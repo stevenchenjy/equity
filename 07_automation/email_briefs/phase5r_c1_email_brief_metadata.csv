@@ -1,0 +1,2 @@
+generated_at,source_scores_path,source_tickets_path,manual_review_count,watch_count,avoid_count,insufficient_data_count,top_manual_review_tickers,top_watch_tickers,email_subject,send_allowed,delivery_phase
+2026-07-09T14:54:58-05:00,03_source_data/phase5r/phase5r_b2_signal_scores.csv,03_source_data/phase5r/phase5r_b2_manual_trade_tickets.csv,1,23,3,0,META,"AVGO, PANW, MU, AMD, ARM",Daily AI Equity Brief — 2026-07-09 — 1 Review / 23 Watch / 3 Avoid,no,phase5r_c1_compose_only

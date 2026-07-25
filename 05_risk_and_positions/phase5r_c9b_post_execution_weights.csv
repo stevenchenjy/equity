@@ -1,0 +1,3 @@
+execution_id,reconciliation_state,ticker,shares_after,reference_price,post_execution_value,account_total_after,post_execution_weight_pct,reference_price_timestamp,price_source,price_quality_label,account_total_source,canonical_state_applied
+C9B-IOT-PENDING-001,applied,IOT,5.0000,31.49,157.45,2442.39,6.4466,2026-07-23T23:19:45-04:00,yfinance_public_market_data,ok,estimated_public_prices,yes
+C9B-IOT-PENDING-001,applied,RBRK,2.0000,72.63,145.26,2442.39,5.9475,2026-07-23T23:19:45-04:00,yfinance_public_market_data,ok,estimated_public_prices,yes

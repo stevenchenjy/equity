@@ -1,0 +1,11 @@
+original_root_path,archived_path,existed_before,moved,file_count_before,file_count_after,dir_count_before,dir_count_after,checksum_manifest_created,notes
+00_rules,11_archive/legacy_pre_5r_root_20260709/00_rules,yes,yes,6,6,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+01_universe,11_archive/legacy_pre_5r_root_20260709/01_universe,yes,yes,8,8,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+02_filings,11_archive/legacy_pre_5r_root_20260709/02_filings,yes,yes,30,30,3,3,yes,Moved by same-filesystem rename; contents preserved exactly.
+03_research,11_archive/legacy_pre_5r_root_20260709/03_research,yes,yes,100,100,28,28,yes,Moved by same-filesystem rename; contents preserved exactly.
+04_data,11_archive/legacy_pre_5r_root_20260709/04_data,yes,yes,59,59,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+05_scripts,11_archive/legacy_pre_5r_root_20260709/05_scripts,yes,yes,44,44,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+06_logs,11_archive/legacy_pre_5r_root_20260709/06_logs,yes,yes,6,6,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+06_trading,11_archive/legacy_pre_5r_root_20260709/06_trading,yes,yes,3,3,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+07_reviews,11_archive/legacy_pre_5r_root_20260709/07_reviews,yes,yes,42,42,1,1,yes,Moved by same-filesystem rename; contents preserved exactly.
+tests,11_archive/legacy_pre_5r_root_20260709/tests,yes,yes,1,1,1,1,yes,Moved by same-filesystem rename; contents preserved exactly. Additional archived folder: Phase 0C legacy quarantine and non-canonical visible root folder.

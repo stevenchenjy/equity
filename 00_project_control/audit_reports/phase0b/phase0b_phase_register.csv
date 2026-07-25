@@ -1,0 +1,54 @@
+phase_name,status,owner_folder,canonical_destination,can_be_used_by_phase5r,file_count_from_phase0a,notes
+phase0,active,00_project_control,00_project_control/audit_reports/phase0,yes,3,
+phase0a,active,00_project_control,00_project_control/audit_reports/phase0a,yes,4,
+phase0b,active,00_project_control,00_project_control/audit_reports/phase0b,yes,5,
+phase1,archived,03_research,11_archive/historical_phase_outputs/phase1,no,4,
+phase1a,archived,05_scripts,11_archive/historical_phase_outputs/phase1a,no,4,
+phase1b,archived,07_reviews,11_archive/historical_phase_outputs/phase1b,no,4,
+phase1c,archived,07_reviews,11_archive/historical_phase_outputs/phase1c,no,4,
+phase1d,archived,07_reviews,11_archive/historical_phase_outputs/phase1d,no,3,
+phase1e,archived,07_reviews,11_archive/historical_phase_outputs/phase1e,no,1,
+phase2,superseded,05_scripts,11_archive/historical_phase_outputs/phase2,reference_only,7,
+phase2a,superseded,07_reviews,11_archive/historical_phase_outputs/phase2a,reference_only,3,
+phase2b,superseded,05_scripts,11_archive/historical_phase_outputs/phase2b,reference_only,20,
+phase2c,superseded,05_scripts,11_archive/historical_phase_outputs/phase2c,reference_only,25,
+phase2d,superseded,07_reviews,11_archive/historical_phase_outputs/phase2d,reference_only,2,
+phase2e,superseded,05_scripts,11_archive/historical_phase_outputs/phase2e,reference_only,43,
+phase2e1,superseded,05_scripts,11_archive/historical_phase_outputs/phase2e1,reference_only,35,
+phase2f,superseded,05_scripts,11_archive/historical_phase_outputs/phase2f,reference_only,25,
+phase2g,superseded,05_scripts,11_archive/historical_phase_outputs/phase2g,reference_only,14,
+phase2h,superseded,05_scripts,11_archive/historical_phase_outputs/phase2h,reference_only,21,
+phase2i,superseded,05_scripts,11_archive/historical_phase_outputs/phase2i,reference_only,16,
+phase2j,superseded,05_scripts,11_archive/historical_phase_outputs/phase2j,reference_only,23,
+phase2k,superseded,05_scripts,11_archive/historical_phase_outputs/phase2k,reference_only,23,
+phase2l,superseded,05_scripts,11_archive/historical_phase_outputs/phase2l,reference_only,21,
+phase2m,superseded,05_scripts,11_archive/historical_phase_outputs/phase2m,reference_only,13,
+phase2n,superseded,05_scripts,11_archive/historical_phase_outputs/phase2n,reference_only,20,
+phase2o,superseded,05_scripts,11_archive/historical_phase_outputs/phase2o,reference_only,19,
+phase2o1b,superseded,05_scripts,11_archive/historical_phase_outputs/phase2o1b,reference_only,2,
+phase2p,superseded,05_scripts,11_archive/historical_phase_outputs/phase2p,reference_only,21,
+phase2q,superseded,05_scripts,11_archive/historical_phase_outputs/phase2q,reference_only,34,
+phase2r,superseded,05_scripts,11_archive/historical_phase_outputs/phase2r,reference_only,21,
+phase2s,superseded,05_scripts,11_archive/historical_phase_outputs/phase2s,reference_only,4,
+phase3,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,8,Sensitive operational phase requires human review before Phase 5R.
+phase3a,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,11,Sensitive operational phase requires human review before Phase 5R.
+phase3b,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,24,Sensitive operational phase requires human review before Phase 5R.
+phase3c,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,14,Sensitive operational phase requires human review before Phase 5R.
+phase4,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,4,Sensitive operational phase requires human review before Phase 5R.
+phase4a,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,16,Sensitive operational phase requires human review before Phase 5R.
+phase4b,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,19,Sensitive operational phase requires human review before Phase 5R.
+phase5,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,8,Sensitive operational phase requires human review before Phase 5R.
+phase5a,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,12,Sensitive operational phase requires human review before Phase 5R.
+phase5b,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,11,Sensitive operational phase requires human review before Phase 5R.
+phase5c,sensitive_operational,05_scripts,05_risk_and_positions or 07_automation after human approval,review_required,3,Sensitive operational phase requires human review before Phase 5R.
+phase5d,sensitive_operational,04_data,05_risk_and_positions or 07_automation after human approval,review_required,2,Sensitive operational phase requires human review before Phase 5R.
+phase5e,sensitive_operational,04_data,05_risk_and_positions or 07_automation after human approval,review_required,2,Sensitive operational phase requires human review before Phase 5R.
+phase5f,sensitive_operational,04_data,05_risk_and_positions or 07_automation after human approval,review_required,2,Sensitive operational phase requires human review before Phase 5R.
+phase5r,future,(future - not created),(future - define only after Phase 0B human gate),no,,Phase 5R is future and intentionally not created.
+phase8,archived,02_filings,11_archive/historical_phase_outputs/phase8,no,1,
+phase13ga,archived,02_filings,11_archive/historical_phase_outputs/phase13ga,no,1,
+unphased,active,05_scripts,canonical active folders by artifact type,yes,110,
+phase2017de,archived,02_filings,11_archive/historical_phase_outputs/phase2017de,no,1,
+phase2017pr,archived,02_filings,11_archive/historical_phase_outputs/phase2017pr,no,1,
+phase2018de,archived,02_filings,11_archive/historical_phase_outputs/phase2018de,no,1,
+phase2018pr,archived,02_filings,11_archive/historical_phase_outputs/phase2018pr,no,1,

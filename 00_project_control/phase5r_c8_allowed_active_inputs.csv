@@ -1,0 +1,44 @@
+registry_id,path_spec,path_kind,category,active_role,allowed_readers,contains_current_positions,allowed_as_active_input,decision_freshness,notes
+AI-001,00_project_control/active_decision_state.yaml,exact,project_control,authoritative workflow state,phase5r_c7;future_active_pipelines,no,yes,current,Must be read before other active inputs.
+AI-002,05_risk_and_positions/current_positions.local.csv,exact,current_positions,only current IOT/RBRK source,C4;C4R;C5;C5T;C6;C7,yes,yes,current_gitignored,No other holding file is authoritative.
+AI-003,05_risk_and_positions/phase5r_c4_portfolio_state_report.csv,exact,portfolio_state,C4 validation summary,C5;C7,yes,yes,current_run,Generated from current local positions.
+AI-004,05_risk_and_positions/phase5r_c4r_current_position_validation.csv,exact,portfolio_state,C4R row validation,C5;C7,yes,yes,current_run,Current local positions only.
+AI-005,05_risk_and_positions/phase5r_c4r_portfolio_concentration_report.csv,exact,portfolio_state,C4R concentration state,C5;C5T;C7,yes,yes,current_run,Authoritative concentration input.
+AI-006,05_risk_and_positions/phase5r_c4r_position_review_queue.csv,exact,portfolio_state,C4R position review queue,C5;C7,yes,yes,current_run,Weekly position review context.
+AI-007,05_risk_and_positions/phase5r_c4r_current_portfolio_summary.md,exact,portfolio_state,C4R human-readable summary,C5;C7,yes,yes,current_run,Current portfolio summary.
+AI-008,03_source_data/phase5r/phase5r_universe_seed.csv,exact,public_market_data,canonical Phase 5R universe,B2;C7,no,yes,canonical,Excludes current legacy-context holdings from candidate selection.
+AI-009,03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv,exact,public_market_data,latest public market snapshot,C5;C7,no,yes,current_run,Read-only public data.
+AI-010,03_source_data/phase5r/phase5r_b2_market_data_quality_report.csv,exact,public_market_data,data quality gate,C5;C7,no,yes,current_run,Missing data remains explicit.
+AI-011,03_source_data/phase5r/phase5r_b2_candidates_with_market_data.csv,exact,public_market_data,scoring input,C5;C7,no,yes,current_run,Canonical B2 candidate set.
+AI-012,03_source_data/phase5r/phase5r_b2_signal_scores.csv,exact,public_market_data,weekly queue signal input,C5;C7,no,yes,current_run,Daily signal is input context only.
+AI-013,03_source_data/phase5r/phase5r_b2_manual_trade_tickets.csv,exact,manual_research,manual-only ticket context,C5;C7,no,yes,current_run,No transaction authority.
+AI-014,04_research/realtime_stock_picker_phase5r/phase5r_c5_research_queue.csv,exact,weekly_research,controlled weekly research queue,C5;C6;C7,yes,yes,current_run,Unsupported tickers are excluded until reviewed.
+AI-015,04_research/realtime_stock_picker_phase5r/phase5r_c5_company_research_packets.csv,exact,weekly_research,controlled source packets,C5;C6;C7,yes,yes,current_run,Primary-source evidence registry.
+AI-016,04_research/realtime_stock_picker_phase5r/phase5r_c5_weekly_conviction_scores.csv,exact,weekly_research,weekly conviction scores,C5T;C6;C7,yes,yes,current_run,Portfolio fit is included.
+AI-017,04_research/realtime_stock_picker_phase5r/phase5r_c5_position_review_recommendations.csv,exact,weekly_research,current position labels,C5T;C6;C7,yes,yes,current_run,Current positions precede candidates.
+AI-018,04_research/realtime_stock_picker_phase5r/phase5r_c5_new_candidate_recommendations.csv,exact,weekly_research,new candidate labels,C6;C7,no,yes,current_run,Zero to two eligible candidates.
+AI-019,04_research/realtime_stock_picker_phase5r/phase5r_c5_weekly_conviction_memo.md,exact,weekly_research,weekly decision memo,C5T;C6;C7,yes,yes,current_run,Primary weekly research summary.
+AI-020,05_risk_and_positions/phase5r_c5t_trim_scenario_table.csv,exact,manual_action_planning,manual trim scenarios,C6;C7,yes,yes,current_run,Scenario estimates only.
+AI-021,05_risk_and_positions/phase5r_c5t_hold_vs_trim_checklist.csv,exact,manual_action_planning,hold trim wait checklist,C6;C7,yes,yes,current_run,Human decision required.
+AI-022,05_risk_and_positions/phase5r_c5t_next_review_triggers.csv,exact,manual_action_planning,next review triggers,C6;C7,yes,yes,current_run,No automatic response.
+AI-023,05_risk_and_positions/phase5r_c5t_manual_action_plan.md,exact,manual_action_planning,selected manual scenario,C6;C7,yes,yes,current_run,Primary scenario is no action.
+AI-024,07_automation/email_briefs/phase5r_c6_weekly_email_subject.txt,exact,weekly_email,current weekly subject,C6;C7,no,yes,current_run,C7-controlled delivery component.
+AI-025,07_automation/email_briefs/phase5r_c6_weekly_email_body.txt,exact,weekly_email,current weekly plain-text body,C6;C7,yes,yes,current_run,Low-attention weekly brief.
+AI-026,07_automation/email_briefs/phase5r_c6_weekly_email_body.html,exact,weekly_email,current weekly HTML body,C6;C7,yes,yes,current_run,No external content.
+AI-027,07_automation/email_briefs/phase5r_c6_email_metadata.csv,exact,weekly_email,current weekly metadata,C6;C7,no,yes,current_run,Manual C7 delivery only.
+AI-028,08_reviews/current/latest_phase5r_c6_weekly_email_preview.md,exact,weekly_email,current weekly preview,C6;C7,yes,yes,current_run,Human-readable preview.
+AI-029,07_automation/email_delivery/phase5r_c6_delivery_status.csv,exact,execution_record,weekly delivery audit,C7,no,yes,current_run,Audit input for send-row delta only.
+AI-030,00_project_control/phase5r_c7_pipeline_status_report.md,exact,pipeline_control,current C7 status,future_active_pipelines,no,yes,current_run,Latest active pipeline result.
+AI-031,00_project_control/run_logs/phase5r_c7_weekly_pipeline_run_log.csv,exact,pipeline_control,C7 step audit,future_active_pipelines,no,yes,append_only,Used for run verification.
+AI-032,04_research/realtime_stock_picker_phase5r/phase5r_c7_pipeline_report.md,exact,pipeline_control,C7 research summary,future_active_pipelines,no,yes,current_run,Active weekly pipeline summary.
+AI-033,00_project_control/phase5r_c4_*policy.md,pattern,project_policy,portfolio and cadence controls,C4;C5;C5T;C6;C7,no,yes,policy,Pattern excludes reports.
+AI-034,00_project_control/phase5r_c5_*policy.md,pattern,project_policy,deep research controls,C5;C5T;C6;C7,no,yes,policy,Pattern excludes reports.
+AI-035,00_project_control/phase5r_c5t_*policy.md,pattern,project_policy,manual action controls,C5T;C6;C7,no,yes,policy,Pattern excludes reports.
+AI-036,00_project_control/phase5r_c6_*policy.md,pattern,project_policy,weekly email controls,C6;C7,no,yes,policy,C6 is a C7 component.
+AI-037,00_project_control/phase5r_c7_*policy.md,pattern,project_policy,active pipeline control,C7;future_active_pipelines,no,yes,policy,C7 is active.
+AI-038,00_project_control/phase5r_c8_active_state_policy.md,exact,project_policy,active state and stale guard,C7;future_active_pipelines,no,yes,policy,Highest-level stale-file policy.
+AI-039,00_project_control/phase5r_strategy_profile.md,exact,project_policy,canonical strategy boundary,C5;C5T;C6;C7,no,yes,policy,Weekly research remains manual execution only.
+AI-040,00_project_control/phase5r_data_contract.md,exact,project_policy,canonical Phase 5R data contract,B2;C5;C5T;C6;C7,no,yes,policy,Defines canonical Phase 5R fields and provenance.
+AI-041,00_project_control/phase5r_manual_execution_boundary.md,exact,project_policy,manual execution boundary,C5;C5T;C6;C7,no,yes,policy,Prohibits broker and automatic transaction authority.
+AI-042,00_project_control/phase5r_b2_full_universe_data_policy.md,exact,project_policy,public market data boundary,B2;C5;C7,no,yes,policy,Read-only public market data control.
+AI-043,00_project_control/phase5r_c4r_*policy.md,pattern,project_policy,current position intake control,C4R;C5;C5T;C6;C7,yes,yes,policy,Current local positions only.

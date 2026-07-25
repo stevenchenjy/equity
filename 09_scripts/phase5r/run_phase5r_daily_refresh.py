@@ -1,0 +1,185 @@
+#!/usr/bin/env python3
+"""Refresh market, official evidence, account-aware research, and daily brief.
+
+This pipeline never imports or invokes an email sender.
+"""
+
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from contextlib import nullcontext
+from pathlib import Path
+from typing import Any
+
+from phase5r_daily_common import (
+    DAILY_PIPELINE_LOCK_PATH,
+    DAILY_REFRESH_STATE_PATH,
+    ROOT,
+    ExclusiveFileLock,
+    atomic_write_json,
+    iso_now,
+    load_active_state,
+    load_inhibit,
+    log_daily_run,
+)
+
+
+SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
+STEP_SPECS = [
+    ("market_refresh", "run_phase5r_b2_full_universe_market_data.py", False),
+    ("market_scoring", "score_phase5r_b2_candidates.py", False),
+    ("official_evidence", "refresh_phase5r_daily_evidence.py", True),
+    (
+        "sec_filing_artifacts",
+        "refresh_phase5r_sec_filing_artifacts.py",
+        True,
+    ),
+    # portfolio_outputs owns the account/weight/action/cash child sequence.
+    # Running those children here as well duplicated C9 work and widened the
+    # refresh race window without changing the result.
+    ("portfolio_outputs", "regenerate_phase5r_c9_portfolio_outputs.py", False),
+    ("price_aware_review", "create_phase5r_c9b_price_aware_action_plan.py", True),
+    (
+        "daily_decision",
+        "create_phase5r_daily_decision_and_brief.py",
+        False,
+    ),
+]
+
+
+def run_step(name: str, script_name: str, allowed_to_fail: bool) -> dict[str, Any]:
+    extra_arguments = ["--refresh"] if name == "sec_filing_artifacts" else []
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(SCRIPT_DIR / script_name), *extra_arguments],
+            cwd=ROOT,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=240,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as exc:
+        partial = exc.stdout or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", errors="replace")
+        safe_summary = " ".join(str(partial).strip().split())[-400:]
+        return {
+            "name": name,
+            "script": script_name,
+            "exit_code": 124,
+            "allowed_to_fail": allowed_to_fail,
+            "outcome": "timed_out",
+            "safe_summary": safe_summary or "child_timeout_240_seconds",
+        }
+    safe_summary = " ".join(completed.stdout.strip().split())[-500:]
+    return {
+        "name": name,
+        "script": script_name,
+        "exit_code": completed.returncode,
+        "allowed_to_fail": allowed_to_fail,
+        "outcome": "passed" if completed.returncode == 0 else "failed",
+        "safe_summary": safe_summary,
+    }
+
+
+def safe_check() -> int:
+    load_active_state()
+    load_inhibit()
+    missing = [
+        script_name
+        for _, script_name, _ in STEP_SPECS
+        if not (SCRIPT_DIR / script_name).exists()
+    ]
+    if missing:
+        raise RuntimeError(f"missing daily refresh scripts: {','.join(missing)}")
+    print(
+        "safe_check_passed=true sender_reference=false smtp_config_read=false "
+        "broker_connected=false order_code_created=false"
+    )
+    return 0
+
+
+def run_refresh(no_lock: bool) -> int:
+    load_active_state()
+    load_inhibit()
+    lock_context = nullcontext() if no_lock else ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH)
+    started_at = iso_now()
+    with lock_context:
+        steps = [run_step(*spec) for spec in STEP_SPECS]
+    hard_failures = [
+        row["name"]
+        for row in steps
+        if row["exit_code"] != 0 and not row["allowed_to_fail"]
+    ]
+    soft_failures = [
+        row["name"]
+        for row in steps
+        if row["exit_code"] != 0 and row["allowed_to_fail"]
+    ]
+    decision_completed = any(
+        row["name"] == "daily_decision" and row["exit_code"] == 0 for row in steps
+    )
+    if decision_completed and not hard_failures and not soft_failures:
+        outcome = "passed"
+    elif decision_completed:
+        outcome = "degraded_decision_created"
+    else:
+        outcome = "failed"
+    state = {
+        "schema_version": "phase5r_daily_refresh_state_v1",
+        "started_at": started_at,
+        "completed_at": iso_now(),
+        "outcome": outcome,
+        "hard_failures": hard_failures,
+        "soft_failures": soft_failures,
+        "decision_created": decision_completed,
+        "steps": steps,
+        "email_attempted": False,
+        "email_sent": False,
+        "broker_connected": False,
+        "broker_account_read": False,
+        "order_code_created": False,
+    }
+    atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
+    log_daily_run(
+        component="daily_refresh",
+        run_mode="public_research_no_send",
+        outcome=outcome,
+        reason=(
+            "complete"
+            if outcome == "passed"
+            else ",".join(hard_failures + soft_failures) or "decision_not_created"
+        ),
+    )
+    print(
+        f"daily_refresh_outcome={outcome} decision_created="
+        f"{str(decision_completed).lower()} email_attempted=false "
+        f"hard_failures={','.join(hard_failures) or 'none'} "
+        f"soft_failures={','.join(soft_failures) or 'none'}"
+    )
+    return 0 if decision_completed else 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--run", action="store_true")
+    mode.add_argument("--safe-check", action="store_true")
+    parser.add_argument(
+        "--no-lock",
+        action="store_true",
+        help="internal: caller already owns the daily pipeline lock",
+    )
+    args = parser.parse_args()
+    if args.safe_check:
+        if args.no_lock:
+            raise ValueError("--no-lock is valid only with --run")
+        return safe_check()
+    return run_refresh(args.no_lock)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,16 @@
+{
+  "account_total_value": 0.0,
+  "prior_account_value": 0.0,
+  "new_external_cash": 0.0,
+  "cash_available": 0.0,
+  "cash_reserved": 0.0,
+  "investment_horizon_years": 5,
+  "cash_needed_within_three_years": "no",
+  "core_allocation_target_pct": 60.0,
+  "active_stock_target_pct": 20.0,
+  "active_stock_hard_cap_pct": 30.0,
+  "cash_target_pct": 20.0,
+  "single_stock_default_cap_pct": 6.0,
+  "single_stock_hard_cap_pct": 8.0,
+  "last_updated": "YYYY-MM-DDTHH:MM:SS-04:00"
+}

@@ -1,0 +1,12 @@
+timestamp,action,status,detail
+2026-07-08T23:11:29-05:00,load_phase0a_inputs,complete,Loaded Phase 0A CSV/Markdown reports; no project scripts or .env files read
+2026-07-08T23:11:29-05:00,write_migration_map,complete,Wrote 375 migration rows covering current pre-Phase0B files
+2026-07-08T23:11:29-05:00,write_human_review_queue,complete,Wrote 201 human-review queue rows
+2026-07-08T23:11:29-05:00,write_duplicate_resolution_plan,complete,Wrote 5 duplicate group plans
+2026-07-08T23:11:29-05:00,write_active_entrypoint_register,complete,Wrote 19 active entrypoint rows
+2026-07-08T23:11:29-05:00,write_broken_path_resolution_plan,complete,Wrote 27 broken/path reference rows
+2026-07-08T23:11:29-05:00,write_phase_register,complete,Wrote 53 phase register rows
+2026-07-08T23:11:29-05:00,write_migration_plan,complete,Wrote Phase 0B migration plan markdown
+2026-07-08T23:11:29-05:00,write_verification_report,complete,Wrote Phase 0B verification report; all required gates evaluated
+2026-07-08T23:12:29-05:00,phase0b_rule_refinement,complete,Set human approval on 12 sensitive cache rows and ARCHIVE_AFTER_APPROVAL on 24 historical phase report rows; rebuilt human queue (213 rows)
+2026-07-08T23:13:16-05:00,verification_rule_qa_refresh,complete,Added rule-level QA section to verification report; error count 0

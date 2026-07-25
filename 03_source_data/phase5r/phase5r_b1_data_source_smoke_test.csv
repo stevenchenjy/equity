@@ -1,0 +1,4 @@
+ticker,yfinance_available,smoke_test_attempted,last_price,previous_close,volume,data_timestamp,data_source,data_quality_label,status,notes
+QQQ,no,no,,,,2026-07-09T12:29:14-05:00,none_yfinance_missing,insufficient_data,not_attempted,yfinance missing; install instructions written; no market values invented
+XLK,no,no,,,,2026-07-09T12:29:14-05:00,none_yfinance_missing,insufficient_data,not_attempted,yfinance missing; install instructions written; no market values invented
+SPY,no,no,,,,2026-07-09T12:29:14-05:00,none_yfinance_missing,insufficient_data,not_attempted,yfinance missing; install instructions written; no market values invented

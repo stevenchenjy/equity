@@ -1,0 +1,21 @@
+{
+  "cycle_attempts": {},
+  "cycle_recovery_history": [],
+  "last_check": null,
+  "last_cycle_id": null,
+  "last_decision": null,
+  "last_reason": null,
+  "last_sent_rows_observed": 0,
+  "last_successful_cycle_id": null,
+  "install_inhibit": false,
+  "protected_verification": false,
+  "schedule": {
+    "check_interval_seconds": 900,
+    "hour": 9,
+    "minute": 5,
+    "timezone": "system_local",
+    "weekday": "Thursday"
+  },
+  "schema_version": "phase5r_d3_catchup_state_v1",
+  "verification_flag_active": false
+}

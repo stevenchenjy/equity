@@ -1,0 +1,253 @@
+{
+  "packet": {
+    "schema_version": "phase5r_llm_evidence_packet_v1",
+    "packet_id": "$PACKET_ID",
+    "generated_at": "2026-07-23T18:30:00-04:00",
+    "as_of_et": "2026-07-23T18:30:00-04:00",
+    "cycle_date": "2026-07-23",
+    "decision_fingerprint": "fixture-decision-fingerprint-v1",
+    "entities": [
+      {
+        "ticker": "TST",
+        "role": "held",
+        "cik": "0001000000",
+        "position_weight_band": "5_to_8_pct",
+        "position_weight_pct_rounded": "6.0",
+        "concentration_status": "within_default_cap",
+        "holding_horizon": "long_term",
+        "thesis": "Durable product adoption with improving operating leverage.",
+        "invalidation_rule": "Official evidence shows durable demand deterioration.",
+        "deterministic_recommendation": "hold"
+      }
+    ],
+    "portfolio_constraints": {
+      "account_size_band": "under_10k",
+      "investment_horizon_years": 5,
+      "core_allocation_target_pct": 40,
+      "active_stock_target_pct": 40,
+      "active_stock_hard_cap_pct": 50,
+      "single_stock_default_cap_pct": 8,
+      "single_stock_hard_cap_pct": 10,
+      "cash_target_pct": 20,
+      "manual_execution_only": true
+    },
+    "gates": {
+      "market_data_current": true,
+      "sec_held_coverage_complete": true,
+      "fundamental_held_coverage_complete": true,
+      "filing_artifact_provenance_complete": true,
+      "account_state_consistent": true,
+      "point_in_time_safe": true
+    },
+    "market_observations": [
+      {
+        "ticker": "TST",
+        "last_price": "50.00",
+        "previous_close": "49.50",
+        "intraday_change_pct": "1.01",
+        "relative_volume": "1.05",
+        "fifty_two_week_high": "60.00",
+        "fifty_two_week_low": "30.00",
+        "market_session_date": "2026-07-23",
+        "data_timestamp": "2026-07-23T16:15:00-04:00",
+        "data_source": "fixture_public_market_data",
+        "data_quality_label": "ok",
+        "usable_for_scoring": "yes",
+        "bar_state": "complete_close",
+        "source_id": "market:TST:2026-07-23"
+      }
+    ],
+    "fundamental_observations": [
+      {
+        "ticker": "TST",
+        "cik": "0001000000",
+        "fetched_at": "2026-07-23T17:00:00-04:00",
+        "latest_period_end": "2026-03-31",
+        "latest_frame": "CY2026Q1",
+        "revenue_latest": "478844000",
+        "revenue_prior_year": "366884000",
+        "revenue_yoy_pct": "30.52",
+        "net_income_latest": "44508000",
+        "net_margin_pct": "9.29",
+        "cash_latest": "700000000",
+        "assets_latest": "1800000000",
+        "liabilities_latest": "600000000",
+        "trend_label": "strong_growth",
+        "data_quality": "ok",
+        "source_id": "sec:TST:10Q:2026Q1:0"
+      }
+    ],
+    "filing_evidence": [
+      {
+        "ticker": "TST",
+        "cik": "0001000000",
+        "form": "10-Q",
+        "filing_date": "2026-05-01",
+        "accession_number": "0001000000-26-000001",
+        "items": "",
+        "materiality": "high",
+        "material_event": "yes",
+        "metadata_source_id": "sec:TST:10Q:2026Q1:0",
+        "text_chunk_source_ids": [
+          "sec:TST:10Q:2026Q1:0"
+        ]
+      }
+    ],
+    "research_context": [],
+    "calculations": [
+      {
+        "calculation_id": "calc:revenue_yoy:TST:CY2026Q1",
+        "ticker": "TST",
+        "metric": "revenue_yoy_pct",
+        "value": "30.52",
+        "recomputed_value": "30.52",
+        "unit": "pct",
+        "period": "CY2026Q1",
+        "formula": "(revenue_latest/revenue_prior_year-1)*100",
+        "source_ids": [
+          "sec:TST:10Q:2026Q1:0"
+        ],
+        "inputs": [
+          {
+            "name": "revenue_latest",
+            "value": "478844000",
+            "unit": "USD",
+            "period": "CY2026Q1"
+          },
+          {
+            "name": "revenue_prior_year",
+            "value": "366884000",
+            "unit": "USD",
+            "period": "CY2025Q1"
+          }
+        ],
+        "reconciled": true
+      }
+    ],
+    "source_catalog": [
+      {
+        "source_id": "sec:TST:10Q:2026Q1:0",
+        "source_type": "sec_filing_text_chunk",
+        "ticker": "TST",
+        "accepted_at": "2026-05-01T17:00:00-04:00",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1000000/000100000026000001/tst-20260331.htm",
+        "content_sha256": "88d0db2b688c7db72cc7074533e38f38e1668377a4ab93feb2217a09c0b96434",
+        "locator": {
+          "cik": "0001000000",
+          "accession_number": "0001000000-26-000001",
+          "form": "10-Q",
+          "char_start": 0,
+          "char_end": 208,
+          "fixture_path": "sources/sec_filing_excerpt.txt"
+        },
+        "authority": "primary_official",
+        "excerpt_text": "TST reported quarterly revenue of 478844000 USD versus 366884000 USD in the comparable prior-year quarter. Net income was 44508000 USD. Management stated that the long-term product roadmap remains unchanged.\n"
+      },
+      {
+        "source_id": "market:TST:2026-07-23",
+        "source_type": "public_market_observation",
+        "ticker": "TST",
+        "accepted_at": "2026-07-23T16:15:00-04:00",
+        "source_url": "",
+        "content_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "locator": {
+          "dataset": "fixture_public_market_data",
+          "session": "2026-07-23"
+        },
+        "authority": "secondary_public_market_context",
+        "excerpt_text": ""
+      }
+    ],
+    "boundaries": {
+      "research_only": true,
+      "canonical_effect": false,
+      "email_eligible": false,
+      "automatic_action_allowed": false,
+      "broker_connected": false,
+      "order_code_available": false,
+      "exact_account_dollars_included": false
+    }
+  },
+  "responses": {
+    "analyst": {
+      "schema_version": "phase5r_llm_evidence_analysis_v1",
+      "packet_id": "$PACKET_ID",
+      "as_of_et": "2026-07-23T18:30:00-04:00",
+      "prompt_injection_detected": false,
+      "claims": [
+        {
+          "claim_id": "claim-stable-thesis",
+          "ticker": "TST",
+          "claim": "Official quarterly evidence is consistent with the existing long-term thesis.",
+          "stance": "supports",
+          "time_horizon": "long_term",
+          "materiality": "high",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ],
+          "calculation_ids": []
+        }
+      ],
+      "ticker_coverage": [
+        {
+          "ticker": "TST",
+          "official_evidence_sufficient": true,
+          "contradictory_evidence": false,
+          "missing_evidence": []
+        }
+      ],
+      "unresolved_questions": []
+    },
+    "committee": {
+      "schema_version": "phase5r_llm_committee_decision_v1",
+      "packet_id": "$PACKET_ID",
+      "portfolio_classification": "hold_existing",
+      "headline": "Maintain the existing research posture",
+      "decisive_advice": "The evidence supports holding the existing research position without a portfolio change.",
+      "long_term_portfolio_case": "Growth and operating leverage remain consistent with the existing thesis.",
+      "data_sufficiency": "sufficient",
+      "material_thesis_break": false,
+      "confidence_pct": 82,
+      "ticker_decisions": [
+        {
+          "ticker": "TST",
+          "classification": "hold_existing",
+          "thesis_direction": "stable",
+          "rationale": "The primary filing supports the existing thesis.",
+          "long_term_case": "Product adoption and operating leverage remain intact.",
+          "risks": [
+            "Growth may normalize."
+          ],
+          "invalidation_conditions": [
+            "Official evidence shows durable demand deterioration."
+          ],
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ],
+          "calculation_ids": [],
+          "confidence_pct": 82,
+          "human_review_needed": false
+        }
+      ],
+      "dissent": [],
+      "automatic_action_allowed": false
+    },
+    "critic": {
+      "schema_version": "phase5r_llm_critic_review_v1",
+      "packet_id": "$PACKET_ID",
+      "verdict": "approve",
+      "downgrade_to": "hold_existing",
+      "factual_grounding_pass": true,
+      "citation_integrity_pass": true,
+      "numeric_reconciliation_pass": true,
+      "long_term_reasoning_pass": true,
+      "action_proportionality_pass": true,
+      "policy_boundary_pass": true,
+      "issues": [],
+      "approved_source_ids": [
+        "sec:TST:10Q:2026Q1:0"
+      ],
+      "automatic_action_allowed": false
+    }
+  }
+}

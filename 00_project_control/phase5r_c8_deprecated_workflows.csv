@@ -1,0 +1,9 @@
+workflow_id,workflow_name,status,entrypoint_or_path,replacement,active_input_allowed,email_send_allowed,scheduler_allowed,reason
+DW-001,Phase 5R-C2 direct daily email sender,deprecated,09_scripts/phase5r/send_phase5r_c2_daily_email.py,phase5r_c7,no,no,no,Historical direct daily delivery tool.
+DW-002,Phase 5R-C3 daily email pipeline,deprecated,09_scripts/phase5r/run_phase5r_c3_daily_email_pipeline.py,phase5r_c7,no,no,no,Daily pipeline is not the active cadence.
+DW-003,Phase 5R-D1 daily scheduler,parked_uninstalled,07_automation/scheduler/com.steven.phase5r.dailybrief.plist.template;07_automation/scheduler/install_phase5r_d1_scheduler.sh,manual_phase5r_c7,no,no,no,Scheduler remains parked and uninstalled.
+DW-004,Archived pre-5R root folders,archived_evidence_only,11_archive/legacy_pre_5r_root_20260709/,none,no,no,no,Archived evidence must never become an active input.
+DW-005,Old B2 daily watchlist outputs,parked_evidence,08_reviews/current/latest_phase5r_b2_daily_research_preview.md;08_reviews/current/latest_phase5r_b2_watchlist.md,phase5r_c5_weekly_conviction_memo,no,no,no,Daily views are context only and cannot drive decisions.
+DW-006,Phase 5R-C1 daily email composer,deprecated,09_scripts/phase5r/create_phase5r_c1_daily_email_brief.py,phase5r_c6_weekly_email,no,no,no,Weekly C6 brief replaces daily composition.
+DW-007,Phase 5R-C6 standalone sender,component_only,09_scripts/phase5r/send_phase5r_c6_weekly_email.py,phase5r_c7,no,via_phase5r_c7_only,no,C6 delivery is an active component only when orchestrated by C7.
+DW-008,Historical Phase 0 and superseded Phase 5R reports,evidence_only,00_project_control/phase0*;00_project_control/phase5r_c2*;00_project_control/phase5r_c3*,active_decision_state.yaml,no,no,no,Reports remain for audit provenance but are not active decision inputs.

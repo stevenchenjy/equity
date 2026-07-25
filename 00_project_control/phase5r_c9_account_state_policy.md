@@ -1,0 +1,32 @@
+# Phase 5R-C9 Account-State Policy
+
+## Canonical Inputs
+
+- Shares, entry date, entry price, thesis, horizon, and invalidation context: `05_risk_and_positions/current_positions.local.csv`.
+- Account total, prior value, external cash, available cash, reserve, horizon, and allocation limits: gitignored `05_risk_and_positions/current_account_state.local.json`.
+- Current prices and provenance: `03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv`.
+- Current public research evidence: controlled C5 packet fields; portfolio-fit fields from the old packet are not authoritative.
+
+## Confirmed State
+
+- Account total: `2500.00 USD`.
+- Prior account value: `1000.00 USD` as historical funding provenance only.
+- New external cash: `1500.00 USD`.
+- Reported cash available: `2026.58 USD`.
+- Reserved cash: `500.00 USD`.
+- Investment horizon: at least `5 years`.
+- Cash needed within three years: `no`.
+
+The old `1000 USD` value may appear in the account file only as `prior_account_value`; it cannot be a calculation denominator.
+
+## Validation
+
+The account JSON must contain exactly the C9 fields, use finite non-negative numbers, include a timezone-aware `last_updated`, keep reserved cash at or below available cash, and make core/active/cash targets total 100%. In the initial C9 state, prior value plus external cash reconciles to the $2,500 account total. After a validated C9B fill, those two fields remain contribution history while `account_total_value` becomes current confirmed or explicitly estimated equity and may differ because of market movement or fees.
+
+Current positions require positive shares. Each held ticker and SPY require exactly one canonical B2 row with a positive price, `data_quality_label=ok`, source, and timestamp.
+
+Reported cash plus current holdings may differ modestly from the confirmed total because holdings are repriced while cash is an estimate. C9 accepts and documents a difference no larger than the greater of `25 USD` or `1%` of account total. A larger difference stops the workflow for account-state refresh.
+
+## Privacy and Execution Boundary
+
+The account file is gitignored and local-user-readable only. C9 does not read SMTP credentials, archived position files, broker accounts, or transaction systems. Every output is research planning for manual confirmation.

@@ -1,0 +1,20 @@
+timestamp,event,status,details
+2026-07-09T00:28:23-05:00,preflight,passed,Phase 0E reports passed and canonical Phase 5R-A files exist.
+2026-07-09T00:28:24-05:00,pre_archive_snapshot,complete,"root_entries=27, files=443"
+2026-07-09T00:28:24-05:00,plan_written,complete,00_project_control/phase0f_archive_old_root_plan.md
+2026-07-09T00:28:24-05:00,archive_root_created,complete,11_archive/legacy_pre_5r_root_20260709
+2026-07-09T00:28:24-05:00,folder_moved,complete,00_rules -> 11_archive/legacy_pre_5r_root_20260709/00_rules
+2026-07-09T00:28:24-05:00,folder_moved,complete,01_universe -> 11_archive/legacy_pre_5r_root_20260709/01_universe
+2026-07-09T00:28:24-05:00,folder_moved,complete,02_filings -> 11_archive/legacy_pre_5r_root_20260709/02_filings
+2026-07-09T00:28:24-05:00,folder_moved,complete,03_research -> 11_archive/legacy_pre_5r_root_20260709/03_research
+2026-07-09T00:28:24-05:00,folder_moved,complete,04_data -> 11_archive/legacy_pre_5r_root_20260709/04_data
+2026-07-09T00:28:24-05:00,folder_moved,complete,05_scripts -> 11_archive/legacy_pre_5r_root_20260709/05_scripts
+2026-07-09T00:28:24-05:00,folder_moved,complete,06_logs -> 11_archive/legacy_pre_5r_root_20260709/06_logs
+2026-07-09T00:28:24-05:00,folder_moved,complete,06_trading -> 11_archive/legacy_pre_5r_root_20260709/06_trading
+2026-07-09T00:28:24-05:00,folder_moved,complete,07_reviews -> 11_archive/legacy_pre_5r_root_20260709/07_reviews
+2026-07-09T00:28:24-05:00,folder_moved,complete,tests -> 11_archive/legacy_pre_5r_root_20260709/tests
+2026-07-09T00:28:24-05:00,folder_map_written,complete,00_project_control/phase0f_archived_folder_map.csv
+2026-07-09T00:28:24-05:00,manifest_written,complete,00_project_control/phase0f_archive_manifest.md
+2026-07-09T00:28:24-05:00,post_root_report_written,complete,00_project_control/phase0f_post_root_structure_report.md
+2026-07-09T00:28:24-05:00,phase5r_integrity_written,complete,00_project_control/phase0f_phase5r_canonical_integrity_check.md
+2026-07-09T00:28:24-05:00,verification_written,complete,00_project_control/phase0f_verification_report.md

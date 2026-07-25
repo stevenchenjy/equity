@@ -1,0 +1,2 @@
+execution_id,ticker,side,shares,order_type,order_submitted_at,order_status,limit_price_optional,fill_date,fill_price,fees,shares_before,shares_after,cash_before,cash_after,account_total_after,source,notes
+EXAMPLE-ONLY,EXAMPLE,sell,1,limit_review,,pending_fill,,,,,2,1,,,,example_only_not_an_execution,Example only. Unknown fill and account fields remain blank while pending.

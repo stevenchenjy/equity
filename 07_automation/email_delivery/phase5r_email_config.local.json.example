@@ -1,0 +1,8 @@
+{
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_username": "your_sender@gmail.com",
+  "smtp_app_password": "replace_with_gmail_app_password",
+  "recipient_email": "recipient@example.com",
+  "sender_name": "AI Investment Research Assistant"
+}

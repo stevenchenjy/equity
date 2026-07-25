@@ -1,0 +1,13 @@
+folder_path,existed_before,created_now,exists_after,status
+00_project_control,yes,no,yes,existing
+01_policies,no,yes,yes,created_missing_canonical_folder
+02_universe,no,yes,yes,created_missing_canonical_folder
+03_source_data,no,yes,yes,created_missing_canonical_folder
+04_research,no,yes,yes,created_missing_canonical_folder
+05_risk_and_positions,no,yes,yes,created_missing_canonical_folder
+06_execution_records,no,yes,yes,created_missing_canonical_folder
+07_automation,no,yes,yes,created_missing_canonical_folder
+08_reviews,no,yes,yes,created_missing_canonical_folder
+09_scripts,no,yes,yes,created_missing_canonical_folder
+10_tests,no,yes,yes,created_missing_canonical_folder
+11_archive,no,yes,yes,created_missing_canonical_folder

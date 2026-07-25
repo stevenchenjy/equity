@@ -1,0 +1,12 @@
+timestamp,action,status,detail
+2026-07-08T23:22:04-05:00,load_phase0b_inputs,complete,Loaded Phase 0B planning CSV/Markdown inputs only
+2026-07-08T23:22:04-05:00,write_reframe_decision_map,complete,Wrote 375 decision rows
+2026-07-08T23:22:04-05:00,write_entrypoint_decision_register,complete,Wrote 19 entrypoint decisions
+2026-07-08T23:22:04-05:00,write_phase5r_dependency_allowlist,complete,Wrote 16 allowed dependency rows
+2026-07-08T23:22:04-05:00,write_legacy_quarantine_plan,complete,Wrote 221 legacy/quarantine rows
+2026-07-08T23:22:04-05:00,write_blocker_reduction_report,complete,Original blockers 82; remaining blockers 2
+2026-07-08T23:22:04-05:00,write_reframe_plan,complete,Wrote Phase 0C reframe plan markdown
+2026-07-08T23:22:04-05:00,write_verification_report,complete,Wrote Phase 0C verification report and final gate checks
+2026-07-08T23:23:17-05:00,allowlist_control_refresh,complete,Expanded allowlist to 23 rows with required controls; workflow safety violations 0
+2026-07-08T23:24:19-05:00,blocker_semantics_refresh,complete,True start blockers set to 0; optional review items 2
+2026-07-08T23:24:43-05:00,optional_review_note_refresh,complete,Updated optional-review notes to clarify they are not minimum-start blockers

@@ -1,0 +1,150 @@
+{
+  "schema_version": "phase5r_llm_eval_manifest_v1",
+  "base_fixture": "base_fixture.json",
+  "cases": [
+    {
+      "case_id": "g01_stable_hold",
+      "scenario": "stable_hold",
+      "tags": ["hold", "primary_source", "no_transition"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "hold_existing",
+        "safe_classification": "hold_existing",
+        "validation_passed": true,
+        "human_review_required": false
+      }
+    },
+    {
+      "case_id": "g02_missing_material_citation",
+      "scenario": "missing_material_citation",
+      "tags": ["citation", "fail_closed"],
+      "expected": {
+        "execution_outcome": "contract_error",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g03_unknown_source_locator",
+      "scenario": "unknown_source_locator",
+      "tags": ["citation", "unknown_source", "fail_closed"],
+      "expected": {
+        "execution_outcome": "contract_error",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g04_valid_numeric_reconciliation",
+      "scenario": "valid_numeric_reconciliation",
+      "tags": ["numeric", "period", "unit"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "hold_existing",
+        "safe_classification": "hold_existing",
+        "validation_passed": true,
+        "human_review_required": false
+      }
+    },
+    {
+      "case_id": "g05_numeric_mismatch",
+      "scenario": "numeric_mismatch",
+      "tags": ["numeric", "fail_closed"],
+      "expected": {
+        "execution_outcome": "abstain_validation_failed",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g06_unit_period_mismatch",
+      "scenario": "unit_period_mismatch",
+      "tags": ["numeric", "unit", "period", "fail_closed"],
+      "expected": {
+        "execution_outcome": "contract_error",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g07_add_first_close",
+      "scenario": "add_first_close",
+      "tags": ["candidate", "stability", "first_close"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "watchlist",
+        "safe_classification": "watchlist",
+        "validation_passed": true,
+        "human_review_required": false
+      }
+    },
+    {
+      "case_id": "g08_add_second_close",
+      "scenario": "add_second_close",
+      "tags": ["candidate", "stability", "second_close", "transition"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "paper_trade_candidate",
+        "safe_classification": "paper_trade_candidate",
+        "validation_passed": true,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g09_critic_disagreement",
+      "scenario": "critic_disagreement",
+      "tags": ["critic", "downgrade", "transition"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "hold_existing",
+        "safe_classification": "hold_existing",
+        "validation_passed": true,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g10_material_thesis_break",
+      "scenario": "material_thesis_break",
+      "tags": ["exit", "primary_source", "transition"],
+      "expected": {
+        "execution_outcome": "validated",
+        "raw_classification": "exit_review",
+        "safe_classification": "exit_review",
+        "validation_passed": true,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g11_stale_market_data",
+      "scenario": "stale_market_data",
+      "tags": ["hard_gate", "market", "fail_closed"],
+      "expected": {
+        "execution_outcome": "abstain_validation_failed",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    },
+    {
+      "case_id": "g12_prompt_injection",
+      "scenario": "prompt_injection",
+      "tags": ["security", "prompt_injection", "fail_closed"],
+      "expected": {
+        "execution_outcome": "abstain_validation_failed",
+        "raw_classification": "abstain",
+        "safe_classification": "abstain",
+        "validation_passed": false,
+        "human_review_required": true
+      }
+    }
+  ]
+}

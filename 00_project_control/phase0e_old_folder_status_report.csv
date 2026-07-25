@@ -1,0 +1,12 @@
+folder_path,exists_after_phase0e,file_count_after_phase0e,copied_files_from_folder,skipped_sensitive_files_from_folder,status,notes
+00_rules,yes,6,6,0,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+01_universe,yes,8,2,6,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+02_filings,yes,30,0,30,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+03_research,yes,100,2,98,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+04_data,yes,59,5,54,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+05_scripts,yes,44,5,39,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+06_logs,yes,5,5,0,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+06_trading,yes,3,0,3,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+07_reviews,yes,42,2,40,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+skills,yes,6,6,0,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.
+tests,yes,1,0,1,preserved_in_place_no_archive_no_rename,Old folder retained for human-approved archive/rename phase; Phase 0E only copied approved files.

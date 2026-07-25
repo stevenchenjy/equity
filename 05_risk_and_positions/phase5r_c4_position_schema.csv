@@ -1,0 +1,13 @@
+column_name,required,data_type,allowed_values,description,example
+ticker,yes,text,non-empty ticker,Security identifier.,SAMPLECO
+entry_date,yes,date_or_blank_for_watch,YYYY-MM-DD or blank for watch_only,Manual entry date.,2026-01-15
+entry_price,yes,number_or_blank_for_watch,non-negative,Manual reference entry price.,100.00
+position_pct,yes,number,0 to 100,Percent of account represented by the position.,3.00
+shares_optional,no,number_or_blank,non-negative,Optional private share count.,
+thesis,yes,text,free text,Current investment thesis.,Illustrative thesis.
+horizon_class,yes,enum,short_swing;medium_conviction;core_compounder;watch_only,Expected research and holding horizon.,medium_conviction
+planned_review_date,yes,date,YYYY-MM-DD,Next planned human review date.,2026-02-15
+max_loss_pct_of_account,yes,number,non-negative,Maximum account-level loss reference for manual review.,0.60
+invalidation_rule,yes,text,free text,Condition that would break or materially weaken the thesis.,Illustrative metric fails.
+current_action,yes,enum,hold_existing;add_review;trim_review;exit_review;new_candidate;watch_only,Current research action label.,hold_existing
+notes,no,text,free text,Optional private notes.,

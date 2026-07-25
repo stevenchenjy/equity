@@ -1,0 +1,2 @@
+timestamp,phase,action,status,minimum_files_inspected,stale_report_rows,dependency_map_rows,supersession_rows,maintenance_inhibit_active,allowed_pipeline,d3_loaded,d3_decision,c7_invoked,email_sent,positions_modified,smtp_modified,broker_used,order_code_created,archived_legacy_used,c9_implementation_created,notes
+2026-07-19T21:05:59-04:00,phase5r_c9a,account_state_and_stale_denominator_audit,complete,20,41,35,33,yes,none,yes,maintenance_inhibit,no,no,no,no,no,no,no,no,"Planning and guard files only; D3 safe check produced zero send delta; C9 implementation deferred."

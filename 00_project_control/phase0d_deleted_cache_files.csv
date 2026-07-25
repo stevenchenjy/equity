@@ -1,0 +1,54 @@
+relative_path,item_type,size_bytes,deleted,status
+.DS_Store,.DS_Store,14340,yes,deleted_allowed_cache_file
+03_research/.DS_Store,.DS_Store,8196,yes,deleted_allowed_cache_file
+03_research/manual_filing_review_phase2h/.DS_Store,.DS_Store,6148,yes,deleted_allowed_cache_file
+04_data/.DS_Store,.DS_Store,14340,yes,deleted_allowed_cache_file
+07_reviews/.DS_Store,.DS_Store,6148,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/audit_phase3a_real_position_structure.cpython-313.pyc,__pycache__ pyc,19350,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/audit_phase3c_agent_restructure.cpython-313.pyc,__pycache__ pyc,20432,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/calculate_phase3b_real_risk.cpython-313.pyc,__pycache__ pyc,7156,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/check_phase4a_sec_filing_alerts.cpython-313.pyc,__pycache__ pyc,10634,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/collect_phase2k_peer_data.cpython-313.pyc,__pycache__ pyc,27730,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2h_manual_review_worksheets.cpython-312.pyc,__pycache__ pyc,16048,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2j_scenario_peer_workpapers.cpython-313.pyc,__pycache__ pyc,25478,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2l_valuation_earnings_workpapers.cpython-313.pyc,__pycache__ pyc,26613,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2m_research_decision_review.cpython-313.pyc,__pycache__ pyc,17861,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2n_paper_plan_drafts.cpython-313.pyc,__pycache__ pyc,19931,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2o_paper_execution_readiness.cpython-313.pyc,__pycache__ pyc,24323,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2p_paper_execution_log_setup.cpython-313.pyc,__pycache__ pyc,17740,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2q_execution_decision_gate.cpython-313.pyc,__pycache__ pyc,18783,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase2r_paper_execution_log.cpython-313.pyc,__pycache__ pyc,20848,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase3b_real_position_log.cpython-313.pyc,__pycache__ pyc,25677,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase4a_weekly_action_labels.cpython-313.pyc,__pycache__ pyc,6292,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/create_phase4b_weekly_email_draft.cpython-313.pyc,__pycache__ pyc,22155,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/enrich_candidate_financials.cpython-312.pyc,__pycache__ pyc,24465,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/extract_phase2f_filing_excerpts.cpython-312.pyc,__pycache__ pyc,15831,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/make_gpt_packet.cpython-312.pyc,__pycache__ pyc,15859,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/make_gpt_packet.cpython-313.pyc,__pycache__ pyc,16211,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/make_weekly_report.cpython-312.pyc,__pycache__ pyc,11053,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/make_weekly_report.cpython-313.pyc,__pycache__ pyc,11283,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/normalize_phase2q_filled_inputs.cpython-313.pyc,__pycache__ pyc,9614,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/normalize_phase3b_real_position_inputs.cpython-313.pyc,__pycache__ pyc,7044,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/phase5a_email_automation_preflight.cpython-313.pyc,__pycache__ pyc,1868,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/phase5b_email_preflight_validator.cpython-313.pyc,__pycache__ pyc,25203,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/rescore_phase2e1_candidates.cpython-312.pyc,__pycache__ pyc,19113,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/review_8k_and_dilution_filings.cpython-312.pyc,__pycache__ pyc,20507,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/risk_calculator.cpython-312.pyc,__pycache__ pyc,6240,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/risk_calculator.cpython-313.pyc,__pycache__ pyc,6267,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/run_phase2q_paper_risk_calculator.cpython-313.pyc,__pycache__ pyc,8138,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/run_phase4a_weekly_real_position_review.cpython-313.pyc,__pycache__ pyc,17651,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/score_phase2e_candidates.cpython-312.pyc,__pycache__ pyc,18998,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/score_phase2f_memos.cpython-312.pyc,__pycache__ pyc,11506,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/score_phase2k_peer_data_quality.cpython-313.pyc,__pycache__ pyc,14344,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/screen_universe.cpython-312.pyc,__pycache__ pyc,6271,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/screen_universe.cpython-313.pyc,__pycache__ pyc,6342,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/synthesize_phase2i_human_notes.cpython-313.pyc,__pycache__ pyc,31735,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/update_sec_filings.cpython-312.pyc,__pycache__ pyc,15941,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/update_sec_filings.cpython-313.pyc,__pycache__ pyc,16208,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/validate_manual_market_data.cpython-312.pyc,__pycache__ pyc,8744,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/validate_phase2o_manual_chart_review.cpython-313.pyc,__pycache__ pyc,12333,yes,deleted_allowed_cache_file
+05_scripts/__pycache__/validate_phase2q_manual_execution_inputs.cpython-313.pyc,__pycache__ pyc,9381,yes,deleted_allowed_cache_file
+tests/__pycache__/smoke_tests.cpython-312.pyc,__pycache__ pyc,5604,yes,deleted_allowed_cache_file
+tests/__pycache__/smoke_tests.cpython-313.pyc,__pycache__ pyc,5644,yes,deleted_allowed_cache_file
+05_scripts/__pycache__,__pycache__ directory,,yes,removed_empty_allowed_cache_directory
+tests/__pycache__,__pycache__ directory,,yes,removed_empty_allowed_cache_directory

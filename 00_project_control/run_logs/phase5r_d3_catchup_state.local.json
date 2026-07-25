@@ -1,0 +1,39 @@
+{
+  "cycle_attempts": {
+    "2026-W29": {
+      "c7_return_code": 0,
+      "completed_at": "2026-07-18T18:11:45-04:00",
+      "outcome": "catchup_sent",
+      "send_delta": 1,
+      "started_at": "2026-07-18T18:11:37-04:00"
+    }
+  },
+  "cycle_recovery_history": [
+    {
+      "cleared_attempt": {
+        "c7_return_code": 1,
+        "completed_at": "2026-07-17T16:00:14-04:00",
+        "outcome": "catchup_failed",
+        "send_delta": 0,
+        "started_at": "2026-07-17T15:59:39-04:00"
+      },
+      "cycle_id": "2026-W29",
+      "reason": "composer_fix_validated_manual_retry_authorized",
+      "reset_at": "2026-07-18T18:11:25-04:00"
+    }
+  ],
+  "last_check": "2026-07-19T20:49:34-04:00",
+  "last_cycle_id": "2026-W29",
+  "last_decision": "already_sent",
+  "last_reason": "successful_c6_send_exists_for_cycle",
+  "last_sent_rows_observed": 3,
+  "last_successful_cycle_id": "2026-W29",
+  "schedule": {
+    "check_interval_seconds": 900,
+    "hour": 9,
+    "minute": 5,
+    "timezone": "system_local",
+    "weekday": "Thursday"
+  },
+  "schema_version": "phase5r_d3_catchup_state_v1"
+}

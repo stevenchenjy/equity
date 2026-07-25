@@ -1,0 +1,147 @@
+{
+  "account": {
+    "account_total_value": 2442.39,
+    "cash_available": 2139.68,
+    "cash_reserved": 500.0,
+    "investment_horizon_years": 5,
+    "last_updated": "2026-07-23T23:20:05-04:00",
+    "valuation_basis": "canonical local state with public market-price estimate"
+  },
+  "account_conflicts": [],
+  "action_stability_distinct_closes": 0,
+  "automatic_action_allowed": false,
+  "boundaries": {
+    "broker_account_read": false,
+    "broker_connected": false,
+    "order_code_created": false,
+    "research_only": true,
+    "trade_placed": false
+  },
+  "cycle_date": "2026-07-24",
+  "decision_changed": false,
+  "decision_code": "hold_no_new_position",
+  "decision_fingerprint": "20e74cb4cfa18b15ddc7e1e81c3958c6156f067910e5dbb94b6f2920ec192911",
+  "decisive_advice": "保持长期视角；今日信息没有达到改变仓位建议的证据阈值。",
+  "eligible_action_review_candidates": [],
+  "evidence_gate": {
+    "last_attempt_at": "2026-07-24T23:21:12-04:00",
+    "new_material_event_count": 0,
+    "passed": true,
+    "status": "ok"
+  },
+  "fundamental_gate": {
+    "held_coverage_complete": true,
+    "passed": true,
+    "weakening_tickers": []
+  },
+  "generated_at": "2026-07-24T23:21:29-04:00",
+  "headline": "继续持有现有仓位｜今天不新增仓位",
+  "held_fundamentals": [
+    {
+      "cash_latest": "218986000.00",
+      "data_quality": "ok",
+      "net_margin_pct": "9.29",
+      "period": "CY2026Q1",
+      "revenue_yoy_pct": "30.52",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001642896.json",
+      "ticker": "IOT",
+      "trend_label": "strong_growth"
+    },
+    {
+      "cash_latest": "429397000.00",
+      "data_quality": "ok",
+      "net_margin_pct": "-10.81",
+      "period": "CY2026Q1",
+      "revenue_yoy_pct": "38.99",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001943896.json",
+      "ticker": "RBRK",
+      "trend_label": "strong_growth"
+    }
+  ],
+  "held_positions": [
+    {
+      "action": "hold",
+      "automatic_action_allowed": "no",
+      "confidence": "high",
+      "current_shares": "5.0000",
+      "current_weight_pct": "6.7782",
+      "human_confirmation_required": "no",
+      "invalidation": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
+      "reason": "Dynamic weight 6.7782% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
+      "target_shares": "5.0000",
+      "ticker": "IOT",
+      "whole_shares_to_change": "0"
+    },
+    {
+      "action": "hold",
+      "automatic_action_allowed": "no",
+      "confidence": "high",
+      "current_shares": "2.0000",
+      "current_weight_pct": "5.9974",
+      "human_confirmation_required": "no",
+      "invalidation": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
+      "reason": "Dynamic weight 5.9974% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
+      "target_shares": "2.0000",
+      "ticker": "RBRK",
+      "whole_shares_to_change": "0"
+    }
+  ],
+  "human_review_reasons": [],
+  "human_review_required": false,
+  "market_gate": {
+    "bar_state": "complete_close",
+    "complete_close_verified": true,
+    "expected_market_session": "2026-07-24",
+    "failures": [],
+    "held_session_dates": {
+      "IOT": "2026-07-24",
+      "RBRK": "2026-07-24"
+    },
+    "passed": true,
+    "source": "03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv"
+  },
+  "material_events": [],
+  "pending_stability_candidates": [],
+  "schema_version": "phase5r_daily_decision_v1",
+  "send_reason": "weekday_daily_brief",
+  "send_recommended": true,
+  "timezone": "America/New_York",
+  "watch_candidates": [
+    {
+      "action": "core_allocation_tranche_review",
+      "human_confirmation_required": "no",
+      "label": "separate_core_review",
+      "score": "6.91",
+      "ticker": "SPY"
+    },
+    {
+      "action": "watch_only",
+      "human_confirmation_required": "no",
+      "label": "wait_for_more_evidence",
+      "score": "7.61",
+      "ticker": "AVGO"
+    },
+    {
+      "action": "watch_only",
+      "human_confirmation_required": "no",
+      "label": "wait_for_more_evidence",
+      "score": "7.16",
+      "ticker": "PANW"
+    },
+    {
+      "action": "watch_only",
+      "human_confirmation_required": "no",
+      "label": "wait_for_more_evidence",
+      "score": "7.10",
+      "ticker": "MU"
+    },
+    {
+      "action": "watch_only",
+      "human_confirmation_required": "no",
+      "label": "wait_for_more_evidence",
+      "score": "6.72",
+      "ticker": "ARM"
+    }
+  ],
+  "weekend_policy": "material_change_only"
+}

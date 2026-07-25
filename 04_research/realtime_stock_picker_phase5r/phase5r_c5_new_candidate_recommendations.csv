@@ -1,0 +1,6 @@
+weekly_rank,ticker,theme,weekly_conviction_score,portfolio_fit_score,holding_horizon_candidate,recommendation_label,recommendation_confidence,candidate_for_week,suggested_review_size_pct,review_reason,human_action_required,automatic_action_allowed
+3,AVGO,AI infrastructure,7.26,1.5,core_compounder,wait_for_pullback,medium_high,no,0.00,Continue weekly review; current sleeve concentration prevents a fresh sizing review.,yes,no
+4,PANW,Cybersecurity,6.86,4.0,core_compounder,watch_only,medium_high,no,0.00,Continue weekly review; current sleeve concentration prevents a fresh sizing review.,yes,no
+5,SPY,Benchmark ETF,6.81,8.0,core_compounder,wait_for_pullback,medium_high,no,0.00,Continue weekly review; current sleeve concentration prevents a fresh sizing review.,yes,no
+6,MU,AI infrastructure,6.70,1.0,short_swing,watch_only,medium,no,0.00,Continue weekly review; current sleeve concentration prevents a fresh sizing review.,yes,no
+7,ARM,AI infrastructure,6.32,1.0,medium_conviction,watch_only,medium,no,0.00,Continue weekly review; current sleeve concentration prevents a fresh sizing review.,yes,no

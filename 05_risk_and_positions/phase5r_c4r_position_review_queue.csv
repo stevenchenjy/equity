@@ -1,0 +1,3 @@
+priority,ticker,horizon_class,current_action,planned_review_date,position_pct,estimated_value_usd,concentration_status,review_label,review_reason,manual_review_only,broker_action_allowed
+1,IOT,medium_conviction,trim_review,2026-07-16,29.59,295.90,above_hard_cap,trim_review_due_to_concentration,Position is 29.59% versus 8.00% hard cap.,yes,no
+1,RBRK,medium_conviction,trim_review,2026-07-16,17.75,177.50,above_hard_cap,trim_review_due_to_concentration,Position is 17.75% versus 8.00% hard cap.,yes,no

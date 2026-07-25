@@ -1,0 +1,3 @@
+row_number,ticker,required_columns_present,ticker_non_empty,entry_price_numeric,position_pct_numeric,shares_optional_numeric_or_blank,horizon_class_allowed,current_action_allowed,row_validation_status,validation_errors
+2,IOT,yes,yes,yes,yes,yes,yes,yes,pass,
+3,RBRK,yes,yes,yes,yes,yes,yes,yes,pass,

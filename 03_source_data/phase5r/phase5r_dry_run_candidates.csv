@@ -1,0 +1,28 @@
+ticker,company_name,theme,price_placeholder,intraday_change_pct_placeholder,relative_volume_placeholder,dollar_volume_placeholder,trend_score,volume_score,catalyst_score,quality_score,risk_penalty,total_score,action_label
+NVDA,NVIDIA Corporation,AI infrastructure,128.40,2.60,1.80,31500000000,8.12,8.60,8.50,9.00,5.50,7.09,possible_buy_manual_review
+ARM,Arm Holdings,AI infrastructure,141.30,3.40,1.70,5100000000,9.08,8.40,8.50,7.50,5.82,7.07,possible_buy_manual_review
+SMCI,Super Micro Computer,Data centers,864.00,4.20,2.20,7800000000,10.00,9.40,7.00,7.50,8.46,7.03,possible_buy_manual_review
+META,Meta Platforms,AI infrastructure,512.80,1.50,1.30,8100000000,6.80,7.60,8.50,9.00,2.50,6.74,watch
+VRT,Vertiv Holdings,Data centers,95.80,2.80,1.90,2600000000,8.36,8.80,7.00,7.50,5.50,6.68,watch
+AVGO,Broadcom Inc.,AI infrastructure,1725.50,1.10,1.30,8900000000,6.32,7.60,8.50,9.00,2.50,6.60,watch
+MU,Micron Technology,AI infrastructure,134.60,2.00,1.60,6200000000,7.40,8.20,8.50,7.50,5.50,6.54,watch
+TSM,Taiwan Semiconductor Manufacturing Company,AI infrastructure,184.10,0.80,1.20,4300000000,5.96,7.40,8.50,9.00,2.50,6.44,watch
+AMD,Advanced Micro Devices,AI infrastructure,164.25,1.80,1.50,11800000000,7.16,8.00,8.50,7.50,5.50,6.42,watch
+GOOGL,Alphabet Inc.,AI infrastructure,176.40,0.60,1.00,6100000000,5.72,7.00,8.50,9.00,2.50,6.27,watch
+NET,Cloudflare,Cybersecurity,92.60,2.70,1.60,980000000,8.24,7.20,7.00,7.50,5.50,6.25,watch
+SNOW,Snowflake,Cloud software,133.50,2.40,1.40,1300000000,7.88,7.80,6.50,7.50,5.50,6.19,watch
+AMZN,Amazon.com Inc.,Cloud software,191.10,1.20,1.20,7600000000,6.44,7.40,6.50,9.00,2.50,6.18,watch
+CRWD,CrowdStrike,Cybersecurity,372.10,2.10,1.40,2200000000,7.52,7.80,7.00,7.50,5.50,6.18,watch
+MSFT,Microsoft Corporation,Cloud software,445.20,0.90,1.10,9200000000,6.08,7.20,6.50,9.00,1.00,6.17,watch
+DDOG,Datadog,Cloud software,127.30,1.90,1.50,1150000000,7.28,8.00,6.50,7.50,5.50,6.06,watch
+PANW,Palo Alto Networks,Cybersecurity,336.00,0.80,1.00,1850000000,5.96,7.00,7.00,7.50,2.50,5.81,watch
+ASML,ASML Holding,Semiconductors,1012.20,0.40,1.00,1900000000,5.48,7.00,7.50,7.50,2.50,5.77,watch
+SPY,SPDR S&P 500 ETF Trust,Benchmark ETF,548.20,0.40,1.00,38600000000,5.48,7.00,5.00,9.50,1.00,5.72,watch
+ZS,Zscaler,Cybersecurity,196.40,1.60,1.30,720000000,6.92,6.60,7.00,7.50,5.50,5.70,watch
+QQQ,Invesco QQQ Trust,Benchmark ETF,482.60,0.70,1.00,18400000000,5.84,7.00,5.00,9.50,2.50,5.68,watch
+ORCL,Oracle Corporation,Cloud software,138.70,0.50,1.10,2100000000,5.60,7.20,6.50,7.50,2.50,5.66,watch
+XLK,Technology Select Sector SPDR Fund,Benchmark ETF,226.80,0.60,0.90,3100000000,5.72,6.80,5.00,9.50,2.50,5.59,watch
+NOW,ServiceNow,Cloud software,755.90,0.70,0.90,950000000,5.84,5.80,6.50,7.50,2.50,5.38,watch
+EQIX,Equinix,Data centers,770.50,0.30,0.80,650000000,5.36,5.60,7.00,7.50,2.50,5.28,watch
+CRM,Salesforce,Cloud software,254.20,-0.40,0.90,1600000000,4.52,6.80,6.50,7.50,2.50,5.23,avoid
+DLR,Digital Realty Trust,Data centers,151.40,-0.20,0.70,540000000,4.76,5.40,7.00,7.50,2.50,5.05,avoid

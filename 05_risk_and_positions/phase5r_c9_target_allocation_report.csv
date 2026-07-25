@@ -1,0 +1,4 @@
+asset_role,current_value,current_weight_pct,target_weight_pct,target_value,allocation_gap_value,policy_status,calculation_basis
+core_allocation,0.00,0.0000,60.00,1465.43,1465.43,below_target_unfunded,separate broad-market core sleeve; no current core holdings recorded
+active_stock,312.03,12.7756,20.00,488.48,176.45,within_target,sum of held shares times canonical B2 prices divided by account total
+cash,2139.68,87.6060,20.00,488.48,-1651.20,above_target,reported cash_available from current_account_state.local.json

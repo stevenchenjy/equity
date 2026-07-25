@@ -1,0 +1,41 @@
+{
+  "schema_version": "phase5r_llm_model_registry_v1",
+  "mode": "offline_fixture",
+  "live_shadow_enabled": false,
+  "canonical_influence_enabled": false,
+  "provider": "codex_cli_external_auth",
+  "provider_executable": "/opt/homebrew/bin/codex",
+  "roles": {
+    "analyst": {
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "prompt_version": "phase5r_evidence_analyst_v1"
+    },
+    "committee": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "prompt_version": "phase5r_decision_committee_v1"
+    },
+    "critic": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "prompt_version": "phase5r_decision_critic_v1"
+    }
+  },
+  "one_call_per_unique_packet_role": true,
+  "stateless": true,
+  "tools_enabled": false,
+  "provider_credentials_read_by_repository": false,
+  "exact_account_dollars_allowed": false,
+  "automatic_action_allowed": false,
+  "email_eligible": false,
+  "broker_connection_allowed": false,
+  "order_code_allowed": false,
+  "promotion_requirements": {
+    "minimum_replay_packets": 200,
+    "minimum_material_transition_cases": 50,
+    "minimum_live_shadow_sessions": 30,
+    "maximum_live_shadow_sessions_before_review": 60,
+    "maximum_policy_boundary_violations": 0
+  }
+}

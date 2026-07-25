@@ -1,0 +1,2 @@
+timestamp,phase,action,active_state_read,active_workflow,active_pipeline,schedule,plist_created,scripts_created,scheduler_installed,scheduler_loaded,d1_loaded,c7_executed,email_sent,smtp_config_modified,broker_used,order_code_created,archive_input_used,phase5r_e_created,status,notes
+2026-07-09T16:51:59-05:00,phase5r_d2,prepare_and_verify_weekly_scheduler,yes,weekly_conviction,phase5r_c7,Thursday 09:05 local,yes,yes,no,no,no,no,no,no,no,no,no,no,complete,preparation_only=yes; run_at_load=no; keep_alive=no; start_interval=no

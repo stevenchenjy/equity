@@ -1,0 +1,29 @@
+{
+  "cycle_attempts": {
+    "2026-W29": {
+      "c7_return_code": 0,
+      "completed_at": "2026-07-16T09:08:30-04:00",
+      "outcome": "catchup_sent",
+      "send_delta": 1,
+      "started_at": "2026-07-16T09:05:02-04:00"
+    }
+  },
+  "cycle_recovery_history": [],
+  "last_check": "2026-07-16T09:08:30-04:00",
+  "last_cycle_id": "2026-W29",
+  "last_decision": "catchup_sent",
+  "last_reason": "c7_completed_with_exactly_one_new_c6_send",
+  "last_sent_rows_observed": 3,
+  "last_successful_cycle_id": "2026-W29",
+  "install_inhibit": false,
+  "protected_verification": false,
+  "schedule": {
+    "check_interval_seconds": 900,
+    "hour": 9,
+    "minute": 5,
+    "timezone": "system_local",
+    "weekday": "Thursday"
+  },
+  "schema_version": "phase5r_d3_catchup_state_v1",
+  "verification_flag_active": false
+}

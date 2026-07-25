@@ -1,0 +1,5 @@
+timestamp,phase,action,mode,active_workflow,active_pipeline,d2_loaded,d3_loaded,d3_plist_present,c7_present,install_inhibit_before,install_inhibit_after,state_flags_before,state_flags_after,verification_hold_preserved,c7_invoked,email_sent,smtp_config_modified,status,notes
+2026-07-17T15:44:37-04:00,phase5r_d3f,safe_unblock_check,check_only,weekly_conviction,phase5r_c7,no,yes,yes,yes,yes,yes,,,yes,no,no,no,complete,preconditions_validated; no_protection_state_changed
+2026-07-17T15:44:37-04:00,phase5r_d3f,clear_verification_inhibit,unblock,weekly_conviction,phase5r_c7,no,yes,yes,yes,yes,no,,,yes,no,no,no,complete,legacy_protection_cleared; c7_not_invoked; email_not_sent
+2026-07-17T15:44:58-04:00,phase5r_d3f,clear_verification_inhibit,unblock,weekly_conviction,phase5r_c7,no,yes,yes,yes,no,no,,,no,no,no,no,complete,legacy_protection_cleared; c7_not_invoked; email_not_sent
+2026-07-17T15:50:01-04:00,phase5r_d3f,clear_verification_inhibit,unblock,weekly_conviction,phase5r_c7,no,yes,yes,yes,no,no,,,no,no,no,no,complete,legacy_protection_cleared; c7_not_invoked; email_not_sent

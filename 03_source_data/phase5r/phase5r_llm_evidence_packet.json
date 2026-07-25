@@ -1,0 +1,1796 @@
+{
+  "as_of_et": "2026-07-24T19:13:57-04:00",
+  "boundaries": {
+    "automatic_action_allowed": false,
+    "broker_connected": false,
+    "canonical_effect": false,
+    "email_eligible": false,
+    "exact_account_dollars_included": false,
+    "order_code_available": false,
+    "research_only": true
+  },
+  "calculations": [
+    {
+      "calculation_id": "calc:revenue_yoy:AVGO:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "47.87",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:AVGO:CY2026Q1"
+      ],
+      "ticker": "AVGO",
+      "unit": "pct",
+      "value": "47.87"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:IOT:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "30.52",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:IOT:CY2026Q1"
+      ],
+      "ticker": "IOT",
+      "unit": "pct",
+      "value": "30.52"
+    },
+    {
+      "calculation_id": "calc:net_margin:IOT:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "9.29",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:IOT:CY2026Q1"
+      ],
+      "ticker": "IOT",
+      "unit": "pct",
+      "value": "9.29"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:MU:CY2026Q2",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q2",
+      "recomputed_value": "345.72",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:MU:CY2026Q2"
+      ],
+      "ticker": "MU",
+      "unit": "pct",
+      "value": "345.72"
+    },
+    {
+      "calculation_id": "calc:net_margin:MU:CY2026Q2",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q2",
+      "recomputed_value": "68.13",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:MU:CY2026Q2"
+      ],
+      "ticker": "MU",
+      "unit": "pct",
+      "value": "68.13"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:PANW:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "31.15",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:PANW:CY2026Q1"
+      ],
+      "ticker": "PANW",
+      "unit": "pct",
+      "value": "31.15"
+    },
+    {
+      "calculation_id": "calc:net_margin:PANW:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "-5.90",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:PANW:CY2026Q1"
+      ],
+      "ticker": "PANW",
+      "unit": "pct",
+      "value": "-5.90"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:RBRK:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "38.99",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:RBRK:CY2026Q1"
+      ],
+      "ticker": "RBRK",
+      "unit": "pct",
+      "value": "38.99"
+    },
+    {
+      "calculation_id": "calc:net_margin:RBRK:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "-10.81",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:RBRK:CY2026Q1"
+      ],
+      "ticker": "RBRK",
+      "unit": "pct",
+      "value": "-10.81"
+    },
+    {
+      "calculation_id": "calc:c9_score:ARM:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "6.72",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:ARM:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "ARM",
+      "unit": "score_0_to_10",
+      "value": "6.72"
+    },
+    {
+      "calculation_id": "calc:c9_score:AVGO:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "7.61",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:AVGO:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "AVGO",
+      "unit": "score_0_to_10",
+      "value": "7.61"
+    },
+    {
+      "calculation_id": "calc:c9_score:IOT:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "7.09",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:IOT:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "IOT",
+      "unit": "score_0_to_10",
+      "value": "7.09"
+    },
+    {
+      "calculation_id": "calc:c9_score:MU:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "7.10",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:MU:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "MU",
+      "unit": "score_0_to_10",
+      "value": "7.10"
+    },
+    {
+      "calculation_id": "calc:c9_score:PANW:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "7.16",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:PANW:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "PANW",
+      "unit": "score_0_to_10",
+      "value": "7.16"
+    },
+    {
+      "calculation_id": "calc:c9_score:RBRK:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "7.35",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:RBRK:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "RBRK",
+      "unit": "score_0_to_10",
+      "value": "7.35"
+    },
+    {
+      "calculation_id": "calc:c9_score:SPY:2026-07-24",
+      "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
+      "metric": "account_aware_conviction_score",
+      "period": "2026-07-24",
+      "recomputed_value": "6.91",
+      "reconciled": true,
+      "source_ids": [
+        "research-context:SPY:2026-07-18T18:11:42-04:00"
+      ],
+      "ticker": "SPY",
+      "unit": "score_0_to_10",
+      "value": "6.91"
+    }
+  ],
+  "cycle_date": "2026-07-24",
+  "decision_fingerprint": "20e74cb4cfa18b15ddc7e1e81c3958c6156f067910e5dbb94b6f2920ec192911",
+  "entities": [
+    {
+      "cik": "1642896",
+      "concentration_status": "above_default_cap",
+      "deterministic_recommendation": "hold",
+      "holding_horizon": "medium_conviction",
+      "invalidation_rule": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
+      "position_weight_band": "5_to_8_pct",
+      "position_weight_pct_rounded": "6.8",
+      "role": "held",
+      "thesis": "Growth software / connected-operations platform; existing position. Concentration is high for a $1000 account, so future reviews should focus on risk control rather than adding.",
+      "ticker": "IOT"
+    },
+    {
+      "cik": "1943896",
+      "concentration_status": "within_default_cap",
+      "deterministic_recommendation": "hold",
+      "holding_horizon": "medium_conviction",
+      "invalidation_rule": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
+      "position_weight_band": "5_to_8_pct",
+      "position_weight_pct_rounded": "6.0",
+      "role": "held",
+      "thesis": "Cybersecurity / data security growth exposure; existing position. Concentration is high for a $1000 account, so future reviews should focus on risk control rather than adding.",
+      "ticker": "RBRK"
+    },
+    {
+      "cik": "",
+      "concentration_status": "not_held",
+      "deterministic_recommendation": "core_allocation_tranche_review",
+      "holding_horizon": "",
+      "invalidation_rule": "",
+      "position_weight_band": "not_held",
+      "position_weight_pct_rounded": "0.0",
+      "role": "candidate",
+      "thesis": "",
+      "ticker": "SPY"
+    },
+    {
+      "cik": "1730168",
+      "concentration_status": "not_held",
+      "deterministic_recommendation": "watch_only",
+      "holding_horizon": "",
+      "invalidation_rule": "",
+      "position_weight_band": "not_held",
+      "position_weight_pct_rounded": "0.0",
+      "role": "candidate",
+      "thesis": "",
+      "ticker": "AVGO"
+    },
+    {
+      "cik": "1327567",
+      "concentration_status": "not_held",
+      "deterministic_recommendation": "watch_only",
+      "holding_horizon": "",
+      "invalidation_rule": "",
+      "position_weight_band": "not_held",
+      "position_weight_pct_rounded": "0.0",
+      "role": "candidate",
+      "thesis": "",
+      "ticker": "PANW"
+    },
+    {
+      "cik": "723125",
+      "concentration_status": "not_held",
+      "deterministic_recommendation": "watch_only",
+      "holding_horizon": "",
+      "invalidation_rule": "",
+      "position_weight_band": "not_held",
+      "position_weight_pct_rounded": "0.0",
+      "role": "candidate",
+      "thesis": "",
+      "ticker": "MU"
+    },
+    {
+      "cik": "1973239",
+      "concentration_status": "not_held",
+      "deterministic_recommendation": "watch_only",
+      "holding_horizon": "",
+      "invalidation_rule": "",
+      "position_weight_band": "not_held",
+      "position_weight_pct_rounded": "0.0",
+      "role": "candidate",
+      "thesis": "",
+      "ticker": "ARM"
+    }
+  ],
+  "filing_evidence": [
+    {
+      "accession_number": "0001973239-26-000097",
+      "cik": "1973239",
+      "filing_date": "2026-05-26",
+      "form": "20-F",
+      "items": "",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001973239-26-000097",
+      "text_chunk_source_ids": [
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:1",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:222",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223"
+      ],
+      "ticker": "ARM"
+    },
+    {
+      "accession_number": "0001973239-26-000062",
+      "cik": "1973239",
+      "filing_date": "2026-05-06",
+      "form": "6-K",
+      "items": "",
+      "material_event": "no",
+      "materiality": "medium",
+      "metadata_source_id": "sec-filing-metadata:0001973239-26-000062",
+      "text_chunk_source_ids": [],
+      "ticker": "ARM"
+    },
+    {
+      "accession_number": "0001193125-26-295589",
+      "cik": "1730168",
+      "filing_date": "2026-07-06",
+      "form": "8-K",
+      "items": "8.01",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001193125-26-295589",
+      "text_chunk_source_ids": [
+        "sec-1730168-0001193125-26-295589-b161757f0c8de8ac:chunk:0"
+      ],
+      "ticker": "AVGO"
+    },
+    {
+      "accession_number": "0001193125-26-275077",
+      "cik": "1730168",
+      "filing_date": "2026-06-18",
+      "form": "8-K",
+      "items": "8.01,9.01",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001193125-26-275077",
+      "text_chunk_source_ids": [],
+      "ticker": "AVGO"
+    },
+    {
+      "accession_number": "0001628280-26-049446",
+      "cik": "1642896",
+      "filing_date": "2026-07-23",
+      "form": "8-K",
+      "items": "5.07",
+      "material_event": "no",
+      "materiality": "medium",
+      "metadata_source_id": "sec-filing-metadata:0001628280-26-049446",
+      "text_chunk_source_ids": [
+        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:0",
+        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:1"
+      ],
+      "ticker": "IOT"
+    },
+    {
+      "accession_number": "0001628280-26-041893",
+      "cik": "1642896",
+      "filing_date": "2026-06-09",
+      "form": "10-Q",
+      "items": "",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001628280-26-041893",
+      "text_chunk_source_ids": [],
+      "ticker": "IOT"
+    },
+    {
+      "accession_number": "0000723125-26-000015",
+      "cik": "723125",
+      "filing_date": "2026-06-25",
+      "form": "10-Q",
+      "items": "",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0000723125-26-000015",
+      "text_chunk_source_ids": [
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:23",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:30",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55"
+      ],
+      "ticker": "MU"
+    },
+    {
+      "accession_number": "0000723125-26-000013",
+      "cik": "723125",
+      "filing_date": "2026-06-24",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0000723125-26-000013",
+      "text_chunk_source_ids": [],
+      "ticker": "MU"
+    },
+    {
+      "accession_number": "0001327567-26-000015",
+      "cik": "1327567",
+      "filing_date": "2026-06-03",
+      "form": "10-Q",
+      "items": "",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001327567-26-000015",
+      "text_chunk_source_ids": [
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:36",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:37",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:38",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39"
+      ],
+      "ticker": "PANW"
+    },
+    {
+      "accession_number": "0001327567-26-000012",
+      "cik": "1327567",
+      "filing_date": "2026-06-02",
+      "form": "8-K",
+      "items": "2.02,9.01",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001327567-26-000012",
+      "text_chunk_source_ids": [],
+      "ticker": "PANW"
+    },
+    {
+      "accession_number": "0001943896-26-000049",
+      "cik": "1943896",
+      "filing_date": "2026-06-05",
+      "form": "8-K",
+      "items": "5.07",
+      "material_event": "no",
+      "materiality": "medium",
+      "metadata_source_id": "sec-filing-metadata:0001943896-26-000049",
+      "text_chunk_source_ids": [
+        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:0",
+        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:1"
+      ],
+      "ticker": "RBRK"
+    },
+    {
+      "accession_number": "0001943896-26-000047",
+      "cik": "1943896",
+      "filing_date": "2026-06-05",
+      "form": "10-Q",
+      "items": "",
+      "material_event": "no",
+      "materiality": "high",
+      "metadata_source_id": "sec-filing-metadata:0001943896-26-000047",
+      "text_chunk_source_ids": [
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:12",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:26",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:27",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29"
+      ],
+      "ticker": "RBRK"
+    }
+  ],
+  "fundamental_observations": [
+    {
+      "assets_latest": "10703000000.00",
+      "cash_latest": "2751000000.00",
+      "cik": "1973239",
+      "data_quality": "unavailable",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "",
+      "latest_period_end": "",
+      "liabilities_latest": "2417000000.00",
+      "net_income_latest": "",
+      "net_margin_pct": "",
+      "revenue_latest": "",
+      "revenue_prior_year": "",
+      "revenue_yoy_pct": "",
+      "source_id": "sec-xbrl:ARM:unknown",
+      "ticker": "ARM",
+      "trend_label": "insufficient_trend"
+    },
+    {
+      "assets_latest": "179158000000.00",
+      "cash_latest": "19628000000.00",
+      "cik": "1730168",
+      "data_quality": "ok",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-05-03",
+      "liabilities_latest": "91467000000.00",
+      "net_income_latest": "",
+      "net_margin_pct": "",
+      "revenue_latest": "22187000000.00",
+      "revenue_prior_year": "15004000000.00",
+      "revenue_yoy_pct": "47.87",
+      "source_id": "sec-xbrl:AVGO:CY2026Q1",
+      "ticker": "AVGO",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "2614070000.00",
+      "cash_latest": "218986000.00",
+      "cik": "1642896",
+      "data_quality": "ok",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-05-02",
+      "liabilities_latest": "1106480000.00",
+      "net_income_latest": "44508000.00",
+      "net_margin_pct": "9.29",
+      "revenue_latest": "478844000.00",
+      "revenue_prior_year": "366884000.00",
+      "revenue_yoy_pct": "30.52",
+      "source_id": "sec-xbrl:IOT:CY2026Q1",
+      "ticker": "IOT",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "134112000000.00",
+      "cash_latest": "24995000000.00",
+      "cik": "723125",
+      "data_quality": "ok",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "CY2026Q2",
+      "latest_period_end": "2026-05-28",
+      "liabilities_latest": "33388000000.00",
+      "net_income_latest": "28243000000.00",
+      "net_margin_pct": "68.13",
+      "revenue_latest": "41456000000.00",
+      "revenue_prior_year": "9301000000.00",
+      "revenue_yoy_pct": "345.72",
+      "source_id": "sec-xbrl:MU:CY2026Q2",
+      "ticker": "MU",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "46266000000.00",
+      "cash_latest": "2364000000.00",
+      "cik": "1327567",
+      "data_quality": "ok",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-04-30",
+      "liabilities_latest": "18598000000.00",
+      "net_income_latest": "-177000000.00",
+      "net_margin_pct": "-5.90",
+      "revenue_latest": "3002000000.00",
+      "revenue_prior_year": "2289000000.00",
+      "revenue_yoy_pct": "31.15",
+      "source_id": "sec-xbrl:PANW:CY2026Q1",
+      "ticker": "PANW",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "2768247000.00",
+      "cash_latest": "429397000.00",
+      "cik": "1943896",
+      "data_quality": "ok",
+      "fetched_at": "2026-07-24T19:13:30-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-04-30",
+      "liabilities_latest": "3249572000.00",
+      "net_income_latest": "-41853000.00",
+      "net_margin_pct": "-10.81",
+      "revenue_latest": "387068000.00",
+      "revenue_prior_year": "278481000.00",
+      "revenue_yoy_pct": "38.99",
+      "source_id": "sec-xbrl:RBRK:CY2026Q1",
+      "ticker": "RBRK",
+      "trend_label": "strong_growth"
+    }
+  ],
+  "gates": {
+    "account_state_consistent": true,
+    "filing_artifact_provenance_complete": true,
+    "fundamental_held_coverage_complete": true,
+    "market_data_current": true,
+    "point_in_time_safe": true,
+    "prompt_injection_text_detected": false,
+    "sec_held_coverage_complete": true
+  },
+  "generated_at": "2026-07-24T19:13:57-04:00",
+  "market_observations": [
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "495.0000",
+      "fifty_two_week_low": "281.6100",
+      "intraday_change_pct": "-2.6881",
+      "last_price": "381.9200",
+      "market_session_date": "2026-07-24",
+      "previous_close": "392.4700",
+      "relative_volume": "0.6277",
+      "source_id": "market:AVGO:2026-07-24",
+      "ticker": "AVGO",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "452.7000",
+      "fifty_two_week_low": "100.0200",
+      "intraday_change_pct": "-8.1367",
+      "last_price": "260.0100",
+      "market_session_date": "2026-07-24",
+      "previous_close": "283.0400",
+      "relative_volume": "0.8055",
+      "source_id": "market:ARM:2026-07-24",
+      "ticker": "ARM",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "1255.0000",
+      "fifty_two_week_low": "103.3800",
+      "intraday_change_pct": "-6.9945",
+      "last_price": "920.9500",
+      "market_session_date": "2026-07-24",
+      "previous_close": "990.2100",
+      "relative_volume": "0.8594",
+      "source_id": "market:MU:2026-07-24",
+      "ticker": "MU",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "368.8000",
+      "fifty_two_week_low": "139.5700",
+      "intraday_change_pct": "-0.5651",
+      "last_price": "323.7900",
+      "market_session_date": "2026-07-24",
+      "previous_close": "325.6300",
+      "relative_volume": "0.7073",
+      "source_id": "market:PANW:2026-07-24",
+      "ticker": "PANW",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "760.4000",
+      "fifty_two_week_low": "619.2900",
+      "intraday_change_pct": "0.1016",
+      "last_price": "738.9300",
+      "market_session_date": "2026-07-24",
+      "previous_close": "738.1800",
+      "relative_volume": "0.8663",
+      "source_id": "market:SPY:2026-07-24",
+      "ticker": "SPY",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "47.4700",
+      "fifty_two_week_low": "23.3800",
+      "intraday_change_pct": "5.1445",
+      "last_price": "33.1100",
+      "market_session_date": "2026-07-24",
+      "previous_close": "31.4900",
+      "relative_volume": "0.7296",
+      "source_id": "market:IOT:2026-07-24",
+      "ticker": "IOT",
+      "usable_for_scoring": "yes"
+    },
+    {
+      "bar_state": "complete_close",
+      "data_quality_label": "ok",
+      "data_source": "yfinance_public_market_data",
+      "data_timestamp": "2026-07-24T19:13:24-04:00",
+      "fifty_two_week_high": "99.7500",
+      "fifty_two_week_low": "42.2500",
+      "intraday_change_pct": "0.8399",
+      "last_price": "73.2400",
+      "market_session_date": "2026-07-24",
+      "previous_close": "72.6300",
+      "relative_volume": "0.4766",
+      "source_id": "market:RBRK:2026-07-24",
+      "ticker": "RBRK",
+      "usable_for_scoring": "yes"
+    }
+  ],
+  "packet_id": "52f5c32dc833707f2f199880598b85a8e3ae35c478fc3bb3beda8e713811bcbf",
+  "portfolio_constraints": {
+    "account_size_band": "under_10k",
+    "active_stock_hard_cap_pct": 30.0,
+    "active_stock_target_pct": 20.0,
+    "cash_target_pct": 20.0,
+    "core_allocation_target_pct": 60.0,
+    "investment_horizon_years": 5,
+    "manual_execution_only": true,
+    "single_stock_default_cap_pct": 6.0,
+    "single_stock_hard_cap_pct": 8.0
+  },
+  "research_context": [
+    {
+      "business_quality_score": "8.0",
+      "catalyst_news_quality_score": "8.0",
+      "deterministic_conviction_score": "6.72",
+      "earnings_revenue_trend_score": "7.5",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://investors.arm.com/static-files/adf3bac7-1e91-442e-92e0-5f2d8f1b6a14",
+      "portfolio_fit_score": "5.0",
+      "primary_source_url": "https://investors.arm.com/news-releases/news-release-details/arm-holdings-plc-reports-results-fourth-quarter-financial-year-0",
+      "reason": "Expected upside and reward-to-risk estimates are unavailable, so individual-stock eligibility is incomplete; no value was invented and no purchase review is recommended.",
+      "recommendation_label": "wait_for_more_evidence",
+      "recommended_action": "watch_only",
+      "source_id": "research-context:ARM:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "6.6",
+      "theme": "AI infrastructure",
+      "ticker": "ARM",
+      "valuation_reasonableness_score": "3.5"
+    },
+    {
+      "business_quality_score": "9.0",
+      "catalyst_news_quality_score": "9.0",
+      "deterministic_conviction_score": "7.61",
+      "earnings_revenue_trend_score": "9.0",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://investors.broadcom.com/financial-information/financial-reports",
+      "portfolio_fit_score": "5.0",
+      "primary_source_url": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-second-quarter-fiscal-year-2026-financial",
+      "reason": "Expected upside and reward-to-risk estimates are unavailable, so individual-stock eligibility is incomplete; no value was invented and no purchase review is recommended.",
+      "recommendation_label": "wait_for_more_evidence",
+      "recommended_action": "watch_only",
+      "source_id": "research-context:AVGO:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "6.4",
+      "theme": "AI infrastructure",
+      "ticker": "AVGO",
+      "valuation_reasonableness_score": "5.0"
+    },
+    {
+      "business_quality_score": "8.0",
+      "catalyst_news_quality_score": "7.5",
+      "deterministic_conviction_score": "7.09",
+      "earnings_revenue_trend_score": "8.5",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026041893/iot-20260502.htm",
+      "portfolio_fit_score": "6.0",
+      "primary_source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026040788/samsaraepr-q12027.htm",
+      "reason": "Dynamic weight 6.7782% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
+      "recommendation_label": "hold_existing",
+      "recommended_action": "hold",
+      "source_id": "research-context:IOT:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "6.6",
+      "theme": "Connected operations software",
+      "ticker": "IOT",
+      "valuation_reasonableness_score": "4.5"
+    },
+    {
+      "business_quality_score": "7.5",
+      "catalyst_news_quality_score": "9.0",
+      "deterministic_conviction_score": "7.10",
+      "earnings_revenue_trend_score": "9.0",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://investors.micron.com/static-files/23023765-dfef-4e7e-845b-cd744fc20d93",
+      "portfolio_fit_score": "5.0",
+      "primary_source_url": "https://investors.micron.com/node/50671",
+      "reason": "Expected upside and reward-to-risk estimates are unavailable, so individual-stock eligibility is incomplete; no value was invented and no purchase review is recommended.",
+      "recommendation_label": "wait_for_more_evidence",
+      "recommended_action": "watch_only",
+      "source_id": "research-context:MU:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "6.5",
+      "theme": "AI infrastructure",
+      "ticker": "MU",
+      "valuation_reasonableness_score": "4.0"
+    },
+    {
+      "business_quality_score": "8.5",
+      "catalyst_news_quality_score": "8.0",
+      "deterministic_conviction_score": "7.16",
+      "earnings_revenue_trend_score": "8.0",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://investors.paloaltonetworks.com/financial-information/quarterly-results",
+      "portfolio_fit_score": "7.0",
+      "primary_source_url": "https://investors.paloaltonetworks.com/news-releases/news-release-details/palo-alto-networks-reports-fiscal-third-quarter-2026-financial",
+      "reason": "Expected upside and reward-to-risk estimates are unavailable, so individual-stock eligibility is incomplete; no value was invented and no purchase review is recommended.",
+      "recommendation_label": "wait_for_more_evidence",
+      "recommended_action": "watch_only",
+      "source_id": "research-context:PANW:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "4.7",
+      "theme": "Cybersecurity",
+      "ticker": "PANW",
+      "valuation_reasonableness_score": "5.5"
+    },
+    {
+      "business_quality_score": "8.0",
+      "catalyst_news_quality_score": "8.0",
+      "deterministic_conviction_score": "7.35",
+      "earnings_revenue_trend_score": "8.5",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "portfolio_fit_score": "8.0",
+      "primary_source_url": "https://ir.rubrik.com/financials/quarterly-results/default.aspx",
+      "reason": "Dynamic weight 5.9974% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
+      "recommendation_label": "hold_existing",
+      "recommended_action": "hold",
+      "source_id": "research-context:RBRK:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "6.5",
+      "theme": "Cybersecurity",
+      "ticker": "RBRK",
+      "valuation_reasonableness_score": "4.5"
+    },
+    {
+      "business_quality_score": "9.0",
+      "catalyst_news_quality_score": "5.0",
+      "deterministic_conviction_score": "6.91",
+      "earnings_revenue_trend_score": "7.0",
+      "evidence_checked_at": "2026-07-18T18:11:42-04:00",
+      "filing_source_url": "https://www.ssga.com/library-content/products/factsheets/etfs/us/factsheet-us-en-spy.pdf",
+      "portfolio_fit_score": "9.0",
+      "primary_source_url": "https://www.ssga.com/us/en/individual/etfs/state-street-spdr-sp-500-etf-trust-spy",
+      "reason": "Broad-market core candidate is evaluated under the separate core policy; current cash plans are options only and none is selected by the current daily decision.",
+      "recommendation_label": "separate_core_review",
+      "recommended_action": "core_allocation_tranche_review",
+      "source_id": "research-context:SPY:2026-07-18T18:11:42-04:00",
+      "technical_entry_discipline_score": "5.2",
+      "theme": "Benchmark ETF",
+      "ticker": "SPY",
+      "valuation_reasonableness_score": "5.5"
+    }
+  ],
+  "schema_version": "phase5r_llm_evidence_packet_v1",
+  "source_catalog": [
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "45a4dd01ed61777c496660ad401c8d30820c71c0b8476197f8168d76531ffc4e",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:AVGO:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "ae4b84a01d5ce008cc0ae8fb83fff6746fe5c28c7ac829b7f845b747127739d1",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:ARM:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "1b216e4e6ea2d9cfc3d2fa9ad1da9114c9edd469abf9a139c99bd9c088990250",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:MU:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "0ef8a691c56e57de485066cfe1226fd2414d879aff1d655937b385266624f82a",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:PANW:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "077da91a4c0ac5845fa028d308dd265890b74c2e0388851cae598cabed5c97e3",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:SPY:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "SPY"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "e6d17a46a5cd5ccdb057997609183bfd861f0379101690a6cf558e75250bf61c",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:IOT:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:24-04:00",
+      "authority": "secondary_public_market_context",
+      "content_sha256": "044dcbd37579f1dd46110ff05453e62fefb9c8882ac22c4e07ae11c51eda2980",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_b2_market_data_snapshot",
+        "session": "2026-07-24"
+      },
+      "source_id": "market:RBRK:2026-07-24",
+      "source_type": "public_market_observation",
+      "source_url": "",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "3d17daffb1325c58b6286376f2af803e9ebb0745fcc3aa871beb5793b190a9bf",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1973239",
+        "frame": "",
+        "period": ""
+      },
+      "source_id": "sec-xbrl:ARM:unknown",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001973239.json",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "a360646fd00e51a1073031b71dd2544028da483bd5446c74964e0af3425045d2",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1730168",
+        "frame": "CY2026Q1",
+        "period": "2026-05-03"
+      },
+      "source_id": "sec-xbrl:AVGO:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001730168.json",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "18db5ba166023b710e04b5de716431dc084a5fba6ba546fe84c56df5c386f081",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1642896",
+        "frame": "CY2026Q1",
+        "period": "2026-05-02"
+      },
+      "source_id": "sec-xbrl:IOT:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001642896.json",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "612730f42bf25a99bded9d5e6af455ff8fb451aff18e2c67632922b560361a19",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "723125",
+        "frame": "CY2026Q2",
+        "period": "2026-05-28"
+      },
+      "source_id": "sec-xbrl:MU:CY2026Q2",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000723125.json",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "0e7de37c17d59a1b6cceb0915b34bfdba1386dd37a603fb4560796fade148a4e",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1327567",
+        "frame": "CY2026Q1",
+        "period": "2026-04-30"
+      },
+      "source_id": "sec-xbrl:PANW:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001327567.json",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-24T19:13:30-04:00",
+      "authority": "primary_official",
+      "content_sha256": "75a7809d69f9f638c8d91e0d1e5b2ec420886987d00efdd17a2942921274b7a4",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1943896",
+        "frame": "CY2026Q1",
+        "period": "2026-04-30"
+      },
+      "source_id": "sec-xbrl:RBRK:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001943896.json",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "3a874bd17ce32034c50c1ae0fcce456afca46694949d268bd74f8adb231e719d",
+      "excerpt_text": "6-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMember2023-04-012024-03-310001973239us-gaap:TransferredOverTimeMember2025-04-012026-03-310001973239us-gaap:TransferredOverTimeMember2024-04-012025-03-310001973239us-gaap:TransferredOverTimeMember2023-04-012024-03-310001973239us-gaap:TransferredAtPointInTimeMember2025-04-012026-03-310001973239us-gaap:TransferredAtPointInTimeMember2024-04-012025-03-310001973239us-gaap:TransferredAtPointInTimeMember2023-04-012024-03-310001973239country:US2025-04-012026-03-310001973239country:US2024-04-012025-03-310001973239country:US2023-04-012024-03-310001973239country:CN2025-04-012026-03-310001973239country:CN2024-04-012025-03-310001973239country:CN2023-04-012024-03-310001973239country:JP2025-04-012026-03-310001973239country:JP2024-04-012025-03-310001973239country:JP2023-04-012024-03-310001973239country:TW2025-04-012026-03-310001973239country:TW2024-04-012025-03-310001973239country:TW2023-04-012024-03-310001973239country:KR2025-04-012026-03-310001973239country:KR2024-04-012025-03-310001973239country:KR2023-04-012024-03-310001973239arm:OtherCountriesMember2025-04-012026-03-310001973239arm:OtherCountriesMember2024-04-012025-03-310001973239arm:OtherCountriesMember2023-04-012024-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:FourCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:FourthLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2023-04-012024-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentratio",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 7800,
+        "char_start": 3800,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:1",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "43f187393a35421a8ff65af2fa5f9c6fc892f22b264ca7b61dc4ccd2dab904dc",
+      "excerpt_text": "nterest income, net\n111\n2\n%\n116\n3\n%\n110\n3\n%\nOther non-operating income (loss), net\n132\n3\n%\n10\n0\n%\n11\n0\n%\nIncome (loss) before income taxes\n1,157\n24\n%\n720\n18\n%\n212\n7\n%\nIncome tax benefit (expense)\n(253)\n5\n%\n72\n2\n%\n94\n3\n%\nNet income (loss)\n$\n904\n18\n%\n$\n792\n20\n%\n$\n306\n9\n%\nPercentages are calculated from the amounts presented and may not add to their respective totals due to rounding.\nComparison of Performance for the Fiscal Years Ended March 31, 2026 and 2025\nTotal revenue\nFiscal Year Ended March 31,\nExternal Customers\nRelated Parties\nTotal\n(in millions, except percentages)\n2026\n2025\n% Change\n2026\n2025\n% Change\n2026\n2025\n% Change\nLicense and Other Revenue\n$\n1,298\n$\n1,421\n(9)\n%\n$\n1,009\n$\n418\n141\n%\n$\n2,307\n$\n1,839\n25\n%\nRoyalty Revenue\n2,123\n1,763\n20\n%\n490\n405\n21\n%\n2,613\n2,168\n21\n%\n$\n3,421\n$\n3,184\n7\n%\n$\n1,499\n$\n823\n82\n%\n$\n4,920\n$\n4,007\n23\n%\nTotal revenue increased $913 million, or 23%, to $4,920 million during the fiscal year ended March 31, 2026, from total revenue of $4,007 million during the fiscal year ended March 31, 2025. License and other revenue increased $468 million, or 25%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily driven by continued strong demand for Arm IP, as well as fluctuation in timing and size of multiple high-value license agreements and contributions from backlog into the current period from arrangements entered in prior periods. Royalty revenue increased $445 million, or 21%, during the fiscal year ended March 31, 2026 as compared to the fiscal\n72\nyear ended March 31, 2025, driven by an improved mix of products with higher royalty rates per chip, such as Armv9 technology.\nRevenue from external customers increased $237 million, or 7%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, driven by a $360 million, or 20%, increase in royalty revenue, offset by a $123 million, or 9%, decrease in license and other revenue. Revenue from related parties increased $676 million, or 82%, during the fiscal year ended March 31, 2026 as compared to the fiscal year ended March 31, 2025, primarily driven by a $591 million, or 141%, increase in license and other revenue and a $85 million, or 21%, increase in royalty revenue. The drivers for the changes in revenue from external customers for both periods were broadly aligned with the overall trends in license and other revenue and royalty revenue described above, with external customer revenue reflecting strong growth in royalty revenue that outweighed the decline in license and other revenue. For additional financial information relating to our revenue from related parties, see “Item 8. Financial Information—Note 20—Related Party Transactions” in the Notes to the Consolidated Financial Statements included in this Annual Report.\nIn March 2026, we announced the expansion of our compute platform into production silicon products with the Arm AGI CPU, which did not have a material impact to our revenue for the fiscal year ended March 31, 2026.\nDuring the fiscal years ended March 31, 2026 and 2025, revenue from sales to customers outside of the U.S. accounted for approximately 64% and approximately 57% of total revenue, respectively. Less than 2% of our total revenue is denominated in currencies other than U.S. dollars, and the impact of changes in foreign exchange rates on our revenue for the fiscal years ended March 31, 2026 and 2025 was immaterial.\nCost of sales\nFiscal Year Ended March 31,\n(in millions, except percentages)\n2026\n2025\n% Change\nCost of sales\n$\n(121)\n$\n(121)\n—\n%\nCost of sales remained flat during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily due to decreases in activities associated with professional and design services, offset by increases in salaries and related expenses, share-based compensation costs and depreciation.\nResearch and development\nFiscal Year Ended March 31,\n(in millions, except percentag",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 399200,
+        "char_start": 395200,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "f06a42b14926886fa7f7b5bb6f25f26f017daad438263ce5f2d436113a98fefc",
+      "excerpt_text": "ise risks that are subject to oversight by the Board of Directors, the Audit Committee, and management’s Risk Review Committee. The Company’s cybersecurity policies, standards and incident response practices generally follow recognized frameworks established by National Institute of Standards and Technology (“NIST”). The Company approaches cybersecurity threats, as such term is defined in Form 20-F, Part II, Item 16K(a), through a cross-functional, multilayered approach, with the specific goals of: (i) identifying, preventing and mitigating actual or potential cybersecurity threats to the Company; (ii) preserving the confidentiality, integrity and availability of the information that we collect and store to use in our business; (iii) protecting the Company’s intellectual property; (iv) maintaining the confidence of our customers, clients and business partners; and (v) providing appropriate public disclosure of cybersecurity risks and incidents when required.\nRisk Management and Strategy\nConsistent with overall ERM policies and practices, the Company’s cybersecurity program focuses on the following areas:\n•Vigilance: The Company maintains a global presence, with 24/7 cyber defense operations focusing on identifying, preventing and mitigating cybersecurity threats and responding to cybersecurity incidents and vulnerabilities in accordance with our established security incident response plan.\n•Systems Safeguards: The Company deploys system safeguards where feasible that are designed to protect the Company’s information systems from cybersecurity threats, including firewalls, intrusion prevention and detection systems, anti-malware functionality and access controls, which are evaluated and improved through ongoing vulnerability assessments and cybersecurity threat intelligence.\n•Incident Response and Recovery Planning: The Company has established comprehensive security incident response plans that fully address the Company’s response to a cybersecurity threat, including the recovery from a cybersecurity incident, which is tested outside of real incident response at least annually.\n•Collaboration: The Company’s security incident response plan contains mechanisms to collaborate with public and private entities, including intelligence and enforcement agencies, industry groups and third-party service providers, to identify, assess and respond to cybersecurity threats.\n•Third-Party Risk Management: The Company maintains a comprehensive, risk-based approach to identifying and overseeing cybersecurity risks presented by third parties, including vendors, service providers and other external users of the Company’s systems, as well as the systems of third parties that could adversely impact our business in the event of a cybersecurity threat affecting those third-party systems.\n•Training: The Company provides annual mandatory training for personnel regarding cybersecurity threats, which reinforces the Company’s information security policies, standards and practices, and such training is scaled to reflect the roles, responsibilities and information systems access of such personnel.\n•Communication, Coordination and Disclosure: The Company has established a cross-functional approach to address the risk from cybersecurity threats, involving management personnel from the Company’s enterprise security, technology, operations, legal, business continuity management, internal audit and other key business functions, as well as the members of the Board of Directors and the Audit Committee in an ongoing dialogue regarding cybersecurity threats and incidents, while also implementing controls and procedures for the escalation of cybersecurity incidents pursuant to established thresholds so that decisions regarding the disclosure and reporting of such incidents can be made by management in a timely manner.\n•Governance: The Board of Directors’ oversight of cybersecurity risk management is supported by the Audit Committee, which regularly interacts with the",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 847600,
+        "char_start": 843600,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:222",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "3f70b59faddddae7a1ca0dde4d748fa647bc4283067bac52df0d7180ad3f9c1d",
+      "excerpt_text": "ts can be made by management in a timely manner.\n•Governance: The Board of Directors’ oversight of cybersecurity risk management is supported by the Audit Committee, which regularly interacts with the Company’s VP of Audit and Risk, the Chief Information Security Officer, and other members of management involved in overseeing risks from cybersecurity threats.\nA key part of the Company’s strategy for managing risks from cybersecurity threats is the ongoing assessment and testing of the Company’s processes and practices through auditing, assessments, tabletop exercises, threat modeling, vulnerability testing and other exercises focused on evaluating the effectiveness of our cybersecurity measures. The Company regularly engages third parties to perform assessments on our cybersecurity measures, including information security maturity assessments, penetration testing, audits and independent reviews of our information security control environment and operating effectiveness. The results of such assessments, audits and reviews are reported to the Audit\n199\nCommittee and the Board of Directors, and the Company adjusts its cybersecurity policies, standards, processes and practices as necessary based on the information provided by the assessments, audits and reviews.\nGovernance\nThe Board of Directors, in coordination with the Audit Committee, oversees the management of risks from cybersecurity threats, including the policies, standards, processes and practices that the Company’s management implements to address risks from cybersecurity threats. The Audit Committee receives regular presentations and reports on cybersecurity risks, which address a wide range of topics including, for example, recent developments, evolving standards, vulnerability assessments, third-party and independent reviews, the threat environment, technological trends and information security considerations arising with respect to the Company’s peers and third parties. The Audit Committee timely oversees any cybersecurity incident that meets established reporting thresholds, as well as ongoing updates regarding any such incident until it has been addressed. Risks of cybersecurity threats are also discussed with the Board of Directors in connection with other relevant matters such as enterprise risk management, operational budgeting, strategic planning, business continuity planning, mergers and acquisitions, and brand management.\nThe Company’s Chief Information Security Officer is the member of the Company’s management that is principally responsible for overseeing the Company’s security incident response plan and cybersecurity risk management program. The Chief Information Security Officer works in partnership with members of the Company’s Risk Review Committee and other business leaders across the Company, including the Chief Information Officer, Chief Accounting Officer, VP and Deputy General Counsel, Litigation, and the Chief Compliance Officer.\nThe Company’s Chief Information Security Officer reports to the CFO. This group has industry experience building and leading security teams and is responsible for overseeing data security and Company-wide preparedness. The Chief Information Security Officer is a qualified holder of CISSP and CISM certifications and has served in various roles in information technology and information security for over 10 years. Prior experience includes security leadership roles in financial services.\nThe Company’s Chief Information Security Officer manages a dedicated enterprise security team who provide information assurance governance and consultation across all regions of our business.\nThe enterprise security team works collaboratively across the Company to implement the Company’s security strategy, which includes evaluating and considering the relevance of specific cyber security capabilities to the Company’s business model and external threats. To facilitate the success of this strategy, multidisciplinary teams throughout the Company",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 851400,
+        "char_start": 847400,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "442f54c218a82eea747ad95d5f081b17059266d4b1403b4a8e99660d3ddb5e1f",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "cik": "1973239",
+        "filing_date": "2026-05-26",
+        "form": "20-F"
+      },
+      "source_id": "sec-filing-metadata:0001973239-26-000097",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "dfec44ed829ef68ca839e766627a6abbc7e577281e8515673334d5cda80b110e",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001973239-26-000062",
+        "cik": "1973239",
+        "filing_date": "2026-05-06",
+        "form": "6-K"
+      },
+      "source_id": "sec-filing-metadata:0001973239-26-000062",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000062/arm-20260506.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "27bb9dfeccd510e304206efe5e5a19a2c00e610e340955a3c5522bd1791b4ffb",
+      "excerpt_text": "8-K\n0001730168 2026-07-06 2026-07-06\nUNITED STATES\nSECURITIES AND EXCHANGE COMMISSION\nWashington, D.C. 20549\nFORM 8-K\nCURRENT REPORT\nPURSUANT TO SECTION 13 OR 15(d)\nOF THE SECURITIES EXCHANGE ACT OF 1934\nDate of Report (Date of earliest event reported): July 6, 2026\nBroadcom Inc.\n(Exact Name of Registrant as Specified in Charter)\nDelaware\n001-38449\n35-2617337\n(State or other jurisdiction of incorporation)\n(Commission File Number)\n(I.R.S. Employer Identification No.)\n3421 Hillview Avenue\nPalo Alto, California 94304\n(Address of principal executive offices including zip code)\n(650) 427-6000\n(Registrant’s telephone number, including area code)\nCheck the appropriate box below if the Form 8-K filing is intended to simultaneously satisfy the filing obligation of the registrant under any of the following provisions:\n☐\nWritten communications pursuant to Rule 425 under the Securities Act (17 CFR 230.425)\n☐\nSoliciting material pursuant to Rule 14a-12 under the Exchange Act (17 CFR 240.14a-12)\n☐\nPre-commencement communications pursuant to Rule 14d-2(b) under the Exchange Act (17 CFR 240.14d-2(b))\n☐\nPre-commencement communications pursuant to Rule 13e-4(c) under the Exchange Act (17 CFR 240.13e-4(c))\nSecurities registered pursuant to Section 12(b) of the Act:\nTitle of Each Class\nTrading Symbol(s)\nName of Each Exchange on Which Registered\nCommon Stock, $0.001 par value\nAVGO\nThe NASDAQ Global Select Market\nIndicate by check mark whether the registrant is an emerging growth company as defined in Rule 405 of the Securities Act of 1933 (§230.405 of this chapter) or Rule 12b-2 of the Securities Exchange Act of 1934 (§240.12b-2 of this chapter).\nEmerging growth company ☐\nIf an emerging growth company, indicate by check mark if the registrant has elected not to use the extended transition period for complying with any new or revised financial accounting standards provided pursuant to Section 13(a) of the Exchange Act. ☐\nItem 8.01\nOther Events.\nBroadcom Inc. (“Broadcom”) and Apple Inc. (“Apple”) have agreed to expand their long-standing technology collaboration through 2031 by entering into new multi-year long-term agreements for Broadcom to develop and supply a range of custom ASIC silicon products for use in multiple generations of Apple products.\nCautionary Note Regarding Forward-Looking Statements\nThis Current Report on Form 8-K contains forward-looking statements (including within the meaning of Section 21E of the Securities Exchange Act of 1934, as amended, and Section 27A of the Securities Act of 1933, as amended). These forward-looking statements are based on current expectations and beliefs of Broadcom’s management, current information available to Broadcom’s management, and current market trends and market conditions, and these forward-looking statements involve risks and uncertainties that may cause actual results to differ materially from those in such statements. Accordingly, undue reliance should not be placed on such statements. All forward-looking statements are qualified in their entirety by reference to the risk factors discussed under the heading “Risk Factors” in Broadcom’s Annual Report on Form 10-K for the year ended November 2, 2025, Quarterly Report on Form 10-Q for the period ended May 3, 2026 and any subsequent reports that are filed with the Securities and Exchange Commission and include some important risk factors that may affect future results. Broadcom undertakes no intent or obligation to publicly update or revise the forward-looking statements made in this Current Report on Form 8-K, except as required by law.\nSIGNATURE\nPursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned hereunto duly authorized.\nDate: July 6, 2026\nBroadcom Inc.\nBy:\n/s/ Amie Thuener\nAmie Thuener\nChief Financial Officer",
+      "locator": {
+        "accession_number": "0001193125-26-295589",
+        "char_end": 3870,
+        "char_start": 0,
+        "cik": "1730168",
+        "form": "8-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1730168-0001193125-26-295589-b161757f0c8de8ac:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526295589/d84378d8k.htm",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "98b215351174e608d923a7d4813057e8496b194c7cf9fa2acd735d96117cbaa7",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001193125-26-295589",
+        "cik": "1730168",
+        "filing_date": "2026-07-06",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0001193125-26-295589",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526295589/d84378d8k.htm",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "5411023477d4fa463dbd064f1ecd8390c6d20725c7ca8910dc3fbbccd9abbd05",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001193125-26-275077",
+        "cik": "1730168",
+        "filing_date": "2026-06-18",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0001193125-26-275077",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526275077/d149683d8k.htm",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "002ff54a214ef4095d45caeefc7d0ddded8b4f10dba0d817cf4b551fe13ce896",
+      "excerpt_text": "iot-20260722\n00016428962026-07-222026-07-22\nUNITED STATES\nSECURITIES AND EXCHANGE COMMISSION\nWashington, D.C. 20549\nFORM 8-K\nCURRENT REPORT\nPursuant to Section 13 or 15(d) of The Securities Exchange Act of 1934\nDate of Report (Date of earliest event reported): July 22, 2026\nSAMSARA INC.\n(Exact name of registrant as specified in its charter)\nNevada\n001-41140\n47-3100039\n(State or other jurisdiction of incorporation)\n(Commission File Number)\n(IRS Employer Identification No.)\n1 De Haro Street\nSan Francisco, California 94107\n(Address of principal executive offices, including zip code)\n(415) 985-2400\n(Registrant’s telephone number, including area code)\nNot Applicable\n(Former name or former address, if changed since last report.)\nCheck the appropriate box below if the Form 8-K filing is intended to simultaneously satisfy the filing obligation of the registrant under any of the following provisions:\n☐ Written communications pursuant to Rule 425 under the Securities Act (17 CFR 230.425)\n☐ Soliciting material pursuant to Rule 14a-12 under the Exchange Act (17 CFR 240.14a-12)\n☐ Pre-commencement communications pursuant to Rule 14d-2(b) under the Exchange Act (17 CFR 240.14d-2(b))\n☐ Pre-commencement communications pursuant to Rule 13e-4(c) under the Exchange Act (17 CFR 240.13e-4(c))\nSecurities registered pursuant to Section 12(b) of the Act:\nTitle of each class\nTrading Symbol(s)\nName of each exchange on which registered\nClass A Common Stock, $0.0001 par value per share\nIOT\nThe New York Stock Exchange\nIndicate by check mark whether the registrant is an emerging growth company as defined in Rule 405 of the Securities Act of 1933 (§230.405 of this chapter) or Rule 12b-2 of the Securities Exchange Act of 1934 (§240.12b-2 of this chapter).\nEmerging growth company o\nIf an emerging growth company, indicate by check mark if the registrant has elected not to use the extended transition period for complying with any new or revised financial accounting standards provided pursuant to Section 13(a) of the Exchange Act. o\nItem 5.07 Submission of Matters to a Vote of Security Holders.\nOn July 22, 2026, Samsara Inc. (the “Company”) held its annual meeting of stockholders (the “Annual Meeting”). The Company’s stockholders voted on the following three proposals, which are described in more detail in the Company’s definitive proxy statement filed with the United States Securities and Exchange Commission on June 1, 2026 (the “Proxy Statement”):\n(1)to elect eight directors to the Board of Directors of the Company until the next annual meeting of stockholders and until their respective successors are elected and qualified;\n(2)to ratify the appointment of Deloitte & Touche LLP, an independent registered public accounting firm, as auditors for the fiscal year ending January 30, 2027; and\n(3)to vote on the compensation of our named executive officers.\nProposal 1 – Election of Directors.\nEach of the following nominees was elected to serve as a director and to hold office until the Company’s next annual meeting of stockholders and until his or her respective successor has been duly elected and qualified, or until such director’s earlier death, resignation, or removal, based on the following results of voting:\nFor\nWithhold\nBroker Non-Votes\nSanjit Biswas\n2,214,155,515\n13,064,949\n29,708,157\nJohn Bicket\n2,220,968,672\n6,251,792\n29,708,157\nMarc Andreessen\n2,221,581,324\n5,639,140\n29,708,157\nTodd Bluedorn\n2,164,128,938\n63,091,526\n29,708,157\nJonathan Chadwick\n2,221,749,469\n5,470,995\n29,708,157\nAlyssa Henry\n2,222,316,075\n4,904,389\n29,708,157\nAnn Livermore\n2,142,633,952\n84,586,512\n29,708,157\nGary Steele\n2,225,879,315\n1,341,149\n29,708,157\nProposal 2 – Ratification of Appointment of Independent Registered Public Accounting Firm.\nThe appointment of Deloitte & Touche LLP as the Company’s independent registered public accounting firm for the fiscal year ending January 30, 2027 was ratified based on the following results of voting:\nFor\nAgainst\nAbstain\n2,255,012,812\n1,752,631\n163,17",
+      "locator": {
+        "accession_number": "0001628280-26-049446",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "1642896",
+        "form": "8-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026049446/iot-20260722.htm",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "168a90a9be4dfbfce671019e48c9f0fd2fd54d54a4620f6c49da7089db5319cf",
+      "excerpt_text": "ny’s independent registered public accounting firm for the fiscal year ending January 30, 2027 was ratified based on the following results of voting:\nFor\nAgainst\nAbstain\n2,255,012,812\n1,752,631\n163,178\nProposal 3 – Advisory Vote on the Compensation of Our Named Executive Officers.\nThe vote to approve the compensation of our named executive officers was ratified based on the following results of voting:\nFor\nAgainst\nAbstain\nBroker Non-Votes\n2,203,754,736\n23,276,163\n189,565\n29,708,157\nSIGNATURES\nPursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned hereunto duly authorized.\nSAMSARA INC.\nDate: July 23, 2026\nBy:\n/s/ Adam Eltoukhy\nAdam Eltoukhy\nExecutive Vice President, Chief Administrative Officer and Corporate Secretary",
+      "locator": {
+        "accession_number": "0001628280-26-049446",
+        "char_end": 4629,
+        "char_start": 3800,
+        "cik": "1642896",
+        "form": "8-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:1",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026049446/iot-20260722.htm",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "517965b31e4924f18729ab632cb3ee0eabcddc8a24adcbc9be5c33572e92a79f",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001628280-26-049446",
+        "cik": "1642896",
+        "filing_date": "2026-07-23",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0001628280-26-049446",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026049446/iot-20260722.htm",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "3461221170b93450347b28bddd3fef686e9f783ada9252448d7a877918210396",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001628280-26-041893",
+        "cik": "1642896",
+        "filing_date": "2026-06-09",
+        "form": "10-Q"
+      },
+      "source_id": "sec-filing-metadata:0001628280-26-041893",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026041893/iot-20260502.htm",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "ba5f9bce003a43a1e712bdc7197b19a3b3114ff525f0a3096a1a3570fc5df6f6",
+      "excerpt_text": ") of\nAssets(2)\nLiabilities(3)\nAs of May 28, 2026\nDerivative instruments with hedge accounting designation\nCash flow currency hedges\n$\n4,096\n$\n7\n$\n(106)\nCash flow commodity hedges\n406\n105\n(7)\nFair value currency hedges\n5,568\n19\n—\nDerivative instruments without hedge accounting designation\nNon-designated currency hedges\n12,431\n15\n(48)\n$\n146\n$\n(161)\nAs of August 28, 2025\nDerivative instruments with hedge accounting designation\nCash flow currency hedges\n$\n3,271\n$\n41\n$\n(64)\nCash flow commodity hedges\n393\n19\n(20)\nFair value currency hedges\n3,049\n1\n(10)\nDerivative instruments without hedge accounting designation\nNon-designated currency hedges\n3,477\n3\n(18)\n$\n64\n$\n(112)\n(1)Forward and swap contracts are measured at fair value based on market-based observable inputs, including market spot and forward rates, interest rates, and credit-risk spreads (Level 2).\n(2)Included in receivables and other noncurrent assets.\n(3)Included in accounts payable and accrued expenses and other noncurrent liabilities.\nDerivative Instruments with Hedge Accounting Designation\nCash Flow Hedges: We utilize forward contracts that generally mature within two years designated as cash flow hedges to minimize our exposure to changes in currency exchange rates or commodity prices for certain capital expenditures and manufacturing costs.\nFair Value Hedges: We utilize currency forward contracts that generally mature within one year designated as fair value hedges to minimize our exposure to changes in currency exchange rates for non-U.S.-dollar-denominated cash and investments in debt securities. The fair value of our hedged cash and investments in debt securities was $5.54 billion and $3.05 billion as of May 28, 2026 and August 28, 2025, respectively. The changes in the fair values of derivatives designated as fair value hedges and the offsetting changes in the underlying fair values of the hedged items are both recognized in earnings.\n19 | 2026 Q3 10-Q\nTable of Contents\nDerivative Instruments without Hedge Accounting Designation\nCurrency Derivatives: We generally utilize a rolling hedge strategy with currency forward contracts that mature within one year to hedge our exposures of monetary assets and liabilities from changes in currency exchange rates. At the end of each reporting period, monetary assets and liabilities denominated in currencies other than the U.S. dollar are remeasured into U.S. dollars and the associated outstanding forward contracts are marked to market. Realized and unrealized gains and losses on derivative instruments without hedge accounting designation, as well as the changes in the underlying monetary assets and liabilities from changes in currency exchange rates, are included in other non-operating income (expense), net.\nGains and losses from our derivative instruments were not material for the periods presented.\nNote 13. Equity Compensation Plans\nAs of May 28, 2026, 48 million shares of our common stock were available for future awards under our equity compensation plans, including 7 million shares approved for issuance under our employee stock purchase plan (“ESPP”).\nRestricted Stock and Restricted Stock Units (“Restricted Stock Awards”)\nNine Months Ended\nMay 28,\n2026\nMay 29,\n2025\nRestricted stock award shares granted\n7\n11\nWeighted-average grant-date fair value per share\n$\n227.18\n$\n100.25\nEmployee Stock Purchase Plan (“ESPP”)\nEmployees purchased 2 million shares in each six-month ESPP offering period that ended in the second quarter of 2026 and 2025 at a share price of $92.77 and $78.63, respectively.\nStock-based Compensation Expense\nStock-based compensation expense recognized in our statements of operations is presented below. Stock-based compensation expense of $132 million and $96 million was capitalized and remained in inventory as of May 28, 2026 and August 28, 2025, respectively.\nQuarter Ended\nNine Months Ended\nMay 28,\n2026\nMay 29,\n2025\nMay 28,\n2026\nMay 29,\n2025\nStock-based compensation expense by caption\nCost of goods sold\n$\n143\n$\n11",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 68600,
+        "char_start": 64600,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "1f4f7e75665da85b58f31c872c6b13c7869c7603182a3dd7349cb4e6128751b1",
+      "excerpt_text": "%\n13\n—\n%\n10\n—\n%\nNet income\n$\n28,243\n68\n%\n$\n13,785\n58\n%\n$\n1,885\n20\n%\n$\n47,268\n60\n%\n$\n5,338\n20\n%\nTotal Revenue: Total revenue for the third quarter and first nine months of 2026 was impacted by the factors described in the section titled “Industry Conditions—Memory and Storage Demand” above.\nTotal revenue for the third quarter of 2026 increased 74% as compared to the second quarter of 2026, primarily due to increases in sales of both DRAM and NAND products.\n•Sales of DRAM products increased 67%, primarily due to a low-60% range increase in average selling prices and a low-single-digit percentage range increase in bit shipments.\n•Sales of NAND products increased 99%, primarily due to a mid-80% range increase in average selling prices and a mid-single-digit percentage range increase in bit shipments.\nTotal revenue for the third quarter of 2026 increased 346% as compared to the third quarter of 2025, primarily due to increases in sales of both DRAM and NAND products.\n•Sales of DRAM products increased 343%, primarily due to a low-260% range increase in average selling prices and a low-20% range increase in bit shipments.\n•Sales of NAND products increased 361%, primarily due to a mid-310% increase in average selling prices and a low-double-digit increase in bit shipments.\n28\nTable of Contents\nTotal revenue for the first nine months of 2026 increased 203% as compared to the first nine months of 2025, primarily due to increases in sales of both DRAM and NAND products.\n•Sales of DRAM products increased 211%, primarily due to an approximate 140% increase in average selling prices and an approximate 30% increase in bit shipments.\n•Sales of NAND products increased 183%, primarily due to an approximate 130% increase in average selling prices and a low-20% range increase in bit shipments.\nConsolidated Gross Margin: Our consolidated gross margin has been impacted by the factors described in the section titled “Industry Conditions—Memory and Storage Demand.” Our consolidated gross margin percentage increased to 85% for the third quarter of 2026 from 74% for the second quarter of 2026 as a result of improvements in margins for both DRAM and NAND products. Margins improved primarily due to increases in average selling prices and also benefited from continued strong execution and favorable mix.\nOur consolidated gross margin percentage improved to 85% for the third quarter of 2026 from 38% for the third quarter of 2025 and improved to 77% for the first nine months of 2026 from 38% for the first nine months of 2025. Improvements in our consolidated gross margins for the third quarter and first nine months of 2026 as compared to corresponding periods of 2025 were due to improvements in margins for both DRAM and NAND products. Margins improved, primarily due to increases in average selling prices and, to a lesser extent, favorable mix and manufacturing cost reductions.\nRevenue by Business Unit\nThird Quarter\nSecond Quarter\nThird Quarter\nNine Months Ended\n2026\n2026\n2025\n2026\n2025\nCMBU\n$\n13,769\n33\n%\n$\n7,749\n32\n%\n$\n3,386\n36\n%\n$\n26,802\n34\n%\n$\n8,981\n34\n%\nCDBU\n11,524\n28\n%\n5,687\n24\n%\n1,530\n16\n%\n19,590\n25\n%\n5,652\n22\n%\nMCBU\n11,521\n28\n%\n7,711\n32\n%\n3,255\n35\n%\n23,487\n30\n%\n8,099\n31\n%\nAEBU\n4,634\n11\n%\n2,708\n11\n%\n1,127\n12\n%\n9,062\n11\n%\n3,319\n13\n%\nAll other\n8\n—\n%\n5\n—\n%\n3\n—\n%\n18\n—\n%\n12\n—\n%\n$\n41,456\n$\n23,860\n$\n9,301\n$\n78,959\n$\n26,063\nPercentages of total revenue may not total 100% due to rounding.\nChanges in revenue for each business unit for the third quarter of 2026 as compared to the second quarter of 2026 were as follows:\n•CMBU revenue increased 78%, primarily due to increases in average selling prices and bit shipments.\n•CDBU revenue increased 103%, primarily due to increases in average selling prices and favorable mix.\n•MCBU revenue increased 49%, primarily due to increases in average selling prices, partially offset by lower bit shipments.\n•AEBU revenue increased 71%, primarily due to increases in average selling prices and bit shipments.\nChanges in revenue for ea",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 91400,
+        "char_start": 87400,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:23",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "27e85514fcd21edc26a0ebdf7b4ce917e76cecf3681e04eec3ae177e1fbb23f3",
+      "excerpt_text": " internal control over financial reporting.\n35 | 2026 Q3 10-Q\nTable of Contents\nPART II. OTHER INFORMATION\nITEM 1. LEGAL PROCEEDINGS\nFor a discussion of legal proceedings, see Part I. Financial Information, Item 1. Financial Statements, Notes to Consolidated Financial Statements, Note 10. Contingencies and Item 1A. Risk Factors in this Quarterly Report on Form 10-Q.\nSEC regulations require disclosure of certain proceedings related to environmental matters unless we reasonably believe that the related monetary sanctions, if any, will be less than a specified threshold. We use a threshold of $1 million for this purpose.\n36\nTable of Contents\nITEM 1A. RISK FACTORS\nIn addition to the factors discussed elsewhere in this Form 10-Q, this section discusses important factors which could cause actual results or events to differ materially from those contained in any forward-looking statements made by us. The order of presentation is not necessarily indicative of the level of risk that each factor poses to us. Any of these factors could have a material adverse effect on our business, results of operations, financial condition, or stock price. Our operations could also be affected by other factors that are presently unknown to us or not considered significant.\nRisk Factor Summary\nRisks Related to Our Business, Operations, and Industry\n•volatility in average selling prices of our products;\n•a range of factors that may adversely affect our gross margins;\n•our international operations, including geopolitical risks;\n•the highly competitive nature of our industry;\n•our ability to develop, produce, and supply new and competitive memory and storage technologies and products;\n•realizing expected returns from capacity expansions;\n•achieving or maintaining certain outcomes and the compliance requirements associated with incentives from various governments;\n•availability and quality of materials, supplies, electrical power, gas, water, and capital equipment, or dependency on third-party service providers;\n•a downturn or ongoing adverse conditions in regional or worldwide economies;\n•disruptions to our manufacturing processes from operational issues, natural disasters, or other events;\n•dependency on certain customers, including international customers, and end markets;\n•products that fail to meet specifications, are defective, or are incompatible with end uses;\n•breaches of our security systems or products, systems failures, interruptions, delays in service, catastrophic events, and resulting interruptions of our systems or those of our customers, suppliers, or business partners;\n•uncertainties and outcomes associated with the use and evolution of AI;\n•attracting, retaining, and motivating highly skilled employees;\n•responsible sourcing requirements and related regulations;\n•sustainability and governance expectations or standards;\n•acquisitions and/or strategic transactions and investments; and\n•restructure plans may not realize expected savings or other benefits.\nRisks Related to Intellectual Property and Litigation\n•protecting our intellectual property and retaining key employees who are knowledgeable about and develop our intellectual property;\n•legal, regulatory and administrative investigations, inquiries, proceedings, and claims; and\n•claims that our products or manufacturing processes infringe or otherwise violate the intellectual property rights of others or failure to obtain or renew license agreements covering such intellectual property.\nRisks Related to Laws and Regulations\n•impacts of government actions and compliance with tariffs, trade restrictions, and/or trade regulations;\n•tax expense and tax laws in key jurisdictions; and\n•compliance with laws, regulations, or industry standards, including environmental considerations.\nRisks Related to Capitalization and Financial Markets\n•our ability to generate sufficient cash flows or obtain access to external financing;\n•our debt obligations;\n•changes in foreign currency exchange rates;\n•counter",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 118000,
+        "char_start": 114000,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:30",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "cd823e2c4e6fdfafeca902962c14b2905a44cf433aec423bf1ae5186eba343ad",
+      "excerpt_text": "ge various third parties as sales channel partners or to represent us or otherwise act on our behalf who are also subject to a broad array of laws, regulations, and industry standards. Our engagement with these third parties may also expose us to risks associated with their respective compliance with laws and regulations.\nNew and evolving environmental, health, safety, and product considerations, including those related to greenhouse gas emissions and climate change, the purchase, use, and disposal of regulated and/or hazardous chemicals, and the potential resulting environmental, health, or safety impacts, may result in new laws, regulations, or industry standards that may affect us, our suppliers, and our customers. Such laws, regulations, or industry standards could require us to alter our product design, manufacturing, and operations and incur additional direct costs for compliance, as well as increased indirect costs resulting from our customers, suppliers, or both incurring additional compliance costs that are passed on to us. These costs may adversely impact our results of operations and financial condition.\nAs a result of the considerations detailed in this risk factor, we could experience the following:\n56\nTable of Contents\n•suspension of production or sales of our products;\n•limited supplies of chemicals or materials used to make our products;\n•remediation costs and activities;\n•increased compliance costs;\n•alteration of our manufacturing processes;\n•regulatory penalties, fines, civil or criminal sanctions, litigation and other legal liabilities; and\n•reputational challenges.\nWhile we maintain insurance for certain potential liabilities, such insurance does not cover all types and amounts of potential liabilities and is subject to various exclusions, as well as caps on recoverable amounts. Our insurance may not be adequate or otherwise cover all claims, penalties, fines, expenses, regulatory actions, litigation, sanctions, other liabilities or losses, and may not continue to be available on acceptable terms or at all.\nCompliance with, or our failure, or the failure of our third-party sales channel partners or agents, to comply with, laws, regulations, or industry standards could have a material adverse effect on our business, results of operations, or financial condition.\nRisks Related to Capitalization and Financial Markets\nWe may be unable to generate sufficient cash flows or obtain access to external financing necessary to fund our operations, make scheduled debt payments, pay our dividend, and make adequate capital investments.\nOur cash flows from operations depend primarily on the volume of semiconductor memory and storage products sold and average selling prices. To develop new product and process technology, support future growth, achieve operating efficiencies, and maintain product quality, we must make significant capital investments in manufacturing technology, capital equipment, facilities, R&D, and product and process technology.\nFrom time to time, we utilize external sources of financing when needed. As a result of our debt levels, expected debt amortization, prevailing interest rates, general capital market, changes in government borrowing or spending, and other economic conditions, it may be difficult for us to obtain financing on terms acceptable to us or at all. We have experienced volatility in our cash flows and operating results and we expect to continue to experience such volatility in the future, which may negatively affect our credit rating. Our credit rating may also be affected by our liquidity, financial results, economic risk, or other factors, which may increase the cost of borrowings and make it difficult for us to obtain financing on terms acceptable to us or at all. There can be no assurance that we will be able to generate sufficient cash flows, access capital or credit markets, or find other sources of financing to fund our operations, make debt payments, refinance our debt, pay our q",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 213000,
+        "char_start": 209000,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "6e616137e26f99ec4439ddc11a4790934bafbd9d56b591f9d1c2e0035ddd2034",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "cik": "723125",
+        "filing_date": "2026-06-25",
+        "form": "10-Q"
+      },
+      "source_id": "sec-filing-metadata:0000723125-26-000015",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "5ea28994a2070fdf99db46ebb493ac98ffc29364d8c17da5ab8092cba252de61",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0000723125-26-000013",
+        "cik": "723125",
+        "filing_date": "2026-06-24",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0000723125-26-000013",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000013/mu-20260624.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "c670eb743d32a63f0a15c362dfe5c92829e36be45a1bebd51bee8c36e51940b0",
+      "excerpt_text": "iatory actions by other countries, may materially and adversely affect our business. Further, economic conditions, including inflation, high interest rates, slow growth, fluctuations in foreign exchange rates, supply chain disruptions, including increased memory, storage or other component shortages, impacts of trade regulations or international trade disputes, and other conditions, may adversely affect our results of operations and financial performance.\nThe hostilities in Israel, Iran and the surrounding region have continued to result in economic and political uncertainty. While we have business operations in Israel, and intend to continue growing our presence in Israel, we currently do not expect significant business disruption. We are actively monitoring, evaluating, and responding to the situation.\nWe are also monitoring the impact of inflationary pressures and the tensions between China and Taiwan, and between the U.S. and China, which could have an adverse impact on our business or results of operations in future periods.\n- 29 -\nTable of Contents\nKey Financial Metrics\nWe monitor the key financial metrics set forth in the tables below to help us evaluate growth trends, establish budgets, measure the effectiveness of our sales and marketing efforts, and assess operational efficiencies. We discuss revenue, gross margin, and the components of operating income (loss) and margin below under “Results of Operations.”\nApril 30, 2026\nJuly 31, 2025\n(in billions)\nNext-Generation Security Annualized Recurring Revenue\n$\n8.1\n$\n5.6\nRemaining performance obligations\n$\n18.4\n$\n15.8\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\n2026\n2025\n(dollars in millions)\nTotal revenue\n$\n3,002\n$\n2,289\n$\n8,070\n$\n6,685\nTotal revenue year-over-year percentage increase\n31\n%\n15\n%\n21\n%\n15\n%\nGross margin\n67.6\n%\n72.9\n%\n71.5\n%\n73.5\n%\nOperating income (loss)\n$\n(183)\n$\n219\n$\n523\n$\n746\nOperating margin\n(6.1)\n%\n9.6\n%\n6.5\n%\n11.2\n%\nCash flow provided by operating activities\n$\n3,196\n$\n2,695\nFree cash flow (non-GAAP)\n$\n2,859\n$\n2,535\n•Next-Generation Security Annualized Recurring Revenue (“NGS ARR”). Our NGS ARR represents the annualized allocated revenue of all active contracts as of the final day of the reporting period related to all product, subscription and support offerings, excluding revenue from hardware products, and legacy attached subscriptions, support offerings and professional services. NGS ARR is an operating metric that we use to assess the strength and trajectory of our business. NGS ARR should be viewed independently of revenue, deferred revenue and remaining performance obligations and does not represent our revenue under U.S. GAAP on an annualized basis, as it is an operating metric that can be impacted by contract start and end dates and renewal rates. NGS ARR is not intended to be a replacement for forecasts of revenue. The scope of products, subscriptions, and support offerings that contribute to NGS ARR will generally increase over time as we introduce or acquire new next-generation products, subscriptions, and support offerings.\n•Cash Flow Provided by Operating Activities. We monitor cash flow provided by operating activities as a measure of our overall business performance. Our cash flow provided by operating activities is driven in large part by sales of our products and from up-front payments for subscription and support offerings. Monitoring cash flow provided by operating activities enables us to analyze our financial performance without the non-cash effects of certain items such as share-based compensation costs, depreciation, and amortization, thereby allowing us to better understand and manage the cash needs of our business.\n- 30 -\nTable of Contents\n•Free Cash Flow (non-GAAP). We define free cash flow, a non-GAAP financial measure, as cash provided by operating activities less purchases of property, equipment, and other assets. We consider free cash flow to be an operating metric as well as a profitability and liqui",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 140800,
+        "char_start": 136800,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:36",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "ac416d3cbf6505ec4dbecfd15a2bea0ce388606fff42a81fd1f486cdc18a462a",
+      "excerpt_text": "ial measure, as cash provided by operating activities less purchases of property, equipment, and other assets. We consider free cash flow to be an operating metric as well as a profitability and liquidity measure that provides useful information to management and investors about the amount of cash generated by the business after necessary capital expenditures. A limitation of the utility of free cash flow as a measure of our financial performance and liquidity is that it does not represent the total increase or decrease in our cash balance for the period. In addition, it is important to note that other companies, including companies in our industry, may not use free cash flow, may calculate free cash flow in a different manner than we do, or may use other financial measures to evaluate their performance, all of which could reduce the usefulness of free cash flow as a comparative measure. A reconciliation of free cash flow to cash flow provided by operating activities, the most directly comparable financial measure calculated and presented in accordance with U.S. GAAP, is provided below:\nNine Months Ended April 30,\n2026\n2025\n(in millions)\nFree cash flow (non-GAAP):\nNet cash provided by operating activities\n$\n3,196\n$\n2,695\nLess: purchases of property, equipment, and other assets\n337\n160\nFree cash flow (non-GAAP)\n$\n2,859\n$\n2,535\nNet cash used in investing activities\n$\n(2,098)\n$\n(1,442)\nNet cash used in financing activities\n$\n(1,005)\n$\n(405)\n- 31 -\nTable of Contents\nResults of Operations\nThe following table summarizes our results of operations for the periods presented and as a percentage of our total revenue for those periods based on our condensed consolidated statements of operations data. The period-to-period comparison of results is not necessarily indicative of results for future periods.\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\n2026\n2025\nAmount\n% of Revenue\nAmount\n% of Revenue\nAmount\n% of Revenue\nAmount\n% of Revenue\n(dollars in millions)\nRevenue:\nProduct\n$\n594\n19.8\n%\n$\n453\n19.8\n%\n$\n1,542\n19.1\n%\n$\n1,228\n18.4\n%\nSubscription and support\n2,408\n80.2\n%\n1,836\n80.2\n%\n6,528\n80.9\n%\n5,457\n81.6\n%\nTotal revenue\n3,002\n100.0\n%\n2,289\n100.0\n%\n8,070\n100.0\n%\n6,685\n100.0\n%\nCost of revenue:\nProduct\n167\n5.6\n%\n101\n4.4\n%\n371\n4.6\n%\n277\n4.1\n%\nSubscription and support\n807\n26.8\n%\n518\n22.7\n%\n1,926\n23.9\n%\n1,495\n22.4\n%\nTotal cost of revenue(1)\n974\n32.4\n%\n619\n27.1\n%\n2,297\n28.5\n%\n1,772\n26.5\n%\nTotal gross profit\n2,028\n67.6\n%\n1,670\n72.9\n%\n5,773\n71.5\n%\n4,913\n73.5\n%\nOperating expenses:\nResearch and development\n734\n24.5\n%\n494\n21.6\n%\n1,773\n22.0\n%\n1,480\n22.1\n%\nSales and marketing\n1,161\n38.7\n%\n793\n34.5\n%\n2,804\n34.7\n%\n2,271\n34.0\n%\nGeneral and administrative\n316\n10.5\n%\n164\n7.2\n%\n673\n8.3\n%\n416\n6.2\n%\nTotal operating expenses(1)\n2,211\n73.7\n%\n1,451\n63.3\n%\n5,250\n65.0\n%\n4,167\n62.3\n%\nOperating income (loss)\n(183)\n(6.1)\n%\n219\n9.6\n%\n523\n6.5\n%\n746\n11.2\n%\nInterest expense\n—\n—\n%\n(1)\n—\n%\n—\n—\n%\n(3)\n—\n%\nOther income, net\n27\n0.9\n%\n93\n4.0\n%\n282\n3.5\n%\n261\n3.8\n%\nIncome (loss) before income taxes\n(156)\n(5.2)\n%\n311\n13.6\n%\n805\n10.0\n%\n1,004\n15.0\n%\nProvision for income taxes\n21\n0.7\n%\n49\n2.1\n%\n216\n2.7\n%\n124\n1.8\n%\nNet income (loss)\n$\n(177)\n(5.9)\n%\n$\n262\n11.5\n%\n$\n589\n7.3\n%\n$\n880\n13.2\n%\n(1) Includes share-based compensation as follows:\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\n2026\n2025\n(in millions)\nCost of product revenue\n$\n2\n$\n1\n$\n4\n$\n4\nCost of subscription and support revenue\n50\n32\n114\n95\nResearch and development\n206\n134\n477\n411\nSales and marketing\n188\n92\n388\n258\nGeneral and administrative\n238\n67\n372\n173\nTotal share-based compensation\n$\n684\n$\n326\n$\n1,355\n$\n941\n- 32 -\nTable of Contents\nIMPACT OF ACQUISITIONS\nOn February 11, 2026, we completed our acquisition of CyberArk for a total purchase consideration of $21.1 billion. In connection with completing the acquisition, we paid approximately $2.3 billion in cash and issued 112 million shares of our common stock with a fair value of $18.5 billion. In addition, we issued $945 million of replace",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 144600,
+        "char_start": 140600,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:37",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "90abdc8b44e05e7fba6811a3ce9626612e3e25bf7640eb75ee1545c76396ac97",
+      "excerpt_text": "pleting the acquisition, we paid approximately $2.3 billion in cash and issued 112 million shares of our common stock with a fair value of $18.5 billion. In addition, we issued $945 million of replacement equity awards, of which $265 million attributable to services performed prior to the acquisition date was allocated to purchase consideration.\nThe comparability of our operating results for the three and nine months ended April 30, 2026 compared to the same periods in 2025 was impacted by our recent acquisitions, including CyberArk. In discussions of our results of operations, we may qualitatively or quantitatively disclose the impact of our acquisitions on revenue, costs, and expenses for the one year period subsequent to the acquisition date where such discussions would be meaningful.\nREVENUE\nOur revenue consists of product revenue and subscription and support revenue. Revenue is recognized upon transfer of control of the corresponding promised products and subscriptions and support to our customers in an amount that reflects the consideration we expect to be entitled to in exchange for those products and subscriptions and support. We expect our revenue to vary from quarter to quarter based on seasonal and cyclical factors and business acquisitions.\nPRODUCT REVENUE\nProduct revenue is derived from sales of hardware products, primarily our ML-Powered Next-Generation Firewall, and software licenses, including SD-WAN, VM-Series, Panorama, and certain identity security offerings. Our hardware products and software licenses include a broad set of built-in networking and security features and functionalities. We recognize product revenue at the time of hardware shipment or delivery of software license. As a percentage of product revenue, we expect our revenue from software licenses to vary from quarter to quarter and increase over the long term as we improve features and capabilities of our on-premise software, renew our software license contracts, and expand our installed end-customer base.\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\nChange\n2026\n2025\nChange\nAmount\nAmount\nAmount\n%\nAmount\nAmount\nAmount\n%\n(dollars in millions)\nProduct\n$\n594\n$\n453\n$\n141\n31\n%\n$\n1,542\n$\n1,228\n$\n314\n26\n%\nProduct revenue increased for the three and nine months ended April 30, 2026 compared to the same periods in 2025, driven by increased revenue from software licenses and increased demand for our new generation of hardware products. The increase in product revenue for the three and nine months ended April 30, 2026 was also driven by increased software licenses revenue from our CyberArk acquisition closed in February 2026.\nSUBSCRIPTION AND SUPPORT REVENUE\nSubscription and support revenue is derived primarily from sales of our subscription and support offerings. Our subscription and support contracts are typically one to five years. We recognize revenue from subscriptions and support over time as the services are performed. As a percentage of total revenue, we expect our subscription and support revenue to vary from quarter to quarter and increase over the long term as we introduce new subscriptions, renew existing subscription and support contracts, and expand our installed end-customer base.\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\nChange\n2026\n2025\nChange\nAmount\nAmount\nAmount\n%\nAmount\nAmount\nAmount\n%\n(dollars in millions)\nSubscription\n$\n1,632\n$\n1,234\n$\n398\n32\n%\n$\n4,400\n$\n3,659\n$\n741\n20\n%\nSupport\n776\n602\n174\n29\n%\n2,128\n1,798\n330\n18\n%\nTotal subscription and support\n$\n2,408\n$\n1,836\n$\n572\n31\n%\n$\n6,528\n$\n5,457\n$\n1,071\n20\n%\n- 33 -\nTable of Contents\nSubscription and support revenue increased for the three and nine months ended April 30, 2026 compared to the same periods in 2025 due to increased demand for our subscription and support offerings from our end-customers and our recent acquisitions. The mix between subscription revenue and support revenue will fluctuate over time, depending on the introduction of new ",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 148400,
+        "char_start": 144400,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:38",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "07de9a58af17c2a310ab18382f91089ba1c4877a338160f8992cabda9e370e2a",
+      "excerpt_text": "ption and support offerings from our end-customers and our recent acquisitions. The mix between subscription revenue and support revenue will fluctuate over time, depending on the introduction of new subscription offerings, renewals of support services, and our ability to increase sales to new and existing end-customers.\nREVENUE BY GEOGRAPHIC THEATER\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\nChange\n2026\n2025\nChange\nAmount\nAmount\nAmount\n%\nAmount\nAmount\nAmount\n%\n(dollars in millions)\nAmericas\n$\n2,018\n$\n1,530\n$\n488\n32\n%\n$\n5,371\n$\n4,474\n$\n897\n20\n%\nEurope, the Middle East, and Africa (“EMEA”)\n633\n480\n153\n32\n%\n1,714\n1,402\n312\n22\n%\nAsia Pacific and Japan (“APAC”)\n351\n279\n72\n26\n%\n985\n809\n176\n22\n%\nTotal revenue\n$\n3,002\n$\n2,289\n$\n713\n31\n%\n$\n8,070\n$\n6,685\n$\n1,385\n21\n%\nRevenue from the Americas, EMEA, and APAC increased for the three and nine months ended April 30, 2026 compared to the same periods in 2025 as we continued to increase investment in our global sales force in order to support our growth and innovation, with the Americas contributing the highest increase in revenue due to its larger scale.\nCOST OF REVENUE\nOur cost of revenue consists of cost of product revenue and cost of subscription and support revenue.\nCOST OF PRODUCT REVENUE\nCost of product revenue primarily includes costs paid to our manufacturing partners for procuring components and manufacturing our products. Our cost of product revenue also includes personnel costs, which consist of salaries, benefits, bonuses, share-based compensation, and travel associated with our operations organization, inventory excess and obsolete charges, shipping and tariff costs, amortization of intangible assets, product testing costs, and shared costs. Shared costs consist of certain facilities, depreciation, benefits, recruiting, and information technology costs that we allocate based on headcount. We expect our cost of product revenue to fluctuate with our revenue from hardware products.\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\nChange\n2026\n2025\nChange\nAmount\nAmount\nAmount\n%\nAmount\nAmount\nAmount\n%\n(dollars in millions)\nCost of product revenue\n$\n167\n$\n101\n$\n66\n65\n%\n$\n371\n$\n277\n$\n94\n34\n%\nCost of product revenue increased for the three and nine months ended April 30, 2026 compared to the same periods in 2025 primarily due to higher amortization of intangible assets as a result of our CyberArk acquisition, increased demand for our hardware products and higher tariff costs, partially offset by a decrease in inventory excess and obsolete charges.\n- 34 -\nTable of Contents\nCOST OF SUBSCRIPTION AND SUPPORT REVENUE\nCost of subscription and support revenue includes personnel costs for our global customer support and technical operations organizations, data center and cloud hosting service costs, third-party professional services costs, amortization of intangible assets and capitalized software development costs, customer support and repair costs, and shared costs. We expect our cost of subscription and support revenue to increase as our installed end-customer base grows and adoption of our cloud-based subscription offerings increases.\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\nChange\n2026\n2025\nChange\nAmount\nAmount\nAmount\n%\nAmount\nAmount\nAmount\n%\n(dollars in millions)\nCost of subscription and support revenue\n$\n807\n$\n518\n$\n289\n56\n%\n$\n1,926\n$\n1,495\n$\n431\n29\n%\nCost of subscription and support revenue increased for the three and nine months ended April 30, 2026 compared to the same periods in 2025 primarily due to increased costs to support the growth of our subscription and support offerings. Cloud hosting service costs, which support our cloud-based subscription offerings, increased $75 million and $171 million for the three and nine months ended April 30, 2026, respectively, compared to the same periods in 2025. Amortization of intangible assets increased $117 million and $109 million for the three and nine months ended April ",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 152200,
+        "char_start": 148200,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "7b35388435e2bad3e792febf0c5d5996688cd8cc2f1f9974ffd48de40a54a81f",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "cik": "1327567",
+        "filing_date": "2026-06-03",
+        "form": "10-Q"
+      },
+      "source_id": "sec-filing-metadata:0001327567-26-000015",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "6e6f8a0f75036be18460afd786af30a898e00bd3b3c7b1fcafa4f98b17ee63b4",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001327567-26-000012",
+        "cik": "1327567",
+        "filing_date": "2026-06-02",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0001327567-26-000012",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000012/panw-20260602.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "692da1e31a43e2a2b1c29cc08d78c0edf26ca29a290fe0cb516d9888c5984841",
+      "excerpt_text": "rbrk-20260603\n00019438962026-06-032026-06-03\nUNITED STATES\nSECURITIES AND EXCHANGE COMMISSION\nWashington, D.C. 20549\nFORM 8-K\nCURRENT REPORT\nPursuant to Section 13 or 15(d) of the Securities Exchange Act of 1934\nDate of Report (date of earliest event reported): June 3, 2026\nRUBRIK, INC.\n(Exact name of registrant as specified in its charter)\nDelaware\n(State or other jurisdiction of incorporation or organization)\n001-42028\n(Commission File Number)\n46-4560494\n(I.R.S. Employer Identification Number)\n3495 Deer Creek Road, Palo Alto, California 94304\n(Address of principal executive offices and zip code)\n(844) 478-2745\n(Registrant's telephone number, including area code)\nNot applicable\n(Former name or former address, if changed since last report.)\nCheck the appropriate box below if the Form 8-K filing is intended to simultaneously satisfy the filing obligation of the registrant under any of the following provisions:\n☐\nWritten communications pursuant to Rule 425 under the Securities Act (17 CFR 230.425)\n☐\nSoliciting material pursuant to Rule 14a-12 under the Exchange Act (17 CFR 240.14a-12)\n☐\nPre-commencement communications pursuant to Rule 14d-2(b) under the Exchange Act (17 CFR 240.14d-2(b))\n☐\nPre-commencement communications pursuant to Rule 13e-4(c) under the Exchange Act (17 CFR 240.13e-4(c))\nSecurities registered pursuant to Section 12(b) of the Act:\nTitle of each class\nTrading Symbol(s)\nName of each exchange on which registered\nClass A Common Stock, $0.000025 par value\nRBRK\nNew York Stock Exchange\nIndicate by check mark whether the registrant is an emerging growth company as defined in Rule 405 of the Securities Act of 1933 (§230.405 of this chapter) or Rule 12b-2 of the Securities Exchange Act of 1934 (§240.12b-2 of this chapter).\nEmerging growth company ☐\nIf an emerging growth company, indicate by check mark if the registrant has elected not to use the extended transition period for complying with any new or revised financial accounting standards provided pursuant to Section 13(a) of the Exchange Act. ☐\nItem 5.07 Submission of Matters to a Vote of Security Holders.\nOn June 3, 2026, Rubrik, Inc. (the “Company”) held its 2026 Annual Meeting of Stockholders (the “Annual Meeting”). At the Annual Meeting, the Company’s stockholders (1) elected each of the Company’s nominees for Class II director, (2) ratified the appointment by the Audit Committee of the Board of Directors of the Company (the “Audit Committee”) of KPMG LLP as the Company’s independent registered public accounting firm for the fiscal year ending January 31, 2027, and (3) approved, on an advisory basis, every one year as the preferred frequency of stockholder advisory votes on the compensation of the Company’s named executive officers. The final results with respect to each proposal are set forth below.\nProposal One – Election of Directors\nThe stockholders elected each of the three nominees named below as Class II directors to hold office until the 2029 annual meeting of stockholders and their successors are duly elected and qualified, or until their earlier death, resignation or removal. The results of such vote were:\nNominee\nFor\nWithheld\nBroker Non-Vote\nAsheem Chandna\n963,427,829\n7,288,223\n44,493,277\nRavi Mhatre\n931,385,414\n39,330,638\n44,493,277\nArvind Nithrakashyap\n966,093,445\n4,622,607\n44,493,277\nProposal Two – Ratification of Selection of Independent Registered Public Accounting Firm\nThe stockholders ratified the appointment by the Audit Committee of KPMG LLP as the Company’s independent registered public accounting firm for the fiscal year ending January 31, 2027. The results of such vote were:\nFor\nAgainst\nAbstain\n1,013,250,788\n1,449,686\n508,855\nProposal Three – Advisory Vote on the Frequency of Future Stockholder Advisory Votes on the Compensation of the Company’s Named Executive Officers\nThe stockholders approved, on an advisory basis, every one year as the preferred frequency of stockholder advisory votes on the compensation of the Company’s named executive ",
+      "locator": {
+        "accession_number": "0001943896-26-000049",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "1943896",
+        "form": "8-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000049/rbrk-20260603.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "4e6a918a45599e3ef79717a1c9897f7a21b3c950dd5ba72046194924d9193869",
+      "excerpt_text": " Named Executive Officers\nThe stockholders approved, on an advisory basis, every one year as the preferred frequency of stockholder advisory votes on the compensation of the Company’s named executive officers. The results of such vote were:\n1 Year\n2 Years\n3 Years\nAbstain\nBroker Non-Vote\n970,083,338\n130,905\n290,742\n211,067\n44,493,277\nBased on these results and consistent with the Company’s recommendation, the Company’s board of directors has determined that the Company will conduct future stockholder advisory votes on the compensation program for its named executive officers every one year.\nSIGNATURES\nPursuant to the requirements of the Securities Exchange Act of 1934, as amended, the registrant has duly caused this report to be signed on its behalf by the undersigned hereunto duly authorized.\nDate: June 5, 2026\nRubrik, Inc.\nBy:\n/s/ Kiran Choudary\nName:\nKiran Choudary\nTitle:\nChief Financial Officer",
+      "locator": {
+        "accession_number": "0001943896-26-000049",
+        "char_end": 4710,
+        "char_start": 3800,
+        "cik": "1943896",
+        "form": "8-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:1",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000049/rbrk-20260603.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "b10dd2674c74d8d520c3b9e3e80951694c4cd8c7ad27522e08d21c002b910cbf",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001943896-26-000049",
+        "cik": "1943896",
+        "filing_date": "2026-06-05",
+        "form": "8-K"
+      },
+      "source_id": "sec-filing-metadata:0001943896-26-000049",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000049/rbrk-20260603.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "2da284008e30235ed0391f3a9d4cfd86485ae1180b60f580ec8d79a2c5d86de7",
+      "excerpt_text": "into revenue at a point in time or over time beginning on the date the customer accepts the option. Deferred revenue associated with customer options that are subsequently forfeited will be released into revenue at the time the options are forfeited.\nTiming of revenue recognition (in thousands):\nThree Months Ended April 30,\n2026\n2025\nSubscription revenue\nProducts and services transferred over time\n$\n355,639\n$\n243,991\nProducts and services transferred at a point in time\n18,514\n21,670\nOther revenue\nProducts and services transferred over time\n11,160\n11,074\nProducts and services transferred at a point in time\n1,755\n1,746\nTotal revenue\n$\n387,068\n$\n278,481\nContract assets\nThe Company invoices its customers in accordance with contractual billing terms established in each contract. As the Company performs under customer contracts, its right to consideration that is unconditional is classified as accounts receivable. If the Company’s right to consideration for such performance is contingent upon a future event or satisfaction of additional performance obligations, the amount of revenue the Company has recognized in excess of the amount it has billed to the customer is classified as a contract asset. Contract assets are included in prepaid expenses and other current assets and other assets, noncurrent in the unaudited condensed consolidated balance sheets. There were $14.0 million and $12.6 million of contract assets as of April 30, 2026 and January 31, 2026, respectively. The current and noncurrent contract assets balances as of April 30, 2026 were $4.6 million and $9.4 million, respectively, and as of January 31, 2026 were $3.8 million and $8.8 million, respectively.\nDeferred revenue\nDeferred revenue, which are contract liabilities, are amounts received or due from customers in advance of the Company’s performance. The current portion of deferred revenue represents the amount that is expected to be recognized as revenue within one year of the unaudited condensed consolidated balance sheet date. The Company invoices customers upfront for the majority of contracts, and the increase in the Company’s deferred revenue corresponds to an increase in revenue contracts that include SaaS and support in which the Company satisfies its performance obligations typically over the contractual service period. During the three\nRubrik, Inc.\nQ1 2027 Form 10-Q\n12\nTable of Contents\nmonths ended April 30, 2026 and 2025, the Company recognized revenue of approximately $336.4 million and $240.3 million, respectively, pertaining to amounts deferred at the beginning of each respective period.\nTransaction price allocated to the remaining performance obligations\nTransaction price allocated to the remaining performance obligations represents contracted revenue that has not yet been recognized, which includes deferred revenue for contracts that have been invoiced and will be recognized as revenue in future periods.\nAs of April 30, 2026, total remaining non-cancellable performance obligations under the Company’s contracts with customers was approximately $2.44 billion. The Company expects to recognize approximately 53% of this amount as revenue over the next 12 months, with the remaining balance to be recognized as revenue thereafter.\nConcentration of Risk\nCredit risk\nThe Company’s financial instruments that are exposed to concentrations of credit risk consist primarily of cash and cash equivalents, restricted cash, short-term investments, and accounts receivable. Cash and cash equivalents and short-term investments are primarily held in three financial institutions and, at times, may exceed federally insured limits. The Company grants credit to customers in a wide variety of industries worldwide and generally does not require collateral. The Company has not experienced any material credit losses as of April 30, 2026.\nConcentration of revenue and accounts receivable\nThe following customers individually accounted for 10% or more of total revenue or 10% or more of ac",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 49600,
+        "char_start": 45600,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:12",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "7ababc1659d5e5513eeb69f91c60116a33ac3015d0a11a670392727200181400",
+      "excerpt_text": "revenue with past performance. We primarily measure our business on the basis of Subscription ARR, as we believe it best reflects our actual growth and our growth prospects.\nCertain prior period amounts reported in the unaudited condensed consolidated financial statements and notes have been reclassified to conform to the current year presentation. For the three months ended April 30, 2026 and 2025, the Company combined maintenance revenue and other revenue into “Other” on the unaudited condensed consolidated statements of operations. The presentation of cost of revenue has been conformed to reflect the changes related to the presentation of revenues. Such reclassifications related to the presentation of revenue and cost of revenue did not impact total revenue, loss from operations or net loss.\nSubscription Revenue\nOur subscription revenue consists of SaaS subscriptions and subscription term-based licenses with related support services.\nSaaS includes SaaS subscription offerings like Anomaly Detection and Sensitive Data Monitoring sold standalone or with prior sales of term-based license offerings of CDM prior to the launch of the RSC suite as well as sales of RSC. RSC is offered as a fully-hosted subscription or a hybrid cloud subscription. RSC is a fully-hosted subscription in the case of protection of cloud, SaaS, unstructured data, and identity providers. When RSC is securing enterprise applications, it is a hybrid cloud subscription which includes software hosted from the cloud (as a service) and an on-premise license for securing enterprise applications. The hybrid cloud subscription is accounted for as a single performance obligation because the software hosted from the cloud (as a service) and the on-premise software licenses are not separately identifiable and serve together to fulfill our promise to the customer, which is to provide a single, unified data security solution. Our RSC subscription capabilities are primarily sold as editions which bundle multiple products and include the Foundation Edition, Business Edition, and Enterprise Edition. Subscription revenue related to SaaS is recognized ratably over the subscription period.\nSubscription term-based licenses provide our customer with a right to use the software for a fixed term commencing upon delivery of the license to our customer. Support services are bundled with each subscription term-based license for the term of the subscription.\nRubrik, Inc.\nQ1 2027 Form 10-Q\n27\nTable of Contents\nSubscription revenue related to subscription term-based licenses includes upfront revenue recognized at the later of the start date of the subscription term-based license and the date when the subscription term-based license is delivered. The remainder of the revenue is recognized ratably over the subscription period for support services, commencing with the date the service is made available to customers.\nOur subscription revenue will fluctuate when qualified customers choose to exercise or forfeit their customer options that are accounted for as material rights. We have experienced revenue growth benefits from the non-recurring revenue associated with material rights; however, we expect these benefits to decline over the course of fiscal 2027. The combination of both of these factors may continue to limit and cause fluctuations in our subscription revenue growth during fiscal 2027, depending in part on the timing of our existing customers’ transition to RSC and exercises or forfeitures of Subscription Credits (which are customer options that are accounted for as material rights).\nOther Revenue\nOther revenue includes fees earned from sales of professional services, software updates on a when-and-if-available basis, telephone and integrated web-based support, Rubrik-branded Appliance maintenance relating to our perpetual licenses, and Rubrik-branded Appliances. Revenue for Rubrik-branded Appliances is recognized when shipped to the customer. When we sell our software license wit",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 102800,
+        "char_start": 98800,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:26",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "d6d51422759459f44444e47dbd82bd7a6fe0cc8036d51749f68b192621452729",
+      "excerpt_text": "e maintenance relating to our perpetual licenses, and Rubrik-branded Appliances. Revenue for Rubrik-branded Appliances is recognized when shipped to the customer. When we sell our software license with our Rubrik-branded Appliances, revenue for both the Rubrik-branded Appliances and software licenses are recognized at the same time. Revenue related to professional services is typically recognized as the services are performed. We expect other revenue to be largely driven by sales of professional services in the future and as a percentage of total revenue to decrease over time.\nCost of Revenue\nCost of revenue primarily includes employee compensation and related expenses associated with customer support, certain hosting costs, amortization of capitalized internal-use software, amortization of finite-lived intangible assets and cost of Rubrik-branded Appliances.\nCost of Subscription Revenue\nCost of subscription revenue primarily includes employee compensation and related expenses associated with customer support for our subscription offerings, certain hosting costs, amortization of capitalized internal-use software, and amortization of finite-lived intangible assets. We expect our cost of subscription revenue to increase as our subscription revenue increases.\nCost of Other Revenue\nCost of other revenue includes the cost of professional services, employee compensation and related expenses associated with customer support from our perpetual licenses, and the cost of Rubrik-branded Appliances. We expect cost of other revenue as a percentage of total cost of revenue to decrease as the transition of sales of Rubrik-branded Appliances from us to our contract manufacturers was largely completed in fiscal 2025. Over the long-term, we expect the cost of other revenue to be largely driven by sales of professional services.\nGross Profit and Margin\nGross profit is revenue less cost of revenue.\nGross margin is gross profit expressed as a percentage of revenue. Our gross margin has been, and will continue to be, affected by a number of factors, including the mix of subscription term-based licenses, SaaS subscriptions, and other products, when qualified customers choose to exercise or forfeit their customer options that are accounted for as material rights, the timing and extent of our investments in our global customer support organization, certain hosting costs, the amortization of capitalized internal-use software, and stock-based compensation expense. Over time, we expect our gross margin to fluctuate due to the factors described above.\nSubscription Gross Margin\nWe expect our subscription gross margin to fluctuate through fiscal 2027. This is due to the revenue being recognized ratably over the subscription term rather than a portion being recognized upfront from subscription term-based licenses and associated increases in hosting costs for our SaaS solutions. We expect our subscription gross margin to fluctuate as customers adopt data security SaaS solutions on the RSC suite.\nOther Gross Margin\nWe expect other gross margin to decrease as a percentage of total revenue, which we expect will result in a decrease in cost of other revenue. We expect sales of Rubrik-branded Appliances to decrease as the transition of sales of Rubrik-branded Appliances from us to\nRubrik, Inc.\nQ1 2027 Form 10-Q\n28\nTable of Contents\nour contract manufacturers was largely completed in fiscal 2025. Over the long-term, we expect other gross margin to be largely driven by sales of professional services.\nOperating Expenses\nOur operating expenses consist of research and development, sales and marketing, and general and administrative expenses. Personnel costs are the most significant component of operating expenses. We also incur other non-personnel costs such as colocation and certain hosting costs, office space costs, fees for third-party professional services, and costs associated with software and subscription services. We expect our operating expenses will continue ",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 106600,
+        "char_start": 102600,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:27",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official",
+      "content_sha256": "0bb56076a658cd7237b34af1e64e3ebc287de841bb1aec12608de29c204c5f2a",
+      "excerpt_text": ",813)\nOther income (expense), net\n590\n(5,622)\nLoss before income taxes\n(37,216)\n(100,830)\nIncome tax expense\n4,637\n1,274\nNet loss\n$\n(41,853)\n$\n(102,104)\nNet loss per share, basic and diluted\n$\n(0.21)\n$\n(0.53)\nWeighted-average shares used in computing net loss per share, basic and diluted\n203,668\n191,625\n(1) Includes stock-based compensation expense as follows:\nThree Months Ended April 30,\n2026\n2025\n(in thousands)\nCost of revenue\nSubscription\n$\n4,631\n$\n3,968\nOther\n634\n857\nResearch and development\n33,026\n19,812\nSales and marketing\n16,331\n24,144\nGeneral and administrative\n18,746\n24,759\nTotal stock-based compensation expense\n$\n73,368\n$\n73,540\nRubrik, Inc.\nQ1 2027 Form 10-Q\n30\nTable of Contents\nThe following table sets forth our unaudited condensed consolidated statements of operations data expressed as a percentage of revenue for the periods indicated:\nThree Months Ended April 30,\n2026\n2025\nRevenue\nSubscription\n97\n%\n95\n%\nOther\n3\n5\nTotal revenue\n100\n100\nCost of revenue\nSubscription\n17\n19\nOther\n2\n3\nTotal cost of revenue\n19\n22\nGross profit\n81\n78\nOperating expenses\nResearch and development\n30\n29\nSales and marketing\n50\n61\nGeneral and administrative\n15\n21\nTotal operating expenses\n95\n111\nLoss from operations\n(14)\n(33)\nInterest income\n4\n3\nInterest expense\n—\n(4)\nOther income (expense), net\n—\n(2)\nLoss before income taxes\n(10)\n(36)\nIncome tax expense\n1\n1\nNet loss\n(11)\n%\n(37)\n%\nComparison of the Three Months Ended April 30, 2026 and 2025\nRevenue\nThree Months Ended April 30,\n2026\n2025\n$ Change\n% Change\n(dollars in thousands)\nRevenue\nSubscription\n$\n374,153\n$\n265,661\n$\n108,492\n41\n%\nOther\n12,915\n12,820\n95\n1\n%\nTotal revenue\n$\n387,068\n$\n278,481\n$\n108,587\n39\n%\nGrowth in subscription revenue for the three months ended April 30, 2026 was driven by growth in Subscription ARR and some benefits as customers exercised or forfeited their Subscription Credits. For the three months ended April 30, 2026, non-recurring revenue related to material rights associated with Subscription Credits accounted for approximately $8.5 million of subscription revenue. We expect our subscription revenue to continue to benefit from customers exercising or forfeiting their Subscription Credits through fiscal 2027, although we expect the benefits to significantly decline sequentially.\nOur Subscription ARR grew from $1.18 billion as of April 30, 2025 to $1.57 billion as of April 30, 2026, representing a 32% increase. Of the increase in Subscription ARR, approximately 0.4 percentage points are a result of transitioning our existing maintenance customers to our subscription editions. A further indication of our ability to expand revenue from existing customers is through our average subscription dollar-based net retention rate which was approximately 120% as of April 30, 2026. We had 2,946 customers with $100,000 or more in Subscription ARR as of April 30, 2026, increasing from 2,381 as of April 30, 2025.\nOther revenue, which consists primarily of sales of perpetual licenses of our legacy CDM product, Rubrik-branded Appliances and professional services, was relatively flat for the three months ended April 30, 2026. Other revenue represented 3% and 5% of total revenue for the three months ended April 30, 2026 and 2025, respectively. The transition of existing maintenance customers adopting RSC subscription offerings was largely completed in fiscal 2026. We expect our other revenue as a percentage of total revenue to continue to decrease.\nRubrik, Inc.\nQ1 2027 Form 10-Q\n31\nTable of Contents\nCost of Revenue\nThree Months Ended April 30,\n2026\n2025\n$ Change\n% Change\n(dollars in thousands)\nCost of revenue\nSubscription\n$\n66,723\n$\n51,912\n$\n14,811\n29\n%\nOther\n8,562\n8,571\n(9)\n—\n%\nTotal cost of revenue\n$\n75,285\n$\n60,483\n$\n14,802\n24\n%\nCost of subscription revenue increased for the three months ended April 30, 2026 primarily driven by an increase of $8.5 million in hosting costs due to the launch and adoption of more SaaS offerings by our customers, an increase of $2.7 million from growth in our ",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 114200,
+        "char_start": 110200,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "db5666c60e7ce5bb272f41e1604803ef77018ea19f4e11e6ed337a0daa023cb9",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "cik": "1943896",
+        "filing_date": "2026-06-05",
+        "form": "10-Q"
+      },
+      "source_id": "sec-filing-metadata:0001943896-26-000047",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "89bb2e15611b0f22c8c54c196c131b8cfa6bbed634498cf45e1d9252090bb44d",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "ARM"
+      },
+      "source_id": "research-context:ARM:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://investors.arm.com/news-releases/news-release-details/arm-holdings-plc-reports-results-fourth-quarter-financial-year-0",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "e20d74aad0428c9259b75ef3ec59e4e71e34f33e368cedd5856ee7185977128d",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "AVGO"
+      },
+      "source_id": "research-context:AVGO:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announces-second-quarter-fiscal-year-2026-financial",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "4bc8d4333b5c726bd28a50f1d0973c0f6e6799375105c83c5d65bce94305d1b7",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "IOT"
+      },
+      "source_id": "research-context:IOT:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026040788/samsaraepr-q12027.htm",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "488ef1e8b57671e9bd54bd004d32ea319a1688be916128658398e7c24457c524",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "MU"
+      },
+      "source_id": "research-context:MU:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://investors.micron.com/node/50671",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "0a0a9c46e2221c17934a480119606469865c3c21131be884a3849fffd18263ea",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "PANW"
+      },
+      "source_id": "research-context:PANW:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://investors.paloaltonetworks.com/news-releases/news-release-details/palo-alto-networks-reports-fiscal-third-quarter-2026-financial",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "8857486d8f1a879995987aa3fbb7e85b4db6df40d74f6345f2291f92de2439cc",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "RBRK"
+      },
+      "source_id": "research-context:RBRK:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://ir.rubrik.com/financials/quarterly-results/default.aspx",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-07-18T18:11:42-04:00",
+      "authority": "derived_not_primary",
+      "content_sha256": "67e93267daf67677777f774c55fa009a6c915644e94172a55adf5a5f0fa1a7d2",
+      "excerpt_text": "",
+      "locator": {
+        "dataset": "phase5r_c5_c9",
+        "ticker": "SPY"
+      },
+      "source_id": "research-context:SPY:2026-07-18T18:11:42-04:00",
+      "source_type": "derived_research_context",
+      "source_url": "https://www.ssga.com/us/en/individual/etfs/state-street-spdr-sp-500-etf-trust-spy",
+      "ticker": "SPY"
+    }
+  ]
+}

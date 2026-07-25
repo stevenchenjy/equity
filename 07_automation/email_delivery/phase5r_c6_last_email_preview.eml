@@ -1,0 +1,140 @@
+Subject: Weekly AI Equity Conviction Brief =?utf-8?q?=E2=80=94_2026-07-18_?=
+ =?utf-8?b?4oCU?= 0 Eligible / 2 Position Reviews
+From: Phase 5R Equity Brief <steven.equity0326@gmail.com>
+To: stevenchenjy326@gmail.com
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============2093107808714673403=="
+
+--===============2093107808714673403==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+1. Header
+Weekly AI Equity Conviction Brief - 2026-07-18
+A low-attention weekly research summary for independent human review.
+
+2. This Week's Main Decision
+The selected plan remains no action until the next review. Current positions =
+are reviewed concentration-first under their current C5 labels; this brief do=
+es not recommend a portfolio change today.
+Primary scenario: no_action_until_next_review.
+Latest planned review: 2026-07-25.
+
+3. Current Position Review
+- IOT: current local position 29.59%; weekly conviction score 6.54; label tri=
+m_review. Reason: Current weight 29.59% exceeds the 8% hard cap; review conce=
+ntration even though company evidence remains constructive.
+- RBRK: current local position 17.75%; weekly conviction score 6.65; label tr=
+im_review. Reason: Current weight 17.75% exceeds the 8% hard cap; review conc=
+entration even though company evidence remains constructive.
+- Current positions are taken only from current_positions.local.csv and are r=
+eviewed before new candidates.
+
+4. Scenario and Concentration Context
+- The selected scenario estimates an active sleeve of 47.34% and cash release=
+ of $0.00.
+- Current position labels are dynamic: IOT=3Dtrim_review, RBRK=3Dtrim_review.
+- Eligible candidate count is 0; research labels do not authorize a transacti=
+on.
+- Concentration and thesis evidence remain the first portfolio review before =
+any new-candidate discussion.
+
+5. Backup Scenarios
+- light_trim_review_25pct_of_each_position: IOT hold 6.0000 shares, RBRK hold=
+ 1.5000 shares; resulting sleeve 35.51%; estimated cash released $118.36. Bac=
+kup research reference only.
+- whole_share_practical_scenario: IOT hold 2.0000 shares, RBRK hold 1.0000 sh=
+ares; resulting sleeve 16.27%; estimated cash released $310.69. Backup resear=
+ch reference only.
+
+6. New Candidate Review
+- Eligible research-review candidates: 0 total; at most 2 are shown.
+- Zero eligible candidates this week.
+- Wait for pullback (2 total; up to 3 shown): AVGO, SPY.
+- Watch only (3 total; up to 4 shown): PANW, MU, ARM.
+- Reject count: 0.
+
+7. Next Review Triggers
+- A material customer, product, competitive, governance, or business-quality =
+change weakens the documented thesis.
+- Official earnings, guidance, filing, or material news changes the expected =
+earnings path.
+- Weekly conviction score falls by at least 1.0 point or below 5.5.
+- Reference price or public market data is unavailable or stale.
+- Combined active sleeve remains above 30%.
+
+8. Safety Boundary
+- This is a weekly research brief, not a time-sensitive alert.
+- Eligible names are research-review candidates only and carry no urgent trad=
+e language.
+- Every portfolio change requires an independent manual decision.
+- The system cannot connect to a broker or alter a brokerage account.
+- No archived holding record is used.
+
+--===============2093107808714673403==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+<!doctype html>
+<html><head><meta charset=3D"utf-8"><title>Weekly AI Equity Conviction Brief<=
+/title>
+<style>body{font-family:Arial,sans-serif;color:#202124;line-height:1.45;max-w=
+idth:760px;margin:20px auto;padding:0 16px}h1{font-size:24px}h2{font-size:18p=
+x;margin-top:24px}table{border-collapse:collapse;width:100%}th,td{border-bott=
+om:1px solid #dadce0;padding:8px;text-align:left;vertical-align:top}th{backgr=
+ound:#f5f6f7}.decision{border-left:4px solid #1a73e8;padding:12px;background:=
+#f7f9fc}small{color:#5f6368}</style></head><body>
+<h1>Weekly AI Equity Conviction Brief - 2026-07-18</h1>
+<h2>1. Header</h2><p>A low-attention weekly research summary for independent =
+human review.</p>
+<h2>2. This Week's Main Decision</h2><div class=3D"decision"><p><strong>The s=
+elected plan remains no action until the next review. Current positions are r=
+eviewed concentration-first under their current C5 labels; this brief does no=
+t recommend a portfolio change today.</strong></p><p>Primary scenario: <code>=
+no_action_until_next_review</code>.<br>Latest planned review: <strong>2026-07=
+-25</strong>.</p></div>
+<h2>3. Current Position Review</h2>
+<table><thead><tr><th>Ticker</th><th>Weight</th><th>Score</th><th>Current lab=
+el</th><th>Current reason</th></tr></thead><tbody>
+<tr><td>IOT</td><td>29.59%</td><td>6.54</td><td>trim_review</td><td>Current w=
+eight 29.59% exceeds the 8% hard cap; review concentration even though compan=
+y evidence remains constructive.</td></tr><tr><td>RBRK</td><td>17.75%</td><td=
+>6.65</td><td>trim_review</td><td>Current weight 17.75% exceeds the 8% hard c=
+ap; review concentration even though company evidence remains constructive.</=
+td></tr>
+</tbody></table>
+<p><small>Current positions come only from current_positions.local.csv and ar=
+e reviewed before new candidates.</small></p>
+<h2>4. Scenario and Concentration Context</h2><ul>
+<li>The selected scenario estimates an active sleeve of 47.34% and cash relea=
+se of $0.00.</li>
+<li>Eligible candidate count is 0; research labels do not authorize a transac=
+tion.</li>
+<li>Concentration and thesis evidence remain the first portfolio review.</li>=
+</ul>
+<h2>5. Backup Scenarios</h2><ul><li>light_trim_review_25pct_of_each_position:=
+ IOT hold 6.0000 shares, RBRK hold 1.5000 shares; resulting sleeve 35.51%; es=
+timated cash released $118.36. Backup research reference only.</li><li>whole_=
+share_practical_scenario: IOT hold 2.0000 shares, RBRK hold 1.0000 shares; re=
+sulting sleeve 16.27%; estimated cash released $310.69. Backup research refer=
+ence only.</li></ul>
+<h2>6. New Candidate Review</h2><ul><li>Eligible research-review candidates: =
+0 total; at most 2 are shown.</li><li>Zero eligible candidates this week.</li=
+><li>Wait for pullback (2 total; up to 3 shown): AVGO, SPY.</li><li>Watch onl=
+y (3 total; up to 4 shown): PANW, MU, ARM.</li><li>Reject count: 0.</li></ul>
+<h2>7. Next Review Triggers</h2><ul><li>A material customer, product, competi=
+tive, governance, or business-quality change weakens the documented thesis.</=
+li><li>Official earnings, guidance, filing, or material news changes the expe=
+cted earnings path.</li><li>Weekly conviction score falls by at least 1.0 poi=
+nt or below 5.5.</li><li>Reference price or public market data is unavailable=
+ or stale.</li><li>Combined active sleeve remains above 30%.</li></ul>
+<h2>8. Safety Boundary</h2><ul><li>Weekly research brief only.</li><li>Eligib=
+le names are research-review candidates only and are not urgent trade instruc=
+tions.</li><li>Every portfolio change requires an independent manual decision=
+.</li><li>The system cannot connect to a broker or alter a brokerage account.=
+</li><li>No archived holding record is used.</li></ul>
+</body></html>
+
+--===============2093107808714673403==--

@@ -1,0 +1,3 @@
+ticker,entry_date,entry_price,position_pct,shares_optional,thesis,horizon_class,planned_review_date,max_loss_pct_of_account,invalidation_rule,current_action,notes
+SAMPLECO,2026-01-15,100.00,3.00,,Illustrative medium-conviction thesis; not a real holding.,medium_conviction,2026-02-15,0.60,Illustrative thesis metric fails.,hold_existing,Example row only.
+WATCHEX,,,0.00,,Illustrative research-only idea; not a real holding.,watch_only,2026-02-15,0.00,Research thesis no longer merits monitoring.,watch_only,Example row only.

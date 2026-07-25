@@ -1,0 +1,33 @@
+{
+  "baseline_mode": false,
+  "filings_recorded": 0,
+  "fundamental_request_errors": [],
+  "fundamental_rows": 6,
+  "held_coverage_complete": true,
+  "held_failures": [],
+  "held_fundamental_coverage_complete": true,
+  "held_fundamental_failures": [],
+  "held_tickers": [
+    "IOT",
+    "RBRK"
+  ],
+  "last_attempt_at": "2026-07-24T23:21:12-04:00",
+  "last_success_at": "2026-07-24T23:21:29-04:00",
+  "network_used": true,
+  "new_material_accessions": [],
+  "new_material_event_count": 0,
+  "optional_missing_tickers": [],
+  "reason": "complete",
+  "request_errors": [],
+  "scan_status": "ok",
+  "scanned_tickers": [
+    "ARM",
+    "AVGO",
+    "IOT",
+    "MU",
+    "PANW",
+    "RBRK",
+    "SPY"
+  ],
+  "schema_version": "phase5r_daily_evidence_status_v1"
+}

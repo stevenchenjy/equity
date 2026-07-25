@@ -1,0 +1,28 @@
+ticker,company_name,sector,industry,theme,liquidity_tier,volatility_tier,is_benchmark,max_position_pct,notes
+NVDA,NVIDIA Corporation,Technology,Semiconductors,AI infrastructure,mega,high,no,4.0,AI accelerator bellwether; placeholder only
+AMD,Advanced Micro Devices,Technology,Semiconductors,AI infrastructure,large,high,no,3.5,AI/CPU/GPU peer; placeholder only
+AVGO,Broadcom Inc.,Technology,Semiconductors,AI infrastructure,mega,medium,no,4.0,Networking and custom silicon exposure
+TSM,Taiwan Semiconductor Manufacturing Company,Technology,Semiconductors,AI infrastructure,mega,medium,no,3.0,Foundry exposure; geopolitical risk requires review
+ASML,ASML Holding,Technology,Semiconductor Equipment,Semiconductors,large,medium,no,3.0,Lithography equipment leader
+ARM,Arm Holdings,Technology,Semiconductors,AI infrastructure,large,high,no,2.5,High valuation and volatility
+MU,Micron Technology,Technology,Memory Semiconductors,AI infrastructure,large,high,no,2.5,Memory cycle exposure
+SMCI,Super Micro Computer,Technology,Computer Hardware,Data centers,large,very_high,no,2.0,High-volatility AI server exposure
+VRT,Vertiv Holdings,Industrials,Electrical Equipment,Data centers,large,high,no,2.5,Data-center power/cooling exposure
+EQIX,Equinix,Real Estate,Data Center REIT,Data centers,large,medium,no,2.5,Data-center infrastructure benchmark
+DLR,Digital Realty Trust,Real Estate,Data Center REIT,Data centers,large,medium,no,2.0,Data-center REIT exposure
+MSFT,Microsoft Corporation,Technology,Cloud Software,Cloud software,mega,low,no,5.0,Cloud and AI platform leader
+GOOGL,Alphabet Inc.,Communication Services,Internet Content,AI infrastructure,mega,medium,no,4.0,AI/search/cloud exposure
+AMZN,Amazon.com Inc.,Consumer Discretionary,Cloud and E-commerce,Cloud software,mega,medium,no,4.0,AWS and consumer platform exposure
+META,Meta Platforms,Communication Services,Internet Content,AI infrastructure,mega,medium,no,4.0,AI infrastructure and advertising exposure
+ORCL,Oracle Corporation,Technology,Cloud Software,Cloud software,large,medium,no,3.0,Cloud infrastructure and database exposure
+NOW,ServiceNow,Technology,Application Software,Cloud software,large,medium,no,3.0,Enterprise workflow software
+CRM,Salesforce,Technology,Application Software,Cloud software,large,medium,no,2.5,Enterprise software benchmark
+SNOW,Snowflake,Technology,Data Platform Software,Cloud software,large,high,no,2.0,Data platform growth exposure
+DDOG,Datadog,Technology,Observability Software,Cloud software,large,high,no,2.0,Cloud observability growth exposure
+NET,Cloudflare,Technology,Edge Cloud Software,Cybersecurity,large,high,no,2.0,Security and edge network exposure
+CRWD,CrowdStrike,Technology,Cybersecurity,Cybersecurity,large,high,no,2.0,Endpoint security growth exposure
+PANW,Palo Alto Networks,Technology,Cybersecurity,Cybersecurity,large,medium,no,2.5,Cybersecurity platform leader
+ZS,Zscaler,Technology,Cybersecurity,Cybersecurity,large,high,no,2.0,Zero-trust security exposure
+QQQ,Invesco QQQ Trust,ETF,Benchmark ETF,Benchmark ETF,mega,medium,yes,10.0,Nasdaq-100 benchmark
+XLK,Technology Select Sector SPDR Fund,ETF,Benchmark ETF,Benchmark ETF,mega,medium,yes,10.0,Technology sector benchmark
+SPY,SPDR S&P 500 ETF Trust,ETF,Benchmark ETF,Benchmark ETF,mega,low,yes,10.0,Broad market benchmark
