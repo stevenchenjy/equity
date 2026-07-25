@@ -298,5 +298,11 @@
   "296": "check_phase5r_llm_shadow_status.sh",
   "297": "install_phase5r_llm_shadow_scheduler.sh",
   "298": "uninstall_phase5r_llm_shadow_scheduler.sh",
-  "299": "__init__.py"
+  "299": "__init__.py",
+  "300": "Phase 5R LLM Replay Corpus Design",
+  "301": "main",
+  "302": "create_phase5r_c5_research_queue.py",
+  "303": "main",
+  "304": "main",
+  "305": "main"
 }

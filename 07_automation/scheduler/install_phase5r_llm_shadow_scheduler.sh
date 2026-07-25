@@ -28,9 +28,53 @@ assert registry["live_shadow_enabled"] is True
 assert registry["canonical_influence_enabled"] is False
 assert registry["provider_credentials_read_by_repository"] is False
 assert registry["tools_enabled"] is False
+assert registry["one_call_per_unique_packet_role"] is True
+assert registry["provider"] == "codex_cli_external_auth"
+assert registry["provider_executable"] == (
+    "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/"
+    "@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex"
+)
+import hashlib
+provider = Path(registry["provider_executable"]).resolve()
+assert provider.is_file()
+assert hashlib.sha256(provider.read_bytes()).hexdigest() == registry["provider_executable_sha256"]
 '
 
 /usr/bin/plutil -lint "${template_plist}" >/dev/null
+"${python_bin}" -c '
+import plistlib
+from pathlib import Path
+template = Path("/Users/messssi/Desktop/equity/07_automation/scheduler/com.steven.phase5r.llmshadow.plist.template")
+with template.open("rb") as handle:
+    payload = plistlib.load(handle)
+assert payload["Label"] == "com.steven.phase5r.llmshadow"
+assert payload["RunAtLoad"] is True
+assert payload["KeepAlive"] is False
+assert payload["StartInterval"] == 900
+assert "StartCalendarInterval" not in payload
+assert payload["WorkingDirectory"] == "/Users/messssi/Desktop/equity"
+assert payload["ProgramArguments"] == [
+    "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+    "/Users/messssi/Desktop/equity/09_scripts/phase5r/run_phase5r_llm_shadow_scheduler.py",
+]
+'
+"${python_bin}" "${project_root}/09_scripts/phase5r/run_phase5r_llm_shadow_scheduler.py" --safe-check
+
+install_complete=0
+cleanup_incomplete_install() {
+    exit_code=$?
+    if (( install_complete == 0 )); then
+        if /bin/launchctl print "${launch_domain}/${job_label}" >/dev/null 2>&1; then
+            /bin/launchctl bootout "${launch_domain}/${job_label}" >/dev/null 2>&1 || true
+        fi
+        if [[ -f "${installed_plist}" ]]; then
+            /bin/rm -f "${installed_plist}"
+        fi
+    fi
+    exit "${exit_code}"
+}
+trap cleanup_incomplete_install EXIT
+
 /bin/mkdir -p "${launch_agents_dir}" "/Users/messssi/Library/Logs"
 if /bin/launchctl print "${launch_domain}/${job_label}" >/dev/null 2>&1; then
     /bin/launchctl bootout "${launch_domain}/${job_label}"
@@ -40,6 +84,8 @@ fi
 /bin/launchctl bootstrap "${launch_domain}" "${installed_plist}"
 /bin/launchctl enable "${launch_domain}/${job_label}"
 "${python_bin}" "${project_root}/09_scripts/phase5r/run_phase5r_llm_shadow_scheduler.py" --safe-check
+install_complete=1
+trap - EXIT
 
 /usr/bin/printf '%s\n' \
     "llm_shadow_scheduler_installed=true" \

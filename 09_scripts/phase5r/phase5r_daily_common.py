@@ -8,6 +8,7 @@ import fcntl
 import hashlib
 import json
 import os
+import stat
 import tempfile
 from contextlib import AbstractContextManager
 from datetime import date, datetime
@@ -300,7 +301,7 @@ def unresolved_execution_conflicts() -> list[str]:
 
 
 class ExclusiveFileLock(AbstractContextManager["ExclusiveFileLock"]):
-    """Process lock using flock; the file itself is harmless and reusable."""
+    """Process lock using flock over a private, non-linked regular file."""
 
     def __init__(self, path: Path) -> None:
         self.path = path
@@ -308,7 +309,31 @@ class ExclusiveFileLock(AbstractContextManager["ExclusiveFileLock"]):
 
     def __enter__(self) -> "ExclusiveFileLock":
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.handle = self.path.open("a+", encoding="utf-8")
+        if not hasattr(os, "O_NOFOLLOW"):
+            raise RuntimeError("O_NOFOLLOW is required for canonical file locks")
+        file_descriptor = os.open(
+            self.path,
+            os.O_RDWR
+            | os.O_CREAT
+            | os.O_NOFOLLOW
+            | getattr(os, "O_CLOEXEC", 0),
+            0o600,
+        )
+        metadata = os.fstat(file_descriptor)
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            os.close(file_descriptor)
+            raise RuntimeError(
+                f"lock must be a private regular file with one link: {self.path}"
+            )
+        try:
+            self.handle = os.fdopen(
+                file_descriptor,
+                "r+",
+                encoding="utf-8",
+            )
+        except Exception:
+            os.close(file_descriptor)
+            raise
         try:
             fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:

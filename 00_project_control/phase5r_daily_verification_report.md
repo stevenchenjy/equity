@@ -1,6 +1,6 @@
 # Phase 5R Daily Upgrade Verification Report
 
-Generated: `2026-07-24T00:04:30-04:00`
+Generated: `2026-07-24T23:48:40-04:00`
 
 Overall result: **PASS**
 Verification mode: `operational`
@@ -20,9 +20,14 @@ Verification mode: `operational`
 | com.steven.phase5r.dailydecision.loaded | PASS | new job loaded |
 | com.steven.phase5r.dailydecision.installed | PASS | installed plist matches template |
 | com.steven.phase5r.dailydecision.invariants | PASS | RunAtLoad=true KeepAlive=false StartInterval=900 scheduler-only arguments |
+| llm_shadow.job_state | PASS | separate shadow job is installed only after explicit live-shadow enablement |
+| llm_shadow.plist_invariants | PASS | RunAtLoad=true KeepAlive=false StartInterval=900 isolated shadow wrapper only |
 | python.syntax | PASS | all daily Python files compile |
 | shell.safety | PASS | zsh syntax passes and unsafe read-only assignment names are absent |
 | refresh.no_sender | PASS | refresh pipeline has no sender or SMTP-config reference |
+| llm_shadow.not_in_critical_path | PASS | canonical refresh, decision, scheduler, and sender do not invoke the model layer |
+| llm_shadow.registry_fail_closed | PASS | model registry is isolated, stateless, credential-free, and non-canonical |
+| llm_shadow.boundary_verifier | PASS | fixture-only shadow verifier passed without provider, email, SMTP, or canonical effects |
 | sender.ordering | PASS | eligibility, lock, dedupe, config validation, durable claim, SMTP ordering |
 | smtp.single_owner | PASS | only the new sender opens SMTP configuration |
 | prohibited.code | PASS | no broker/account/order API imports or calls |

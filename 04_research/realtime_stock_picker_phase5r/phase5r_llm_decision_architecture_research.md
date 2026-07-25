@@ -27,12 +27,12 @@ The optimal upgrade is a hybrid decision system:
 The model should receive more **read-only evidence**, not more operational
 authority. It may propose one of:
 
-- `eligible_buy_review`
-- `add_review`
+- `paper_trade_candidate`
+- `real_trade_candidate`
 - `hold_existing`
 - `trim_review`
 - `exit_review`
-- `watch_only`
+- `watchlist`
 - `reject`
 - `abstain`
 
@@ -151,13 +151,17 @@ decisive signal.
 
 ### 4. Recommended primary model and API
 
-Use the OpenAI Responses API with strict Structured Outputs.
+Use strict Structured Outputs through a narrow provider boundary. The first
+implemented replay transport is a pinned, externally authenticated,
+tool-disabled Codex CLI process because repository policy forbids reading API
+credentials. A direct OpenAI Responses/Batch API adapter remains an evaluation
+option only after an equally narrow external credential boundary is approved.
 
 | Workload | Initial model | Setting | Reason |
 | --- | --- | --- | --- |
 | Filing and evidence extraction | `gpt-5.6-terra` | `reasoning.effort=medium` | Stronger cost/quality balance for repeatable structured extraction |
 | Thesis update and action proposal | `gpt-5.6-sol` | `reasoning.effort=high` | Frontier model for the smaller set of high-value decisions |
-| Material ADD/TRIM/EXIT critic | `gpt-5.6-sol` | independent prompt, `high`; evaluate `pro` only if measured | Limits routine cost; applies extra scrutiny only to action transitions |
+| Independent critic | `gpt-5.6-sol` | separate stateless prompt, `high`; evaluate `pro` only if measured | Runs on every packet during evaluation/shadow so catch and false-downgrade rates are measurable; later event gating requires its own replay |
 
 As of 2026-07-24, OpenAI identifies GPT-5.6 Sol as the flagship model and Terra
 as the intelligence/cost balance. Both support the Responses API, reasoning,
@@ -173,11 +177,13 @@ Do not use `chat-latest` or an untracked convenience alias. Record the exact
 model ID, request settings, prompt version, schema version, response ID, token
 usage, source-packet hash, and timestamp for every run.
 
-Use the official OpenAI Python SDK directly behind a thin local `ModelProvider`
-interface. A request is valid only after explicit success-status, refusal, and
-incomplete-response checks plus independent local schema, citation, numeric, and
-policy validation. Do not silently repair or retry a semantically invalid
-finance answer into apparent validity.
+Keep a thin local `ModelProvider` interface. The implemented adapter pins and
+rehashes the native Codex executable before every launch, runs in an ephemeral
+read-only directory with model tools disabled and a minimal environment, and
+records hashes rather than provider stdout/stderr content. A future official
+OpenAI SDK adapter must provide equivalent success-status, refusal, incomplete,
+schema, citation, numeric, and policy checks. Do not silently repair or retry a
+semantically invalid finance answer into apparent validity.
 
 OpenAI documents that API inputs and outputs are not used for model training
 unless the customer opts in. It also documents that default abuse-monitoring
@@ -239,7 +245,7 @@ third party.
 | --- | --- | --- | --- |
 | [EdgarTools](https://github.com/dgunning/edgartools) | Active; repository pushed 2026-07-19 and reports v5.43.0; [MIT](https://github.com/dgunning/edgartools/blob/main/LICENSE.txt) | Typed SEC filings, sections, and XBRL behind the raw SEC archive | Do not enable agent/MCP surfaces; record parser version; raw SEC artifact remains canonical |
 | [Docling](https://github.com/docling-project/docling) | Active; repository pushed 2026-07-24 and reports v2.115.0; [MIT](https://github.com/docling-project/docling/blob/main/LICENSE) | Issuer PDFs, image-heavy releases, and presentations | SEC HTML/iXBRL remains preferred; preserve page/bounding-box provenance and reconcile critical tables to raw/XBRL because document-table extraction can fail |
-| [OpenAI Python SDK](https://github.com/openai/openai-python) | Active; repository pushed 2026-07-24 and reports v2.48.0; [Apache-2.0](https://github.com/openai/openai-python/blob/main/LICENSE) | Direct Responses API client | Pin version; no generic agent/tools; check refusal/incomplete/status and validate locally |
+| [OpenAI Python SDK](https://github.com/openai/openai-python) | Active; repository pushed 2026-07-24 and reports v2.48.0; [Apache-2.0](https://github.com/openai/openai-python/blob/main/LICENSE) | Deferred direct Responses/Batch client | Repository policy currently forbids reading provider credentials; evaluate only behind a separately approved external credential boundary |
 | [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai) | Active; repository pushed 2026-07-24; [MIT](https://github.com/UKGovernmentBEIS/inspect_ai/blob/main/LICENSE) | Offline/CI replay and adversarial evaluation harness | Project deterministic scorers, frozen packets, and promotion policy remain authoritative |
 
 #### Shadow-test or defer
@@ -348,14 +354,17 @@ automatic no-go regardless of average benchmark score.
 
 ## Final recommendation
 
-Proceed with a separate, asynchronous shadow-only hybrid upgrade. Use
-provenance-first raw SEC artifacts, EdgarTools as the primary structured parser,
-Docling only where PDF layout requires it, the official OpenAI Python SDK behind
-a thin provider adapter, and Inspect AI plus deterministic project scorers for
-evaluation. Use GPT-5.6 Terra for structured evidence extraction and GPT-5.6 Sol
-for the thesis/action committee, subject to project-specific model comparison.
-Add a critic on action transitions, move price quality to a licensed market-data
-provider, and keep deterministic C9 rules as the final policy gate.
+Proceed with a separate, asynchronous shadow-only hybrid upgrade. Keep
+provenance-first raw SEC artifacts authoritative; evaluate EdgarTools behind
+them and Docling only where PDF layout requires it. Use the implemented pinned
+external CLI bridge for the first controlled provider replay, and evaluate the
+official OpenAI Python SDK or Batch API only behind a separately approved
+credential boundary. Inspect AI may later orchestrate evaluations while
+deterministic project scorers remain authoritative. Use GPT-5.6 Terra for
+structured evidence extraction and GPT-5.6 Sol for the thesis/action committee,
+subject to project-specific model comparison. Add an independent critic, move
+price quality to a licensed market-data provider, and keep deterministic C9
+rules as the final policy gate.
 
 Do not place any model/API request in refresh, C9, the deterministic decision
 pipeline, or the sender. Do not promote the model layer until at least 200

@@ -36,6 +36,14 @@ from phase5r_daily_common import (
     log_daily_run,
     append_csv_durable,
 )
+from phase5r_sec_acceptance import (
+    AcceptanceIndexError,
+    build_acceptance_index,
+    load_acceptance_index,
+    make_acceptance_record,
+    normalize_acceptance_timestamp,
+    write_acceptance_index,
+)
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -207,6 +215,9 @@ def recent_filings(payload: dict[str, Any]) -> list[dict[str, str]]:
                 "accession_number": str(accession).strip(),
                 "form": form,
                 "filing_date": value("filingDate"),
+                "accepted_at": normalize_acceptance_timestamp(
+                    value("acceptanceDateTime")
+                ),
                 "items": value("items"),
                 "primary_document": value("primaryDocument"),
             }
@@ -395,6 +406,8 @@ def main() -> int:
     fundamental_rows: list[dict[str, str]] = []
     missing_tickers: list[str] = []
     new_material_events: list[dict[str, str]] = []
+    prior_acceptance_index = load_acceptance_index()
+    new_acceptance_records: list[dict[str, str]] = []
     filings_recorded = 0
 
     try:
@@ -433,8 +446,27 @@ def main() -> int:
             errors.append(f"{ticker}:{type(exc).__name__}")
             continue
 
+        try:
+            filings = recent_filings(payload)
+            submission_url = SEC_SUBMISSIONS_URL.format(cik=cik)
+            new_acceptance_records.extend(
+                make_acceptance_record(
+                    accession_number=filing["accession_number"],
+                    ticker=ticker,
+                    cik=cik,
+                    filing_date=filing["filing_date"],
+                    accepted_at=filing["accepted_at"],
+                    source_url=submission_url,
+                )
+                for filing in filings
+                if filing["accepted_at"]
+            )
+        except AcceptanceIndexError as exc:
+            errors.append(f"{ticker}:{type(exc).__name__}")
+            continue
+
         existing = seen_by_ticker.setdefault(ticker, set())
-        for filing in recent_filings(payload):
+        for filing in filings:
             accession = filing["accession_number"]
             if not accession or accession in existing:
                 continue
@@ -501,6 +533,12 @@ def main() -> int:
         if fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
     )
     atomic_write_csv(FUNDAMENTALS_PATH, FUNDAMENTAL_FIELDS, fundamental_rows)
+    acceptance_index = build_acceptance_index(
+        prior_records=prior_acceptance_index["records"],
+        new_records=new_acceptance_records,
+        generated_at=iso_now(),
+    )
+    write_acceptance_index(acceptance_index)
     success_at = iso_now()
     state.update(
         {
@@ -541,6 +579,8 @@ def main() -> int:
         "new_material_accessions": [
             row["accession_number"] for row in new_material_events
         ],
+        "sec_acceptance_record_count": acceptance_index["record_count"],
+        "sec_acceptance_source": acceptance_index["source_authority"],
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)

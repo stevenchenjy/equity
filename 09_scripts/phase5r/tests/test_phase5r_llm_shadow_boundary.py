@@ -17,9 +17,16 @@ from evaluate_phase5r_llm_decision import (
     evaluate_manifest,
     write_report,
 )
+from enable_phase5r_llm_live_shadow import offline_replay_status
 from phase5r_daily_common import EMAIL_CONFIG_PATH
 from phase5r_llm_contract import ContractError, validate_packet
-from run_phase5r_llm_shadow import output_paths
+from run_phase5r_llm_shadow import (
+    ShadowOutputLock,
+    _write_audit,
+    load_registry,
+    output_paths,
+)
+from run_phase5r_llm_shadow_scheduler import validate_runtime_boundary
 
 
 SCRIPT_DIR = PROJECT_ROOT / "09_scripts" / "phase5r"
@@ -46,6 +53,10 @@ SENTINELS = (
     / "email_delivery"
     / "phase5r_c6_delivery_status.csv",
     PROJECT_ROOT / "00_project_control" / "run_logs" / "phase5r_c7_run_log.csv",
+    PROJECT_ROOT
+    / "00_project_control"
+    / "run_logs"
+    / "phase5r_c7_weekly_pipeline_run_log.csv",
     PROJECT_ROOT
     / "04_research"
     / "realtime_stock_picker_phase5r"
@@ -209,6 +220,82 @@ class BoundaryTests(unittest.TestCase):
         packet["entities"][0]["thesis"] = "SMTP_CANARY_DO_NOT_LEAK"
         with self.assertRaisesRegex(ContractError, "sensitive/local marker"):
             validate_packet(rehash(packet))
+
+    def test_audit_append_refuses_symlink_target(self) -> None:
+        bundle = {
+            "model_run_id": "canary-run",
+            "packet_id": "canary-packet",
+            "decision_fingerprint": "canary-decision",
+            "outcome": "validated",
+            "adjudication": {
+                "effective_classification": "hold_existing",
+                "validation_passed": True,
+            },
+            "provider_metadata": [],
+        }
+        with tempfile.TemporaryDirectory(prefix="phase5r-audit-link-test-") as directory:
+            root = Path(directory)
+            canary = root / "canonical-canary.txt"
+            canary.write_text("UNCHANGED\n", encoding="utf-8")
+            link = root / "phase5r_llm_decision_audit.jsonl"
+            link.symlink_to(canary)
+            before = canary.read_bytes()
+            with self.assertRaises(OSError):
+                _write_audit(link, bundle)
+            self.assertEqual(canary.read_bytes(), before)
+
+    def test_live_runner_exposes_no_close_count_override(self) -> None:
+        source = (SCRIPT_DIR / "run_phase5r_llm_shadow.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("--distinct-valid-closes", source)
+
+    def test_shadow_output_lock_refuses_symlink(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-lock-link-test-") as directory:
+            root = Path(directory)
+            canary = root / "canonical-canary.lock"
+            canary.write_text("UNCHANGED\n", encoding="utf-8")
+            link = root / "phase5r_llm_shadow.lock"
+            link.symlink_to(canary)
+            with self.assertRaises(OSError):
+                with ShadowOutputLock(link):
+                    pass
+            self.assertEqual(canary.read_text(encoding="utf-8"), "UNCHANGED\n")
+
+    def test_scheduler_revalidates_runtime_boundary(self) -> None:
+        active = {
+            "current_workflow": "daily_decision",
+            "active_pipeline": "phase5r_daily",
+            "email_delivery_allowed_from": "phase5r_daily_only",
+            "broker_connection_allowed": "no",
+            "order_code_allowed": "no",
+            "manual_execution_only": "yes",
+        }
+        inhibit = {"active": False, "allowed_pipeline": "phase5r_daily"}
+        registry = load_registry()
+        validate_runtime_boundary(active, inhibit, registry)
+        active["active_pipeline"] = "phase5r_c7"
+        with self.assertRaisesRegex(RuntimeError, "active.active_pipeline"):
+            validate_runtime_boundary(active, inhibit, registry)
+
+    def test_installer_preflights_before_bootstrap(self) -> None:
+        source = (
+            PROJECT_ROOT
+            / "07_automation"
+            / "scheduler"
+            / "install_phase5r_llm_shadow_scheduler.sh"
+        ).read_text(encoding="utf-8")
+        self.assertLess(
+            source.index("run_phase5r_llm_shadow_scheduler.py\" --safe-check"),
+            source.index("/bin/launchctl bootstrap"),
+        )
+        self.assertIn("cleanup_incomplete_install", source)
+
+    def test_live_activation_is_blocked_until_replay_corpus_gate(self) -> None:
+        ready, case_count, transition_count = offline_replay_status(200, 50)
+        self.assertFalse(ready)
+        self.assertLess(case_count, 200)
+        self.assertLess(transition_count, 50)
 
 
 if __name__ == "__main__":

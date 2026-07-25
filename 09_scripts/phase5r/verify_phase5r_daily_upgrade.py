@@ -92,6 +92,10 @@ MUTATION_SENTINELS = (
     ROOT / "07_automation" / "email_delivery" / "phase5r_c2_delivery_status.csv",
     ROOT / "07_automation" / "email_delivery" / "phase5r_c6_delivery_status.csv",
     ROOT / "00_project_control" / "run_logs" / "phase5r_c7_run_log.csv",
+    ROOT
+    / "00_project_control"
+    / "run_logs"
+    / "phase5r_c7_weekly_pipeline_run_log.csv",
     DAILY_DELIVERY_LEDGER_PATH,
 )
 
@@ -327,8 +331,18 @@ def source_checks(checks: list[dict[str, str]]) -> None:
         registry_mode_ok
         and all(registry.get(field) is False for field in fail_closed_fields)
         and registry.get("stateless") is True
+        and registry.get("one_call_per_unique_packet_role") is True
         and registry.get("provider") == "codex_cli_external_auth"
+        and registry.get("provider_executable")
+        == (
+            "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/"
+            "@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex"
+        )
         and Path(str(registry.get("provider_executable", ""))).is_file()
+        and file_digest_or_absent(
+            Path(str(registry.get("provider_executable", ""))).resolve()
+        )
+        == registry.get("provider_executable_sha256")
     )
     add_check(
         checks,

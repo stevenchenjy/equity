@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import json
+import re
 from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -38,6 +40,7 @@ from phase5r_daily_common import (
     sha256_file,
 )
 from phase5r_llm_contract import PACKET_SCHEMA_VERSION, validate_packet
+from phase5r_sec_acceptance import acceptance_map
 
 
 PACKET_PATH = (
@@ -81,6 +84,30 @@ _UNTRUSTED_INSTRUCTION_PATTERNS = (
     "buy now",
     "sell now",
 )
+_LOCAL_EMAIL_PATTERN = re.compile(
+    r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b"
+)
+_LOCAL_SECRET_PATTERN = re.compile(
+    r"(?i)\b(?:api[_ -]?key|access[_ -]?token|refresh[_ -]?token|"
+    r"password|secret|credential|smtp[_ -]?password|broker[_ -]?token)"
+    r"[A-Z0-9_-]*\s*[:=]\s*[^\s,;]+"
+)
+_LOCAL_PATH_PATTERN = re.compile(
+    r"(?i)(?:file://|/Users/[^/\s]+/|[A-Z]:\\Users\\[^\\\s]+\\)"
+)
+_LOCAL_CURRENCY_PATTERN = re.compile(
+    r"(?i)(?:[$€£]\s*\d[\d,]*(?:\.\d+)?|"
+    r"\b\d[\d,]*(?:\.\d+)?\s*(?:USD|dollars?)\b)"
+)
+
+
+def _sanitize_local_text(value: Any, *, maximum_length: int = 4000) -> str:
+    text = str(value or "")
+    text = _LOCAL_EMAIL_PATTERN.sub("[email_redacted]", text)
+    text = _LOCAL_SECRET_PATTERN.sub("[secret_redacted]", text)
+    text = _LOCAL_PATH_PATTERN.sub("[local_path_redacted]", text)
+    text = _LOCAL_CURRENCY_PATTERN.sub("[local_currency_redacted]", text)
+    return text[:maximum_length]
 
 
 def _decimal(value: Any) -> Decimal | None:
@@ -171,7 +198,7 @@ def _artifact_map() -> dict[str, list[dict[str, Any]]]:
 def _verified_artifact_chunks(
     artifact: dict[str, Any],
     *,
-    maximum_chunks: int = 4,
+    maximum_chunks: int = 8,
 ) -> list[tuple[dict[str, Any], str]]:
     relative_path = str(artifact.get("normalized_path", ""))
     if not relative_path:
@@ -224,8 +251,36 @@ def _verified_artifact_chunks(
         if index == 0:
             score += 1
         verified.append((score, index, chunk, excerpt))
-    selected = sorted(verified, key=lambda row: (-row[0], row[1]))[:maximum_chunks]
-    return [(chunk, excerpt) for _, _, chunk, excerpt in sorted(selected, key=lambda row: row[1])]
+    if not verified or maximum_chunks <= 0:
+        return []
+    by_index = sorted(verified, key=lambda row: row[1])
+    semantic_slots = min(len(by_index), max(1, maximum_chunks // 2))
+    selected_by_index = {
+        row[1]: row
+        for row in sorted(verified, key=lambda row: (-row[0], row[1]))[
+            :semantic_slots
+        ]
+    }
+    coverage_slots = maximum_chunks - len(selected_by_index)
+    if coverage_slots > 0:
+        if coverage_slots == 1:
+            coverage_positions = [0]
+        else:
+            coverage_positions = [
+                round(position * (len(by_index) - 1) / (coverage_slots - 1))
+                for position in range(coverage_slots)
+            ]
+        for position in coverage_positions:
+            selected_by_index[by_index[position][1]] = by_index[position]
+    if len(selected_by_index) < min(maximum_chunks, len(by_index)):
+        for row in sorted(verified, key=lambda item: (-item[0], item[1])):
+            selected_by_index.setdefault(row[1], row)
+            if len(selected_by_index) >= min(maximum_chunks, len(by_index)):
+                break
+    selected = sorted(selected_by_index.values(), key=lambda row: row[1])[
+        :maximum_chunks
+    ]
+    return [(chunk, excerpt) for _, _, chunk, excerpt in selected]
 
 
 def _entities(
@@ -259,11 +314,15 @@ def _entities(
                 "concentration_status": recommendation.get(
                     "concentration_status", "unknown"
                 ),
-                "holding_horizon": position.get("horizon_class", ""),
-                "thesis": position.get("thesis", ""),
-                "invalidation_rule": position.get("invalidation_rule", ""),
-                "deterministic_recommendation": recommendation.get(
-                    "recommended_action", "hold"
+                "holding_horizon": _sanitize_local_text(
+                    position.get("horizon_class", "")
+                ),
+                "thesis": _sanitize_local_text(position.get("thesis", "")),
+                "invalidation_rule": _sanitize_local_text(
+                    position.get("invalidation_rule", "")
+                ),
+                "deterministic_recommendation": _sanitize_local_text(
+                    recommendation.get("recommended_action", "hold")
                 ),
             }
         )
@@ -440,6 +499,7 @@ def _filing_evidence(
     tickers: set[str],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], set[str]]:
     artifacts = _artifact_map()
+    acceptance_records = acceptance_map()
     by_ticker: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in read_csv(EVIDENCE_LEDGER_PATH):
         ticker = row.get("ticker", "").upper()
@@ -466,6 +526,31 @@ def _filing_evidence(
         )
         for row in selected:
             accession = row.get("accession_number", "")
+            acceptance_record = acceptance_records.get(accession, {})
+            accepted_at = str(acceptance_record.get("accepted_at", ""))
+            acceptance_source_id = (
+                f"sec-acceptance:{accession}" if acceptance_record else ""
+            )
+            if acceptance_record:
+                sources.append(
+                    _source(
+                        source_id=acceptance_source_id,
+                        source_type="sec_submission_acceptance",
+                        ticker=ticker,
+                        accepted_at=accepted_at,
+                        source_url=str(acceptance_record["source_url"]),
+                        content_sha256=str(
+                            acceptance_record["record_sha256"]
+                        ),
+                        locator={
+                            "cik": acceptance_record["cik"],
+                            "accession_number": accession,
+                            "filing_date": acceptance_record["filing_date"],
+                            "field": "acceptanceDateTime",
+                        },
+                        authority="primary_official_metadata",
+                    )
+                )
             artifact_rows = artifacts.get(accession, [])
             chunk_ids: list[str] = []
             for artifact in artifact_rows:
@@ -483,7 +568,7 @@ def _filing_evidence(
                             source_id=chunk_id,
                             source_type="sec_filing_text_chunk",
                             ticker=ticker,
-                            accepted_at=row.get("detected_at", ""),
+                            accepted_at=accepted_at,
                             source_url=row.get("source_url", ""),
                             content_sha256=str(chunk.get("sha256", "")),
                             locator={
@@ -501,7 +586,7 @@ def _filing_evidence(
                             excerpt_text=excerpt,
                         )
                     )
-            if chunk_ids:
+            if chunk_ids and acceptance_record:
                 covered.add(ticker)
             metadata_source_id = f"sec-filing-metadata:{accession}"
             sources.append(
@@ -527,11 +612,13 @@ def _filing_evidence(
                     "cik": row.get("cik", ""),
                     "form": row.get("form", ""),
                     "filing_date": row.get("filing_date", ""),
+                    "accepted_at": accepted_at,
                     "accession_number": accession,
                     "items": row.get("items", ""),
                     "materiality": row.get("materiality", ""),
                     "material_event": row.get("material_event", ""),
                     "metadata_source_id": metadata_source_id,
+                    "acceptance_source_id": acceptance_source_id,
                     "text_chunk_source_ids": chunk_ids,
                 }
             )
@@ -559,7 +646,7 @@ def _research_context(
         source_id = f"research-context:{ticker}:{c5_row.get('evidence_checked_at') or cycle_date()}"
         public_context = {
             "ticker": ticker,
-            "theme": c5_row.get("theme", ""),
+            "theme": _sanitize_local_text(c5_row.get("theme", "")),
             "business_quality_score": c5_row.get("business_quality_score", ""),
             "earnings_revenue_trend_score": c5_row.get(
                 "earnings_revenue_trend_score", ""
@@ -577,11 +664,16 @@ def _research_context(
             "deterministic_conviction_score": c9_row.get(
                 "account_aware_conviction_score", ""
             ),
-            "recommendation_label": recommendation.get(
-                "recommendation_label", recommendation.get("eligibility_label", "")
+            "recommendation_label": _sanitize_local_text(
+                recommendation.get(
+                    "recommendation_label",
+                    recommendation.get("eligibility_label", ""),
+                )
             ),
-            "recommended_action": recommendation.get("recommended_action", ""),
-            "reason": recommendation.get("reason", ""),
+            "recommended_action": _sanitize_local_text(
+                recommendation.get("recommended_action", "")
+            ),
+            "reason": _sanitize_local_text(recommendation.get("reason", "")),
             "primary_source_url": c5_row.get("primary_source_url", ""),
             "filing_source_url": c5_row.get("filing_source_url", ""),
             "evidence_checked_at": c5_row.get("evidence_checked_at", ""),
@@ -658,10 +750,19 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     filings, filing_sources, artifact_covered = _filing_evidence(tickers)
     research, research_sources, research_calculations = _research_context(tickers)
     source_catalog = market_sources + fundamental_sources + filing_sources + research_sources
+    untrusted_text = json.dumps(
+        {
+            "entities": entities,
+            "research_context": research,
+            "source_excerpts": [
+                source.get("excerpt_text", "") for source in source_catalog
+            ],
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+    ).lower()
     prompt_injection_text_detected = any(
-        pattern in str(source.get("excerpt_text", "")).lower()
-        for source in source_catalog
-        for pattern in _UNTRUSTED_INSTRUCTION_PATTERNS
+        pattern in untrusted_text for pattern in _UNTRUSTED_INSTRUCTION_PATTERNS
     )
 
     market_gate = decision.get("market_gate", {})
@@ -696,6 +797,10 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
         },
         "gates": {
             "market_data_current": market_gate.get("passed") is True,
+            # The active B2 source is public yfinance context.  It is useful for
+            # HOLD/WATCH research, but it is not a licensed SIP-grade action
+            # source and therefore cannot independently unlock a transition.
+            "market_data_action_grade": False,
             "sec_held_coverage_complete": evidence_status.get(
                 "held_coverage_complete"
             )
@@ -707,9 +812,34 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
             "filing_artifact_provenance_complete": held_tickers.issubset(
                 artifact_covered
             ),
+            "sec_acceptance_provenance_complete": held_tickers.issubset(
+                artifact_covered
+            ),
             "account_state_consistent": not decision.get("account_conflicts", []),
             "point_in_time_safe": point_in_time_safe,
             "prompt_injection_text_detected": prompt_injection_text_detected,
+            "deterministic_action_stability_distinct_closes": int(
+                decision.get("action_stability_distinct_closes", 0) or 0
+            ),
+            "deterministic_transition_pending_tickers": sorted(
+                {
+                    str(value).upper()
+                    for value in decision.get("pending_stability_candidates", [])
+                    if str(value).strip()
+                }
+            ),
+            "deterministic_transition_eligible_tickers": sorted(
+                {
+                    str(row.get("ticker", "")).upper()
+                    for row in decision.get("eligible_action_review_candidates", [])
+                    if isinstance(row, dict) and str(row.get("ticker", "")).strip()
+                }
+            ),
+            "verified_close_session": (
+                str(market_gate.get("expected_market_session", ""))
+                if market_gate.get("complete_close_verified") is True
+                else ""
+            ),
         },
         "market_observations": market,
         "fundamental_observations": fundamental,
@@ -738,7 +868,8 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=PACKET_PATH)
     args = parser.parse_args()
 
-    packet = build_packet(args.as_of)
+    verification_as_of = args.as_of or (iso_now() if args.check else None)
+    packet = build_packet(verification_as_of)
     if args.check:
         print(
             f"safe_check_passed=true packet_valid=true packet_id={packet['packet_id']} "

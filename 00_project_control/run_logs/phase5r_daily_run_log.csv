@@ -31,3 +31,5 @@ logged_at,cycle_date,component,run_mode,outcome,reason,email_attempted,email_sen
 2026-07-24T23:21:29-04:00,2026-07-24,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no
 2026-07-24T23:21:29-04:00,2026-07-24,daily_decision,compose_no_send,passed,hold_no_new_position,no,no,no,no,no,no,no,no
 2026-07-24T23:21:29-04:00,2026-07-24,daily_refresh,public_research_no_send,passed,complete,no,no,no,no,no,no,no,no
+2026-07-25T00:02:19-04:00,2026-07-25,evidence_refresh,live_public_read,failed,held_ticker_sec_scan_failed,no,no,no,no,no,no,no,no
+2026-07-25T00:03:47-04:00,2026-07-25,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no

@@ -157,6 +157,13 @@ def _apply_scenario(
             thesis_direction="broken",
             material_break=True,
         )
+        analyst_claim = responses["analyst"]["claims"][0]
+        analyst_claim["stance"] = "weakens"
+        analyst_claim["materiality"] = "high"
+        analyst_claim["time_horizon"] = "long_term"
+        analyst_claim["claim"] = (
+            "Primary-source evidence shows a material long-term thesis break."
+        )
         decision["rationale"] = (
             "The primary filing contains a material long-term thesis break."
         )

@@ -26,5 +26,10 @@
   "email_cadence": "weekday_daily_once;weekend_material_change_only",
   "weekend_email_policy": "material_change_only",
   "d2_scheduler_status": "retired_unloaded",
-  "d3_scheduler_status": "retired_unloaded"
+  "d3_scheduler_status": "retired_unloaded",
+  "llm_shadow_status": "offline_hardened_replay_gate_pending",
+  "llm_shadow_canonical_influence": "disabled",
+  "llm_shadow_scheduler_status": "not_installed",
+  "llm_provider_credentials_in_repository": "no",
+  "model_decision_authority": "research_shadow_only"
 }

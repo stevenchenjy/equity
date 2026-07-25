@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import socket
 import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -95,7 +97,72 @@ class ProviderTests(unittest.TestCase):
 
     def test_codex_bridge_cannot_be_inside_project(self) -> None:
         with self.assertRaisesRegex(ProviderError, "cannot live inside"):
-            CodexCliProvider(PROJECT_ROOT / "AGENTS.md")
+            CodexCliProvider(
+                PROJECT_ROOT / "AGENTS.md",
+                expected_sha256="0" * 64,
+            )
+
+    def test_codex_bridge_disables_tools_and_strips_sensitive_environment(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-provider-test-") as directory:
+            executable = Path(directory) / "codex"
+            executable.write_text("#!/bin/sh\n", encoding="utf-8")
+            executable.chmod(0o755)
+            expected_hash = hashlib.sha256(executable.read_bytes()).hexdigest()
+            provider = CodexCliProvider(
+                executable,
+                expected_sha256=expected_hash,
+            )
+
+            def completed(command: list[str], **kwargs: object):
+                output_path = Path(command[command.index("--output-last-message") + 1])
+                output_path.write_text('{"ok": true}', encoding="utf-8")
+                environment = kwargs["env"]
+                self.assertNotIn("OPENAI_API_KEY", environment)
+                self.assertNotIn("SMTP_PASSWORD", environment)
+                self.assertNotIn("BROKER_TOKEN", environment)
+                for feature in (
+                    "shell_tool",
+                    "unified_exec",
+                    "apps",
+                    "browser_use",
+                    "computer_use",
+                    "plugins",
+                ):
+                    index = command.index(feature)
+                    self.assertEqual(command[index - 1], "--disable")
+                self.assertIn("--ignore-user-config", command)
+                self.assertIn("--ignore-rules", command)
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            with (
+                mock.patch.dict(
+                    "os.environ",
+                    {
+                        "OPENAI_API_KEY": "CANARY_API_SECRET",
+                        "SMTP_PASSWORD": "CANARY_SMTP_SECRET",
+                        "BROKER_TOKEN": "CANARY_BROKER_SECRET",
+                        "LANG": "en_US.UTF-8",
+                    },
+                    clear=False,
+                ),
+                mock.patch(
+                    "phase5r_llm_provider.subprocess.run",
+                    side_effect=completed,
+                ),
+            ):
+                result = provider.generate(
+                    role="analyst",
+                    model="fixture-model",
+                    reasoning_effort="medium",
+                    schema={"type": "object"},
+                    instructions="return one object",
+                    input_payload={"packet": "safe"},
+                )
+            self.assertEqual(result.payload, {"ok": True})
+            self.assertEqual(result.metadata["environment_policy"], "minimal_allowlist")
+            self.assertIn("shell_tool", result.metadata["tool_features_disabled"])
 
 
 if __name__ == "__main__":

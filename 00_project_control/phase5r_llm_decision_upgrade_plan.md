@@ -1,8 +1,9 @@
 # Phase 5R Rigorous Model and Decision API Upgrade Plan
 
 Date: 2026-07-24  
-Status: approved architecture proposal; implementation is gated by SEC
-provenance, replay evaluation, and explicit credential/network activation
+Status: offline architecture implemented and fail-closed; real SEC replay
+materialization, independently reviewed transition labels, provider replay, and
+explicit external-inference activation remain pending
 
 Target: improve decision robustness and decisiveness without automated trading
 
@@ -22,10 +23,10 @@ The target email headline becomes one of:
 - `决定性建议：进入退出复核`
 - `决定性建议：证据不足，暂不改变仓位`
 
-The corresponding machine labels are:
+The corresponding closed machine labels are:
 
-`eligible_buy_review`, `add_review`, `hold_existing`, `trim_review`,
-`exit_review`, `abstain`.
+`reject`, `watchlist`, `hold_existing`, `paper_trade_candidate`,
+`real_trade_candidate`, `trim_review`, `exit_review`, and `abstain`.
 
 The words “复核” are a control boundary, not softened language: the system will
 state what it concludes should be reviewed, why, and what evidence would reverse
@@ -100,10 +101,10 @@ inside the SMTP sender and no model can authorize execution.
 
 | Component | Model | API | Initial setting |
 | --- | --- | --- | --- |
-| Evidence extraction | `gpt-5.6-terra` | OpenAI Responses API | medium reasoning |
-| Thesis and action | `gpt-5.6-sol` | OpenAI Responses API | high reasoning |
-| Action critic | `gpt-5.6-sol` | separate stateless request | high reasoning |
-| High-value escalation experiment | `gpt-5.6-sol` | Responses API pro mode | disabled until eval proves value |
+| Evidence extraction | `gpt-5.6-terra` | pinned, externally authenticated Codex CLI bridge for the first replay | medium reasoning |
+| Thesis and action | `gpt-5.6-sol` | same isolated bridge, separate stateless request | high reasoning |
+| Action critic | `gpt-5.6-sol` | same isolated bridge, independent prompt and request | high reasoning |
+| Direct Responses API / Batch experiment | same pinned models | external managed adapter only | disabled until separately authorized and replay-equivalent |
 | Optional independent challenger | Claude Opus 5 or successor | provider adapter | evaluation only |
 
 Use strict Structured Outputs with a versioned JSON Schema. Do not let models
@@ -146,24 +147,22 @@ Retention is unavailable, send percentages and categorical bands rather than
 exact personal dollar values. See
 https://developers.openai.com/api/docs/guides/your-data.
 
-API credentials must be provided outside the repository at runtime. They must
-never appear in a plist, report, prompt log, exception, command output, or test
-fixture. Credential setup is a separate explicit user action and is not part of
-shadow code verification.
+Provider authentication must remain outside the repository. It must never
+appear in a plist, report, prompt log, exception, command output, or test
+fixture. The implemented transport delegates authentication to a pinned
+external Codex CLI executable and never reads the credential. A direct API
+transport may be evaluated later only if an equally narrow external credential
+boundary is approved.
 
 The repository `AGENTS.md` creates an intentional activation blocker: public
 research network access may be used only explicitly, while credentials may not
-be stored in the repository. A live provider call therefore requires both:
-
-1. a user-provided secret configured outside the repository (for example,
-   macOS Keychain or a process-scoped secure environment); and
-2. explicit authorization for an outbound provider API test.
-
-The implementation must not request, inspect, echo, or persist that secret.
-Until the user completes both actions, only schemas, local fixtures, mock/replay
-tests, packet creation, queueing, and offline validation can run. Real shadow
-model execution remains blocked by missing external credential/network
-authorization, while the deterministic daily workflow remains active.
+be stored in the repository. A live provider call therefore requires explicit
+authorization for outbound inference and a pre-existing external authentication
+session. The implementation must not request, inspect, echo, or persist that
+authentication material. Until authorization and replay gates pass, only
+schemas, local fixtures, mock/replay tests, packet creation, and offline
+validation can run. Real shadow execution remains disabled while the
+deterministic daily workflow stays active.
 
 ### 3.4 Dependency decision
 
@@ -174,7 +173,7 @@ notes are in the companion research report.
 | --- | --- | --- | --- |
 | Adopt | [EdgarTools](https://github.com/dgunning/edgartools) ([license](https://github.com/dgunning/edgartools/blob/main/LICENSE.txt)) | MIT | Typed SEC filing/XBRL/section parser behind the raw SEC archive; do not enable its agent/MCP surface |
 | Adopt | [Docling](https://github.com/docling-project/docling) ([license](https://github.com/docling-project/docling/blob/main/LICENSE)) | MIT | Issuer PDFs and image-heavy documents only, preserving page/bounding-box provenance |
-| Adopt | [OpenAI Python SDK](https://github.com/openai/openai-python) ([license](https://github.com/openai/openai-python/blob/main/LICENSE)) | Apache-2.0 | Direct Responses API adapter with explicit refusal/incomplete/status handling and local Pydantic validation |
+| Defer pending policy/credential design | [OpenAI Python SDK](https://github.com/openai/openai-python) ([license](https://github.com/openai/openai-python/blob/main/LICENSE)) | Apache-2.0 | A direct Responses/Batch adapter is useful, but this repository is not permitted to read provider credentials; the implemented first transport is a pinned, externally authenticated, tool-disabled CLI bridge |
 | Adopt | [Inspect AI](https://github.com/UKGovernmentBEIS/inspect_ai) ([license](https://github.com/UKGovernmentBEIS/inspect_ai/blob/main/LICENSE)) | MIT | Offline/CI evaluation harness; deterministic project scorers remain authoritative |
 | Shadow-test | [sec-parser](https://github.com/alphanome-ai/sec-parser) ([license](https://github.com/alphanome-ai/sec-parser/blob/main/LICENSE)) | MIT | Sampled parser-agreement checks only |
 | Defer | [PydanticAI](https://github.com/pydantic/pydantic-ai) ([license](https://github.com/pydantic/pydantic-ai/blob/main/LICENSE)) | MIT | Useful typed-agent framework, but rapid churn and tool surfaces are unnecessary for a non-agent worker |
@@ -285,9 +284,14 @@ calculation or remain missing.
 
 ### 5.3 Adversarial Critic
 
-The critic is mandatory for `eligible_buy_review`, `add_review`, `trim_review`,
-and `exit_review`. It receives the same frozen packet and the proposed decision,
-but not the committee's hidden reasoning. It must test:
+The critic is mandatory for `paper_trade_candidate`,
+`real_trade_candidate`, `trim_review`, and `exit_review`. During the initial
+replay and live-shadow evaluation it runs on every packet so its incremental
+catch rate and false-downgrade rate can be measured. It receives the sealed
+packet's cited evidence plus a separately marked set of uncited packet-local
+sources and reconciled calculations, so it can detect omitted counterevidence.
+It receives no uncontrolled archive context, tools, or hidden reasoning. It
+must test:
 
 - the strongest alternative explanation;
 - contradicting primary-source evidence;
@@ -444,19 +448,25 @@ Acceptance:
 
 ### WP1 — Market and evidence provenance
 
-Modify:
+Implemented:
 
-- `09_scripts/phase5r/run_phase5r_b2_full_universe_market_data.py`
 - `09_scripts/phase5r/refresh_phase5r_daily_evidence.py`
-
-Create:
-
-- `09_scripts/phase5r/phase5r_market_data_provider.py`
 - `09_scripts/phase5r/build_phase5r_decision_evidence_packet.py`
+- `09_scripts/phase5r/phase5r_sec_acceptance.py`
+
+Pending external data-provider selection:
+
+- add a narrow read-only licensed market-data adapter only after the user
+  selects and provisions a provider outside the repository;
+- until then B2 `yfinance` observations are secondary context and
+  `market_data_action_grade=false`, so market-dependent action transitions fail
+  closed.
 
 Acceptance:
 
-- licensed primary market-data path works in read-only mode;
+- exact SEC accession/acceptance provenance and raw artifact hashes pass;
+- a future licensed primary market-data path works in read-only mode before
+  `market_data_action_grade` may become true;
 - provider agreement and corporate actions are checked;
 - raw SEC filing text is hashed and source-located before parser output is used;
 - SEC accession/accepted time/raw hash/parser version/span or page/bbox and XBRL
@@ -466,14 +476,13 @@ Acceptance:
 
 ### WP2 — Structured model layer
 
-Create:
+Implemented:
 
 - `09_scripts/phase5r/phase5r_llm_contract.py`
 - `09_scripts/phase5r/phase5r_llm_provider.py`
-- `09_scripts/phase5r/run_phase5r_llm_evidence_analyst.py`
-- `09_scripts/phase5r/run_phase5r_llm_decision_committee.py`
-- `09_scripts/phase5r/validate_phase5r_llm_decision.py`
-- versioned prompts under `09_scripts/phase5r/prompts/`
+- `09_scripts/phase5r/run_phase5r_llm_shadow.py`, containing the versioned
+  analyst, committee, critic, validator, and adjudication sequence;
+- `09_scripts/phase5r/evaluate_phase5r_llm_decision.py` and versioned fixtures.
 
 Acceptance:
 
@@ -485,14 +494,23 @@ Acceptance:
 - model output cannot alter canonical state or send email;
 - request/response logs contain no secret or personal identifier.
 
-### WP3 — Separate shadow queue, worker, and audit trail
+### WP3 — Separate idempotent shadow worker and audit trail
 
 Do not add a synchronous model call to C9, daily refresh, the deterministic
-decision pipeline, or the sender. Create:
+decision pipeline, or the sender. The implemented worker is:
 
-- `09_scripts/phase5r/queue_phase5r_llm_shadow_packet.py`
-- `09_scripts/phase5r/run_phase5r_llm_shadow_worker.py`
-- a local idempotent spool keyed by packet hash and model-registry version;
+- `09_scripts/phase5r/run_phase5r_llm_shadow.py`;
+- `09_scripts/phase5r/run_phase5r_llm_shadow_scheduler.py`;
+- an immutable run identity keyed by packet, prompt, schema, and model-registry
+  content, with a separate output lock and completed-run cache.
+
+The worker takes a short locked snapshot of canonical inputs, releases the
+pipeline lock, then performs inference. It does not queue a provider request
+from refresh or email code. Consequently a powered-off Mac cannot capture
+events while it is off; after wake the deterministic jobs and shadow worker can
+evaluate the newest available state, but they cannot reconstruct an intraday
+snapshot that was never collected. A continuously available remote collector is
+a separate future deployment decision, not an implied capability of launchd.
 
 Create parallel, non-canonical outputs:
 
@@ -508,7 +526,8 @@ Acceptance:
 - refresh/C9/sender do not import or invoke the provider adapter;
 - API failure, missing credential, or worker downtime cannot delay or fail the
   deterministic refresh or email;
-- replaying a queue item is idempotent and cannot create duplicate email;
+- replaying the same immutable model run is idempotent and cannot create
+  duplicate email;
 - the worker has no SMTP, broker, account-write, or order capability.
 
 ### WP4 — Replay evaluation and adversarial testing
@@ -635,10 +654,15 @@ This upgrade will not:
 
 ## 11. Go/no-go decision
 
-**Go** for WP0–WP4 offline fixtures, provenance, queueing, replay, and
-shadow-only architecture. Live provider execution remains **blocked** until the
-user supplies a credential outside the repository and explicitly authorizes the
-provider network test.
+**Go** for the completed offline contracts, provenance, role isolation,
+fixtures, corpus builder, replay verifier, provider-replay runner/gate, and
+shadow-only architecture. Materializing the real corpus requires an explicit
+SEC-compliant contact User-Agent. External provider replay remains **blocked**
+until the user explicitly authorizes the fixed call and cost budgets. The
+currently selected bridge uses authentication already owned by the external
+Codex CLI; this repository neither requests nor reads a provider secret. A
+future direct API/Batch adapter would require a separate external credential
+design and approval.
 
 **No-go** for model-influenced production email until at least 200 replay
 packets, at least 50 material-transition cases, 30–60 live shadow sessions, all

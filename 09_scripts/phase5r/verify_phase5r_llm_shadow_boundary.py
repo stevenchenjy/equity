@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from build_phase5r_decision_evidence_packet import build_packet
-from phase5r_daily_common import EMAIL_CONFIG_PATH, ROOT, read_json
+from phase5r_daily_common import EMAIL_CONFIG_PATH, ROOT, iso_now, read_json
 from phase5r_llm_provider import FixtureProvider
 from run_phase5r_llm_shadow import (
     execute_shadow,
@@ -44,6 +44,10 @@ CANONICAL_SENTINELS = (
     ROOT / "07_automation" / "email_delivery" / "phase5r_c2_delivery_status.csv",
     ROOT / "07_automation" / "email_delivery" / "phase5r_c6_delivery_status.csv",
     ROOT / "00_project_control" / "run_logs" / "phase5r_c7_run_log.csv",
+    ROOT
+    / "00_project_control"
+    / "run_logs"
+    / "phase5r_c7_weekly_pipeline_run_log.csv",
     ROOT
     / "04_research"
     / "realtime_stock_picker_phase5r"
@@ -260,7 +264,10 @@ def main() -> int:
     violations = static_source_check()
     before = {str(path): digest_or_absent(path) for path in CANONICAL_SENTINELS}
     smtp_before = smtp_stat_only()
-    packet = build_packet()
+    # Verification may run after a source-only refresh and before the next
+    # canonical daily decision.  Use the verifier's current timestamp so newly
+    # fetched public evidence is not incorrectly treated as future data.
+    packet = build_packet(iso_now())
     registry = load_registry()
     fail_closed_registry_fields = (
         "canonical_influence_enabled",

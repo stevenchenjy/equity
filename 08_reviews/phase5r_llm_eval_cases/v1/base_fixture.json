@@ -33,6 +33,7 @@
     },
     "gates": {
       "market_data_current": true,
+      "market_data_action_grade": true,
       "sec_held_coverage_complete": true,
       "fundamental_held_coverage_complete": true,
       "filing_artifact_provenance_complete": true,
@@ -208,6 +209,63 @@
       "data_sufficiency": "sufficient",
       "material_thesis_break": false,
       "confidence_pct": 82,
+      "confidence_components": {
+        "evidence_coverage_pct": 82,
+        "thesis_clarity_pct": 86,
+        "valuation_clarity_pct": 82,
+        "portfolio_fit_pct": 84
+      },
+      "supporting_facts": [
+        {
+          "ticker": "TST",
+          "fact": "The primary filing supports the existing long-term thesis.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        },
+        {
+          "ticker": "TST",
+          "fact": "The filing provides direct evidence about durable operating performance.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        },
+        {
+          "ticker": "TST",
+          "fact": "The reported period remains consistent with the prior research case.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        }
+      ],
+      "disconfirming_facts": [
+        {
+          "ticker": "TST",
+          "fact": "The same primary filing leaves normalization risk unresolved.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        },
+        {
+          "ticker": "TST",
+          "fact": "A single reported period cannot establish durable trend persistence.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        },
+        {
+          "ticker": "TST",
+          "fact": "The filing does not eliminate execution and demand risks.",
+          "source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        }
+      ],
+      "scenarios": {
+        "bull": "Verified adoption persists and operating leverage improves.",
+        "base": "The existing thesis remains intact with moderating growth.",
+        "bear": "Durable demand deterioration invalidates the thesis."
+      },
       "ticker_decisions": [
         {
           "ticker": "TST",

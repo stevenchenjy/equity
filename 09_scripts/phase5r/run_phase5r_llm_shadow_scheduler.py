@@ -18,6 +18,7 @@ from phase5r_daily_common import (
     now_et,
     read_json,
 )
+from phase5r_llm_provider import CodexCliProvider
 from run_phase5r_llm_shadow import load_registry
 
 
@@ -33,6 +34,45 @@ MAX_AUTOMATIC_ATTEMPTS = 2
 TIMEOUT_SECONDS = 1100
 
 
+def validate_runtime_boundary(
+    active: dict[str, object],
+    inhibit: dict[str, object],
+    registry: dict[str, object],
+) -> None:
+    required_active = {
+        "current_workflow": "daily_decision",
+        "active_pipeline": "phase5r_daily",
+        "email_delivery_allowed_from": "phase5r_daily_only",
+        "broker_connection_allowed": "no",
+        "order_code_allowed": "no",
+        "manual_execution_only": "yes",
+    }
+    for key, expected in required_active.items():
+        if active.get(key) != expected:
+            raise RuntimeError(f"shadow runtime boundary failed: active.{key}")
+    if (
+        inhibit.get("active") is not False
+        or inhibit.get("allowed_pipeline") != "phase5r_daily"
+    ):
+        raise RuntimeError("shadow runtime boundary failed: maintenance inhibit")
+    if (
+        registry.get("canonical_influence_enabled") is not False
+        or registry.get("automatic_action_allowed") is not False
+        or registry.get("email_eligible") is not False
+        or registry.get("broker_connection_allowed") is not False
+        or registry.get("order_code_allowed") is not False
+        or registry.get("tools_enabled") is not False
+        or registry.get("provider_credentials_read_by_repository") is not False
+    ):
+        raise RuntimeError("shadow runtime boundary failed: model registry")
+    if not SHADOW_RUNNER.is_file():
+        raise RuntimeError("shadow runtime boundary failed: runner missing")
+    CodexCliProvider(
+        Path(str(registry["provider_executable"])),
+        expected_sha256=str(registry["provider_executable_sha256"]),
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--safe-check", action="store_true")
@@ -40,6 +80,7 @@ def main() -> int:
     active = load_active_state()
     inhibit = load_inhibit()
     registry = load_registry()
+    validate_runtime_boundary(active, inhibit, registry)
     if args.safe_check:
         print(
             "safe_check_passed=true component=llm_shadow_scheduler "
@@ -52,9 +93,6 @@ def main() -> int:
             "scheduler_action=none reason=live_shadow_not_enabled "
             "provider_invoked=false email_attempted=false"
         )
-        return 0
-    if bool(inhibit.get("active")):
-        print("scheduler_action=none reason=maintenance_inhibit_active")
         return 0
     if cycle_date() < str(active.get("operational_from", "")):
         print("scheduler_action=none reason=before_operational_from")

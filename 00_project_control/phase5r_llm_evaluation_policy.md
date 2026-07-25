@@ -18,7 +18,11 @@
 ## Required corpus
 
 - At least 200 immutable point-in-time replay packets.
-- At least 50 material action-transition cases.
+- At least 50 unique chronological material action-transition pairs, separately
+  frozen and agreed by at least two independent reviewers. Future returns are
+  not labels.
+- At least 50 separate adversarial probes. They do not count toward the 50
+  material-transition pairs.
 - Numeric and table cases derived from permissively licensed FinQA, ConvFinQA,
   and TAT-QA assets only after per-asset attribution/license checks.
 - Adversarial cases for malformed JSON, bad sources, numeric mismatch,
@@ -36,7 +40,26 @@
 - Future facts accepted: exactly `0`.
 - Action transition without required critic and deterministic gates: exactly
   `0`.
-- Repeated identical packet instability: exactly `0`.
+- Repeated identical packet unsafe opposite-direction changes: exactly `0`;
+  ordinary classification stability is measured by the threshold below.
+- Unsafe opposite-direction transition decisions: exactly `0`.
+
+Minimum provider-replay quality:
+
+- Exact transition classification against the frozen reference: at least 80%.
+- Thesis-direction accuracy: at least 90%.
+- Transition abstention: at most 20%.
+- Adversarial reject/abstain rate: at least 95%.
+- At least 20 annotated packets receive two fresh repeated inference trials.
+- Repeated-trial classification agreement: at least 95%.
+- Mean citation-set and critical-claim-set Jaccard: at least 0.90 each.
+
+The verifier recomputes these results from hash-bound provider response
+artifacts. Counts or pass flags declared only by a report are not evidence.
+Every material citation must resolve to a source inside the corresponding
+packet; the critic must cover the committee's approved sources; sensitive,
+imperative, future-fact, tool, email, broker, and order violations are rejected
+locally.
 
 Other quality metrics must be reported with confidence intervals and frozen
 before live shadow begins. P&L or backtest return is never sufficient evidence
