@@ -23,6 +23,7 @@ from prepare_phase5r_llm_replay_corpus import (
     MAX_PRIMARY_BYTES,
     MINIMUM_ADVERSARIAL_SAFETY_PROBES,
     MINIMUM_MATERIAL_TRANSITION_PROBES,
+    MINIMUM_REAL_ISSUERS,
     MINIMUM_REAL_PACKETS,
     PACKET_SCHEMA_VERSION,
     SHA256_PATTERN,
@@ -327,6 +328,7 @@ def verify_packet(
     return {
         "packet_id": stored_packet_id,
         "ticker": ledger_row["ticker"],
+        "cik": str(int(ledger_row["cik"])),
         "accession": ledger_row["accession"],
         "accepted_at_et": accepted_at.isoformat(timespec="seconds"),
     }
@@ -407,13 +409,20 @@ def verify_corpus(
     corpus_root: Path = CORPUS_ROOT,
     ledger_path: Path = LEDGER_PATH,
     enforce_minimums: bool = True,
+    manifest_path: Path | None = None,
 ) -> dict[str, Any]:
     issues: list[str] = []
-    manifest_path = corpus_root / MANIFEST_NAME
+    issuer_count = 0
+    manifest_path = (
+        corpus_root / MANIFEST_NAME
+        if manifest_path is None
+        else manifest_path
+    )
     if not manifest_path.exists():
         return {
             "passed": False,
             "real_packet_count": 0,
+            "distinct_issuer_count": 0,
             "case_count": 0,
             "material_transition_probe_count": 0,
             "adversarial_safety_probe_count": 0,
@@ -428,14 +437,15 @@ def verify_corpus(
         manifest = _read_json_object(manifest_path, "corpus manifest")
         if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
             raise CorpusError("manifest schema version mismatch")
+        selection = manifest.get("selection")
+        if not isinstance(selection, dict):
+            raise CorpusError("manifest ledger provenance mismatch")
         ledger_rows = read_ledger(ledger_path)
         ledger_by_accession = {
             row["accession"]: row for row in ledger_rows
         }
-        selection = manifest.get("selection")
         if (
-            not isinstance(selection, dict)
-            or selection.get("ledger_sha256")
+            selection.get("ledger_sha256")
             != sha256_bytes(ledger_path.read_bytes())
             or selection.get("ledger_distinct_accessions") != len(ledger_rows)
         ):
@@ -473,6 +483,7 @@ def verify_corpus(
             raise CorpusError("manifest packets must be a list")
         packets_by_id: dict[str, dict[str, str]] = {}
         accessions: set[str] = set()
+        ticker_to_cik: dict[str, str] = {}
         for record in packets:
             if not isinstance(record, dict):
                 raise CorpusError("manifest packet record must be an object")
@@ -499,6 +510,13 @@ def verify_corpus(
                 ledger_row=ledger_row,
                 upstream_market=upstream_market,
             )
+            prior_cik = ticker_to_cik.setdefault(
+                verified["ticker"], verified["cik"]
+            )
+            if prior_cik != verified["cik"]:
+                raise CorpusError(
+                    "corpus ticker maps to multiple CIK identities"
+                )
             if (
                 verified["packet_id"] != record.get("packet_id")
                 or record.get("historical_label_status")
@@ -578,14 +596,32 @@ def verify_corpus(
         ):
             raise CorpusError("manifest public-source/rate policy is invalid")
         requirements = manifest.get("requirements")
+        issuer_count = len(
+            {row["cik"] for row in packets_by_id.values()}
+        )
         minimums_met = (
             len(packets_by_id) >= MINIMUM_REAL_PACKETS
+            and issuer_count >= MINIMUM_REAL_ISSUERS
             and transition_case_count >= MINIMUM_MATERIAL_TRANSITION_PROBES
             and adversarial_case_count >= MINIMUM_ADVERSARIAL_SAFETY_PROBES
         )
         if (
             not isinstance(requirements, dict)
+            or requirements.get("minimum_real_point_in_time_packets")
+            != MINIMUM_REAL_PACKETS
             or requirements.get("real_packet_count") != len(packets_by_id)
+            or requirements.get("minimum_distinct_issuers")
+            != MINIMUM_REAL_ISSUERS
+            or requirements.get("minimum_material_transition_probes")
+            != MINIMUM_MATERIAL_TRANSITION_PROBES
+            or requirements.get("minimum_adversarial_safety_probes")
+            != MINIMUM_ADVERSARIAL_SAFETY_PROBES
+            or requirements.get("minimum_transition_or_adversarial_cases")
+            != (
+                MINIMUM_MATERIAL_TRANSITION_PROBES
+                + MINIMUM_ADVERSARIAL_SAFETY_PROBES
+            )
+            or requirements.get("distinct_issuer_count") != issuer_count
             or requirements.get("transition_or_adversarial_case_count")
             != case_count
             or requirements.get("material_transition_probe_count")
@@ -622,6 +658,7 @@ def verify_corpus(
         return {
             "passed": False,
             "real_packet_count": packet_count,
+            "distinct_issuer_count": issuer_count,
             "case_count": case_count,
             "material_transition_probe_count": transition_case_count,
             "adversarial_safety_probe_count": adversarial_case_count,
@@ -635,6 +672,7 @@ def verify_corpus(
     return {
         "passed": True,
         "real_packet_count": len(packets_by_id),
+        "distinct_issuer_count": issuer_count,
         "case_count": case_count,
         "material_transition_probe_count": transition_case_count,
         "adversarial_safety_probe_count": adversarial_case_count,
@@ -663,6 +701,7 @@ def main() -> int:
     print(
         f"replay_corpus_verification={'passed' if report['passed'] else 'failed'} "
         f"real_packets={report['real_packet_count']} "
+        f"issuers={report['distinct_issuer_count']} "
         f"transition_cases={report['material_transition_probe_count']} "
         f"adversarial_cases={report['adversarial_safety_probe_count']} "
         f"cases={report['case_count']} "

@@ -10,20 +10,21 @@
     "analyst": {
       "model": "gpt-5.6-terra",
       "reasoning_effort": "medium",
-      "prompt_version": "phase5r_evidence_analyst_v1"
+      "prompt_version": "phase5r_evidence_analyst_v3_valuation_bound"
     },
     "committee": {
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
-      "prompt_version": "phase5r_decision_committee_v1"
+      "prompt_version": "phase5r_decision_committee_v3_valuation_bound"
     },
     "critic": {
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
-      "prompt_version": "phase5r_decision_critic_v1"
+      "prompt_version": "phase5r_decision_critic_v3_valuation_bound"
     }
   },
-  "one_call_per_unique_packet_role": true,
+  "successful_role_results_reused": true,
+  "maximum_live_attempts_per_role": 2,
   "stateless": true,
   "tools_enabled": false,
   "provider_credentials_read_by_repository": false,
@@ -33,7 +34,8 @@
   "broker_connection_allowed": false,
   "order_code_allowed": false,
   "promotion_requirements": {
-    "minimum_replay_packets": 200,
+    "minimum_replay_packets": 250,
+    "minimum_replay_issuers": 20,
     "minimum_material_transition_cases": 50,
     "minimum_live_shadow_sessions": 30,
     "maximum_live_shadow_sessions_before_review": 60,

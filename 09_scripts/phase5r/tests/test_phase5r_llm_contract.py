@@ -19,11 +19,20 @@ class ContractTests(unittest.TestCase):
         self.assertIs(validate_packet(packet), packet)
         self.assertIs(validate_analyst(packet, responses["analyst"]), responses["analyst"])
         self.assertIs(
-            validate_committee(packet, responses["committee"]),
+            validate_committee(
+                packet,
+                responses["committee"],
+                responses["analyst"],
+            ),
             responses["committee"],
         )
         self.assertIs(
-            validate_critic(packet, responses["committee"], responses["critic"]),
+            validate_critic(
+                packet,
+                responses["committee"],
+                responses["critic"],
+                responses["analyst"],
+            ),
             responses["critic"],
         )
 
@@ -147,6 +156,159 @@ class ContractTests(unittest.TestCase):
         packet, _, _ = materialized("g01_stable_hold")
         packet["gates"]["market_data_current"] = False
         self.assertIs(validate_packet(rehash(packet))["gates"]["market_data_current"], False)
+
+    def test_market_action_grade_is_bound_to_explicit_ticker_membership(
+        self,
+    ) -> None:
+        packet, _, _ = materialized("g01_stable_hold")
+        for enabled, tickers in (
+            (True, []),
+            (False, ["TST"]),
+            (True, ["ALT"]),
+        ):
+            with self.subTest(enabled=enabled, tickers=tickers):
+                candidate = copy.deepcopy(packet)
+                candidate["gates"]["market_data_action_grade"] = enabled
+                candidate["gates"]["market_data_action_grade_tickers"] = tickers
+                with self.assertRaises(ContractError):
+                    validate_packet(rehash(candidate))
+
+        candidate = copy.deepcopy(packet)
+        candidate["gates"]["market_data_action_grade"] = False
+        candidate["gates"].pop("market_data_action_grade_tickers")
+        self.assertEqual(
+            validate_packet(rehash(candidate))["gates"].get(
+                "market_data_action_grade_tickers",
+                [],
+            ),
+            [],
+        )
+
+    def test_c9_allowed_classification_map_is_exact_and_role_safe(self) -> None:
+        packet, _, _ = materialized("g01_stable_hold")
+        mutations = (
+            {},
+            {"TST": ["hold_existing"]},
+            {"TST": ["hold_existing", "watchlist", "abstain"]},
+            {
+                "TST": [
+                    "hold_existing",
+                    "abstain",
+                    "abstain",
+                ]
+            },
+            {"TST": ["hold_existing", "abstain"], "ALT": ["abstain"]},
+        )
+        for allowed in mutations:
+            with self.subTest(allowed=allowed):
+                candidate = copy.deepcopy(packet)
+                candidate["gates"][
+                    "allowed_classifications_by_ticker"
+                ] = allowed
+                with self.assertRaisesRegex(
+                    ContractError,
+                    "allowed classifications",
+                ):
+                    validate_packet(rehash(candidate))
+
+    def test_return_objective_cannot_become_quota_guarantee_or_override(
+        self,
+    ) -> None:
+        packet, _, _ = materialized("g01_stable_hold")
+        for field in (
+            "monthly_or_annual_quota",
+            "return_guarantee",
+            "risk_gates_override_allowed",
+        ):
+            with self.subTest(field=field):
+                candidate = copy.deepcopy(packet)
+                candidate["portfolio_constraints"]["return_objective"][field] = True
+                with self.assertRaisesRegex(
+                    ContractError,
+                    "return objective",
+                ):
+                    validate_packet(rehash(candidate))
+
+    def test_portfolio_constraints_are_exact_bounded_and_manual(self) -> None:
+        packet, _, _ = materialized("g01_stable_hold")
+        mutations = (
+            (
+                "zero hard cap",
+                lambda row: row.__setitem__(
+                    "active_stock_hard_cap_pct",
+                    0,
+                ),
+                "portfolio cap",
+            ),
+            (
+                "targets do not sum to one hundred",
+                lambda row: row.__setitem__("cash_target_pct", 9),
+                "targets must sum to 100",
+            ),
+            (
+                "automatic execution",
+                lambda row: row.__setitem__("manual_execution_only", False),
+                "execution must remain manual",
+            ),
+        )
+        for label, mutate, message in mutations:
+            with self.subTest(label=label):
+                candidate = copy.deepcopy(packet)
+                mutate(candidate["portfolio_constraints"])
+                with self.assertRaisesRegex(ContractError, message):
+                    validate_packet(rehash(candidate))
+
+    def test_analyst_claim_is_bound_to_nonempty_cited_excerpt(self) -> None:
+        packet, responses, _ = materialized("g01_stable_hold")
+        analyst = copy.deepcopy(responses["analyst"])
+        analyst["claims"][0]["cited_excerpt_sha256"][0] = "0" * 64
+        with self.assertRaisesRegex(ContractError, "excerpt binding mismatch"):
+            validate_analyst(packet, analyst)
+        analyst = copy.deepcopy(responses["analyst"])
+        analyst["claims"][0]["rationale"] = ""
+        with self.assertRaisesRegex(ContractError, "rationale must be non-empty"):
+            validate_analyst(packet, analyst)
+
+    def test_analyst_as_of_must_exactly_match_packet(self) -> None:
+        packet, responses, _ = materialized("g01_stable_hold")
+        analyst = copy.deepcopy(responses["analyst"])
+        analyst["as_of_et"] = "2026-07-23T18:30:01-04:00"
+        with self.assertRaisesRegex(ContractError, "exactly match"):
+            validate_analyst(packet, analyst)
+
+    def test_committee_claim_links_and_entity_coverage_are_exact(self) -> None:
+        packet, responses, _ = materialized("g01_stable_hold")
+        committee = copy.deepcopy(responses["committee"])
+        committee["ticker_decisions"][0]["claim_ids"] = []
+        with self.assertRaisesRegex(ContractError, "requires analyst claim_ids"):
+            validate_committee(packet, committee, responses["analyst"])
+
+        packet["entities"].append(
+            {
+                **copy.deepcopy(packet["entities"][0]),
+                "ticker": "ALT",
+                "role": "candidate",
+                "position_weight_band": "not_held",
+                "position_weight_pct_rounded": "0.0",
+            }
+        )
+        packet = rehash(packet)
+        committee = copy.deepcopy(responses["committee"])
+        committee["packet_id"] = packet["packet_id"]
+        with self.assertRaisesRegex(ContractError, "exactly match"):
+            validate_committee(packet, committee)
+
+    def test_critic_ticker_reviews_are_authoritative_and_exact(self) -> None:
+        packet, responses, _ = materialized("g01_stable_hold")
+        critic = copy.deepcopy(responses["critic"])
+        critic["ticker_reviews"] = []
+        with self.assertRaisesRegex(ContractError, "exactly match"):
+            validate_critic(packet, responses["committee"], critic)
+
+        critic = copy.deepcopy(responses["critic"])
+        critic["approved_source_ids"] = []
+        with self.assertRaisesRegex(ContractError, "sorted per-ticker union"):
+            validate_critic(packet, responses["committee"], critic)
 
 
 if __name__ == "__main__":

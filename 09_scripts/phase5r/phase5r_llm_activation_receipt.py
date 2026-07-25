@@ -26,12 +26,16 @@ from typing import Any
 from phase5r_daily_common import ROOT, canonical_sha256
 from verify_phase5r_llm_provider_replay_gate import (
     CORPUS_MANIFEST_PATH,
+    ANNOTATION_SET_PATH,
+    CITATION_REVIEW_SET_PATH,
     MANIFEST_SCHEMA_VERSION,
     MODEL_REGISTRY_PATH,
     PROVIDER_REPORT_PATH,
     REPORT_SCHEMA_VERSION,
     REQUIRED_ROLES,
     VIOLATION_CATEGORIES,
+    _expected_role_bindings,
+    replay_runtime_code_hashes,
 )
 
 
@@ -41,9 +45,107 @@ ACTIVATION_RECEIPT_PATH = (
     / "run_logs"
     / "phase5r_llm_activation_receipt.local.json"
 )
-RECEIPT_SCHEMA_VERSION = "phase5r_llm_activation_receipt_v1"
+RECEIPT_SCHEMA_VERSION = "phase5r_llm_activation_receipt_v2"
 SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
 MAX_JSON_BYTES = 64 * 1024 * 1024
+MAX_BOUND_ARTIFACT_BYTES = 128 * 1024 * 1024
+RUNTIME_CODE_PATHS = (
+    ROOT / "09_scripts" / "phase5r" / "phase5r_daily_common.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_evidence_freshness.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "build_phase5r_decision_evidence_packet.py",
+    ROOT / "09_scripts" / "phase5r" / "enable_phase5r_llm_live_shadow.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_llm_activation_receipt.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_llm_citation_reviews.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_llm_contract.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_llm_cost_aware_router.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_llm_role_execution_ledger.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_llm_provider.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_llm_shadow_router_gate.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_return_objective.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_sec_acceptance.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "refresh_phase5r_sec_filing_artifacts.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "prepare_phase5r_llm_replay_corpus.py",
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_llm_shadow.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "run_phase5r_llm_provider_replay_evaluation.py",
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_llm_shadow_scheduler.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "verify_phase5r_llm_provider_replay_gate.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_llm_transition_annotations.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "verify_phase5r_llm_shadow_boundary.py",
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_refresh.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "run_phase5r_daily_decision_pipeline.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "run_phase5r_daily_refresh_scheduler.py",
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_scheduler.py",
+    ROOT / "09_scripts" / "phase5r" / "send_phase5r_daily_email.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "run_phase5r_b2_full_universe_market_data.py",
+    ROOT / "09_scripts" / "phase5r" / "score_phase5r_b2_candidates.py",
+    ROOT / "09_scripts" / "phase5r" / "refresh_phase5r_daily_evidence.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "regenerate_phase5r_c9_portfolio_outputs.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "create_phase5r_c9b_price_aware_action_plan.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "create_phase5r_daily_decision_and_brief.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_c9_common.py",
+    ROOT / "09_scripts" / "phase5r" / "phase5r_c9b_common.py",
+    ROOT / "09_scripts" / "phase5r" / "create_phase5r_c9_account_state.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "calculate_phase5r_c9_dynamic_weights.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "create_phase5r_c9_exact_action_plan.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "create_phase5r_c9_cash_deployment_plan.py",
+)
 
 
 class ActivationReceiptError(ValueError):
@@ -124,6 +226,93 @@ def _valid_sha256(value: Any, *, label: str) -> str:
     return value
 
 
+def _read_bound_artifact(
+    root: Path,
+    relative_path: str,
+    *,
+    label: str,
+) -> bytes:
+    relative = Path(relative_path)
+    if (
+        not relative_path
+        or relative.is_absolute()
+        or any(part in {"", ".", ".."} for part in relative.parts)
+    ):
+        raise ActivationReceiptError(f"{label} path is not a safe relative path")
+    try:
+        resolved_root = root.resolve(strict=True)
+    except OSError as exc:
+        raise ActivationReceiptError(f"{label} root is unavailable") from exc
+    candidate = resolved_root
+    for part in relative.parts:
+        candidate = candidate / part
+        if candidate.is_symlink():
+            raise ActivationReceiptError(f"{label} must not use symlinks")
+    try:
+        resolved = candidate.resolve(strict=True)
+        resolved.relative_to(resolved_root)
+        metadata = resolved.stat()
+    except (OSError, ValueError) as exc:
+        raise ActivationReceiptError(
+            f"{label} escapes its artifact root or is unavailable"
+        ) from exc
+    if (
+        not stat.S_ISREG(metadata.st_mode)
+        or metadata.st_size <= 0
+        or metadata.st_size > MAX_BOUND_ARTIFACT_BYTES
+    ):
+        raise ActivationReceiptError(f"{label} is not an allowed regular file")
+    try:
+        return resolved.read_bytes()
+    except OSError as exc:
+        raise ActivationReceiptError(f"{label} is unreadable") from exc
+
+
+def _validate_transitive_artifact_hashes(
+    value: Any,
+    *,
+    corpus_root: Path,
+    report_root: Path,
+) -> dict[str, dict[str, str]]:
+    groups = _exact_keys(
+        value,
+        {"corpus", "provider_responses"},
+        label="transitive artifact binding",
+    )
+    normalized: dict[str, dict[str, str]] = {}
+    for group, root in (
+        ("corpus", corpus_root),
+        ("provider_responses", report_root),
+    ):
+        entries = groups[group]
+        if not isinstance(entries, dict) or not entries:
+            raise ActivationReceiptError(
+                f"transitive artifact binding {group} must be non-empty"
+            )
+        normalized_entries: dict[str, str] = {}
+        for relative_path, expected_hash_value in sorted(entries.items()):
+            if not isinstance(relative_path, str):
+                raise ActivationReceiptError(
+                    f"transitive artifact binding {group} path must be a string"
+                )
+            expected_hash = _valid_sha256(
+                expected_hash_value,
+                label=f"transitive artifact binding {group} hash",
+            )
+            raw = _read_bound_artifact(
+                root,
+                relative_path,
+                label=f"transitive artifact binding {group}",
+            )
+            if sha256_bytes(raw) != expected_hash:
+                raise ActivationReceiptError(
+                    f"transitive artifact binding {group} changed"
+                )
+            normalized_entries[relative_path] = expected_hash
+        normalized[group] = normalized_entries
+    return normalized
+
+
 def _exact_keys(
     value: Any,
     expected: set[str],
@@ -179,7 +368,8 @@ def target_shadow_registry(evaluated_registry: dict[str, Any]) -> dict[str, Any]
     if any(evaluated_registry.get(field) is not False for field in false_fields):
         raise ActivationReceiptError("evaluated registry is not fail-closed")
     if (
-        evaluated_registry.get("one_call_per_unique_packet_role") is not True
+        evaluated_registry.get("successful_role_results_reused") is not True
+        or evaluated_registry.get("maximum_live_attempts_per_role") != 2
         or evaluated_registry.get("stateless") is not True
     ):
         raise ActivationReceiptError("evaluated registry provider policy is unsafe")
@@ -193,22 +383,73 @@ def target_shadow_registry(evaluated_registry: dict[str, Any]) -> dict[str, Any]
 
 
 def _quality_counts(summary: dict[str, Any]) -> dict[str, int]:
-    expected = {
+    positive_fields = {
         "packet_count",
         "source_identity_count",
         "accession_count",
         "role_result_count",
         "validated_response_count",
         "material_transition_count",
+        "transition_pair_result_count",
+        "negative_control_result_count",
+        "adversarial_probe_result_count",
+        "stability_trial_count",
+        "extended_quality_call_count",
+        "total_provider_call_count",
+        "logical_provider_call_count",
+        "physical_provider_attempt_count",
+    }
+    nonnegative_fields = {
+        "first_attempt_valid_logical_call_count",
+        "retryable_transport_or_process_failure_count",
+        "invalid_provider_attempt_count",
     }
     counts: dict[str, int] = {}
-    for key in expected:
+    for key in positive_fields:
         counts[key] = _positive_int(summary.get(key), label=f"summary {key}")
+    for key in nonnegative_fields:
+        value = summary.get(key)
+        if (
+            not isinstance(value, int)
+            or isinstance(value, bool)
+            or value < 0
+        ):
+            raise ActivationReceiptError(
+                f"summary {key} must be a nonnegative integer"
+            )
+        counts[key] = value
     if counts["role_result_count"] != counts["packet_count"] * len(REQUIRED_ROLES):
         raise ActivationReceiptError("provider report role-result count is invalid")
-    if counts["validated_response_count"] != counts["role_result_count"]:
+    expected_total = (
+        counts["role_result_count"]
+        + counts["transition_pair_result_count"]
+        + counts["negative_control_result_count"]
+        + counts["adversarial_probe_result_count"]
+        + counts["stability_trial_count"]
+        + counts["extended_quality_call_count"]
+    )
+    if (
+        counts["validated_response_count"]
+        != counts["total_provider_call_count"]
+        or counts["total_provider_call_count"] != expected_total
+        or counts["logical_provider_call_count"] != expected_total
+        or counts["physical_provider_attempt_count"] < expected_total
+        or counts["retryable_transport_or_process_failure_count"]
+        != counts["physical_provider_attempt_count"] - expected_total
+        or counts["first_attempt_valid_logical_call_count"]
+        > expected_total
+        or counts["invalid_provider_attempt_count"] != 0
+    ):
         raise ActivationReceiptError("provider responses were not all validated")
     return counts
+
+
+def _runtime_code_hashes() -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for path in RUNTIME_CODE_PATHS:
+        raw = _read_regular_bytes(path, label=f"runtime code {path.name}")
+        hashes[path.name] = sha256_bytes(raw)
+    return hashes
 
 
 def _zero_violations(value: Any) -> dict[str, int]:
@@ -235,6 +476,11 @@ def _role_config_from_report(
     bindings = report.get("role_bindings")
     if not isinstance(bindings, dict) or set(bindings) != set(REQUIRED_ROLES):
         raise ActivationReceiptError("provider report role bindings are missing")
+    expected_bindings = _expected_role_bindings(registry)
+    if bindings != expected_bindings:
+        raise ActivationReceiptError(
+            "provider report prompt/schema/model hashes are stale"
+        )
     role_config: dict[str, dict[str, str]] = {}
     for role in REQUIRED_ROLES:
         binding = bindings.get(role)
@@ -289,6 +535,8 @@ def build_activation_receipt(
     provider_report_path: Path,
     activated_at: str,
     provider_gate_result: dict[str, Any],
+    annotation_set_path: Path = ANNOTATION_SET_PATH,
+    citation_review_set_path: Path = CITATION_REVIEW_SET_PATH,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Create a receipt and its uniquely derived target registry in memory."""
 
@@ -308,6 +556,12 @@ def build_activation_receipt(
     report, report_raw = _read_json(
         provider_report_path, label="provider replay report"
     )
+    _, annotation_raw = _read_json(
+        annotation_set_path, label="transition annotation set"
+    )
+    _, citation_review_raw = _read_json(
+        citation_review_set_path, label="claim citation review set"
+    )
     if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
         raise ActivationReceiptError("replay corpus manifest version mismatch")
     if report.get("schema_version") != REPORT_SCHEMA_VERSION:
@@ -315,6 +569,35 @@ def build_activation_receipt(
     evaluated_registry_sha = sha256_bytes(evaluated_registry_raw)
     manifest_sha = sha256_bytes(manifest_raw)
     report_sha = sha256_bytes(report_raw)
+    annotation_sha = sha256_bytes(annotation_raw)
+    citation_review_sha = sha256_bytes(citation_review_raw)
+    runtime_code_hashes = _runtime_code_hashes()
+    gate_artifact_binding = provider_gate_result.get("artifact_binding")
+    if not isinstance(gate_artifact_binding, dict):
+        raise ActivationReceiptError(
+            "provider gate artifact binding is missing"
+        )
+    transitive_artifact_hashes = _validate_transitive_artifact_hashes(
+        gate_artifact_binding.get("transitive_artifact_sha256"),
+        corpus_root=corpus_manifest_path.parent,
+        report_root=provider_report_path.parent,
+    )
+    expected_gate_artifact_binding = {
+        "model_registry_sha256": evaluated_registry_sha,
+        "corpus_manifest_sha256": manifest_sha,
+        "provider_report_sha256": report_sha,
+        "annotation_set_sha256": annotation_sha,
+        "citation_review_set_sha256": citation_review_sha,
+        "runtime_code_sha256": runtime_code_hashes,
+        "transitive_artifact_sha256": transitive_artifact_hashes,
+    }
+    if (
+        provider_gate_result.get("artifact_binding")
+        != expected_gate_artifact_binding
+    ):
+        raise ActivationReceiptError(
+            "activation artifacts changed after the provider gate"
+        )
     if report.get("model_registry_sha256") != evaluated_registry_sha:
         raise ActivationReceiptError(
             "provider report is not bound to the evaluated registry"
@@ -323,7 +606,27 @@ def build_activation_receipt(
         raise ActivationReceiptError(
             "provider report is not bound to the replay corpus"
         )
+    if (
+        report.get("annotation_set_binding", {}).get(
+            "annotation_file_sha256"
+        )
+        != annotation_sha
+        or report.get("extended_quality", {})
+        .get("citation_review_set_binding", {})
+        .get("review_file_sha256")
+        != citation_review_sha
+    ):
+        raise ActivationReceiptError(
+            "provider report human-review artifact bindings are stale"
+        )
     role_config = _role_config_from_report(report, evaluated_registry)
+    if (
+        report.get("runtime_code_sha256") != runtime_code_hashes
+        or replay_runtime_code_hashes() != runtime_code_hashes
+    ):
+        raise ActivationReceiptError(
+            "provider report replay/runtime code hashes are stale"
+        )
     summary = report.get("summary")
     if not isinstance(summary, dict) or summary.get("quality_gate_passed") is not True:
         raise ActivationReceiptError("provider report quality summary did not pass")
@@ -360,6 +663,8 @@ def build_activation_receipt(
         "activated_at": activated_at,
         "corpus_manifest_sha256": manifest_sha,
         "provider_report_sha256": report_sha,
+        "annotation_set_sha256": annotation_sha,
+        "citation_review_set_sha256": citation_review_sha,
         "evaluated_registry_sha256": evaluated_registry_sha,
         "target_shadow_registry_canonical_sha256": canonical_sha256(
             target_registry
@@ -369,6 +674,9 @@ def build_activation_receipt(
         ),
         "evaluated_registry_snapshot": copy.deepcopy(evaluated_registry),
         "model_role_config": role_config,
+        "role_bindings": copy.deepcopy(report["role_bindings"]),
+        "runtime_code_sha256": runtime_code_hashes,
+        "transitive_artifact_sha256": transitive_artifact_hashes,
         "provider_binding": provider_binding,
         "external_provider_transport": transport["transport"],
         "quality_counts": counts,
@@ -381,6 +689,7 @@ def build_activation_receipt(
         "email_eligible": False,
         "broker_connection_allowed": False,
         "order_code_allowed": False,
+        "activation_scope": "exploratory_shadow_only",
     }
     receipt["receipt_id"] = canonical_sha256(receipt)
     return receipt, target_registry
@@ -392,6 +701,8 @@ def _verify_receipt(
     receipt_path: Path,
     corpus_manifest_path: Path,
     provider_report_path: Path,
+    annotation_set_path: Path,
+    citation_review_set_path: Path,
 ) -> dict[str, Any]:
     receipt, _ = _read_json(receipt_path, label="activation receipt")
     _exact_keys(
@@ -404,11 +715,16 @@ def _verify_receipt(
             "activated_at",
             "corpus_manifest_sha256",
             "provider_report_sha256",
+            "annotation_set_sha256",
+            "citation_review_set_sha256",
             "evaluated_registry_sha256",
             "target_shadow_registry_canonical_sha256",
             "target_shadow_registry_file_sha256",
             "evaluated_registry_snapshot",
             "model_role_config",
+            "role_bindings",
+            "runtime_code_sha256",
+            "transitive_artifact_sha256",
             "provider_binding",
             "external_provider_transport",
             "quality_counts",
@@ -421,6 +737,7 @@ def _verify_receipt(
             "email_eligible",
             "broker_connection_allowed",
             "order_code_allowed",
+            "activation_scope",
         },
         label="activation receipt",
     )
@@ -442,6 +759,8 @@ def _verify_receipt(
         or receipt["external_auth_ready"] is not True
     ):
         raise ActivationReceiptError("activation receipt is not active")
+    if receipt["activation_scope"] != "exploratory_shadow_only":
+        raise ActivationReceiptError("activation scope is not exploratory shadow")
     false_receipt_fields = (
         "canonical_influence_enabled",
         "automatic_action_allowed",
@@ -479,6 +798,8 @@ def _verify_receipt(
         raise ActivationReceiptError("current registry target hashes do not match")
     if receipt["model_role_config"] != registry["roles"]:
         raise ActivationReceiptError("receipt model/role configuration is stale")
+    if receipt["runtime_code_sha256"] != _runtime_code_hashes():
+        raise ActivationReceiptError("activation runtime code hashes are stale")
     if receipt["provider_binding"] != {
         "provider": registry["provider"],
         "provider_executable": registry["provider_executable"],
@@ -492,8 +813,26 @@ def _verify_receipt(
     report, report_raw = _read_json(
         provider_report_path, label="current provider replay report"
     )
+    _, annotation_raw = _read_json(
+        annotation_set_path, label="current transition annotation set"
+    )
+    _, citation_review_raw = _read_json(
+        citation_review_set_path,
+        label="current claim citation review set",
+    )
+    transitive_artifact_hashes = _validate_transitive_artifact_hashes(
+        receipt["transitive_artifact_sha256"],
+        corpus_root=corpus_manifest_path.parent,
+        report_root=provider_report_path.parent,
+    )
+    if transitive_artifact_hashes != receipt["transitive_artifact_sha256"]:
+        raise ActivationReceiptError(
+            "current transitive artifact binding is stale"
+        )
     manifest_sha = sha256_bytes(manifest_raw)
     report_sha = sha256_bytes(report_raw)
+    annotation_sha = sha256_bytes(annotation_raw)
+    citation_review_sha = sha256_bytes(citation_review_raw)
     if (
         manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION
         or manifest_sha != receipt["corpus_manifest_sha256"]
@@ -505,6 +844,19 @@ def _verify_receipt(
     ):
         raise ActivationReceiptError("current provider replay report hash is stale")
     if (
+        annotation_sha != receipt["annotation_set_sha256"]
+        or citation_review_sha != receipt["citation_review_set_sha256"]
+        or report.get("annotation_set_binding", {}).get(
+            "annotation_file_sha256"
+        )
+        != annotation_sha
+        or report.get("extended_quality", {})
+        .get("citation_review_set_binding", {})
+        .get("review_file_sha256")
+        != citation_review_sha
+    ):
+        raise ActivationReceiptError("current human-review artifact hashes are stale")
+    if (
         report.get("corpus_manifest_sha256") != manifest_sha
         or report.get("model_registry_sha256")
         != receipt["evaluated_registry_sha256"]
@@ -515,6 +867,10 @@ def _verify_receipt(
         != receipt["model_role_config"]
     ):
         raise ActivationReceiptError("provider report model/role binding is stale")
+    if receipt["role_bindings"] != report["role_bindings"]:
+        raise ActivationReceiptError("receipt prompt/schema hash binding is stale")
+    if report.get("runtime_code_sha256") != receipt["runtime_code_sha256"]:
+        raise ActivationReceiptError("provider report runtime code binding is stale")
     summary = report.get("summary")
     if not isinstance(summary, dict) or summary.get("quality_gate_passed") is not True:
         raise ActivationReceiptError("provider report no longer records a pass")
@@ -560,6 +916,8 @@ def verify_active_activation_receipt(
     receipt_path: Path = ACTIVATION_RECEIPT_PATH,
     corpus_manifest_path: Path = CORPUS_MANIFEST_PATH,
     provider_report_path: Path = PROVIDER_REPORT_PATH,
+    annotation_set_path: Path = ANNOTATION_SET_PATH,
+    citation_review_set_path: Path = CITATION_REVIEW_SET_PATH,
 ) -> dict[str, Any]:
     """Return a safe result instead of propagating receipt-validation details."""
 
@@ -569,6 +927,8 @@ def verify_active_activation_receipt(
             receipt_path=receipt_path,
             corpus_manifest_path=corpus_manifest_path,
             provider_report_path=provider_report_path,
+            annotation_set_path=annotation_set_path,
+            citation_review_set_path=citation_review_set_path,
         )
     except (
         ActivationReceiptError,
@@ -601,6 +961,14 @@ def main() -> int:
     parser.add_argument(
         "--provider-report", type=Path, default=PROVIDER_REPORT_PATH
     )
+    parser.add_argument(
+        "--annotation-set", type=Path, default=ANNOTATION_SET_PATH
+    )
+    parser.add_argument(
+        "--citation-review-set",
+        type=Path,
+        default=CITATION_REVIEW_SET_PATH,
+    )
     args = parser.parse_args()
     del args.check_active
     result = verify_active_activation_receipt(
@@ -608,6 +976,10 @@ def main() -> int:
         receipt_path=args.receipt.expanduser().resolve(),
         corpus_manifest_path=args.corpus_manifest.expanduser().resolve(),
         provider_report_path=args.provider_report.expanduser().resolve(),
+        annotation_set_path=args.annotation_set.expanduser().resolve(),
+        citation_review_set_path=(
+            args.citation_review_set.expanduser().resolve()
+        ),
     )
     print(
         f"llm_activation_receipt={'passed' if result['passed'] else 'failed'} "

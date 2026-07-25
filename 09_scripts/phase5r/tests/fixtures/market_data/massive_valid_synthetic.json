@@ -1,0 +1,146 @@
+{
+  "fixture_schema_version": "phase5r_massive_synthetic_fixture_v1",
+  "synthetic_fixture": true,
+  "provider_id": "massive",
+  "dataset_id": "stocks_rest",
+  "expected_session_date": "2026-07-24",
+  "previous_session_date": "2026-07-23",
+  "retrieved_at": "2026-07-24T20:05:00-04:00",
+  "responses": {
+    "ticker_overview": {
+      "endpoint_path": "/v3/reference/tickers/TST",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "ticker": "TST",
+        "name": "Synthetic Test Corporation",
+        "market": "stocks",
+        "locale": "us",
+        "primary_exchange": "XNAS",
+        "type": "CS",
+        "active": true,
+        "currency_name": "usd",
+        "cik": "0001000000",
+        "composite_figi": "BBG000TST001",
+        "share_class_figi": "BBG00TST0001"
+      }
+    },
+    "current_open_close": {
+      "endpoint_path": "/v1/open-close/TST/2026-07-24",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "symbol": "TST",
+        "from": "2026-07-24",
+        "open": 50.2,
+        "high": 51.5,
+        "low": 49.7,
+        "close": 51.0,
+        "volume": 1250000,
+        "afterHours": null,
+        "preMarket": null
+      }
+    },
+    "previous_open_close": {
+      "endpoint_path": "/v1/open-close/TST/2026-07-23",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "symbol": "TST",
+        "from": "2026-07-23",
+        "open": 49.2,
+        "high": 50.5,
+        "low": 48.8,
+        "close": 50.0,
+        "volume": 1100000,
+        "afterHours": null,
+        "preMarket": null
+      }
+    },
+    "current_adjusted_aggregate": {
+      "endpoint_path": "/v2/aggs/ticker/TST/range/1/day/2026-07-24/2026-07-24/adjusted",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "T": "TST",
+        "t": 1784865600000,
+        "o": 50.2,
+        "h": 51.5,
+        "l": 49.7,
+        "c": 51.0,
+        "v": 1250000,
+        "n": 28750,
+        "vw": 50.8
+      }
+    },
+    "current_unadjusted_aggregate": {
+      "endpoint_path": "/v2/aggs/ticker/TST/range/1/day/2026-07-24/2026-07-24/unadjusted",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "T": "TST",
+        "t": 1784865600000,
+        "o": 50.2,
+        "h": 51.5,
+        "l": 49.7,
+        "c": 51.0,
+        "v": 1250000,
+        "n": 28750,
+        "vw": 50.8
+      }
+    },
+    "previous_adjusted_aggregate": {
+      "endpoint_path": "/v2/aggs/ticker/TST/range/1/day/2026-07-23/2026-07-23/adjusted",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "T": "TST",
+        "t": 1784779200000,
+        "o": 49.2,
+        "h": 50.5,
+        "l": 48.8,
+        "c": 50.0,
+        "v": 1100000,
+        "n": 25100,
+        "vw": 49.8
+      }
+    },
+    "previous_unadjusted_aggregate": {
+      "endpoint_path": "/v2/aggs/ticker/TST/range/1/day/2026-07-23/2026-07-23/unadjusted",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": {
+        "T": "TST",
+        "t": 1784779200000,
+        "o": 49.2,
+        "h": 50.5,
+        "l": 48.8,
+        "c": 50.0,
+        "v": 1100000,
+        "n": 25100,
+        "vw": 49.8
+      }
+    },
+    "splits": {
+      "endpoint_path": "/v3/reference/splits/TST",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": []
+    },
+    "dividends": {
+      "endpoint_path": "/v3/reference/dividends/TST",
+      "status": "OK",
+      "request_id": "",
+      "next_url": "",
+      "results": []
+    }
+  }
+}

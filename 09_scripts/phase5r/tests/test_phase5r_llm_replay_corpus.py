@@ -396,6 +396,83 @@ class RefreshAndVerifierTests(unittest.TestCase):
             self.assertFalse(report["passed"])
             self.assertIn("hash mismatch", report["issues"][0])
 
+    def test_one_ticker_cannot_inflate_distinct_issuers_with_multiple_ciks(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            ledger = root / "ledger.csv"
+            corpus = root / "corpus"
+            rows = [ledger_row(0), ledger_row(1)]
+            replacement_cik = "7654321"
+            replacement_accession = "0007654321-26-000002"
+            replacement_document = "tst-20260702-replacement.htm"
+            rows[1].update(
+                {
+                    "cik": replacement_cik,
+                    "accession_number": replacement_accession,
+                    "primary_document": replacement_document,
+                    "source_url": (
+                        "https://www.sec.gov/Archives/edgar/data/"
+                        f"{int(replacement_cik)}/"
+                        f"{replacement_accession.replace('-', '')}/"
+                        f"{replacement_document}"
+                    ),
+                }
+            )
+            write_ledger(ledger, rows)
+            sources = FakeSources()
+            clock = FakeClock()
+            prepare.refresh_corpus(
+                ledger_path=ledger,
+                corpus_root=corpus,
+                target_packet_count=2,
+                target_transition_case_count=1,
+                target_adversarial_case_count=1,
+                candidate_padding=0,
+                user_agent="Phase5RUnitTest/1.0 unit@example.com",
+                sec_requests_per_second=2.0,
+                sec_fetcher=sources.sec,
+                market_fetcher=sources.market,
+                clock=clock.now,
+                sleeper=clock.sleep,
+            )
+            report = verify.verify_corpus(
+                corpus_root=corpus,
+                ledger_path=ledger,
+                enforce_minimums=False,
+            )
+            self.assertFalse(report["passed"])
+            self.assertIn(
+                "corpus ticker maps to multiple CIK identities",
+                report["issues"][0],
+            )
+
+    def test_stale_manifest_hard_minimum_fails_offline_verification(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            ledger, corpus, manifest, _ = build_small_corpus(
+                Path(directory_name)
+            )
+            manifest["requirements"][
+                "minimum_real_point_in_time_packets"
+            ] = 249
+            (corpus / prepare.MANIFEST_NAME).write_text(
+                json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            report = verify.verify_corpus(
+                corpus_root=corpus,
+                ledger_path=ledger,
+                enforce_minimums=False,
+            )
+            self.assertFalse(report["passed"])
+            self.assertIn(
+                "manifest requirement counts are inconsistent",
+                report["issues"][0],
+            )
+
     def test_same_day_close_is_never_selected(self) -> None:
         accepted = "2026-07-02T08:00:00-04:00"
         bars = {

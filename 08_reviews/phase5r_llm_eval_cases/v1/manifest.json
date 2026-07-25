@@ -78,13 +78,13 @@
       "case_id": "g07_add_first_close",
       "scenario": "add_first_close",
       "tags": ["candidate", "stability", "first_close"],
-      "expected": {
-        "execution_outcome": "validated",
-        "raw_classification": "watchlist",
-        "safe_classification": "watchlist",
-        "validation_passed": true,
-        "human_review_required": false
-      }
+    "expected": {
+      "execution_outcome": "validated",
+      "raw_classification": "hold_existing",
+      "safe_classification": "hold_existing",
+      "validation_passed": true,
+      "human_review_required": false
+    }
     },
     {
       "case_id": "g08_add_second_close",
@@ -125,13 +125,13 @@
     {
       "case_id": "g11_stale_market_data",
       "scenario": "stale_market_data",
-      "tags": ["hard_gate", "market", "fail_closed"],
+      "tags": ["action_gate", "market", "research_preserved"],
       "expected": {
-        "execution_outcome": "abstain_validation_failed",
-        "raw_classification": "abstain",
-        "safe_classification": "abstain",
-        "validation_passed": false,
-        "human_review_required": true
+        "execution_outcome": "validated",
+        "raw_classification": "hold_existing",
+        "safe_classification": "hold_existing",
+        "validation_passed": true,
+        "human_review_required": false
       }
     },
     {

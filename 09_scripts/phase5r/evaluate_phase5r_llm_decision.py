@@ -26,6 +26,7 @@ from phase5r_llm_contract import (
     validate_packet,
 )
 from phase5r_llm_provider import FixtureProvider, ProviderError
+from phase5r_valuation_evidence_v1 import valuation_packet_calculations
 from run_phase5r_llm_shadow import execute_shadow, load_registry
 
 
@@ -74,6 +75,10 @@ def _committee_decision(responses: dict[str, Any]) -> dict[str, Any]:
     return responses["committee"]["ticker_decisions"][0]
 
 
+def _critic_review(responses: dict[str, Any]) -> dict[str, Any]:
+    return responses["critic"]["ticker_reviews"][0]
+
+
 def _set_transition(
     responses: dict[str, Any],
     classification: str,
@@ -93,6 +98,7 @@ def _set_transition(
     decision["thesis_direction"] = thesis_direction
     decision["human_review_needed"] = True
     responses["critic"]["downgrade_to"] = classification
+    _critic_review(responses)["downgrade_to"] = classification
 
 
 def _apply_scenario(
@@ -129,6 +135,10 @@ def _apply_scenario(
             "paper_trade_candidate",
             thesis_direction="strengthening",
         )
+        packet["gates"]["deterministic_transition_pending_tickers"] = [
+            "TST"
+        ]
+        packet["gates"]["deterministic_transition_eligible_tickers"] = []
     elif scenario == "add_second_close":
         _set_transition(
             responses,
@@ -136,9 +146,14 @@ def _apply_scenario(
             thesis_direction="strengthening",
         )
         distinct_valid_closes = 2
+        packet["gates"]["deterministic_transition_pending_tickers"] = []
+        packet["gates"]["deterministic_transition_eligible_tickers"] = [
+            "TST"
+        ]
     elif scenario == "critic_disagreement":
         _set_transition(responses, "trim_review", thesis_direction="weakening")
         critic = responses["critic"]
+        review = _critic_review(responses)
         critic["verdict"] = "revise"
         critic["downgrade_to"] = "hold_existing"
         critic["action_proportionality_pass"] = False
@@ -150,6 +165,15 @@ def _apply_scenario(
                 "source_ids": ["sec:TST:10Q:2026Q1:0"],
             }
         ]
+        review.update(
+            {
+                "verdict": "revise",
+                "downgrade_to": "hold_existing",
+                "action_proportionality_pass": False,
+                "approved_source_ids": [],
+                "issues": copy.deepcopy(critic["issues"]),
+            }
+        )
     elif scenario == "material_thesis_break":
         _set_transition(
             responses,
@@ -186,6 +210,7 @@ def _apply_scenario(
             {
                 "classification": "abstain",
                 "thesis_direction": "unclear",
+                "claim_ids": [],
                 "source_ids": [],
                 "calculation_ids": [],
                 "confidence_pct": 0,
@@ -213,6 +238,21 @@ def _apply_scenario(
                 ],
             }
         )
+        review = _critic_review(responses)
+        review.update(
+            {
+                "verdict": "reject",
+                "downgrade_to": "abstain",
+                "factual_grounding_pass": False,
+                "citation_integrity_pass": False,
+                "numeric_reconciliation_pass": False,
+                "long_term_reasoning_pass": False,
+                "action_proportionality_pass": False,
+                "policy_boundary_pass": False,
+                "approved_source_ids": [],
+                "issues": copy.deepcopy(critic["issues"]),
+            }
+        )
     else:
         raise ContractError(f"unknown evaluation scenario: {scenario}")
     return distinct_valid_closes
@@ -238,6 +278,15 @@ def materialize_case(
     distinct_valid_closes = _apply_scenario(
         str(case["scenario"]), packet, responses
     )
+    existing_calculation_ids = {
+        str(row.get("calculation_id", ""))
+        for row in packet.get("calculations", [])
+    }
+    for receipt in packet.get("valuation_evidence", []):
+        for calculation in valuation_packet_calculations(receipt):
+            if calculation["calculation_id"] not in existing_calculation_ids:
+                packet["calculations"].append(calculation)
+                existing_calculation_ids.add(calculation["calculation_id"])
     unsigned = copy.deepcopy(packet)
     unsigned.pop("packet_id", None)
     packet_id = canonical_sha256(unsigned)

@@ -6,6 +6,11 @@ Mode: applied primary-source architecture and open-source dependency research
 Decision: proceed to a gated shadow implementation; do not replace C9 with an
 unconstrained model
 
+Portfolio research objective: rolling five-year annualized net total return of
+12%–15%. The exact monthly compound equivalent is 0.9489%–1.1715%; 15%–20% is
+an excellent calendar-year range, not an annual quota or guarantee. Model
+quality and portfolio returns remain separate evaluation axes.
+
 ## Executive conclusion
 
 The optimal upgrade is a hybrid decision system:
@@ -41,8 +46,10 @@ orders, or execution authorization.
 
 The deterministic daily decision and email remain canonical and available when
 the shadow worker is offline, delayed, uncredentialed, or rejected by a
-validator. The worker catches up from an immutable local queue keyed by packet
-hash; API availability is not an availability dependency of the daily system.
+validator. The implemented worker snapshots the newest local packet and
+deduplicates by packet, model, prompt, schema, and runtime-code hashes; API
+availability is not a dependency of the daily system. It does not yet keep an
+immutable historical queue and cannot collect states while the Mac is off.
 
 ## Research question and method
 
@@ -149,19 +156,26 @@ Therefore Phase 5R should use an LLM primarily to:
 It should not use a model-generated next-day return or price target as the
 decisive signal.
 
+The return objective therefore belongs in portfolio constraints and
+walk-forward measurement, not in provider self-scoring. Daily evidence may
+change confidence, but weak monthly performance must not force a trade and a
+strong year must not relax risk controls. The frozen measurement policy is
+`00_project_control/phase5r_return_objective_policy.md`.
+
 ### 4. Recommended primary model and API
 
 Use strict Structured Outputs through a narrow provider boundary. The first
 implemented replay transport is a pinned, externally authenticated,
 tool-disabled Codex CLI process because repository policy forbids reading API
-credentials. A direct OpenAI Responses/Batch API adapter remains an evaluation
-option only after an equally narrow external credential boundary is approved.
+credentials. A direct injected-client OpenAI Responses adapter is implemented
+but disabled; live use and any Batch path still require an equally narrow
+external credential boundary and explicit approval.
 
 | Workload | Initial model | Setting | Reason |
 | --- | --- | --- | --- |
 | Filing and evidence extraction | `gpt-5.6-terra` | `reasoning.effort=medium` | Stronger cost/quality balance for repeatable structured extraction |
 | Thesis update and action proposal | `gpt-5.6-sol` | `reasoning.effort=high` | Frontier model for the smaller set of high-value decisions |
-| Independent critic | `gpt-5.6-sol` | separate stateless prompt, `high`; evaluate `pro` only if measured | Runs on every packet during evaluation/shadow so catch and false-downgrade rates are measurable; later event gating requires its own replay |
+| Proposal-aware critic | `gpt-5.6-sol` | separate stateless prompt, `high`; receives the committee proposal | Runs on every packet during evaluation/shadow so catch and false-downgrade rates are measurable; it is not a blinded or cross-family control |
 
 As of 2026-07-24, OpenAI identifies GPT-5.6 Sol as the flagship model and Terra
 as the intelligence/cost balance. Both support the Responses API, reasoning,
@@ -173,9 +187,13 @@ evidence packets rather than entire uncontrolled archives. See the
 [Responses API guidance](https://developers.openai.com/api/docs/guides/migrate-to-responses),
 and [Structured Outputs guidance](https://developers.openai.com/api/docs/guides/structured-outputs).
 
-Do not use `chat-latest` or an untracked convenience alias. Record the exact
-model ID, request settings, prompt version, schema version, response ID, token
-usage, source-packet hash, and timestamp for every run.
+Do not use `chat-latest` or an untracked convenience alias. Every run must
+record the requested exact model ID, request settings, prompt version, schema
+version, source-packet hash, timestamp, and local input/output hashes. A direct
+Responses API transport must additionally record its provider-native response
+ID, resolved model/version metadata, and token usage. The exploratory Codex CLI
+bridge does not expose authoritative response IDs or billing usage; that known
+provenance gap is one reason it cannot qualify advisory influence.
 
 Keep a thin local `ModelProvider` interface. The implemented adapter pins and
 rehashes the native Codex executable before every launch, runs in an ephemeral
@@ -185,6 +203,15 @@ OpenAI SDK adapter must provide equivalent success-status, refusal, incomplete,
 schema, citation, numeric, and policy checks. Do not silently repair or retry a
 semantically invalid finance answer into apparent validity.
 
+The live-shadow implementation therefore persists intent before provider
+construction, stores one immutable result receipt per role, and reuses every
+successful role independently. Schema, semantic, citation, evidence, and
+policy-invalid results terminate the exact run; only narrowly classified
+transport/process failures may retry. A final hash-bound completion manifest,
+not the mere presence of a decision file, is the completed-run authority.
+Replay evaluation separately discloses every physical attempt and keeps its
+global call and operator-estimated cost ceilings cumulative across resumes.
+
 OpenAI documents that API inputs and outputs are not used for model training
 unless the customer opts in. It also documents that default abuse-monitoring
 logs may retain customer content for up to 30 days and that Zero Data Retention
@@ -192,13 +219,18 @@ requires approval. The implementation should therefore transmit only public
 evidence and coarse portfolio percentages unless a stricter retention control
 is confirmed:
 [OpenAI API data controls](https://developers.openai.com/api/docs/guides/your-data).
+For bulk replay, the [Batch API FAQ](https://help.openai.com/en/articles/9197833-batch-api-faq%3F.gz)
+documents a 50% discount but explicitly excludes Batch from Zero Data
+Retention. Batch is therefore appropriate only for public evidence and
+sanitized portfolio bands, never private or identifying inputs.
 
 ### 5. Independent model option
 
 Create a vendor-neutral critic interface, but do not make a second provider a
 day-one dependency. During evaluation, compare the same frozen decision packet
-with an independent model such as Claude Opus 5. Anthropic documents its current
-model IDs as pinned snapshots, which is useful for reproducibility:
+with an independent model such as maximum-capability Claude Fable 5, with
+Claude Opus 5 as a lower-cost control. Anthropic documents its current model IDs
+as pinned snapshots, which is useful for reproducibility:
 [Claude models overview](https://platform.claude.com/docs/en/about-claude/models/overview)
 and [model ID/versioning](https://platform.claude.com/docs/en/about-claude/models/model-ids-and-versions).
 
@@ -293,24 +325,25 @@ only by a separate worker:
 ```text
 deterministic refresh -> canonical C9/email (unchanged)
          |
-         +-> sealed packet manifest -> local idempotent spool
-                                          |
-                                          v
-                              asynchronous shadow worker
-                                          |
-                              analyst / committee / critic
-                                          |
-                              local validators and audit
-                                          |
-                              non-canonical shadow artifact
+         +-> newest sealed packet snapshot
+                       |
+                       v
+             asynchronous shadow worker
+                       |
+             analyst / committee / critic
+                       |
+             local validators and audit
+                       |
+             non-canonical shadow artifact
 ```
 
 The refresh process needs no provider credential and makes no external model
-network request. The worker may run later and catch up by immutable packet hash.
-A provider outage, quota failure, refusal, incomplete output, validation error,
-or computer shutdown cannot delay or fail deterministic refresh or email. Even
-after promotion, email may consume only a previously completed, validated
-artifact matching the current packet/session; otherwise it uses the
+network request. The worker may run later against the newest locally available
+packet. A provider outage, quota failure, refusal, incomplete output, validation
+error, or computer shutdown cannot delay or fail deterministic refresh or
+email. A shutdown can, however, lose an intraday state that was never fetched.
+Even after a future promotion, email may consume only a previously completed,
+validated artifact matching the current packet/session; otherwise it uses the
 deterministic result.
 
 The project `AGENTS.md` also creates a deliberate runtime blocker: it permits
@@ -318,13 +351,14 @@ explicit public-research network access but prohibits storing credentials in the
 repository. A live provider test cannot be activated automatically by this
 research or by code alone. The user must later:
 
-1. configure the API secret outside the repository, such as macOS Keychain or a
-   process-scoped secure environment; and
-2. explicitly authorize the outbound provider network test.
+1. keep provider authentication outside the repository (the selected first
+   transport already delegates to the externally logged-in, pinned Codex CLI);
+   and
+2. explicitly authorize the capped outbound provider replay.
 
 The implementation must not request, read, print, log, or persist that secret.
 Until both steps occur, the project can complete schemas, fixtures, mock/replay,
-provenance, queue/worker, and offline evaluations, but real shadow model calls
+provenance, worker, and offline evaluations, but real shadow model calls
 remain blocked. The canonical deterministic daily workflow remains active.
 
 ### 9. Governance is part of model quality
@@ -345,12 +379,40 @@ For this project, safe failure means:
   execution tools;
 - no model can directly edit canonical account state or send email.
 
-Promotion is not a subjective demonstration. It requires at least 200 immutable
-time-isolated replay packets, including at least 50 material-transition cases;
-30–60 completed U.S. market sessions of separate live shadow observation; every
-factual, numeric, citation, stability, and boundary threshold in the
-project-control plan; and zero policy violations. One policy violation is an
-automatic no-go regardless of average benchmark score.
+Promotion is not a subjective demonstration. It requires at least 250 immutable
+time-isolated replay packets across at least 20 issuers, including at least 50
+material-transition cases; 30–60 completed U.S. market sessions of separate
+live shadow observation; every factual, numeric, citation, stability, and
+boundary threshold in the project-control plan; and zero policy violations.
+One policy violation is an automatic no-go regardless of average benchmark
+score.
+
+### 10. A source pilot is not qualification
+
+The safest next corpus step is a 30-packet **source-materialization pilot**, not
+a provider demonstration. It should expose exhibit discovery failures, missing
+accession-level XBRL reconciliation, market-license or point-in-time gaps,
+temporal leakage, cache-reuse defects, and realistic storage before hundreds of
+public-source requests are made. No model/API call is needed for that pilot,
+and a successful pilot does not establish decision quality.
+
+Qualification is a separate frozen dataset of at least 250 time-isolated
+packets across at least 20 issuers, with at least 50 independently reviewed
+material transitions, explicit negative/no-change cases, and a predeclared
+representative cohort distributed across filing forms, years, sectors, and
+market regimes. The current ledger's six issuers can test mechanics but cannot
+support a broad robustness claim. Only after the
+qualification sources and annotations are frozen should capped provider replay
+begin; the later provider smoke test must not be confused with the earlier
+source pilot.
+
+`inventory_phase5r_llm_replay_corpus.py` implements the local preflight for
+both stages. It makes zero requests and writes no corpus file. Its deterministic
+stdout report binds the evidence-ledger and SEC acceptance-index hashes, freezes
+the selected accessions and distributions, itemizes missing primary,
+filing-index, exhibit, XBRL, and market artifacts per accession, and gives
+request/storage ranges. This closes the planning-information gap without
+requiring an SEC User-Agent, provider authentication, or a market credential.
 
 ## Final recommendation
 
@@ -367,9 +429,10 @@ price quality to a licensed market-data provider, and keep deterministic C9
 rules as the final policy gate.
 
 Do not place any model/API request in refresh, C9, the deterministic decision
-pipeline, or the sender. Do not promote the model layer until at least 200
-time-isolated replay packets, at least 50 material-transition cases, 30–60 live
-shadow sessions, all acceptance gates, and zero policy violations pass.
+pipeline, or the sender. Do not promote the model layer until at least 250
+time-isolated replay packets across at least 20 issuers, at least 50
+material-transition cases, 30–60 live shadow sessions, all acceptance gates,
+and zero policy violations pass.
 Credential and provider-network activation remain a separate explicit user
 action outside the repository.
 

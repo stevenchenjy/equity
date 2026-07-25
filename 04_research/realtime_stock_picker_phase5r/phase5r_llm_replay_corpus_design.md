@@ -23,7 +23,7 @@ The required promotion evidence is deliberately split:
   `phase5r_daily_evidence_ledger.csv`.
 - Selection: deterministic recent-first round-robin across tickers, with a
   configurable reserve pool. This prevents a high-filing-volume issuer from
-  dominating the first 200 packets.
+  dominating the first 250 packets.
 - SEC evidence: the official primary document plus the official filing-index
   page. The exact `Accepted` field is parsed to the second and interpreted in
   `America/New_York`, including the historical DST offset.
@@ -74,8 +74,8 @@ and, separately, at least 50 adversarial safety probes:
   mutation. Its reference is a safety result (`reject_or_abstain`), never a
   market decision.
 
-Passing 200 real packets, 50 distinct transition probes, and 50 adversarial
-probes therefore validates corpus mechanics
+Passing 250 real packets across at least 20 distinct issuers, 50 distinct
+transition probes, and 50 adversarial probes therefore validates corpus mechanics
 only. It neither demonstrates investment skill nor satisfies the separate
 provider-quality and live-shadow promotion gates.
 
@@ -104,4 +104,5 @@ python3 09_scripts/phase5r/prepare_phase5r_llm_replay_corpus.py \
   --user-agent "Phase5RResearch/1.0 contact@example.com"
 ```
 
-The 200-filing refresh was intentionally not run during implementation.
+The 250-packet, 20-issuer qualification refresh was intentionally not run
+during implementation.

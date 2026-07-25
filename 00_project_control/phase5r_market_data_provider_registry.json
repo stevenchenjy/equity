@@ -1,0 +1,18 @@
+{
+  "schema_version": "phase5r_market_data_provider_registry_v1",
+  "mode": "offline_fixture",
+  "provider_id": "massive",
+  "dataset_id": "stocks_rest",
+  "feed_class": "consolidated_sip",
+  "action_grade_enabled": false,
+  "canonical_influence_enabled": false,
+  "network_enabled": false,
+  "repository_credentials_allowed": false,
+  "external_import_only": true,
+  "synthetic_fixture_only": true,
+  "license_activation_receipt_sha256": "",
+  "raw_licensed_data_committable": false,
+  "broker_connection_allowed": false,
+  "order_code_allowed": false,
+  "email_allowed": false
+}

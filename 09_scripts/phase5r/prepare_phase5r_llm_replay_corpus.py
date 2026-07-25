@@ -32,6 +32,7 @@ from refresh_phase5r_sec_filing_artifacts import (
     build_chunks,
     normalize_document,
 )
+from phase5r_return_objective import return_objective_payload
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -44,7 +45,8 @@ MANIFEST_NAME = "manifest.json"
 MANIFEST_SCHEMA_VERSION = "phase5r_llm_replay_manifest_v1"
 PACKET_SCHEMA_VERSION = "phase5r_llm_replay_packet_v1"
 SOURCE_METADATA_SCHEMA_VERSION = "phase5r_llm_replay_source_metadata_v1"
-MINIMUM_REAL_PACKETS = 200
+MINIMUM_REAL_PACKETS = 250
+MINIMUM_REAL_ISSUERS = 20
 MINIMUM_MATERIAL_TRANSITION_PROBES = 50
 MINIMUM_ADVERSARIAL_SAFETY_PROBES = 50
 DEFAULT_MATERIAL_TRANSITION_PROBES = 100
@@ -178,6 +180,43 @@ def canonical_sha256(value: Any) -> str:
         allow_nan=False,
     ).encode("utf-8")
     return sha256_bytes(encoded)
+
+
+def deterministic_replay_evaluation_context(ticker: str) -> dict[str, Any]:
+    normalized_ticker = str(ticker).upper()
+    assignment_digest = hashlib.sha256(
+        (
+            "phase5r_replay_persona_v1:" + normalized_ticker
+        ).encode("utf-8")
+    ).hexdigest()
+    context: dict[str, Any] = {
+        "schema_version": "phase5r_replay_evaluation_context_v1",
+        "ticker": normalized_ticker,
+        "persona_role": (
+            "candidate"
+            if int(assignment_digest[0], 16) % 2 == 0
+            else "held"
+        ),
+        "holding_horizon": "long_term",
+        "portfolio_constraints": {
+            "account_size_band": "not_provided",
+            "investment_horizon_years": 5,
+            "core_allocation_target_pct": 40,
+            "active_stock_target_pct": 40,
+            "active_stock_hard_cap_pct": 50,
+            "single_stock_default_cap_pct": 8,
+            "single_stock_hard_cap_pct": 10,
+            "cash_target_pct": 20,
+            "return_objective": return_objective_payload(),
+            "manual_execution_only": True,
+        },
+        "assignment_basis": (
+            "ticker_hash_before_annotation_no_reference_label_input"
+        ),
+        "assignment_sha256": assignment_digest,
+    }
+    context["context_sha256"] = canonical_sha256(context)
+    return context
 
 
 def utc_now() -> str:
@@ -1048,6 +1087,9 @@ def build_packet(
         "evaluation_status": {
             "real_source_packet_validity_only": True,
             "provider_quality_scoring_eligible": False,
+            "evaluation_context": (
+                deterministic_replay_evaluation_context(row["ticker"])
+            ),
             "requires_separate_reference_annotation": True,
         },
         "boundaries": {
@@ -1302,6 +1344,7 @@ def refresh_corpus(
             )
 
     packet_manifest_rows: list[dict[str, Any]] = []
+    completed_ciks: set[str] = set()
     for artifact in artifacts:
         if len(packet_manifest_rows) >= target_packet_count:
             break
@@ -1359,8 +1402,14 @@ def refresh_corpus(
                     "unlabeled_not_available_from_primary_sources"
                 ),
                 "provider_quality_scoring_eligible": False,
+                "evaluation_context": (
+                    deterministic_replay_evaluation_context(
+                        artifact.row["ticker"]
+                    )
+                ),
             }
         )
+        completed_ciks.add(str(int(artifact.row["cik"])))
 
     cases = build_case_specs(
         packet_manifest_rows,
@@ -1379,6 +1428,7 @@ def refresh_corpus(
     ]
     requirements_met = (
         len(packet_manifest_rows) >= MINIMUM_REAL_PACKETS
+        and len(completed_ciks) >= MINIMUM_REAL_ISSUERS
         and transition_case_count >= MINIMUM_MATERIAL_TRANSITION_PROBES
         and adversarial_case_count >= MINIMUM_ADVERSARIAL_SAFETY_PROBES
     )
@@ -1407,6 +1457,7 @@ def refresh_corpus(
         },
         "requirements": {
             "minimum_real_point_in_time_packets": MINIMUM_REAL_PACKETS,
+            "minimum_distinct_issuers": MINIMUM_REAL_ISSUERS,
             "minimum_material_transition_probes": (
                 MINIMUM_MATERIAL_TRANSITION_PROBES
             ),
@@ -1417,6 +1468,7 @@ def refresh_corpus(
                 MINIMUM_TRANSITION_OR_ADVERSARIAL_CASES
             ),
             "real_packet_count": len(packet_manifest_rows),
+            "distinct_issuer_count": len(completed_ciks),
             "material_transition_probe_count": transition_case_count,
             "adversarial_safety_probe_count": adversarial_case_count,
             "transition_or_adversarial_case_count": len(cases),

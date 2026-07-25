@@ -1,10 +1,10 @@
 {
   "schema_version": "phase5r_daily_v1",
-  "generated_at": "2026-07-23T23:52:32-04:00",
+  "generated_at": "2026-07-25T01:21:07-04:00",
   "current_workflow": "daily_decision",
   "active_pipeline": "phase5r_daily",
   "primary_decision": "daily_account_aware_decision",
-  "next_review_date": "2026-07-23",
+  "next_review_date": "2026-07-25",
   "daily_pipeline_status": "operational_scheduled",
   "d1_scheduler_status": "retired_unloaded",
   "email_delivery_allowed_from": "phase5r_daily_only",
@@ -27,9 +27,14 @@
   "weekend_email_policy": "material_change_only",
   "d2_scheduler_status": "retired_unloaded",
   "d3_scheduler_status": "retired_unloaded",
-  "llm_shadow_status": "offline_hardened_replay_gate_pending",
+  "llm_shadow_status": "offline_hardened_real_replay_provider_and_extended_eval_pending",
   "llm_shadow_canonical_influence": "disabled",
   "llm_shadow_scheduler_status": "not_installed",
   "llm_provider_credentials_in_repository": "no",
-  "model_decision_authority": "research_shadow_only"
+  "model_decision_authority": "research_shadow_only",
+  "long_horizon_return_objective": "rolling_5y_net_total_return_annualized_12_to_15_pct",
+  "monthly_compound_equivalent": "0.9489_to_1.1715_pct",
+  "excellent_year_context": "15_to_20_pct_not_annual_quota",
+  "return_objective_guaranteed": "no",
+  "performance_history_status": "insufficient_for_rolling_5y_measurement"
 }

@@ -28,7 +28,8 @@ assert registry["live_shadow_enabled"] is True
 assert registry["canonical_influence_enabled"] is False
 assert registry["provider_credentials_read_by_repository"] is False
 assert registry["tools_enabled"] is False
-assert registry["one_call_per_unique_packet_role"] is True
+assert registry["successful_role_results_reused"] is True
+assert registry["maximum_live_attempts_per_role"] == 2
 assert registry["provider"] == "codex_cli_external_auth"
 assert registry["provider_executable"] == (
     "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/"
@@ -40,6 +41,9 @@ assert provider.is_file()
 assert hashlib.sha256(provider.read_bytes()).hexdigest() == registry["provider_executable_sha256"]
 '
 
+"${python_bin}" \
+    "${project_root}/09_scripts/phase5r/phase5r_llm_activation_receipt.py" \
+    --check-active
 /usr/bin/plutil -lint "${template_plist}" >/dev/null
 "${python_bin}" -c '
 import plistlib

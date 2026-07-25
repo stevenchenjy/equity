@@ -29,16 +29,45 @@
       "single_stock_default_cap_pct": 8,
       "single_stock_hard_cap_pct": 10,
       "cash_target_pct": 20,
+      "return_objective": {
+        "measurement_horizon": "rolling_5_year_net_total_return",
+        "target_annualized_return_pct_low": 12.0,
+        "target_annualized_return_pct_high": 15.0,
+        "equivalent_monthly_compound_pct_low": 0.9489,
+        "equivalent_monthly_compound_pct_high": 1.1715,
+        "excellent_calendar_year_pct_low": 15.0,
+        "excellent_calendar_year_pct_high": 20.0,
+        "monthly_or_annual_quota": false,
+        "return_guarantee": false,
+        "risk_gates_override_allowed": false
+      },
       "manual_execution_only": true
     },
     "gates": {
       "market_data_current": true,
       "market_data_action_grade": true,
+      "market_data_action_grade_tickers": [
+        "TST"
+      ],
+      "valuation_action_grade_tickers": [
+        "TST"
+      ],
+      "allowed_classifications_by_ticker": {
+        "TST": [
+          "hold_existing",
+          "paper_trade_candidate",
+          "real_trade_candidate",
+          "trim_review",
+          "exit_review",
+          "abstain"
+        ]
+      },
       "sec_held_coverage_complete": true,
       "fundamental_held_coverage_complete": true,
       "filing_artifact_provenance_complete": true,
       "account_state_consistent": true,
-      "point_in_time_safe": true
+      "point_in_time_safe": true,
+      "verified_close_session": "2026-07-23"
     },
     "market_observations": [
       {
@@ -95,6 +124,404 @@
       }
     ],
     "research_context": [],
+    "valuation_evidence": [
+      {
+        "schema_version": "phase5r_valuation_evidence_v1",
+        "ticker": "TST",
+        "as_of_utc": "2026-07-23T22:30:00Z",
+        "input_receipts": [
+          {
+            "input_id": "share_price",
+            "value": "50",
+            "unit": "USD_per_share",
+            "period": "2026-07-23",
+            "available_at_utc": "2026-07-23T20:15:00Z",
+            "source_ids": [
+              "market:TST:2026-07-23"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "diluted_shares",
+            "value": "100000000",
+            "unit": "shares",
+            "period": "TTM-2026Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "cash_and_equivalents",
+            "value": "700000000",
+            "unit": "USD",
+            "period": "2026Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "total_debt",
+            "value": "200000000",
+            "unit": "USD",
+            "period": "2026Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "revenue_ttm",
+            "value": "1800000000",
+            "unit": "USD",
+            "period": "TTM-2026Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "free_cash_flow_ttm",
+            "value": "180000000",
+            "unit": "USD",
+            "period": "TTM-2026Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "prior_diluted_shares",
+            "value": "98000000",
+            "unit": "shares",
+            "period": "TTM-2025Q1",
+            "available_at_utc": "2026-05-01T21:00:00Z",
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "evidence_kind": "observation"
+          },
+          {
+            "input_id": "target_price_assumption",
+            "value": "65",
+            "unit": "USD_per_share",
+            "period": "2027_base_case",
+            "available_at_utc": "2026-07-23T22:00:00Z",
+            "source_ids": [
+              "scenario:TST:valuation:2026-07-23"
+            ],
+            "evidence_kind": "scenario_assumption"
+          },
+          {
+            "input_id": "downside_price_assumption",
+            "value": "38",
+            "unit": "USD_per_share",
+            "period": "2027_bear_case",
+            "available_at_utc": "2026-07-23T22:00:00Z",
+            "source_ids": [
+              "scenario:TST:valuation:2026-07-23"
+            ],
+            "evidence_kind": "scenario_assumption"
+          }
+        ],
+        "calculations": [
+          {
+            "calculation_id": "market_cap",
+            "formula": "share_price * diluted_shares",
+            "value": "5000000000.00",
+            "unit": "USD",
+            "input_ids": [
+              "share_price",
+              "diluted_shares"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "share_price": "2026-07-23",
+              "diluted_shares": "TTM-2026Q1"
+            }
+          },
+          {
+            "calculation_id": "net_debt",
+            "formula": "total_debt - cash_and_equivalents",
+            "value": "-500000000.00",
+            "unit": "USD",
+            "input_ids": [
+              "total_debt",
+              "cash_and_equivalents"
+            ],
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "total_debt": "2026Q1",
+              "cash_and_equivalents": "2026Q1"
+            }
+          },
+          {
+            "calculation_id": "enterprise_value",
+            "formula": "market_cap + total_debt - cash_and_equivalents",
+            "value": "4500000000.00",
+            "unit": "USD",
+            "input_ids": [
+              "share_price",
+              "diluted_shares",
+              "total_debt",
+              "cash_and_equivalents"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "share_price": "2026-07-23",
+              "diluted_shares": "TTM-2026Q1",
+              "total_debt": "2026Q1",
+              "cash_and_equivalents": "2026Q1"
+            }
+          },
+          {
+            "calculation_id": "ev_to_revenue",
+            "formula": "enterprise_value / revenue_ttm",
+            "value": "2.5000",
+            "unit": "multiple",
+            "input_ids": [
+              "share_price",
+              "diluted_shares",
+              "total_debt",
+              "cash_and_equivalents",
+              "revenue_ttm"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "share_price": "2026-07-23",
+              "diluted_shares": "TTM-2026Q1",
+              "total_debt": "2026Q1",
+              "cash_and_equivalents": "2026Q1",
+              "revenue_ttm": "TTM-2026Q1"
+            }
+          },
+          {
+            "calculation_id": "free_cash_flow_margin_pct",
+            "formula": "free_cash_flow_ttm / revenue_ttm * 100",
+            "value": "10.00",
+            "unit": "percent",
+            "input_ids": [
+              "free_cash_flow_ttm",
+              "revenue_ttm"
+            ],
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "free_cash_flow_ttm": "TTM-2026Q1",
+              "revenue_ttm": "TTM-2026Q1"
+            }
+          },
+          {
+            "calculation_id": "free_cash_flow_yield_pct",
+            "formula": "free_cash_flow_ttm / market_cap * 100",
+            "value": "3.60",
+            "unit": "percent",
+            "input_ids": [
+              "free_cash_flow_ttm",
+              "share_price",
+              "diluted_shares"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "free_cash_flow_ttm": "TTM-2026Q1",
+              "share_price": "2026-07-23",
+              "diluted_shares": "TTM-2026Q1"
+            }
+          },
+          {
+            "calculation_id": "ev_to_free_cash_flow",
+            "formula": "enterprise_value / free_cash_flow_ttm",
+            "value": "25.0000",
+            "unit": "multiple",
+            "input_ids": [
+              "share_price",
+              "diluted_shares",
+              "total_debt",
+              "cash_and_equivalents",
+              "free_cash_flow_ttm"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "share_price": "2026-07-23",
+              "diluted_shares": "TTM-2026Q1",
+              "total_debt": "2026Q1",
+              "cash_and_equivalents": "2026Q1",
+              "free_cash_flow_ttm": "TTM-2026Q1"
+            }
+          },
+          {
+            "calculation_id": "dilution_pct",
+            "formula": "(diluted_shares / prior_diluted_shares - 1) * 100",
+            "value": "2.04",
+            "unit": "percent",
+            "input_ids": [
+              "diluted_shares",
+              "prior_diluted_shares"
+            ],
+            "source_ids": [
+              "sec:TST:valuation:2026Q1"
+            ],
+            "input_periods": {
+              "diluted_shares": "TTM-2026Q1",
+              "prior_diluted_shares": "TTM-2025Q1"
+            }
+          },
+          {
+            "calculation_id": "target_upside_pct",
+            "formula": "(target_price_assumption / share_price - 1) * 100",
+            "value": "30.00",
+            "unit": "percent",
+            "input_ids": [
+              "target_price_assumption",
+              "share_price"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "scenario:TST:valuation:2026-07-23"
+            ],
+            "input_periods": {
+              "target_price_assumption": "2027_base_case",
+              "share_price": "2026-07-23"
+            }
+          },
+          {
+            "calculation_id": "downside_change_pct",
+            "formula": "(downside_price_assumption / share_price - 1) * 100",
+            "value": "-24.00",
+            "unit": "percent",
+            "input_ids": [
+              "downside_price_assumption",
+              "share_price"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "scenario:TST:valuation:2026-07-23"
+            ],
+            "input_periods": {
+              "downside_price_assumption": "2027_bear_case",
+              "share_price": "2026-07-23"
+            }
+          },
+          {
+            "calculation_id": "reward_to_risk",
+            "formula": "target_upside_fraction / downside_loss_fraction",
+            "value": "1.2500",
+            "unit": "ratio",
+            "input_ids": [
+              "target_price_assumption",
+              "downside_price_assumption",
+              "share_price"
+            ],
+            "source_ids": [
+              "market:TST:2026-07-23",
+              "scenario:TST:valuation:2026-07-23"
+            ],
+            "input_periods": {
+              "target_price_assumption": "2027_base_case",
+              "downside_price_assumption": "2027_bear_case",
+              "share_price": "2026-07-23"
+            }
+          }
+        ],
+        "sufficiency": {
+          "valuation_sufficient": true,
+          "scenario_sufficient": true,
+          "decision_sufficient": true,
+          "missing_core_input_ids": [],
+          "missing_scenario_input_ids": [],
+          "blocked_reasons": []
+        },
+        "guardrails": {
+          "missing_inputs_may_be_invented": false,
+          "scenario_prices_are_observations": false,
+          "action_grade_valuation_permitted": true,
+          "insufficient_result": "watch_or_abstain",
+          "broker_or_execution_capability": false
+        },
+        "receipt_sha256": "a38401a901e69675e36554c66d07290451d94ff923257586b2ad629af93cf398"
+      }
+    ],
+    "evidence_freshness": [
+      {
+        "schema_version": "phase5r_evidence_freshness_v1",
+        "ticker": "TST",
+        "as_of_utc": "2026-07-23T22:30:00Z",
+        "sec_scan": {
+          "status_artifact_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+          "completed_through_utc": "2026-07-23T22:20:00Z",
+          "ticker_scanned": true,
+          "complete": true,
+          "max_age_seconds": 172800,
+          "age_seconds": 600,
+          "current": true,
+          "blocked_reasons": []
+        },
+        "market": {
+          "observed_at_utc": "2026-07-23T20:15:00Z",
+          "market_session_date": "2026-07-23",
+          "expected_market_session_date": "2026-07-23",
+          "complete_close": true,
+          "current": true,
+          "blocked_reasons": []
+        },
+        "valuation": {
+          "valuation_receipt_sha256": "a38401a901e69675e36554c66d07290451d94ff923257586b2ad629af93cf398",
+          "receipt_as_of_utc": "2026-07-23T22:30:00Z",
+          "market_input_at_utc": "2026-07-23T20:15:00Z",
+          "market_session_date": "2026-07-23",
+          "expected_market_session_date": "2026-07-23",
+          "scenario_refreshed_at_utc": "2026-07-23T22:00:00Z",
+          "scenario_max_age_seconds": 604800,
+          "scenario_age_seconds": 1800,
+          "complete": true,
+          "current": true,
+          "blocked_reasons": []
+        },
+        "durable_sec_source_ids": [
+          "sec:TST:10Q:2026Q1:0",
+          "sec:TST:valuation:2026Q1"
+        ],
+        "transition_freshness": {
+          "sec_scan_current": true,
+          "market_current": true,
+          "valuation_current": true,
+          "all_current": true,
+          "blocked_reasons": []
+        },
+        "guardrails": {
+          "durable_sec_evidence_age_limit_applied": false,
+          "current_sec_scan_required_for_transition": true,
+          "missing_or_expired_blocks_action_review": true,
+          "missing_or_expired_erases_research_classification": false,
+          "broker_or_execution_capability": false
+        },
+        "receipt_sha256": "b1f1259d71bf21c106e85330d3fe3c914eac4c0bc04a15e4f884696ba533fdf6"
+      }
+    ],
     "calculations": [
       {
         "calculation_id": "calc:revenue_yoy:TST:CY2026Q1",
@@ -145,6 +572,36 @@
         "excerpt_text": "TST reported quarterly revenue of 478844000 USD versus 366884000 USD in the comparable prior-year quarter. Net income was 44508000 USD. Management stated that the long-term product roadmap remains unchanged.\n"
       },
       {
+        "source_id": "sec:TST:valuation:2026Q1",
+        "source_type": "sec_filing_valuation_fact",
+        "ticker": "TST",
+        "accepted_at": "2026-05-01T17:00:00-04:00",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1000000/000100000026000001/tst-20260331.htm",
+        "content_sha256": "534f4b46c73e807ab94f1d6237d7c61b479b1416fad7bcf3a86915fd03cefa84",
+        "locator": {
+          "cik": "0001000000",
+          "accession_number": "0001000000-26-000001",
+          "form": "10-Q",
+          "fixture_kind": "synthetic_valuation_fact"
+        },
+        "authority": "primary_official",
+        "excerpt_text": "TST reported 100000000 diluted shares, 98000000 prior-year diluted shares, 700000000 USD cash, 200000000 USD debt, 1800000000 USD trailing revenue, and 180000000 USD trailing free cash flow.\n"
+      },
+      {
+        "source_id": "scenario:TST:valuation:2026-07-23",
+        "source_type": "deterministic_valuation_scenario",
+        "ticker": "TST",
+        "accepted_at": "2026-07-23T18:00:00-04:00",
+        "source_url": "",
+        "content_sha256": "61d0a44ac95ea1ebf2ee43f8f2de568087bb081817d3b18ed0a25c9ff1b3de84",
+        "locator": {
+          "method": "synthetic_fixture_scenario",
+          "cycle_date": "2026-07-23"
+        },
+        "authority": "deterministic_research_calculation",
+        "excerpt_text": "Deterministic fixture valuation scenarios use a 65 USD base target and 38 USD downside reference for validation only.\n"
+      },
+      {
         "source_id": "market:TST:2026-07-23",
         "source_type": "public_market_observation",
         "ticker": "TST",
@@ -183,8 +640,16 @@
           "stance": "supports",
           "time_horizon": "long_term",
           "materiality": "high",
+          "rationale": "The claim directly summarizes the cited official quarterly excerpt.",
+          "fact_type": "fact",
+          "evidence_origin": "management_reported",
+          "unit": "qualitative",
+          "period": "CY2026Q1",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
+          ],
+          "cited_excerpt_sha256": [
+            "88d0db2b688c7db72cc7074533e38f38e1668377a4ab93feb2217a09c0b96434"
           ],
           "calculation_ids": []
         }
@@ -221,21 +686,24 @@
           "fact": "The primary filing supports the existing long-term thesis.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         },
         {
           "ticker": "TST",
           "fact": "The filing provides direct evidence about durable operating performance.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         },
         {
           "ticker": "TST",
           "fact": "The reported period remains consistent with the prior research case.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         }
       ],
       "disconfirming_facts": [
@@ -244,21 +712,24 @@
           "fact": "The same primary filing leaves normalization risk unresolved.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         },
         {
           "ticker": "TST",
           "fact": "A single reported period cannot establish durable trend persistence.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         },
         {
           "ticker": "TST",
           "fact": "The filing does not eliminate execution and demand risks.",
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
-          ]
+          ],
+          "calculation_ids": []
         }
       ],
       "scenarios": {
@@ -278,6 +749,9 @@
           ],
           "invalidation_conditions": [
             "Official evidence shows durable demand deterioration."
+          ],
+          "claim_ids": [
+            "claim-stable-thesis"
           ],
           "source_ids": [
             "sec:TST:10Q:2026Q1:0"
@@ -301,6 +775,23 @@
       "long_term_reasoning_pass": true,
       "action_proportionality_pass": true,
       "policy_boundary_pass": true,
+      "ticker_reviews": [
+        {
+          "ticker": "TST",
+          "verdict": "approve",
+          "downgrade_to": "hold_existing",
+          "factual_grounding_pass": true,
+          "citation_integrity_pass": true,
+          "numeric_reconciliation_pass": true,
+          "long_term_reasoning_pass": true,
+          "action_proportionality_pass": true,
+          "policy_boundary_pass": true,
+          "issues": [],
+          "approved_source_ids": [
+            "sec:TST:10Q:2026Q1:0"
+          ]
+        }
+      ],
       "issues": [],
       "approved_source_ids": [
         "sec:TST:10Q:2026Q1:0"

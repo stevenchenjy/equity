@@ -331,7 +331,8 @@ def source_checks(checks: list[dict[str, str]]) -> None:
         registry_mode_ok
         and all(registry.get(field) is False for field in fail_closed_fields)
         and registry.get("stateless") is True
-        and registry.get("one_call_per_unique_packet_role") is True
+        and registry.get("successful_role_results_reused") is True
+        and registry.get("maximum_live_attempts_per_role") == 2
         and registry.get("provider") == "codex_cli_external_auth"
         and registry.get("provider_executable")
         == (

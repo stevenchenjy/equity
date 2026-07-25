@@ -27,6 +27,9 @@ gmail_tokens/
 00_project_control/run_logs/phase5r_llm_shadow_state.local.json
 00_project_control/run_logs/phase5r_llm_shadow_scheduler_state.local.json
 00_project_control/run_logs/phase5r_llm_shadow.lock
+00_project_control/run_logs/phase5r_llm_shadow_runs/
 00_project_control/run_logs/phase5r_llm_activation_receipt.local.json
 02_filings/phase5r_daily/
 02_filings/phase5r_replay/
+02_filings/phase5r_llm_replay/
+08_reviews/phase5r_llm_provider_replay/quarantine/

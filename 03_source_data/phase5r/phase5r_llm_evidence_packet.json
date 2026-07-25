@@ -1,5 +1,5 @@
 {
-  "as_of_et": "2026-07-25T00:16:06-04:00",
+  "as_of_et": "2026-07-25T04:36:32-04:00",
   "boundaries": {
     "automatic_action_allowed": false,
     "broker_connected": false,
@@ -336,10 +336,14 @@
       "materiality": "high",
       "metadata_source_id": "sec-filing-metadata:0001973239-26-000097",
       "text_chunk_source_ids": [
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:0",
         "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:1",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:75",
         "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:150",
         "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:222",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223"
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223",
+        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:225"
       ],
       "ticker": "ARM"
     },
@@ -430,10 +434,14 @@
       "materiality": "high",
       "metadata_source_id": "sec-filing-metadata:0000723125-26-000015",
       "text_chunk_source_ids": [
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:0",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:20",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:23",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:30",
-        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55"
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:39",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:59"
       ],
       "ticker": "MU"
     },
@@ -463,10 +471,14 @@
       "materiality": "high",
       "metadata_source_id": "sec-filing-metadata:0001327567-26-000015",
       "text_chunk_source_ids": [
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:0",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:28",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:36",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:37",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:38",
-        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39"
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:56",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:84"
       ],
       "ticker": "PANW"
     },
@@ -513,10 +525,14 @@
       "materiality": "high",
       "metadata_source_id": "sec-filing-metadata:0001943896-26-000047",
       "text_chunk_source_ids": [
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:0",
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:12",
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:26",
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:27",
-        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29"
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:33",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:67",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:100"
       ],
       "ticker": "RBRK"
     }
@@ -633,23 +649,60 @@
   ],
   "gates": {
     "account_state_consistent": true,
+    "allowed_classifications_by_ticker": {
+      "ARM": [
+        "reject",
+        "watchlist",
+        "abstain"
+      ],
+      "AVGO": [
+        "reject",
+        "watchlist",
+        "abstain"
+      ],
+      "IOT": [
+        "hold_existing",
+        "abstain"
+      ],
+      "MU": [
+        "reject",
+        "watchlist",
+        "abstain"
+      ],
+      "PANW": [
+        "reject",
+        "watchlist",
+        "abstain"
+      ],
+      "RBRK": [
+        "hold_existing",
+        "abstain"
+      ],
+      "SPY": [
+        "reject",
+        "watchlist",
+        "abstain"
+      ]
+    },
     "deterministic_action_stability_distinct_closes": 0,
     "deterministic_transition_eligible_tickers": [],
     "deterministic_transition_pending_tickers": [],
     "filing_artifact_provenance_complete": true,
     "fundamental_held_coverage_complete": true,
     "market_data_action_grade": false,
+    "market_data_action_grade_tickers": [],
     "market_data_current": true,
     "point_in_time_safe": true,
     "prompt_injection_text_detected": false,
     "sec_acceptance_provenance_complete": true,
     "sec_held_coverage_complete": true,
+    "valuation_action_grade_tickers": [],
     "verified_close_session": "2026-07-24"
   },
-  "generated_at": "2026-07-25T00:16:06-04:00",
+  "generated_at": "2026-07-25T04:36:32-04:00",
   "market_observations": [
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -665,7 +718,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -681,7 +734,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -697,7 +750,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -713,7 +766,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -729,7 +782,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -745,7 +798,7 @@
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "intraday_or_unverified",
+      "bar_state": "complete_close",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
       "data_timestamp": "2026-07-24T23:21:09-04:00",
@@ -761,7 +814,7 @@
       "usable_for_scoring": "yes"
     }
   ],
-  "packet_id": "14ddfc7dd0870b369f7aaf7c3a81dc0fc3da1e73fde427f5a2fcbe28ade2cc17",
+  "packet_id": "0125bf68a4d8f02e31e586752ff3b8427268c833d0c66293eac0cf73d20cb3af",
   "portfolio_constraints": {
     "account_size_band": "under_10k",
     "active_stock_hard_cap_pct": 30.0,
@@ -770,6 +823,18 @@
     "core_allocation_target_pct": 60.0,
     "investment_horizon_years": 5,
     "manual_execution_only": true,
+    "return_objective": {
+      "equivalent_monthly_compound_pct_high": 1.1715,
+      "equivalent_monthly_compound_pct_low": 0.9489,
+      "excellent_calendar_year_pct_high": 20.0,
+      "excellent_calendar_year_pct_low": 15.0,
+      "measurement_horizon": "rolling_5_year_net_total_return",
+      "monthly_or_annual_quota": false,
+      "return_guarantee": false,
+      "risk_gates_override_allowed": false,
+      "target_annualized_return_pct_high": 15.0,
+      "target_annualized_return_pct_low": 12.0
+    },
     "single_stock_default_cap_pct": 6.0,
     "single_stock_hard_cap_pct": 8.0
   },
@@ -906,7 +971,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "80a52d9c5787db4152662b3b21320660bfbf2f565888a30191d36cd325bebac3",
+      "content_sha256": "7e7aa144504186fe28fd3f8ac98f1680755c30c6ed39d95be096771991aacf60",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -920,7 +985,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "a88f56736288f60c2c6c2b32125e5ede5f09af1df579c05e84327c0a92ad3bb9",
+      "content_sha256": "3d8293ba458daa4946a7678ee68130062439d18528b4b379c5e346df93397f3e",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -934,7 +999,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "85552639ab38a4c18c5fd3d29d117e79ed3d83e89f0b4999e0591aeb94fb6159",
+      "content_sha256": "0b9242aa7ff31f95840930517850bc9041e8645907c9bd1f214c9bd59a183ebe",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -948,7 +1013,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "9eb9754533648711cf59c41df11f7a267ed8debe76582d945fc1fcf1a66248db",
+      "content_sha256": "bc1bf2d602176cb4af06a120c3635e024e98a6e36c381c366b21a101dafc072b",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -962,7 +1027,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "b27cb56ace38d232871cc7abae624072ab5bcc3eef0531266508c07b8995ec75",
+      "content_sha256": "77be98fe0004b44183037e4262a784beb27b79beb77c170f61dacbc9f592a66c",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -976,7 +1041,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "ba860a3a56863932dd845d93243ca8dac2d2fdea5f67f212fd985dac9059c67e",
+      "content_sha256": "01d0ee34e5a09bf55876c421499ee36e95899b8ffd75a8ecceb08269fe16e1f1",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -990,7 +1055,7 @@
     {
       "accepted_at": "2026-07-24T23:21:09-04:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "2cc5682c640395e8ae9275ea389976dc4c10a183119e278e3f5d3565e82baf1b",
+      "content_sha256": "5008bf7b07dcf21de0c928e3a3caa8082df718ae5bdb44d1a03cd95f81160cc2",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -1110,6 +1175,27 @@
     {
       "accepted_at": "2026-05-26T20:35:23.000+00:00",
       "authority": "primary_official",
+      "content_sha256": "4ccc1da248b86f835b8abc8e3618ec7daf9b952f39fa9b27d34677d04d0e1a52",
+      "excerpt_text": "arm-20260331\nxbrli:sharesiso4217:USDiso4217:USDxbrli:sharesarm:reporting_unitxbrli:purearm:leasearm:board_memberiso4217:GBPiso4217:EURarm:employeearm:executive_awardarm:segment00019732392025-04-012026-03-310001973239dei:BusinessContactMember2025-04-012026-03-3100019732392026-03-310001973239us-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239us-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239us-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239us-gaap:RelatedPartyMember2025-04-012026-03-310001973239us-gaap:RelatedPartyMember2024-04-012025-03-310001973239us-gaap:RelatedPartyMember2023-04-012024-03-3100019732392024-04-012025-03-3100019732392023-04-012024-03-3100019732392025-03-310001973239us-gaap:RelatedPartyMember2026-03-310001973239us-gaap:RelatedPartyMember2025-03-310001973239us-gaap:CommonStockMember2023-03-310001973239us-gaap:AdditionalPaidInCapitalMember2023-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2023-03-310001973239us-gaap:RetainedEarningsMember2023-03-3100019732392023-03-310001973239us-gaap:RetainedEarningsMember2023-04-012024-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2023-04-012024-03-310001973239us-gaap:AdditionalPaidInCapitalMember2023-04-012024-03-310001973239us-gaap:CommonStockMember2023-04-012024-03-310001973239us-gaap:CommonStockMember2024-03-310001973239us-gaap:AdditionalPaidInCapitalMember2024-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-03-310001973239us-gaap:RetainedEarningsMember2024-03-3100019732392024-03-310001973239us-gaap:RetainedEarningsMember2024-04-012025-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-04-012025-03-310001973239us-gaap:AdditionalPaidInCapitalMember2024-04-012025-03-310001973239us-gaap:CommonStockMember2024-04-012025-03-310001973239us-gaap:CommonStockMember2025-03-310001973239us-gaap:AdditionalPaidInCapitalMember2025-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-03-310001973239us-gaap:RetainedEarningsMember2025-03-310001973239us-gaap:RetainedEarningsMember2025-04-012026-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-04-012026-03-310001973239us-gaap:AdditionalPaidInCapitalMember2025-04-012026-03-310001973239us-gaap:CommonStockMember2025-04-012026-03-310001973239us-gaap:CommonStockMember2026-03-310001973239us-gaap:AdditionalPaidInCapitalMember2026-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-03-310001973239us-gaap:RetainedEarningsMember2026-03-310001973239arm:RestrictedStockUnitsLiabilityClassifiedMember2023-04-012024-03-310001973239us-gaap:IPOMember2023-09-182023-09-180001973239us-gaap:IPOMember2023-09-180001973239us-gaap:OverAllotmentOptionMember2023-09-182023-09-180001973239srt:MinimumMemberarm:PatentsAndLicensesMember2026-03-310001973239srt:MaximumMemberarm:PatentsAndLicensesMember2026-03-310001973239srt:MinimumMemberarm:SoftwareInternallyDevelopedMember2026-03-310001973239srt:MaximumMemberarm:SoftwareInternallyDevelopedMember2026-03-310001973239srt:MinimumMemberus-gaap:TechnologyBasedIntangibleAssetsMember2026-03-310001973239srt:MaximumMemberus-gaap:TechnologyBasedIntangibleAssetsMember2026-03-310001973239srt:MinimumMemberus-gaap:CustomerRelationshipsMember2026-03-310001973239srt:MaximumMemberus-gaap:CustomerRelationshipsMember2026-03-310001973239srt:MinimumMemberus-gaap:LeaseholdImprovementsMember2026-03-310001973239srt:MaximumMemberus-gaap:LeaseholdImprovementsMember2026-03-310001973239srt:MinimumMemberus-gaap:EquipmentMember2026-03-310001973239srt:MaximumMemberus-gaap:EquipmentMember2026-03-310001973239srt:MinimumMemberarm:FixturesAndVehiclesMember2026-03-310001973239srt:MaximumMemberarm:FixturesAndVehiclesMember2026-03-310001973239srt:MinimumMember2025-04-012026-03-310001973239srt:MaximumMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239a",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "authority": "primary_official",
       "content_sha256": "3a874bd17ce32034c50c1ae0fcce456afca46694949d268bd74f8adb231e719d",
       "excerpt_text": "6-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMember2023-04-012024-03-310001973239us-gaap:TransferredOverTimeMember2025-04-012026-03-310001973239us-gaap:TransferredOverTimeMember2024-04-012025-03-310001973239us-gaap:TransferredOverTimeMember2023-04-012024-03-310001973239us-gaap:TransferredAtPointInTimeMember2025-04-012026-03-310001973239us-gaap:TransferredAtPointInTimeMember2024-04-012025-03-310001973239us-gaap:TransferredAtPointInTimeMember2023-04-012024-03-310001973239country:US2025-04-012026-03-310001973239country:US2024-04-012025-03-310001973239country:US2023-04-012024-03-310001973239country:CN2025-04-012026-03-310001973239country:CN2024-04-012025-03-310001973239country:CN2023-04-012024-03-310001973239country:JP2025-04-012026-03-310001973239country:JP2024-04-012025-03-310001973239country:JP2023-04-012024-03-310001973239country:TW2025-04-012026-03-310001973239country:TW2024-04-012025-03-310001973239country:TW2023-04-012024-03-310001973239country:KR2025-04-012026-03-310001973239country:KR2024-04-012025-03-310001973239country:KR2023-04-012024-03-310001973239arm:OtherCountriesMember2025-04-012026-03-310001973239arm:OtherCountriesMember2024-04-012025-03-310001973239arm:OtherCountriesMember2023-04-012024-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:FourCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:FourthLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2023-04-012024-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentratio",
       "locator": {
@@ -1131,6 +1217,27 @@
     {
       "accepted_at": "2026-05-26T20:35:23.000+00:00",
       "authority": "primary_official",
+      "content_sha256": "080e0cb19399997a3f9d75f28f3b8c2d078f3d3f670a01c6166651e6e8da76ac",
+      "excerpt_text": "ions, financings, investments, to compensate consultants or advisors, or otherwise. Any such issuance could result in substantial dilution to our existing ADS holders and cause the market price of our ADSs to decline.\nWe may from time to time distribute rights to our shareholders, including rights to acquire our securities. However, we cannot make rights available to holders in the U.S. unless we register the offer and sale of the rights and the securities to which the rights relate under the Securities Act or an exemption from the registration requirements is available. Also, under the deposit agreement, the depositary bank will not make rights available to holders unless either both the rights and any related securities are registered under the Securities Act, or the distribution of them to ADS holders is exempted from registration under the Securities Act. We are under no obligation to file a registration statement with respect to any such rights or securities, to endeavor to cause such a registration statement to be declared effective or to establish an exemption from registration under the Securities Act. Accordingly, you may be unable to participate in such a rights offerings and may experience dilution in your holdings.\nThe market price of our ADSs may be volatile and may decline.\nThe market price of our ADSs could be volatile and may decline. The stock market in general, and the market for technology companies in particular, has experienced extreme volatility that has often been unrelated to the operating performance of particular companies, and the trading price of our ADSs may be volatile due to factors beyond our control. As a result of this volatility, you may not be able to sell your ADSs at or above the price at which you purchased your ADSs. The market price for our ADSs may be influenced by many factors, including, among others:\n•variations in our actual or anticipated annual or quarterly operating results or those of others in our industry;\n•results of operations that otherwise fail to meet the expectations of securities analysts and investors;\n•changes in earnings estimates or recommendations by securities analysts, or other changes in investor perceptions of the investment opportunity associated with our ordinary shares relative to other investment alternatives;\n•market conditions in the semiconductor industry;\n•changes to, or perceived changes to, our business model;\n•publications, reports or other media exposure of our licensed products, our business, or those of others in our industry, including reports or coverage by industry or equity research analysts, or of our industry generally;\n•announcements by us or others in our industry, or by our or their respective suppliers, distributors or other business partners, regarding, among other things, significant contracts, price reductions, capital commitments or other business developments, the entry into or termination of strategic transactions or relationships, securities offerings or other financing initiatives, and public reaction thereto;\n•additions or departures of key management;\n•significant lawsuits, including patent or shareholder litigation;\n49\n•regulatory actions involving us or others in our industry, or actual or anticipated changes in applicable government regulations or enforcement thereof;\n•the development and sustainability of an active trading market for our ordinary shares;\n•sales, or anticipated sales, of large blocks of our ADSs;\n•general economic and securities market conditions; and\n•other factors discussed in this “Risk Factors” section and elsewhere in this Annual Report.\nBroad market and industry factors may negatively affect the market price of our ADSs, regardless of our actual operating performance. Further, a decline in the financial markets and related factors beyond our control may cause the price of our ADSs to decline rapidly and unexpectedly. In the past, securities class action litigation has often been brought against a comp",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 289000,
+        "char_start": 285000,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:75",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "authority": "primary_official",
       "content_sha256": "43f187393a35421a8ff65af2fa5f9c6fc892f22b264ca7b61dc4ccd2dab904dc",
       "excerpt_text": "nterest income, net\n111\n2\n%\n116\n3\n%\n110\n3\n%\nOther non-operating income (loss), net\n132\n3\n%\n10\n0\n%\n11\n0\n%\nIncome (loss) before income taxes\n1,157\n24\n%\n720\n18\n%\n212\n7\n%\nIncome tax benefit (expense)\n(253)\n5\n%\n72\n2\n%\n94\n3\n%\nNet income (loss)\n$\n904\n18\n%\n$\n792\n20\n%\n$\n306\n9\n%\nPercentages are calculated from the amounts presented and may not add to their respective totals due to rounding.\nComparison of Performance for the Fiscal Years Ended March 31, 2026 and 2025\nTotal revenue\nFiscal Year Ended March 31,\nExternal Customers\nRelated Parties\nTotal\n(in millions, except percentages)\n2026\n2025\n% Change\n2026\n2025\n% Change\n2026\n2025\n% Change\nLicense and Other Revenue\n$\n1,298\n$\n1,421\n(9)\n%\n$\n1,009\n$\n418\n141\n%\n$\n2,307\n$\n1,839\n25\n%\nRoyalty Revenue\n2,123\n1,763\n20\n%\n490\n405\n21\n%\n2,613\n2,168\n21\n%\n$\n3,421\n$\n3,184\n7\n%\n$\n1,499\n$\n823\n82\n%\n$\n4,920\n$\n4,007\n23\n%\nTotal revenue increased $913 million, or 23%, to $4,920 million during the fiscal year ended March 31, 2026, from total revenue of $4,007 million during the fiscal year ended March 31, 2025. License and other revenue increased $468 million, or 25%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily driven by continued strong demand for Arm IP, as well as fluctuation in timing and size of multiple high-value license agreements and contributions from backlog into the current period from arrangements entered in prior periods. Royalty revenue increased $445 million, or 21%, during the fiscal year ended March 31, 2026 as compared to the fiscal\n72\nyear ended March 31, 2025, driven by an improved mix of products with higher royalty rates per chip, such as Armv9 technology.\nRevenue from external customers increased $237 million, or 7%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, driven by a $360 million, or 20%, increase in royalty revenue, offset by a $123 million, or 9%, decrease in license and other revenue. Revenue from related parties increased $676 million, or 82%, during the fiscal year ended March 31, 2026 as compared to the fiscal year ended March 31, 2025, primarily driven by a $591 million, or 141%, increase in license and other revenue and a $85 million, or 21%, increase in royalty revenue. The drivers for the changes in revenue from external customers for both periods were broadly aligned with the overall trends in license and other revenue and royalty revenue described above, with external customer revenue reflecting strong growth in royalty revenue that outweighed the decline in license and other revenue. For additional financial information relating to our revenue from related parties, see “Item 8. Financial Information—Note 20—Related Party Transactions” in the Notes to the Consolidated Financial Statements included in this Annual Report.\nIn March 2026, we announced the expansion of our compute platform into production silicon products with the Arm AGI CPU, which did not have a material impact to our revenue for the fiscal year ended March 31, 2026.\nDuring the fiscal years ended March 31, 2026 and 2025, revenue from sales to customers outside of the U.S. accounted for approximately 64% and approximately 57% of total revenue, respectively. Less than 2% of our total revenue is denominated in currencies other than U.S. dollars, and the impact of changes in foreign exchange rates on our revenue for the fiscal years ended March 31, 2026 and 2025 was immaterial.\nCost of sales\nFiscal Year Ended March 31,\n(in millions, except percentages)\n2026\n2025\n% Change\nCost of sales\n$\n(121)\n$\n(121)\n—\n%\nCost of sales remained flat during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily due to decreases in activities associated with professional and design services, offset by increases in salaries and related expenses, share-based compensation costs and depreciation.\nResearch and development\nFiscal Year Ended March 31,\n(in millions, except percentag",
       "locator": {
@@ -1145,6 +1252,27 @@
         }
       },
       "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "cc184bcda18bcef87ca3f622cf8d0c67eafcdba10690fe9ad92463a3877e9ad4",
+      "excerpt_text": "lated transactions, has a value of over $20 million, in which case such transaction will be presented to the Board of Directors for review and approval or ratification; and\n•if the audit committee of our Board of Directors determines that a particular proposed transaction is to be conducted on an arm’s-length basis or upon terms generally available to third parties, such transaction will be exempt from the approval and ratification requirements of our related party transactions policy, provided that such transaction will be presented to our full Board of Directors for review and approval or ratification.\n•if the audit committee of our Board of Directors determines that a particular transaction does not meet the criteria in the preceding bullets, such transaction will require review and/or approval or ratification to the same extent as other related party transactions.\nIf one or more directors on the audit committee of our Board of Directors do not qualify as independent, determinations required to be made by the audit committee in accordance with the foregoing will be made by those directors on the audit committee which qualify as independent.\nInformation and Other Rights\nThe Shareholder Governance Agreement also provides, among other things, that, for so long as SoftBank Group consolidates us for the purposes of its consolidated financial statements or accounts for its investment in us under the equity method:\n•to the extent permitted by applicable law, we will in a timely manner provide SoftBank Group with information and data relating to our business and financial results so as to enable SoftBank Group and its controlled affiliates to satisfy their respective ongoing financial reporting, audit and other legal and regulatory requirements;\n•to the extent permitted by applicable law, we will in a timely manner provide SoftBank Group with access to our auditors, personnel, data, information and systems, in each case in the same manner as we do immediately prior to the date of our listing on Nasdaq and on or prior to any reasonable deadline set by SoftBank Group for receipt of such information, data or access;\n•to the extent permitted by applicable law, we will consult with SoftBank Group in a timely manner (i) prior to the disclosure and filing of our annual and quarterly earnings information and related periodic reports and (ii) prior to the disclosure of any information that may reasonably be considered material to SoftBank Group or in which\n116\nSoftBank Group is named, in each case taking into account all of SoftBank Group’s reasonable comments or advice prior to the filing thereof;\n•we will inform SoftBank Group promptly of any events or developments that might reasonably be expected to materially affect our financial results; and\n•certain of our executive officers and employees will provide quarterly certifications regarding our disclosure controls and procedures and internal control over financial reporting, as reasonably requested by SoftBank Group in a timely manner.\nWe have also agreed to provide SoftBank Group with such information as SoftBank Group may reasonably require to facilitate the compliance by SoftBank Group and its controlled affiliates with their respective global legal, regulatory and tax obligations in a timely manner.\nSoftBank Group Consultation Rights\nFor so long as we are a consolidated subsidiary of SoftBank Group, if we propose to (i) change our independent auditor to a firm outside of the professional services networks commonly referred to as the “Big Four accounting firms” or (ii) make any material changes in our accounting policies applicable to our financial statements prepared under International Financial Reporting Standards, the Shareholder Governance Agreement requires us to provide SoftBank Group with prior written notice of such proposed changes, consult with SoftBank Group in good faith regarding the rationale for such proposed changes, and use our reasonable endeavors to resolve any disa",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 574000,
+        "char_start": 570000,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:150",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
       "ticker": "ARM"
@@ -1187,6 +1315,27 @@
         }
       },
       "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "b42e3bc342170097b681f40cafa6ae09eb3c1274cb8a5e84f51a0bda35d704e7",
+      "excerpt_text": "1800\n11.1\n05/29/2024\n201\n101\nThe following materials from the Company’s Annual Report on Form 20-F for the year ended March 31, 2025, were formatted in Inline XBRL (Extensible Business Reporting Language): (i) Consolidated Balance Sheets, (ii) Consolidated Statements of Comprehensive Income, (iii) Consolidated Statements of Shareholders’ Equity, (iv) Consolidated Statements of Cash Flows, and (v) Notes to Consolidated Financial Statements. The instance document does not appear in the Interactive Data File because its XBRL tags are embedded within the Inline XBRL document.\nX\n104\nCover page Interactive Data File - the cover page XBRL tags are embedded within the Inline XBRL.\nX\n* Furnished herewith.\n202\nSIGNATURE\nThe registrant hereby certifies that it meets all of the requirements for filing on Form 20-F and that it has duly caused and authorized the undersigned to sign this annual report on its behalf.\nARM HOLDINGS PLC\nDate: May 26, 2026\nBy:\n/s/ Laura Bartels\nName:\nLaura Bartels\nTitle:\nChief Accounting Officer\n(Principal Accounting Officer)\n203",
+      "locator": {
+        "accession_number": "0001973239-26-000097",
+        "char_end": 856059,
+        "char_start": 855000,
+        "cik": "1973239",
+        "form": "20-F",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:225",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
       "ticker": "ARM"
@@ -1449,6 +1598,27 @@
     {
       "accepted_at": "2026-06-24T22:59:46.000+00:00",
       "authority": "primary_official",
+      "content_sha256": "0d0402263f40c41678370bf96043e05a588e669ee0b569f820d6f163ad739447",
+      "excerpt_text": "mu-20260528\nxbrli:sharesiso4217:USDiso4217:USDxbrli:sharesxbrli:pureutr:Ratemu:patentmu:segment00007231252025-08-292026-05-2800007231252026-06-1700007231252026-02-272026-05-2800007231252025-02-282025-05-2900007231252024-08-302025-05-2900007231252026-05-2800007231252025-08-280000723125us-gaap:CommonStockMember2026-02-260000723125us-gaap:AdditionalPaidInCapitalMember2026-02-260000723125us-gaap:RetainedEarningsMember2026-02-260000723125us-gaap:TreasuryStockCommonMember2026-02-260000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-02-2600007231252026-02-260000723125us-gaap:RetainedEarningsMember2026-02-272026-05-280000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-02-272026-05-280000723125us-gaap:CommonStockMember2026-02-272026-05-280000723125us-gaap:AdditionalPaidInCapitalMember2026-02-272026-05-280000723125us-gaap:CommonStockMember2026-05-280000723125us-gaap:AdditionalPaidInCapitalMember2026-05-280000723125us-gaap:RetainedEarningsMember2026-05-280000723125us-gaap:TreasuryStockCommonMember2026-05-280000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-05-280000723125us-gaap:CommonStockMember2025-02-270000723125us-gaap:AdditionalPaidInCapitalMember2025-02-270000723125us-gaap:RetainedEarningsMember2025-02-270000723125us-gaap:TreasuryStockCommonMember2025-02-270000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-02-2700007231252025-02-270000723125us-gaap:RetainedEarningsMember2025-02-282025-05-290000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-02-282025-05-290000723125us-gaap:CommonStockMember2025-02-282025-05-290000723125us-gaap:AdditionalPaidInCapitalMember2025-02-282025-05-290000723125us-gaap:CommonStockMember2025-05-290000723125us-gaap:AdditionalPaidInCapitalMember2025-05-290000723125us-gaap:RetainedEarningsMember2025-05-290000723125us-gaap:TreasuryStockCommonMember2025-05-290000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-05-2900007231252025-05-290000723125us-gaap:CommonStockMember2025-08-280000723125us-gaap:AdditionalPaidInCapitalMember2025-08-280000723125us-gaap:RetainedEarningsMember2025-08-280000723125us-gaap:TreasuryStockCommonMember2025-08-280000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-08-280000723125us-gaap:RetainedEarningsMember2025-08-292026-05-280000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-08-292026-05-280000723125us-gaap:CommonStockMember2025-08-292026-05-280000723125us-gaap:AdditionalPaidInCapitalMember2025-08-292026-05-280000723125us-gaap:TreasuryStockCommonMember2025-08-292026-05-280000723125us-gaap:CommonStockMember2024-08-290000723125us-gaap:AdditionalPaidInCapitalMember2024-08-290000723125us-gaap:RetainedEarningsMember2024-08-290000723125us-gaap:TreasuryStockCommonMember2024-08-290000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-08-2900007231252024-08-290000723125us-gaap:RetainedEarningsMember2024-08-302025-05-290000723125us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-08-302025-05-290000723125us-gaap:CommonStockMember2024-08-302025-05-290000723125us-gaap:AdditionalPaidInCapitalMember2024-08-302025-05-290000723125us-gaap:VariableInterestEntityNotPrimaryBeneficiaryMember2026-05-280000723125us-gaap:VariableInterestEntityNotPrimaryBeneficiaryMember2025-08-280000723125us-gaap:CashMember2026-05-280000723125us-gaap:CashMember2025-08-280000723125us-gaap:MoneyMarketFundsMemberus-gaap:FairValueInputsLevel1Member2026-05-280000723125us-gaap:MoneyMarketFundsMemberus-gaap:FairValueInputsLevel1Member2025-08-280000723125us-gaap:CertificatesOfDepositMemberus-gaap:FairValueInputsLevel2Member2026-05-280000723125us-gaap:CertificatesOfDepositMemberus-gaap:FairValueInputsLevel2Member2025-08-280000723125us-gaap:CorporateDebtSecuritiesMemberus-gaap:FairValueInputsLevel2Member2026-05-280000723125us-gaap:CorporateDebtSecuritiesMemberus-gaap:FairValueInputsLevel2Member2025-08-280000723125us-gaap:AssetBackedSecuritiesMemberus-gaap:FairValueInputsLevel2Member2026-05-280000723125us-gaap:AssetBackedSecuritiesM",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-06-24T22:59:46.000+00:00",
+      "authority": "primary_official",
       "content_sha256": "ba5f9bce003a43a1e712bdc7197b19a3b3114ff525f0a3096a1a3570fc5df6f6",
       "excerpt_text": ") of\nAssets(2)\nLiabilities(3)\nAs of May 28, 2026\nDerivative instruments with hedge accounting designation\nCash flow currency hedges\n$\n4,096\n$\n7\n$\n(106)\nCash flow commodity hedges\n406\n105\n(7)\nFair value currency hedges\n5,568\n19\n—\nDerivative instruments without hedge accounting designation\nNon-designated currency hedges\n12,431\n15\n(48)\n$\n146\n$\n(161)\nAs of August 28, 2025\nDerivative instruments with hedge accounting designation\nCash flow currency hedges\n$\n3,271\n$\n41\n$\n(64)\nCash flow commodity hedges\n393\n19\n(20)\nFair value currency hedges\n3,049\n1\n(10)\nDerivative instruments without hedge accounting designation\nNon-designated currency hedges\n3,477\n3\n(18)\n$\n64\n$\n(112)\n(1)Forward and swap contracts are measured at fair value based on market-based observable inputs, including market spot and forward rates, interest rates, and credit-risk spreads (Level 2).\n(2)Included in receivables and other noncurrent assets.\n(3)Included in accounts payable and accrued expenses and other noncurrent liabilities.\nDerivative Instruments with Hedge Accounting Designation\nCash Flow Hedges: We utilize forward contracts that generally mature within two years designated as cash flow hedges to minimize our exposure to changes in currency exchange rates or commodity prices for certain capital expenditures and manufacturing costs.\nFair Value Hedges: We utilize currency forward contracts that generally mature within one year designated as fair value hedges to minimize our exposure to changes in currency exchange rates for non-U.S.-dollar-denominated cash and investments in debt securities. The fair value of our hedged cash and investments in debt securities was $5.54 billion and $3.05 billion as of May 28, 2026 and August 28, 2025, respectively. The changes in the fair values of derivatives designated as fair value hedges and the offsetting changes in the underlying fair values of the hedged items are both recognized in earnings.\n19 | 2026 Q3 10-Q\nTable of Contents\nDerivative Instruments without Hedge Accounting Designation\nCurrency Derivatives: We generally utilize a rolling hedge strategy with currency forward contracts that mature within one year to hedge our exposures of monetary assets and liabilities from changes in currency exchange rates. At the end of each reporting period, monetary assets and liabilities denominated in currencies other than the U.S. dollar are remeasured into U.S. dollars and the associated outstanding forward contracts are marked to market. Realized and unrealized gains and losses on derivative instruments without hedge accounting designation, as well as the changes in the underlying monetary assets and liabilities from changes in currency exchange rates, are included in other non-operating income (expense), net.\nGains and losses from our derivative instruments were not material for the periods presented.\nNote 13. Equity Compensation Plans\nAs of May 28, 2026, 48 million shares of our common stock were available for future awards under our equity compensation plans, including 7 million shares approved for issuance under our employee stock purchase plan (“ESPP”).\nRestricted Stock and Restricted Stock Units (“Restricted Stock Awards”)\nNine Months Ended\nMay 28,\n2026\nMay 29,\n2025\nRestricted stock award shares granted\n7\n11\nWeighted-average grant-date fair value per share\n$\n227.18\n$\n100.25\nEmployee Stock Purchase Plan (“ESPP”)\nEmployees purchased 2 million shares in each six-month ESPP offering period that ended in the second quarter of 2026 and 2025 at a share price of $92.77 and $78.63, respectively.\nStock-based Compensation Expense\nStock-based compensation expense recognized in our statements of operations is presented below. Stock-based compensation expense of $132 million and $96 million was capitalized and remained in inventory as of May 28, 2026 and August 28, 2025, respectively.\nQuarter Ended\nNine Months Ended\nMay 28,\n2026\nMay 29,\n2025\nMay 28,\n2026\nMay 29,\n2025\nStock-based compensation expense by caption\nCost of goods sold\n$\n143\n$\n11",
       "locator": {
@@ -1463,6 +1633,27 @@
         }
       },
       "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-06-24T22:59:46.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "56b08bf674245ec5ae578fcbd4de397d031b85f41fc60bf151447a1b1e90ce11",
+      "excerpt_text": "\n$\n41,456\nCost of goods sold\n2,278\n1,537\n1,463\n975\n4\n143\n6,400\nGross margin\n11,491\n9,987\n10,058\n3,659\n4\n(143)\n35,056\nResearch and development\n592\n391\n107\n96\n—\n130\n1,316\nSelling, general, and administrative\n108\n79\n81\n70\n—\n69\n407\nOther operating (income) expense, net\n(2)\n(2)\n(3)\n—\n1\n21\n15\nOperating income\n$\n10,793\n$\n9,519\n$\n9,873\n$\n3,493\n$\n3\n$\n(363)\n$\n33,318\nQuarter Ended May 29, 2025\nCMBU\nCDBU\nMCBU\nAEBU\nAll Other\nUnallocated\nTotal\nRevenue\n$\n3,386\n$\n1,530\n$\n3,255\n$\n1,127\n$\n3\n$\n—\n$\n9,301\nCost of goods sold\n1,415\n956\n2,467\n837\n3\n115\n5,793\nGross margin\n1,971\n574\n788\n290\n—\n(115)\n3,508\nResearch and development\n337\n223\n201\n114\n1\n89\n965\nSelling, general, and administrative\n61\n45\n105\n49\n(1)\n59\n318\nOther operating (income) expense, net\n—\n(1)\n—\n1\n(2)\n58\n56\nOperating income\n$\n1,573\n$\n307\n$\n482\n$\n126\n$\n2\n$\n(321)\n$\n2,169\nNine Months Ended May 28, 2026\nCMBU\nCDBU\nMCBU\nAEBU\nAll Other\nUnallocated\nTotal\nRevenue\n$\n26,802\n$\n19,590\n$\n23,487\n$\n9,062\n$\n18\n$\n—\n$\n78,959\nCost of goods sold\n6,097\n4,155\n5,090\n2,776\n13\n371\n18,502\nGross margin\n20,705\n15,435\n18,397\n6,286\n5\n(371)\n60,457\nResearch and development\n1,628\n1,040\n409\n302\n—\n358\n3,737\nSelling, general, and administrative\n274\n177\n263\n182\n—\n192\n1,088\nOther operating (income) expense, net\n(1)\n—\n(1)\n—\n—\n45\n43\nOperating income\n$\n18,804\n$\n14,218\n$\n17,726\n$\n5,802\n$\n5\n$\n(966)\n$\n55,589\nNine Months Ended May 29, 2025\nCMBU\nCDBU\nMCBU\nAEBU\nAll Other\nUnallocated\nTotal\nRevenue\n$\n8,981\n$\n5,652\n$\n8,099\n$\n3,319\n$\n12\n$\n—\n$\n26,063\nCost of goods sold\n4,025\n3,072\n6,260\n2,579\n10\n298\n16,244\nGross margin\n4,956\n2,580\n1,839\n740\n2\n(298)\n9,819\nResearch and development\n851\n644\n671\n330\n1\n254\n2,751\nSelling, general, and administrative\n146\n147\n290\n144\n(1)\n165\n891\nOther operating (income) expense, net\n—\n—\n1\n1\n1\n58\n61\nOperating income\n$\n3,959\n$\n1,789\n$\n877\n$\n265\n$\n1\n$\n(775)\n$\n6,116\n24\nTable of Contents\nDepreciation and amortization expense included in operating income was as follows:\nQuarter Ended\nNine Months Ended\nMay 28,\n2026\nMay 29,\n2025\nMay 28,\n2026\nMay 29,\n2025\nCMBU\n$\n780\n$\n548\n$\n2,291\n$\n1,600\nCDBU\n550\n361\n1,534\n1,193\nMCBU\n678\n877\n2,005\n2,361\nAEBU\n353\n306\n1,024\n1,040\nAll Other\n2\n2\n5\n5\nUnallocated\n1\n—\n3\n4\n$\n2,364\n$\n2,094\n$\n6,862\n$\n6,203\nRevenue from one customer was 10% and 16% (primarily included in the CMBU segment) of total revenue for the first nine months of 2026 and 2025, respectively.\nAs of May 28, 2026 and August 28, 2025, CMBU, CDBU, MCBU, and AEBU had goodwill of $654 million, $109 million, $284 million, and $103 million, respectively.\n25 | 2026 Q3 10-Q\nTable of Contents\nITEM 2. MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERATIONS\nThis discussion should be read in conjunction with the consolidated financial statements and accompanying notes for the year ended August 28, 2025. All period references are to our fiscal periods unless otherwise indicated. Our fiscal year is the 52- or 53-week period ending on the Thursday closest to August 31. Fiscal 2026 contains 53 weeks and fiscal 2025 contains 52 weeks. The third quarter of 2026 contains 13 weeks and the fourth quarter of 2026 contains 14 weeks. All tabular dollar amounts are in millions, except per share amounts.\nOverview\nMicron Technology, Inc. is an industry leader in innovative memory and storage solutions transforming how the world uses information to enrich life for all. With a relentless focus on our customers, technology leadership, and manufacturing and operational excellence, Micron delivers a rich portfolio of high-performance DRAM, NAND, and NOR memory and storage products. Every day, the innovations that our people create fuel the data economy, enabling advances in artificial intelligence (AI) and compute-intensive applications that unleash opportunities — from the data center to the intelligent edge and across the client and mobile user experience.\nWe manufacture our products at wholly-owned facilities and also utilize subcontractors for certain manufacturing processes. Our global network of manufacturing centers of excellence ",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 80000,
+        "char_start": 76000,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:20",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
       "ticker": "MU"
@@ -1512,6 +1703,27 @@
     {
       "accepted_at": "2026-06-24T22:59:46.000+00:00",
       "authority": "primary_official",
+      "content_sha256": "017bafccf9981610e1ab536ddcaa4498bf94a61abc26d9f223e08f870176e654",
+      "excerpt_text": "ve incentives or disbursements. Compliance with these terms and conditions may add complexity to our operations and increase our costs and failure to comply could result in termination of incentive programs or clawbacks of incentive amounts received, in some cases along with interest and/or loss of project assets.\nWe may be unable to obtain sufficient future incentives to continue to fund a portion of our capital expenditures and operating costs, without which our cost structure may be adversely impacted and planned capital expenditures and research and development expenditures may be affected. For example, in December 2024, we entered into direct funding agreements, providing funds for the construction of fab facilities in Idaho and New York, with the United States Department of Commerce (the “Department”) under the Department’s CHIPS Incentives Program established pursuant to the CHIPS Act. In June 2025, such agreements were subsequently amended to expand our investments, and we entered into a direct funding agreement to provide funds to expand and modernize our fab in Virginia. The awards under the direct funding agreements are subject to various conditions, and we may not receive the funding expected on the same terms or at all. We cannot guarantee that we will successfully achieve or maintain outcomes or satisfy the compliance requirements to qualify for these incentives or that the granting agencies will provide or continue to provide such funding.\nThese incentive arrangements, including the funding agreements, typically provide the granting agencies with rights to audit our compliance with their terms and obligations. Such audits could result in modifications to, or termination of, the applicable incentive program. In addition, the incentives we receive, including the funding agreements, are in some cases subject to reduction, termination, or clawback under certain circumstances, and any decrease or clawback of government incentives could have a material adverse effect on our business, results of operations, or financial condition.\n44\nTable of Contents\nOur business, results of operations, or financial condition could be adversely affected by the availability and quality of materials, supplies, electrical power, gas, water, and capital equipment, or dependency on third-party service providers.\nOur supply chain and operations are dependent on the availability of materials that meet exacting standards and the use of third parties to provide us with components and services. We generally have multiple sources of supply for our materials and services. However, only a limited number of suppliers are capable of delivering certain materials, components, and services that meet our standards and, in some cases, materials, components, or services are provided by a single or sole source, and we may be unable to qualify new suppliers on a timely basis. The availability of materials or components, such as chemicals, silicon wafers, gases, photoresists, semiconductors, substrates, lead frames, printed circuit boards, targets, and reticle glass blanks is impacted by various factors. These factors could include a shortage of raw materials or a disruption in the processing or purification of those raw materials into finished goods. Shortages or increases in lead times have occurred in the past, are currently occurring with respect to some materials and components, and may occur from time to time in the future because of the nature of the industry. Constraints within our supply chain for certain materials and integrated circuit components could limit our bit shipments, which could have a material adverse effect on our business, results of operations, or financial condition.\nOur manufacturing processes are also dependent on our relationships with third-party manufacturers of controllers, analog integrated circuits, and other components used in some of our products and with outsourced semiconductor foundries, assembly and test providers, con",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 152200,
+        "char_start": 148200,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:39",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-06-24T22:59:46.000+00:00",
+      "authority": "primary_official",
       "content_sha256": "cd823e2c4e6fdfafeca902962c14b2905a44cf433aec423bf1ae5186eba343ad",
       "excerpt_text": "ge various third parties as sales channel partners or to represent us or otherwise act on our behalf who are also subject to a broad array of laws, regulations, and industry standards. Our engagement with these third parties may also expose us to risks associated with their respective compliance with laws and regulations.\nNew and evolving environmental, health, safety, and product considerations, including those related to greenhouse gas emissions and climate change, the purchase, use, and disposal of regulated and/or hazardous chemicals, and the potential resulting environmental, health, or safety impacts, may result in new laws, regulations, or industry standards that may affect us, our suppliers, and our customers. Such laws, regulations, or industry standards could require us to alter our product design, manufacturing, and operations and incur additional direct costs for compliance, as well as increased indirect costs resulting from our customers, suppliers, or both incurring additional compliance costs that are passed on to us. These costs may adversely impact our results of operations and financial condition.\nAs a result of the considerations detailed in this risk factor, we could experience the following:\n56\nTable of Contents\n•suspension of production or sales of our products;\n•limited supplies of chemicals or materials used to make our products;\n•remediation costs and activities;\n•increased compliance costs;\n•alteration of our manufacturing processes;\n•regulatory penalties, fines, civil or criminal sanctions, litigation and other legal liabilities; and\n•reputational challenges.\nWhile we maintain insurance for certain potential liabilities, such insurance does not cover all types and amounts of potential liabilities and is subject to various exclusions, as well as caps on recoverable amounts. Our insurance may not be adequate or otherwise cover all claims, penalties, fines, expenses, regulatory actions, litigation, sanctions, other liabilities or losses, and may not continue to be available on acceptable terms or at all.\nCompliance with, or our failure, or the failure of our third-party sales channel partners or agents, to comply with, laws, regulations, or industry standards could have a material adverse effect on our business, results of operations, or financial condition.\nRisks Related to Capitalization and Financial Markets\nWe may be unable to generate sufficient cash flows or obtain access to external financing necessary to fund our operations, make scheduled debt payments, pay our dividend, and make adequate capital investments.\nOur cash flows from operations depend primarily on the volume of semiconductor memory and storage products sold and average selling prices. To develop new product and process technology, support future growth, achieve operating efficiencies, and maintain product quality, we must make significant capital investments in manufacturing technology, capital equipment, facilities, R&D, and product and process technology.\nFrom time to time, we utilize external sources of financing when needed. As a result of our debt levels, expected debt amortization, prevailing interest rates, general capital market, changes in government borrowing or spending, and other economic conditions, it may be difficult for us to obtain financing on terms acceptable to us or at all. We have experienced volatility in our cash flows and operating results and we expect to continue to experience such volatility in the future, which may negatively affect our credit rating. Our credit rating may also be affected by our liquidity, financial results, economic risk, or other factors, which may increase the cost of borrowings and make it difficult for us to obtain financing on terms acceptable to us or at all. There can be no assurance that we will be able to generate sufficient cash flows, access capital or credit markets, or find other sources of financing to fund our operations, make debt payments, refinance our debt, pay our q",
       "locator": {
@@ -1526,6 +1738,27 @@
         }
       },
       "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-06-24T22:59:46.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "ed788ecab7a47037cff66d3dbdb016b2de0c640e9f01241c0420a816acaba2bc",
+      "excerpt_text": "ay 28, 2026, we did not repurchase any common stock under the authorization and as of May 28, 2026, $2.16 billion of the authorization remained available for the repurchase of our common stock.\nShares of common stock withheld as payment of withholding taxes upon the vesting of restricted stock are also treated as common stock repurchases. Shares withheld as payment of withholding taxes upon the vesting of restricted stock units are not considered repurchases for purposes of this Item and are not required to be reported.\nIn the third quarter of 2026, shares withheld as payment upon the vesting of restricted stock consisted of the following:\nPeriod\nTotal number of shares purchased\nAverage price paid per share\nTotal number of shares purchased as part of publicly announced plans or programs\nApproximate dollar value of shares that may yet be purchased under publicly announced plans or programs (in millions)\nFebruary 27, 2026 – March 26, 2026\n—\n$\n—\n—\nMarch 27, 2026 – April 23, 2026\n912\n465.66\n—\nApril 24, 2026 – May 28, 2026\n—\n—\n—\n912\n$\n465.66\n—\n$\n2,156\nITEM 5. OTHER INFORMATION\nSecurities Trading Plans of Directors and Executive Officers\nNo directors or officers, as defined in Rule 16a-1(f) of the Exchange Act, adopted and/or terminated a “Rule 10b5-1 trading arrangement” or a “non-Rule 10b5-1 trading arrangement,” as defined in Item 408 of Regulation S-K, during the last fiscal quarter.\n60\nTable of Contents\nIndex to Exhibits\nExhibit Number\nDescription of Exhibit\nFiled Herewith\nForm\nPeriod Ending\nExhibit/ Appendix\nFiling Date\n3.1\nRestated Certificate of Incorporation, as amended, of the Registrant\n10-Q\n2/26/26\n3.1\n3/19/26\n3.2\nAmended and Restated Bylaws of Registrant as of July 17, 2025\n8-K\n3.1\n7/18/25\n10.1^\nWaiver and Amendment No. 3 to Direct Funding Agreement, dated February 27, 2026, by and between Micron Idaho Semiconductor Manufacturing (Triton) LLC and U.S. Department of Commerce\nX\n10.2^\nWaiver and Amendment No. 3 to Direct Funding Agreement, dated February 27, 2026, by and between Micron New York Semiconductor Manufacturing LLC and U.S. Department of Commerce\nX\n31.1\nRule 13a-14(a) Certification of Chief Executive Officer\nX\n31.2\nRule 13a-14(a) Certification of Chief Financial Officer\nX\n32.1\nCertification of Chief Executive Officer Pursuant to 18 U.S.C. 1350\nX\n32.2\nCertification of Chief Financial Officer Pursuant to 18 U.S.C. 1350\nX\n101.INS\nInline XBRL Instance Document - the instance document does not appear in the Interactive Data File because its XBRL tags are embedded within the Inline XBRL document\nX\n101.SCH\nInline XBRL Taxonomy Extension Schema Document\nX\n101.CAL\nInline XBRL Taxonomy Extension Calculation Linkbase Document\nX\n101.DEF\nInline XBRL Taxonomy Extension Definition Linkbase Document\nX\n101.LAB\nInline XBRL Taxonomy Extension Label Linkbase Document\nX\n101.PRE\nInline XBRL Taxonomy Extension Presentation Linkbase Document\nX\n104\nCover Page Interactive Data File (formatted as Inline XBRL and contained in Exhibit 101)\nX\n^ Certain portions of this exhibit have been redacted because they are both not material and is the type that the Registrant treats as private or confidential. The Registrant hereby agrees to furnish supplementally to the Securities and Exchange Commission, upon its request, an unredacted copy of this exhibit.\n61 | 2026 Q3 10-Q\nTable of Contents\nSIGNATURES\nPursuant to the requirements of the Securities Exchange Act of 1934, the Registrant has duly caused this report to be signed on its behalf by the undersigned, thereunto duly authorized.\nMicron Technology, Inc.\n(Registrant)\nDate\nJune 24, 2026\nBy:\n/s/ Mark Murphy\nMark Murphy\nExecutive Vice President and Chief Financial Officer\n(Principal Financial Officer)\n/s/ Scott Allen\nScott Allen\nCorporate Vice President and Chief Accounting Officer\n(Principal Accounting Officer)\n62",
+      "locator": {
+        "accession_number": "0000723125-26-000015",
+        "char_end": 228013,
+        "char_start": 224200,
+        "cik": "723125",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:59",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
       "ticker": "MU"
@@ -1592,6 +1825,48 @@
       "source_id": "sec-acceptance:0001327567-26-000015",
       "source_type": "sec_submission_acceptance",
       "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-06-02T23:39:01.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "d08ec3aa0469e63a30498677e4b1b0da1e183061c2f9333c6a7967edea3d3bed",
+      "excerpt_text": "panw-20260430\nxbrli:sharesiso4217:USDiso4217:USDxbrli:sharesutr:acrexbrli:purepanw:daypanw:amendmentpanw:patent00013275672025-08-012026-04-3000013275672026-05-2600013275672026-04-3000013275672025-07-310001327567us-gaap:ProductMember2026-02-012026-04-300001327567us-gaap:ProductMember2025-02-012025-04-300001327567us-gaap:ProductMember2025-08-012026-04-300001327567us-gaap:ProductMember2024-08-012025-04-300001327567us-gaap:ServiceMember2026-02-012026-04-300001327567us-gaap:ServiceMember2025-02-012025-04-300001327567us-gaap:ServiceMember2025-08-012026-04-300001327567us-gaap:ServiceMember2024-08-012025-04-3000013275672026-02-012026-04-3000013275672025-02-012025-04-3000013275672024-08-012025-04-300001327567us-gaap:CommonStockMember2026-01-310001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2026-01-310001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-01-310001327567us-gaap:RetainedEarningsMember2026-01-3100013275672026-01-310001327567us-gaap:RetainedEarningsMember2026-02-012026-04-300001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-02-012026-04-300001327567us-gaap:CommonStockMember2026-02-012026-04-300001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2026-02-012026-04-300001327567us-gaap:CommonStockMemberus-gaap:CommonStockMember2026-02-012026-04-300001327567us-gaap:CommonStockMemberus-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2026-02-012026-04-300001327567us-gaap:CommonStockMember2026-02-012026-04-300001327567panw:ReplacementEquityAwardsMemberus-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2026-02-012026-04-300001327567panw:ReplacementEquityAwardsMember2026-02-012026-04-300001327567us-gaap:CommonStockMember2026-04-300001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2026-04-300001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-04-300001327567us-gaap:RetainedEarningsMember2026-04-300001327567us-gaap:CommonStockMember2025-01-310001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-01-310001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-01-310001327567us-gaap:RetainedEarningsMember2025-01-3100013275672025-01-310001327567us-gaap:RetainedEarningsMember2025-02-012025-04-300001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-02-012025-04-300001327567us-gaap:CommonStockMember2025-02-012025-04-300001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-02-012025-04-300001327567us-gaap:CommonStockMember2025-04-300001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-04-300001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-04-300001327567us-gaap:RetainedEarningsMember2025-04-3000013275672025-04-300001327567us-gaap:CommonStockMember2025-07-310001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-07-310001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-07-310001327567us-gaap:RetainedEarningsMember2025-07-310001327567us-gaap:RetainedEarningsMember2025-08-012026-04-300001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-08-012026-04-300001327567us-gaap:CommonStockMember2025-08-012026-04-300001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-08-012026-04-300001327567us-gaap:CommonStockMemberus-gaap:CommonStockMember2025-08-012026-04-300001327567us-gaap:CommonStockMemberus-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-08-012026-04-300001327567us-gaap:CommonStockMember2025-08-012026-04-300001327567panw:ReplacementEquityAwardsMemberus-gaap:CommonStockMember2025-08-012026-04-300001327567panw:ReplacementEquityAwardsMemberus-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2025-08-012026-04-300001327567panw:ReplacementEquityAwardsMember2025-08-012026-04-300001327567us-gaap:CommonStockMember2024-07-310001327567us-gaap:CommonStockIncludingAdditionalPaidInCapitalMember2024-07-310001327567us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-07-310001327567us-gaap:RetainedEarningsMember2024-07-3",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-06-02T23:39:01.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "4cfeed31b419dc3193227579a192f4b0538144e1a107017d258369c52428012e",
+      "excerpt_text": "ntil vested, RSUs do not have the voting and dividend participation rights of common stock and the shares underlying the awards are not considered issued and outstanding.\nOur PSUs generally vest over a period of one to four years from the date of grant. The number of PSUs eligible to vest is determined based on the level of achievement against certain performance conditions, market conditions, and a combination thereof.\nDuring the nine months ended April 30, 2026, we granted 3 million shares of PSUs that contain service, performance, and market conditions. The service conditions are satisfied after a period of one to three years. The performance conditions are based on an average of next-generation security annualized recurring revenue and non-GAAP net income per diluted share, subject to certain adjustments. The market condition is measured based on our total shareholder return (“TSR”) relative to the TSR of the companies listed in the Standard & Poor’s 500 index. As of April 30, 2026, we have approved 3 million shares of PSUs, which will be granted upon the performance condition being established during the next two fiscal years.\nThe fair value of the PSUs subject to market conditions is estimated on the grant date using a Monte Carlo simulation model. The following table summarizes the assumptions used and the resulting grant-date fair value of our PSUs subject to market conditions granted during the nine months ended April 30, 2026 and 2025:\nNine Months Ended April 30,\n2026\n2025\nVolatility\n36.6% - 42.6%\n43.5% - 47.6%\nExpected term (in years)\n1.0 - 3.0\n1.0 - 2.9\nDividend yield\n0.0\n%\n0.0\n%\nRisk-free interest rate\n3.6% - 3.9%\n3.7% - 4.5%\nGrant-date fair value per share\n$226.06 - $261.62\n$264.51 - $305.83\nPerformance Stock Option (“PSO”) Activities\nWe have granted PSOs with both service and market conditions. The market conditions were achieved when certain stock price targets were met. As of April 30, 2026 and July 31, 2025, all of our outstanding PSOs have been fully vested. The maximum contractual term of our outstanding PSOs is seven and a half years from the date of grant in fiscal year 2018 and 2019.\n- 23 -\nTable of Contents\nThe following table summarizes the PSO activity under our stock plans during the nine months ended April 30, 2026 (in millions, except per share amounts):\nNumber of Shares\nWeighted-Average Exercise Price Per Share\nWeighted-Average Remaining Contractual Term (Years)\nAggregate Intrinsic Value\nBalance—July 31, 2025\n1\n$\n32.76\n0.5\n$\n197\nExercised\n(1)\n$\n32.76\nBalance—April 30, 2026\n—\n$\n—\n0.0\n$\n—\nExercisable—April 30, 2026\n—\n$\n—\n0.0\n$\n—\nShare-Based Compensation\nThe following table summarizes share-based compensation included in costs and expenses (in millions):\nThree Months Ended April 30,\nNine Months Ended April 30,\n2026\n2025\n2026\n2025\nCost of product revenue\n$\n2\n$\n1\n$\n4\n$\n4\nCost of subscription and support revenue\n50\n32\n114\n95\nResearch and development\n206\n134\n477\n411\nSales and marketing\n188\n92\n388\n258\nGeneral and administrative\n238\n67\n372\n173\nTotal share-based compensation\n$\n684\n$\n326\n$\n1,355\n$\n941\nDuring the three and nine months ended April 30, 2026, the vesting of certain equity awards was accelerated in connection with our acquisitions of CyberArk and Koi; as a result, we recorded share-based compensation of $177 million, including $1 million in cost of subscription and support revenue, $36 million in sales and marketing expense, and $140 million in general and administrative expense on our condensed consolidated statements of operations.\nAs of April 30, 2026, total compensation cost related to unvested share-based awards not yet recognized was $3.6 billion. This cost is expected to be amortized over a weighted-average period of approximately 2.6 years.\n14. Income Taxes\nOur income taxes primarily consist of U.S. and foreign income taxes and our effective tax rates differ from the U.S. statutory tax rate primarily due to our CyberArk acquisition and excess tax benefits from share-based compensation.\nFo",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 110400,
+        "char_start": 106400,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:28",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
       "ticker": "PANW"
     },
     {
@@ -1674,6 +1949,48 @@
         }
       },
       "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-06-02T23:39:01.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "ed0c0e85af1e5971f0e3287efc879a02f9aee688fa897eb72b82957c3b9a28bd",
+      "excerpt_text": "t offerings to the U.S. government.\n- 48 -\nTable of Contents\nWe face intense competition and we may lack sufficient financial or other resources to maintain or improve our competitive position.\nThe industry for enterprise security products and the other spaces in which we have offerings is intensely competitive, and we expect competition to increase in the future from established competitors and new market entrants. Our main competitors fall into four categories:\n•large companies that incorporate security or observability features in their products, such as Alphabet, Cisco, and Microsoft or those that have acquired, or may acquire, security vendors and have the technical and financial resources to bring competitive solutions to the market;\n•independent vendors that may offer a mix of security products, such as CheckPoint, Crowdstrike, Delinea, Fortinet, Okta, SailPoint, and Zscaler, vendors that may offer a mix of observability products, such as DataDog, Dynatrace, and Elastic, or vendors that may offer a mix of security and observability products;\n•startups and point-product vendors that offer independent or emerging solutions across various areas of security; and\n•public cloud vendors and startups that offer solutions for cloud security (private, public, and hybrid cloud).\nSome of our competitors have or may attain greater financial, technical, marketing, sales, and other resources, greater name recognition, longer operating histories, and a larger base of customers than we do. They may be able to devote greater resources to the promotion and sale of products and services than we can, and they may offer lower pricing than we do. Further, they may have greater resources for research and development of new technologies, the provision of customer support, and the pursuit of acquisitions or other strategic investments. They may also have larger and more mature intellectual property portfolios, and broader and more diverse product and service offerings, which allow them to leverage their relationships based on other products or incorporate functionality into existing products to gain business in a manner that discourages users from purchasing our products and subscriptions, including incorporating cybersecurity features into their existing products or services and product bundling, selling at zero or negative margins, and offering concessions or a closed technology offering. Some competitors may have broader distribution and established relationships with distribution partners and end-customers. Other competitors specialize in providing protection from a single type of security threat, which may allow them to deliver these specialized security products to the market more quickly than we can.\nThe maturity and expansion of the enterprise cybersecurity space may attract new players, such as enterprise software companies in related or adjacent industries. In addition, larger vendors, including the cloud hyperscalers and other cybersecurity companies with specialized or broad platforms, may meaningfully enter or further expand into additional cybersecurity categories, including the identity security category. This additional competition could adversely impact our business.\nWe also face competition from companies that have entrenched legacy offerings at end-user customers. End-user customers have also often invested substantial personnel and financial resources to design and operate their networks and have established deep relationships with other providers of networking and security products. As a result, these organizations may prefer to purchase from their existing suppliers rather than add or switch to a new supplier such as us. In addition, as our customers refresh the security products bought in prior years, they may seek to consolidate vendors, which may result in current customers choosing to purchase products from our competitors. Due to budget constraints or economic downturns, organizations may add solutions to their existin",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 216800,
+        "char_start": 212800,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:56",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-06-02T23:39:01.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "9c8e87439eee9c0cf9fe6e50384db1b0444b04d63928ef06a636f1329319bba6",
+      "excerpt_text": "d Exchange Commission and are not to be incorporated by reference into any filing of Palo Alto Networks, Inc. under the Securities Act of 1933, as amended, or the Securities Exchange Act of 1934, as amended, whether made before or after the date of this Quarterly Report on Form 10-Q, irrespective of any general incorporation language contained in such filing.\n- 67 -\nTable of Contents\nSignatures\nPursuant to the requirements of the Securities Exchange Act of 1934, the Registrant has duly caused this report to be signed on its behalf by the undersigned, thereunto duly authorized.\nDate: June 2, 2026\nPALO ALTO NETWORKS, INC.\nBy:\n/s/ DIPAK GOLECHHA\nDipak Golechha\nChief Financial Officer\n(Duly Authorized Officer and Principal Financial Officer)\nDate: June 2, 2026\nPALO ALTO NETWORKS, INC.\nBy:\n/s/ JOSH PAUL\nJosh Paul\nChief Accounting Officer\n(Duly Authorized Officer and Principal Accounting Officer)\n- 68 -",
+      "locator": {
+        "accession_number": "0001327567-26-000015",
+        "char_end": 320110,
+        "char_start": 319200,
+        "cik": "1327567",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:84",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000015/panw-20260430.htm",
       "ticker": "PANW"
@@ -1819,6 +2136,27 @@
     {
       "accepted_at": "2026-06-05T20:04:30.000+00:00",
       "authority": "primary_official",
+      "content_sha256": "2563c4ed114e998f47c7164846089fc981a708d542ece4e0b47d597b3b547c11",
+      "excerpt_text": "rbrk-20260430\nxbrli:sharesiso4217:USDiso4217:USDxbrli:sharesxbrli:purerbrk:financial_institutionrbrk:segment00019438962026-02-012026-04-300001943896us-gaap:CommonClassAMember2026-05-310001943896us-gaap:CommonClassBMember2026-05-3100019438962026-04-3000019438962026-01-3100019438962024-04-300001943896us-gaap:CommonClassAMember2026-04-300001943896us-gaap:CommonClassAMember2026-01-310001943896us-gaap:CommonClassBMember2026-04-300001943896us-gaap:CommonClassBMember2026-01-310001943896us-gaap:SubscriptionAndCirculationMember2026-02-012026-04-300001943896us-gaap:SubscriptionAndCirculationMember2025-02-012025-04-300001943896us-gaap:ProductAndServiceOtherMember2026-02-012026-04-300001943896us-gaap:ProductAndServiceOtherMember2025-02-012025-04-3000019438962025-02-012025-04-300001943896us-gaap:CommonStockMember2026-01-310001943896us-gaap:AdditionalPaidInCapitalMember2026-01-310001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-01-310001943896us-gaap:RetainedEarningsMember2026-01-310001943896us-gaap:CommonStockMember2026-02-012026-04-300001943896us-gaap:AdditionalPaidInCapitalMember2026-02-012026-04-300001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-02-012026-04-300001943896us-gaap:RetainedEarningsMember2026-02-012026-04-300001943896us-gaap:CommonStockMember2026-04-300001943896us-gaap:AdditionalPaidInCapitalMember2026-04-300001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-04-300001943896us-gaap:RetainedEarningsMember2026-04-300001943896us-gaap:CommonStockMember2025-01-310001943896us-gaap:AdditionalPaidInCapitalMember2025-01-310001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-01-310001943896us-gaap:RetainedEarningsMember2025-01-3100019438962025-01-310001943896us-gaap:CommonStockMember2025-02-012025-04-300001943896us-gaap:AdditionalPaidInCapitalMember2025-02-012025-04-300001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-02-012025-04-300001943896us-gaap:RetainedEarningsMember2025-02-012025-04-300001943896us-gaap:CommonStockMember2025-04-300001943896us-gaap:AdditionalPaidInCapitalMember2025-04-300001943896us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-04-300001943896us-gaap:RetainedEarningsMember2025-04-3000019438962025-04-300001943896srt:MinimumMember2026-02-012026-04-300001943896srt:MaximumMember2026-02-012026-04-300001943896us-gaap:SubscriptionAndCirculationMemberus-gaap:TransferredOverTimeMember2026-02-012026-04-300001943896us-gaap:SubscriptionAndCirculationMemberus-gaap:TransferredOverTimeMember2025-02-012025-04-300001943896us-gaap:SubscriptionAndCirculationMemberus-gaap:TransferredAtPointInTimeMember2026-02-012026-04-300001943896us-gaap:SubscriptionAndCirculationMemberus-gaap:TransferredAtPointInTimeMember2025-02-012025-04-300001943896us-gaap:ProductAndServiceOtherMemberus-gaap:TransferredOverTimeMember2026-02-012026-04-300001943896us-gaap:ProductAndServiceOtherMemberus-gaap:TransferredOverTimeMember2025-02-012025-04-300001943896us-gaap:ProductAndServiceOtherMemberus-gaap:TransferredAtPointInTimeMember2026-02-012026-04-300001943896us-gaap:ProductAndServiceOtherMemberus-gaap:TransferredAtPointInTimeMember2025-02-012025-04-3000019438962026-05-012026-04-300001943896rbrk:PartnerAMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2026-02-012026-04-300001943896rbrk:PartnerAMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-02-012025-04-300001943896rbrk:PartnerAMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:AccountsReceivableMember2026-02-012026-04-300001943896rbrk:PartnerAMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:AccountsReceivableMember2025-02-012026-01-310001943896rbrk:PartnerBMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2026-02-012026-04-300001943896rbrk:PartnerBMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-02-012025-04-300001943896rbrk:PartnerBMemberus-gaap:CustomerConcentra",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 4000,
+        "char_start": 0,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-06-05T20:04:30.000+00:00",
+      "authority": "primary_official",
       "content_sha256": "2da284008e30235ed0391f3a9d4cfd86485ae1180b60f580ec8d79a2c5d86de7",
       "excerpt_text": "into revenue at a point in time or over time beginning on the date the customer accepts the option. Deferred revenue associated with customer options that are subsequently forfeited will be released into revenue at the time the options are forfeited.\nTiming of revenue recognition (in thousands):\nThree Months Ended April 30,\n2026\n2025\nSubscription revenue\nProducts and services transferred over time\n$\n355,639\n$\n243,991\nProducts and services transferred at a point in time\n18,514\n21,670\nOther revenue\nProducts and services transferred over time\n11,160\n11,074\nProducts and services transferred at a point in time\n1,755\n1,746\nTotal revenue\n$\n387,068\n$\n278,481\nContract assets\nThe Company invoices its customers in accordance with contractual billing terms established in each contract. As the Company performs under customer contracts, its right to consideration that is unconditional is classified as accounts receivable. If the Company’s right to consideration for such performance is contingent upon a future event or satisfaction of additional performance obligations, the amount of revenue the Company has recognized in excess of the amount it has billed to the customer is classified as a contract asset. Contract assets are included in prepaid expenses and other current assets and other assets, noncurrent in the unaudited condensed consolidated balance sheets. There were $14.0 million and $12.6 million of contract assets as of April 30, 2026 and January 31, 2026, respectively. The current and noncurrent contract assets balances as of April 30, 2026 were $4.6 million and $9.4 million, respectively, and as of January 31, 2026 were $3.8 million and $8.8 million, respectively.\nDeferred revenue\nDeferred revenue, which are contract liabilities, are amounts received or due from customers in advance of the Company’s performance. The current portion of deferred revenue represents the amount that is expected to be recognized as revenue within one year of the unaudited condensed consolidated balance sheet date. The Company invoices customers upfront for the majority of contracts, and the increase in the Company’s deferred revenue corresponds to an increase in revenue contracts that include SaaS and support in which the Company satisfies its performance obligations typically over the contractual service period. During the three\nRubrik, Inc.\nQ1 2027 Form 10-Q\n12\nTable of Contents\nmonths ended April 30, 2026 and 2025, the Company recognized revenue of approximately $336.4 million and $240.3 million, respectively, pertaining to amounts deferred at the beginning of each respective period.\nTransaction price allocated to the remaining performance obligations\nTransaction price allocated to the remaining performance obligations represents contracted revenue that has not yet been recognized, which includes deferred revenue for contracts that have been invoiced and will be recognized as revenue in future periods.\nAs of April 30, 2026, total remaining non-cancellable performance obligations under the Company’s contracts with customers was approximately $2.44 billion. The Company expects to recognize approximately 53% of this amount as revenue over the next 12 months, with the remaining balance to be recognized as revenue thereafter.\nConcentration of Risk\nCredit risk\nThe Company’s financial instruments that are exposed to concentrations of credit risk consist primarily of cash and cash equivalents, restricted cash, short-term investments, and accounts receivable. Cash and cash equivalents and short-term investments are primarily held in three financial institutions and, at times, may exceed federally insured limits. The Company grants credit to customers in a wide variety of industries worldwide and generally does not require collateral. The Company has not experienced any material credit losses as of April 30, 2026.\nConcentration of revenue and accounts receivable\nThe following customers individually accounted for 10% or more of total revenue or 10% or more of ac",
       "locator": {
@@ -1896,6 +2234,69 @@
         }
       },
       "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-06-05T20:04:30.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "ee4b352954e52ce302d10b5b348780d6ba9a029061c3c16bb5ccc34fe098cdc8",
+      "excerpt_text": "s, and a $26.6 million increase in deferred commissions.\nFor the three months ended April 30, 2025, net cash provided by operating activities of $39.7 million resulted primarily from a net loss of $102.1 million, partially offset by $73.5 million of stock-based compensation, $24.8 million of amortization of deferred commissions, $8.1 million for depreciation and amortization, and $35.1 million of net cash inflow from changes in operating assets and liabilities. The net cash inflow from changes in operating assets and liabilities was primarily the result of a $89.7 million increase in deferred revenue from increased billings and a $12.0 million decrease in accounts receivable. The cash inflow was partially offset by a $36.8 million decrease in accrued expenses and other current liabilities, a $21.4 million increase in deferred commissions, and a $7.8 million increase in prepaid expense and other assets.\nInvesting Activities\nFor the three months ended April 30, 2026, net cash used in investing activities of $36.2 million resulted from $292.0 million in purchases of investments, $3.8 million in capitalized internal-use software, and $4.3 million in purchases of property and equipment, partially offset by $263.9 million in proceeds from maturities of investments.\nFor the three months ended April 30, 2025, net cash provided by investing activities of $34.2 million resulted from $162.6 million in proceeds from maturities and sales of investments, partially offset by $120.2 million in purchases of investments, $3.5 million in capitalized internal-use software, and $2.8 million in purchases of property and equipment.\nFinancing Activities\nFor the three months ended April 30, 2026, net cash provided by financing activities of $17.2 million resulted primarily from $16.6 million in proceeds from issuance of common stock under employee stock purchase plan and $0.6 million from the exercise of stock options.\nFor the three months ended April 30, 2025, net cash provided by financing activities of $15.3 million resulted from $13.5 million in proceeds from issuance of common stock under employee stock purchase plan and $1.8 million from the exercise of stock options.\nMaterial Cash Requirements\nOur material cash requirements primarily consist of operating lease commitments for our offices and data centers, non-cancelable purchase commitments related to third-party cloud hosting services, and long-term debt. Except as already disclosed in Note 7, Debt and Note 8, Commitments and Contingencies in our unaudited condensed consolidated financial statements included elsewhere in this Quarterly Report on Form 10-Q, there has been no other material change in our material cash requirements other than in the ordinary course of business since our fiscal year ended January 31, 2026. See our Annual Report for additional information regarding our contractual obligations.\nCritical Accounting Policies and Estimates\nRefer to Part II, Item 7, “Critical Accounting Policies and Estimates” of our Annual Report on Form 10-K for the fiscal year ended January 31, 2026. There have been no material changes to our Critical Accounting Policies and Estimates.\nRecently Issued Accounting Pronouncements\nSee Note 2, Basis of Presentation and Summary of Significant Accounting Policies, in the notes to our unaudited condensed consolidated financial statements included in Part I, Item I of this Quarterly Report on Form 10-Q for a discussion of recent accounting pronouncements.\nRubrik, Inc.\nQ1 2027 Form 10-Q\n35\nTable of Contents\nItem 3. Quantitative and Qualitative Disclosures About Market Risk\nWe have operations in the United States and internationally, and we are exposed to market risk in the ordinary course of our business.\nInterest Rate Risk\nAs of April 30, 2026, we had cash, cash equivalents, and short-term investments of $1.75 billion and restricted cash of $16.6 million. Our cash, cash equivalents, and short-term investments are held for working capital purposes. We do not e",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 129400,
+        "char_start": 125400,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:33",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-06-05T20:04:30.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "81ae7077e5c3ebe6c89a51734695b019b188b893adbe22caa1c6df87ee8a50e0",
+      "excerpt_text": "or sell our solutions would adversely affect our business, financial condition, results of operations, and growth prospects.\nWe are subject to anti-corruption, anti-bribery, and similar laws, and non-compliance with such laws can subject us to criminal or civil liability and harm our business, financial condition, and results of operations.\nWe are subject to the U.S. Foreign Corrupt Practices Act (“FCPA”), U.S. domestic bribery laws, the UK Bribery Act, and other anti-corruption and anti-bribery laws in the countries in which we conduct business. Anti-corruption and anti-bribery laws are interpreted broadly to prohibit companies, their officers and employees, and their third-party intermediaries from authorizing, offering, or providing, or in some cases receiving, directly or indirectly, improper payments or benefits to or from persons in the public or private sector. As a public company, we are also required by the FCPA to keep accurate books and records and maintain internal accounting controls sufficient to assure management’s control, authority, and responsibility over our assets. As we engage in and increase our international business and sales to the public sector, we may engage with business partners and third-party intermediaries, including Channel Partners, to market and sell our solutions and to obtain necessary permits, licenses, and other regulatory approvals from government authorities. In addition, we or our third-party intermediaries may have direct or indirect interactions with officials, employees, or other representatives of government agencies or state-owned or affiliated entities. We can be held liable for the corrupt or other illegal activities of these third-party intermediaries and our employees, representatives, contractors, partners, and agents, even if we do not explicitly authorize or have actual knowledge of such unlawful activities.\nWhile we have policies and procedures and conduct training designed to address compliance with such laws, our employees and agents may take actions in violation of our policies and applicable law, for which we may be ultimately held responsible. As we increase our international sales and business, our risks under these laws may increase.\nDetecting, investigating, responding to, and resolving actual or alleged violations of anti-corruption laws can lead to a materially significant diversion of time, resources, and attention from senior management, as well as significant defense costs and other professional fees. In addition, noncompliance with anti-corruption and anti-bribery laws, could subject us to whistleblower complaints, investigations, sanctions, settlements, prosecution, enforcement actions, fines, damages, other civil or criminal penalties or injunctions, suspension, or debarment from contracting with certain persons, reputational harm, adverse media coverage, and other collateral consequences. If any subpoenas or investigations are launched, or governmental or other sanctions are imposed, or if we do not prevail in any possible civil or criminal proceeding, our business, financial condition, and results of operations could be harmed.\nDownturns or upturns in our sales may not be immediately reflected in our financial condition and results of operations.\nWe recognize a significant portion of our revenue ratably over the term of subscriptions to our solutions. As a result, any decreases in new subscriptions or renewals in any one period may not immediately be fully reflected as a decrease in revenue for that period but would negatively affect our revenue in future quarters. This also makes it difficult for us to rapidly increase our revenue through the sale\nRubrik, Inc.\nQ1 2027 Form 10-Q\n57\nTable of Contents\nof additional subscriptions in any period. If our quarterly results of operations fall below the expectations of investors and securities analysts who follow our stock, the price of our Class A common stock would decline substantially, and we could face costly",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 258600,
+        "char_start": 254600,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:67",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-06-05T20:04:30.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "2aa884ac0ea905e19850c6ebaf309863bb77f298be45cf5a51fc92abd331486a",
+      "excerpt_text": "behalf by the undersigned, thereunto duly authorized.\nDate: June 5, 2026\nRubrik, Inc.\nBy:\n/s/ Bipul Sinha\nName:\nBipul Sinha\nTitle:\nChief Executive Officer\n(Principal Executive Officer)\nBy:\n/s/ Kiran Choudary\nName:\nKiran Choudary\nTitle:\nChief Financial Officer\n(Principal Financial and Accounting Officer)\nRubrik, Inc.\nQ1 2027 Form 10-Q\n79",
+      "locator": {
+        "accession_number": "0001943896-26-000047",
+        "char_end": 380338,
+        "char_start": 380000,
+        "cik": "1943896",
+        "form": "10-Q",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:100",
       "source_type": "sec_filing_text_chunk",
       "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
       "ticker": "RBRK"
@@ -2014,5 +2415,6 @@
       "source_url": "https://www.ssga.com/us/en/individual/etfs/state-street-spdr-sp-500-etf-trust-spy",
       "ticker": "SPY"
     }
-  ]
+  ],
+  "valuation_evidence": []
 }

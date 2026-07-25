@@ -23,11 +23,26 @@ from run_phase5r_llm_shadow import (
 SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
 NEW_SOURCE_FILES = (
     "phase5r_llm_contract.py",
+    "phase5r_market_data_contract.py",
+    "phase5r_massive_payload_adapter.py",
+    "phase5r_valuation_evidence_v1.py",
+    "phase5r_point_in_time_performance.py",
+    "phase5r_return_objective.py",
     "build_phase5r_decision_evidence_packet.py",
     "phase5r_llm_provider.py",
     "run_phase5r_llm_shadow.py",
     "refresh_phase5r_sec_filing_artifacts.py",
+    "phase5r_sec_acceptance.py",
     "evaluate_phase5r_llm_decision.py",
+    "prepare_phase5r_llm_replay_corpus.py",
+    "inventory_phase5r_llm_replay_corpus.py",
+    "verify_phase5r_llm_replay_corpus.py",
+    "phase5r_llm_citation_reviews.py",
+    "phase5r_llm_transition_annotations.py",
+    "create_phase5r_llm_transition_annotation_template.py",
+    "run_phase5r_llm_provider_replay_evaluation.py",
+    "verify_phase5r_llm_provider_replay_gate.py",
+    "phase5r_llm_activation_receipt.py",
     "run_phase5r_llm_shadow_scheduler.py",
     "enable_phase5r_llm_live_shadow.py",
     "verify_phase5r_llm_shadow_boundary.py",
@@ -38,6 +53,28 @@ CANONICAL_RUNTIME_FILES = (
     "run_phase5r_daily_refresh_scheduler.py",
     "run_phase5r_daily_scheduler.py",
     "send_phase5r_daily_email.py",
+    "run_phase5r_b2_full_universe_market_data.py",
+    "score_phase5r_b2_candidates.py",
+    "refresh_phase5r_daily_evidence.py",
+    "refresh_phase5r_sec_filing_artifacts.py",
+    "regenerate_phase5r_c9_portfolio_outputs.py",
+    "create_phase5r_c9b_price_aware_action_plan.py",
+    "create_phase5r_daily_decision_and_brief.py",
+    "phase5r_c9_common.py",
+    "phase5r_c9b_common.py",
+    "create_phase5r_c9_account_state.py",
+    "calculate_phase5r_c9_dynamic_weights.py",
+    "create_phase5r_c9_exact_action_plan.py",
+    "create_phase5r_c9_cash_deployment_plan.py",
+)
+CANONICAL_FORBIDDEN_MODEL_MARKERS = (
+    "phase5r_llm",
+    "llm_shadow",
+    "phase5r_llm_shadow_decision.json",
+    "phase5r_llm_shadow_decision.md",
+    "phase5r_llm_shadow_state.local.json",
+    "phase5r_llm_decision_audit.jsonl",
+    "codexcliprovider",
 )
 CANONICAL_SENTINELS = (
     ROOT / "07_automation" / "email_delivery" / "phase5r_daily_delivery_ledger.csv",
@@ -104,6 +141,15 @@ def smtp_stat_only() -> tuple[int, int, int, int] | str:
     )
 
 
+def canonical_model_reference_markers(source: str) -> list[str]:
+    lowered = source.lower()
+    return [
+        marker
+        for marker in CANONICAL_FORBIDDEN_MODEL_MARKERS
+        if marker in lowered
+    ]
+
+
 def static_source_check() -> list[str]:
     violations: list[str] = []
     for name in NEW_SOURCE_FILES:
@@ -153,69 +199,144 @@ def static_source_check() -> list[str]:
             violations.append(f"missing:{name}")
             continue
         source = path.read_text(encoding="utf-8")
-        if any(
-            marker in source
-            for marker in (
-                "run_phase5r_llm_shadow",
-                "phase5r_llm_provider",
-                "CodexCliProvider",
+        for marker in canonical_model_reference_markers(source):
+            violations.append(
+                f"canonical_model_reference:{name}:{marker}"
             )
-        ):
-            violations.append(f"canonical_model_reference:{name}")
     return violations
 
 
 def _fixture(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    primary_sources_by_ticker: dict[str, list[str]] = {}
+    primary_sources_by_ticker: dict[str, list[dict[str, Any]]] = {}
     for source in packet["source_catalog"]:
         ticker = str(source.get("ticker", "")).upper()
-        if ticker and source.get("source_id"):
-            primary_sources_by_ticker.setdefault(ticker, []).append(
-                source["source_id"]
-            )
-    held = [row["ticker"] for row in packet["entities"] if row["role"] == "held"]
+        if (
+            ticker
+            and source.get("source_id")
+            and source.get("authority") == "primary_official"
+            and source.get("excerpt_text")
+        ):
+            primary_sources_by_ticker.setdefault(ticker, []).append(source)
     claims = []
     coverage = []
     decisions = []
+    ticker_reviews = []
     approved_sources: list[str] = []
-    for index, ticker in enumerate(held):
-        source_ids = primary_sources_by_ticker.get(ticker, [])[:1]
+    for index, entity in enumerate(packet["entities"]):
+        ticker = str(entity["ticker"]).upper()
+        selected_sources = primary_sources_by_ticker.get(ticker, [])[:1]
+        source_ids = [source["source_id"] for source in selected_sources]
+        cited_hashes = [
+            source["content_sha256"] for source in selected_sources
+        ]
         if not source_ids:
-            raise RuntimeError(f"fixture cannot ground held ticker: {ticker}")
+            classification = "abstain"
+        elif entity["role"] == "held":
+            classification = "hold_existing"
+        else:
+            classification = "watchlist"
         approved_sources.extend(source_ids)
+        claim_id = f"entity-{index}"
         claims.append(
             {
-                "claim_id": f"held-{index}",
+                "claim_id": claim_id,
                 "ticker": ticker,
                 "claim": "Current packet does not establish a material thesis break.",
                 "stance": "neutral",
                 "time_horizon": "long_term",
-                "materiality": "medium",
+                "materiality": "medium" if source_ids else "low",
+                "rationale": (
+                    "The claim conservatively summarizes the cited frozen "
+                    "primary excerpt."
+                    if source_ids
+                    else "No citable primary excerpt is available."
+                ),
+                "fact_type": "independent_analysis",
+                "evidence_origin": "independently_reported",
+                "unit": "qualitative",
+                "period": str(packet["cycle_date"]),
                 "source_ids": source_ids,
+                "cited_excerpt_sha256": cited_hashes,
                 "calculation_ids": [],
             }
         )
         coverage.append(
             {
                 "ticker": ticker,
-                "official_evidence_sufficient": True,
+                "official_evidence_sufficient": bool(source_ids),
                 "contradictory_evidence": False,
-                "missing_evidence": [],
+                "missing_evidence": [] if source_ids else ["primary_excerpt"],
             }
         )
         decisions.append(
             {
                 "ticker": ticker,
-                "classification": "hold_existing",
-                "thesis_direction": "stable",
+                "classification": classification,
+                "thesis_direction": (
+                    "stable" if classification != "abstain" else "unclear"
+                ),
                 "rationale": "No packet-local evidence crosses the change threshold.",
                 "long_term_case": "Continue monitoring the documented thesis.",
                 "risks": ["Evidence may change in a later filing."],
                 "invalidation_conditions": ["A primary-source thesis break."],
+                "claim_ids": [claim_id] if source_ids else [],
                 "source_ids": source_ids,
                 "calculation_ids": [],
-                "confidence_pct": 70,
+                "confidence_pct": 70 if source_ids else 0,
                 "human_review_needed": False,
+            }
+        )
+        ticker_reviews.append(
+            {
+                "ticker": ticker,
+                "verdict": "approve",
+                "downgrade_to": classification,
+                "factual_grounding_pass": True,
+                "citation_integrity_pass": True,
+                "numeric_reconciliation_pass": True,
+                "long_term_reasoning_pass": True,
+                "action_proportionality_pass": True,
+                "policy_boundary_pass": True,
+                "issues": [],
+                "approved_source_ids": source_ids,
+            }
+        )
+    rollup_priority = {
+        "abstain": 0,
+        "reject": 1,
+        "watchlist": 2,
+        "hold_existing": 3,
+    }
+    portfolio_classification = max(
+        (decision["classification"] for decision in decisions),
+        key=lambda value: rollup_priority[value],
+    )
+    fact_source = next(
+        (
+            (decision["ticker"], decision["source_ids"])
+            for decision in decisions
+            if decision["source_ids"]
+        ),
+        None,
+    )
+    supporting_facts = []
+    disconfirming_facts = []
+    if fact_source is not None:
+        fact_ticker, fact_source_ids = fact_source
+        supporting_facts.append(
+            {
+                "ticker": fact_ticker,
+                "fact": "The frozen primary excerpt supports continued research.",
+                "source_ids": fact_source_ids,
+                "calculation_ids": [],
+            }
+        )
+        disconfirming_facts.append(
+            {
+                "ticker": fact_ticker,
+                "fact": "The same excerpt cannot eliminate future execution risk.",
+                "source_ids": fact_source_ids,
+                "calculation_ids": [],
             }
         )
     return {
@@ -231,13 +352,26 @@ def _fixture(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
         "committee": {
             "schema_version": "phase5r_llm_committee_decision_v1",
             "packet_id": packet["packet_id"],
-            "portfolio_classification": "hold_existing",
+            "portfolio_classification": portfolio_classification,
             "headline": "影子结论：继续持有，当前证据不足以改变长期判断",
             "decisive_advice": "不因单日噪声改变研究分类。",
             "long_term_portfolio_case": "Primary evidence does not show a thesis break.",
             "data_sufficiency": "sufficient",
             "material_thesis_break": False,
-            "confidence_pct": 70,
+            "confidence_pct": 0,
+            "confidence_components": {
+                "evidence_coverage_pct": 70,
+                "thesis_clarity_pct": 70,
+                "valuation_clarity_pct": 0,
+                "portfolio_fit_pct": 70,
+            },
+            "supporting_facts": supporting_facts,
+            "disconfirming_facts": disconfirming_facts,
+            "scenarios": {
+                "bull": "Durable evidence strengthens the documented thesis.",
+                "base": "The documented thesis remains stable.",
+                "bear": "New primary evidence weakens the documented thesis.",
+            },
             "ticker_decisions": decisions,
             "dissent": [],
             "automatic_action_allowed": False,
@@ -246,13 +380,14 @@ def _fixture(packet: dict[str, Any]) -> dict[str, dict[str, Any]]:
             "schema_version": "phase5r_llm_critic_review_v1",
             "packet_id": packet["packet_id"],
             "verdict": "approve",
-            "downgrade_to": "hold_existing",
+            "downgrade_to": portfolio_classification,
             "factual_grounding_pass": True,
             "citation_integrity_pass": True,
             "numeric_reconciliation_pass": True,
             "long_term_reasoning_pass": True,
             "action_proportionality_pass": True,
             "policy_boundary_pass": True,
+            "ticker_reviews": ticker_reviews,
             "issues": [],
             "approved_source_ids": sorted(set(approved_sources)),
             "automatic_action_allowed": False,

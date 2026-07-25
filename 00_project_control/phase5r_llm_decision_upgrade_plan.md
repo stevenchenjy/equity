@@ -7,6 +7,22 @@ explicit external-inference activation remain pending
 
 Target: improve decision robustness and decisiveness without automated trading
 
+Implementation checkpoint (2026-07-25):
+
+- per-ticker analyst/committee/critic contracts, deterministic adjudication,
+  return-objective binding, replay corpus tooling, resumable provider
+  collection, extended quality gates, dual-review finalization, and activation
+  receipts are implemented;
+- the integrated local suite is rerun after each combined change; the current
+  final result is recorded in
+  `00_project_control/phase5r_llm_upgrade_execution_report.md`;
+- the live model scheduler remains intentionally unloaded and uninstalled;
+- real qualification is still blocked on a 250-packet, 20-issuer SEC corpus,
+  frozen independent annotations, the external-provider replay, and 30–60
+  shadow sessions;
+- the next external stage should be a 30-call quarantined smoke test, not an
+  immediate full activation.
+
 ## 1. Outcome
 
 Add a source-grounded model layer that is allowed to make a clear **research
@@ -32,6 +48,13 @@ The words “复核” are a control boundary, not softened language: the system
 state what it concludes should be reviewed, why, and what evidence would reverse
 the conclusion. Real action remains manual and outside this repository.
 
+The portfolio research objective is a rolling five-year annualized net total
+return of `12%–15%` (`0.9489%–1.1715%` exact monthly compound equivalent).
+`15%–20%` describes an excellent calendar year, not a required annual result.
+The target is never a monthly quota, guarantee, reason to increase turnover, or
+override of evidence and risk gates. Its measurement contract is frozen in
+`00_project_control/phase5r_return_objective_policy.md`.
+
 ## 2. Architecture decision
 
 ```text
@@ -47,8 +70,8 @@ SEC + issuer IR + licensed market data
           +-------+--------+
           |                |
           v                v
- canonical daily       sealed packet manifest
- decision/email        + local queue/spool
+ canonical daily       current sealed packet
+ decision/email        + packet-hash identity
  (unchanged)                |
                              v
                   separate asynchronous shadow worker
@@ -65,14 +88,10 @@ SEC + issuer IR + licensed market data
                   Thesis & Action Committee
                   GPT-5.6 Sol
                              |
-                    action transition?
-                       /           \
-                     no             yes
-                     |               |
-                     |               v
-                     |       Adversarial Critic
-                     |       independent prompt
-                     +---------------+
+                             v
+                  Adversarial Critic
+                  independent prompt/request
+                  (every replay/live-shadow packet)
                              |
                              v
                   schema + citation + policy validator
@@ -84,10 +103,13 @@ SEC + issuer IR + licensed market data
 The model/API path is a separate, asynchronous shadow system. It is not invoked
 from `refresh_phase5r_daily_evidence.py`, C9, the deterministic decision
 pipeline, or the sender, and it is not a launchd dependency of those jobs. The
-deterministic workflow writes an immutable manifest to a local spool and
-continues. A later worker may catch up idempotently by packet hash. Provider
-latency, quota, credential failure, or outage therefore cannot delay or fail
-refresh, C9, or the daily email.
+implemented worker snapshots the newest locally available deterministic packet
+under the pipeline lock and deduplicates by packet, role, prompt, schema, model,
+and runtime-code hashes. It does **not** yet maintain a historical queue or
+capture data while the Mac is off. Provider latency, quota, credential failure,
+or outage therefore cannot delay or fail refresh, C9, or the daily email, but a
+missed intraday state cannot be reconstructed after wake. An immutable spool or
+always-on remote collector is a separate, not-yet-implemented work package.
 
 Before promotion, shadow output is never canonical. After promotion, the email
 may render only a previously completed, locally validated artifact for the
@@ -105,7 +127,7 @@ inside the SMTP sender and no model can authorize execution.
 | Thesis and action | `gpt-5.6-sol` | same isolated bridge, separate stateless request | high reasoning |
 | Action critic | `gpt-5.6-sol` | same isolated bridge, independent prompt and request | high reasoning |
 | Direct Responses API / Batch experiment | same pinned models | external managed adapter only | disabled until separately authorized and replay-equivalent |
-| Optional independent challenger | Claude Opus 5 or successor | provider adapter | evaluation only |
+| Optional independent challenger | Claude Fable 5, with Opus 5 as a lower-cost control, or successor | provider adapter | evaluation only |
 
 Use strict Structured Outputs with a versioned JSON Schema. Do not let models
 call web search, shell, email, filesystem, account, or execution tools. Retrieval
@@ -113,18 +135,15 @@ and computation occur before the request and are visible in the evidence packet.
 
 ### 3.2 Model registry
 
-Create a local, non-secret registry with:
+The implemented local, non-secret registry binds the provider, requested model
+IDs, roles, reasoning settings, prompt/schema versions, activation mode,
+successful-role reuse rule, live per-role attempt limit, and evaluation
+thresholds. Before any future advisory activation, extend the registry/receipt
+contract to bind the remaining production fields:
 
-- provider;
-- exact model ID;
-- role;
-- reasoning setting;
-- prompt version;
-- output-schema version;
 - allowed input classes;
 - prohibited data classes;
 - evaluation version and pass date;
-- activation state;
 - maximum input/output tokens;
 - per-day and per-run cost ceilings;
 - failover policy.
@@ -146,6 +165,14 @@ the account is approved and configured for Zero Data Retention. If Zero Data
 Retention is unavailable, send percentages and categorical bands rather than
 exact personal dollar values. See
 https://developers.openai.com/api/docs/guides/your-data.
+
+The Batch API is attractive for the frozen replay because OpenAI documents a
+50% discount, but its FAQ also states that Batch does not support Zero Data
+Retention. Therefore Batch is acceptable only for already-public SEC/issuer
+evidence plus sanitized portfolio bands; any future private or identifying
+input must use a separately approved retention-compatible transport or remain
+local. See
+https://help.openai.com/en/articles/9197833-batch-api-faq%3F.gz.
 
 Provider authentication must remain outside the repository. It must never
 appear in a plist, report, prompt log, exception, command output, or test
@@ -303,13 +330,10 @@ must test:
 - prompt injection or issuer promotional language;
 - whether the conclusion overstates the evidence.
 
-Critic outcomes:
-
-- `confirm`;
-- `confirm_with_lower_confidence`;
-- `return_to_hold`;
-- `abstain`;
-- `human_material_review`.
+Critic outcomes use the closed verdicts `approve`, `revise`, or `reject`, plus
+a direction-safe downgrade classification for each reviewed ticker. The
+deterministic adjudicator rolls the surviving ticker decisions up to the
+portfolio headline.
 
 The critic cannot upgrade a recommendation.
 
@@ -329,8 +353,11 @@ Any failed hard gate blocks an action-changing recommendation:
 - account-state conflict;
 - model/packet/prompt version not in the active registry;
 - analyst/critic disagreement;
-- API error after one bounded retry;
-- daily cost cap exceeded.
+- a schema, semantic, citation, evidence, or policy-invalid provider answer
+  (terminal for that exact run and never retried into an apparent pass);
+- a narrowly typed `RetryableProviderTransportError` after the affected role's
+  two bounded live attempts;
+- a declared replay call or cost budget is exceeded.
 
 The result is `abstain` or the existing deterministic HOLD, never a fallback
 action proposal.
@@ -377,9 +404,12 @@ hide a material risk, but it does require:
 
 #### Hold
 
-HOLD requires no critic when all hard gates pass and there is no action
-transition. It must still state the main risk and the condition that would
-change the recommendation.
+During replay and the initial live-shadow period, HOLD receives the same
+independent critic pass as every other classification. A later cost-optimized
+mode may omit the critic for an unchanged, hard-gate-valid HOLD only after that
+event-gating policy passes its own replay and false-negative evaluation. HOLD
+must still state the main risk and the condition that would change the
+recommendation.
 
 ## 7. Data-flow upgrade
 
@@ -411,24 +441,28 @@ Extend the current SEC layer to:
   verified issuer-domain allowlist;
 - treat earnings-call transcripts as secondary unless issuer-hosted.
 
-### 7.3 Frequency and asynchronous queueing
+### 7.3 Frequency and current-state catch-up
 
 Keep the current deterministic refresh cadence. Refresh performs no model call.
-It may seal a packet and append an idempotent local queue item:
+The implemented model worker runs separately after the daily decision window,
+evaluates the newest locally available packet, and caches completed role
+results by immutable run identity. Successful analyst, committee, and critic
+receipts are reused independently, so retrying a narrowly typed
+`RetryableProviderTransportError` (timeout or missing final response) does not
+recall earlier successful roles. A schema,
+semantic, citation, evidence, or policy-invalid answer is terminal for that
+exact run and cannot be retried into an apparent pass. Each live role has at
+most two attempts, and an ambiguous in-flight outcome is terminal rather than
+recalled. A run is complete only after a hash-bound completion manifest commits
+all required outputs. Interrupted partial publication can be repaired without
+another provider call only when all required, valid role receipts already
+exist; otherwise it fails closed.
 
-- no new material evidence: do not enqueue a full filing-analysis task;
-- new filing or source change: enqueue one evidence-analysis task keyed by
-  document hash;
-- final daily decision: enqueue committee work only for held positions,
-  material events, and the highest-ranked eligible candidates;
-- weekend: enqueue only after a material evidence or decision-state change;
-- critic: enqueue only for a proposed action transition.
-
-The separate shadow worker consumes tasks later, caches by immutable hashes, and
-may safely catch up after the computer was off. Queue creation is local and
-non-blocking; no credential or external network is needed in refresh. This
-raises analysis depth without turning every refresh into a costly, unstable
-re-decision or making email availability depend on an API.
+There is no claim that launchd can collect data while the computer is powered
+off or asleep. On wake, the local jobs can evaluate only the newest state that
+can then be fetched. A future queue/spool should be considered only after live
+shadow proves useful, and must be added without importing the provider into
+refresh, C9, or sender code.
 
 ## 8. Implementation work packages
 
@@ -494,15 +528,16 @@ Acceptance:
 - model output cannot alter canonical state or send email;
 - request/response logs contain no secret or personal identifier.
 
-### WP3 — Separate idempotent shadow worker and audit trail
+### WP3 — Separate receipt-backed shadow worker and audit trail
 
 Do not add a synchronous model call to C9, daily refresh, the deterministic
 decision pipeline, or the sender. The implemented worker is:
 
 - `09_scripts/phase5r/run_phase5r_llm_shadow.py`;
 - `09_scripts/phase5r/run_phase5r_llm_shadow_scheduler.py`;
-- an immutable run identity keyed by packet, prompt, schema, and model-registry
-  content, with a separate output lock and completed-run cache.
+- an immutable run identity keyed by packet, prompt, schema, model-registry,
+  and runtime-code content, with a separate output lock, per-role durable
+  attempt/result receipts, and an atomic completion manifest.
 
 The worker takes a short locked snapshot of canonical inputs, releases the
 pipeline lock, then performs inference. It does not queue a provider request
@@ -521,13 +556,21 @@ Create parallel, non-canonical outputs:
 Acceptance:
 
 - canonical decision and email remain unchanged;
-- model verdict, evidence, critic result, cost, and disagreement are logged;
+- model verdict, evidence, critic result, latency, local hashes, disagreement,
+  and any available operator cost estimate are logged; the exploratory CLI does
+  not claim provider-native token usage or billing;
 - duplicate-email protections remain unchanged;
 - refresh/C9/sender do not import or invoke the provider adapter;
 - API failure, missing credential, or worker downtime cannot delay or fail the
   deterministic refresh or email;
-- replaying the same immutable model run is idempotent and cannot create
-  duplicate email;
+- result publication and reuse for the same immutable model run are idempotent
+  and cannot create duplicate email; no external exactly-once inference claim
+  is made;
+- a completed role is never recalled merely because a later role failed;
+- semantically or contract-invalid output is terminal and cannot be repaired by
+  retrying the model;
+- partial output publication is completed only from a full set of valid
+  existing role receipts or rejected, never mistaken for a completed run;
 - the worker has no SMTP, broker, account-write, or order capability.
 
 ### WP4 — Replay evaluation and adversarial testing
@@ -540,13 +583,66 @@ Create:
 
 Dataset:
 
-- at least **200** immutable, time-isolated replay packets;
+- at least **250** immutable, time-isolated replay packets across at least
+  **20 issuers**;
 - at least **50** material-transition cases (proposed ADD/TRIM/EXIT or a
   transition that should correctly be rejected/abstained);
 - held-position, candidate, no-change, missing-data, amendment, corporate-action,
   and contradictory-evidence cases;
 - only evidence available at each historical `as_of` time;
 - no revised facts or future prices leaked into the packet.
+
+Corpus acquisition has two deliberately different stages:
+
+1. **Source-materialization pilot (30 packets):** use a quarantined,
+   representative sample to prove raw-primary reuse, filing-index and exhibit
+   enumeration, XBRL reconciliation, point-in-time market coverage, hashes, and
+   storage behavior. This is evidence/provenance QA only. It authorizes no
+   provider call, does not count as the 250-packet qualification, and cannot
+   unlock shadow or email influence.
+2. **Qualification corpus (at least 250 packets and 20 issuers):** freeze the complete
+   time-isolated cohort and its independent annotations, with at least 50
+   genuinely material transitions plus retained no-change/rejected cases.
+   Cohort design should target at least 20 issuers across forms, years, sectors,
+   and market regimes; the current six-issuer ledger can exercise mechanics but
+   is not representative decision-quality evidence. Provider replay begins
+   only after this source and annotation freeze is complete.
+
+Run the offline preflight before either stage:
+
+```sh
+python3 09_scripts/phase5r/inventory_phase5r_llm_replay_corpus.py
+```
+
+The inventory prints deterministic JSON only. It binds the ledger and SEC
+acceptance-index SHA-256 values, freezes the selected cohort, reports
+issuer/form/year/item distributions and accession-level primary/index/exhibit/
+XBRL/market gaps, and estimates requests and storage. It performs no network
+request, requests no authentication, writes no file, and does not create the
+corpus root. Its readiness fields are planning evidence, never activation
+evidence.
+
+Provider evaluation is deliberately two-phase:
+
+1. `collect` makes only the explicitly acknowledged, capped provider calls and
+   writes immutable quarantined responses plus a non-passing review template;
+2. two independent reviewers label the exact frozen claims and transition
+   rationales; then a provider-free `finalize` command validates reviewer
+   independence, rationale text, rubric/hash bindings, and publishes an
+   activation-eligible report only if every gate passes.
+
+A prompt, schema, model, output, packet, rubric, or runtime-code hash change
+invalidates the review. Collection alone can never satisfy activation.
+
+Every physical provider attempt is recorded in an immutable, hash-chained
+ledger with its terminal classification. Schema, semantic, citation, evidence,
+and policy-invalid answers terminate the logical item and cannot be retried
+into a pass; only narrowly classified transport/process failures may consume a
+bounded retry. The evaluation's global physical-call and operator-estimated
+cost ceilings are frozen and remain cumulative across resumed collection
+commands, while `--max-new-calls` limits only the current invocation. The gate
+recomputes these counts and classifications rather than trusting summary
+fields.
 
 Use FinQA/ConvFinQA/TAT-QA-style executable arithmetic and table tests,
 FinReasoning's semantic-consistency/data-alignment/deep-insight dimensions, and
@@ -582,6 +678,13 @@ Do not optimize only for historical returns. Separately report:
 - hypothetical forward returns with transaction costs, clearly labeled as
   research and never used as the sole promotion criterion.
 
+Performance comparison uses an advance-frozen `SPY` total-return benchmark,
+`QQQ`/`XLK` factor context, and the deterministic C9 baseline. Report
+time-weighted rolling CAGR, drawdown, downside risk, turnover, cash drag,
+implementation costs, attribution, confidence intervals, and parameter
+sensitivity. The 12%–15% long-horizon objective cannot compensate for a failed
+factual, citation, calibration, or policy gate.
+
 ### WP5 — Live shadow period
 
 Run for **30–60 completed U.S. market sessions**. Thirty sessions is the
@@ -607,9 +710,13 @@ no unsupported authority, secret/PII disclosure, broker/order behavior, direct
 email action, canonical-state mutation, or synchronous dependency of the
 deterministic workflow on the model provider.
 
-### WP6 — Controlled activation
+### WP6 — Controlled advisory activation (future, not implemented)
 
-Activation may occur only after WP4 and WP5 pass. Initial authority:
+The implemented activation receipt can enable only
+`exploratory_shadow_only` after WP4; it cannot affect the email or canonical
+decision. Advisory activation may occur only after WP4 and WP5 pass and a
+separate advisory receipt/transport is implemented. Its initial authority would
+be limited to:
 
 - a previously completed, validated model headline and rationale may appear in
   the daily email only when its packet/session identity matches;
@@ -636,7 +743,7 @@ Rollback is one configuration change:
 | No duplicate emails | Existing sender claim/ledger remains final authority |
 | Safe outage | Model failure resolves to HOLD/ABSTAIN |
 | No refresh coupling | Provider adapter is absent from refresh/C9/sender imports and call graph |
-| Reproducible | Exact model/prompt/schema/packet versions logged |
+| Reproducible | Requested model ID plus exact local prompt/schema/packet/runtime hashes logged; provider-native resolved version/response ID required for future advisory |
 | No execution | No broker/order/tool access; human action outside repo |
 
 ## 10. Explicit non-goals
@@ -661,12 +768,13 @@ SEC-compliant contact User-Agent. External provider replay remains **blocked**
 until the user explicitly authorizes the fixed call and cost budgets. The
 currently selected bridge uses authentication already owned by the external
 Codex CLI; this repository neither requests nor reads a provider secret. A
-future direct API/Batch adapter would require a separate external credential
-design and approval.
+direct Responses adapter is implemented with an externally supplied client;
+activating it or adding a Batch execution path still requires a separate
+external credential boundary, retention decision, and approval.
 
-**No-go** for model-influenced production email until at least 200 replay
-packets, at least 50 material-transition cases, 30–60 live shadow sessions, all
-quality gates, and zero policy violations pass.
+**No-go** for model-influenced production email until at least 250 replay
+packets across at least 20 issuers, at least 50 material-transition cases,
+30–60 live shadow sessions, all quality gates, and zero policy violations pass.
 
 **Permanent no-go** for broker or order authority inside this repository.
 

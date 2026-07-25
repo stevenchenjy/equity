@@ -18,13 +18,16 @@ from typing import Any
 from phase5r_daily_common import ROOT, iso_now
 from phase5r_llm_transition_annotations import (
     ANNOTATION_SET_SCHEMA_VERSION,
+    DEFAULT_RUBRIC_PATH,
 )
 from verify_phase5r_llm_provider_replay_gate import (
     CORPUS_MANIFEST_PATH,
     MANIFEST_SCHEMA_VERSION,
+    MINIMUM_REAL_ISSUERS,
     MINIMUM_REAL_PACKETS,
     REFERENCE_RUBRIC_VERSION,
     _load_corpus,
+    sha256_bytes,
 )
 
 
@@ -52,20 +55,46 @@ def build_incomplete_template(corpus: Any) -> dict[str, Any]:
                 "reference_classification": None,
                 "reference_thesis_direction": None,
                 "evidence_source_ids": [],
+                "consensus_rationale": "",
                 "consensus_rationale_sha256": "",
                 "reviewer_attestations": [],
+                "adjudication": {
+                    "required": None,
+                    "adjudicator_id_sha256": "",
+                    "adjudicated_at": "",
+                    "adjudication_rationale": "",
+                    "adjudication_rationale_sha256": "",
+                    "adjudication_sha256": "",
+                },
                 "record_sha256": "",
             }
         )
+    rubric_raw = DEFAULT_RUBRIC_PATH.read_bytes()
     return {
         "schema_version": ANNOTATION_SET_SCHEMA_VERSION,
         "generated_at": iso_now(),
         "corpus_manifest_sha256": corpus.manifest_sha256,
         "corpus_schema_version": MANIFEST_SCHEMA_VERSION,
-        "rubric_version": REFERENCE_RUBRIC_VERSION,
+        "rubric": {
+            "version": REFERENCE_RUBRIC_VERSION,
+            "relative_path": DEFAULT_RUBRIC_PATH.relative_to(ROOT).as_posix(),
+            "file_sha256": sha256_bytes(rubric_raw),
+        },
         "frozen": False,
         "annotation_method": "independent_dual_review",
         "records": records,
+        "review_statistics": {
+            "record_count": 0,
+            "independent_review_count_total": 0,
+            "minimum_reviewers_per_record": 0,
+            "initial_unanimous_count": 0,
+            "initial_disagreement_count": 0,
+            "initial_exact_agreement_pct": 0.0,
+            "adjudicated_count": 0,
+            "unresolved_disagreement_count": 0,
+            "final_consensus_count": 0,
+            "final_consensus_pct": 0.0,
+        },
         "annotation_set_sha256": "",
     }
 
@@ -114,6 +143,7 @@ def main() -> int:
     corpus = _load_corpus(
         args.manifest.expanduser().resolve(),
         minimum_packets=MINIMUM_REAL_PACKETS,
+        minimum_issuers=MINIMUM_REAL_ISSUERS,
     )
     template = build_incomplete_template(corpus)
     _exclusive_write_json(args.output, template)

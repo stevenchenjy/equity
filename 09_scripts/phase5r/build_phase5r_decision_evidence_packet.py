@@ -14,7 +14,7 @@ import hashlib
 import json
 import re
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, time, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any, Iterable
@@ -22,6 +22,7 @@ from typing import Any, Iterable
 from phase5r_daily_common import (
     ACCOUNT_STATE_PATH,
     DAILY_DECISION_JSON_PATH,
+    ET,
     EVIDENCE_LEDGER_PATH,
     EVIDENCE_STATUS_PATH,
     FUNDAMENTALS_PATH,
@@ -40,6 +41,8 @@ from phase5r_daily_common import (
     sha256_file,
 )
 from phase5r_llm_contract import PACKET_SCHEMA_VERSION, validate_packet
+from phase5r_evidence_freshness import build_evidence_freshness_receipt
+from phase5r_return_objective import return_objective_payload
 from phase5r_sec_acceptance import acceptance_map
 
 
@@ -129,6 +132,242 @@ def _safe_time(value: str) -> datetime | None:
     except (TypeError, ValueError):
         return None
     return parsed if parsed.tzinfo is not None else None
+
+
+def _utc_text(value: Any) -> str:
+    parsed = _safe_time(str(value or ""))
+    if parsed is None:
+        return ""
+    return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _date_from_period(value: Any) -> str:
+    match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", str(value or ""))
+    return match.group(0) if match else ""
+
+
+def _evidence_freshness_receipts(
+    *,
+    tickers: set[str],
+    as_of: str,
+    verified_close_session: str,
+    evidence_status: dict[str, Any],
+    market_observations: list[dict[str, Any]],
+    valuation_evidence: list[dict[str, Any]],
+    source_catalog: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Build ticker-local receipts without fetching or inferring evidence."""
+
+    as_of_utc = _utc_text(as_of)
+    market_by_ticker = {
+        str(row.get("ticker", "")).upper(): row
+        for row in market_observations
+        if row.get("ticker")
+    }
+    valuation_by_ticker = {
+        str(row.get("ticker", "")).upper(): row
+        for row in valuation_evidence
+        if row.get("ticker")
+    }
+    scanned_tickers = {
+        str(value).upper()
+        for value in evidence_status.get("scanned_tickers", [])
+        if isinstance(value, str) and value
+    }
+    status_digest = (
+        sha256_file(EVIDENCE_STATUS_PATH)
+        if EVIDENCE_STATUS_PATH.exists()
+        else ""
+    )
+    receipts: list[dict[str, Any]] = []
+    for ticker in sorted(tickers):
+        market_row = market_by_ticker.get(ticker, {})
+        valuation_row = valuation_by_ticker.get(ticker, {})
+        valuation_inputs = {
+            str(row.get("input_id", "")): row
+            for row in valuation_row.get("input_receipts", [])
+            if isinstance(row, dict)
+        }
+        share_price = valuation_inputs.get("share_price", {})
+        scenario_times = sorted(
+            {
+                _utc_text(
+                    valuation_inputs.get(input_id, {}).get(
+                        "available_at_utc",
+                        "",
+                    )
+                )
+                for input_id in (
+                    "target_price_assumption",
+                    "downside_price_assumption",
+                )
+                if _utc_text(
+                    valuation_inputs.get(input_id, {}).get(
+                        "available_at_utc",
+                        "",
+                    )
+                )
+            }
+        )
+        durable_sec_source_ids = sorted(
+            str(source["source_id"])
+            for source in source_catalog
+            if str(source.get("ticker", "")).upper() == ticker
+            and str(source.get("source_type", "")).startswith("sec_")
+            and source.get("authority") == "primary_official"
+        )
+        receipts.append(
+            build_evidence_freshness_receipt(
+                ticker=ticker,
+                as_of_utc=as_of_utc,
+                sec_scan={
+                    "status_artifact_sha256": status_digest,
+                    "completed_through_utc": _utc_text(
+                        evidence_status.get("last_success_at", "")
+                    ),
+                    "ticker_scanned": ticker in scanned_tickers,
+                    "complete": (
+                        evidence_status.get("scan_status") == "ok"
+                        and ticker in scanned_tickers
+                    ),
+                },
+                market={
+                    "observed_at_utc": _utc_text(
+                        market_row.get("data_timestamp", "")
+                    ),
+                    "market_session_date": str(
+                        market_row.get("market_session_date", "")
+                    ),
+                    "expected_market_session_date": verified_close_session,
+                    "complete_close": (
+                        market_row.get("bar_state") == "complete_close"
+                    ),
+                },
+                valuation={
+                    "valuation_receipt_sha256": str(
+                        valuation_row.get("receipt_sha256", "")
+                    ),
+                    "receipt_as_of_utc": str(
+                        valuation_row.get("as_of_utc", "")
+                    ),
+                    "market_input_at_utc": _utc_text(
+                        share_price.get("available_at_utc", "")
+                    ),
+                    "market_session_date": _date_from_period(
+                        share_price.get("period", "")
+                    ),
+                    "expected_market_session_date": verified_close_session,
+                    "scenario_refreshed_at_utc": (
+                        scenario_times[-1] if scenario_times else ""
+                    ),
+                    "complete": (
+                        valuation_row.get("sufficiency", {}).get(
+                            "decision_sufficient"
+                        )
+                        is True
+                        and valuation_row.get("guardrails", {}).get(
+                            "action_grade_valuation_permitted"
+                        )
+                        is True
+                    ),
+                },
+                durable_sec_source_ids=durable_sec_source_ids,
+            )
+        )
+    return receipts
+
+
+def _decision_tickers(values: Any) -> set[str]:
+    """Accept current string rows and the legacy ``{"ticker": ...}`` shape."""
+
+    if not isinstance(values, list):
+        return set()
+    tickers: set[str] = set()
+    for value in values:
+        raw = value.get("ticker", "") if isinstance(value, dict) else value
+        ticker = str(raw or "").strip().upper()
+        if ticker:
+            tickers.add(ticker)
+    return tickers
+
+
+def _allowed_classifications_by_ticker(
+    decision: dict[str, Any],
+    entities: list[dict[str, Any]],
+) -> dict[str, list[str]]:
+    """Translate the deterministic C9 decision into a per-ticker policy cap.
+
+    The map is consumed only by the deterministic adjudicator and is removed
+    from every semantic model view.  A model may therefore form an independent
+    opinion, but it cannot promote a classification that C9 has not opened.
+    """
+
+    held_rows = {
+        str(row.get("ticker", "")).strip().upper(): row
+        for row in decision.get("held_positions", [])
+        if isinstance(row, dict) and str(row.get("ticker", "")).strip()
+    }
+    candidate_rows = {
+        str(row.get("ticker", "")).strip().upper(): row
+        for row in decision.get("watch_candidates", [])
+        if isinstance(row, dict) and str(row.get("ticker", "")).strip()
+    }
+    eligible_tickers = _decision_tickers(
+        decision.get("eligible_action_review_candidates", [])
+    )
+    allowed: dict[str, list[str]] = {}
+    for entity in entities:
+        ticker = str(entity["ticker"]).upper()
+        role = str(entity["role"])
+        if role == "held":
+            action = str(held_rows.get(ticker, {}).get("action", "hold")).lower()
+            if "exit" in action or "sell" in action:
+                classifications = [
+                    "hold_existing",
+                    "trim_review",
+                    "exit_review",
+                    "abstain",
+                ]
+            elif "trim" in action or "reduce" in action:
+                classifications = [
+                    "hold_existing",
+                    "trim_review",
+                    "abstain",
+                ]
+            elif "add" in action or "buy" in action:
+                classifications = [
+                    "hold_existing",
+                    "paper_trade_candidate",
+                    "real_trade_candidate",
+                    "abstain",
+                ]
+            else:
+                classifications = ["hold_existing", "abstain"]
+        else:
+            candidate = candidate_rows.get(ticker, {})
+            action = str(candidate.get("action", "")).lower()
+            label = str(candidate.get("label", "")).lower()
+            c9_buy_review = (
+                ticker in eligible_tickers
+                and (
+                    "buy" in action
+                    or "add" in action
+                    or "entry" in action
+                    or label == "eligible_buy_review"
+                )
+            )
+            if c9_buy_review:
+                classifications = [
+                    "reject",
+                    "watchlist",
+                    "paper_trade_candidate",
+                    "real_trade_candidate",
+                    "abstain",
+                ]
+            else:
+                classifications = ["reject", "watchlist", "abstain"]
+        allowed[ticker] = classifications
+    return allowed
 
 
 def _source(
@@ -350,7 +589,9 @@ def _entities(
 
 
 def _market_observations(
-    tickers: set[str], as_of_et: str
+    tickers: set[str],
+    as_of_et: str,
+    verified_close_session: str = "",
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
     quality = {row.get("ticker", "").upper(): row for row in read_csv(MARKET_QUALITY_PATH)}
     as_of = _safe_time(as_of_et)
@@ -365,11 +606,24 @@ def _market_observations(
         parsed_timestamp = _safe_time(timestamp)
         if as_of and parsed_timestamp and parsed_timestamp > as_of:
             point_in_time_safe = False
+        close_cutoff: datetime | None = None
+        try:
+            if verified_close_session:
+                close_cutoff = datetime.combine(
+                    datetime.fromisoformat(verified_close_session).date(),
+                    time(16, 15),
+                    tzinfo=ET,
+                )
+        except ValueError:
+            close_cutoff = None
         complete_close = bool(
             as_of
-            and as_of.strftime("%H:%M") >= "16:15"
-            and row.get("market_session_date") == as_of.date().isoformat()
-            and as_of.weekday() < 5
+            and parsed_timestamp
+            and close_cutoff
+            and row.get("market_session_date") == verified_close_session
+            and close_cutoff
+            <= parsed_timestamp.astimezone(ET)
+            <= as_of.astimezone(ET)
         )
         source_id = f"market:{ticker}:{row.get('market_session_date', 'unknown')}"
         public_row = {
@@ -727,6 +981,10 @@ def _research_context(
     return context, sources, calculations
 
 
+def _resolve_packet_as_of(as_of_et: str | None) -> str:
+    return as_of_et or iso_now()
+
+
 def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     decision = read_json(DAILY_DECISION_JSON_PATH)
     account = read_json(ACCOUNT_STATE_PATH)
@@ -735,7 +993,11 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     position_recommendations = read_csv(POSITION_RECOMMENDATION_PATH)
     candidates = read_csv(NEW_CANDIDATE_PATH)
     fundamentals = read_csv(FUNDAMENTALS_PATH)
-    as_of = as_of_et or str(decision.get("generated_at") or iso_now())
+    # This packet is a fresh point-in-time research snapshot.  The underlying
+    # deterministic decision may predate later verified SEC artifacts, so using
+    # its generation time here can falsely place already-local evidence in the
+    # future.  Historical replay callers always pass an explicit as-of.
+    as_of = _resolve_packet_as_of(as_of_et)
 
     entities = _entities(
         positions, candidates, position_recommendations, fundamentals
@@ -743,7 +1005,17 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     tickers = {row["ticker"] for row in entities}
     held_tickers = {row["ticker"] for row in entities if row["role"] == "held"}
 
-    market, market_sources, point_in_time_safe = _market_observations(tickers, as_of)
+    market_gate = decision.get("market_gate", {})
+    verified_close_session = (
+        str(market_gate.get("expected_market_session", ""))
+        if market_gate.get("complete_close_verified") is True
+        else ""
+    )
+    market, market_sources, point_in_time_safe = _market_observations(
+        tickers,
+        as_of,
+        verified_close_session,
+    )
     fundamental, fundamental_sources, fundamental_calculations = (
         _fundamental_observations(tickers)
     )
@@ -764,8 +1036,17 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     prompt_injection_text_detected = any(
         pattern in untrusted_text for pattern in _UNTRUSTED_INSTRUCTION_PATTERNS
     )
+    valuation_evidence: list[dict[str, Any]] = []
+    evidence_freshness = _evidence_freshness_receipts(
+        tickers=tickers,
+        as_of=as_of,
+        verified_close_session=verified_close_session,
+        evidence_status=evidence_status,
+        market_observations=market,
+        valuation_evidence=valuation_evidence,
+        source_catalog=source_catalog,
+    )
 
-    market_gate = decision.get("market_gate", {})
     boundaries = {
         "research_only": True,
         "canonical_effect": False,
@@ -793,6 +1074,7 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
             ),
             "single_stock_hard_cap_pct": account.get("single_stock_hard_cap_pct"),
             "cash_target_pct": account.get("cash_target_pct"),
+            "return_objective": return_objective_payload(),
             "manual_execution_only": True,
         },
         "gates": {
@@ -801,6 +1083,14 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
             # HOLD/WATCH research, but it is not a licensed SIP-grade action
             # source and therefore cannot independently unlock a transition.
             "market_data_action_grade": False,
+            "market_data_action_grade_tickers": [],
+            # No valuation receipt is promoted from the current source bundle.
+            # The deterministic valuation contract must validate a ticker
+            # before this list can contain it.
+            "valuation_action_grade_tickers": [],
+            "allowed_classifications_by_ticker": (
+                _allowed_classifications_by_ticker(decision, entities)
+            ),
             "sec_held_coverage_complete": evidence_status.get(
                 "held_coverage_complete"
             )
@@ -822,29 +1112,21 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
                 decision.get("action_stability_distinct_closes", 0) or 0
             ),
             "deterministic_transition_pending_tickers": sorted(
-                {
-                    str(value).upper()
-                    for value in decision.get("pending_stability_candidates", [])
-                    if str(value).strip()
-                }
+                _decision_tickers(decision.get("pending_stability_candidates", []))
             ),
             "deterministic_transition_eligible_tickers": sorted(
-                {
-                    str(row.get("ticker", "")).upper()
-                    for row in decision.get("eligible_action_review_candidates", [])
-                    if isinstance(row, dict) and str(row.get("ticker", "")).strip()
-                }
+                _decision_tickers(
+                    decision.get("eligible_action_review_candidates", [])
+                )
             ),
-            "verified_close_session": (
-                str(market_gate.get("expected_market_session", ""))
-                if market_gate.get("complete_close_verified") is True
-                else ""
-            ),
+            "verified_close_session": verified_close_session,
         },
         "market_observations": market,
         "fundamental_observations": fundamental,
         "filing_evidence": filings,
         "research_context": research,
+        "valuation_evidence": valuation_evidence,
+        "evidence_freshness": evidence_freshness,
         "calculations": fundamental_calculations + research_calculations,
         "source_catalog": source_catalog,
         "boundaries": boundaries,
@@ -868,7 +1150,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=PACKET_PATH)
     args = parser.parse_args()
 
-    verification_as_of = args.as_of or (iso_now() if args.check else None)
+    verification_as_of = args.as_of or iso_now()
     packet = build_packet(verification_as_of)
     if args.check:
         print(

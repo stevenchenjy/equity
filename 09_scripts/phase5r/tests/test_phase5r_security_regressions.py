@@ -86,7 +86,7 @@ class DecisionBoundaryRegressionTests(unittest.TestCase):
         self.assertEqual(result["stability"]["distinct_valid_closes"], 0)
         self.assertEqual(
             result["adjudication"]["effective_classification"],
-            "watchlist",
+            "hold_existing",
         )
 
     def test_invalid_canonical_close_sessions_fail_closed(self) -> None:

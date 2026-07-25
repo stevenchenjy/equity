@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import tempfile
 import unittest
@@ -8,8 +9,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from _support import SCRIPT_DIR  # noqa: F401
 from phase5r_llm_transition_annotations import (
     ANNOTATION_SET_SCHEMA_VERSION,
+    DEFAULT_RUBRIC_PATH,
     AnnotationError,
     check_annotation_readiness,
     validate_annotation_set,
@@ -69,6 +72,10 @@ class TransitionAnnotationTests(unittest.TestCase):
         sources = ["sec-primary:current", "sec-primary:prior"]
         attestations: list[dict[str, Any]] = []
         for index in range(2):
+            reviewer_rationale = (
+                f"Reviewer {index} found a material long-term change in "
+                "both cited primary filings."
+            )
             attestation = {
                 "reviewer_id_sha256": canonical_sha256(f"reviewer-{index}"),
                 "reviewed_at": f"2026-07-24T1{index}:00:00+00:00",
@@ -76,11 +83,24 @@ class TransitionAnnotationTests(unittest.TestCase):
                 "reference_classification": "paper_trade_candidate",
                 "reference_thesis_direction": "strengthening",
                 "evidence_source_ids": sources,
-                "reviewer_rationale_sha256": canonical_sha256(
-                    f"independent rationale {index}"
-                ),
+                "reviewer_rationale": reviewer_rationale,
+                "reviewer_rationale_sha256": hashlib.sha256(
+                    reviewer_rationale.encode("utf-8")
+                ).hexdigest(),
             }
             attestations.append(self._hashed(attestation, "attestation_sha256"))
+        consensus_rationale = (
+            "Both independent reviews agree that the current filing materially "
+            "strengthens the long-term evidence relative to the prior filing."
+        )
+        adjudication = {
+            "required": False,
+            "adjudicator_id_sha256": "",
+            "adjudicated_at": "",
+            "adjudication_rationale": "",
+            "adjudication_rationale_sha256": "",
+        }
+        adjudication = self._hashed(adjudication, "adjudication_sha256")
         record = {
             "case_id": self.case_id,
             "transition_fingerprint": self.fingerprint,
@@ -90,8 +110,12 @@ class TransitionAnnotationTests(unittest.TestCase):
             "reference_classification": "paper_trade_candidate",
             "reference_thesis_direction": "strengthening",
             "evidence_source_ids": sources,
-            "consensus_rationale_sha256": canonical_sha256("consensus"),
+            "consensus_rationale": consensus_rationale,
+            "consensus_rationale_sha256": hashlib.sha256(
+                consensus_rationale.encode("utf-8")
+            ).hexdigest(),
             "reviewer_attestations": attestations,
+            "adjudication": adjudication,
         }
         record = self._hashed(record, "record_sha256")
         payload = {
@@ -99,10 +123,30 @@ class TransitionAnnotationTests(unittest.TestCase):
             "generated_at": "2026-07-24T12:00:00+00:00",
             "corpus_manifest_sha256": self.corpus.manifest_sha256,
             "corpus_schema_version": MANIFEST_SCHEMA_VERSION,
-            "rubric_version": REFERENCE_RUBRIC_VERSION,
+            "rubric": {
+                "version": REFERENCE_RUBRIC_VERSION,
+                "relative_path": DEFAULT_RUBRIC_PATH.relative_to(
+                    DEFAULT_RUBRIC_PATH.parents[1]
+                ).as_posix(),
+                "file_sha256": hashlib.sha256(
+                    DEFAULT_RUBRIC_PATH.read_bytes()
+                ).hexdigest(),
+            },
             "frozen": True,
             "annotation_method": "independent_dual_review",
             "records": [record],
+            "review_statistics": {
+                "record_count": 1,
+                "independent_review_count_total": 2,
+                "minimum_reviewers_per_record": 2,
+                "initial_unanimous_count": 1,
+                "initial_disagreement_count": 0,
+                "initial_exact_agreement_pct": 100.0,
+                "adjudicated_count": 0,
+                "unresolved_disagreement_count": 0,
+                "final_consensus_count": 1,
+                "final_consensus_pct": 100.0,
+            },
         }
         return self._hashed(payload, "annotation_set_sha256")
 
@@ -159,6 +203,35 @@ class TransitionAnnotationTests(unittest.TestCase):
         payload["annotation_set_sha256"] = canonical_sha256(payload)
         path, _ = self._write(payload)
         with self.assertRaisesRegex(AnnotationError, "independent"):
+            validate_annotation_set(
+                annotation_path=path,
+                corpus=self.corpus,
+                minimum_transitions=1,
+            )
+
+    def test_hash_only_consensus_rationale_fails(self) -> None:
+        payload = self._payload()
+        record = payload["records"][0]
+        record["consensus_rationale"] = ""
+        record.pop("record_sha256")
+        record["record_sha256"] = canonical_sha256(record)
+        payload.pop("annotation_set_sha256")
+        payload["annotation_set_sha256"] = canonical_sha256(payload)
+        path, _ = self._write(payload)
+        with self.assertRaisesRegex(AnnotationError, "inspectable"):
+            validate_annotation_set(
+                annotation_path=path,
+                corpus=self.corpus,
+                minimum_transitions=1,
+            )
+
+    def test_stale_rubric_hash_fails(self) -> None:
+        payload = self._payload()
+        payload["rubric"]["file_sha256"] = "9" * 64
+        payload.pop("annotation_set_sha256")
+        payload["annotation_set_sha256"] = canonical_sha256(payload)
+        path, _ = self._write(payload)
+        with self.assertRaisesRegex(AnnotationError, "rubric raw-byte hash"):
             validate_annotation_set(
                 annotation_path=path,
                 corpus=self.corpus,
