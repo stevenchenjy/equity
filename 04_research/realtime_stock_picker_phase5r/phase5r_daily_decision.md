@@ -1,10 +1,10 @@
-# Phase 5R 每日决策 — 2026-07-24
+# Phase 5R 每日决策 — 2026-07-25
 
 ## 决定性结论
 
-**继续持有现有仓位｜今天不新增仓位**
+**不采取新动作｜数据可靠性门槛未通过**
 
-保持长期视角；今日信息没有达到改变仓位建议的证据阈值。
+维持现有仓位，不新增候选；等待市场或官方证据数据恢复完整。
 
 这是研究建议，不是买卖指令；不会连接券商或自动下单。
 
@@ -23,15 +23,15 @@
 
 ## 可靠性门槛
 
-- 市场数据：通过；预期交易日 2026-07-24。
-- SEC 官方证据：通过；今日重大新事件 0 条。
-- 长期基本面：通过；收入趋势转弱标的 0 个。
+- 市场数据：未通过；预期交易日 2026-07-24。
+- SEC 官方证据：未通过；今日重大新事件 0 条。
+- 长期基本面：未通过；收入趋势转弱标的 0 个。
 - 账户与成交：结构化状态一致。
 
 ## 长期基本面
 
-- IOT: strong_growth；收入同比 30.52%；净利率 9.29%；期间 CY2026Q1。
-- RBRK: strong_growth；收入同比 38.99%；净利率 -10.81%；期间 CY2026Q1。
+- IOT: insufficient_trend；收入同比 n/a%；净利率 n/a%；期间 n/a。
+- RBRK: insufficient_trend；收入同比 n/a%；净利率 n/a%；期间 n/a。
 
 ## 深度与长期约束
 
@@ -46,7 +46,7 @@
 - human_review_required=no
 - automatic_action_allowed=no
 - send_recommended=yes
-- send_reason=weekday_daily_brief
+- send_reason=weekend_material_change
 - broker_connected=no
 - broker_account_read=no
 - order_code_created=no
