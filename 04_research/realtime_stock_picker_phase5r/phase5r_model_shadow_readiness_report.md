@@ -25,9 +25,13 @@ execution.
 
 ## Current evidence
 
-- 609 SEC accessions are inventoried.
-- 250 replay candidates are selected, but only six issuers are represented.
-- Zero packets are locally complete under the point-in-time corpus contract.
+- Ten genuine SEC point-in-time pilot candidates were acquired across six
+  issuers, using `37,968,013` bytes of local storage.
+- The original packet verifier passes all ten candidates, four material
+  transition cases, and five adversarial cases.
+- The stricter inventory reports `10/10` locally complete packets after
+  validating raw submissions, Company Facts snapshots, accession-level XBRL
+  reconciliation, and exact filing-index attachment discovery.
 - No real valuation receipt exists in the active model packet.
 - No provider replay, live shadow session, or activation receipt exists.
 
@@ -38,12 +42,13 @@ fixtures prove contract safety, not investment skill.
 
 - Canonical daily guard: PASS
 - Safe-shadow controls: PASS
-- Full local tests: `350/350`
+- Full local tests: `360/360`
 - Real provider invoked: no
+- Physical calls/tokens/cost: `0/30`, `0`, `$0.00/$5.00`
 - Email/SMTP effect: no
 - Broker/account/order/trade effect: no
-- Live shadow ready: no; external corpus, authorization, authentication, and
-  independent review are still required
+- Live shadow ready: no; external authentication and independent review are
+  still required
 
 The detailed authority is
 `00_project_control/phase5r_safe_shadow_readiness_report.md`.

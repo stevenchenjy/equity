@@ -190,20 +190,33 @@ def _cost_policy_checks(
         f"models={','.join(sorted(prices))}",
     )
 
-    authorizations = (
-        model_api["pilot"].get("authorized"),
-        model_api["qualification"].get("authorized"),
-        model_api["live_shadow"].get("authorized"),
-        policy["licensed_market_data"].get("authorized"),
-        policy["cross_provider_challenger"].get("authorized"),
-        policy["sec_corpus"].get("network_acquisition_authorized"),
-        policy["sec_corpus"].get("storage_budget_authorized"),
+    pilot_authorization = (
+        model_api["pilot"].get("authorized") is True
+        and model_api["pilot"].get("maximum_physical_calls") == 30
+        and model_api["pilot"].get("maximum_usd") == "5.00"
+        and policy["sec_corpus"].get("network_acquisition_authorized")
+        is True
+        and policy["sec_corpus"].get("required_contact_string_present")
+        is True
+        and policy["sec_corpus"].get("storage_budget_authorized") is True
+    )
+    later_spend_disabled = (
+        model_api["qualification"].get("authorized") is False
+        and model_api["live_shadow"].get("authorized") is False
+        and policy["licensed_market_data"].get("authorized") is False
+        and policy["cross_provider_challenger"].get("authorized") is False
     )
     _check(
         checks,
-        "policy.all_external_spend_disabled",
-        all(value is False for value in authorizations),
-        f"authorizations={authorizations}",
+        "policy.pilot_only_authorization",
+        pilot_authorization and later_spend_disabled,
+        (
+            f"pilot={model_api['pilot'].get('authorized')!r};"
+            f"calls={model_api['pilot'].get('maximum_physical_calls')!r};"
+            f"usd={model_api['pilot'].get('maximum_usd')!r};"
+            f"qualification={model_api['qualification'].get('authorized')!r};"
+            f"live={model_api['live_shadow'].get('authorized')!r}"
+        ),
     )
     _check(
         checks,

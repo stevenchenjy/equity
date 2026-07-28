@@ -10,7 +10,7 @@
   "broker_connection_allowed": false,
   "order_code_allowed": false,
   "model_api": {
-    "activation_state": "disabled_pending_external_authorization_and_quality_gates",
+    "activation_state": "pilot_authorized_but_blocked_by_strict_corpus_quality_and_external_auth",
     "provider": "openai",
     "transport": "responses_api_injected_client",
     "repository_constructs_authenticated_client": false,
@@ -51,7 +51,7 @@
       "multi_agent": "disabled"
     },
     "pilot": {
-      "authorized": false,
+      "authorized": true,
       "maximum_physical_calls": 30,
       "maximum_usd": "5.00",
       "assumed_input_tokens_per_call": 20000,
@@ -101,12 +101,12 @@
   },
   "sec_corpus": {
     "public_api_cost_usd": "0.00",
-    "network_acquisition_authorized": false,
-    "required_contact_string_present": false,
+    "network_acquisition_authorized": true,
+    "required_contact_string_present": true,
     "pilot_target_packets": 10,
     "qualification_target_packets": 250,
     "qualification_target_issuers": 20,
-    "storage_budget_authorized": false,
+    "storage_budget_authorized": true,
     "typical_storage_estimate_bytes": 958892732,
     "planning_upper_storage_bytes": 61352181760
   },

@@ -358,5 +358,9 @@
   "356": "execute_blinded_challenger",
   "357": "enable_phase5r_llm_live_shadow.py",
   "358": "valuation_packet_calculations",
-  "359": "ExclusiveFileLock"
+  "359": "ExclusiveFileLock",
+  "360": ".begin_attempt",
+  "361": "Phase 5R External Decision Brief",
+  "362": "Phase 5R Model Shadow Readiness — Research Summary",
+  "363": "ShadowOutputLock"
 }

@@ -10,6 +10,19 @@ Economical dependency authority as of 2026-07-27:
 `00_project_control/phase5r_economical_dependency_decision.md`. Where older
 cost or dependency examples below differ, the 2026-07-27 closed policy wins.
 
+## 2026-07-27 pilot execution update
+
+The bounded pilot is authorized for one provider family, at most 30 physical
+calls and $5. Ten genuine SEC candidate packets now pass both the original
+corpus verifier and strict `10/10` inventory after submissions, Company Facts,
+accession-level XBRL reconciliation, and attachment discovery were added.
+External provider authentication is absent, so inference has not started.
+
+Actual result: `0/30` calls, zero input/cached/cache-write/output tokens, and
+`$0.00/$5.00`. Citation accuracy, unsupported claims, model disagreement, and
+critic value are not measurable without valid model outputs; no synthetic
+measurements or anonymous claim-review set were fabricated.
+
 ## Current decision
 
 Proceed with a leakage-free three-role model layer plus deterministic
@@ -65,7 +78,7 @@ and [GPT-5.6 release and pricing](https://openai.com/index/gpt-5-6/).
 | D3 full-label replay corpus | Minimum-size/diversity gates plus single-split and three-fold issuer/time purge/embargo receipts complete locally; real acquisition and labels blocked | 250–300 locally complete packets, 20+ issuers, 50+ material transitions, 50+ separate adversarial probes, material and no-change/uncertain labels, and real frozen multi-fold scores |
 | D4 point-in-time performance | Rolling 12/36/60-month receipt and deterministic sequential paper simulator complete with synthetic tests; real ledger absent | real next-session paper ledger, calibrated costs/cash/corporate actions, benchmarks, drawdown/turnover/CI |
 | D5 external blinded challenger | Closed contract, deterministic comparison, injected Anthropic Messages adapter, and offline fixtures complete; no credentials or calls | exact provider-specific schema preflight, frozen cross-family model/version, retention approval, issuer-held-out qualification, and explicit cost/call authorization |
-| Q1 30-physical-call provider smoke | Not authorized | 10 packets × Luna analyst + the same 10 × Terra analyst + 10 precommitted Sol committee/critic requests, preferably Batch; all receipts valid; no canonical or email effect; $5 cap |
+| Q1 30-physical-call provider smoke | Authorized and corpus-ready; blocked only by external auth | 10 strictly complete packets × Luna analyst + the same 10 × Terra analyst + 10 precommitted Sol committee/critic requests, preferably Batch; all receipts valid; no canonical or email effect; $5 cap |
 | Q2 qualification replay | Blocked by corpus/auth | all decision-quality confidence-bound gates pass |
 | Q2C cross-provider critic benchmark | Deferred and not required for initial shadow | buy only if the same-provider critic leaves measured correlated errors or inadequate unique catches |
 | Q3 live shadow | Blocked by Q2/corpus/auth | 30–60 completed research-only market sessions without boundary/data-quality failure; public market context cannot unlock action-grade transitions |
@@ -656,7 +669,7 @@ is execution authority.
 
 ## Verification snapshot
 
-- Full integrated local suite: PASS, `350/350`, including the economical
+- Full integrated local suite: PASS, `360/360`, including the economical
   same-provider initial-shadow policy and explicit paid-challenger opt-in.
 - Cost-router planner/gate, durable exact-role fixture execution and metering,
   three-fold issuer/time validation, freshness, research/action separation,

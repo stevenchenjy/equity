@@ -44,6 +44,11 @@ from phase5r_llm_contract import PACKET_SCHEMA_VERSION, validate_packet
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
 from phase5r_sec_acceptance import acceptance_map
+from phase5r_valuation_evidence_v1 import valuation_packet_calculations
+from phase5r_valuation_input_bundle import (
+    DEFAULT_BUNDLE_PATH as DEFAULT_VALUATION_BUNDLE_PATH,
+    load_valuation_input_bundle,
+)
 
 
 PACKET_PATH = (
@@ -985,7 +990,12 @@ def _resolve_packet_as_of(as_of_et: str | None) -> str:
     return as_of_et or iso_now()
 
 
-def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
+def build_packet(
+    as_of_et: str | None = None,
+    *,
+    valuation_bundle_path: Path = DEFAULT_VALUATION_BUNDLE_PATH,
+    valuation_source_root: Path = ROOT,
+) -> dict[str, Any]:
     decision = read_json(DAILY_DECISION_JSON_PATH)
     account = read_json(ACCOUNT_STATE_PATH)
     evidence_status = read_json(EVIDENCE_STATUS_PATH, {})
@@ -1021,7 +1031,19 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     )
     filings, filing_sources, artifact_covered = _filing_evidence(tickers)
     research, research_sources, research_calculations = _research_context(tickers)
-    source_catalog = market_sources + fundamental_sources + filing_sources + research_sources
+    valuation_evidence, valuation_sources = load_valuation_input_bundle(
+        path=valuation_bundle_path,
+        packet_as_of=as_of,
+        active_tickers=tickers,
+        project_root=valuation_source_root,
+    )
+    source_catalog = (
+        market_sources
+        + fundamental_sources
+        + filing_sources
+        + research_sources
+        + valuation_sources
+    )
     untrusted_text = json.dumps(
         {
             "entities": entities,
@@ -1036,7 +1058,17 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
     prompt_injection_text_detected = any(
         pattern in untrusted_text for pattern in _UNTRUSTED_INSTRUCTION_PATTERNS
     )
-    valuation_evidence: list[dict[str, Any]] = []
+    valuation_calculations = [
+        calculation
+        for receipt in valuation_evidence
+        for calculation in valuation_packet_calculations(receipt)
+    ]
+    valuation_action_grade_tickers = sorted(
+        receipt["ticker"]
+        for receipt in valuation_evidence
+        if receipt["sufficiency"]["decision_sufficient"] is True
+        and receipt["guardrails"]["action_grade_valuation_permitted"] is True
+    )
     evidence_freshness = _evidence_freshness_receipts(
         tickers=tickers,
         as_of=as_of,
@@ -1084,10 +1116,11 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
             # source and therefore cannot independently unlock a transition.
             "market_data_action_grade": False,
             "market_data_action_grade_tickers": [],
-            # No valuation receipt is promoted from the current source bundle.
-            # The deterministic valuation contract must validate a ticker
-            # before this list can contain it.
-            "valuation_action_grade_tickers": [],
+            # This list is derived only from sealed, locally re-hashed
+            # valuation input bundles. Public market data remains non-action
+            # grade, so a valuation receipt cannot independently authorize an
+            # action transition.
+            "valuation_action_grade_tickers": valuation_action_grade_tickers,
             "allowed_classifications_by_ticker": (
                 _allowed_classifications_by_ticker(decision, entities)
             ),
@@ -1127,7 +1160,11 @@ def build_packet(as_of_et: str | None = None) -> dict[str, Any]:
         "research_context": research,
         "valuation_evidence": valuation_evidence,
         "evidence_freshness": evidence_freshness,
-        "calculations": fundamental_calculations + research_calculations,
+        "calculations": (
+            fundamental_calculations
+            + research_calculations
+            + valuation_calculations
+        ),
         "source_catalog": source_catalog,
         "boundaries": boundaries,
     }

@@ -58,7 +58,7 @@ status and was not retried, preserving the no-duplicate policy.
 
 - Canonical daily guard: PASS
 - Daily scheduler status: PASS
-- Full Phase 5R Python suite: PASS, `350/350`
+- Full Phase 5R Python suite: PASS, `360/360`
 - Safe-shadow controls: PASS
 - Live shadow launch ready: no
 - Model/provider invoked during verification: no
@@ -68,3 +68,17 @@ status and was not retried, preserving the no-duplicate policy.
 
 The model layer remains outside the daily critical path. Missing or stale model
 artifacts cannot delay, change, or send the canonical daily decision.
+
+## Bounded model-pilot update
+
+Ten genuine SEC point-in-time candidate packets were acquired within the
+authorized 5 GB ceiling; the completed corpus occupies exactly `37,968,013`
+bytes. The original corpus verifier and stricter inventory now both pass
+`10/10`, including submissions, Company Facts, accession XBRL reconciliation,
+and filing-index-bound exhibit discovery.
+
+The provider run remains unstarted because external authentication is absent:
+`0/30` model calls, zero tokens, and `$0.00/$5.00`. No shadow scheduler was
+installed, and daily internal monitoring remains unchanged. Future
+material-event alerts plus a weekly user summary are planning only; current
+email behavior was not modified.

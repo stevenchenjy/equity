@@ -19,6 +19,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import inventory_phase5r_llm_replay_corpus as inventory
+import phase5r_strict_replay_artifacts as strict_artifacts
 import prepare_phase5r_llm_replay_corpus as prepare
 from phase5r_sec_acceptance import (
     build_acceptance_index,
@@ -132,8 +133,35 @@ def write_corpus_sec_sources(
     row = normalized_row(raw_row)
     paths = prepare.filing_paths(corpus_root, row)
     paths["directory"].mkdir(parents=True, exist_ok=True)
-    primary = f"primary:{row['accession']}".encode()
-    filing_index = f"index:{row['accession']}".encode()
+    primary = (
+        "<html><body>"
+        '<ix:nonFraction name="us-gaap:Revenue">1</ix:nonFraction>'
+        f" primary:{row['accession']}</body></html>"
+    ).encode()
+    exhibit_raw = b"official exhibit"
+    exhibit_document = f"{row['ticker'].lower()}-ex99-1.htm"
+    exhibit_row = ""
+    if row["form"] in {"6-K", "6-K/A", "8-K", "8-K/A"}:
+        exhibit_row = (
+            "<tr><td>2</td><td>EX-99.1</td>"
+            f'<td><a href="/Archives/edgar/data/{int(row["cik"])}/'
+            f'{row["accession"].replace("-", "")}/{exhibit_document}">'
+            f"{exhibit_document}</a></td><td>EX-99.1</td>"
+            f"<td>{len(exhibit_raw)}</td></tr>"
+        )
+    filing_index = (
+        "<html><body>"
+        f"<div>Accepted {row['filing_date']} 17:00:00</div>"
+        '<table class="tableFile" summary="Document Format Files">'
+        "<tr><th>Seq</th><th>Description</th><th>Document</th>"
+        "<th>Type</th><th>Size</th></tr>"
+        "<tr><td>1</td><td>Primary</td>"
+        f'<td><a href="/Archives/edgar/data/{int(row["cik"])}/'
+        f'{row["accession"].replace("-", "")}/{row["primary_document"]}">'
+        f'{row["primary_document"]}</a></td><td>{row["form"]}</td>'
+        f"<td>{len(primary)}</td></tr>"
+        f"{exhibit_row}</table></body></html>"
+    ).encode()
     if include_primary:
         paths["primary"].write_bytes(primary)
     paths["index"].write_bytes(filing_index)
@@ -145,6 +173,7 @@ def write_corpus_sec_sources(
         "index_url": row["index_url"],
         "primary_raw_sha256": prepare.sha256_bytes(primary),
         "index_raw_sha256": prepare.sha256_bytes(filing_index),
+        "accepted_at_et": f"{row['filing_date']}T17:00:00-04:00",
     }
     paths["metadata"].write_text(
         json.dumps(metadata, sort_keys=True), encoding="utf-8"
@@ -197,33 +226,70 @@ def write_xbrl_source(
 ) -> None:
     directory = corpus_root / "xbrl" / raw_row["ticker"]
     directory.mkdir(parents=True, exist_ok=True)
-    raw = b'{"facts":{}}'
+    row = normalized_row(raw_row)
+    payload = {
+        "cik": int(row["cik"]),
+        "entityName": row["ticker"],
+        "facts": {
+            "us-gaap": {
+                "Revenue": {
+                    "label": "Revenue",
+                    "description": "Revenue",
+                    "units": {
+                        "USD": [
+                            {
+                                "start": row["filing_date"],
+                                "end": row["filing_date"],
+                                "val": 1,
+                                "accn": row["accession"],
+                                "filed": row["filing_date"],
+                                "form": row["form"],
+                                "fy": int(row["filing_date"][:4]),
+                                "fp": "Q1",
+                            }
+                        ]
+                    },
+                }
+            }
+        },
+    }
+    raw = json.dumps(payload, sort_keys=True).encode()
     (directory / "companyfacts.raw.json").write_bytes(raw)
     (directory / "source_metadata.json").write_text(
         json.dumps(
             {
+                "schema_version": strict_artifacts.COMPANYFACTS_SCHEMA_VERSION,
                 "ticker": raw_row["ticker"],
                 "cik": raw_row["cik"],
+                "url": strict_artifacts.companyfacts_url(raw_row["cik"]),
+                "content_type": "application/json",
+                "charset": "utf-8",
                 "raw_sha256": prepare.sha256_bytes(raw),
+                "raw_bytes": len(raw),
+                "retrieved_at": "2027-01-01T00:00:00+00:00",
+                "source_role": (
+                    "current_companyfacts_cross_check_only_not_historical"
+                ),
             }
         ),
         encoding="utf-8",
     )
-    row = normalized_row(raw_row)
-    primary = f"primary:{row['accession']}".encode()
+    primary = prepare.filing_paths(corpus_root, row)["primary"].read_bytes()
     reconciliation_path = (
         prepare.filing_paths(corpus_root, row)["directory"]
         / "xbrl_reconciliation.json"
     )
     reconciliation_path.write_text(
         json.dumps(
-            {
-                "ticker": row["ticker"],
-                "cik": row["cik"],
-                "accession": row["accession"],
-                "source_primary_sha256": prepare.sha256_bytes(primary),
-                "future_facts_excluded": True,
-            }
+            strict_artifacts.build_xbrl_reconciliation(
+                row=row,
+                accepted_at_et=(
+                    f"{row['filing_date']}T17:00:00-04:00"
+                ),
+                primary_raw=primary,
+                companyfacts_raw=raw,
+            ),
+            sort_keys=True,
         ),
         encoding="utf-8",
     )
@@ -234,31 +300,35 @@ def write_exhibit_manifest(
     raw_row: dict[str, str],
 ) -> None:
     row = normalized_row(raw_row)
-    directory = prepare.filing_paths(corpus_root, row)["directory"] / "exhibits"
-    directory.mkdir(parents=True, exist_ok=True)
-    exhibit = directory / "ex99-1.htm"
-    raw = b"official exhibit"
-    exhibit.write_bytes(raw)
-    (directory / "exhibit_manifest.json").write_text(
-        json.dumps(
-            {
-                "accession": row["accession"],
-                "discovery_complete": True,
-                "source_filing_index_sha256": prepare.sha256_bytes(
-                    f"index:{row['accession']}".encode()
-                ),
-                "documents": [
-                    {
-                        "relative_path": exhibit.relative_to(
-                            corpus_root
-                        ).as_posix(),
-                        "sha256": prepare.sha256_bytes(raw),
-                    }
-                ],
-            }
+    index_raw = prepare.filing_paths(corpus_root, row)["index"].read_bytes()
+
+    def fixture_fetcher(
+        url: str, user_agent: str, maximum_bytes: int
+    ) -> prepare.HttpResult:
+        del user_agent, maximum_bytes
+        return prepare.HttpResult(
+            raw_bytes=b"official exhibit",
+            content_type="text/html",
+            final_url=url,
+        )
+
+    context = strict_artifacts.AcquisitionContext(
+        user_agent="inventory-test test@example.com",
+        limiter=prepare.RequestLimiter(
+            2.0,
+            clock=lambda: 1.0,
+            sleeper=lambda _: None,
         ),
-        encoding="utf-8",
+        fetcher=fixture_fetcher,
     )
+    with prepare.storage_budget_scope(corpus_root, 10_000_000):
+        strict_artifacts.materialize_exhibit_manifest(
+            context=context,
+            corpus_root=corpus_root,
+            row=row,
+            index_raw=index_raw,
+            index_sha256=prepare.sha256_bytes(index_raw),
+        )
 
 
 def write_market_manifest(
@@ -302,18 +372,30 @@ def write_submission_snapshots(
             corpus_root / "sec_submissions" / f"CIK{int(cik):010d}"
         )
         directory.mkdir(parents=True, exist_ok=True)
-        raw = f"submissions:{ticker}:{cik}".encode()
+        raw = json.dumps(
+            {
+                "cik": str(int(cik)),
+                "name": ticker,
+                "filings": {"recent": {"accessionNumber": []}},
+            },
+            sort_keys=True,
+        ).encode()
         (directory / "submissions.raw.json").write_bytes(raw)
         (directory / "source_metadata.json").write_text(
             json.dumps(
                 {
+                    "schema_version": strict_artifacts.SUBMISSION_SCHEMA_VERSION,
                     "ticker": ticker,
                     "cik": cik,
-                    "url": (
-                        "https://data.sec.gov/submissions/"
-                        f"CIK{int(cik):010d}.json"
-                    ),
+                    "url": strict_artifacts.submissions_url(cik),
+                    "content_type": "application/json",
+                    "charset": "utf-8",
                     "raw_sha256": prepare.sha256_bytes(raw),
+                    "raw_bytes": len(raw),
+                    "retrieved_at": "2027-01-01T00:00:00+00:00",
+                    "source_role": (
+                        "current_submission_history_cross_check_only"
+                    ),
                 }
             ),
             encoding="utf-8",

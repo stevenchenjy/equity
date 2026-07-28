@@ -14,9 +14,25 @@ class SafeShadowReadinessTests(unittest.TestCase):
         self.assertTrue(result["safety_controls_passed"])
         self.assertTrue(result["local_controls_ready"])
         self.assertFalse(result["live_shadow_launch_ready"])
-        self.assertIn("sec_contact_string", result["external_blockers"])
-        self.assertIn(
+        self.assertNotIn("sec_contact_string", result["external_blockers"])
+        self.assertNotIn(
             "pilot_call_and_usd_authorization",
+            result["external_blockers"],
+        )
+        self.assertNotIn(
+            "complete_frozen_pilot_corpus",
+            result["external_blockers"],
+        )
+        self.assertEqual(
+            result["replay_status"]["pilot_complete_packets"], 10
+        )
+        self.assertTrue(result["replay_status"]["pilot_ready"])
+        self.assertIn(
+            "external_provider_authentication",
+            result["external_blockers"],
+        )
+        self.assertIn(
+            "independent_transition_and_citation_reviews",
             result["external_blockers"],
         )
         self.assertFalse(result["boundaries"]["provider_invoked"])
@@ -30,7 +46,7 @@ class SafeShadowReadinessTests(unittest.TestCase):
             for row in result["checks"]
         }
         self.assertTrue(checks["policy.cost_estimates_recomputed"])
-        self.assertTrue(checks["policy.all_external_spend_disabled"])
+        self.assertTrue(checks["policy.pilot_only_authorization"])
         self.assertTrue(
             checks["adapter.responses_usage_and_cache_normalized"]
         )

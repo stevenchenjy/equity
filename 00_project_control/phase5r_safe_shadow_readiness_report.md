@@ -5,7 +5,8 @@ Generated: 2026-07-27 ET
 ## Result
 
 Local safety controls: **PASS**  
-Live shadow launch ready: **NO — correctly blocked on external inputs**
+Live shadow launch ready: **NO — pilot corpus passes; external authentication
+and independent review remain**
 
 The current state is the intended stopping point before external spending:
 
@@ -14,7 +15,8 @@ The current state is the intended stopping point before external spending:
 - model mode is `offline_fixture`;
 - canonical and email influence are false;
 - the shadow LaunchAgent is absent;
-- no paid model, licensed data, or cross-provider challenger is authorized;
+- only the bounded 30-call/$5 Pilot is authorized; qualification, live Shadow,
+  licensed data, and cross-provider challenger remain unauthorized;
 - no provider, credential, SMTP, broker, account, order, or trade action
   occurred during verification.
 
@@ -72,30 +74,27 @@ retains worst-case cost after an unknown outcome.
 - The router supports zero/one/two/three same-provider calls; the fourth
   cross-provider role requires explicit policy opt-in.
 - Canonical daily and safe-shadow read-only guards pass.
-- Full test suite passes: `350/350`.
+- Full test suite passes: `360/360`.
 
 ## Evidence readiness
 
 - Replay ledger distinct accessions: `609`
 - Qualification cohort selected: `250`
 - Selected issuers: `6/20`
-- Locally complete pilot packets: `0`
-- Locally complete qualification packets: `0`
-- Typical qualification storage estimate: `958,892,732` bytes
-- Conservative planning upper estimate: `61,352,181,760` bytes
+- Narrow packets materialized and verified: `10`
+- Strictly complete pilot packets: `10`
+- Locally complete qualification packets: `14`
+- Typical qualification storage estimate: `956,795,580` bytes
+- Conservative planning upper estimate: `59,779,317,760` bytes
 
-The corpus selector and provenance verifier work, but current evidence is not a
-qualification corpus. Current daily SEC artifacts are useful operational
-evidence and cannot be relabeled as historical point-in-time proof.
+The original corpus verifier and stricter readiness inventory both pass the
+frozen ten-packet Pilot cohort. This is evidence/provenance readiness only, not
+model-quality or promotion evidence. No provider call was made.
 
 ## External blockers
 
-1. SEC-compliant project/contact string.
-2. A bounded corpus storage authorization.
-3. Completion of the frozen 10-packet pilot corpus.
-4. Explicit 30-call/$5 Batch authorization.
-5. External OpenAI authentication configured outside the repository.
-6. Two independent transition/citation reviewers.
+1. External OpenAI authentication configured outside the repository.
+2. Two independent transition/citation reviewers after model claims exist.
 
 Licensed market data and a cross-provider challenger are deliberately not
 blockers for the initial research-only shadow.

@@ -33,3 +33,5 @@ gmail_tokens/
 02_filings/phase5r_replay/
 02_filings/phase5r_llm_replay/
 08_reviews/phase5r_llm_provider_replay/quarantine/
+04_data/phase5r/phase5r_valuation_inputs.local.json
+04_data/phase5r/phase5r_valuation_source_*.local.*

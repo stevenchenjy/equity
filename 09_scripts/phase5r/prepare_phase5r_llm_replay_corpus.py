@@ -10,6 +10,7 @@ live model inference.
 from __future__ import annotations
 
 import argparse
+import contextvars
 import csv
 import hashlib
 import json
@@ -19,6 +20,7 @@ import re
 import tempfile
 import time
 import urllib.request
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, time as datetime_time, timedelta, timezone
 from html.parser import HTMLParser
@@ -59,6 +61,7 @@ DEFAULT_SEC_REQUESTS_PER_SECOND = 1.8
 MAX_PRIMARY_BYTES = 25 * 1024 * 1024
 MAX_INDEX_BYTES = 5 * 1024 * 1024
 MAX_MARKET_BYTES = 10 * 1024 * 1024
+DEFAULT_MAX_STORAGE_BYTES = 5_000_000_000
 
 ALLOWED_SEC_HOSTS = frozenset({"www.sec.gov", "sec.gov"})
 ALLOWED_MARKET_HOSTS = frozenset({"query1.finance.yahoo.com"})
@@ -95,6 +98,65 @@ EASTERN = ZoneInfo("America/New_York")
 
 class CorpusError(ValueError):
     """A fail-closed corpus preparation or validation error."""
+
+
+class StorageBudget:
+    """Track corpus bytes and reject writes before the authorized ceiling."""
+
+    def __init__(self, root: Path, maximum_bytes: int) -> None:
+        if (
+            not isinstance(maximum_bytes, int)
+            or isinstance(maximum_bytes, bool)
+            or maximum_bytes <= 0
+        ):
+            raise CorpusError("storage budget must be a positive integer")
+        self.root = root.resolve()
+        self.maximum_bytes = maximum_bytes
+        self.used_bytes = self._measure()
+        if self.used_bytes > maximum_bytes:
+            raise CorpusError("existing corpus already exceeds storage budget")
+
+    def _measure(self) -> int:
+        if not self.root.exists():
+            return 0
+        return sum(
+            path.stat().st_size
+            for path in self.root.rglob("*")
+            if path.is_file() and not path.is_symlink()
+        )
+
+    def check_write(self, path: Path, byte_count: int) -> int:
+        resolved = path.resolve()
+        if resolved != self.root and self.root not in resolved.parents:
+            raise CorpusError("storage-budget write escaped corpus root")
+        old_size = path.stat().st_size if path.exists() and path.is_file() else 0
+        # Atomic replacement creates a temporary file before replacing the old
+        # path, so enforce the transient high-water mark, not only final size.
+        if byte_count < 0 or self.used_bytes + byte_count > self.maximum_bytes:
+            raise CorpusError("storage budget would be exceeded")
+        return old_size
+
+    def commit_write(self, *, old_size: int, byte_count: int) -> None:
+        self.used_bytes = self.used_bytes - old_size + byte_count
+
+
+_ACTIVE_STORAGE_BUDGET: contextvars.ContextVar[StorageBudget | None] = (
+    contextvars.ContextVar("phase5r_corpus_storage_budget", default=None)
+)
+
+
+@contextmanager
+def storage_budget_scope(
+    corpus_root: Path, maximum_bytes: int
+) -> Iterable[StorageBudget]:
+    """Apply one fail-closed storage ceiling to every nested atomic write."""
+
+    budget = StorageBudget(corpus_root, maximum_bytes)
+    token = _ACTIVE_STORAGE_BUDGET.set(budget)
+    try:
+        yield budget
+    finally:
+        _ACTIVE_STORAGE_BUDGET.reset(token)
 
 
 @dataclass(frozen=True)
@@ -224,6 +286,8 @@ def utc_now() -> str:
 
 
 def atomic_write_bytes(path: Path, content: bytes) -> None:
+    budget = _ACTIVE_STORAGE_BUDGET.get()
+    old_size = budget.check_write(path, len(content)) if budget else 0
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=f".{path.name}.", dir=path.parent
@@ -234,6 +298,8 @@ def atomic_write_bytes(path: Path, content: bytes) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temporary_name, path)
+        if budget:
+            budget.commit_write(old_size=old_size, byte_count=len(content))
     finally:
         try:
             os.unlink(temporary_name)
@@ -1256,7 +1322,7 @@ def _load_prior_manifest(corpus_root: Path) -> dict[str, Any]:
     return payload
 
 
-def refresh_corpus(
+def _refresh_corpus_impl(
     *,
     ledger_path: Path = LEDGER_PATH,
     corpus_root: Path = CORPUS_ROOT,
@@ -1521,6 +1587,41 @@ def refresh_corpus(
     return manifest
 
 
+def refresh_corpus(
+    *,
+    ledger_path: Path = LEDGER_PATH,
+    corpus_root: Path = CORPUS_ROOT,
+    target_packet_count: int = MINIMUM_REAL_PACKETS,
+    target_transition_case_count: int = MINIMUM_MATERIAL_TRANSITION_PROBES,
+    target_adversarial_case_count: int = MINIMUM_ADVERSARIAL_SAFETY_PROBES,
+    candidate_padding: int = DEFAULT_CANDIDATE_PADDING,
+    user_agent: str,
+    sec_requests_per_second: float = DEFAULT_SEC_REQUESTS_PER_SECOND,
+    max_storage_bytes: int = DEFAULT_MAX_STORAGE_BYTES,
+    sec_fetcher: Fetcher = fetch_public_resource,
+    market_fetcher: Fetcher = fetch_public_resource,
+    clock: Clock = time.monotonic,
+    sleeper: Sleeper = time.sleep,
+) -> dict[str, Any]:
+    """Refresh under one exact storage ceiling covering every atomic write."""
+
+    with storage_budget_scope(corpus_root, max_storage_bytes):
+        return _refresh_corpus_impl(
+            ledger_path=ledger_path,
+            corpus_root=corpus_root,
+            target_packet_count=target_packet_count,
+            target_transition_case_count=target_transition_case_count,
+            target_adversarial_case_count=target_adversarial_case_count,
+            candidate_padding=candidate_padding,
+            user_agent=user_agent,
+            sec_requests_per_second=sec_requests_per_second,
+            sec_fetcher=sec_fetcher,
+            market_fetcher=market_fetcher,
+            clock=clock,
+            sleeper=sleeper,
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -1549,6 +1650,11 @@ def main() -> int:
         "--sec-requests-per-second",
         type=float,
         default=DEFAULT_SEC_REQUESTS_PER_SECOND,
+    )
+    parser.add_argument(
+        "--max-storage-bytes",
+        type=int,
+        default=DEFAULT_MAX_STORAGE_BYTES,
     )
     parser.add_argument("--allow-incomplete", action="store_true")
     args = parser.parse_args()
@@ -1580,6 +1686,7 @@ def main() -> int:
         candidate_padding=args.candidate_padding,
         user_agent=args.user_agent,
         sec_requests_per_second=args.sec_requests_per_second,
+        max_storage_bytes=args.max_storage_bytes,
     )
     requirements_met = bool(manifest["requirements"]["requirements_met"])
     print(

@@ -21,9 +21,15 @@ It is:
    until a measured gate justifies it.
 
 The machine-readable authority is
-`00_project_control/phase5r_paid_dependency_policy.json`. Every paid field is
-disabled. This decision does not authorize a model request, data purchase,
-credential read, email effect, broker connection, order, or trade.
+`00_project_control/phase5r_paid_dependency_policy.json`. The user has
+authorized only the bounded first pilot: at most 30 physical model calls and
+$5 total, using one provider family after the strict corpus and external-auth
+gates pass. The SEC acquisition and 5 GB local-storage ceiling are also
+authorized. Qualification, live shadow, model influence, email influence,
+licensed data, and any second provider remain disabled. The 2026-07-27 run
+repaired the strict corpus to `10/10` but still stopped before inference
+because external authentication is absent; actual provider calls, tokens, and
+cost remain zero.
 
 ## Why Luna is a benchmark, not the automatic default
 
@@ -118,13 +124,15 @@ cheaper and easier to audit than a provider-hosted multi-agent workflow.
 
 ## Remaining activation gates
 
-No paid or live step can begin until:
+No model request can begin until:
 
-- the SEC pilot corpus is locally complete;
-- a compliant SEC contact string and storage budget are supplied;
-- the user authorizes the exact call and USD cap;
 - external authentication is configured outside the repository;
 - the fixed private execution ledger and provider-native metering pass;
 - the offline provider replay and boundary gates pass; and
 - model influence, email eligibility, broker access, and order capability
   remain false.
+
+The SEC contact, 5 GB storage limit, 30-call limit, and $5 cap are already
+authorized for this pilot. This run passed the contact string at runtime and
+did not add it to the pilot policy, corpus metadata, logs, or reports.
+The strict point-in-time corpus requirement is now satisfied at `10/10`.

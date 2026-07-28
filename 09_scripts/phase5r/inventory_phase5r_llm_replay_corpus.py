@@ -23,6 +23,14 @@ from typing import Any, Iterable
 sys.dont_write_bytecode = True
 
 from phase5r_sec_acceptance import validate_acceptance_index
+from phase5r_strict_replay_artifacts import (
+    companyfacts_paths,
+    submission_paths,
+    validate_companyfacts_snapshot,
+    validate_exhibit_manifest,
+    validate_submission_snapshot,
+    validate_xbrl_reconciliation,
+)
 from prepare_phase5r_llm_replay_corpus import (
     CORPUS_ROOT,
     DEFAULT_CANDIDATE_PADDING,
@@ -397,6 +405,9 @@ def _manifest_collection_status(
     binding_field: str,
     expected_binding_sha256: str | None,
     project_root: Path,
+    row: dict[str, str] | None = None,
+    index_raw: bytes | None = None,
+    corpus_root: Path | None = None,
 ) -> dict[str, Any]:
     """Inspect a future hash manifest without treating loose files as complete."""
 
@@ -417,6 +428,32 @@ def _manifest_collection_status(
     }
     payload = _read_json_object(manifest_path)
     if payload is None or payload.get("accession") != accession:
+        return result
+    if (
+        row is not None
+        and index_raw is not None
+        and corpus_root is not None
+        and expected_binding_sha256 is not None
+    ):
+        strict = validate_exhibit_manifest(
+            manifest_path=manifest_path,
+            exhibit_directory=directory,
+            corpus_root=corpus_root,
+            row=row,
+            index_raw=index_raw,
+            index_sha256=expected_binding_sha256,
+        )
+        result.update(
+            {
+                "discovery_complete": strict["discovery_complete"],
+                "declared_file_count": strict["declared_file_count"],
+                "verified_file_count": strict["verified_file_count"],
+                "invalid_or_missing_file_count": strict[
+                    "invalid_or_missing_file_count"
+                ],
+                "binding_verified": strict["binding_verified"],
+            }
+        )
         return result
     binding_verified = bool(
         expected_binding_sha256
@@ -480,6 +517,9 @@ def _xbrl_reconciliation_status(
     *,
     row: dict[str, str],
     expected_primary_sha256: str | None,
+    accepted_at_et: str | None,
+    primary_raw: bytes | None,
+    companyfacts_raw: bytes | None,
     project_root: Path,
 ) -> dict[str, Any]:
     observation = _file_observation(path, project_root=project_root)
@@ -492,6 +532,21 @@ def _xbrl_reconciliation_status(
     }
     payload = _read_json_object(path)
     if payload is None:
+        return result
+    if (
+        expected_primary_sha256 is not None
+        and accepted_at_et is not None
+        and primary_raw is not None
+        and companyfacts_raw is not None
+    ):
+        strict = validate_xbrl_reconciliation(
+            path=path,
+            row=row,
+            accepted_at_et=accepted_at_et,
+            primary_raw=primary_raw,
+            companyfacts_raw=companyfacts_raw,
+        )
+        result.update(strict)
         return result
     identity_verified = bool(
         payload.get("ticker") == row["ticker"]
@@ -531,27 +586,27 @@ def _load_shared_xbrl(
         identity = (row["ticker"], row["cik"])
         if identity in statuses:
             continue
-        directory = corpus_root / "xbrl" / row["ticker"]
-        raw_path = directory / "companyfacts.raw.json"
-        metadata = _read_json_object(directory / "source_metadata.json")
-        observation = _file_observation(
-            raw_path,
-            project_root=project_root,
-            expected_sha256=(
-                metadata.get("raw_sha256") if metadata else None
-            ),
+        paths = companyfacts_paths(corpus_root, row["ticker"])
+        strict = validate_companyfacts_snapshot(
+            raw_path=paths["raw"],
+            metadata_path=paths["metadata"],
+            ticker=row["ticker"],
+            cik=row["cik"],
         )
-        identity_verified = bool(
-            metadata
-            and metadata.get("ticker") == row["ticker"]
-            and str(metadata.get("cik")) == row["cik"]
+        observation = _file_observation(
+            paths["raw"],
+            project_root=project_root,
+            expected_sha256=strict.get("sha256"),
         )
         statuses[identity] = {
             **observation,
-            "metadata_identity_verified": identity_verified,
-            "verified": bool(
-                observation["hash_verified"] and identity_verified
-            ),
+            "metadata_identity_verified": strict[
+                "metadata_identity_verified"
+            ],
+            "payload_identity_verified": strict[
+                "payload_identity_verified"
+            ],
+            "verified": strict["verified"],
         }
     return statuses
 
@@ -567,32 +622,27 @@ def _load_submission_snapshots(
         identity = (row["ticker"], row["cik"])
         if identity in statuses:
             continue
-        directory = corpus_root / "sec_submissions" / f"CIK{int(row['cik']):010d}"
-        raw_path = directory / "submissions.raw.json"
-        metadata = _read_json_object(directory / "source_metadata.json")
+        paths = submission_paths(corpus_root, row["cik"])
+        strict = validate_submission_snapshot(
+            raw_path=paths["raw"],
+            metadata_path=paths["metadata"],
+            ticker=row["ticker"],
+            cik=row["cik"],
+        )
         observation = _file_observation(
-            raw_path,
+            paths["raw"],
             project_root=project_root,
-            expected_sha256=(
-                metadata.get("raw_sha256") if metadata else None
-            ),
-        )
-        expected_url = (
-            "https://data.sec.gov/submissions/"
-            f"CIK{int(row['cik']):010d}.json"
-        )
-        identity_verified = bool(
-            metadata
-            and metadata.get("ticker") == row["ticker"]
-            and str(metadata.get("cik")) == row["cik"]
-            and metadata.get("url") == expected_url
+            expected_sha256=strict.get("sha256"),
         )
         statuses[identity] = {
             **observation,
-            "metadata_identity_verified": identity_verified,
-            "verified": bool(
-                observation["hash_verified"] and identity_verified
-            ),
+            "metadata_identity_verified": strict[
+                "metadata_identity_verified"
+            ],
+            "payload_identity_verified": strict[
+                "payload_identity_verified"
+            ],
+            "verified": strict["verified"],
         }
     return statuses
 
@@ -902,7 +952,14 @@ def inventory_replay_readiness(
             )
         )
 
-        filing_directory = filing_paths(corpus_root, row)["directory"]
+        filing_path_map = filing_paths(corpus_root, row)
+        filing_directory = filing_path_map["directory"]
+        source_metadata = _read_json_object(filing_path_map["metadata"])
+        index_raw = (
+            filing_path_map["index"].read_bytes()
+            if corpus_index["verified"]
+            else None
+        )
         exhibit_scope = (
             row["form"] in EXHIBIT_DISCOVERY_FORMS or "9.01" in items
         )
@@ -918,6 +975,9 @@ def inventory_replay_readiness(
                 else None
             ),
             project_root=project_root,
+            row=row,
+            index_raw=index_raw,
+            corpus_root=corpus_root,
         )
         exhibits.update(
             {
@@ -951,10 +1011,41 @@ def inventory_replay_readiness(
 
         xbrl_required = row["form"] in XBRL_FORMS
         xbrl_source = shared_xbrl[(row["ticker"], row["cik"])]
+        primary_raw_for_reconciliation: bytes | None = None
+        if corpus_primary["verified"]:
+            primary_raw_for_reconciliation = filing_path_map[
+                "primary"
+            ].read_bytes()
+        elif (
+            reusable_record
+            and reusable_primary
+            and reusable_primary["hash_verified"]
+            and reusable_identity_verified
+        ):
+            reusable_path = _safe_project_path(
+                reusable_primary.get("path"), project_root
+            )
+            if reusable_path is not None and _is_safe_regular_file(
+                reusable_path
+            ):
+                primary_raw_for_reconciliation = reusable_path.read_bytes()
+        companyfacts_raw: bytes | None = None
+        if xbrl_source["verified"]:
+            companyfacts_raw = companyfacts_paths(
+                corpus_root, row["ticker"]
+            )["raw"].read_bytes()
         xbrl_reconciliation = _xbrl_reconciliation_status(
             filing_directory / "xbrl_reconciliation.json",
             row=row,
             expected_primary_sha256=available_primary_sha256,
+            accepted_at_et=(
+                str(source_metadata.get("accepted_at_et"))
+                if source_metadata
+                and source_metadata.get("accepted_at_et")
+                else None
+            ),
+            primary_raw=primary_raw_for_reconciliation,
+            companyfacts_raw=companyfacts_raw,
             project_root=project_root,
         )
         xbrl = {

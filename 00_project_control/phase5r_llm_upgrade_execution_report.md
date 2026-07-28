@@ -5,8 +5,22 @@ Status: combined local contracts, cost-aware exact-role fixture execution,
 durable usage/cost accounting, fixed private cycle ledger, GPT-5.6 native cache
 metering, optional paid-challenger routing, ticker freshness, three-fold
 issuer/time isolation, and sequential paper evaluation are implemented;
-real-source corpus acquisition, external-provider replay, and live-shadow
-qualification remain pending
+ten real-source pilot packets are strict-complete; external-provider replay
+and live-shadow qualification remain pending
+
+## 2026-07-27 bounded pilot result
+
+All ten genuine SEC candidate packets now pass the original verifier and the
+stricter point-in-time inventory. Raw submissions, Company Facts,
+accession-level XBRL reconciliations, and filing-index-bound attachment
+discovery are complete. Corpus storage is exactly `37,968,013` bytes, below
+the 5 GB ceiling.
+
+Actual provider result: `0/30` calls, zero input/cached/cache-write/output
+tokens, and `$0.00/$5.00`. No citation, unsupported-claim, disagreement, or
+critic-value metric is reported because no model output exists. No anonymous
+claim-review set was fabricated. The shadow scheduler was not installed and
+the canonical decision and email paths were unchanged.
 
 ## Decisive conclusion
 
@@ -331,7 +345,7 @@ state was changed.
 
 | Check | Result |
 | --- | --- |
-| Combined full Phase 5R Python suite | PASS — 350/350, including the economical same-provider initial-shadow policy |
+| Combined full Phase 5R Python suite | PASS — 360/360, including the economical same-provider initial-shadow policy |
 | Leakage-free live/replay role inputs | PASS in the combined suite, including label/map hiding and role-scoped source checks |
 | Injected-client Responses adapter | Implemented and synthetic-client tested; no external call performed |
 | Blinded cross-family challenger | Closed proposal-free contract, deterministic comparison, and injected Anthropic adapter PASS offline; no external call performed |

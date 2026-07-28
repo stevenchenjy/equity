@@ -183,6 +183,42 @@ def build_small_corpus(
 
 
 class AcceptanceAndSelectionTests(unittest.TestCase):
+    def test_storage_ceiling_rejects_before_first_oversized_atomic_write(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            root = Path(directory_name)
+            ledger = root / "ledger.csv"
+            corpus = root / "corpus"
+            write_ledger(ledger, [ledger_row(0)])
+            sources = FakeSources()
+            clock = FakeClock()
+            with self.assertRaisesRegex(
+                prepare.CorpusError,
+                "storage budget would be exceeded",
+            ):
+                prepare.refresh_corpus(
+                    ledger_path=ledger,
+                    corpus_root=corpus,
+                    target_packet_count=1,
+                    target_transition_case_count=0,
+                    target_adversarial_case_count=0,
+                    candidate_padding=0,
+                    user_agent="Phase5RUnitTest/1.0 unit@example.com",
+                    sec_requests_per_second=2.0,
+                    max_storage_bytes=1,
+                    sec_fetcher=sources.sec,
+                    market_fetcher=sources.market,
+                    clock=clock.now,
+                    sleeper=clock.sleep,
+                )
+            used = sum(
+                path.stat().st_size
+                for path in corpus.rglob("*")
+                if path.is_file()
+            )
+            self.assertLessEqual(used, 1)
+
     def test_acceptance_parser_preserves_exact_second_and_dst_offset(self) -> None:
         raw = (
             b"<html><body><div>Accepted</div>"

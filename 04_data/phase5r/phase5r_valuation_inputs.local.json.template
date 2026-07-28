@@ -1,0 +1,19 @@
+{
+  "boundaries": {
+    "automatic_action_allowed": false,
+    "broker_account_read": false,
+    "broker_connected": false,
+    "canonical_effect": false,
+    "credentials_read": false,
+    "email_eligible": false,
+    "network_used": false,
+    "order_code_created": false,
+    "research_only": true,
+    "smtp_config_read": false,
+    "trade_placed": false
+  },
+  "bundle_sha256": "",
+  "prepared_at_utc": "2026-01-01T00:00:00Z",
+  "records": [],
+  "schema_version": "phase5r_valuation_input_bundle_v1"
+}

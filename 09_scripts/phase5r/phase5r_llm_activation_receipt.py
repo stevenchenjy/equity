@@ -82,7 +82,19 @@ RUNTIME_CODE_PATHS = (
     ROOT
     / "09_scripts"
     / "phase5r"
+    / "phase5r_valuation_input_bundle.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
     / "prepare_phase5r_llm_replay_corpus.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_strict_replay_artifacts.py",
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "inventory_phase5r_llm_replay_corpus.py",
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_llm_shadow.py",
     ROOT
     / "09_scripts"
