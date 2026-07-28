@@ -1,6 +1,6 @@
 # Phase 5R Daily Operational Status
 
-Generated: 2026-07-27 ET
+Generated: 2026-07-28 ET
 
 ## Active state
 
@@ -58,7 +58,7 @@ status and was not retried, preserving the no-duplicate policy.
 
 - Canonical daily guard: PASS
 - Daily scheduler status: PASS
-- Full Phase 5R Python suite: PASS, `360/360`
+- Full Phase 5R Python suite: PASS, `369/369`
 - Safe-shadow controls: PASS
 - Live shadow launch ready: no
 - Model/provider invoked during verification: no
@@ -77,8 +77,12 @@ bytes. The original corpus verifier and stricter inventory now both pass
 `10/10`, including submissions, Company Facts, accession XBRL reconciliation,
 and filing-index-bound exhibit discovery.
 
+The isolated OpenAI pilot runtime occupies about `32,964,608` bytes; together
+with the corpus, known pilot storage is about `70,932,621` bytes.
+
 The provider run remains unstarted because external authentication is absent:
-`0/30` model calls, zero tokens, and `$0.00/$5.00`. No shadow scheduler was
-installed, and daily internal monitoring remains unchanged. Future
+`0/30` model-inference calls, `0/30` non-inference token counts, zero tokens,
+and `$0.00/$5.00`. No shadow scheduler was installed, and daily internal
+monitoring remains unchanged. Future
 material-event alerts plus a weekly user summary are planning only; current
 email behavior was not modified.

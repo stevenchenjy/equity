@@ -1,6 +1,6 @@
 # Phase 5R Future Notification Plan
 
-Date: 2026-07-27 ET  
+Date: 2026-07-28 ET
 Status: planning only; current email behavior is unchanged
 
 ## Target operating model

@@ -1,4 +1,4 @@
-# Phase 5R 每日决策 — 2026-07-27
+# Phase 5R 每日决策 — 2026-07-28
 
 ## 决定性结论
 
@@ -23,7 +23,7 @@
 
 ## 可靠性门槛
 
-- 市场数据：通过；预期交易日 2026-07-27。
+- 市场数据：通过；预期交易日 2026-07-28。
 - SEC 官方证据：通过；今日重大新事件 0 条。
 - 长期基本面：通过；收入趋势转弱标的 0 个。
 - 账户与成交：结构化状态一致。
@@ -45,8 +45,8 @@
 
 - human_review_required=no
 - automatic_action_allowed=no
-- send_recommended=yes
-- send_reason=weekday_daily_brief
+- send_recommended=no
+- send_reason=before_daily_decision_time
 - broker_connected=no
 - broker_account_read=no
 - order_code_created=no

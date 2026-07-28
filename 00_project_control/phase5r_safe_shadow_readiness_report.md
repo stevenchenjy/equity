@@ -1,6 +1,6 @@
 # Phase 5R Safe-Shadow Readiness Report
 
-Generated: 2026-07-27 ET
+Generated: 2026-07-28 ET
 
 ## Result
 
@@ -12,7 +12,7 @@ The current state is the intended stopping point before external spending:
 
 - canonical workflow is `daily_decision / phase5r_daily`;
 - weekly and legacy send paths are closed;
-- model mode is `offline_fixture`;
+- model mode is `bounded_offline_shadow_pilot_ready_but_unstarted`;
 - canonical and email influence are false;
 - the shadow LaunchAgent is absent;
 - only the bounded 30-call/$5 Pilot is authorized; qualification, live Shadow,
@@ -37,16 +37,20 @@ Read-only verifier:
    criticism.
 5. The initial shadow stops at the same-provider Sol critic. A paid
    cross-provider challenger is optional and disabled.
-6. Offline replay uses Batch when separately authorized; live shadow uses
-   standard stateless Responses requests.
+6. The 30-call pilot uses synchronous stateless Responses requests so every
+   reservation, exact token count, response, and unknown outcome is durably
+   reconciled. No Batch discount is assumed.
 7. Public secondary market data is research/shadow context only. It cannot
    unlock an action-grade transition.
 
 ## Verified cost controls
 
-At the closed 20,000-input/8,000-output planning envelope:
+At the closed 24,000-input/3,800-output ceiling:
 
-- pilot: 10 Luna + 10 Terra + 10 Sol Batch requests = `$2.89` estimate;
+- pilot: 10 Luna + 10 Terra + 5 Sol committees + 5 Sol critics;
+- standard no-cache-write maximum: `$3.978`;
+- cache-write maximum: `$4.488`;
+- hard reservation including a 10% billing contingency: `$4.9368`;
 - pilot hard cap: `30` physical calls and `$5.00`;
 - qualification: 250 Terra analyst + 100 Sol committee/critic Batch requests =
   `$38.25` estimate;
@@ -58,13 +62,19 @@ At the closed 20,000-input/8,000-output planning envelope:
 - cross-provider challenger budget: `$0`.
 
 Every retry and unknown outcome counts against the physical-call and USD
-ceilings. The exact-role executor reserves before provider construction and
-retains worst-case cost after an unknown outcome.
+ceilings. The pilot SDK has `max_retries=0`: each inference is attempted once,
+and an unknown outcome consumes its full reservation and permanently stops the
+run. A complete pilot uses 30 inference requests plus 30 non-inference exact
+input-token count requests.
 
 ## Local controls completed
 
 - Direct Responses adapter is stateless, tool-free, `store=false`, and uses
-  strict Structured Outputs.
+  strict Structured Outputs, `service_tier=default`, a 120-second timeout,
+  and the global standard endpoint.
+- Python 3.11.15 and OpenAI SDK 2.49.0 are installed in an isolated runtime;
+  the complete dependency lock hash, Python version, and SDK version are
+  plan-bound and rechecked before inference.
 - GPT-5.6 `cached_tokens` and `cache_write_tokens` are normalized for exact
   ledger pricing.
 - Implicit prompt-cache writes are disabled because the 30-minute reuse window
@@ -74,7 +84,12 @@ retains worst-case cost after an unknown outcome.
 - The router supports zero/one/two/three same-provider calls; the fourth
   cross-provider role requires explicit policy opt-in.
 - Canonical daily and safe-shadow read-only guards pass.
-- Full test suite passes: `360/360`.
+- One canonical quarantine and an exclusive process lock prevent concurrent or
+  alternate-root re-spend.
+- Every receipt is reconciled to a hash-chained reservation/completion journal;
+  completed runs fail if either side is missing or changed.
+- Pricing is pinned for at most seven days and currently expires 2026-08-04.
+- Full test suite passes: `369/369`.
 
 ## Evidence readiness
 
@@ -85,7 +100,8 @@ retains worst-case cost after an unknown outcome.
 - Strictly complete pilot packets: `10`
 - Locally complete qualification packets: `14`
 - Typical qualification storage estimate: `956,795,580` bytes
-- Conservative planning upper estimate: `59,779,317,760` bytes
+- Enforced local storage ceiling: `5,000,000,000` bytes
+- Current strict corpus use: `37,968,013` bytes
 
 The original corpus verifier and stricter readiness inventory both pass the
 frozen ten-packet Pilot cohort. This is evidence/provenance readiness only, not

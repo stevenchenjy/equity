@@ -279,6 +279,7 @@ class ProviderTests(unittest.TestCase):
                         "id": "resp_fixture_5r",
                         "status": "completed",
                         "model": "gpt-5.6-sol-2026-07-01",
+                        "service_tier": "default",
                         "output": [
                             {
                                 "type": "message",
@@ -326,6 +327,8 @@ class ProviderTests(unittest.TestCase):
         request = client.responses.request
         self.assertEqual(request["tools"], [])
         self.assertIs(request["store"], False)
+        self.assertEqual(request["service_tier"], "default")
+        self.assertEqual(request["timeout"], 120)
         self.assertEqual(
             request["prompt_cache_options"],
             {"mode": "explicit"},
@@ -344,6 +347,10 @@ class ProviderTests(unittest.TestCase):
             "gpt-5.6-sol-2026-07-01",
         )
         self.assertEqual(
+            result.metadata["resolved_service_tier"],
+            "default",
+        )
+        self.assertEqual(
             result.metadata["usage"],
             {
                 "input_tokens": 110,
@@ -355,6 +362,95 @@ class ProviderTests(unittest.TestCase):
         )
         self.assertFalse(result.metadata["credential_read"])
         self.assertFalse(result.metadata["tools_enabled"])
+
+    def test_responses_adapter_enforces_zero_sdk_retries_when_required(
+        self,
+    ) -> None:
+        class Responses:
+            def create(self, **kwargs: object) -> object:
+                del kwargs
+                raise AssertionError("model request must not run")
+
+        class Client:
+            def __init__(self, max_retries: object) -> None:
+                self.responses = Responses()
+                self.max_retries = max_retries
+
+        for invalid_value in (None, 1, True, "0"):
+            with self.subTest(max_retries=invalid_value):
+                with self.assertRaisesRegex(
+                    ProviderError,
+                    "max_retries=0",
+                ):
+                    OpenAIResponsesProvider(
+                        Client(invalid_value),
+                        require_zero_client_retries=True,
+                    )
+
+        provider = OpenAIResponsesProvider(
+            Client(0),
+            require_zero_client_retries=True,
+        )
+        self.assertIs(provider.require_zero_client_retries, True)
+
+    def test_responses_adapter_uses_exact_input_token_count_endpoint(
+        self,
+    ) -> None:
+        class InputTokens:
+            def __init__(self) -> None:
+                self.request: dict[str, object] = {}
+
+            def count(self, **kwargs: object) -> object:
+                self.request = kwargs
+                return type("InputTokenCount", (), {"input_tokens": 321})()
+
+        class Responses:
+            def __init__(self) -> None:
+                self.input_tokens = InputTokens()
+
+            def create(self, **kwargs: object) -> object:
+                del kwargs
+                raise AssertionError("token counting must not run inference")
+
+        class Client:
+            def __init__(self) -> None:
+                self.responses = Responses()
+                self.max_retries = 0
+
+        client = Client()
+        provider = OpenAIResponsesProvider(
+            client,
+            max_output_tokens=1_200,
+            require_zero_client_retries=True,
+        )
+        count = provider.count_input_tokens(
+            role="critic",
+            model="gpt-5.6-sol",
+            reasoning_effort="high",
+            schema={
+                "type": "object",
+                "properties": {"ok": {"type": "boolean"}},
+                "required": ["ok"],
+                "additionalProperties": False,
+            },
+            instructions="Return the closed result.",
+            input_payload={"evidence": "fixture"},
+        )
+
+        self.assertEqual(count, 321)
+        request = client.responses.input_tokens.request
+        self.assertEqual(request["model"], "gpt-5.6-sol")
+        self.assertEqual(request["tools"], [])
+        self.assertEqual(request["reasoning"], {"effort": "high"})
+        self.assertEqual(
+            request["text"]["format"]["type"],  # type: ignore[index]
+            "json_schema",
+        )
+        self.assertNotIn("max_output_tokens", request)
+        self.assertNotIn("prompt_cache_options", request)
+        self.assertNotIn("service_tier", request)
+        self.assertNotIn("store", request)
+        self.assertEqual(request["timeout"], 120)
 
     def test_responses_adapter_rejects_inconsistent_native_usage(
         self,

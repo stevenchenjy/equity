@@ -12,6 +12,7 @@ broker, creates an order, or changes canonical state.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -52,6 +53,12 @@ CANONICAL_VERIFIER = (
 SHADOW_LABEL = "com.steven.phase5r.llmshadow"
 SHADOW_PLIST = (
     Path.home() / "Library" / "LaunchAgents" / f"{SHADOW_LABEL}.plist"
+)
+REQUIREMENTS_LOCK = (
+    ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "phase5r_model_pilot_requirements.lock.txt"
 )
 
 
@@ -189,11 +196,37 @@ def _cost_policy_checks(
         price_ok,
         f"models={','.join(sorted(prices))}",
     )
+    pilot = model_api["pilot"]
+    runtime_lock_sha256 = (
+        hashlib.sha256(REQUIREMENTS_LOCK.read_bytes()).hexdigest()
+        if REQUIREMENTS_LOCK.is_file()
+        and not REQUIREMENTS_LOCK.is_symlink()
+        else ""
+    )
+    runtime_pinned = (
+        pilot.get("python_runtime_version") == "3.11.15"
+        and pilot.get("openai_sdk_package") == "openai"
+        and pilot.get("openai_sdk_version") == "2.49.0"
+        and pilot.get("requirements_lock_path")
+        == "09_scripts/phase5r/phase5r_model_pilot_requirements.lock.txt"
+        and pilot.get("requirements_lock_sha256")
+        == runtime_lock_sha256
+    )
+    _check(
+        checks,
+        "policy.pilot_runtime_pinned",
+        runtime_pinned,
+        (
+            f"python={pilot.get('python_runtime_version')!r};"
+            f"sdk={pilot.get('openai_sdk_version')!r};"
+            f"lock={runtime_lock_sha256}"
+        ),
+    )
 
     pilot_authorization = (
-        model_api["pilot"].get("authorized") is True
-        and model_api["pilot"].get("maximum_physical_calls") == 30
-        and model_api["pilot"].get("maximum_usd") == "5.00"
+        pilot.get("authorized") is True
+        and pilot.get("maximum_physical_calls") == 30
+        and pilot.get("maximum_usd") == "5.00"
         and policy["sec_corpus"].get("network_acquisition_authorized")
         is True
         and policy["sec_corpus"].get("required_contact_string_present")
@@ -228,7 +261,7 @@ def _cost_policy_checks(
             ),
             "analyst_baseline": "gpt-5.6-terra_medium",
             "low_cost_candidate": (
-                "gpt-5.6-luna_medium_batch_eval_only"
+                "gpt-5.6-luna_medium_bounded_same_packet_eval_only"
             ),
             "committee": (
                 "gpt-5.6-sol_high_only_if_classification_may_change"
@@ -249,16 +282,16 @@ def _cost_policy_checks(
         model_api["batch_discount_fraction"],
         label="batch discount",
     )
-    assumed_input = int(pilot["assumed_input_tokens_per_call"])
-    assumed_output = int(pilot["assumed_output_tokens_per_call"])
-    pilot_cost = sum(
+    pilot_input = int(pilot["maximum_input_tokens_per_call"])
+    pilot_output = int(pilot["maximum_output_tokens_per_call"])
+    pilot_standard_cost = sum(
         (
             _model_call_cost(
                 price=prices[model],
                 calls=10,
-                input_tokens=assumed_input,
-                output_tokens=assumed_output,
-                batch_discount=discount,
+                input_tokens=pilot_input,
+                output_tokens=pilot_output,
+                batch_discount=Decimal("0"),
             )
             for model in (
                 "gpt-5.6-luna",
@@ -268,6 +301,35 @@ def _cost_policy_checks(
         ),
         Decimal("0"),
     )
+    pilot_cache_write_worst = sum(
+        (
+            (
+                Decimal(pilot_input)
+                * _decimal(prices[model]["input"], label="input price")
+                * _decimal(
+                    prices[model]["cache_write_multiplier"],
+                    label="cache-write multiplier",
+                )
+                + Decimal(pilot_output)
+                * _decimal(prices[model]["output"], label="output price")
+            )
+            * Decimal(10)
+            / Decimal(1_000_000)
+            for model in (
+                "gpt-5.6-luna",
+                "gpt-5.6-terra",
+                "gpt-5.6-sol",
+            )
+        ),
+        Decimal("0"),
+    )
+    pilot_reserved = pilot_cache_write_worst * _decimal(
+        pilot["billing_safety_multiplier"],
+        label="billing safety multiplier",
+    )
+    qualification = model_api["qualification"]
+    assumed_input = int(qualification["assumed_input_tokens_per_call"])
+    assumed_output = int(qualification["assumed_output_tokens_per_call"])
     qualification_terra = _model_call_cost(
         price=prices["gpt-5.6-terra"],
         calls=250,
@@ -295,9 +357,22 @@ def _cost_policy_checks(
         batch_discount=discount,
     )
     estimates_ok = (
-        pilot_cost == _decimal(
-            pilot["estimated_batch_usd"],
-            label="pilot estimate",
+        pilot_standard_cost
+        == _decimal(
+            pilot["estimated_standard_usd_without_cache_writes"],
+            label="standard pilot estimate",
+        )
+        and pilot_cache_write_worst
+        == _decimal(
+            pilot["maximum_worst_case_usd_with_cache_writes"],
+            label="cache-write pilot estimate",
+        )
+        and pilot_reserved
+        == _decimal(
+            pilot[
+                "maximum_worst_case_usd_with_cache_writes_and_billing_safety"
+            ],
+            label="reserved pilot estimate",
         )
         and qualification_terra
         == _decimal(
@@ -313,7 +388,7 @@ def _cost_policy_checks(
             ],
             label="Luna qualification estimate",
         )
-        and pilot_cost <= _decimal(
+        and pilot_reserved <= _decimal(
             pilot["maximum_usd"],
             label="pilot maximum USD",
         )
@@ -328,7 +403,9 @@ def _cost_policy_checks(
         "policy.cost_estimates_recomputed",
         estimates_ok,
         (
-            f"pilot_batch_usd={pilot_cost};"
+            f"pilot_standard_usd={pilot_standard_cost};"
+            f"pilot_cache_write_worst_usd={pilot_cache_write_worst};"
+            f"pilot_reserved_usd={pilot_reserved};"
             f"qualification_terra_batch_usd={qualification_terra};"
             f"qualification_luna_batch_usd={qualification_luna}"
         ),
@@ -346,6 +423,7 @@ def _adapter_check(checks: list[dict[str, Any]]) -> None:
                 "id": "resp_local_readiness_fixture",
                 "status": "completed",
                 "model": "gpt-5.6-terra",
+                "service_tier": "default",
                 "output": [
                     {
                         "type": "message",
@@ -402,6 +480,7 @@ def _adapter_check(checks: list[dict[str, Any]]) -> None:
         and result.metadata.get("usage") == expected_usage
         and request.get("tools") == []
         and request.get("store") is False
+        and request.get("service_tier") == "default"
         and request.get("prompt_cache_options") == {"mode": "explicit"}
     )
     _check(
@@ -612,9 +691,9 @@ def audit(*, static_only: bool = False) -> dict[str, Any]:
             "typical_storage_estimate_bytes": inventory[
                 "storage_estimates"
             ]["qualification_typical_projected_total_bytes"],
-            "planning_upper_storage_bytes": inventory[
-                "storage_estimates"
-            ]["qualification_planning_upper_bytes"],
+            "authorized_storage_ceiling_bytes": policy["sec_corpus"][
+                "maximum_local_storage_bytes"
+            ],
         },
         "external_blockers": external_blockers,
         "boundaries": {

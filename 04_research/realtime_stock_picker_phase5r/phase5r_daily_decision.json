@@ -17,14 +17,14 @@
     "research_only": true,
     "trade_placed": false
   },
-  "cycle_date": "2026-07-27",
-  "decision_changed": false,
+  "cycle_date": "2026-07-28",
+  "decision_changed": true,
   "decision_code": "hold_no_new_position",
   "decision_fingerprint": "20e74cb4cfa18b15ddc7e1e81c3958c6156f067910e5dbb94b6f2920ec192911",
   "decisive_advice": "保持长期视角；今日信息没有达到改变仓位建议的证据阈值。",
   "eligible_action_review_candidates": [],
   "evidence_gate": {
-    "last_attempt_at": "2026-07-27T19:01:32-04:00",
+    "last_attempt_at": "2026-07-28T13:24:31-04:00",
     "new_material_event_count": 0,
     "passed": true,
     "status": "ok"
@@ -34,7 +34,7 @@
     "passed": true,
     "weakening_tickers": []
   },
-  "generated_at": "2026-07-27T19:01:56-04:00",
+  "generated_at": "2026-07-28T13:24:47-04:00",
   "headline": "继续持有现有仓位｜今天不新增仓位",
   "held_fundamentals": [
     {
@@ -89,13 +89,13 @@
   "human_review_reasons": [],
   "human_review_required": false,
   "market_gate": {
-    "bar_state": "complete_close",
-    "complete_close_verified": true,
-    "expected_market_session": "2026-07-27",
+    "bar_state": "intraday_or_unverified",
+    "complete_close_verified": false,
+    "expected_market_session": "2026-07-28",
     "failures": [],
     "held_session_dates": {
-      "IOT": "2026-07-27",
-      "RBRK": "2026-07-27"
+      "IOT": "2026-07-28",
+      "RBRK": "2026-07-28"
     },
     "passed": true,
     "source": "03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv"
@@ -103,8 +103,8 @@
   "material_events": [],
   "pending_stability_candidates": [],
   "schema_version": "phase5r_daily_decision_v1",
-  "send_reason": "weekday_daily_brief",
-  "send_recommended": true,
+  "send_reason": "before_daily_decision_time",
+  "send_recommended": false,
   "timezone": "America/New_York",
   "watch_candidates": [
     {

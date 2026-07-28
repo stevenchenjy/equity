@@ -1,27 +1,51 @@
 # Phase 5R Model/API Actual Upgrade Plan
 
-Date: 2026-07-25  
+Date: 2026-07-28
 Objective: produce clear, source-grounded buy/hold/trim/exit research decisions
 with exception-based review, while keeping all execution manual and outside the
 repository
 
-Economical dependency authority as of 2026-07-27:
+Economical dependency authority as of 2026-07-28:
 `00_project_control/phase5r_paid_dependency_policy.json` and
 `00_project_control/phase5r_economical_dependency_decision.md`. Where older
-cost or dependency examples below differ, the 2026-07-27 closed policy wins.
+cost or dependency examples below differ, the 2026-07-28 closed policy wins.
 
-## 2026-07-27 pilot execution update
+## 2026-07-28 executable pilot update
 
-The bounded pilot is authorized for one provider family, at most 30 physical
-calls and $5. Ten genuine SEC candidate packets now pass both the original
-corpus verifier and strict `10/10` inventory after submissions, Company Facts,
-accession-level XBRL reconciliation, and attachment discovery were added.
-External provider authentication is absent, so inference has not started.
+The bounded pilot is authorized for OpenAI only, at most `30` physical
+model-inference calls, and `$5.00`. Ten genuine SEC point-in-time packets pass
+both the original corpus verifier and strict `10/10` inventory after
+submissions, Company Facts, accession-level XBRL reconciliation, and attachment
+discovery were added.
+
+`09_scripts/phase5r/run_phase5r_model_pilot.py` is now the closed executable
+runner. Its frozen request plan is:
+
+- 10 Luna assessments;
+- 10 Terra assessments on the identical analyst views;
+- 5 randomly blinded Sol committee comparisons; and
+- 5 Sol critic requests on a form- and issuer-diverse cohort.
+
+Each inference has a separate non-inference exact input-token count request,
+so a completed pilot uses `30` model-inference requests plus `30` token-count
+requests. Inference requests are synchronous stateless Responses calls with
+`service_tier=default`, `store=false`, `tools=[]`, a 120-second timeout, SDK
+`max_retries=0`, at most 24,000 input tokens, and at most 3,800 output tokens.
+The full cache-write-aware reservation plus a 10% billing contingency is
+`$4.9368`; no Batch discount is assumed. Pricing must be reverified after
+2026-08-04.
+
+The executable environment is also frozen: Python `3.11.15`, OpenAI SDK
+`2.49.0`, and the complete transitive dependency lock are bound into the plan.
+The isolated runtime passed an offline real-SDK construction/boundary smoke
+test without a credential, token count request, or inference request.
 
 Actual result: `0/30` calls, zero input/cached/cache-write/output tokens, and
-`$0.00/$5.00`. Citation accuracy, unsupported claims, model disagreement, and
-critic value are not measurable without valid model outputs; no synthetic
-measurements or anonymous claim-review set were fabricated.
+`$0.00/$5.00`, because no externally authenticated OpenAI client is available.
+Citation accuracy, unsupported claims, model disagreement, and critic value
+remain unmeasured without valid model outputs. The anonymous two-reviewer
+protocol and immutable review-material generator are complete, but no review
+claims were fabricated.
 
 ## Current decision
 
@@ -78,7 +102,7 @@ and [GPT-5.6 release and pricing](https://openai.com/index/gpt-5-6/).
 | D3 full-label replay corpus | Minimum-size/diversity gates plus single-split and three-fold issuer/time purge/embargo receipts complete locally; real acquisition and labels blocked | 250–300 locally complete packets, 20+ issuers, 50+ material transitions, 50+ separate adversarial probes, material and no-change/uncertain labels, and real frozen multi-fold scores |
 | D4 point-in-time performance | Rolling 12/36/60-month receipt and deterministic sequential paper simulator complete with synthetic tests; real ledger absent | real next-session paper ledger, calibrated costs/cash/corporate actions, benchmarks, drawdown/turnover/CI |
 | D5 external blinded challenger | Closed contract, deterministic comparison, injected Anthropic Messages adapter, and offline fixtures complete; no credentials or calls | exact provider-specific schema preflight, frozen cross-family model/version, retention approval, issuer-held-out qualification, and explicit cost/call authorization |
-| Q1 30-physical-call provider smoke | Authorized and corpus-ready; blocked only by external auth | 10 strictly complete packets × Luna analyst + the same 10 × Terra analyst + 10 precommitted Sol committee/critic requests, preferably Batch; all receipts valid; no canonical or email effect; $5 cap |
+| Q1 30-inference-call provider smoke | Executable, authorized, and corpus-ready; blocked only by external auth | 10 Luna + 10 Terra assessments, 5 blinded Sol committees, and 5 Sol critics; 30 separate non-inference token counts; all receipts valid; no canonical or email effect; `$4.9368` reservation within the `$5` cap |
 | Q2 qualification replay | Blocked by corpus/auth | all decision-quality confidence-bound gates pass |
 | Q2C cross-provider critic benchmark | Deferred and not required for initial shadow | buy only if the same-provider critic leaves measured correlated errors or inadequate unique catches |
 | Q3 live shadow | Blocked by Q2/corpus/auth | 30–60 completed research-only market sessions without boundary/data-quality failure; public market context cannot unlock action-grade transitions |
@@ -447,10 +471,11 @@ Required receipt:
 - prompt/schema/runtime hashes;
 - physical attempt number and cumulative cost estimate.
 
-Only transport timeout/connection/no-final-response failures may receive the
-single bounded retry allowed by the registry. Refusal, incomplete, malformed,
+The bounded pilot allows no retry of any inference request. A transport
+timeout, connection failure, or unknown outcome consumes the full reservation,
+is recorded durably, and stops the pilot. Refusal, incomplete, malformed,
 schema-invalid, citation-invalid, semantic-invalid, or policy-invalid results
-are terminal for that run.
+are likewise terminal.
 
 OpenAI documents JSON Schema Structured Outputs in the Responses API and the
 meaning of response storage/data controls:
@@ -463,25 +488,31 @@ Retention without the relevant approval.
 
 ### Q1 physical-call and cost plan
 
-The first paid pilot is capped at exactly `30` physical requests:
+The first paid pilot is capped at exactly `30` model-inference requests:
 
 - `10` frozen public-evidence packets × one Luna analyst request;
 - the same `10` packets × one Terra analyst request;
-- `10` precommitted Sol committee or critic requests on the relevant frozen
-  cases.
+- `5` blinded Sol committee requests; and
+- `5` Sol critic requests.
 
-A retry counts as another physical request. If a retry would exceed `30`, the
-affected packet remains incomplete and the pilot stops; the call ceiling is not
-silently expanded. C9 and deterministic validation do not consume provider
-calls.
+Before each inference, one exact `/responses/input_tokens` request measures the
+same semantic input. Those `30` token-count requests do not generate model
+output and are reported separately; the promise is therefore 30 physical
+model-inference calls, not 30 total HTTP requests.
 
-Planning envelope per request: no more than `20,000` billed input tokens and
-`8,000` billed output/reasoning tokens. At current standard prices, the 10
-Luna + 10 Terra + 10 Sol plan is `$5.78`; OpenAI's 50% Batch discount reduces
-the planning estimate to `$2.89`. The operator hard cap is `$5.00`.
+Every inference is attempted at most once. An ambiguous or failed outcome
+retains its full durable reservation and stops the pilot. C9 and deterministic
+validation do not consume provider calls.
 
-Actual provider usage receipts, not these planning estimates, determine the
-recorded cost. Cached-input savings are not assumed.
+The closed envelope is at most `24,000` input and `3,800` output tokens per
+request. At pinned standard prices the no-cache-write maximum is `$3.978`; the
+cache-write maximum is `$4.488`; and the hard reservation after a 10% billing
+contingency is `$4.9368`. The operator hard cap is `$5.00`. No Batch discount,
+cached-input saving, provider retry, or regional-price assumption is used.
+
+Exact provider usage receipts determine the recorded standard cost. The
+conservative reservation remains the budget authority and is never reclaimed
+after an unknown outcome.
 
 Q2 uses one analyst request for every one of 250 frozen packets and two Sol
 requests only for 50 material transitions: at most `350` requests. Under the
@@ -669,7 +700,9 @@ is execution authority.
 
 ## Verification snapshot
 
-- Full integrated local suite: PASS, `360/360`, including the economical
+- Full integrated local suite: PASS, `369/369`, including the executable
+  bounded pilot, durable audit journal, storage enforcement, exact token
+  preflight, and anonymous-review generation.
   same-provider initial-shadow policy and explicit paid-challenger opt-in.
 - Cost-router planner/gate, durable exact-role fixture execution and metering,
   three-fold issuer/time validation, freshness, research/action separation,
@@ -693,31 +726,29 @@ is execution authority.
 
 ## External inputs required
 
-1. SEC User-Agent contact string before real corpus acquisition.
-2. Confirmation that an OpenAI project with GPT-5.6 Terra/Sol access is
-   configured outside the repository. Never paste a key into chat, a file,
-   a log, or a LaunchAgent.
-3. Explicit authorization for the Q1 ceiling: exactly `30` physical requests,
-   a `$5.00` hard cap, Batch use on public sanitized inputs, and the
-   20K-input/8K-output planning envelope. These are
-   separate approvals; having a credential is not authorization to spend.
-4. Two independent reviewer assignments and an adjudicator for at least `150`
-   chronological probes. Reviewer identities may remain outside the packet,
-   but reviewer independence and conflict resolution must be recorded.
-5. Explicit authorization for D3's SEC/network acquisition after the
-   User-Agent is configured, plus an operator storage budget. Current planning
-   is about `0.96 GB` typical and a deliberately conservative `61.35 GB`
-   upper bound.
-6. A later, optional choice among Claude Fable 5 (maximum rigor), Claude Opus 5
-   (lower-cost Anthropic control), and Gemini 3.1 Pro Preview (preview-only
-   alternative), separate external authentication, retention/data-region
-   review, and an explicit challenger cost cap. This input is not requested
-   until issuer-held-out Q2 passes and shows a measured need.
+The SEC contact, SEC-network permission, 5 GB storage ceiling, OpenAI-only
+30-inference-call limit, and `$5.00` cap have already been supplied and are not
+outstanding.
+
+1. Construct an authenticated OpenAI SDK client outside the repository with
+   `max_retries=0`, the global standard API base, and no regional-processing
+   billing multiplier; inject it into `OpenAIResponsesProvider` with the
+   `global_standard_no_regional_processing` billing attestation. Never paste a
+   key into chat, source files, logs, a LaunchAgent, or SMTP configuration.
+2. Complete two independent copies of the generated anonymous review bundle
+   and one adjudication receipt after real outputs exist. This review measures
+   semantic citation accuracy, unsupported claims, disagreements, and critic
+   value; it cannot activate canonical or email influence.
+
+The present corpus occupies `37,968,013` of the authorized
+`5,000,000,000` bytes. Qualification, live shadow, licensed data, a second
+provider, model/email influence, and scheduler installation remain outside
+this pilot and require separate future authorization.
 
 A licensed market-data purchase is deliberately deferred. Public secondary
 data is sufficient for noncanonical research shadow; valuation-sensitive
 transitions continue to abstain until a later action-grade purchase gate is
 met.
 
-Until those inputs exist, continue only offline contract, fixture, inventory,
-and verification work.
+Until the authenticated client exists, continue only offline contract, fixture,
+inventory, and verification work.

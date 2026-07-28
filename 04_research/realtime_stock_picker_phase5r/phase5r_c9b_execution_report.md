@@ -1,6 +1,6 @@
 # Phase 5R-C9B Execution Report
 
-Generated: `2026-07-27T19:01:55-04:00`
+Generated: `2026-07-28T13:24:45-04:00`
 
 ## Execution State
 
@@ -12,7 +12,7 @@ Generated: `2026-07-27T19:01:55-04:00`
 
 | Ticker | Action | Shares | Target shares | Reference | Max slippage | Style | Target weight |
 | --- | --- | ---: | ---: | ---: | ---: | --- | ---: |
-| IOT | hold | 0 | 5.0000 | $35.34 | 0.74% | no_action | 7.2347% |
-| RBRK | hold | 0 | 2.0000 | $74.82 | 0.40% | no_action | 6.1268% |
+| IOT | hold | 0 | 5.0000 | $37.73 | 0.63% | no_action | 7.7240% |
+| RBRK | hold | 0 | 2.0000 | $73.10 | 0.98% | no_action | 5.9859% |
 
 Reference prices are public B2 observations, not broker quotes or assumed fills. Market-at-open is not the default. Limit orders may not execute or may fill only partially. HOLD rows require no routine human review; only action-transition or reconciliation rows require review. No automatic action is permitted.

@@ -43,6 +43,7 @@ NEW_SOURCE_FILES = (
     "phase5r_llm_transition_annotations.py",
     "create_phase5r_llm_transition_annotation_template.py",
     "run_phase5r_llm_provider_replay_evaluation.py",
+    "run_phase5r_model_pilot.py",
     "verify_phase5r_llm_provider_replay_gate.py",
     "phase5r_llm_activation_receipt.py",
     "run_phase5r_llm_shadow_scheduler.py",

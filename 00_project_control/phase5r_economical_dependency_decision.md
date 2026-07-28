@@ -1,6 +1,6 @@
 # Phase 5R Economical Dependency Decision
 
-Effective: 2026-07-27 ET
+Effective: 2026-07-28 ET
 
 ## Decision
 
@@ -12,7 +12,8 @@ It is:
 2. no model request when evidence is insufficient or the semantic state did
    not materially change;
 3. one OpenAI provider family for the initial qualification and shadow;
-4. asynchronous Batch requests for offline replay;
+4. synchronous stateless Responses requests for the bounded pilot so each
+   reservation and outcome can be reconciled immediately;
 5. Terra as the initial evidence-analyst quality baseline;
 6. Luna tested against Terra only as a lower-cost analyst candidate;
 7. Sol used only when a classification may change or a high-impact proposal
@@ -49,15 +50,16 @@ Standard text prices per one million tokens:
 
 | Model | Input | Cached input | Output | Intended Phase 5R use |
 | --- | ---: | ---: | ---: | --- |
-| GPT-5.6 Luna | $1.00 | $0.10 | $6.00 | batch analyst challenger only |
+| GPT-5.6 Luna | $1.00 | $0.10 | $6.00 | bounded analyst challenger only |
 | GPT-5.6 Terra | $2.50 | $0.25 | $15.00 | evidence-analyst baseline |
 | GPT-5.6 Sol | $5.00 | $0.50 | $30.00 | sparse committee/critic |
 
-OpenAI documents a 50% Batch discount with a 24-hour completion window. GPT-5.6
-cache writes cost 1.25 times uncached input, while cache reads receive the
-cached-input rate. Because Phase 5R requests are stateless and normally
-separated by hours or days, the direct Responses adapter uses explicit cache
-mode with no breakpoint instead of paying for speculative implicit writes.
+OpenAI documents a 50% Batch discount with a 24-hour completion window, but the
+bounded pilot does not use or assume that discount. GPT-5.6 cache writes cost
+1.25 times uncached input, while cache reads receive the cached-input rate.
+Because Phase 5R requests are stateless and normally separated by hours or
+days, the direct Responses adapter uses explicit cache mode with no breakpoint
+instead of paying for speculative implicit writes.
 
 Sources:
 
@@ -69,23 +71,28 @@ Sources:
 
 ## Minimum viable paid pilot
 
-The first paid step is capped at 30 physical Batch requests and $5:
+The first paid step is capped at 30 physical model-inference requests and
+$5.00:
 
 - 10 frozen packets with Luna analyst;
-- the same 10 with Terra analyst; and
-- 10 precommitted Sol committee/critic requests on the most relevant frozen
-  cases.
+- the same 10 with Terra analyst;
+- 5 blinded Sol committee requests; and
+- 5 Sol critic requests.
 
-Using the conservative planning envelope of 20,000 input and 8,000 output
-tokens per call, current list prices imply about $2.89 after the Batch
-discount. The $5 hard ceiling leaves retry and token-shape margin. Every
-attempt, including transport failures and unknown outcomes, must count against
-the cap.
+Each inference is preceded by one non-inference exact input-token count
+request, so the complete transport consists of 30 inference plus 30 token-count
+requests. The closed ceiling is 24,000 input and 3,800 output tokens per
+inference. Current standard prices yield a `$3.978` no-cache-write maximum and
+a `$4.488` cache-write maximum. A 10% billing contingency reserves `$4.9368`,
+below the `$5.00` hard cap. No Batch discount or cached-input saving is assumed.
+
+The SDK has `max_retries=0`. Every inference is attempted once; transport
+failures and unknown outcomes retain their full reservation and stop the run.
 
 The pilot does not promote a model. It only proves transport, schema, metering,
 cost, and whether Luna merits the larger analyst comparison.
 
-## Qualification cost envelope
+## Future qualification cost envelope — not authorized
 
 If the corpus reaches 250 packets across at least 20 issuers and contains at
 least 50 reviewed material transitions:
@@ -122,17 +129,20 @@ Disabled. The roles are deterministic sequential requests with closed inputs.
 Local preprocessing, exact role routing, and cached completed results are
 cheaper and easier to audit than a provider-hosted multi-agent workflow.
 
-## Remaining activation gates
+## Remaining pilot gates
 
 No model request can begin until:
 
 - external authentication is configured outside the repository;
-- the fixed private execution ledger and provider-native metering pass;
-- the offline provider replay and boundary gates pass; and
+- the fixed private execution ledger and provider-native metering continue to
+  pass at invocation time;
+- the offline provider replay and boundary gates continue to pass; and
 - model influence, email eligibility, broker access, and order capability
   remain false.
 
 The SEC contact, 5 GB storage limit, 30-call limit, and $5 cap are already
 authorized for this pilot. This run passed the contact string at runtime and
-did not add it to the pilot policy, corpus metadata, logs, or reports.
+did not add it to the model-pilot policy, corpus metadata, model-pilot logs, or
+review materials. The same address already exists in unrelated historical
+email-delivery artifacts.
 The strict point-in-time corpus requirement is now satisfied at `10/10`.

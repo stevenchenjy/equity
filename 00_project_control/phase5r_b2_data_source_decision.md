@@ -1,6 +1,6 @@
 # Phase 5R-B2 Data Source Decision
 
-Generated: `2026-07-27T19:01:29-04:00`
+Generated: `2026-07-28T13:24:28-04:00`
 
 ## Decision
 
@@ -13,9 +13,9 @@ Generated: `2026-07-27T19:01:29-04:00`
 
 | Ticker | Last Price | Previous Close | Volume | Status |
 | --- | ---: | ---: | ---: | --- |
-| QQQ | 682.1200 | 684.2300 | 42144580 | passed |
-| XLK | 174.3000 | 175.8800 | 8244227 | passed |
-| SPY | 739.0900 | 738.9300 | 41105825 | passed |
+| QQQ | 678.1300 | 682.1200 | 33126340 | passed |
+| XLK | 171.3600 | 174.3000 | 6546111 | passed |
+| SPY | 742.1900 | 739.0900 | 21901972 | passed |
 
 ## Boundary
 

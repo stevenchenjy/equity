@@ -1,14 +1,16 @@
 # Phase 5R Rigorous Decision-Model Upgrade Execution Report
 
-Generated: 2026-07-27 ET; updated after economical dependency audit
+Generated: 2026-07-28 ET; updated after bounded-pilot implementation
 Status: combined local contracts, cost-aware exact-role fixture execution,
 durable usage/cost accounting, fixed private cycle ledger, GPT-5.6 native cache
 metering, optional paid-challenger routing, ticker freshness, three-fold
 issuer/time isolation, and sequential paper evaluation are implemented;
-ten real-source pilot packets are strict-complete; external-provider replay
-and live-shadow qualification remain pending
+ten real-source pilot packets are strict-complete; the 30-inference-call
+OpenAI-only pilot runner and anonymous review protocol are complete;
+external-provider inference is blocked only by missing external authentication,
+and live-shadow qualification remains pending
 
-## 2026-07-27 bounded pilot result
+## 2026-07-28 bounded pilot result
 
 All ten genuine SEC candidate packets now pass the original verifier and the
 stricter point-in-time inventory. Raw submissions, Company Facts,
@@ -21,6 +23,22 @@ tokens, and `$0.00/$5.00`. No citation, unsupported-claim, disagreement, or
 critic-value metric is reported because no model output exists. No anonymous
 claim-review set was fabricated. The shadow scheduler was not installed and
 the canonical decision and email paths were unchanged.
+
+The executable runner is
+`09_scripts/phase5r/run_phase5r_model_pilot.py`. Its frozen plan is 10 Luna
+assessments, 10 Terra assessments on identical evidence views, 5 randomly
+blinded Sol committees, and 5 Sol critics. A completed run makes exactly 30
+model-inference requests plus 30 non-inference exact input-token count
+requests. Each inference uses `service_tier=default`, `store=false`, no tools,
+a 120-second timeout, SDK `max_retries=0`, a 24,000-input/3,800-output ceiling,
+and a durable pre-call reservation. The cache-write-aware reservation plus 10%
+billing contingency is `$4.9368`; no Batch discount is assumed.
+
+The local runtime prerequisite is complete: an isolated Python 3.11.15
+environment contains OpenAI SDK 2.49.0, and the full dependency lock hash plus
+runtime versions are included in the immutable pilot plan and verified before
+inference. The real SDK object passed an offline construction/boundary smoke
+test with no API request.
 
 ## Decisive conclusion
 
@@ -216,10 +234,10 @@ additional packets or probes increase it. Physical attempts are counted
 separately and may exceed logical items only for allowed replay transport/process
 retries, capped at three physical attempts per logical item.
 
-Collection is quarantined and resumable, with receipt-idempotent result reuse.
-It supports a 30-call smoke stage, an up-to-200-call pilot, and the remaining
-frozen plan. Successful role results are reused. Live analyst, committee, and
-critic roles have
+The larger qualification collector is quarantined and resumable, with
+receipt-idempotent result reuse. It remains unauthorized and is not the bounded
+Q1 pilot runner. Successful role results are reused. Live analyst, committee,
+and critic roles have
 independent, hash-bound receipts, so a later-role failure cannot recall an
 earlier successful role. A schema, semantic, citation, evidence, or
 policy-invalid answer is terminal for that exact run and cannot be retried into
@@ -292,21 +310,14 @@ challenger role, strict-schema output, and no tools. These mechanics are
 offline-tested only; they are not evidence that a real cross-family model is
 accurate or independent enough for operation.
 
-The already-authenticated, pinned Codex CLI remains one possible quarantined
-smoke transport and keeps credentials outside the repository. Direct,
-injected-client OpenAI Responses and Anthropic Messages adapters are now
-implemented locally, but no client, credential, or external call has been
-supplied and neither is enabled for shadow qualification. A future
-Responses/Batch execution path still requires an approved external credential
-boundary, lifecycle policy, and replay-equivalent qualification. OpenAI
-documents strict Structured Outputs and a 50% Batch API discount; provider data
-retention must still be treated according to the account's configured data
+The bounded pilot does not use the Codex CLI, Batch, or a second provider.
+It accepts only a directly injected OpenAI Responses client constructed
+outside the repository; no client, credential, or external call has been
+supplied. The optional Anthropic adapter remains disabled and outside the
+pilot. OpenAI documents strict Structured Outputs and account-dependent data
 controls:
 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs),
-[Batch API](https://help.openai.com/en/articles/9197833-batch-api-faq%3F.gz),
 and [API data controls](https://developers.openai.com/api/docs/guides/your-data).
-The same Batch FAQ says Zero Data Retention does not apply to Batch, so the
-planned replay may send only public evidence and sanitized portfolio bands.
 
 The CLI bridge binds the requested model IDs and executable hash, but it does
 not prove an immutable provider-side weight snapshot or expose authoritative
@@ -345,7 +356,7 @@ state was changed.
 
 | Check | Result |
 | --- | --- |
-| Combined full Phase 5R Python suite | PASS — 360/360, including the economical same-provider initial-shadow policy |
+| Combined full Phase 5R Python suite | PASS — 369/369, including the bounded pilot runner, durable completion audit, and anonymous-review generation |
 | Leakage-free live/replay role inputs | PASS in the combined suite, including label/map hiding and role-scoped source checks |
 | Injected-client Responses adapter | Implemented and synthetic-client tested; no external call performed |
 | Blinded cross-family challenger | Closed proposal-free contract, deterministic comparison, and injected Anthropic adapter PASS offline; no external call performed |
@@ -376,31 +387,25 @@ outside the model work.
 
 ## Inputs needed to continue
 
-1. A real SEC-compliant User-Agent contact string, for example a project name
-   plus a contact email. It will be supplied only as a command argument for the
-   public SEC corpus refresh and will not be written to the repository.
-2. After the 10-packet pilot corpus exists, explicit authorization for exactly
-   **30 physical external model calls**, the 20K-input/8K-output planning
-   envelope, public-input Batch processing, and a `$5.00` operator hard cap.
-   Authentication stays outside the repository and must never be pasted into a
-   report, log, LaunchAgent, or chat.
-3. Explicitly authorize the external credential and physical request/USD cap.
-   The fixed ledger, native cache metering, exact-role, and crash-accounting
-   mechanics pass fixture tests; the shadow gate correctly refuses live
-   transport.
-4. One-time independent dual review of transition and claim-entailment
-   artifacts. This is a model licensing exam, not a daily user-review burden.
-5. Only after issuer-held-out qualification and a measured residual-error need:
-   a separately authorized choice
-   among maximum-capability Claude Fable 5, lower-cost Claude Opus 5, and
-   preview-only Gemini 3.1 Pro, with provider-specific schema preflight,
-   retention/data-region review, and a challenger cost cap.
+The SEC User-Agent, SEC-network authority, 5 GB storage ceiling, 30-inference
+limit, and `$5.00` cap have already been supplied and used only within their
+declared boundaries.
+
+1. Construct an authenticated OpenAI SDK client outside the repository with
+   `max_retries=0` and the global standard API base; inject it into
+   `OpenAIResponsesProvider` with
+   `billing_scope_attestation="global_standard_no_regional_processing"`.
+   Never paste a key into chat, source, logs, a LaunchAgent, or SMTP
+   configuration.
+2. After real model claims exist, complete two independent copies of the
+   generated anonymous review bundle and one adjudication receipt. This is a
+   one-time pilot assessment, not a daily user-review burden.
 
 Until those inputs are provided and the gates pass, the model remains disabled
 and the deterministic daily workflow remains canonical. In particular, the
-real valuation ingestion, real corpus acquisition, real
-point-in-time performance ledger, external provider calls, and shadow
-qualification are all incomplete.
+real valuation ingestion, qualification-scale corpus, real point-in-time
+performance ledger, external provider calls, and shadow qualification are all
+incomplete. A second provider is neither enabled nor requested.
 
 A licensed feed is no longer an initial-shadow prerequisite. Public secondary
 market context may be used for noncanonical shadow research, while

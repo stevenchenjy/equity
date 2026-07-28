@@ -1,6 +1,6 @@
 {
   "schema_version": "phase5r_paid_dependency_policy_v1",
-  "effective_date": "2026-07-27",
+  "effective_date": "2026-07-28",
   "decision": "local_first_single_provider_shadow",
   "canonical_workflow": "daily_decision",
   "canonical_pipeline": "phase5r_daily",
@@ -10,7 +10,7 @@
   "broker_connection_allowed": false,
   "order_code_allowed": false,
   "model_api": {
-    "activation_state": "pilot_authorized_but_blocked_by_strict_corpus_quality_and_external_auth",
+    "activation_state": "pilot_authorized_and_strict_corpus_ready_but_blocked_by_external_auth",
     "provider": "openai",
     "transport": "responses_api_injected_client",
     "repository_constructs_authenticated_client": false,
@@ -18,7 +18,11 @@
     "store": false,
     "tools_enabled": false,
     "standard_service_tier": "default",
-    "offline_replay_service": "batch",
+    "api_base_scope": "global_standard_only",
+    "billing_scope_attestation_required": "global_standard_no_regional_processing",
+    "pricing_verified_on": "2026-07-28",
+    "pricing_valid_through": "2026-08-04",
+    "offline_replay_service": "synchronous_responses_shadow_smoke",
     "batch_discount_fraction": "0.50",
     "prompt_cache_mode": "explicit_no_breakpoints",
     "pricing_usd_per_million_tokens": {
@@ -44,7 +48,7 @@
     "routing": {
       "unchanged_or_insufficient_evidence": "local_only_zero_model_calls",
       "analyst_baseline": "gpt-5.6-terra_medium",
-      "low_cost_candidate": "gpt-5.6-luna_medium_batch_eval_only",
+      "low_cost_candidate": "gpt-5.6-luna_medium_bounded_same_packet_eval_only",
       "committee": "gpt-5.6-sol_high_only_if_classification_may_change",
       "critic": "gpt-5.6-sol_high_only_for_high_impact_or_disagreement",
       "cross_provider_challenger": "deferred_not_required_for_initial_shadow",
@@ -54,11 +58,23 @@
       "authorized": true,
       "maximum_physical_calls": 30,
       "maximum_usd": "5.00",
-      "assumed_input_tokens_per_call": 20000,
-      "assumed_output_tokens_per_call": 8000,
-      "plan": "10_luna_analyst_plus_10_terra_analyst_plus_10_sol_committee_or_critic_batch_requests",
-      "estimated_batch_usd": "2.89",
-      "activation_gate": "explicit_user_spend_authorization_plus_complete_10_packet_pilot_corpus_plus_external_auth"
+      "maximum_input_tokens_per_call": 24000,
+      "maximum_output_tokens_per_call": 3800,
+      "maximum_request_envelope_bytes": 35000,
+      "sdk_max_retries": 0,
+      "python_runtime_version": "3.11.15",
+      "openai_sdk_package": "openai",
+      "openai_sdk_version": "2.49.0",
+      "requirements_lock_path": "09_scripts/phase5r/phase5r_model_pilot_requirements.lock.txt",
+      "requirements_lock_sha256": "c5933cead47e6f965b1f293e0a6f58a66cecd65f8d9706992f47ea0e57ea610a",
+      "request_timeout_seconds": 120,
+      "billing_safety_multiplier": "1.10",
+      "plan": "10_luna_assessments_plus_10_terra_assessments_plus_5_sol_committees_plus_5_sol_critics",
+      "estimated_standard_usd_without_cache_writes": "3.978",
+      "maximum_worst_case_usd_with_cache_writes": "4.488",
+      "maximum_worst_case_usd_with_cache_writes_and_billing_safety": "4.9368",
+      "batch_discount_assumed_for_hard_cap": false,
+      "activation_gate": "complete_10_packet_pilot_corpus_plus_external_auth"
     },
     "qualification": {
       "authorized": false,
@@ -67,6 +83,8 @@
       "minimum_material_transitions": 50,
       "maximum_physical_calls": 350,
       "maximum_usd": "45.00",
+      "assumed_input_tokens_per_call": 20000,
+      "assumed_output_tokens_per_call": 8000,
       "estimated_batch_usd_if_terra_analyst": "38.25",
       "estimated_batch_usd_if_luna_noninferior": "25.50",
       "activation_gate": "pilot_pass_plus_frozen_corpus_plus_two_reviewer_annotations_plus_explicit_user_spend_authorization"
@@ -107,8 +125,9 @@
     "qualification_target_packets": 250,
     "qualification_target_issuers": 20,
     "storage_budget_authorized": true,
-    "typical_storage_estimate_bytes": 958892732,
-    "planning_upper_storage_bytes": 61352181760
+    "maximum_local_storage_bytes": 5000000000,
+    "typical_storage_estimate_bytes": 956795580,
+    "planning_upper_storage_bytes": 5000000000
   },
   "sources": {
     "model_guidance": "https://developers.openai.com/api/docs/guides/latest-model",

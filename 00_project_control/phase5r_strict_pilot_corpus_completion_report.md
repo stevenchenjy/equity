@@ -38,7 +38,7 @@ incomplete or empty manifest pass when the index declares an exhibit.
 - Strict completion audit: `10/10`, PASS
 - Independent readiness inventory: `10/10`, PASS
 - Original replay-corpus verifier: PASS
-- Full Phase 5R Python suite: `360/360`, PASS
+- Full Phase 5R Python suite: `369/369`, PASS
 - Completion receipt SHA-256:
   `1e23cf04c64691bec9084c2fc7b83a984f9332a3020b74fd3f4c9ceb7721330a`
 - Offline audit SHA-256:

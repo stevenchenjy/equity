@@ -3,17 +3,19 @@
 
 The repository never reads or stores a provider token.  Live shadow inference is
 available only through an explicitly selected, already-authenticated external
-Codex CLI process.  Deterministic fixtures remain the default for verification.
-An injected-client Responses API adapter is available for offline contract
-testing, but no repository entry point constructs that client or reads its
-credentials.
+client. Deterministic fixtures remain the default for verification. An
+injected-client Responses API adapter is available for offline contract
+testing and bounded shadow research, but no repository entry point constructs
+that client or reads its credentials.
 """
 
 from __future__ import annotations
 
 import hashlib
+import importlib.metadata
 import json
 import os
+import platform
 import pwd
 import re
 import stat
@@ -376,7 +378,10 @@ class OpenAIResponsesProvider:
         client: Any,
         *,
         max_output_tokens: int = 32_768,
+        request_timeout_seconds: int = 120,
+        billing_scope_attestation: str = "unverified",
         retryable_exception_types: tuple[type[BaseException], ...] = (),
+        require_zero_client_retries: bool = False,
     ) -> None:
         responses = getattr(client, "responses", None)
         if responses is None or not callable(getattr(responses, "create", None)):
@@ -397,9 +402,53 @@ class OpenAIResponsesProvider:
             raise ProviderError(
                 "Responses API retryable exception types are invalid"
             )
+        if (
+            not isinstance(request_timeout_seconds, int)
+            or isinstance(request_timeout_seconds, bool)
+            or not 1 <= request_timeout_seconds <= 600
+        ):
+            raise ProviderError("Responses API request timeout is invalid")
+        if billing_scope_attestation not in {
+            "unverified",
+            "global_standard_no_regional_processing",
+        }:
+            raise ProviderError(
+                "Responses API billing-scope attestation is invalid"
+            )
+        if not isinstance(require_zero_client_retries, bool):
+            raise ProviderError(
+                "Responses API zero-retry requirement must be boolean"
+            )
+        if require_zero_client_retries:
+            client_max_retries = getattr(client, "max_retries", None)
+            if (
+                not isinstance(client_max_retries, int)
+                or isinstance(client_max_retries, bool)
+                or client_max_retries != 0
+            ):
+                raise ProviderError(
+                    "Responses API client must set max_retries=0 for the "
+                    "strict physical-call budget"
+                )
         self.client = client
         self.max_output_tokens = max_output_tokens
+        self.request_timeout_seconds = request_timeout_seconds
+        self.billing_scope_attestation = billing_scope_attestation
         self.retryable_exception_types = retryable_exception_types
+        self.require_zero_client_retries = require_zero_client_retries
+        self.python_runtime_version = platform.python_version()
+        client_module = type(client).__module__
+        if client_module == "openai" or client_module.startswith("openai."):
+            try:
+                self.client_library_version = importlib.metadata.version(
+                    "openai"
+                )
+            except importlib.metadata.PackageNotFoundError:
+                self.client_library_version = "unverified"
+            self.client_library_name = "openai"
+        else:
+            self.client_library_name = "unverified"
+            self.client_library_version = "unverified"
 
     @staticmethod
     def _field(value: Any, name: str, default: Any = None) -> Any:
@@ -514,7 +563,7 @@ class OpenAIResponsesProvider:
             "cache_read_input_tokens": 0,
         }
 
-    def generate(
+    def _request_payload(
         self,
         *,
         role: str,
@@ -523,7 +572,7 @@ class OpenAIResponsesProvider:
         schema: dict[str, Any],
         instructions: str,
         input_payload: dict[str, Any],
-    ) -> ProviderResult:
+    ) -> dict[str, Any]:
         if role not in {"analyst", "committee", "critic"}:
             raise ProviderError("Responses API role is invalid")
         if not isinstance(model, str) or not model.strip():
@@ -545,7 +594,7 @@ class OpenAIResponsesProvider:
             sort_keys=True,
             separators=(",", ":"),
         )
-        request = {
+        return {
             "model": model,
             "reasoning": {"effort": reasoning_effort},
             "input": [
@@ -572,6 +621,8 @@ class OpenAIResponsesProvider:
             },
             "tools": [],
             "store": False,
+            "service_tier": "default",
+            "timeout": self.request_timeout_seconds,
             # GPT-5.6 implicit cache writes cost 1.25x uncached input.  These
             # requests are stateless, role-specific, and ordinarily too
             # dispersed in time to reuse a 30-minute cache.  Explicit mode
@@ -579,6 +630,96 @@ class OpenAIResponsesProvider:
             "prompt_cache_options": {"mode": "explicit"},
             "max_output_tokens": self.max_output_tokens,
         }
+
+    def count_input_tokens(
+        self,
+        *,
+        role: str,
+        model: str,
+        reasoning_effort: str,
+        schema: dict[str, Any],
+        instructions: str,
+        input_payload: dict[str, Any],
+    ) -> int:
+        """Return the provider's exact pre-inference input token count.
+
+        The OpenAI token-count endpoint does not generate a model response.
+        Strict pilot callers use it before reserving and starting each of the
+        separately capped inference requests.
+        """
+
+        request = self._request_payload(
+            role=role,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            schema=schema,
+            instructions=instructions,
+            input_payload=input_payload,
+        )
+        input_tokens_api = getattr(
+            getattr(self.client.responses, "input_tokens", None),
+            "count",
+            None,
+        )
+        if not callable(input_tokens_api):
+            raise ProviderError(
+                "Responses API client must expose "
+                "responses.input_tokens.count"
+            )
+        count_request = {
+            key: value
+            for key, value in request.items()
+            if key
+            not in {
+                "max_output_tokens",
+                "prompt_cache_options",
+                "service_tier",
+                "store",
+            }
+        }
+        try:
+            response = input_tokens_api(**count_request)
+        except (TimeoutError, ConnectionError) as exc:
+            raise RetryableProviderTransportError(
+                f"{role} Responses input-token count failed"
+            ) from exc
+        except self.retryable_exception_types as exc:
+            raise RetryableProviderTransportError(
+                f"{role} Responses input-token count failed"
+            ) from exc
+        except Exception as exc:
+            raise ProviderError(
+                f"{role} Responses input-token count failed"
+            ) from exc
+        count = self._field(response, "input_tokens")
+        if (
+            not isinstance(count, int)
+            or isinstance(count, bool)
+            or count < 0
+        ):
+            raise ProviderError(
+                f"{role} Responses input-token count is invalid"
+            )
+        return count
+
+    def generate(
+        self,
+        *,
+        role: str,
+        model: str,
+        reasoning_effort: str,
+        schema: dict[str, Any],
+        instructions: str,
+        input_payload: dict[str, Any],
+    ) -> ProviderResult:
+        request = self._request_payload(
+            role=role,
+            model=model,
+            reasoning_effort=reasoning_effort,
+            schema=schema,
+            instructions=instructions,
+            input_payload=input_payload,
+        )
         started = time.monotonic()
         try:
             response = self.client.responses.create(**request)
@@ -614,6 +755,9 @@ class OpenAIResponsesProvider:
         resolved_model = self._field(response, "model", "")
         if not isinstance(resolved_model, str):
             resolved_model = ""
+        resolved_service_tier = self._field(response, "service_tier", "")
+        if not isinstance(resolved_service_tier, str):
+            resolved_service_tier = ""
         return ProviderResult(
             payload=payload,
             metadata={
@@ -621,6 +765,15 @@ class OpenAIResponsesProvider:
                 "role": role,
                 "model": model,
                 "resolved_model": resolved_model,
+                "requested_service_tier": "default",
+                "resolved_service_tier": resolved_service_tier,
+                "request_timeout_seconds": self.request_timeout_seconds,
+                "billing_scope_attestation": (
+                    self.billing_scope_attestation
+                ),
+                "client_library_name": self.client_library_name,
+                "client_library_version": self.client_library_version,
+                "python_runtime_version": self.python_runtime_version,
                 "reasoning_effort": reasoning_effort,
                 "input_sha256": canonical_sha256(input_payload),
                 "output_sha256": canonical_sha256(payload),

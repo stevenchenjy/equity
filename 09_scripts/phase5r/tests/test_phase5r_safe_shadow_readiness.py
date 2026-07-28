@@ -47,6 +47,7 @@ class SafeShadowReadinessTests(unittest.TestCase):
         }
         self.assertTrue(checks["policy.cost_estimates_recomputed"])
         self.assertTrue(checks["policy.pilot_only_authorization"])
+        self.assertTrue(checks["policy.pilot_runtime_pinned"])
         self.assertTrue(
             checks["adapter.responses_usage_and_cache_normalized"]
         )
