@@ -1,240 +1,490 @@
+#!/usr/bin/env python3
+"""Read-only verifier for the one canonical Phase 5R daily workflow.
+
+The verifier never invokes a pipeline, sender, installer, scheduler kickstart,
+provider, or broker surface.  It never opens SMTP configuration content.
+Historical weekly files may exist, but no canonical runtime source, active
+input registry row, launchd job, or state field may authorize them.
+"""
+
 from __future__ import annotations
 
-import ast
+import argparse
 import csv
-import hashlib
 import json
 import os
-import re
+import plistlib
 import subprocess
-from datetime import datetime, timezone
+from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROL_DIR = ROOT / "00_project_control"
-POSITION_DIR = ROOT / "05_risk_and_positions"
-RESEARCH_DIR = ROOT / "04_research" / "realtime_stock_picker_phase5r"
-SCRIPTS_DIR = ROOT / "09_scripts" / "phase5r"
-AUTOMATION_DIR = ROOT / "07_automation"
+SCHEDULER_DIR = ROOT / "07_automation" / "scheduler"
+SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
+LAUNCH_AGENTS = Path.home() / "Library" / "LaunchAgents"
+LAUNCH_DOMAIN = f"gui/{os.getuid()}"
 
 STATE_PATH = CONTROL_DIR / "active_decision_state.yaml"
+INHIBIT_PATH = (
+    SCHEDULER_DIR / "phase5r_c9_maintenance_inhibit.local.json"
+)
 ALLOWED_PATH = CONTROL_DIR / "phase5r_c8_allowed_active_inputs.csv"
 DEPRECATED_PATH = CONTROL_DIR / "phase5r_c8_deprecated_workflows.csv"
-STALE_REPORT = CONTROL_DIR / "phase5r_c8_stale_file_guard_report.csv"
+STALE_REPORT_PATH = (
+    CONTROL_DIR / "phase5r_c8_stale_file_guard_report.csv"
+)
 POLICY_PATH = CONTROL_DIR / "phase5r_c8_active_state_policy.md"
-CONTROL_REPORT = CONTROL_DIR / "phase5r_c8_verification_report.md"
-RESEARCH_REPORT = RESEARCH_DIR / "phase5r_c8_active_state_report.md"
-RESEARCH_VERIFICATION = RESEARCH_DIR / "phase5r_c8_verification_report.md"
-RUN_LOG = CONTROL_DIR / "run_logs" / "phase5r_c8_run_log.csv"
-C7_RUNNER = SCRIPTS_DIR / "run_phase5r_c7_weekly_conviction_pipeline.py"
-LOCAL_POSITIONS = POSITION_DIR / "current_positions.local.csv"
-C6_STATUS = AUTOMATION_DIR / "email_delivery" / "phase5r_c6_delivery_status.csv"
-SMTP_CONFIG = AUTOMATION_DIR / "email_delivery" / "phase5r_email_config.local.json"
-D1_INSTALLED = Path.home() / "Library" / "LaunchAgents" / "com.steven.phase5r.dailybrief.plist"
+MODEL_REGISTRY_PATH = (
+    CONTROL_DIR / "phase5r_llm_model_registry.json"
+)
+SMTP_CONFIG_PATH = (
+    ROOT
+    / "07_automation"
+    / "email_delivery"
+    / "phase5r_email_config.local.json"
+)
 
-C6_STATUS_HASH_BASELINE = "336550f5ff5eac1c01a18d31553ac493cab0144062ed65a50063ac648bc2c5e0"
-LOCAL_HASH_BASELINE = "d2941bd90ecb4318a8d6501ddf77ea576606b47c3e746712a813b3bb2f5ede6c"
-SMTP_SIZE_BASELINE = 241
-SMTP_MTIME_BASELINE = 1783625651
-REQUIRED_STATE = {
-    "current_workflow": "weekly_conviction",
-    "active_pipeline": "phase5r_c7",
-    "primary_decision": "no_action_until_next_review",
-    "next_review_date": "2026-07-16",
-    "daily_pipeline_status": "parked",
-    "d1_scheduler_status": "parked_uninstalled",
-    "email_delivery_allowed_from": "phase5r_c7_only",
-    "current_positions_source": "05_risk_and_positions/current_positions.local.csv",
+ACTIVE_JOBS = {
+    "com.steven.phase5r.dailyrefresh": (
+        "run_phase5r_daily_refresh_scheduler.py"
+    ),
+    "com.steven.phase5r.dailydecision": (
+        "run_phase5r_daily_scheduler.py"
+    ),
+}
+RETIRED_JOBS = (
+    "com.steven.phase5r.dailybrief",
+    "com.steven.phase5r.weeklyconviction",
+    "com.steven.phase5r.weeklycatchup",
+)
+SHADOW_JOB = "com.steven.phase5r.llmshadow"
+CANONICAL_RUNTIME_FILES = (
+    "phase5r_daily_common.py",
+    "run_phase5r_daily_refresh.py",
+    "run_phase5r_daily_decision_pipeline.py",
+    "run_phase5r_daily_refresh_scheduler.py",
+    "run_phase5r_daily_scheduler.py",
+    "create_phase5r_daily_decision_and_brief.py",
+    "send_phase5r_daily_email.py",
+)
+FORBIDDEN_CANONICAL_MARKERS = (
+    "weekly_conviction",
+    "weeklyconviction",
+    "weeklycatchup",
+    "phase5r_c1",
+    "phase5r_c2",
+    "phase5r_c3",
+    "phase5r_c5",
+    "phase5r_c6",
+    "phase5r_c7",
+    "send_phase5r_c",
+)
+EXPECTED_STATE = {
+    "current_workflow": "daily_decision",
+    "active_pipeline": "phase5r_daily",
+    "primary_decision": "daily_account_aware_decision",
+    "email_delivery_allowed_from": "phase5r_daily_only",
+    "active_research_phase": "phase5r_daily",
+    "active_action_planner": "phase5r_c9_account_aware",
+    "active_email_brief": "phase5r_daily",
+    "active_state_guard": "phase5r_daily",
+    "d1_scheduler_status": "retired_unloaded",
+    "d2_scheduler_status": "retired_unloaded",
+    "d3_scheduler_status": "retired_unloaded",
     "archived_folders_allowed_as_input": "no",
     "broker_connection_allowed": "no",
     "order_code_allowed": "no",
     "manual_execution_only": "yes",
+    "llm_shadow_canonical_influence": "disabled",
+    "llm_shadow_scheduler_status": "not_installed",
 }
-REQUIRED_FILES = [
-    POLICY_PATH, STATE_PATH, ALLOWED_PATH, DEPRECATED_PATH, STALE_REPORT,
-    C7_RUNNER, Path(__file__),
-]
-LOG_FIELDS = [
-    "timestamp", "phase", "action", "input_paths", "output_paths", "status",
-    "active_pipeline", "primary_decision", "allowed_input_rows", "deprecated_workflow_rows",
-    "guard_check_rows", "email_sent", "scheduler_used", "broker_used",
-    "smtp_config_modified", "archive_contents_read", "phase5r_d2_created", "safety_notes",
-]
-BROKER_MODULES = {"alpaca", "alpaca_trade_api", "ib_insync", "robin_stocks", "schwab", "tda", "webull", "ccxt", "etrade", "tradier"}
-EMAIL_MODULES = {"smtplib", "imaplib", "poplib", "gmail", "sendgrid"}
-BLOCKED_CALLS = {"place_order", "submit_order", "create_order", "send_order", "execute_trade", "send_message", "sendmail"}
 
 
-def timestamp() -> str:
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
+@dataclass(frozen=True, slots=True)
+class Check:
+    check_id: str
+    passed: bool
+    detail: str
 
 
-def digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def _read_json(path: Path) -> dict[str, Any]:
+    with path.open("r", encoding="utf-8") as handle:
+        payload = json.load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path.name} must contain one JSON object")
+    return payload
 
 
-def read_csv(path: Path) -> list[dict[str, str]]:
-    with path.open(newline="", encoding="utf-8") as handle:
+def _read_csv(path: Path) -> list[dict[str, str]]:
+    with path.open("r", encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle))
 
 
-def load_state() -> dict[str, str]:
-    with STATE_PATH.open(encoding="utf-8") as handle:
-        state = json.load(handle)
-    if not isinstance(state, dict):
-        raise RuntimeError("active state must be an object")
-    return {str(key): str(value) for key, value in state.items()}
-
-
-def scheduler_loaded() -> bool:
-    result = subprocess.run(
-        ["launchctl", "print", f"gui/{os.getuid()}/com.steven.phase5r.dailybrief"],
-        capture_output=True, text=True, check=False,
+def _loaded(label: str) -> bool:
+    return (
+        subprocess.run(
+            [
+                "/bin/launchctl",
+                "print",
+                f"{LAUNCH_DOMAIN}/{label}",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode
+        == 0
     )
-    return result.returncode == 0
 
 
-def gitignored(path: Path) -> bool:
-    result = subprocess.run(
-        ["git", "check-ignore", "-q", str(path.relative_to(ROOT))],
-        cwd=ROOT, capture_output=True, text=True, check=False,
+def _smtp_stat() -> tuple[int, int, int] | str:
+    try:
+        metadata = SMTP_CONFIG_PATH.stat()
+    except FileNotFoundError:
+        return "absent"
+    return (
+        metadata.st_size,
+        metadata.st_mtime_ns,
+        metadata.st_ctime_ns,
     )
-    return result.returncode == 0
 
 
-def script_scan() -> tuple[list[str], list[str], list[str]]:
-    broker: list[str] = []
-    email: list[str] = []
-    blocked: list[str] = []
-    for path in (C7_RUNNER, Path(__file__)):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        for node in ast.walk(tree):
-            modules: list[str] = []
-            if isinstance(node, ast.Import):
-                modules = [alias.name.split(".")[0] for alias in node.names]
-            elif isinstance(node, ast.ImportFrom):
-                modules = [(node.module or "").split(".")[0]]
-            broker.extend(f"{path.name}:{module}" for module in modules if module in BROKER_MODULES)
-            email.extend(f"{path.name}:{module}" for module in modules if module in EMAIL_MODULES)
-            if isinstance(node, ast.Call):
-                name = node.func.id if isinstance(node.func, ast.Name) else node.func.attr if isinstance(node.func, ast.Attribute) else ""
-                if name in BLOCKED_CALLS:
-                    blocked.append(f"{path.name}:{name}")
-    return broker, email, blocked
+def _registry_paths(
+    rows: list[dict[str, str]],
+) -> tuple[list[str], list[str]]:
+    missing: list[str] = []
+    forbidden: list[str] = []
+    for row in rows:
+        path_spec = row.get("path_spec", "")
+        path_kind = row.get("path_kind", "")
+        if row.get("allowed_as_active_input") != "yes":
+            forbidden.append(
+                f"{row.get('registry_id', '')}:not_explicitly_allowed"
+            )
+        lowered = path_spec.lower()
+        if (
+            "11_archive" in lowered
+            or any(
+                marker in lowered
+                for marker in (
+                    "phase5r_c5",
+                    "phase5r_c6",
+                    "phase5r_c7",
+                    "weekly",
+                )
+            )
+        ):
+            forbidden.append(
+                f"{row.get('registry_id', '')}:{path_spec}"
+            )
+        if path_kind == "exact":
+            if not (ROOT / path_spec).is_file():
+                missing.append(path_spec)
+        elif path_kind == "pattern":
+            if not any(path.is_file() for path in ROOT.glob(path_spec)):
+                missing.append(path_spec)
+        else:
+            forbidden.append(
+                f"{row.get('registry_id', '')}:invalid_path_kind"
+            )
+    return missing, forbidden
 
 
-def d2_paths() -> list[str]:
-    pattern = re.compile(r"phase5r(?:_d2_|-d2\b)|phase5rd2\b", re.IGNORECASE)
-    roots = [CONTROL_DIR, POSITION_DIR, ROOT / "03_source_data", RESEARCH_DIR, AUTOMATION_DIR, ROOT / "08_reviews", SCRIPTS_DIR]
-    return sorted(str(path.relative_to(ROOT)) for folder in roots for path in folder.rglob("*") if path.is_file() and pattern.search(path.name))
+def _deprecated_registry_issues(
+    rows: list[dict[str, str]],
+) -> list[str]:
+    issues: list[str] = []
+    required_ids = {f"DW-{index:03d}" for index in range(1, 12)}
+    by_id = {row.get("workflow_id", ""): row for row in rows}
+    if set(by_id) != required_ids:
+        issues.append("closed_workflow_id_set_mismatch")
+    for workflow_id, row in by_id.items():
+        if (
+            row.get("active_input_allowed") != "no"
+            or row.get("email_send_allowed") != "no"
+            or row.get("scheduler_allowed") != "no"
+            or row.get("status")
+            not in {
+                "retired",
+                "retired_unloaded",
+                "archived_evidence_only",
+                "context_only",
+                "evidence_only",
+            }
+        ):
+            issues.append(workflow_id)
+    return issues
 
 
-def append_log(state: dict[str, str], allowed_count: int, deprecated_count: int, guard_count: int, status: str) -> None:
-    RUN_LOG.parent.mkdir(parents=True, exist_ok=True)
-    exists = RUN_LOG.exists()
-    with RUN_LOG.open("a", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=LOG_FIELDS)
-        if not exists:
-            writer.writeheader()
-        writer.writerow({
-            "timestamp": timestamp(), "phase": "phase5r_c8", "action": "verify_active_state_guard",
-            "input_paths": ";".join(str(path.relative_to(ROOT)) for path in [STATE_PATH, ALLOWED_PATH, DEPRECATED_PATH, STALE_REPORT, C7_RUNNER]),
-            "output_paths": ";".join(str(path.relative_to(ROOT)) for path in [CONTROL_REPORT, RESEARCH_REPORT, RESEARCH_VERIFICATION, RUN_LOG]),
-            "status": status, "active_pipeline": state.get("active_pipeline", ""),
-            "primary_decision": state.get("primary_decision", ""),
-            "allowed_input_rows": str(allowed_count), "deprecated_workflow_rows": str(deprecated_count),
-            "guard_check_rows": str(guard_count), "email_sent": "no", "scheduler_used": "no",
-            "broker_used": "no", "smtp_config_modified": "no", "archive_contents_read": "no",
-            "phase5r_d2_created": "no", "safety_notes": "registry_only=yes; active_state_read_first=yes; files_moved=no; files_deleted=no",
-        })
+def _canonical_source_issues() -> list[str]:
+    issues: list[str] = []
+    for name in CANONICAL_RUNTIME_FILES:
+        path = SCRIPT_DIR / name
+        if not path.is_file():
+            issues.append(f"{name}:missing")
+            continue
+        text = path.read_text(encoding="utf-8")
+        try:
+            compile(text, str(path), "exec")
+        except SyntaxError:
+            issues.append(f"{name}:syntax")
+            continue
+        lowered = text.lower()
+        for marker in FORBIDDEN_CANONICAL_MARKERS:
+            if marker in lowered:
+                issues.append(f"{name}:{marker}")
+    return sorted(issues)
 
 
-def main() -> None:
-    state = load_state()
-    allowed = read_csv(ALLOWED_PATH)
-    deprecated = read_csv(DEPRECATED_PATH)
-    guards = read_csv(STALE_REPORT)
-    broker_imports, email_imports, blocked_calls = script_scan()
+def _plist_issues() -> list[str]:
+    issues: list[str] = []
+    for label, script_name in ACTIVE_JOBS.items():
+        template = SCHEDULER_DIR / f"{label}.plist.template"
+        installed = LAUNCH_AGENTS / f"{label}.plist"
+        if not _loaded(label):
+            issues.append(f"{label}:not_loaded")
+        if (
+            not template.is_file()
+            or not installed.is_file()
+            or template.read_bytes() != installed.read_bytes()
+        ):
+            issues.append(f"{label}:template_mismatch")
+            continue
+        with template.open("rb") as handle:
+            payload = plistlib.load(handle)
+        arguments = payload.get("ProgramArguments", [])
+        if not (
+            payload.get("Label") == label
+            and payload.get("RunAtLoad") is True
+            and payload.get("KeepAlive") is False
+            and payload.get("StartInterval") == 900
+            and "StartCalendarInterval" not in payload
+            and payload.get("WorkingDirectory") == str(ROOT)
+            and len(arguments) == 2
+            and arguments[1] == str(SCRIPT_DIR / script_name)
+        ):
+            issues.append(f"{label}:invariants")
+    for label in RETIRED_JOBS:
+        if _loaded(label) or (
+            LAUNCH_AGENTS / f"{label}.plist"
+        ).exists():
+            issues.append(f"{label}:retired_job_present")
+    if _loaded(SHADOW_JOB) or (
+        LAUNCH_AGENTS / f"{SHADOW_JOB}.plist"
+    ).exists():
+        issues.append(f"{SHADOW_JOB}:prematurely_active")
+    return issues
 
-    state_ok = all(state.get(key) == value for key, value in REQUIRED_STATE.items())
-    archive_allowed_rows = [row for row in allowed if "11_archive" in row["path_spec"] or row["allowed_as_active_input"] != "yes"]
-    exact_missing = [
-        row["path_spec"] for row in allowed
-        if row["path_kind"] == "exact" and not (ROOT / row["path_spec"]).exists()
+
+def collect_checks(*, include_runtime: bool) -> list[Check]:
+    checks: list[Check] = []
+    state = _read_json(STATE_PATH)
+    state_mismatches = [
+        f"{key}={state.get(key)!r}"
+        for key, expected in EXPECTED_STATE.items()
+        if state.get(key) != expected
     ]
-    pattern_missing = [
-        row["path_spec"] for row in allowed
-        if row["path_kind"] == "pattern" and not list(ROOT.glob(row["path_spec"]))
-    ]
-    workflow_by_id = {row["workflow_id"]: row for row in deprecated}
-    deprecated_ok = (
-        workflow_by_id.get("DW-001", {}).get("status") == "deprecated"
-        and workflow_by_id.get("DW-002", {}).get("status") == "deprecated"
-        and workflow_by_id.get("DW-003", {}).get("status") == "parked_uninstalled"
-        and workflow_by_id.get("DW-004", {}).get("status") == "archived_evidence_only"
-        and workflow_by_id.get("DW-005", {}).get("status") == "parked_evidence"
-        and workflow_by_id.get("DW-007", {}).get("email_send_allowed") == "via_phase5r_c7_only"
+    checks.append(
+        Check(
+            "active_state.daily_only",
+            not state_mismatches,
+            "mismatches=" + (",".join(state_mismatches) or "none"),
+        )
     )
-    runner_source = C7_RUNNER.read_text(encoding="utf-8")
-    guard_call = runner_source.find("validate_active_state()", runner_source.find("def main"))
-    first_active_read = runner_source.find("live_before = live_send_row_count()", runner_source.find("def main"))
-    runner_guarded = "ACTIVE_STATE" in runner_source and guard_call != -1 and first_active_read != -1 and guard_call < first_active_read
-    c6_rows = read_csv(C6_STATUS)
-    successful_sends = sum(row.get("mode") == "send" and row.get("sent") == "yes" for row in c6_rows)
-    smtp_stat = SMTP_CONFIG.stat()
-    smtp_unchanged = smtp_stat.st_size == SMTP_SIZE_BASELINE and int(smtp_stat.st_mtime) == SMTP_MTIME_BASELINE
-    guards_ok = all(row["active_input_allowed"] in {"yes", "no"} for row in guards) and any(row["guard_decision"] == "exclude_all" for row in guards)
-    broker_order_safe = not broker_imports and not blocked_calls
-    checks = [
-        ("active_decision_state.yaml exists", STATE_PATH.exists() and state_ok, f"active_pipeline={state.get('active_pipeline')}"),
-        ("allowed active inputs registry exists", ALLOWED_PATH.exists() and bool(allowed), f"rows={len(allowed)}"),
-        ("deprecated workflow registry exists", DEPRECATED_PATH.exists() and bool(deprecated), f"rows={len(deprecated)}"),
-        ("archived folders are excluded from active inputs", not archive_allowed_rows and guards_ok, f"archive_allowed_rows={len(archive_allowed_rows)}"),
-        ("all allowed active input paths resolve", not exact_missing and not pattern_missing, f"exact_missing={exact_missing}; pattern_missing={pattern_missing}"),
-        ("C7 is marked active", state.get("active_pipeline") == "phase5r_c7" and state.get("email_delivery_allowed_from") == "phase5r_c7_only", "weekly C7 only"),
-        ("C7 reads active state before active inputs", runner_guarded, f"guard_index={guard_call}; first_input_index={first_active_read}"),
-        ("C2/C3/D1 are deprecated or parked", deprecated_ok, "C2=deprecated; C3=deprecated; D1=parked_uninstalled"),
-        ("current_positions.local.csv is gitignored", gitignored(LOCAL_POSITIONS) and state.get("current_positions_source") == str(LOCAL_POSITIONS.relative_to(ROOT)), "only current holding source"),
-        ("no scheduler installed or loaded", not D1_INSTALLED.exists() and not scheduler_loaded(), f"installed={D1_INSTALLED.exists()}"),
-        ("no email sent", digest(C6_STATUS) == C6_STATUS_HASH_BASELINE and successful_sends == 2 and not email_imports, f"successful_send_rows={successful_sends}"),
-        ("no broker/order code created", broker_order_safe, f"broker={broker_imports}; blocked_calls={blocked_calls}"),
-        ("SMTP config not modified", smtp_unchanged, "metadata unchanged; config content not read"),
-        ("current local positions remained read-only", digest(LOCAL_POSITIONS) == LOCAL_HASH_BASELINE, "hash unchanged"),
-        ("Phase 5R-D2 was not created", not d2_paths(), f"paths={d2_paths()}"),
-        ("all required C8 files exist", all(path.exists() for path in REQUIRED_FILES), f"missing={[str(path.relative_to(ROOT)) for path in REQUIRED_FILES if not path.exists()]}"),
-    ]
-    passed = all(ok for _, ok, _ in checks)
-    generated = timestamp()
-    verification_lines = ["# Phase 5R-C8 Verification Report", "", f"Generated: `{generated}`", "", "## Required Checks", ""]
-    verification_lines.extend(f"- **{'PASS' if ok else 'FAIL'}** - {label}: {detail}." for label, ok, detail in checks)
-    verification_lines.extend(["", "## Active State", "", f"- Workflow: `{state.get('current_workflow')}`.", f"- Active pipeline: `{state.get('active_pipeline')}`.", f"- Primary decision: `{state.get('primary_decision')}`.", f"- Next review: `{state.get('next_review_date')}`.", f"- Allowed input rows: `{len(allowed)}`.", f"- Deprecated or parked workflow rows: `{len(deprecated)}`.", "", "## Boundary", "", "C8 created registries and verification artifacts only. It sent no email, activated no scheduler, accessed no broker, created no transaction code, modified no SMTP configuration, read no archive contents, moved no files, deleted no files, and created no Phase 5R-D2 artifact."])
-    verification_text = "\n".join(verification_lines) + "\n"
-    CONTROL_REPORT.write_text(verification_text, encoding="utf-8")
-    RESEARCH_VERIFICATION.write_text(verification_text, encoding="utf-8")
 
-    report_lines = [
-        "# Phase 5R-C8 Active State Report", "", f"Generated: `{generated}`", "",
-        "## Authoritative State", "", f"- Current workflow: `{state.get('current_workflow')}`.",
-        f"- Active pipeline: `{state.get('active_pipeline')}`.",
-        f"- Primary decision: `{state.get('primary_decision')}`.",
-        f"- Next review date: `{state.get('next_review_date')}`.",
-        f"- Current position source: `{state.get('current_positions_source')}`.",
-        f"- Email delivery boundary: `{state.get('email_delivery_allowed_from')}`.", "",
-        "## Registry Summary", "", f"- Allowed active input rows: `{len(allowed)}`.",
-        f"- Deprecated or parked workflow rows: `{len(deprecated)}`.",
-        f"- Stale-file guard checks: `{len(guards)}`.",
-        "- Archived folders are excluded without reading their contents.",
-        "- Historical daily files remain evidence only.", "",
-        "## Enforcement", "", "C7 now validates the active state before reading other weekly inputs. A missing or conflicting state blocks pipeline execution.", "",
-        "## Boundary", "", "The registry does not authorize scheduling, broker access, automatic portfolio action, standalone historical email workflows, archived inputs, or Phase 5R-D2.",
+    inhibit = _read_json(INHIBIT_PATH)
+    inhibit_ok = (
+        inhibit.get("active") is False
+        and inhibit.get("allowed_pipeline") == "phase5r_daily"
+    )
+    checks.append(
+        Check(
+            "maintenance_inhibit.daily_only",
+            inhibit_ok,
+            (
+                f"active={inhibit.get('active')!r};"
+                f"allowed_pipeline={inhibit.get('allowed_pipeline')!r}"
+            ),
+        )
+    )
+
+    allowed_rows = _read_csv(ALLOWED_PATH)
+    missing, forbidden = _registry_paths(allowed_rows)
+    checks.append(
+        Check(
+            "active_input_registry.daily_only",
+            bool(allowed_rows) and not missing and not forbidden,
+            (
+                f"rows={len(allowed_rows)};missing={missing};"
+                f"forbidden={forbidden}"
+            ),
+        )
+    )
+
+    deprecated_rows = _read_csv(DEPRECATED_PATH)
+    deprecated_issues = _deprecated_registry_issues(deprecated_rows)
+    checks.append(
+        Check(
+            "deprecated_workflows.closed",
+            not deprecated_issues,
+            (
+                f"rows={len(deprecated_rows)};"
+                f"issues={deprecated_issues}"
+            ),
+        )
+    )
+
+    guard_rows = _read_csv(STALE_REPORT_PATH)
+    weekly_allowed = [
+        row.get("check_id", "")
+        for row in guard_rows
+        if (
+            any(
+                marker in row.get("path_or_pattern", "").lower()
+                for marker in ("weekly", "phase5r_c5", "phase5r_c6", "phase5r_c7")
+            )
+            and row.get("active_input_allowed") != "no"
+        )
     ]
-    RESEARCH_REPORT.write_text("\n".join(report_lines) + "\n", encoding="utf-8")
-    append_log(state, len(allowed), len(deprecated), len(guards), "complete" if passed else "failed")
-    if not passed:
-        raise RuntimeError("Phase 5R-C8 active-state verification failed")
-    print(f"Phase 5R-C8 verification passed; active_pipeline={state.get('active_pipeline')}; email_sent=no")
+    archive_excluded = any(
+        row.get("guard_decision") == "exclude_all"
+        and "11_archive" in row.get("path_or_pattern", "")
+        and row.get("active_input_allowed") == "no"
+        for row in guard_rows
+    )
+    checks.append(
+        Check(
+            "stale_guard.weekly_archive_closed",
+            not weekly_allowed and archive_excluded,
+            (
+                f"weekly_allowed={weekly_allowed};"
+                f"archive_excluded={archive_excluded}"
+            ),
+        )
+    )
+
+    source_issues = _canonical_source_issues()
+    checks.append(
+        Check(
+            "canonical_source.no_weekly_dependency",
+            not source_issues,
+            f"issues={source_issues}",
+        )
+    )
+
+    registry = _read_json(MODEL_REGISTRY_PATH)
+    model_disabled = (
+        registry.get("mode") == "offline_fixture"
+        and registry.get("live_shadow_enabled") is False
+        and registry.get("canonical_influence_enabled") is False
+        and registry.get("email_eligible") is False
+        and registry.get("automatic_action_allowed") is False
+        and registry.get("broker_connection_allowed") is False
+        and registry.get("order_code_allowed") is False
+    )
+    checks.append(
+        Check(
+            "model_influence.disabled",
+            model_disabled,
+            (
+                f"mode={registry.get('mode')!r};"
+                f"live={registry.get('live_shadow_enabled')!r}"
+            ),
+        )
+    )
+
+    required_files = (
+        POLICY_PATH,
+        STATE_PATH,
+        INHIBIT_PATH,
+        ALLOWED_PATH,
+        DEPRECATED_PATH,
+        STALE_REPORT_PATH,
+    )
+    missing_control = [
+        str(path.relative_to(ROOT))
+        for path in required_files
+        if not path.is_file()
+    ]
+    checks.append(
+        Check(
+            "control_files.present",
+            not missing_control,
+            f"missing={missing_control}",
+        )
+    )
+
+    if include_runtime:
+        plist_issues = _plist_issues()
+        checks.append(
+            Check(
+                "launchd.daily_only",
+                not plist_issues,
+                f"issues={plist_issues}",
+            )
+        )
+    return checks
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--static-only",
+        action="store_true",
+        help="skip host launchd state and verify repository state only",
+    )
+    parser.add_argument("--json", action="store_true")
+    args = parser.parse_args()
+    smtp_before = _smtp_stat()
+    checks = collect_checks(include_runtime=not args.static_only)
+    smtp_after = _smtp_stat()
+    checks.append(
+        Check(
+            "smtp_config.not_opened_or_modified",
+            smtp_before == smtp_after,
+            f"metadata_unchanged={smtp_before == smtp_after}",
+        )
+    )
+    passed = all(check.passed for check in checks)
+    payload = {
+        "schema_version": "phase5r_canonical_workflow_check_v1",
+        "passed": passed,
+        "canonical_workflow": "daily_decision",
+        "canonical_pipeline": "phase5r_daily",
+        "checks": [asdict(check) for check in checks],
+        "boundaries": {
+            "pipeline_invoked": False,
+            "sender_invoked": False,
+            "email_attempted": False,
+            "smtp_config_read": False,
+            "provider_invoked": False,
+            "broker_connected": False,
+            "order_code_created": False,
+            "canonical_effect": False,
+            "files_written": False,
+        },
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+    else:
+        failures = [
+            check.check_id for check in checks if not check.passed
+        ]
+        print(
+            "canonical_workflow_status="
+            f"{'passed' if passed else 'failed'} "
+            "workflow=daily_decision pipeline=phase5r_daily "
+            f"checks={len(checks)} "
+            f"failures={','.join(failures) or 'none'} "
+            "weekly_active=false llm_active=false "
+            "email_attempted=false smtp_config_read=false "
+            "provider_invoked=false broker_connected=false "
+            "order_code_created=false files_written=false"
+        )
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

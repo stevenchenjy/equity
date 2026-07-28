@@ -10,8 +10,10 @@ The router is intentionally suitable for staged use:
 1. deterministic local gates can stop with no call;
 2. material evidence can request a Terra evidence pass;
 3. a possible class change can add a Sol proposal;
-4. a high-impact transition, thesis break, or disagreement can add the Sol
-   critic and a proposal-blind cross-family challenger.
+4. a high-impact transition, thesis break, or disagreement adds the Sol
+   critic; and
+5. a proposal-blind cross-family challenger is added only when the frozen
+   policy explicitly requires that paid dependency.
 
 All limits are immutable inputs.  Calls are reserved at their configured
 worst-case token and USD envelopes.  If one required call cannot fit, the
@@ -275,6 +277,7 @@ class RouterPolicy:
     high_impact_classifications: frozenset[str] = (
         HIGH_IMPACT_CLASSIFICATIONS
     )
+    independent_challenger_required: bool = True
     provider_fallback_allowed: bool = False
 
     def __post_init__(self) -> None:
@@ -293,6 +296,10 @@ class RouterPolicy:
         if self.provider_fallback_allowed is not False:
             raise RouterConfigurationError(
                 "provider fallback must remain disabled"
+            )
+        if not isinstance(self.independent_challenger_required, bool):
+            raise RouterConfigurationError(
+                "independent challenger policy must be boolean"
             )
         if (
             not isinstance(self.high_impact_classifications, frozenset)
@@ -342,6 +349,9 @@ class RouterPolicy:
                 ],
                 "high_impact_classifications": (
                     self.high_impact_classifications
+                ),
+                "independent_challenger_required": (
+                    self.independent_challenger_required
                 ),
                 "provider_fallback_allowed": (
                     self.provider_fallback_allowed
@@ -902,7 +912,9 @@ def _required_roles(
 ) -> tuple[str, ...]:
     high_impact = _high_impact_transition(policy, signals)
     if high_impact or signals.disagreement:
-        return ROLE_ORDER
+        if policy.independent_challenger_required:
+            return ROLE_ORDER
+        return ("analyst", "committee", "critic")
     if (
         signals.classification_may_change
         or signals.decision_changed

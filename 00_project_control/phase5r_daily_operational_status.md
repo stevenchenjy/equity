@@ -1,59 +1,70 @@
 # Phase 5R Daily Operational Status
 
-Generated: 2026-07-24 00:04 ET
+Generated: 2026-07-27 ET
 
-## Active State
+## Active state
 
 - Workflow: `daily_decision`
 - Pipeline: `phase5r_daily`
 - Email source: `phase5r_daily_only`
 - Time zone: `America/New_York`
-- Operational from: `2026-07-24`
 - Maintenance inhibit: cleared only for `phase5r_daily`
-- Broker connection: prohibited
-- Order code: prohibited
-- Execution: manual outside the repository only
+- Broker connection, account read, order code, and automatic execution:
+  prohibited
+- Execution: manual outside the repository
+- Model registry: `offline_fixture`
+- Model canonical/email influence: disabled
 
-## Scheduler State
+The read-only canonical guard passes. It confirms that weekly C1–C7 and
+schedulers D1–D3 cannot be active inputs or regain delivery authority.
 
+## Scheduler state
+
+- `com.steven.phase5r.dailyrefresh`: loaded; installed plist matches template
+- `com.steven.phase5r.dailydecision`: loaded; installed plist matches template
 - `com.steven.phase5r.dailybrief`: unloaded
 - `com.steven.phase5r.weeklyconviction`: unloaded
 - `com.steven.phase5r.weeklycatchup`: unloaded
-- `com.steven.phase5r.dailyrefresh`: loaded
-- `com.steven.phase5r.dailydecision`: loaded
+- `com.steven.phase5r.llmshadow`: unloaded and not installed
 
-Both new installed plists match repository templates. Each uses
-`RunAtLoad=true`, `KeepAlive=false`, and `StartInterval=900`. RunAtLoad is safe:
-the scheduler performs date/slot checks and cannot send before
-`operational_from`.
+The two daily LaunchAgents use `RunAtLoad=true`, `KeepAlive=false`, and
+`StartInterval=900`. The refresh wrapper checks weekday slots at 08:15, 12:30,
+16:15, and 17:45 ET and one weekend slot at 12:00. The decision wrapper checks
+after 18:30 ET, caps automatic attempts at two, and records completion by
+cycle date.
 
-## Latest Completed Closing-Session Refresh
+LaunchAgents do not run while the Mac is powered off or fully asleep. A later
+wake can cover due slots for the current date; it does not guarantee
+reconstruction of a prior day's missed state.
 
-- B2 market rows: 29
-- Scored candidate rows: 27
-- Held market sessions: IOT and RBRK both `2026-07-23`
-- SEC submission coverage for held positions: complete
-- SEC XBRL fundamental coverage for held positions: complete
-- New material SEC events: 0
-- Confirmed execution reconciliation conflicts: 0
+## Latest completed daily cycle
+
+- Generated: `2026-07-27T19:01:56-04:00`
+- Market snapshot rows: `29`
+- Scored candidate rows: `27`
+- IOT and RBRK close session: `2026-07-27`
+- Held-position SEC and fundamental gates: passed
+- New material SEC events: `0`
 - Decision: `继续持有现有仓位｜今天不新增仓位`
 - Human review required: no
+- Weekday send recommended: yes
 
-The 2026-07-24 pre-session preview is intentionally `data_gate_hold` because
-the new market session has not occurred. It has
-`send_recommended=false / before_daily_decision_time`; the sender independently
-enforces the same 18:30 boundary.
+The ordinary production scheduler sent one email for the July 27 cycle. This
+was not caused by upgrade verification. The delivery ledger contains a durable
+pre-SMTP claim followed by `sent`. A prior `delivery_unknown` remains a blocking
+status and was not retried, preserving the no-duplicate policy.
 
-## Verification
+## Upgrade verification
 
-- Protected verification: PASS
-- Operational verification: PASS
-- Email attempted during upgrade verification: no
-- Email sent during upgrade verification: no
-- C7 invoked: no
-- SMTP configuration read or modified by verification/activation: no
-- Broker connected or account read: no
-- Order code or Phase 5R-E created: no
+- Canonical daily guard: PASS
+- Daily scheduler status: PASS
+- Full Phase 5R Python suite: PASS, `350/350`
+- Safe-shadow controls: PASS
+- Live shadow launch ready: no
+- Model/provider invoked during verification: no
+- Email attempted during verification: no
+- SMTP configuration read during verification: no
+- Broker/account/order/trade action: no
 
-The first eligible automatic decision is after 18:30 ET on 2026-07-24. The
-sender's daily ledger remains the final duplicate guard.
+The model layer remains outside the daily critical path. Missing or stale model
+artifacts cannot delay, change, or send the canonical daily decision.

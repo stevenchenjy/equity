@@ -5,13 +5,19 @@ Objective: produce clear, source-grounded buy/hold/trim/exit research decisions
 with exception-based review, while keeping all execution manual and outside the
 repository
 
+Economical dependency authority as of 2026-07-27:
+`00_project_control/phase5r_paid_dependency_policy.json` and
+`00_project_control/phase5r_economical_dependency_decision.md`. Where older
+cost or dependency examples below differ, the 2026-07-27 closed policy wins.
+
 ## Current decision
 
 Proceed with a leakage-free three-role model layer plus deterministic
 adjudication:
 
 - evidence analyst: `gpt-5.6-terra`, medium reasoning, because it is the
-  cost-balanced member of the 5.6 family;
+  cost-balanced quality baseline; `gpt-5.6-luna` is evaluated on the same
+  frozen pilot packets and may replace Terra only if it is non-inferior;
 - committee/research proposer: `gpt-5.6-sol`, high reasoning, because the
   higher-cost frontier model is reserved for the smaller number of decisions
   that require synthesis and proportionality judgment;
@@ -53,16 +59,16 @@ and [GPT-5.6 release and pricing](https://openai.com/index/gpt-5-6/).
 | M0 safety/contract shell | Complete locally | closed schemas, citation binding, retries, receipts, cost/call ceilings, canonical influence false |
 | M1 leakage-free semantic inputs | Complete locally | no C9 recommendation/action/eligibility/score reaches analyst, committee, or critic |
 | M2 direct Responses API boundary | Adapter complete; live use disabled | externally constructed client, no credential read, strict JSON schema, no tools, `store=false`, response ID/model/usage receipts |
-| M3 cost-aware inference routing | Planner, pre-provider gate, exact-role fixture executor, hash-chained request/token/USD ledger, and metered receipts complete locally; live provider authority disabled | fixed cycle-ledger location, provider-native live metering normalization, explicit credential/cost authorization, and physical smoke evidence |
-| D1 per-ticker action-grade market contract | Provider-neutral contract, synthetic Massive adapter, and per-ticker packet gate complete locally; licensed feed absent | licensed receipt, finality/corporate-action checks, ticker-scoped grade, 30-session shadow |
+| M3 cost-aware inference routing | Planner, optional paid-challenger policy, pre-provider gate, exact-role fixture executor, fixed private cycle-ledger location, hash-chained request/token/USD ledger, GPT-5.6 cache-write/read normalization, and metered receipts complete locally; live provider authority disabled | explicit external authentication/cost authorization and physical smoke evidence |
+| D1 per-ticker action-grade market contract | Provider-neutral contract, synthetic Massive adapter, and per-ticker packet gate complete locally; licensed feed absent | public data remains research/shadow-only; purchase a licensed feed only if model replay passes and a valuation-sensitive advisory transition requires action-grade data |
 | D2 valuation evidence | Receipt validation and deterministic-adjudicator wiring complete; active packet contains zero real receipts | real source-bound shares/market cap/net debt/EV/FCF/dilution/target/downside receipts populate and pass the active packet |
 | D3 full-label replay corpus | Minimum-size/diversity gates plus single-split and three-fold issuer/time purge/embargo receipts complete locally; real acquisition and labels blocked | 250–300 locally complete packets, 20+ issuers, 50+ material transitions, 50+ separate adversarial probes, material and no-change/uncertain labels, and real frozen multi-fold scores |
 | D4 point-in-time performance | Rolling 12/36/60-month receipt and deterministic sequential paper simulator complete with synthetic tests; real ledger absent | real next-session paper ledger, calibrated costs/cash/corporate actions, benchmarks, drawdown/turnover/CI |
 | D5 external blinded challenger | Closed contract, deterministic comparison, injected Anthropic Messages adapter, and offline fixtures complete; no credentials or calls | exact provider-specific schema preflight, frozen cross-family model/version, retention approval, issuer-held-out qualification, and explicit cost/call authorization |
-| Q1 30-physical-call provider smoke | Not authorized | 10 packets × Terra analyst + Sol proposer + separately requested Sol critic; all receipts valid; no canonical or email effect |
+| Q1 30-physical-call provider smoke | Not authorized | 10 packets × Luna analyst + the same 10 × Terra analyst + 10 precommitted Sol committee/critic requests, preferably Batch; all receipts valid; no canonical or email effect; $5 cap |
 | Q2 qualification replay | Blocked by corpus/auth | all decision-quality confidence-bound gates pass |
-| Q2C cross-provider critic benchmark | Blocked by issuer-held-out Q2 | a blinded Fable 5, Opus 5, or Gemini 3.1 Pro classifier improves unique catches without excessive false rejects/downgrades |
-| Q3 live shadow | Blocked by Q2/Q2C/data | 30–60 completed market sessions without boundary/data-quality failure |
+| Q2C cross-provider critic benchmark | Deferred and not required for initial shadow | buy only if the same-provider critic leaves measured correlated errors or inadequate unique catches |
+| Q3 live shadow | Blocked by Q2/corpus/auth | 30–60 completed research-only market sessions without boundary/data-quality failure; public market context cannot unlock action-grade transitions |
 | A1 advisory email influence | Disabled | explicit activation receipt after all Q gates |
 
 ## Concrete model architecture
@@ -251,14 +257,16 @@ unknown outcomes keep the worst-case charge and can never be silently retried.
 The executor accepts fixture transport only. The operational shadow gate still
 blocks every external call with
 `live_provider_execution_not_authorized`; there is no fall-through to the
-legacy fixed three-role executor. A live adapter must additionally pin one
-cycle-ledger location, normalize provider-native usage, and receive explicit
-credential and cost authority.
+legacy fixed three-role executor. The fixed private per-cycle ledger location
+and provider-native GPT-5.6 cache usage normalization are now implemented.
+External authentication, cost authority, and physical provider evidence remain
+required before live transport can be enabled.
 
 ## Provider comparison and qualification decision
 
 | Candidate | Intended role | Official API facts used for planning | Cost at standard list price | Phase 5R decision |
 | --- | --- | --- | --- | --- |
+| `gpt-5.6-luna` | lower-cost analyst candidate | lowest-cost GPT-5.6 tier; Responses API, Structured Outputs, and Batch | `$1` input / `$6` output per MTok | frozen Batch comparison only; replace Terra only on non-inferiority |
 | `gpt-5.6-terra` | high-volume evidence analyst | balanced 5.6 tier; Responses API reasoning and Structured Outputs | `$2.50` input / `$15` output per MTok | selected for Q1/Q2 |
 | `gpt-5.6-sol` | committee/proposer and provisional same-provider critic | flagship 5.6 tier; higher reasoning capability | `$5` input / `$30` output per MTok | selected for Q1/Q2 |
 | `claude-fable-5` | maximum-capability independent critic challenger | Anthropic's most capable widely released model; 1M context, 128K synchronous maximum output, and Claude API Structured Outputs | `$10` input / `$50` output per MTok | preferred maximum-rigor challenger after issuer-held-out Q2 and exact-schema preflight; never final authority |
@@ -444,9 +452,10 @@ Retention without the relevant approval.
 
 The first paid pilot is capped at exactly `30` physical requests:
 
-- `10` frozen public-evidence packets × one Terra analyst request;
-- the same `10` packets × one Sol proposer request;
-- the same `10` packets × one separate Sol critic request.
+- `10` frozen public-evidence packets × one Luna analyst request;
+- the same `10` packets × one Terra analyst request;
+- `10` precommitted Sol committee or critic requests on the relevant frozen
+  cases.
 
 A retry counts as another physical request. If a retry would exceed `30`, the
 affected packet remains incomplete and the pilot stops; the call ceiling is not
@@ -454,23 +463,19 @@ silently expanded. C9 and deterministic validation do not consume provider
 calls.
 
 Planning envelope per request: no more than `20,000` billed input tokens and
-`8,000` billed output/reasoning tokens. At the official standard prices above:
-
-- Terra ceiling: `10 × (($2.50 × .020) + ($15 × .008)) = $1.70`;
-- two Sol roles: `20 × (($5 × .020) + ($30 × .008)) = $6.80`;
-- Q1 list-price envelope: `$8.50`; recommended operator hard cap: `$10.00`
-  before tax.
+`8,000` billed output/reasoning tokens. At current standard prices, the 10
+Luna + 10 Terra + 10 Sol plan is `$5.78`; OpenAI's 50% Batch discount reduces
+the planning estimate to `$2.89`. The operator hard cap is `$5.00`.
 
 Actual provider usage receipts, not these planning estimates, determine the
 recorded cost. Cached-input savings are not assumed.
 
-Q2 uses the same three physical role requests per packet: `750–900` requests
-for `250–300` packets. Under the deliberately conservative Q1 token envelope,
-the synchronous list-price ceiling is approximately `$212.50–$255.00`.
-OpenAI documents a `50%` Batch API discount, which would reduce that estimate
-to `$106.25–$127.50`, but Batch requires uploaded input/output files and
-separate retention approval. It is optional only for public, sanitized replay
-material and is not part of Q1:
+Q2 uses one analyst request for every one of 250 frozen packets and two Sol
+requests only for 50 material transitions: at most `350` requests. Under the
+same conservative token envelope and OpenAI's 50% Batch discount, the estimate
+is `$38.25` with Terra or `$25.50` if Luna passes the non-inferiority gate.
+The operator hard cap is `$45.00`. Batch is limited to public, sanitized replay
+material:
 [OpenAI Batch API](https://platform.openai.com/docs/api-reference/batch/object?api-mode=responses).
 
 After issuer-held-out Q2 passes, a `50`-packet critic challenger benchmark
@@ -485,23 +490,16 @@ Those challenger estimates exclude taxes, retries, data-residency multipliers,
 and provider price changes. No cross-provider spend is authorized by this
 plan.
 
-An illustrative **post-qualification operating ceiling**, using the same
-deliberately large 20K-input/8K-output envelope, is:
+An illustrative **post-qualification operating ceiling** uses zero calls for
+unchanged cycles, one Terra-or-Luna request for material evidence, and no more
+than three same-provider requests for a material transition. Cross-provider
+calls remain zero unless Q2 demonstrates a specific residual-error need.
 
-- up to 252 Terra evidence passes: `$42.84`;
-- up to 52 material sessions with both Sol proposer and critic: `$35.36`;
-- up to 20 high-impact Opus 5 blinded challenges: `$6.00`;
-- combined list-price planning ceiling: about `$84.20` per year before tax and
-  retries.
-
-Those counts are hard-cap examples, not a forecast. Calling all four roles on
-all 252 sessions would be about `$289.80` under the same envelope and is
-specifically not the selected operating design. Local deterministic refreshes,
-cached sealed no-change conclusions, smaller actual outputs, and approved
-prompt caching may reduce cost, but savings are not credited before provider
-usage receipts exist. API spend is treated as an operating cost in net
-performance; it is never justified by assuming the 12%–15% aspiration will be
-achieved.
+The direct adapter disables implicit GPT-5.6 cache breakpoints because
+stateless Phase 5R role requests are normally too far apart to reuse the
+30-minute cache. Cache reads and writes are still normalized and priced from
+actual provider receipts. API spend is an operating cost in net performance;
+it is never justified by assuming the 12%–15% aspiration will be achieved.
 
 ### D1 — Action-grade market data
 
@@ -658,7 +656,8 @@ is execution authority.
 
 ## Verification snapshot
 
-- Full integrated local suite: PASS, `341/341`.
+- Full integrated local suite: PASS, `350/350`, including the economical
+  same-provider initial-shadow policy and explicit paid-challenger opt-in.
 - Cost-router planner/gate, durable exact-role fixture execution and metering,
   three-fold issuer/time validation, freshness, research/action separation,
   runtime hash coverage, sequential simulator, and rolling-performance tests
@@ -675,8 +674,8 @@ is execution authority.
 - Provider replay gate: correctly blocked with `0` real qualified packets and
   no verifier side effects; it now reruns the strict manifest/ledger/SEC/market
   provenance verifier, and the synthetic fake-CIK/text corpus is rejected.
-- Qualification inventory: correctly blocked at `300` selected target packets
-  because only `6/20` issuers are present and `0/300` packets are locally
+- Qualification inventory: correctly blocked at `250` selected target packets
+  because only `6/20` issuers are present and `0/250` packets are locally
   complete.
 
 ## External inputs required
@@ -686,25 +685,26 @@ is execution authority.
    configured outside the repository. Never paste a key into chat, a file,
    a log, or a LaunchAgent.
 3. Explicit authorization for the Q1 ceiling: exactly `30` physical requests,
-   a `$10.00` hard cap, and the 20K-input/8K-output planning envelope. These are
+   a `$5.00` hard cap, Batch use on public sanitized inputs, and the
+   20K-input/8K-output planning envelope. These are
    separate approvals; having a credential is not authorization to spend.
 4. Two independent reviewer assignments and an adjudicator for at least `150`
    chronological probes. Reviewer identities may remain outside the packet,
    but reviewer independence and conflict resolution must be recorded.
-5. A licensed read-only market-data plan plus confirmation that its terms
-   permit the required local research retention and corporate-action replay.
-6. Explicit authorization for D3's SEC/network acquisition after the
+5. Explicit authorization for D3's SEC/network acquisition after the
    User-Agent is configured, plus an operator storage budget. Current planning
-   is `791–2,701` requests, about `1.12 GB` typical, and a deliberately
-   conservative `72.94 GB` upper bound.
-7. A later choice among Claude Fable 5 (maximum rigor), Claude Opus 5
+   is about `0.96 GB` typical and a deliberately conservative `61.35 GB`
+   upper bound.
+6. A later, optional choice among Claude Fable 5 (maximum rigor), Claude Opus 5
    (lower-cost Anthropic control), and Gemini 3.1 Pro Preview (preview-only
    alternative), separate external authentication, retention/data-region
    review, and an explicit challenger cost cap. This input is not requested
-   until issuer-held-out Q2 passes.
-8. Separate approval before using Batch, because its uploaded request/output
-   files have separate object-storage and retention behavior from stateless
-   `store=false` Responses calls.
+   until issuer-held-out Q2 passes and shows a measured need.
+
+A licensed market-data purchase is deliberately deferred. Public secondary
+data is sufficient for noncanonical research shadow; valuation-sensitive
+transitions continue to abstain until a later action-grade purchase gate is
+met.
 
 Until those inputs exist, continue only offline contract, fixture, inventory,
 and verification work.

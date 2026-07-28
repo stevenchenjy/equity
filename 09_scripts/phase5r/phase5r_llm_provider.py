@@ -447,24 +447,72 @@ class OpenAIResponsesProvider:
         return "".join(text_parts)
 
     def _usage_receipt(self, response: Any) -> dict[str, int]:
+        """Normalize provider-native Responses usage for exact cost metering.
+
+        OpenAI reports cache reads and GPT-5.6 cache writes as subsets of
+        ``input_tokens``.  The execution ledger's provider-neutral contract
+        expects cache writes separately while cache reads remain a subset of
+        base input.  Subtracting writes here prevents the ledger from charging
+        those tokens once at the uncached rate and again at the 1.25x
+        cache-write rate.
+        """
+
         usage = self._field(response, "usage", {})
-        receipt: dict[str, int] = {}
-        for name in ("input_tokens", "output_tokens", "total_tokens"):
-            value = self._field(usage, name)
-            if (
-                isinstance(value, int)
-                and not isinstance(value, bool)
-                and value >= 0
-            ):
-                receipt[name] = value
-        if (
-            {"input_tokens", "output_tokens"}.issubset(receipt)
-            and "total_tokens" not in receipt
+        input_tokens = self._field(usage, "input_tokens")
+        output_tokens = self._field(usage, "output_tokens")
+        total_tokens = self._field(usage, "total_tokens")
+        for name, value in (
+            ("input_tokens", input_tokens),
+            ("output_tokens", output_tokens),
         ):
-            receipt["total_tokens"] = (
-                receipt["input_tokens"] + receipt["output_tokens"]
+            if (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or value < 0
+            ):
+                raise ProviderError(
+                    f"Responses API {name} usage is missing or invalid"
+                )
+        if total_tokens is not None and (
+            not isinstance(total_tokens, int)
+            or isinstance(total_tokens, bool)
+            or total_tokens < 0
+            or total_tokens != input_tokens + output_tokens
+        ):
+            raise ProviderError(
+                "Responses API total_tokens usage is inconsistent"
             )
-        return receipt
+
+        details = self._field(usage, "input_tokens_details", {})
+        cached_tokens = self._field(details, "cached_tokens", 0)
+        cache_write_tokens = self._field(
+            details,
+            "cache_write_tokens",
+            0,
+        )
+        for name, value in (
+            ("cached_tokens", cached_tokens),
+            ("cache_write_tokens", cache_write_tokens),
+        ):
+            if (
+                not isinstance(value, int)
+                or isinstance(value, bool)
+                or value < 0
+            ):
+                raise ProviderError(
+                    f"Responses API {name} usage is invalid"
+                )
+        if cached_tokens + cache_write_tokens > input_tokens:
+            raise ProviderError(
+                "Responses API cache usage exceeds total input tokens"
+            )
+        return {
+            "input_tokens": input_tokens - cache_write_tokens,
+            "output_tokens": output_tokens,
+            "cached_input_tokens": cached_tokens,
+            "cache_creation_input_tokens": cache_write_tokens,
+            "cache_read_input_tokens": 0,
+        }
 
     def generate(
         self,
@@ -524,6 +572,11 @@ class OpenAIResponsesProvider:
             },
             "tools": [],
             "store": False,
+            # GPT-5.6 implicit cache writes cost 1.25x uncached input.  These
+            # requests are stateless, role-specific, and ordinarily too
+            # dispersed in time to reuse a 30-minute cache.  Explicit mode
+            # disables the implicit breakpoint; no breakpoint is supplied.
+            "prompt_cache_options": {"mode": "explicit"},
             "max_output_tokens": self.max_output_tokens,
         }
         started = time.monotonic()

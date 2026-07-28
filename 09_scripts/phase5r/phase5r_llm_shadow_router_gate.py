@@ -271,6 +271,7 @@ def _policy(
         fields={
             "role_specs",
             "high_impact_classifications",
+            "independent_challenger_required",
             "provider_fallback_allowed",
         },
     )
@@ -292,6 +293,10 @@ def _policy(
             for role_row in role_rows
         ),
         high_impact_classifications=frozenset(high_impact),
+        independent_challenger_required=_boolean(
+            row["independent_challenger_required"],
+            label="independent_challenger_required",
+        ),
         provider_fallback_allowed=_boolean(
             row["provider_fallback_allowed"],
             label="provider_fallback_allowed",

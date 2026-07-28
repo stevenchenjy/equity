@@ -91,6 +91,7 @@ def _envelope(
                 "trim_review",
                 "exit_review",
             ],
+            "independent_challenger_required": False,
             "provider_fallback_allowed": False,
         },
         "ceilings": {

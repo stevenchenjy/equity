@@ -1,11 +1,12 @@
 # Phase 5R Rigorous Decision-Model Upgrade Execution Report
 
-Generated: 2026-07-25T10:33:12-04:00  
+Generated: 2026-07-27 ET; updated after economical dependency audit
 Status: combined local contracts, cost-aware exact-role fixture execution,
-durable usage/cost accounting, ticker freshness, three-fold issuer/time
-isolation, and sequential paper evaluation are implemented; live licensed
-inputs, real-source corpus acquisition, external-provider replay, and
-live-shadow qualification remain pending
+durable usage/cost accounting, fixed private cycle ledger, GPT-5.6 native cache
+metering, optional paid-challenger routing, ticker freshness, three-fold
+issuer/time isolation, and sequential paper evaluation are implemented;
+real-source corpus acquisition, external-provider replay, and live-shadow
+qualification remain pending
 
 ## Decisive conclusion
 
@@ -16,8 +17,8 @@ source-bound model roles:
 1. an evidence analyst;
 2. a thesis/action committee;
 3. a proposal-aware adversarial critic; and
-4. for high-impact transitions, a cross-family challenger that precommits
-   without seeing the committee proposal.
+4. optionally, after a measured need is proven, a cross-family challenger that
+   precommits without seeing the committee proposal.
 
 The model layer may make a clear per-ticker research classification—hold,
 candidate, trim review, exit review, or abstain. A separate action-review axis
@@ -165,28 +166,31 @@ infrastructure decision.
   guard only; it is not a calibrated probability threshold.
 - Weekend model inference is suppressed when the deterministic daily decision
   has no material change.
-- A cost-aware planner now selects zero, one, two, or four exact roles based on
-  materiality and impact, reserves worst-case calls/tokens/USD, rejects
+- A cost-aware planner now selects zero, one, two, or three same-provider roles
+  for the economical initial shadow, with an optional fourth cross-provider
+  role only under a separately enabled policy. It reserves worst-case
+  calls/tokens/USD, rejects
   provider fallback, and allows reuse only under exact semantic/dependency
   bindings. An explicit shadow routing envelope is checked before activation
   or provider construction and emits a hashed local receipt. A new fixture-only
   executor consumes exactly that plan, persists the reservation before
   provider construction, recomputes cost from metered tokens and frozen model
   prices, binds dependency hashes, and retains worst-case charges after unknown
-  outcomes. Live provider calls remain blocked pending a pinned cycle ledger,
-  provider-native metering normalization, and explicit credential/cost
-  authority.
+  outcomes. The private cycle-ledger location is now fixed outside the
+  repository, and Responses API cached/cache-write tokens are normalized.
+  Live provider calls remain blocked pending external authentication, explicit
+  cost authority, and physical provider evidence.
 - Routine validated HOLD/WATCH/ABSTAIN results require no daily manual review.
   Human attention is reserved for action transitions, exceptions, and any
   eventual real-world action.
 
 ## Evaluation and activation design
 
-The base evaluation plan contains at least 1,040 logical model items at the
-machine-enforced 250-packet floor and the 50-case adversarial minimum:
+The original all-roles evaluation plan remains useful as a stress ceiling, but
+it is no longer the economical default. The selected qualification plan uses:
 
-- 750 analyst/committee/critic calls over 250 real packets;
-- 50 reviewed transition-pair calls;
+- 250 analyst calls over 250 real packets;
+- 100 Sol committee/critic calls for 50 reviewed material transitions;
 - 50 deterministic no-change controls;
 - at least 50 adversarial calls;
 - 40 repeated stability calls;
@@ -327,13 +331,13 @@ state was changed.
 
 | Check | Result |
 | --- | --- |
-| Combined full Phase 5R Python suite | PASS — 341/341 tests; `python3 -m unittest discover -s 09_scripts/phase5r/tests -p 'test_*.py'`; completed 2026-07-25T10:33:12-04:00 |
+| Combined full Phase 5R Python suite | PASS — 350/350, including the economical same-provider initial-shadow policy |
 | Leakage-free live/replay role inputs | PASS in the combined suite, including label/map hiding and role-scoped source checks |
 | Injected-client Responses adapter | Implemented and synthetic-client tested; no external call performed |
 | Blinded cross-family challenger | Closed proposal-free contract, deterministic comparison, and injected Anthropic adapter PASS offline; no external call performed |
 | Research/action dual-axis adjudication | PASS — C9 can block action review without erasing a validated research exit/candidate conclusion |
 | Per-ticker freshness | PASS offline — hashed SEC scan/market/valuation freshness binds each ticker; expired or missing state blocks action review without aging out durable SEC thesis evidence |
-| Cost-aware router and shadow preflight | PASS offline — exact semantic/model/schema/budget envelope is checked before provider construction; fixture execution uses a private hash-chained ledger and metered exact-role receipts; live provider authority remains blocked |
+| Cost-aware router and shadow preflight | PASS offline — exact semantic/model/schema/budget envelope is checked before provider construction; fixture execution uses a private hash-chained ledger and metered exact-role receipts; initial shadow can stop at same-provider critic and defer the paid challenger; live provider authority remains blocked |
 | Issuer/time split | PASS synthetic — whole-CIK chronological split plus three expanding out-of-time folds, 7-day purge/embargo, no per-fold issuer/packet/adjacent-transition leakage, and no holdout issuer/case reuse |
 | Critic and confidence sanity | PASS — unsupported downgrades and structurally empty transition confidence fail closed; empirical calibration still pending |
 | Replay-corpus provenance prerequisite | PASS — provider gate reruns the strict manifest/ledger/SEC/market verifier; synthetic fake-CIK/text corpus is rejected |
@@ -346,7 +350,7 @@ state was changed.
 | Daily scheduler | PASS — daily refresh and decision loaded |
 | Legacy daily/weekly schedulers | PASS — unloaded |
 | LLM shadow scheduler | Intentionally unloaded and not installed |
-| Real replay corpus | PENDING — 325 candidates inventoried for the 300-packet plan; only 6/20 issuers and 0 complete packets |
+| Real replay corpus | PENDING — 250 packets selected; only 6/20 issuers and 0 complete packets |
 | Frozen transition annotations | PENDING |
 | External-provider replay | NOT RUN |
 | Activation receipt | Correctly absent/blocked |
@@ -361,29 +365,31 @@ outside the model work.
 1. A real SEC-compliant User-Agent contact string, for example a project name
    plus a contact email. It will be supplied only as a command argument for the
    public SEC corpus refresh and will not be written to the repository.
-2. After the 10-packet pilot corpus and frozen annotations exist, explicit
-   authorization for exactly **30 physical external model calls**, the
-   20K-input/8K-output planning envelope, and a `$10.00` operator hard cap.
+2. After the 10-packet pilot corpus exists, explicit authorization for exactly
+   **30 physical external model calls**, the 20K-input/8K-output planning
+   envelope, public-input Batch processing, and a `$5.00` operator hard cap.
    Authentication stays outside the repository and must never be pasted into a
    report, log, LaunchAgent, or chat.
-3. Before cost-aware live calls, pin one non-bypassable cycle-ledger location,
-   normalize provider-native response/model/token/cache fields into the metered
-   receipt, and explicitly authorize the external credential and physical
-   request/USD cap. The exact-role and crash-accounting mechanics already pass
-   fixture tests; the shadow gate correctly refuses live transport.
-4. For market-dependent candidate decisions, a licensed read-only market-data
-   source. The Massive-shaped adapter currently uses synthetic offline fixtures
-   only; no subscription, live feed, credential, or licensed data ingestion has
-   been activated.
-5. One-time independent dual review of transition and claim-entailment
+3. Explicitly authorize the external credential and physical request/USD cap.
+   The fixed ledger, native cache metering, exact-role, and crash-accounting
+   mechanics pass fixture tests; the shadow gate correctly refuses live
+   transport.
+4. One-time independent dual review of transition and claim-entailment
    artifacts. This is a model licensing exam, not a daily user-review burden.
-6. Only after issuer-held-out qualification: a separately authorized choice
+5. Only after issuer-held-out qualification and a measured residual-error need:
+   a separately authorized choice
    among maximum-capability Claude Fable 5, lower-cost Claude Opus 5, and
    preview-only Gemini 3.1 Pro, with provider-specific schema preflight,
    retention/data-region review, and a challenger cost cap.
 
 Until those inputs are provided and the gates pass, the model remains disabled
 and the deterministic daily workflow remains canonical. In particular, the
-licensed live feed, real valuation ingestion, real corpus acquisition, real
+real valuation ingestion, real corpus acquisition, real
 point-in-time performance ledger, external provider calls, and shadow
 qualification are all incomplete.
+
+A licensed feed is no longer an initial-shadow prerequisite. Public secondary
+market context may be used for noncanonical shadow research, while
+valuation-sensitive action-grade transitions remain blocked. A paid feed is
+considered only after replay quality passes and the action-grade purchase gate
+is actually reached.

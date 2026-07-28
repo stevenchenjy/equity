@@ -25,11 +25,12 @@ import os
 import stat
 import tempfile
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Callable, Mapping, Protocol
 
-from phase5r_daily_common import iso_now
+from phase5r_daily_common import ROOT, iso_now
 from phase5r_llm_cost_aware_router import (
     InferencePlan,
     PlannedRoleCall,
@@ -41,6 +42,12 @@ from phase5r_llm_provider import ModelProvider, ProviderResult
 LEDGER_SCHEMA_VERSION = "phase5r_llm_execution_ledger_v1"
 RECEIPT_SCHEMA_VERSION = "phase5r_llm_metered_role_receipt_v1"
 MAX_LEDGER_BYTES = 4 * 1024 * 1024
+DEFAULT_LEDGER_RELATIVE_ROOT = (
+    Path("Library")
+    / "Application Support"
+    / "Phase5R"
+    / "llm_execution"
+)
 ALLOWED_EVENT_KINDS = frozenset(
     {
         "cycle_opened",
@@ -67,6 +74,48 @@ class ExecutionRecoveryRequired(ExecutionLedgerError):
 class PayloadValidator(Protocol):
     def __call__(self, payload: dict[str, Any]) -> None:
         ...
+
+
+def default_execution_ledger_root(
+    *,
+    user_home: Path | None = None,
+) -> Path:
+    """Return the one private, non-repository runtime-ledger root.
+
+    The path is computed but not created.  Tests and explicit external
+    launchers may inject ``user_home``; production callers must not select an
+    arbitrary per-run location because that would bypass cumulative cycle
+    accounting.
+    """
+
+    home_path = Path.home() if user_home is None else user_home
+    if not isinstance(home_path, Path) or not home_path.is_absolute():
+        raise ExecutionLedgerError("ledger user home must be absolute")
+    root = home_path / DEFAULT_LEDGER_RELATIVE_ROOT
+    try:
+        root.resolve(strict=False).relative_to(ROOT.resolve())
+    except ValueError:
+        return root
+    raise ExecutionLedgerError(
+        "execution ledger root must remain outside the repository"
+    )
+
+
+def cycle_execution_ledger_path(
+    cycle_date: date,
+    *,
+    user_home: Path | None = None,
+) -> Path:
+    """Bind one calendar cycle to one non-bypassable ledger filename."""
+
+    if type(cycle_date) is not date:
+        raise ExecutionLedgerError("ledger cycle date must be a date")
+    root = default_execution_ledger_root(user_home=user_home)
+    return (
+        root
+        / f"{cycle_date.year:04d}"
+        / f"phase5r-{cycle_date.isoformat()}.ledger.json"
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1181,6 +1230,9 @@ __all__ = [
     "LEDGER_SCHEMA_VERSION",
     "MeteredUsage",
     "ModelPrice",
+    "DEFAULT_LEDGER_RELATIVE_ROOT",
+    "cycle_execution_ledger_path",
+    "default_execution_ledger_root",
     "RECEIPT_SCHEMA_VERSION",
     "RoleExecutionRequest",
 ]

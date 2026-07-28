@@ -294,6 +294,10 @@ class ProviderTests(unittest.TestCase):
                             "input_tokens": 120,
                             "output_tokens": 8,
                             "total_tokens": 128,
+                            "input_tokens_details": {
+                                "cached_tokens": 20,
+                                "cache_write_tokens": 10,
+                            },
                         },
                     },
                 )()
@@ -322,6 +326,10 @@ class ProviderTests(unittest.TestCase):
         request = client.responses.request
         self.assertEqual(request["tools"], [])
         self.assertIs(request["store"], False)
+        self.assertEqual(
+            request["prompt_cache_options"],
+            {"mode": "explicit"},
+        )
         self.assertEqual(request["reasoning"], {"effort": "high"})
         self.assertEqual(request["max_output_tokens"], 1024)
         output_format = request["text"]["format"]  # type: ignore[index]
@@ -338,13 +346,60 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(
             result.metadata["usage"],
             {
-                "input_tokens": 120,
+                "input_tokens": 110,
                 "output_tokens": 8,
-                "total_tokens": 128,
+                "cached_input_tokens": 20,
+                "cache_creation_input_tokens": 10,
+                "cache_read_input_tokens": 0,
             },
         )
         self.assertFalse(result.metadata["credential_read"])
         self.assertFalse(result.metadata["tools_enabled"])
+
+    def test_responses_adapter_rejects_inconsistent_native_usage(
+        self,
+    ) -> None:
+        class Responses:
+            def create(self, **kwargs: object) -> object:
+                del kwargs
+                return {
+                    "id": "resp_bad_usage",
+                    "status": "completed",
+                    "model": "gpt-5.6-terra",
+                    "output": [
+                        {
+                            "type": "message",
+                            "content": [
+                                {
+                                    "type": "output_text",
+                                    "text": '{"ok":true}',
+                                }
+                            ],
+                        }
+                    ],
+                    "usage": {
+                        "input_tokens": 10,
+                        "output_tokens": 2,
+                        "total_tokens": 12,
+                        "input_tokens_details": {
+                            "cached_tokens": 8,
+                            "cache_write_tokens": 4,
+                        },
+                    },
+                }
+
+        class Client:
+            responses = Responses()
+
+        with self.assertRaises(ProviderError):
+            OpenAIResponsesProvider(Client()).generate(
+                role="analyst",
+                model="gpt-5.6-terra",
+                reasoning_effort="medium",
+                schema={"type": "object"},
+                instructions="Return one object.",
+                input_payload={"packet": "fixture"},
+            )
 
     def test_responses_adapter_failure_taxonomy_is_fail_closed(self) -> None:
         class Responses:

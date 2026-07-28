@@ -41,3 +41,28 @@ logged_at,cycle_date,component,run_mode,outcome,reason,email_attempted,email_sen
 2026-07-25T21:49:07-04:00,2026-07-25,daily_refresh,public_research_no_send,degraded_decision_created,"portfolio_outputs,official_evidence,price_aware_review",no,no,no,no,no,no,no,no
 2026-07-25T21:49:08-04:00,2026-07-25,daily_sender,send,delivery_unknown,smtp_exception_after_claim,yes,unknown,no,yes,no,no,no,no
 2026-07-25T21:49:08-04:00,2026-07-25,daily_pipeline,scheduled_send,sender_nonzero,email_sent=unknown reason=smtp_exception_after_claim automatic_retry=false,yes,unknown,no,no,no,no,no,no
+2026-07-26T15:20:37-04:00,2026-07-26,evidence_refresh,live_public_read,failed,sec_ticker_map_unavailable,no,no,no,no,no,no,no,no
+2026-07-26T15:20:39-04:00,2026-07-26,daily_decision,compose_no_send,passed,data_gate_hold,no,no,no,no,no,no,no,no
+2026-07-26T15:20:39-04:00,2026-07-26,daily_refresh,public_research_no_send,degraded_decision_created,"portfolio_outputs,official_evidence,price_aware_review",no,no,no,no,no,no,no,no
+2026-07-26T18:41:43-04:00,2026-07-26,evidence_refresh,live_public_read,failed,sec_ticker_map_unavailable,no,no,no,no,no,no,no,no
+2026-07-26T18:41:47-04:00,2026-07-26,daily_decision,compose_no_send,passed,data_gate_hold,no,no,no,no,no,no,no,no
+2026-07-26T18:41:47-04:00,2026-07-26,daily_refresh,public_research_no_send,degraded_decision_created,"portfolio_outputs,official_evidence,price_aware_review",no,no,no,no,no,no,no,no
+2026-07-26T18:41:48-04:00,2026-07-26,daily_sender,send,suppressed,weekend_no_material_change,no,no,no,no,no,no,no,no
+2026-07-26T18:41:48-04:00,2026-07-26,daily_pipeline,scheduled_send,passed,email_sent=false reason=weekend_no_material_change smtp_config_read=false,no,no,no,no,no,no,no,no
+2026-07-27T08:18:24-04:00,2026-07-27,evidence_refresh,live_public_read,failed,sec_ticker_map_unavailable,no,no,no,no,no,no,no,no
+2026-07-27T08:18:28-04:00,2026-07-27,daily_decision,compose_no_send,passed,data_gate_hold,no,no,no,no,no,no,no,no
+2026-07-27T08:18:28-04:00,2026-07-27,daily_refresh,public_research_no_send,degraded_decision_created,"portfolio_outputs,official_evidence,price_aware_review",no,no,no,no,no,no,no,no
+2026-07-27T13:41:32-04:00,2026-07-27,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T13:41:42-04:00,2026-07-27,daily_decision,compose_no_send,passed,hold_no_new_position,no,no,no,no,no,no,no,no
+2026-07-27T13:41:42-04:00,2026-07-27,daily_refresh,public_research_no_send,degraded_decision_created,portfolio_outputs,no,no,no,no,no,no,no,no
+2026-07-27T17:03:09-04:00,2026-07-27,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T17:03:15-04:00,2026-07-27,daily_decision,compose_no_send,passed,hold_no_new_position,no,no,no,no,no,no,no,no
+2026-07-27T17:03:15-04:00,2026-07-27,daily_refresh,public_research_no_send,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T18:01:27-04:00,2026-07-27,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T18:01:35-04:00,2026-07-27,daily_decision,compose_no_send,passed,hold_no_new_position,no,no,no,no,no,no,no,no
+2026-07-27T18:01:35-04:00,2026-07-27,daily_refresh,public_research_no_send,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T19:01:50-04:00,2026-07-27,evidence_refresh,live_public_read,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T19:01:56-04:00,2026-07-27,daily_decision,compose_no_send,passed,hold_no_new_position,no,no,no,no,no,no,no,no
+2026-07-27T19:01:56-04:00,2026-07-27,daily_refresh,public_research_no_send,passed,complete,no,no,no,no,no,no,no,no
+2026-07-27T19:01:59-04:00,2026-07-27,daily_sender,send,sent,smtp_send_completed,yes,yes,no,yes,no,no,no,no
+2026-07-27T19:01:59-04:00,2026-07-27,daily_pipeline,scheduled_send,passed,email_sent=true message_count=1 automatic_retry=false,yes,yes,no,no,no,no,no,no

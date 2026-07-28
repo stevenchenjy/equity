@@ -1,44 +1,69 @@
-# Phase 5R-C8 Active State Policy
+# Phase 5R-C8 Canonical Active-State Policy
 
 ## Purpose
 
-Phase 5R-C8 separates the currently authoritative weekly workflow from historical evidence and parked tools. Active scripts must resolve their workflow state and permitted inputs from the C8 registries before making a decision-facing update.
+Phase 5R has one canonical low-attention operating workflow:
+`daily_decision / phase5r_daily`. Historical C1–C7 weekly or direct-send
+artifacts remain available only for audit provenance. Their existence never
+authorizes them as decision inputs, senders, or schedulers.
 
 ## Authority Order
 
 1. `00_project_control/active_decision_state.yaml`
 2. `00_project_control/phase5r_c8_allowed_active_inputs.csv`
-3. Current C4/C4R portfolio state
-4. Current B2 public market data
-5. Current C5 conviction research
-6. Current C5T manual action planning
-7. Current C6 weekly brief outputs
-8. Current C7 pipeline status and logs
+3. Current local account, positions, and execution-reconciliation state
+4. Current B2 market and official SEC evidence
+5. Current C9 deterministic portfolio/risk outputs
+6. Current daily decision and brief
+7. Daily delivery ledger
 
-Historical reports may explain provenance but cannot override this order.
+Historical reports cannot override this order. Archived folders are excluded
+without reading their contents.
 
 ## Active Workflow
 
-- Workflow: `weekly_conviction`.
-- Pipeline: `phase5r_c7`.
-- Primary decision: `no_action_until_next_review`.
-- Next review: `2026-07-16`.
-- Email delivery: C7 only, through the C6 delivery component.
-- Execution: independent manual decisions only.
+- Workflow: `daily_decision`
+- Pipeline: `phase5r_daily`
+- Primary decision: `daily_account_aware_decision`
+- Analysis: multiple local refresh slots, with one final decision after
+  18:30 ET
+- Email: at most one weekday daily brief; weekend material-change only
+- Authorized sender: `send_phase5r_daily_email.py`
+- Execution: manual and outside the repository
+
+The active launchd jobs are only:
+
+- `com.steven.phase5r.dailyrefresh`
+- `com.steven.phase5r.dailydecision`
+
+`dailybrief`, `weeklyconviction`, `weeklycatchup`, and `llmshadow` remain
+unloaded unless the separately verified LLM activation process later
+authorizes only `llmshadow`.
 
 ## Stale-File Guard
 
-- Archived folders and archived IOT/RBRK records are never active inputs.
-- `current_positions.local.csv` is the only current-position source for IOT and RBRK.
-- C2, C3, and C1 daily delivery artifacts are deprecated or parked.
-- D1 remains parked and uninstalled.
-- Old daily watchlists are evidence only.
-- C6 delivery remains a component of C7 and is not the active standalone pipeline.
+- C2/C3 direct daily delivery and C1 composition are retired.
+- C5/C6/C7 weekly research, composition, and delivery are historical evidence
+  only and cannot send.
+- D1/D2/D3 schedulers are retired and unloaded.
+- B2 human previews are context only; the daily pipeline reads source CSV/JSON
+  evidence rather than old preview prose.
+- `current_positions.local.csv` and `current_account_state.local.json` are the
+  only current local portfolio sources.
+- Model artifacts cannot influence the canonical decision or email until the
+  replay, provider, shadow, and activation gates pass.
 
 ## Pipeline Requirement
 
-The C7 runner must read and validate `active_decision_state.yaml` before reading current positions, market data, delivery status, or any other decision input. A missing, malformed, or conflicting state blocks the run.
+Every daily entrypoint validates `active_decision_state.yaml` and the
+maintenance inhibit before reading decision-facing inputs or attempting
+delivery. Missing or conflicting state blocks the run. The sender independently
+checks the daily state, date, decision artifact, duplicate ledger, and manual
+execution boundary before opening SMTP configuration.
 
 ## Safety Boundary
 
-No scheduler activation, broker connection, automatic portfolio action, archived input, credential handling change, file deletion, file movement, or Phase 5R-D2 is authorized by C8.
+This policy authorizes no broker connection, broker-account read, order code,
+automatic portfolio action, archived input, provider credential read, model
+canonical influence, or trade. Weekly files may be retained or inspected for
+audit, but must not be invoked by the canonical workflow.

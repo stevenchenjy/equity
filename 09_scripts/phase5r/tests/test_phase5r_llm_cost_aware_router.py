@@ -62,6 +62,7 @@ def _policy(
     challenger_provider: str = "anthropic",
     analyst_input_tokens: int = 1000,
     committee_input_tokens: int = 1200,
+    independent_challenger_required: bool = True,
 ) -> RouterPolicy:
     return RouterPolicy(
         role_specs=(
@@ -97,6 +98,9 @@ def _policy(
                 max_output_tokens=300,
                 max_usd="0.30",
             ),
+        ),
+        independent_challenger_required=(
+            independent_challenger_required
         ),
     )
 
@@ -369,6 +373,34 @@ class CostAwareRouterTests(unittest.TestCase):
         self.assertEqual(
             tuple(call.role for call in plan.calls),
             ("analyst", "committee", "critic", "challenger"),
+        )
+
+    def test_economical_initial_shadow_stops_at_same_provider_critic(
+        self,
+    ) -> None:
+        plan = plan_inference(
+            policy=_policy(independent_challenger_required=False),
+            ceilings=_ceilings(),
+            usage=_usage(),
+            signals=_signals(
+                material=True,
+                previous="hold_existing",
+                proposed="real_trade_candidate",
+                providers=frozenset({"openai"}),
+            ),
+        )
+        self.assertTrue(plan.high_impact_transition)
+        self.assertEqual(
+            plan.required_roles,
+            ("analyst", "committee", "critic"),
+        )
+        self.assertEqual(
+            tuple(call.role for call in plan.calls),
+            ("analyst", "committee", "critic"),
+        )
+        self.assertNotIn(
+            "challenger",
+            {call.role for call in plan.calls},
         )
 
     def test_low_impact_transition_never_routes_challenger(

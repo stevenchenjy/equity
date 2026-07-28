@@ -240,9 +240,9 @@
     "semantic_hash": "3a8ee86b8f827b2b524442a73e08020d"
   },
   "09_scripts/phase5r/verify_phase5r_c8_active_state_guard.py": {
-    "mtime": 1783633368.6351552,
-    "ast_hash": "52777caf233f62eb8755ea4a76cf3351",
-    "semantic_hash": "52777caf233f62eb8755ea4a76cf3351"
+    "mtime": 1785206600.506507,
+    "ast_hash": "2e24a4c5911008e883f8dd89facb3bc4",
+    "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_d1_scheduler_boundary.py": {
     "mtime": 1783627289.285534,
@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_b2_data_source_decision.md": {
-    "mtime": 1784949672.5360754,
-    "ast_hash": "c0a3d17e5281985218b6ec84e512b5c7",
+    "mtime": 1785193289.5327625,
+    "ast_hash": "228f4adf09526ab7184032c519614324",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_b2_full_universe_data_policy.md": {
@@ -730,8 +730,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c8_active_state_policy.md": {
-    "mtime": 1783633328.8745205,
-    "ast_hash": "4ae9283d7905327df64a423ccb6d7222",
+    "mtime": 1785206505.1874456,
+    "ast_hash": "ab8b10a6bce44a17c0394bc0f9c5edde",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c8_verification_report.md": {
@@ -920,8 +920,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_b2_data_report.md": {
-    "mtime": 1784949672.5363314,
-    "ast_hash": "14cb0a8930edf5f46b60ac0938bf764a",
+    "mtime": 1785193289.5342243,
+    "ast_hash": "c8729e0f1e811b6516f3513a31d8ae07",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_b2_verification_report.md": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_daily_research_preview.md": {
-    "mtime": 1784949672.6392806,
-    "ast_hash": "e9cafb970e5c64f7ba360f1eca885e52",
+    "mtime": 1785193291.6332283,
+    "ast_hash": "65193147e9c22ec042805575560d6815",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_manual_trade_tickets.md": {
@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_watchlist.md": {
-    "mtime": 1784949672.6394753,
-    "ast_hash": "eef54c1db21694b01818f8391668c77f",
+    "mtime": 1785193291.6340466,
+    "ast_hash": "cb9ee1a73d92247c708d0d21cc638ba0",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b_manual_trade_tickets.md": {
@@ -1410,13 +1410,13 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_account_aware_memo.md": {
-    "mtime": 1784949689.8032272,
-    "ast_hash": "10850cc404b8145c90f7c3f23a3331f9",
+    "mtime": 1785193314.4322145,
+    "ast_hash": "815af04130de2d2a67b78763197c7cbf",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_allocation_report.md": {
-    "mtime": 1784949689.8036644,
-    "ast_hash": "0ad2fe1fd13318dde60d4adb7e3b03ed",
+    "mtime": 1785193314.4360416,
+    "ast_hash": "e5b43c68cfbe2abe2c12548e5804ed94",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_verification_report.md": {
@@ -1425,8 +1425,8 @@
     "semantic_hash": ""
   },
   "05_risk_and_positions/phase5r_c9_weekly_decision_summary.md": {
-    "mtime": 1784949689.8041396,
-    "ast_hash": "6554f1db69ea8c363431737aca9cd505",
+    "mtime": 1785193314.4380233,
+    "ast_hash": "ad45652a6e8468eb911a4bd49a917b2f",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9b_execution_template.py": {
@@ -1480,8 +1480,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9b_execution_report.md": {
-    "mtime": 1784949689.8403373,
-    "ast_hash": "05cf7ea160783f149b04b200d0c32478",
+    "mtime": 1785193315.8529217,
+    "ast_hash": "7549922bdd694cd5963b0ae2a5d203b3",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9b_verification_report.md": {
@@ -1495,13 +1495,13 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_daily_evidence_status.json": {
-    "mtime": 1784952227.791176,
-    "ast_hash": "60ed77ff426a9950a0be2f1efd45d548",
+    "mtime": 1785193310.5357907,
+    "ast_hash": "4f087ba3aa4391a99e856d0ce8d30f06",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.json": {
-    "mtime": 1784949689.9003675,
-    "ast_hash": "15c96b4f8446c17845415a260613261d",
+    "mtime": 1785193316.5206575,
+    "ast_hash": "beef00743dc89983363db2c62d4e6c80",
     "semantic_hash": ""
   },
   "07_automation/scheduler/activate_phase5r_daily_after_verification.sh": {
@@ -1585,8 +1585,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_operational_status.md": {
-    "mtime": 1784865901.6679058,
-    "ast_hash": "3994ce824b18eefcbf59312b91e8de0c",
+    "mtime": 1785207940.6437714,
+    "ast_hash": "b0b827ef516a9fa2d2efacc70814461f",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_research_policy.md": {
@@ -1600,13 +1600,13 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_verification_report.md": {
-    "mtime": 1784968471.0118027,
-    "ast_hash": "aa7a99dd4f7bbe4912690bf26011bce4",
+    "mtime": 1785206660.8440423,
+    "ast_hash": "2994c5dac6e6755854c570a07cec2e81",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.md": {
-    "mtime": 1784949689.9009593,
-    "ast_hash": "68ef6e1c91e403ea0c06734ccf4453b1",
+    "mtime": 1785193316.5248806,
+    "ast_hash": "0a4eec89e5f1ede4df10bc3925282e78",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_upgrade_report.md": {
@@ -1615,18 +1615,18 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_verification_report.md": {
-    "mtime": 1784968471.0119412,
-    "ast_hash": "aa7a99dd4f7bbe4912690bf26011bce4",
+    "mtime": 1785206660.844177,
+    "ast_hash": "2994c5dac6e6755854c570a07cec2e81",
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.html": {
-    "mtime": 1784949689.9016483,
-    "ast_hash": "398f2c431c8301baa667edcd59a36434",
+    "mtime": 1785193316.5463955,
+    "ast_hash": "4f713d60cd6fb4eb7637f048f6bc8e4f",
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.txt": {
-    "mtime": 1784949689.9013212,
-    "ast_hash": "7401af9cb3f48899453393bef8410c10",
+    "mtime": 1785193316.5367866,
+    "ast_hash": "1a1e759a8969b7559309e82824a031b7",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_sec_filing_artifacts.py": {
@@ -1665,8 +1665,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_provider.py": {
-    "mtime": 1784984968.527768,
-    "ast_hash": "3bcded1ccc0e3eec612d91cf2ecf02ad",
+    "mtime": 1785207167.7435977,
+    "ast_hash": "1661f2fa40d6e929bb186f4061ac2708",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_llm_shadow.py": {
@@ -1690,8 +1690,8 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_filing_artifact_index.json": {
-    "mtime": 1784949689.64217,
-    "ast_hash": "c5abe34dff18bf2a5ae6986522728aaf",
+    "mtime": 1785193311.9237487,
+    "ast_hash": "caeaf7ad4bcefdc18ae09762e2d5e69b",
     "semantic_hash": ""
   },
   "07_automation/scheduler/check_phase5r_llm_shadow_status.sh": {
@@ -1765,8 +1765,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_provider.py": {
-    "mtime": 1784964387.6196496,
-    "ast_hash": "296a56d55a7da4257b73432484ed1e2a",
+    "mtime": 1785207167.7475972,
+    "ast_hash": "75f9c18fa1b956e0dca9025b36633639",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_replay.py": {
@@ -1850,8 +1850,8 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_submission_acceptance_index.json": {
-    "mtime": 1784952227.786184,
-    "ast_hash": "186be8414bd49ba3eeffb728fd635702",
+    "mtime": 1785193310.5279007,
+    "ast_hash": "6371df4d3bd11504ee8ef4844ba3dce1",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_replay_corpus.py": {
@@ -1940,8 +1940,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_llm_upgrade_execution_report.md": {
-    "mtime": 1784990048.7338235,
-    "ast_hash": "c2df936042d51a44e38a52ad44dc5056",
+    "mtime": 1785207872.6112149,
+    "ast_hash": "7a5b1312b188487bed00cc5477ad1da7",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_llm_shadow_verification_report.md": {
@@ -2010,8 +2010,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_model_api_actual_upgrade_plan.md": {
-    "mtime": 1784990048.7315774,
-    "ast_hash": "1a8648248300de182d7145440fb9cec0",
+    "mtime": 1785207872.6099489,
+    "ast_hash": "7adf3ca1950b46e3021b4111ed28d3dc",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_model_api_upgrade_research_20260725.md": {
@@ -2045,8 +2045,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_cost_aware_router.py": {
-    "mtime": 1784986693.3421233,
-    "ast_hash": "3734f3d452542b4282a4ea9bccd713cf",
+    "mtime": 1785207672.0530567,
+    "ast_hash": "80cb273aadc149db34199bc78a90925e",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_evidence_freshness.py": {
@@ -2055,13 +2055,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_cost_aware_router.py": {
-    "mtime": 1784986918.9750888,
-    "ast_hash": "46ba58c334ff1c7cc800fd5cae05a7d6",
+    "mtime": 1785207672.0581954,
+    "ast_hash": "9a78a5d7d9ec552809d69440bb36190a",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_shadow_router_gate.py": {
-    "mtime": 1784989601.0965803,
-    "ast_hash": "731701a76d7ca1a8577e13001a987b84",
+    "mtime": 1785207672.0548785,
+    "ast_hash": "6ca9cc91813ee4954f3da2ae6ffde163",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_sequential_portfolio_simulator.py": {
@@ -2070,8 +2070,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_shadow_router_gate.py": {
-    "mtime": 1784989601.0980241,
-    "ast_hash": "1368230c05471342230a60a434565a02",
+    "mtime": 1785207672.0568671,
+    "ast_hash": "6bee71726cf89d6ac7c320f98adef638",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_sequential_portfolio_simulator.py": {
@@ -2080,13 +2080,53 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_role_execution_ledger.py": {
-    "mtime": 1784989899.1832821,
-    "ast_hash": "916851a89087207629eeace9e3427e40",
+    "mtime": 1785207321.509167,
+    "ast_hash": "5d69b8a5f187528c0a597dffe1663365",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_role_execution_ledger.py": {
-    "mtime": 1784989544.7413623,
-    "ast_hash": "40ccab03329a4531f0a62b3612073b82",
+    "mtime": 1785207293.1281822,
+    "ast_hash": "ffbf45ffeb679bef7747942d228fed85",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_paid_dependency_policy.json": {
+    "mtime": 1785207263.6500351,
+    "ast_hash": "8b3342bb555fbb732d65065bcf7605cf",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_canonical_workflow.py": {
+    "mtime": 1785206622.1728668,
+    "ast_hash": "54bf1a96d3bbc09c2bbd65823aba05b3",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_safe_shadow_readiness.py": {
+    "mtime": 1785207479.772899,
+    "ast_hash": "699612f9fee503680fe1649bf4916bfa",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/verify_phase5r_safe_shadow_readiness.py": {
+    "mtime": 1785207621.4600072,
+    "ast_hash": "9eaf4dcd0e98e3c85b2667e1958f3db0",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_economical_dependency_decision.md": {
+    "mtime": 1785207263.6507947,
+    "ast_hash": "4469175772623bbcb3961475ee3b831f",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_external_decision_brief.md": {
+    "mtime": 1785207940.6449165,
+    "ast_hash": "0d012b114d663cd0c2fee4763b4be39b",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_safe_shadow_readiness_report.md": {
+    "mtime": 1785207940.6447647,
+    "ast_hash": "bea4768a75e79a2368a36083edb55552",
+    "semantic_hash": ""
+  },
+  "04_research/realtime_stock_picker_phase5r/phase5r_model_shadow_readiness_report.md": {
+    "mtime": 1785207940.6455262,
+    "ast_hash": "a233350159192d1857e7dadb5a46d9cd",
     "semantic_hash": ""
   }
 }

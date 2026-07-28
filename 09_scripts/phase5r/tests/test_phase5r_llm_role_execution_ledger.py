@@ -29,6 +29,8 @@ from phase5r_llm_role_execution_ledger import (
     ExecutionRecoveryRequired,
     ModelPrice,
     RoleExecutionRequest,
+    cycle_execution_ledger_path,
+    default_execution_ledger_root,
 )
 
 
@@ -203,6 +205,32 @@ class _MeteredFixtureProvider:
 
 
 class RoleExecutionLedgerTests(unittest.TestCase):
+    def test_default_cycle_ledger_path_is_fixed_and_outside_repository(
+        self,
+    ) -> None:
+        user_home = Path("/Users/phase5r-test")
+        self.assertEqual(
+            default_execution_ledger_root(user_home=user_home),
+            user_home
+            / "Library"
+            / "Application Support"
+            / "Phase5R"
+            / "llm_execution",
+        )
+        self.assertEqual(
+            cycle_execution_ledger_path(
+                CYCLE_DATE,
+                user_home=user_home,
+            ),
+            user_home
+            / "Library"
+            / "Application Support"
+            / "Phase5R"
+            / "llm_execution"
+            / "2026"
+            / "phase5r-2026-07-24.ledger.json",
+        )
+
     def test_reserves_before_provider_construction_and_charges_actual_usage(
         self,
     ) -> None:
