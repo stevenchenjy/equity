@@ -440,15 +440,17 @@ def verify_corpus(
         selection = manifest.get("selection")
         if not isinstance(selection, dict):
             raise CorpusError("manifest ledger provenance mismatch")
-        ledger_rows = read_ledger(ledger_path)
+        ledger_rows = read_ledger(
+            ledger_path,
+            expected_snapshot_sha256=selection.get("ledger_sha256"),
+            expected_snapshot_distinct_accessions=selection.get(
+                "ledger_distinct_accessions"
+            ),
+        )
         ledger_by_accession = {
             row["accession"]: row for row in ledger_rows
         }
-        if (
-            selection.get("ledger_sha256")
-            != sha256_bytes(ledger_path.read_bytes())
-            or selection.get("ledger_distinct_accessions") != len(ledger_rows)
-        ):
+        if selection.get("ledger_distinct_accessions") != len(ledger_rows):
             raise CorpusError("manifest ledger provenance mismatch")
         market_sources = manifest.get("market_sources")
         if not isinstance(market_sources, list):

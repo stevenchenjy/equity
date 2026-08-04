@@ -1,0 +1,34 @@
+{
+  "schema_version": "phase5r_v10_project_owner_internal_use_decision_v1",
+  "status": "recorded_limited_project_owner_direction_not_formal_adoption",
+  "recorded_at_et": "2026-08-02T23:29:35-04:00",
+  "decision_source": "Project Owner Decision supplied in the interactive chat",
+  "project_owner_name": null,
+  "formal_amendment_adopted": false,
+  "incident_classification": "contained_non_substantive_boundary_contact",
+  "retained_ai_review_as_noncanonical_internal_quality_evidence": true,
+  "human_review_requirement_waived": false,
+  "human_review_protocol_completed": false,
+  "independent_human_validation_claim_permitted": false,
+  "original_protocol_status": "no_go_pending_independent_review_preserved_historical",
+  "technical_collection_status": "complete",
+  "allowed_internal_uses": [
+    "prompt improvement",
+    "evidence handling improvement",
+    "citation-check improvement",
+    "critic-logic improvement",
+    "confidence-calibration improvement",
+    "research-presentation improvement"
+  ],
+  "prohibited_authorities": {
+    "unblind_or_infer_runtime_assignment": false,
+    "claim_independent_human_validation": false,
+    "canonical_buy_sell_decision": false,
+    "trading_authority": false,
+    "broker_or_account_access": false,
+    "order_execution": false,
+    "automatic_portfolio_change": false,
+    "promotion_or_activation_authority": false
+  },
+  "notes": "This records the supplied Project Owner direction for limited internal use. The Project Owner name was not captured in chat, so this record is not the formal adoption record required by the separate amendment draft. It does not alter sealed artifacts, the original protocol, or the historical no-go status."
+}

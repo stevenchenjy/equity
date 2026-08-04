@@ -1,0 +1,75 @@
+{
+  "authorization": {
+    "authorization_source": "explicit_user_authorization",
+    "execution_requires_explicit_user_authorization": true,
+    "physical_attempts_per_call": 1,
+    "sdk_max_retries": 0
+  },
+  "boundaries": {
+    "broker_or_account_access": false,
+    "canonical_effect": false,
+    "credential_storage": false,
+    "email_effect": false,
+    "no_provider_response_id_persistence": true,
+    "no_raw_failed_response_persistence": true,
+    "scheduler_effect": false,
+    "shadow_only": true,
+    "store": false,
+    "tools": [],
+    "trading": false
+  },
+  "collection_layout": {
+    "comparability": "Not a complete 30-output Phase 5R collection; v7 cannot generate partial anonymous review material or a promotion decision.",
+    "decision_or_recommendation_output": false,
+    "five_unattempted_committee_calls": 5,
+    "five_unattempted_critic_calls": 5,
+    "nine_unattempted_source_locked_diagnostic_assessments": 9,
+    "no_repeated_completed_or_failed_v6_call": true,
+    "planned_model_calls": 19,
+    "source_receipt_groups": 5,
+    "unused_approved_usd": "0.9617110",
+    "worst_case_reserved_usd": "3.86232"
+  },
+  "execution_prohibited_without_explicit_runtime_authorization": false,
+  "future_diagnostics": {
+    "failure_phase_codes_only": true,
+    "prohibited_fields": [
+      "raw_failed_response",
+      "provider_response_id",
+      "provider_response_id_sha256",
+      "exception_message",
+      "credential"
+    ],
+    "retained_fields": [
+      "failure_phase",
+      "failure_type",
+      "retry_allowed",
+      "runtime_safety_issue"
+    ]
+  },
+  "plan_sha256": "ee61ef3de10bedb05daf3794e0c6e26573648ee61aa10e35aa63f5146206295c",
+  "purpose": "Budget-limited shadow-only continuation that reads validated v6 receipts without modifying or retrying v6, then produces only a no-go completeness report.",
+  "remaining_approved_budget": {
+    "calculation": "5.00 - 0.1759690",
+    "charged_v6_calls": 11,
+    "charged_v6_usd": "0.1759690",
+    "maximum_new_model_calls": 19,
+    "maximum_new_usd": "4.8240310",
+    "source_v6_independent_model_call_cap": 30,
+    "source_v6_independent_usd_cap": "5.00"
+  },
+  "schema_version": "phase5r_model_pilot_replacement_plan_v7",
+  "source_v6": {
+    "action": "preserve_immutable_terminal_no_resume_no_reset",
+    "authorization_file_sha256": "5437307823aa66e0d8dda086793dd9b46bbcd1bc4dbe96210e0f7670b3fd88a8",
+    "completed_receipts": 10,
+    "execution_plan_file_sha256": "4a2f6d01e009a0985adcce1dcdad8f62a8047a95d9374b828220419188c85a35",
+    "execution_plan_sha256": "9dc50ecd15d8ff87dd7dfd143d6f30b8ebaaeac5050ed263f7ba77d6f7e5e87d",
+    "failed_raw_response_retained": false,
+    "journal_file_sha256": "c6383703dacd3d64bbfd024a981c630dfb6d3a255103d9578d6b049e25ee394a",
+    "provider_response_ids_retained": false,
+    "receipt_use": "read_only_in_memory_dependencies_only",
+    "terminal_reserved_call": 11
+  },
+  "status": "authorized_pending_sealed_execution_plan"
+}

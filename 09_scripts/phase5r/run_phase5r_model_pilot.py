@@ -73,6 +73,9 @@ REVIEW_SCHEMA_VERSION = "phase5r_model_pilot_anonymous_review_v1"
 BLIND_KEY_SCHEMA_VERSION = "phase5r_model_pilot_blind_key_v1"
 BLIND_ASSIGNMENT_SCHEMA_VERSION = "phase5r_model_pilot_blind_assignment_v1"
 COMPLETION_SCHEMA_VERSION = "phase5r_model_pilot_completion_v1"
+CONTRACT_DIAGNOSTIC_SCHEMA_VERSION = (
+    "phase5r_model_pilot_contract_diagnostic_v1"
+)
 
 POLICY_PATH = (
     ROOT / "00_project_control" / "phase5r_paid_dependency_policy.json"
@@ -1495,11 +1498,21 @@ def _readiness_components(
         or strict_verifier.get("real_packet_count") != PACKET_COUNT
     ):
         raise PilotStop("narrow replay corpus verification failed")
+    manifest = _read_json_object(
+        manifest_path, label="pilot corpus manifest"
+    )
+    selection = manifest.get("selection")
+    if not isinstance(selection, dict):
+        raise PilotStop("pilot corpus ledger snapshot binding is missing")
     strict_audit = audit_strict_pilot(
         ledger_path=ledger_path,
         corpus_root=corpus_root,
         target_packet_count=PACKET_COUNT,
         pilot_packet_count=PACKET_COUNT,
+        ledger_snapshot_sha256=selection.get("ledger_sha256"),
+        ledger_snapshot_distinct_accessions=selection.get(
+            "ledger_distinct_accessions"
+        ),
     )
     if (
         strict_audit.get("readiness_gate_passed") is not True
@@ -2023,6 +2036,17 @@ def _charged_budget(
     plan: dict[str, Any],
     events: list[dict[str, Any]],
 ) -> dict[str, Any]:
+    budget = plan.get("budget")
+    if (
+        not isinstance(budget, dict)
+        or type(budget.get("maximum_physical_model_calls")) is not int
+        or budget["maximum_physical_model_calls"] < 1
+    ):
+        raise PilotStop("pilot execution budget is invalid")
+    maximum_calls = budget["maximum_physical_model_calls"]
+    maximum_usd = _decimal(
+        budget.get("maximum_usd"), label="pilot execution USD cap"
+    )
     calls = {call["call_id"]: call for call in plan["calls"]}
     used_calls = 0
     used_usd = Decimal(0)
@@ -2046,8 +2070,7 @@ def _charged_budget(
                 call["reservation_usd"], label="failed call reservation"
             )
     if (
-        used_calls > MAXIMUM_PHYSICAL_MODEL_CALLS
-        or used_usd > MAXIMUM_USD
+        used_calls > maximum_calls or used_usd > maximum_usd
     ):
         raise PilotStop("pilot journal exceeds its immutable budget")
     return {
@@ -2198,7 +2221,7 @@ def _request_envelope_bytes(
         "service_tier": "default",
         "timeout": REQUEST_TIMEOUT_SECONDS,
         "prompt_cache_options": {"mode": "explicit"},
-        "max_output_tokens": MAXIMUM_OUTPUT_TOKENS,
+        "max_output_tokens": call["maximum_output_tokens"],
     }
     return len(_canonical_bytes(request))
 
@@ -2382,6 +2405,125 @@ def _validate_stage_payload(
     raise PilotStop("unknown pilot stage")
 
 
+def _redacted_contract_diagnostic(
+    call: dict[str, Any],
+    error: ContractError,
+) -> dict[str, str]:
+    """Classify a rejected response without retaining its content or error text."""
+
+    message = str(error)
+    if re.match(r"^\$.*: missing fields ", message):
+        code = "schema_missing_required_field"
+    elif re.match(r"^\$.*: unexpected fields ", message):
+        code = "schema_unexpected_field"
+    elif re.match(r"^\$.*: expected ", message):
+        code = "schema_type_mismatch"
+    elif re.match(r"^\$.*: value does not match const$", message):
+        code = "schema_const_mismatch"
+    elif re.match(r"^\$.*: value is outside enum$", message):
+        code = "schema_enum_mismatch"
+    elif message == "analyst: packet_id mismatch":
+        code = "analyst_packet_id_mismatch"
+    elif message == "analyst: as_of_et must exactly match the packet":
+        code = "analyst_as_of_et_mismatch"
+    elif message.startswith("analyst: deterministic prompt-injection"):
+        code = "analyst_prompt_injection_flag_mismatch"
+    elif re.match(r"^analyst\.claims\[\d+\]: unknown ticker ", message):
+        code = "analyst_claim_unknown_ticker"
+    elif empty_field := re.match(
+        r"^analyst\.claims\[\d+\]: "
+        r"(?P<field>claim_id|claim|rationale|unit|period) must be non-empty$",
+        message,
+    ):
+        code = f"analyst_claim_{empty_field.group('field')}_empty"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: at least one packet-local source is required$",
+        message,
+    ):
+        code = "analyst_claim_source_missing"
+    elif re.match(r"^analyst\.claims\[\d+\]: unknown source ids ", message):
+        code = "analyst_claim_unknown_source"
+    elif re.match(r"^analyst\.claims\[\d+\]: unknown calculation ids ", message):
+        code = "analyst_claim_unknown_calculation"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: cross-ticker source ids ", message
+    ):
+        code = "analyst_claim_cross_ticker_source"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: cross-ticker calculation ids ", message
+    ):
+        code = "analyst_claim_cross_ticker_calculation"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: "
+        r"at least one ticker-matched primary source is required$",
+        message,
+    ):
+        code = "analyst_claim_primary_source_missing"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: source_ids must be unique$", message
+    ):
+        code = "analyst_claim_duplicate_source"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: "
+        r"cited excerpt hashes must align one-to-one with source_ids$",
+        message,
+    ):
+        code = "analyst_claim_citation_hash_alignment"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]\.source_ids\[\d+\]: "
+        r"cited source excerpt is empty$",
+        message,
+    ):
+        code = "analyst_claim_cited_excerpt_empty"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]\.cited_excerpt_sha256\[\d+\]: "
+        r"invalid sha256$",
+        message,
+    ):
+        code = "analyst_claim_citation_hash_invalid"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]\.cited_excerpt_sha256\[\d+\]: "
+        r"excerpt binding mismatch$",
+        message,
+    ):
+        code = "analyst_claim_citation_hash_mismatch"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: "
+        r"calculated evidence requires a reconciled calculation$",
+        message,
+    ):
+        code = "analyst_claim_calculated_without_calculation"
+    elif re.match(
+        r"^analyst\.claims\[\d+\]: "
+        r"numeric text requires a reconciled calculation$",
+        message,
+    ):
+        code = "analyst_claim_numeric_without_calculation"
+    elif message.startswith("analyst.claims["):
+        code = "analyst_claim_validation_failure"
+    elif message.startswith("analyst: ticker coverage"):
+        code = "analyst_ticker_coverage_mismatch"
+    elif message.startswith("analyst:"):
+        code = "analyst_semantic_validation_failure"
+    elif message.startswith("pilot assessment"):
+        code = "assessment_sensitive_content_rejected"
+    else:
+        code = "contract_validation_failure"
+    validator = (
+        "assessment"
+        if call["stage"] in {"luna_assessment", "terra_assessment"}
+        else "committee"
+        if call["stage"] == "sol_committee"
+        else "critic"
+    )
+    return {
+        "schema_version": CONTRACT_DIAGNOSTIC_SCHEMA_VERSION,
+        "stage": call["stage"],
+        "validator": validator,
+        "code": code,
+    }
+
+
 def _metered_usage(
     call: dict[str, Any],
     metadata: dict[str, Any],
@@ -2501,16 +2643,21 @@ def _strict_provider(
     provider: ModelProvider,
     *,
     allow_test_provider: bool,
+    maximum_output_tokens: int = MAXIMUM_OUTPUT_TOKENS,
 ) -> None:
+    if (
+        not isinstance(maximum_output_tokens, int)
+        or isinstance(maximum_output_tokens, bool)
+        or not 1 <= maximum_output_tokens <= 128_000
+    ):
+        raise PilotStop("provider output cap is invalid")
     if allow_test_provider:
         if (
             isinstance(provider, OpenAIResponsesProvider)
             or getattr(provider, "offline_test_provider", None) is not True
         ):
             raise PilotStop("test mode requires an offline fixture provider")
-        if getattr(provider, "max_output_tokens", None) != (
-            MAXIMUM_OUTPUT_TOKENS
-        ):
+        if getattr(provider, "max_output_tokens", None) != maximum_output_tokens:
             raise PilotStop("test provider output cap is not pinned")
         if not callable(getattr(provider, "count_input_tokens", None)):
             raise PilotStop("test provider lacks exact input counting")
@@ -2518,7 +2665,7 @@ def _strict_provider(
     if not isinstance(provider, OpenAIResponsesProvider):
         raise PilotStop("pilot provider must be OpenAI Responses")
     if (
-        provider.max_output_tokens != MAXIMUM_OUTPUT_TOKENS
+        provider.max_output_tokens != maximum_output_tokens
         or provider.request_timeout_seconds != REQUEST_TIMEOUT_SECONDS
         or provider.billing_scope_attestation
         != "global_standard_no_regional_processing"
@@ -2546,6 +2693,7 @@ def _validate_receipt(
     plan_sha256: str,
     prices: dict[str, dict[str, Decimal]],
     allow_test_provider: bool,
+    allow_redacted_provider_response_id: bool = False,
 ) -> dict[str, Any]:
     receipt = _read_json_object(path, label=f"{call['call_id']} receipt")
     claimed = receipt.get("receipt_sha256")
@@ -2562,9 +2710,21 @@ def _validate_receipt(
         or _canonical_sha256(unsigned) != claimed
     ):
         raise PilotStop("pilot call receipt binding is invalid")
+    provider_metadata = receipt.get("provider_metadata")
+    if allow_redacted_provider_response_id:
+        if (
+            not isinstance(provider_metadata, dict)
+            or "provider_response_id" in provider_metadata
+            or "provider_response_id_sha256" in provider_metadata
+        ):
+            raise PilotStop("redacted provider metadata is invalid")
+        provider_metadata = {
+            **copy.deepcopy(provider_metadata),
+            "provider_response_id": "redacted-at-rest",
+        }
     metered = _metered_usage(
         call,
-        receipt.get("provider_metadata"),
+        provider_metadata,
         prices,
         allow_test_provider=allow_test_provider,
     )
@@ -2624,10 +2784,21 @@ def _validate_complete_call_audit(
     allow_test_provider: bool,
     require_model_calls_completed: bool,
     expected_receipt_hashes: dict[str, str] | None = None,
+    allow_redacted_provider_response_id: bool = False,
 ) -> dict[str, Any]:
     """Reconcile every completed call before any completion is trusted."""
 
     calls = plan["calls"]
+    budget = plan.get("budget")
+    if (
+        not isinstance(budget, dict)
+        or budget.get("maximum_physical_model_calls") != len(calls)
+    ):
+        raise PilotStop("completed pilot budget is invalid")
+    maximum_calls = budget["maximum_physical_model_calls"]
+    maximum_usd = _decimal(
+        budget.get("maximum_usd"), label="completed pilot USD cap"
+    )
     expected_call_ids = {call["call_id"] for call in calls}
     if (
         expected_receipt_hashes is not None
@@ -2640,8 +2811,8 @@ def _validate_complete_call_audit(
     if len(events) != expected_event_count:
         raise PilotStop("completed pilot journal event count is invalid")
     expected_opening = {
-        "maximum_model_calls": MAXIMUM_PHYSICAL_MODEL_CALLS,
-        "maximum_usd": _decimal_text(MAXIMUM_USD),
+        "maximum_model_calls": maximum_calls,
+        "maximum_usd": _decimal_text(maximum_usd),
         "provider": execution_mode,
         "sdk_max_retries": 0,
     }
@@ -2693,6 +2864,9 @@ def _validate_complete_call_audit(
             plan_sha256=plan["plan_sha256"],
             prices=prices,
             allow_test_provider=allow_test_provider,
+            allow_redacted_provider_response_id=(
+                allow_redacted_provider_response_id
+            ),
         )
 
         request_binding = receipt["request_binding"]
@@ -2778,7 +2952,7 @@ def _validate_complete_call_audit(
     if require_model_calls_completed:
         final_event = events[cursor]
         expected_completion_details = {
-            "physical_model_calls": MAXIMUM_PHYSICAL_MODEL_CALLS,
+            "physical_model_calls": maximum_calls,
             "charged_usd": _decimal_text(exact_cost),
             "promotion_eligible": False,
         }
@@ -2790,9 +2964,9 @@ def _validate_complete_call_audit(
             raise PilotStop(
                 "pilot model-call completion journal is invalid"
             )
-    if len(receipts) != MAXIMUM_PHYSICAL_MODEL_CALLS:
+    if len(receipts) != maximum_calls:
         raise PilotStop("pilot completed receipt set is incomplete")
-    if exact_cost > MAXIMUM_USD:
+    if exact_cost > maximum_usd:
         raise PilotStop("pilot completed receipts exceed the USD cap")
     return {
         "receipts": receipts,
@@ -2808,6 +2982,7 @@ def _recover_or_stop_pending(
     events: list[dict[str, Any]],
     prices: dict[str, dict[str, Decimal]],
     allow_test_provider: bool,
+    allow_redacted_provider_response_id: bool = False,
 ) -> None:
     for call in plan["calls"]:
         reserved = _reserved_event(events, call["call_id"])
@@ -2822,6 +2997,9 @@ def _recover_or_stop_pending(
                 plan_sha256=plan["plan_sha256"],
                 prices=prices,
                 allow_test_provider=allow_test_provider,
+                allow_redacted_provider_response_id=(
+                    allow_redacted_provider_response_id
+                ),
             )
             _append_event(
                 output_root / JOURNAL_NAME,
@@ -3069,13 +3247,16 @@ def _build_metrics(
         "generated_at": iso_now(),
         "plan_sha256": plan["plan_sha256"],
         "execution_mode": execution_mode,
-        "pilot_complete": len(results) == MAXIMUM_PHYSICAL_MODEL_CALLS,
+        "pilot_complete": len(results)
+        == plan["budget"]["maximum_physical_model_calls"],
         "physical_model_calls": charged["used_model_calls"],
-        "input_token_count_api_calls": MAXIMUM_PHYSICAL_MODEL_CALLS,
+        "input_token_count_api_calls": plan["budget"][
+            "maximum_physical_model_calls"
+        ],
         "total_provider_reported_tokens": total_tokens,
         "exact_known_model_cost_usd": _decimal_text(total_known_cost),
         "charged_cost_usd": _decimal_text(charged["charged_usd"]),
-        "maximum_usd": _decimal_text(MAXIMUM_USD),
+        "maximum_usd": plan["budget"]["maximum_usd"],
         "usage_by_model": rendered_usage,
         "structural_citation_binding": {
             "claims": total_claims,
@@ -3450,7 +3631,7 @@ def _publish_final_artifacts(
         )
         for call in plan["calls"]
     }
-    if len(response_receipts) != MAXIMUM_PHYSICAL_MODEL_CALLS:
+    if len(response_receipts) != plan["budget"]["maximum_physical_model_calls"]:
         raise PilotStop("pilot response receipt set is incomplete")
     completion: dict[str, Any] = {
         "schema_version": COMPLETION_SCHEMA_VERSION,
@@ -3500,6 +3681,7 @@ def _completed_pilot(
     execution_mode: str,
     prices: dict[str, dict[str, Decimal]],
     allow_test_provider: bool,
+    allow_redacted_provider_response_id: bool = False,
 ) -> dict[str, Any] | None:
     path = output_root / COMPLETION_NAME
     if not path.exists():
@@ -3545,6 +3727,9 @@ def _completed_pilot(
         prices=prices,
         allow_test_provider=allow_test_provider,
         require_model_calls_completed=True,
+        allow_redacted_provider_response_id=(
+            allow_redacted_provider_response_id
+        ),
     )
     charged_text = _decimal_text(charged["charged_usd"])
     if (
@@ -3557,7 +3742,7 @@ def _completed_pilot(
         or completion.get("go_no_go")
         != "no_go_pending_independent_review"
         or completion.get("physical_model_calls")
-        != MAXIMUM_PHYSICAL_MODEL_CALLS
+        != plan["budget"]["maximum_physical_model_calls"]
         or completion.get("exact_model_cost_usd") != charged_text
         or completion.get("charged_cost_usd") != charged_text
         or completion.get("journal") != _journal_binding(journal_path, events)
@@ -3628,6 +3813,9 @@ def _completed_pilot(
             plan_sha256=plan["plan_sha256"],
             prices=prices,
             allow_test_provider=allow_test_provider,
+            allow_redacted_provider_response_id=(
+                allow_redacted_provider_response_id
+            ),
         )
         call_events = _call_events(events, call_id)
         reserved = [
@@ -3674,7 +3862,7 @@ def _completed_pilot(
         or metrics.get("execution_mode") != execution_mode
         or metrics.get("pilot_complete") is not True
         or metrics.get("physical_model_calls")
-        != MAXIMUM_PHYSICAL_MODEL_CALLS
+        != plan["budget"]["maximum_physical_model_calls"]
         or metrics.get("exact_known_model_cost_usd") != charged_text
         or metrics.get("charged_cost_usd") != charged_text
         or metrics.get("promotion_eligible") is not False
@@ -4081,18 +4269,23 @@ def _execute_model_pilot_locked(
                 if result_received
                 else "call_outcome_unknown"
             )
+            details: dict[str, Any] = {
+                "charged_reservation_usd": call["reservation_usd"],
+                "failure_type": type(exc).__name__,
+                "retry_allowed": False,
+                "runtime_safety_issue": safety_issue,
+            }
+            if isinstance(exc, ContractError):
+                details["redacted_contract_diagnostic"] = (
+                    _redacted_contract_diagnostic(call, exc)
+                )
             _append_event(
                 journal_path,
                 events,
                 plan_sha256=plan["plan_sha256"],
                 event_kind=event_kind,
                 call_id=call["call_id"],
-                details={
-                    "charged_reservation_usd": call["reservation_usd"],
-                    "failure_type": type(exc).__name__,
-                    "retry_allowed": False,
-                    "runtime_safety_issue": safety_issue,
-                },
+                details=details,
             )
             _append_event(
                 journal_path,

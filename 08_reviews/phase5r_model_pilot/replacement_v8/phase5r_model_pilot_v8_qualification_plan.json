@@ -1,0 +1,42 @@
+{
+  "authorization": {
+    "execution_requires_explicit_runtime_authorization": true,
+    "physical_attempts_per_call": 1,
+    "sdk_max_retries": 0,
+    "training_budget_usd": "15.00",
+    "v8_qualification_call_cap": 3,
+    "v8_qualification_usd_cap": "0.8712"
+  },
+  "boundaries": {
+    "broker_or_account_access": false,
+    "canonical_effect": false,
+    "credential_storage": false,
+    "email_effect": false,
+    "no_provider_response_id_persistence": true,
+    "no_raw_failed_response_persistence": true,
+    "scheduler_effect": false,
+    "shadow_only": true,
+    "store": false,
+    "tools": [],
+    "trading": false
+  },
+  "execution_prohibited_without_explicit_runtime_authorization": false,
+  "plan_sha256": "d18bbe549274587fe99a5199a413fb4245a00a19eefdad5da6f87ac60da29a11",
+  "qualification": {
+    "calls_are_non_collection_diagnostics": true,
+    "input_payload_classification": "synthetic_content_free",
+    "instructions_sha256": "8b7d1b8600e39370941585feca431d56b8da88edcdebddd0adc8c5bd9d8fa65d",
+    "maximum_input_tokens_per_call": 24000,
+    "maximum_output_tokens_per_call": 3800,
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "high",
+    "required_payload": {
+      "qualification": "passed"
+    },
+    "role": "critic",
+    "schema_sha256": "3cc64fb1b49a126d58a4b6690ddc360e28f9ef23f614b6ff2ee46fe419980a8f",
+    "timeout_seconds": 120
+  },
+  "schema_version": "phase5r_model_pilot_v8_qualification_plan_v1",
+  "status": "authorized_pending_sealed_execution_plan"
+}

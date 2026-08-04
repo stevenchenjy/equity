@@ -2369,6 +2369,16 @@ class ProviderReplayGateTests(unittest.TestCase):
         for role, payload in inputs.items():
             rows[role]["input_sha256"] = canonical_sha256(payload)
 
+    def test_runtime_replay_does_not_certify_an_ungrounded_close(self) -> None:
+        self.assertTrue(self.bindings)
+        self.assertTrue(
+            all(
+                binding.runtime_packet["gates"]["verified_close_session"]
+                == ""
+                for binding in self.bindings.values()
+            )
+        )
+
     def test_valid_external_provider_report_passes_without_side_effects(self) -> None:
         result = verify_provider_replay_gate(
             manifest_path=self.manifest_path,

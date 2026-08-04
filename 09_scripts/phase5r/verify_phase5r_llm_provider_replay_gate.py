@@ -1141,7 +1141,10 @@ def build_runtime_replay_packet(
             "deterministic_action_stability_distinct_closes": 0,
             "deterministic_transition_pending_tickers": [],
             "deterministic_transition_eligible_tickers": [],
-            "verified_close_session": cycle_date,
+            # Historical replay packets are research-only and do not carry a
+            # fresh, independently verified current-session gate.  Do not
+            # manufacture one from the packet calendar date.
+            "verified_close_session": "",
         },
         "market_observations": market_observations,
         "fundamental_observations": [],

@@ -6,9 +6,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 from build_phase5r_decision_evidence_packet import build_packet
+from phase5r_daily_common import iso_now
 from phase5r_valuation_input_bundle import (
     ValuationInputBundleError,
     load_valuation_input_bundle,
@@ -295,22 +297,47 @@ class ValuationInputBundleTests(unittest.TestCase):
                 )
 
     def test_packet_builder_imports_receipt_but_market_gate_stays_closed(self) -> None:
-        baseline = build_packet(
-            PACKET_AS_OF,
-            valuation_bundle_path=Path("/definitely/absent/valuation.json"),
-        )
-        ticker = baseline["entities"][0]["ticker"]
+        packet_as_of = iso_now()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            bundle_path = (
-                root / "04_data/phase5r/phase5r_valuation_inputs.local.json"
+            evidence_status_path = (
+                root / "03_source_data/phase5r/phase5r_daily_evidence_status.json"
             )
-            _write_bundle(bundle_path, _bundle(root, ticker=ticker))
-            packet = build_packet(
-                PACKET_AS_OF,
-                valuation_bundle_path=bundle_path,
-                valuation_source_root=root,
+            evidence_status_path.parent.mkdir(parents=True, exist_ok=True)
+            evidence_status_path.write_text(
+                json.dumps(
+                    {
+                        "last_success_at": AVAILABLE_AT,
+                        "scan_status": "ok",
+                        "scanned_tickers": [],
+                        "held_coverage_complete": False,
+                        "held_fundamental_coverage_complete": False,
+                    },
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
             )
+            with patch(
+                "build_phase5r_decision_evidence_packet.EVIDENCE_STATUS_PATH",
+                evidence_status_path,
+            ):
+                baseline = build_packet(
+                    packet_as_of,
+                    valuation_bundle_path=Path(
+                        "/definitely/absent/valuation.json"
+                    ),
+                )
+                ticker = baseline["entities"][0]["ticker"]
+                bundle_path = (
+                    root
+                    / "04_data/phase5r/phase5r_valuation_inputs.local.json"
+                )
+                _write_bundle(bundle_path, _bundle(root, ticker=ticker))
+                packet = build_packet(
+                    packet_as_of,
+                    valuation_bundle_path=bundle_path,
+                    valuation_source_root=root,
+                )
         self.assertEqual(
             [row["ticker"] for row in packet["valuation_evidence"]],
             [ticker],

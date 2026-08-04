@@ -14,7 +14,10 @@ from phase5r_sec_acceptance import (
     validate_acceptance_index,
     write_acceptance_index,
 )
-from refresh_phase5r_daily_evidence import recent_filings
+from refresh_phase5r_daily_evidence import (
+    merge_seen_accessions,
+    recent_filings,
+)
 
 
 def record(
@@ -33,6 +36,24 @@ def record(
 
 
 class SecAcceptanceTests(unittest.TestCase):
+    def test_durable_ledger_repairs_stale_seen_accession_cache(self) -> None:
+        merged = merge_seen_accessions(
+            {"arm": ["0001973239-26-000113"]},
+            [
+                {
+                    "ticker": "ARM",
+                    "accession_number": "0001973239-26-000114",
+                }
+            ],
+        )
+        self.assertEqual(
+            merged["ARM"],
+            {
+                "0001973239-26-000113",
+                "0001973239-26-000114",
+            },
+        )
+
     def test_sec_timestamp_is_timezone_aware_and_normalized(self) -> None:
         self.assertEqual(
             normalize_acceptance_timestamp("2026-07-24T20:30:45.000Z"),

@@ -1,0 +1,17 @@
+{
+  "schema_version": "phase5r_ai_assisted_review_correction_addendum_v1",
+  "status": "noncanonical",
+  "source_ai_review_raw_file_sha256": "",
+  "source_anonymous_bundle_raw_file_sha256": "",
+  "records": [
+    {
+      "review_id": "",
+      "original_ai_judgment": "",
+      "corrected_judgment": "",
+      "reason": "",
+      "evidence_source_ids": [],
+      "changes_original_artifact": false
+    }
+  ],
+  "notes": "Template only. The original anonymous bundle and sealed outputs must remain unchanged."
+}

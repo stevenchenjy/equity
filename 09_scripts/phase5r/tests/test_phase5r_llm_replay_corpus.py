@@ -251,6 +251,37 @@ class AcceptanceAndSelectionTests(unittest.TestCase):
             {"AAA": 2, "BBB": 2, "CCC": 2},
         )
 
+    def test_hash_bound_snapshot_accepts_only_exact_append_only_prefix(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            ledger = Path(directory_name) / "ledger.csv"
+            frozen_rows = [ledger_row(0), ledger_row(1)]
+            write_ledger(ledger, frozen_rows)
+            frozen_sha256 = prepare.sha256_bytes(ledger.read_bytes())
+            with ledger.open("a", encoding="utf-8", newline="") as handle:
+                writer = csv.DictWriter(handle, fieldnames=LEDGER_FIELDS)
+                writer.writerow(ledger_row(2))
+            rows = prepare.read_ledger(
+                ledger,
+                expected_snapshot_sha256=frozen_sha256,
+                expected_snapshot_distinct_accessions=2,
+            )
+            self.assertEqual(len(rows), 2)
+
+            changed = ledger.read_text(encoding="utf-8").replace(
+                "metadata_sha256", "metadata_sha25x", 1
+            )
+            ledger.write_text(changed, encoding="utf-8")
+            with self.assertRaisesRegex(
+                prepare.CorpusError, "snapshot hash mismatch"
+            ):
+                prepare.read_ledger(
+                    ledger,
+                    expected_snapshot_sha256=frozen_sha256,
+                    expected_snapshot_distinct_accessions=2,
+                )
+
     def test_unsafe_sec_url_and_rate_above_two_fail_closed(self) -> None:
         raw = ledger_row(0)
         raw["source_url"] = raw["source_url"].replace(

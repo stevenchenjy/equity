@@ -1,21 +1,21 @@
 # Phase 5R-B2 Data Source Decision
 
-Generated: `2026-07-28T13:24:28-04:00`
+Generated: `2026-08-03T19:30:57-04:00`
 
 ## Decision
 
 - Selected source: `yfinance_public_market_data`.
 - Source use: `public read-only market data`.
-- Benchmark preflight: `passed`.
-- Full-universe action: `full-universe public daily history retrieved`.
+- Benchmark preflight: `failed`.
+- Full-universe action: `not attempted because benchmark preflight failed`.
 
 ## Benchmark Preflight
 
 | Ticker | Last Price | Previous Close | Volume | Status |
 | --- | ---: | ---: | ---: | --- |
-| QQQ | 678.1300 | 682.1200 | 33126340 | passed |
-| XLK | 171.3600 | 174.3000 | 6546111 | passed |
-| SPY | 742.1900 | 739.0900 | 21901972 | passed |
+| QQQ | n/a | n/a | n/a | failed |
+| XLK | n/a | n/a | n/a | failed |
+| SPY | n/a | n/a | n/a | failed |
 
 ## Boundary
 

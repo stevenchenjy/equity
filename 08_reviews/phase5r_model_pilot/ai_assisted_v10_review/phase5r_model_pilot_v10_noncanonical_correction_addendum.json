@@ -1,0 +1,49 @@
+{
+  "schema_version": "phase5r_ai_assisted_review_correction_addendum_v1",
+  "status": "noncanonical",
+  "source_ai_review_raw_file_sha256": "5282ea924a564e2a2fda7a2f49f5c63643f5aa706b2f95ad023ddad678de3775",
+  "source_anonymous_bundle_raw_file_sha256": "011192c2ddb7a9db07e0b588499c16d9330b98da2caf82a855cc70aadc894a77",
+  "records": [
+    {
+      "review_id": "ab5b5abbd47bb74c8befb95f04915ce5d75498962693d46d59e99e8ddd678e47",
+      "original_ai_judgment": "Partial support: the reviewed claim stated that revenue and operating income expanded while operating margin also improved.",
+      "corrected_judgment": "Revenue and operating income rose across the annual comparison; operating margin improved relative to 2024 but declined from 2025 to 2026.",
+      "reason": "The cited table shows operating margin of 3% in 2024, 21% in 2025, and 18% in 2026, so an unqualified latest-year improvement is unsupported.",
+      "evidence_source_ids": [
+        "sec-primary:0001973239-26-000097:chunk:103"
+      ],
+      "changes_original_artifact": false
+    },
+    {
+      "review_id": "af95fdf118586c77bc04b6f9e7ecc6f9dde943ebf9b6ca372860d1a14b51555c",
+      "original_ai_judgment": "Partial support: the reviewed claim stated that Broadcom disclosed tender-offer pricing terms and results.",
+      "corrected_judgment": "The supplied 8-K reports that attached press releases announced tender-offer pricing terms and the expiration, upsize, and results; the excerpt itself does not disclose the specific pricing terms.",
+      "reason": "The cited 8-K incorporates press releases that announced the terms but does not contain the terms themselves in the supplied excerpt.",
+      "evidence_source_ids": [
+        "sec-primary:0001193125-26-275077"
+      ],
+      "changes_original_artifact": false
+    },
+    {
+      "review_id": "400146d357c3b58b9b7868439b97eefad8b08a8cb5b9f3c8d8f6b12bbd6915c9",
+      "original_ai_judgment": "Partial support with an invalid period/unit binding: the reviewed claim stated that operating cash flow and management-defined free cash flow increased year over year.",
+      "corrected_judgment": "In the separately cited nine-month reconciliation, operating cash flow and management-defined free cash flow were higher year over year; otherwise the claim should avoid asserting a period not established by its own cited excerpt.",
+      "reason": "The claim-level excerpt reports the figures but does not itself clearly bind them to the stated nine-month period; that binding appears in a separate critic excerpt.",
+      "evidence_source_ids": [
+        "sec-primary:0001327567-26-000015:chunk:36"
+      ],
+      "changes_original_artifact": false
+    },
+    {
+      "review_id": "bb598fd8ea50d4dca4ab69c7efa4dbfbc80b6caacca9cf8dab548321f3cbe05f",
+      "original_ai_judgment": "Partial support: the reviewed claim stated that dependence on the largest customer decreased as a share of total revenue.",
+      "corrected_judgment": "The disclosed customer's share of revenue declined from 16% to 10%; the supplied excerpt does not establish whether it was the largest customer or whether overall customer dependence changed.",
+      "reason": "The excerpt identifies one customer but does not identify it as the largest or establish a broader dependence conclusion.",
+      "evidence_source_ids": [
+        "sec-primary:0000723125-26-000015:chunk:20"
+      ],
+      "changes_original_artifact": false
+    }
+  ],
+  "notes": "Separate noncanonical correction record. It does not modify the anonymous bundle, the sealed v10 outputs, journals, receipts, completion record, or their hashes. The v10 no-go state remains in force."
+}

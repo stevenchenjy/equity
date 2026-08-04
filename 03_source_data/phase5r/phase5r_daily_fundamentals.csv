@@ -1,7 +1,1 @@
 ticker,cik,fetched_at,latest_period_end,latest_frame,revenue_latest,revenue_prior_year,revenue_yoy_pct,net_income_latest,net_margin_pct,cash_latest,assets_latest,liabilities_latest,trend_label,data_quality,source_url
-ARM,1973239,2026-07-28T13:24:31-04:00,,,,,,,,2751000000.00,10703000000.00,2417000000.00,insufficient_trend,unavailable,https://data.sec.gov/api/xbrl/companyfacts/CIK0001973239.json
-AVGO,1730168,2026-07-28T13:24:31-04:00,2026-05-03,CY2026Q1,22187000000.00,15004000000.00,47.87,,,19628000000.00,179158000000.00,91467000000.00,strong_growth,ok,https://data.sec.gov/api/xbrl/companyfacts/CIK0001730168.json
-IOT,1642896,2026-07-28T13:24:31-04:00,2026-05-02,CY2026Q1,478844000.00,366884000.00,30.52,44508000.00,9.29,218986000.00,2614070000.00,1106480000.00,strong_growth,ok,https://data.sec.gov/api/xbrl/companyfacts/CIK0001642896.json
-MU,723125,2026-07-28T13:24:31-04:00,2026-05-28,CY2026Q2,41456000000.00,9301000000.00,345.72,28243000000.00,68.13,24995000000.00,134112000000.00,33388000000.00,strong_growth,ok,https://data.sec.gov/api/xbrl/companyfacts/CIK0000723125.json
-PANW,1327567,2026-07-28T13:24:31-04:00,2026-04-30,CY2026Q1,3002000000.00,2289000000.00,31.15,-177000000.00,-5.90,2364000000.00,46266000000.00,18598000000.00,strong_growth,ok,https://data.sec.gov/api/xbrl/companyfacts/CIK0001327567.json
-RBRK,1943896,2026-07-28T13:24:31-04:00,2026-04-30,CY2026Q1,387068000.00,278481000.00,38.99,-41853000.00,-10.81,429397000.00,2768247000.00,3249572000.00,strong_growth,ok,https://data.sec.gov/api/xbrl/companyfacts/CIK0001943896.json

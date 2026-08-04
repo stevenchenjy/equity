@@ -510,8 +510,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_b2_data_source_decision.md": {
-    "mtime": 1785193289.5327625,
-    "ast_hash": "228f4adf09526ab7184032c519614324",
+    "mtime": 1785717483.3179243,
+    "ast_hash": "60dc253651bbb5296cd4034e1993883e",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_b2_full_universe_data_policy.md": {
@@ -920,8 +920,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_b2_data_report.md": {
-    "mtime": 1785193289.5342243,
-    "ast_hash": "c8729e0f1e811b6516f3513a31d8ae07",
+    "mtime": 1785717483.3196583,
+    "ast_hash": "0711d3e5c33ae766ac7b7ff2843a34d3",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_b2_verification_report.md": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_daily_research_preview.md": {
-    "mtime": 1785193291.6332283,
-    "ast_hash": "65193147e9c22ec042805575560d6815",
+    "mtime": 1785717485.8728628,
+    "ast_hash": "0f5df7bd03272a156806429688595b46",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_manual_trade_tickets.md": {
@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_watchlist.md": {
-    "mtime": 1785193291.6340466,
-    "ast_hash": "cb9ee1a73d92247c708d0d21cc638ba0",
+    "mtime": 1785717485.8736897,
+    "ast_hash": "87505b02780eb1f6ecf68ec4f337ad95",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b_manual_trade_tickets.md": {
@@ -1410,13 +1410,13 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_account_aware_memo.md": {
-    "mtime": 1785193314.4322145,
-    "ast_hash": "815af04130de2d2a67b78763197c7cbf",
+    "mtime": 1785431696.7235432,
+    "ast_hash": "4851e9a8ac2c77a738ed4a1fc5ca5c3a",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_allocation_report.md": {
-    "mtime": 1785193314.4360416,
-    "ast_hash": "e5b43c68cfbe2abe2c12548e5804ed94",
+    "mtime": 1785431696.7528093,
+    "ast_hash": "02e122615d1fcffb219a588441a90ba7",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9_verification_report.md": {
@@ -1425,8 +1425,8 @@
     "semantic_hash": ""
   },
   "05_risk_and_positions/phase5r_c9_weekly_decision_summary.md": {
-    "mtime": 1785193314.4380233,
-    "ast_hash": "ad45652a6e8468eb911a4bd49a917b2f",
+    "mtime": 1785431696.7680924,
+    "ast_hash": "bc316a66eacb03404a07d4e59f472969",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9b_execution_template.py": {
@@ -1480,8 +1480,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9b_execution_report.md": {
-    "mtime": 1785193315.8529217,
-    "ast_hash": "7549922bdd694cd5963b0ae2a5d203b3",
+    "mtime": 1785717522.4394436,
+    "ast_hash": "c6cbe91df9f34e94bdd553308be605d9",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_c9b_verification_report.md": {
@@ -1495,13 +1495,13 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_daily_evidence_status.json": {
-    "mtime": 1785193310.5357907,
-    "ast_hash": "4f087ba3aa4391a99e856d0ce8d30f06",
+    "mtime": 1785509281.2009892,
+    "ast_hash": "1c2e4fb127aca68eb2e13941112f485f",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.json": {
-    "mtime": 1785193316.5206575,
-    "ast_hash": "beef00743dc89983363db2c62d4e6c80",
+    "mtime": 1785717523.7330875,
+    "ast_hash": "cf1fda30fe65e49ec5a17cc6d58441e8",
     "semantic_hash": ""
   },
   "07_automation/scheduler/activate_phase5r_daily_after_verification.sh": {
@@ -1540,8 +1540,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_daily_evidence.py": {
-    "mtime": 1784952027.3252614,
-    "ast_hash": "38ea64fde78191b789142d30aca4d3d5",
+    "mtime": 1785609709.5457058,
+    "ast_hash": "70e6020b4a94d86a9a4bc2f68afdae27",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py": {
@@ -1605,8 +1605,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.md": {
-    "mtime": 1785193316.5248806,
-    "ast_hash": "0a4eec89e5f1ede4df10bc3925282e78",
+    "mtime": 1785717523.7347164,
+    "ast_hash": "3a932c708c4f6d95e7800a29f96e339c",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_upgrade_report.md": {
@@ -1620,13 +1620,13 @@
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.html": {
-    "mtime": 1785193316.5463955,
-    "ast_hash": "4f713d60cd6fb4eb7637f048f6bc8e4f",
+    "mtime": 1785717523.7374573,
+    "ast_hash": "82fe42dd5e651b52e18758c76201d746",
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.txt": {
-    "mtime": 1785193316.5367866,
-    "ast_hash": "1a1e759a8969b7559309e82824a031b7",
+    "mtime": 1785717523.7361684,
+    "ast_hash": "beeb9d35fb239bf017b22803521f7c1f",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_sec_filing_artifacts.py": {
@@ -1660,13 +1660,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_contract.py": {
-    "mtime": 1784987332.7581341,
-    "ast_hash": "971da7ce0c55e546b1460b0fcaf7cf0b",
+    "mtime": 1785645560.4971774,
+    "ast_hash": "247c46042d21c7e71a108fcd47c410f4",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_provider.py": {
-    "mtime": 1785216408.1082335,
-    "ast_hash": "b50a00d0397f1f11ec73840a60005251",
+    "mtime": 1785685689.8933597,
+    "ast_hash": "7ea2fbc99c326e05d68a1bd41f89e280",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_llm_shadow.py": {
@@ -1690,8 +1690,8 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_filing_artifact_index.json": {
-    "mtime": 1785193311.9237487,
-    "ast_hash": "caeaf7ad4bcefdc18ae09762e2d5e69b",
+    "mtime": 1785717520.8228872,
+    "ast_hash": "da476547a2912d7ccc2cc6892e1b08a8",
     "semantic_hash": ""
   },
   "07_automation/scheduler/check_phase5r_llm_shadow_status.sh": {
@@ -1750,8 +1750,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_contract.py": {
-    "mtime": 1784985221.663635,
-    "ast_hash": "6c61342336ce58fe5fbf608a6102288a",
+    "mtime": 1785612548.978598,
+    "ast_hash": "1a7c8451bc242733238fe970240ae09f",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_numeric.py": {
@@ -1765,8 +1765,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_provider.py": {
-    "mtime": 1785215024.301469,
-    "ast_hash": "7089b967843e3f942db56225f06c275f",
+    "mtime": 1785685689.8943455,
+    "ast_hash": "5e701f5d56d075117abec1be35a4d263",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_replay.py": {
@@ -1830,8 +1830,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/prepare_phase5r_llm_replay_corpus.py": {
-    "mtime": 1785210145.9078333,
-    "ast_hash": "c75b97e9a90e6e47673224a50a57f9ce",
+    "mtime": 1785609270.5681076,
+    "ast_hash": "1aea4885321970631c01154573dfb76c",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_security_regressions.py": {
@@ -1840,8 +1840,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_llm_replay_corpus.py": {
-    "mtime": 1784985585.0036283,
-    "ast_hash": "0888c500d3fff7a3c002130cd95ed602",
+    "mtime": 1785609270.570776,
+    "ast_hash": "bb1308a67980a583007ca62576d07329",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_llm_replay_corpus_design.md": {
@@ -1850,18 +1850,18 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_submission_acceptance_index.json": {
-    "mtime": 1785193310.5279007,
-    "ast_hash": "6371df4d3bd11504ee8ef4844ba3dce1",
+    "mtime": 1785413881.4039679,
+    "ast_hash": "87e010388f391146baa63d6d9c795378",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_replay_corpus.py": {
-    "mtime": 1785209085.6649103,
-    "ast_hash": "0e6691a6c74e28ac1d005d99c8057f90",
+    "mtime": 1785609336.4195185,
+    "ast_hash": "57e60db0ecdaea1d55c5fa6f443c5791",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_sec_acceptance.py": {
-    "mtime": 1784952198.1390638,
-    "ast_hash": "52a76a8fb7a2110cc60e50bcaf116821",
+    "mtime": 1785609709.546956,
+    "ast_hash": "b9f74a7efdf5afb41f69aae4042a4dda",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_llm_transition_annotation_template.py": {
@@ -1895,8 +1895,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_provider_replay_gate.py": {
-    "mtime": 1784989787.802379,
-    "ast_hash": "410f2006e97baee158e7d3785ab6942b",
+    "mtime": 1785612698.144104,
+    "ast_hash": "669826aa231112b4370ddbec49e003a3",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_provider_replay_runner.py": {
@@ -1920,8 +1920,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_llm_provider_replay_gate.py": {
-    "mtime": 1785210741.8123496,
-    "ast_hash": "7c3fe35a2bcc30f722b6c90bf42e9b5a",
+    "mtime": 1785612698.0158,
+    "ast_hash": "b4ebdc4c735ce9d30d4dbd0c600ac860",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_llm_transition_annotation_rubric.md": {
@@ -2105,8 +2105,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_safe_shadow_readiness.py": {
-    "mtime": 1785216246.925801,
-    "ast_hash": "9535dec255f96ee8c2bb0768f27390e0",
+    "mtime": 1785612300.3337553,
+    "ast_hash": "b7f47631b96b214a6e3fb6d7d2021507",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_economical_dependency_decision.md": {
@@ -2135,8 +2135,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_valuation_input_bundle.py": {
-    "mtime": 1785208679.3440871,
-    "ast_hash": "14c5d3ed2e710cb2b0f0af6e29a90dad",
+    "mtime": 1785612340.2801723,
+    "ast_hash": "dac5fa5a8f3a5904e916a3c30b9835f2",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_future_notification_plan.md": {
@@ -2155,13 +2155,13 @@
     "semantic_hash": ""
   },
   "08_reviews/phase5r_model_pilot/phase5r_anonymous_review_materials_status.md": {
-    "mtime": 1785214946.782845,
-    "ast_hash": "f35d2522a3757af4239d8c1f2fe75a0e",
+    "mtime": 1785644222.0129592,
+    "ast_hash": "26fcc1acbe1d1fc454e626abd5679b6d",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_strict_replay_artifacts.py": {
-    "mtime": 1785210944.5750186,
-    "ast_hash": "7d4d0c4336e90227721cd479643fa666",
+    "mtime": 1785609282.6065202,
+    "ast_hash": "382924537a3d7d60b725b22b77cbd0a6",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_strict_replay_artifacts.py": {
@@ -2175,13 +2175,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_model_pilot.py": {
-    "mtime": 1785216408.1100178,
-    "ast_hash": "bfee968e02e631323b7032eb0fc60903",
+    "mtime": 1785689794.4661453,
+    "ast_hash": "36cce8d1107df2e8737e6727b04f7777",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_model_pilot.py": {
-    "mtime": 1785215676.4804575,
-    "ast_hash": "91811a28db10ea4893399bc05d1eef3f",
+    "mtime": 1785611192.390725,
+    "ast_hash": "ad4ba31ed47dd2dea56ac5ffd7134362",
     "semantic_hash": ""
   },
   "08_reviews/phase5r_model_pilot/phase5r_anonymous_review_protocol.md": {
@@ -2192,6 +2192,321 @@
   "09_scripts/phase5r/phase5r_model_pilot_requirements.lock.txt": {
     "mtime": 1785216175.413295,
     "ast_hash": "ba4e5930411b7cb68bcbf391fd751eae",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v2/phase5r_model_pilot_v2_plan.json": {
+    "mtime": 1785613014.6881897,
+    "ast_hash": "19b800f5d0aa72f579718497ff9836a5",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v3/phase5r_model_pilot_v3_plan.json": {
+    "mtime": 1785637335.4693418,
+    "ast_hash": "4f8eadf06a61e73a234f926d89fc38c9",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v4/phase5r_model_pilot_v4_plan.json": {
+    "mtime": 1785639192.5170739,
+    "ast_hash": "d5d9aab6a48ac63b895e6544f240b3c1",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v5/phase5r_model_pilot_v5_plan.json": {
+    "mtime": 1785641707.0909975,
+    "ast_hash": "aeee1a8e31332f9386dbea8d21ae52e9",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v6/phase5r_model_pilot_v6_plan.json": {
+    "mtime": 1785645658.1658032,
+    "ast_hash": "5cadcdc4b4b3f3c838d54cb2eba49e8d",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_model_pilot_v3_prompt.py": {
+    "mtime": 1785615689.4437215,
+    "ast_hash": "b9e210ed45446c9ff056d5e153b3ddda",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_model_pilot_v4_contract.py": {
+    "mtime": 1785638908.689065,
+    "ast_hash": "feacbe68e076e6c89e89a831ac5a6897",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_model_pilot_v5_contract.py": {
+    "mtime": 1785640372.194609,
+    "ast_hash": "f489923883b49d8ea441ea8f64577315",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_model_pilot_v6_contract.py": {
+    "mtime": 1785645616.772543,
+    "ast_hash": "e4b4539f38596c60f36d962b103ebe4f",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v2.py": {
+    "mtime": 1785613996.5012496,
+    "ast_hash": "a79fee130a4128a8f820dfae57660a8b",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v3.py": {
+    "mtime": 1785637967.2704847,
+    "ast_hash": "0c5ba58e322f791dd432b349461e447c",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v4.py": {
+    "mtime": 1785639183.3482518,
+    "ast_hash": "700d1d16da246bd1fd3672139a559207",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v5.py": {
+    "mtime": 1785641698.7291422,
+    "ast_hash": "a7806dd4b048492b67bd6302d36ee0b6",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v6.py": {
+    "mtime": 1785689679.4569473,
+    "ast_hash": "216c9c5ff3e8b5ac4a0b52b8ceeb752b",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v2.py": {
+    "mtime": 1785614031.3260248,
+    "ast_hash": "6b7c14a52654936b10fd1e9a7b52af8a",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v3.py": {
+    "mtime": 1785637967.3961356,
+    "ast_hash": "91d58d2d7ede7caa28c7313c7a1c885e",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v3_prompt.py": {
+    "mtime": 1785615689.660262,
+    "ast_hash": "7a1fd6a745c9a2bb4f9d6192c88ad054",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v4.py": {
+    "mtime": 1785643979.383234,
+    "ast_hash": "e34270f11f08db360285170f29380eef",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v4_contract.py": {
+    "mtime": 1785638908.813315,
+    "ast_hash": "8a3f3747e7f95ceb119d48c83803a9a3",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v5.py": {
+    "mtime": 1785641552.2200193,
+    "ast_hash": "8709af2ec87b65bdcba30905fa48bd77",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v5_contract.py": {
+    "mtime": 1785640372.327391,
+    "ast_hash": "c6214ad8d3a3eac40e1e2c86a1ba4c8b",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v6.py": {
+    "mtime": 1785648595.7983396,
+    "ast_hash": "d33ab9ced2f7668a87636c76d0734ba4",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_model_pilot_v1_stop_diagnosis.md": {
+    "mtime": 1785611883.4810908,
+    "ast_hash": "762efe69e60abaebb10cc163f9d149cc",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/phase5r_model_pilot_terminal_no_go_report.md": {
+    "mtime": 1785644241.3319752,
+    "ast_hash": "b7316807456ad9cc720c5b7a3d05702a",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v6/phase5r_model_pilot_v6_authorization_request.md": {
+    "mtime": 1785644456.1890788,
+    "ast_hash": "9aec43dddc0870843e56c942d5fe3580",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v7/phase5r_model_pilot_v7_plan.json": {
+    "mtime": 1785648460.1079137,
+    "ast_hash": "bd586b94fb8a75e9b7ac505b2c654213",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/phase5r_model_pilot_v6_terminal_diagnosis.md": {
+    "mtime": 1785647678.936409,
+    "ast_hash": "7dbe9a8b8518d84425ed478f269573f4",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v6/phase5r_model_pilot_v6_capability_gate_report.md": {
+    "mtime": 1785646259.490653,
+    "ast_hash": "8290ffa8c785efc979e23292dcf9d628",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v7.py": {
+    "mtime": 1785648545.332286,
+    "ast_hash": "fe4d10748e173abf685506d4bc0d25f8",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v7.py": {
+    "mtime": 1785648782.325514,
+    "ast_hash": "c70fc26cc23cb54d2531ca9ebb326a2e",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/phase5r_model_pilot_v8_reliability_gate_proposal.md": {
+    "mtime": 1785687501.6155226,
+    "ast_hash": "3b81cbb35c7465411a0b4ce1a0669bab",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v8/phase5r_model_pilot_v8_qualification_plan.json": {
+    "mtime": 1785687397.6526196,
+    "ast_hash": "1a5e5d6b7e3930572494619eaef2066b",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v8_qualification.py": {
+    "mtime": 1785686293.7073102,
+    "ast_hash": "da74f8310f43eb61a8cfe22aeefb4110",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v8_qualification.py": {
+    "mtime": 1785687438.1235385,
+    "ast_hash": "a8692b7d8b74085e662a7f12d9b3cf45",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v9/phase5r_model_pilot_v9_plan.json": {
+    "mtime": 1785687678.2405732,
+    "ast_hash": "bb0dbf6e512312da57a57a4a5765f1d1",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v9.py": {
+    "mtime": 1785687731.9220893,
+    "ast_hash": "4d5fba50fd75aa4943fef3f770021b0d",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v9.py": {
+    "mtime": 1785687791.168042,
+    "ast_hash": "1e60d0de0287639f6563a1a59d9ece10",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/replacement_v10/phase5r_model_pilot_v10_plan.json": {
+    "mtime": 1785689728.5749695,
+    "ast_hash": "668fb905ad62281b195a1aa6be3a1c06",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/run_phase5r_model_pilot_v10.py": {
+    "mtime": 1785689890.8459423,
+    "ast_hash": "26d756f76cc6f459b7aa9585c27a6184",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_model_pilot_v10.py": {
+    "mtime": 1785689917.9176085,
+    "ast_hash": "63ec0f7ed907c3df6fa818cd3c21c650",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/phase5r_model_pilot_v9_terminal_diagnosis.md": {
+    "mtime": 1785688378.099626,
+    "ast_hash": "881733aaf5f27462fd84a088162d95af",
+    "semantic_hash": ""
+  },
+  "01_policies/phase5r_ai_assisted_review_correction_addendum_template.json": {
+    "mtime": 1785696660.8627665,
+    "ast_hash": "7e4db4178053f39172ff2dbe6e17b029",
+    "semantic_hash": ""
+  },
+  "01_policies/phase5r_v10_ai_assisted_review_adoption_record_template.json": {
+    "mtime": 1785701750.9475799,
+    "ast_hash": "a6ce1dabc8930ac88e4d0b6ff9af8cf9",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_model_pilot_v10_ai_assisted_review.json": {
+    "mtime": 1785695242.4570022,
+    "ast_hash": "4fd38b3ab793a2571c37413250032878",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_model_pilot_v10_noncanonical_correction_addendum.json": {
+    "mtime": 1785701531.0294018,
+    "ast_hash": "6a75a521509ec8fc8ea6b3ab5cb0e176",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_v10_blind_key_boundary_incident.json": {
+    "mtime": 1785727837.4918227,
+    "ast_hash": "14d7cc94b2646236b648df0f31fa970b",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_verify_phase5r_v10_ai_review_governance.py": {
+    "mtime": 1785727880.4032555,
+    "ast_hash": "73d39eab59ce4905605b1a01eccd69c4",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/verify_phase5r_v10_ai_review_governance.py": {
+    "mtime": 1785727880.4021993,
+    "ast_hash": "7babcc2d5940454616365c12b8ea266e",
+    "semantic_hash": ""
+  },
+  "01_policies/phase5r_v10_ai_assisted_review_limited_governance_amendment_draft.md": {
+    "mtime": 1785727880.404086,
+    "ast_hash": "b7700b3cd2cfc3be87c7b61bd8df8af2",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_model_pilot_v10_ai_assisted_review_report.md": {
+    "mtime": 1785695318.232998,
+    "ast_hash": "7561bb6c70c67ad1f7957987878e3357",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_model_pilot_v10_noncanonical_correction_addendum.md": {
+    "mtime": 1785695481.4683092,
+    "ast_hash": "d2431424ec04d022d1202154955f19a2",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/phase5r_model_pilot_v10_independent_review_preflight.md": {
+    "mtime": 1785692762.288109,
+    "ast_hash": "143140dd082ddb63c82030d90475d5f6",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_v10_project_owner_internal_use_decision.json": {
+    "mtime": 1785727837.4904437,
+    "ast_hash": "7acec3593dd8a15d15b2285e6969ba61",
+    "semantic_hash": ""
+  },
+  "01_policies/phase5r_v10_noncanonical_internal_use_policy.md": {
+    "mtime": 1785727837.4911528,
+    "ast_hash": "8182c4d61f72545f2913a935c99a3269",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_llm_internal_quality.py": {
+    "mtime": 1785734555.6654072,
+    "ast_hash": "4341c0272953427b5315bb55cb563345",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_llm_internal_quality.py": {
+    "mtime": 1785733776.6201608,
+    "ast_hash": "031137d4e19ac56b64d59c8dbe1f17fb",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_model_pilot/ai_assisted_v10_review/phase5r_v10_noncanonical_internal_improvement_backlog.md": {
+    "mtime": 1785741403.3060331,
+    "ast_hash": "7e19f8d7969e0db79d2946bc2f9b74d6",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_llm_evidence_contract_v2.py": {
+    "mtime": 1785734759.1822672,
+    "ast_hash": "0e6ac2e06a6123aa63eabc175de37efc",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_llm_evidence_contract_v2.py": {
+    "mtime": 1785741381.308366,
+    "ast_hash": "281b2c335e6744e225cfc74e888d06a6",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_llm_evidence_contract_v2_handoff.py": {
+    "mtime": 1785739322.5593574,
+    "ast_hash": "1a73811082d43e876c9f220af23dcccc",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_llm_evidence_contract_v2_handoff.py": {
+    "mtime": 1785739322.560162,
+    "ast_hash": "9583f947ac059a35d617a48af2d5ad9f",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_assertion_span_contract_v3.py": {
+    "mtime": 1785741184.8643875,
+    "ast_hash": "ec27f5e0537eebf1e906bd42cfa158af",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_assertion_span_contract_v3.py": {
+    "mtime": 1785741184.8653445,
+    "ast_hash": "c7840913920b3aa54fb8830c3d1d3e8c",
     "semantic_hash": ""
   }
 }

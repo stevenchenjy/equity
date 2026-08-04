@@ -1239,11 +1239,19 @@ def _pilot_rows(
     target_packet_count: int,
     candidate_padding: int,
     pilot_packet_count: int,
+    ledger_snapshot_sha256: str | None = None,
+    ledger_snapshot_distinct_accessions: int | None = None,
 ) -> list[dict[str, str]]:
     if pilot_packet_count <= 0 or pilot_packet_count > target_packet_count:
         raise CorpusError("pilot packet count must be within target packets")
     selected = select_candidate_rows(
-        read_ledger(ledger_path),
+        read_ledger(
+            ledger_path,
+            expected_snapshot_sha256=ledger_snapshot_sha256,
+            expected_snapshot_distinct_accessions=(
+                ledger_snapshot_distinct_accessions
+            ),
+        ),
         target_packet_count=target_packet_count,
         candidate_padding=candidate_padding,
     )
@@ -1259,12 +1267,18 @@ def audit_strict_pilot(
     target_packet_count: int = DEFAULT_PILOT_PACKETS,
     candidate_padding: int = DEFAULT_CANDIDATE_PADDING,
     pilot_packet_count: int = DEFAULT_PILOT_PACKETS,
+    ledger_snapshot_sha256: str | None = None,
+    ledger_snapshot_distinct_accessions: int | None = None,
 ) -> dict[str, Any]:
     rows = _pilot_rows(
         ledger_path=ledger_path,
         target_packet_count=target_packet_count,
         candidate_padding=candidate_padding,
         pilot_packet_count=pilot_packet_count,
+        ledger_snapshot_sha256=ledger_snapshot_sha256,
+        ledger_snapshot_distinct_accessions=(
+            ledger_snapshot_distinct_accessions
+        ),
     )
     issuer_submission: dict[tuple[str, str], dict[str, Any]] = {}
     issuer_companyfacts: dict[tuple[str, str], dict[str, Any]] = {}

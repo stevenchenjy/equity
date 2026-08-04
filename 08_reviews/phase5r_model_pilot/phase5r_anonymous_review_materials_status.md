@@ -1,18 +1,20 @@
 # Phase 5R Anonymous Pilot Review Materials
 
-Status: **GENERATOR AND REVIEW PROTOCOL READY — awaiting authenticated
-provider output**
+Status: **NO-GO — no complete, comparable provider collection exists**
 
-No anonymous model-review set was generated because there are no model claims
-or model decisions to review.
+No anonymous model-review set was generated. Thirteen quarantined partial
+analyst receipts exist across separately sealed, terminal pilot versions, but
+none is a complete collection with the required downstream committee and critic
+results. They must not be combined, selectively reviewed, or presented as a
+completed comparison.
 
 Citation review records are deliberately claim-hash-bound and can only be
 created after quarantined provider output exists. Creating empty approvals,
 synthetic claims, inferred reviewer labels, citation scores, or critic-value
 scores would invalidate the evaluation.
 
-After all 30 inference calls succeed, the bounded runner will atomically
-generate:
+After a newly authorized, complete collection of 30 inference calls succeeds,
+the bounded runner can atomically generate:
 
 - one randomly A/B-blinded row for every Luna/Terra analyst claim;
 - a separate citation verdict slot for every claim/source pair;
@@ -38,6 +40,8 @@ Pre-inference evidence available for audit:
 - strict readiness result: `10/10` locally complete.
 
 The corpus gate is complete. Anonymous claim/citation review rows remain
-intentionally ungenerated until an authenticated, bounded provider collection
-produces quarantined claims. The remaining absence is not a data-quality
-failure and no empty approvals or synthetic reviewer outcomes are permitted.
+intentionally ungenerated because the cumulative 30-call cap has only 12 calls
+remaining after five terminal pilot versions. A fresh complete collection
+therefore requires a new paid authorization and a separately sealed plan. The
+remaining absence is not a data-quality failure and no empty approvals or
+synthetic reviewer outcomes are permitted.

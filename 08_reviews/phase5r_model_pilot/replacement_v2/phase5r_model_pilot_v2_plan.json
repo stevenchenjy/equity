@@ -1,0 +1,80 @@
+{
+  "schema_version": "phase5r_model_pilot_replacement_plan_v2",
+  "status": "ready_for_explicit_user_authorization_execution_prohibited",
+  "created_at": "2026-08-01T00:00:00-04:00",
+  "classification": "paper trade candidate",
+  "purpose": "Replace the terminal v1 pilot with a separately approved, shadow-only, diagnostic-capable pilot.",
+  "source_v1": {
+    "plan_sha256": "c543725b4aac7eb14a79f8749ea67994f60a9d122c0c76c3c72f04bbaba70f4f",
+    "journal_file_sha256": "d32d0dadbb7e53a0ed0d2593d5c498d4ea8cd7be0ed0dbcc647dcc83e0e6ed57",
+    "failed_call_id": "41103ccfe5365c841f39-terra-assessment",
+    "failure_type": "ContractError",
+    "failed_response_receipt_present": false,
+    "v1_action": "preserve_immutable_no_resume_no_reset"
+  },
+  "diagnostic_change": {
+    "change": "Record a finite redacted ContractError code for post-parse validation failures.",
+    "retained": ["schema_version", "stage", "validator", "finite_failure_code"],
+    "never_retained": ["response_payload", "exception_message", "provider_response_id", "credential", "source_excerpt", "account_information"],
+    "schema_or_validator_relaxation": false
+  },
+  "local_validation": {
+    "pilot_contract_regression": "passed",
+    "phase5r_suite": "passed_361_tests_offline",
+    "unrelated_baseline_blockers": [],
+    "new_api_calls_made": false
+  },
+  "cumulative_budget": {
+    "authorized_total_usd": "5.0000000",
+    "v1_charged_usd": "0.2044525",
+    "remaining_authorized_usd": "4.7955475",
+    "v1_charged_model_calls": 4,
+    "remaining_authorized_model_calls": 26
+  },
+  "v2_call_layout": {
+    "luna_assessments": 8,
+    "terra_assessments": 8,
+    "sol_committees": 5,
+    "sol_critics": 5,
+    "maximum_new_model_calls": 26,
+    "maximum_new_reservation_usd": "4.5302400",
+    "combined_charged_ceiling_usd": "4.7346925",
+    "unallocated_authorized_usd": "0.2653075",
+    "per_call_limits": {
+      "maximum_input_tokens": 24000,
+      "maximum_output_tokens": 3800,
+      "timeout_seconds": 120,
+      "sdk_max_retries": 0,
+      "store": false,
+      "tools": []
+    }
+  },
+  "precommitted_packet_ids": {
+    "analyst_pair_packets": [
+      "0a64f1a82400f5183399139e99ad7b0917cbd1dcb68bbc1351ff0b1ed93ac039",
+      "41103ccfe5365c841f39ea5e0fd44c8a60c53870dc5d41a57890a1420dfc4766",
+      "ad58fb53831fddfc81d19517204fbed301310eea58ac0182169efa066acf277d",
+      "edd97daef3d876ecc9e2fb6abf0f69e95763d2f0a65b1e2df819b38ff253801b",
+      "ae2e6a43f3273c30c9fa3815439f3b36220579e04bbf2dcd254de295f874d355",
+      "603b7d088db95802bba35491706f32d57b1edcc77c4cef103ef6ee4bc485bf06",
+      "9c0d080cd3b83bddf328b0204e5e511c7dae22fcdf7f71dab16cb4b4338b45ca",
+      "7777624168bbc66d4622ef9c2366382a168941a0daa4ad0abce053fd913d303d"
+    ],
+    "committee_and_critic_packets": [
+      "0a64f1a82400f5183399139e99ad7b0917cbd1dcb68bbc1351ff0b1ed93ac039",
+      "41103ccfe5365c841f39ea5e0fd44c8a60c53870dc5d41a57890a1420dfc4766",
+      "ad58fb53831fddfc81d19517204fbed301310eea58ac0182169efa066acf277d",
+      "edd97daef3d876ecc9e2fb6abf0f69e95763d2f0a65b1e2df819b38ff253801b",
+      "ae2e6a43f3273c30c9fa3815439f3b36220579e04bbf2dcd254de295f874d355"
+    ]
+  },
+  "execution_gates": [
+    "Explicit user approval after review of this plan and the v1 diagnosis.",
+    "Fresh read-only corpus, policy, runtime, storage, and protected-state checks.",
+    "Pinned runtime and OpenAI client with max_retries=0; external authentication remains outside the repository.",
+    "The redacted ContractError diagnostic regression and full local Phase 5R test suite pass.",
+    "No live-shadow activation, scheduler installation, canonical-model influence, email, broker connection, order code, or automatic action."
+  ],
+  "execution_prohibited": true,
+  "plan_sha256": "8d3f89e32c044c7819e932ebb500b7678c2ba964601a44019bab16526518c127"
+}

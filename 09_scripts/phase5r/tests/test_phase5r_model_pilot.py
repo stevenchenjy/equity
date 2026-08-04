@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -34,10 +35,12 @@ class FakePilotProvider:
         *,
         input_tokens: int = 100,
         interrupt: bool = False,
+        contract_failure_model_call: int | None = None,
     ) -> None:
         self.state = state
         self.input_tokens = input_tokens
         self.interrupt = interrupt
+        self.contract_failure_model_call = contract_failure_model_call
         self.max_output_tokens = MAXIMUM_OUTPUT_TOKENS
         self.request_timeout_seconds = REQUEST_TIMEOUT_SECONDS
         self.billing_scope_attestation = (
@@ -211,6 +214,13 @@ class FakePilotProvider:
             payload = self._committee(input_payload)
         else:
             payload = self._critic(input_payload)
+        if (
+            role == "analyst"
+            and self.contract_failure_model_call
+            == self.state["model_calls"]
+        ):
+            payload = deepcopy(payload)
+            payload["as_of_et"] = "2099-01-01T00:00:00-05:00"
         return ProviderResult(
             payload=payload,
             metadata={
@@ -394,6 +404,78 @@ class ModelPilotTests(unittest.TestCase):
                 )
             self.assertEqual(state["count_calls"], 1)
             self.assertEqual(state["model_calls"], 0)
+
+    def test_fourth_contract_failure_is_redacted_and_terminal(self) -> None:
+        state = new_state()
+
+        def factory() -> FakePilotProvider:
+            state["factory_calls"] += 1
+            return FakePilotProvider(
+                state,
+                contract_failure_model_call=4,
+            )
+
+        with tempfile.TemporaryDirectory(
+            prefix="phase5r-model-pilot-contract-stop-"
+        ) as directory:
+            quarantine = Path(directory) / "quarantine"
+            output = quarantine / "case"
+            with self.assertRaisesRegex(PilotStop, "call_failed"):
+                execute_model_pilot(
+                    provider_factory=factory,
+                    output_root=output,
+                    quarantine_root=quarantine,
+                    allow_test_provider=True,
+                )
+            self.assertEqual(state["model_calls"], 4)
+            self.assertEqual(
+                state["models"],
+                [
+                    "gpt-5.6-luna",
+                    "gpt-5.6-terra",
+                    "gpt-5.6-luna",
+                    "gpt-5.6-terra",
+                ],
+            )
+            journal = output / "phase5r_model_pilot_journal.jsonl"
+            events = [
+                json.loads(line)
+                for line in journal.read_text(encoding="utf-8").splitlines()
+            ]
+            failed = [
+                event for event in events if event["event_kind"] == "call_failed"
+            ]
+            self.assertEqual(len(failed), 1)
+            self.assertTrue(failed[0]["call_id"].endswith("terra-assessment"))
+            self.assertEqual(failed[0]["details"]["failure_type"], "ContractError")
+            self.assertEqual(
+                failed[0]["details"]["redacted_contract_diagnostic"],
+                {
+                    "schema_version": (
+                        "phase5r_model_pilot_contract_diagnostic_v1"
+                    ),
+                    "stage": "terra_assessment",
+                    "validator": "assessment",
+                    "code": "analyst_as_of_et_mismatch",
+                },
+            )
+            self.assertNotIn("2099-01-01", journal.read_text(encoding="utf-8"))
+            self.assertFalse(
+                (
+                    output
+                    / "responses"
+                    / f"{failed[0]['call_id']}.json"
+                ).exists()
+            )
+            calls_before_resume = state["model_calls"]
+            with self.assertRaisesRegex(PilotStop, "durable stop"):
+                execute_model_pilot(
+                    provider_factory=factory,
+                    output_root=output,
+                    quarantine_root=quarantine,
+                    allow_test_provider=True,
+                )
+            self.assertEqual(state["model_calls"], calls_before_resume)
 
     def test_first_completion_rejects_journal_receipt_cost_mismatch(
         self,

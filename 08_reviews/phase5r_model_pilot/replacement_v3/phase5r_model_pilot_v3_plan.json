@@ -1,0 +1,93 @@
+{
+  "schema_version": "phase5r_model_pilot_replacement_plan_v3",
+  "status": "ready_for_explicit_user_authorization_execution_prohibited",
+  "created_at": "2026-08-01T00:00:00-04:00",
+  "classification": "paper trade candidate",
+  "purpose": "Separately replace terminal v2 with a shadow-only analyst citation-binding prompt repair.",
+  "source_v1": {
+    "plan_sha256": "c543725b4aac7eb14a79f8749ea67994f60a9d122c0c76c3c72f04bbaba70f4f",
+    "journal_file_sha256": "d32d0dadbb7e53a0ed0d2593d5c498d4ea8cd7be0ed0dbcc647dcc83e0e6ed57",
+    "v1_action": "preserve_immutable_no_resume_no_reset"
+  },
+  "source_v2": {
+    "replacement_plan_sha256": "8d3f89e32c044c7819e932ebb500b7678c2ba964601a44019bab16526518c127",
+    "execution_plan_file_sha256": "3169714fb24c85e491e597456e73e0032fa304e8890793c9d53bce24108ae449",
+    "journal_file_sha256": "e293387f299198bb1521371eb43423f450ce731b1b1745bb8d6e6e87da06109f",
+    "terminal_call_id": "0a64f1a82400f5183399-luna-assessment",
+    "failure_type": "ContractError",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "failed_response_receipt_present": false,
+    "v2_action": "preserve_terminal_no_resume_no_retry"
+  },
+  "diagnostic_change": {
+    "change": "Add a prompt-only claim-citation binding checklist before a future analyst response is generated.",
+    "instruction_appendix": [
+      "For every source_ids entry, copy the matching cited_excerpt_sha256 verbatim from the visible packet source catalog, in the same one-to-one order.",
+      "Do not invent, truncate, recompute, or substitute a source ID or excerpt hash.",
+      "Use only qualitative claim text with no digits, percentages, currency, or quantities unless a visible reconciled calculation_id is supplied and cited.",
+      "For medium or high materiality, cite a primary packet-local source for the same ticker."
+    ],
+    "validator_or_schema_relaxation": false,
+    "raw_failed_response_retention": false,
+    "provider_response_id_retention": false,
+    "retry_of_v2": false
+  },
+  "local_validation": {
+    "phase5r_suite": "passed_complete_phase5r_suite_after_v3_executor",
+    "v2_terminal_journal_hash_chain_valid": true,
+    "v3_executor_regression": "passed",
+    "new_api_calls_made_during_v3_planning": false
+  },
+  "cumulative_budget": {
+    "authorized_total_usd": "5.0000000",
+    "v1_charged_usd": "0.2044525",
+    "v2_charged_reservation_usd": "0.05808",
+    "charged_model_calls_before_v3": 5,
+    "remaining_authorized_usd_before_v3": "4.7374675",
+    "remaining_authorized_model_calls_before_v3": 25
+  },
+  "v3_call_layout": {
+    "luna_assessments": 8,
+    "terra_assessments": 8,
+    "sol_committees": 4,
+    "sol_critics": 4,
+    "maximum_new_model_calls": 24,
+    "maximum_new_reservation_usd": "3.9494400",
+    "combined_charged_ceiling_usd": "4.2119725",
+    "unallocated_authorized_usd": "0.7880275",
+    "per_call_limits": {
+      "maximum_input_tokens": 24000,
+      "maximum_output_tokens": 3800,
+      "timeout_seconds": 120,
+      "sdk_max_retries": 0,
+      "store": false,
+      "tools": []
+    }
+  },
+  "precommitted_packet_ids": {
+    "analyst_pair_packets": [
+      "0a64f1a82400f5183399139e99ad7b0917cbd1dcb68bbc1351ff0b1ed93ac039",
+      "41103ccfe5365c841f39ea5e0fd44c8a60c53870dc5d41a57890a1420dfc4766",
+      "ad58fb53831fddfc81d19517204fbed301310eea58ac0182169efa066acf277d",
+      "edd97daef3d876ecc9e2fb6abf0f69e95763d2f0a65b1e2df819b38ff253801b",
+      "ae2e6a43f3273c30c9fa3815439f3b36220579e04bbf2dcd254de295f874d355",
+      "603b7d088db95802bba35491706f32d57b1edcc77c4cef103ef6ee4bc485bf06",
+      "9c0d080cd3b83bddf328b0204e5e511c7dae22fcdf7f71dab16cb4b4338b45ca",
+      "7777624168bbc66d4622ef9c2366382a168941a0daa4ad0abce053fd913d303d"
+    ],
+    "committee_and_critic_packets": [
+      "0a64f1a82400f5183399139e99ad7b0917cbd1dcb68bbc1351ff0b1ed93ac039",
+      "41103ccfe5365c841f39ea5e0fd44c8a60c53870dc5d41a57890a1420dfc4766",
+      "ad58fb53831fddfc81d19517204fbed301310eea58ac0182169efa066acf277d",
+      "edd97daef3d876ecc9e2fb6abf0f69e95763d2f0a65b1e2df819b38ff253801b"
+    ]
+  },
+  "execution_gates": [
+    "A fresh explicit user approval after review of this v3 plan.",
+    "Fresh read-only corpus, policy, runtime, storage, protected-state, and cumulative-budget checks.",
+    "A dedicated v3 executor that binds this exact prompt appendix and still permits no retry, email, canonical influence, broker connection, order code, or automatic action.",
+    "The complete Phase 5R suite must pass after the v3 executor and regression are added."
+  ],
+  "execution_prohibited": true,
+  "plan_sha256": "03e794ad6d1c31737d675fe3898eba1281eba87ba3f453cb40d370e217aa52c5"
+}

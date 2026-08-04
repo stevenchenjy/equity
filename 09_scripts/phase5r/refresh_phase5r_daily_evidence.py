@@ -367,6 +367,35 @@ def classify_materiality(form: str, items: str) -> tuple[str, str, str]:
     return "low", "no", "no"
 
 
+def merge_seen_accessions(
+    state_seen: dict[str, Any],
+    ledger_rows: list[dict[str, str]],
+) -> dict[str, set[str]]:
+    """Reconcile the mutable state cache with the durable evidence ledger.
+
+    The ledger is the authoritative once-per-accession guard. This prevents a
+    missing, stale, or concurrently replaced local state file from appending
+    the same SEC filing again on a later scan.
+    """
+
+    merged = {
+        str(ticker).strip().upper(): {
+            str(accession).strip()
+            for accession in values
+            if str(accession).strip()
+        }
+        for ticker, values in state_seen.items()
+        if isinstance(values, (list, tuple, set))
+        and str(ticker).strip()
+    }
+    for row in ledger_rows:
+        ticker = str(row.get("ticker", "")).strip().upper()
+        accession = str(row.get("accession_number", "")).strip()
+        if ticker and accession:
+            merged.setdefault(ticker, set()).add(accession)
+    return merged
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="static no-network check")
@@ -397,10 +426,10 @@ def main() -> int:
         },
     )
     initialized = bool(state.get("initialized"))
-    seen_by_ticker = {
-        str(ticker).upper(): set(values)
-        for ticker, values in state.get("seen_accessions", {}).items()
-    }
+    seen_by_ticker = merge_seen_accessions(
+        state.get("seen_accessions", {}),
+        read_csv(EVIDENCE_LEDGER_PATH),
+    )
     errors: list[str] = []
     fundamental_errors: list[str] = []
     fundamental_rows: list[dict[str, str]] = []

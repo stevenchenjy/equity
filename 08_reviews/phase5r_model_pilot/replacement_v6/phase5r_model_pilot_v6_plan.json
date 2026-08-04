@@ -1,0 +1,79 @@
+{
+  "schema_version": "phase5r_model_pilot_replacement_plan_v6",
+  "status": "authorized_pending_sealed_execution_plan",
+  "execution_prohibited_without_explicit_runtime_authorization": true,
+  "purpose": "fresh independent complete 30-call shadow-only collection after terminal v1-v5 pilots",
+  "authorization": {
+    "authorization_source": "interactive_user_approval",
+    "new_independent_model_call_cap": 30,
+    "new_independent_usd_cap": "5.00",
+    "email_effect": false,
+    "trading": false,
+    "broker_or_account_access": false,
+    "canonical_influence": false,
+    "sdk_max_retries": 0,
+    "credential_storage": false,
+    "execution_requires_sealed_plan_offline_tests_and_capability_gate": true
+  },
+  "source_v1": {
+    "plan_sha256": "c543725b4aac7eb14a79f8749ea67994f60a9d122c0c76c3c72f04bbaba70f4f",
+    "journal_file_sha256": "d32d0dadbb7e53a0ed0d2593d5c498d4ea8cd7be0ed0dbcc647dcc83e0e6ed57",
+    "action": "preserve_immutable_no_resume_no_reset"
+  },
+  "source_v2": {
+    "journal_file_sha256": "e293387f299198bb1521371eb43423f450ce731b1b1745bb8d6e6e87da06109f",
+    "action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v3": {
+    "journal_file_sha256": "59b9ae1e612052fdd17a9d909bc94f337aaf89c47b91e9fd444f84cd0e666341",
+    "action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v4": {
+    "journal_file_sha256": "601d114c6b842810c036b0f6aa78f86d706f1afd11ebc62c752f87f33d824a1e",
+    "action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v5": {
+    "journal_file_sha256": "74feb6fdf319fcf9f2f9f882423218b9d65ce482073afed4c75dbe1ca15a4b0a",
+    "finite_failure_code": "analyst_claim_required_text_empty",
+    "action": "preserve_terminal_no_resume_no_retry"
+  },
+  "diagnostic_change": {
+    "analyst_input": "one deterministic same-ticker primary-source excerpt only",
+    "analyst_output": "deterministic identity, claim_id, citation, calculation, and false safety fields are omitted then injected",
+    "required_text": "strict JSON Schema minLength 1 on every model-authored string",
+    "closed_validator": "unchanged and applied after deterministic hydration",
+    "unsupported_schema_outcome": "terminal pre-inference capability-gate failure with zero model inference"
+  },
+  "collection_layout": {
+    "analyst_calls": 20,
+    "committee_calls": 5,
+    "critic_calls": 5,
+    "total_calls": 30,
+    "collection_must_complete_atomically": true,
+    "partial_receipts_cannot_be_combined_with_v1_to_v5": true
+  },
+  "capability_gate": {
+    "provider": "openai_responses_api",
+    "strict_json_schema": true,
+    "minLength": 1,
+    "first_accepted_request_is_collection_call_one": true,
+    "schema_rejection_before_inference_is_terminal": true,
+    "raw_failure_or_provider_response_id_persisted": false
+  },
+  "boundaries": {
+    "shadow_only": true,
+    "email_effect": false,
+    "canonical_effect": false,
+    "automatic_action_allowed": false,
+    "broker_used": false,
+    "account_read": false,
+    "order_code_created": false,
+    "store": false,
+    "tools": [],
+    "sdk_max_retries": 0,
+    "no_credential_persistence": true,
+    "no_raw_failed_response_persistence": true,
+    "no_provider_response_id_persistence": true
+  },
+  "plan_sha256": "e2c37508abb5a2af7f0cbb2a52758b8ad2a06c00ec6271eb65b4c33b803bf9de"
+}

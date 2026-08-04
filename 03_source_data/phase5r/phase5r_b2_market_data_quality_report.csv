@@ -1,30 +1,30 @@
 ticker,data_source,data_quality_label,missing_fields,usable_for_scoring,notes
-NVDA,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-AMD,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-AVGO,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-TSM,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-ASML,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-ARM,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-MU,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-SMCI,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-VRT,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-EQIX,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-DLR,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-MSFT,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-GOOGL,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-AMZN,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-META,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-ORCL,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-NOW,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-CRM,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-SNOW,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-DDOG,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-NET,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-CRWD,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-PANW,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-ZS,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-QQQ,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-XLK,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-SPY,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-IOT,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
-RBRK,yfinance_public_market_data,ok,,yes,read-only public row ready for scoring
+NVDA,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+AMD,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+AVGO,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+TSM,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+ASML,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+ARM,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+MU,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+SMCI,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+VRT,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+EQIX,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+DLR,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+MSFT,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+GOOGL,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+AMZN,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+META,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+ORCL,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+NOW,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+CRM,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+SNOW,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+DDOG,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+NET,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+CRWD,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+PANW,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+ZS,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+QQQ,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+XLK,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+SPY,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+IOT,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values
+RBRK,yfinance_smoke_test_failed,insufficient_data,last_price;previous_close;intraday_change_pct;volume;average_volume;relative_volume;dollar_volume,no,data unavailable; preserved as insufficient_data without invented values

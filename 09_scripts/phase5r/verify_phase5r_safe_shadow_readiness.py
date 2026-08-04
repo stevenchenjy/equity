@@ -30,6 +30,7 @@ from phase5r_llm_provider import OpenAIResponsesProvider
 from phase5r_llm_role_execution_ledger import (
     cycle_execution_ledger_path,
 )
+from run_phase5r_model_pilot import check_pilot_readiness
 
 
 SCHEMA_VERSION = "phase5r_safe_shadow_readiness_v1"
@@ -636,7 +637,23 @@ def audit(*, static_only: bool = False) -> dict[str, Any]:
             policy["sec_corpus"]["qualification_target_packets"]
         ),
     )
-    pilot = inventory["stage_readiness"]["pilot"]
+    inventory_pilot = inventory["stage_readiness"]["pilot"]
+    frozen_pilot = check_pilot_readiness()
+    _check(
+        checks,
+        "corpus.frozen_pilot_readiness",
+        frozen_pilot.get("passed") is True
+        and frozen_pilot.get("provider_constructed") is False
+        and frozen_pilot.get("network_used") is False
+        and frozen_pilot.get("files_written") is False,
+        (
+            f"passed={frozen_pilot.get('passed')!r};"
+            f"packets={frozen_pilot.get('packet_count')!r};"
+            f"provider_constructed="
+            f"{frozen_pilot.get('provider_constructed')!r};"
+            f"network_used={frozen_pilot.get('network_used')!r}"
+        ),
+    )
     qualification = inventory["stage_readiness"]["qualification"]
     _check(
         checks,
@@ -645,7 +662,8 @@ def audit(*, static_only: bool = False) -> dict[str, Any]:
         and inventory["boundaries"].get("files_written") is False
         and inventory["boundaries"].get("provider_api_used") is False,
         (
-            f"pilot_complete={pilot['locally_complete_packet_count']};"
+            f"inventory_pilot_complete="
+            f"{inventory_pilot['locally_complete_packet_count']};"
             f"qualification_complete="
             f"{qualification['locally_complete_packet_count']};"
             f"issuers={qualification['selected_issuer_count']}"
@@ -659,7 +677,7 @@ def audit(*, static_only: bool = False) -> dict[str, Any]:
         external_blockers.append("sec_contact_string")
     if sec.get("storage_budget_authorized") is not True:
         external_blockers.append("corpus_storage_budget")
-    if pilot.get("readiness_gate_passed") is not True:
+    if frozen_pilot.get("passed") is not True:
         external_blockers.append("complete_frozen_pilot_corpus")
     if policy["model_api"]["pilot"].get("authorized") is not True:
         external_blockers.append("pilot_call_and_usd_authorization")
@@ -675,10 +693,8 @@ def audit(*, static_only: bool = False) -> dict[str, Any]:
         ),
         "checks": checks,
         "replay_status": {
-            "pilot_ready": pilot["readiness_gate_passed"],
-            "pilot_complete_packets": pilot[
-                "locally_complete_packet_count"
-            ],
+            "pilot_ready": frozen_pilot.get("passed") is True,
+            "pilot_complete_packets": frozen_pilot.get("packet_count", 0),
             "qualification_ready": qualification[
                 "readiness_gate_passed"
             ],

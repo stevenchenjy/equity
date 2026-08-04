@@ -1,0 +1,100 @@
+{
+  "schema_version": "phase5r_model_pilot_replacement_plan_v4",
+  "status": "ready_for_explicit_user_authorization_execution_prohibited",
+  "created_at": "2026-08-01T00:00:00-04:00",
+  "classification": "paper trade candidate",
+  "purpose": "Separately replace terminal v3 with source-ID-only Structured Output and deterministic frozen-excerpt hash hydration.",
+  "source_v1": {
+    "plan_sha256": "c543725b4aac7eb14a79f8749ea67994f60a9d122c0c76c3c72f04bbaba70f4f",
+    "journal_file_sha256": "d32d0dadbb7e53a0ed0d2593d5c498d4ea8cd7be0ed0dbcc647dcc83e0e6ed57",
+    "v1_action": "preserve_immutable_no_resume_no_reset"
+  },
+  "source_v2": {
+    "execution_plan_file_sha256": "3169714fb24c85e491e597456e73e0032fa304e8890793c9d53bce24108ae449",
+    "journal_file_sha256": "e293387f299198bb1521371eb43423f450ce731b1b1745bb8d6e6e87da06109f",
+    "terminal_call_id": "0a64f1a82400f5183399-luna-assessment",
+    "failure_type": "ContractError",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "v2_action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v3": {
+    "replacement_plan_sha256": "03e794ad6d1c31737d675fe3898eba1281eba87ba3f453cb40d370e217aa52c5",
+    "execution_plan_sha256": "de5abb41717d24941bc729a3f6cc2c7c7f3726bf11c6c2b1ec876677e0aed8ce",
+    "journal_file_sha256": "59b9ae1e612052fdd17a9d909bc94f337aaf89c47b91e9fd444f84cd0e666341",
+    "terminal_call_id": "603b7d088db95802bba3-luna-assessment",
+    "failure_type": "ContractError",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "completed_receipts": 10,
+    "charged_or_reserved_usd": "0.2753095",
+    "v3_action": "preserve_terminal_no_resume_no_retry"
+  },
+  "diagnostic_change": {
+    "observed_fact": "v3 completed 25 claims across 10 valid analyst receipts; the terminal output was intentionally not retained, so the exact subcondition inside the finite analyst_claim_validation_failure class is unknown.",
+    "change": "Structured Output removes model-supplied cited_excerpt_sha256. A deterministic local adapter derives each hash from the selected packet-local source_id before the unchanged closed validator runs.",
+    "model_output_contract": "source_ids_only_no_cited_excerpt_sha256",
+    "instruction_appendix": [
+      "For each claim, output only unique packet-local source_ids for the same ticker; do not output cited_excerpt_sha256.",
+      "The deterministic adapter will bind each supplied source ID to its frozen excerpt hash before the unchanged validator runs.",
+      "Use qualitative claim text only; numeric or calculated claims still require a visible reconciled calculation_id.",
+      "For medium or high materiality, include at least one same-ticker primary packet-local source ID."
+    ],
+    "deterministic_binding": "for each claim, cited_excerpt_sha256 equals the frozen source catalog content_sha256 for every emitted source_id in emitted order",
+    "validator_or_schema_relaxation": false,
+    "unknown_or_cross_ticker_source_rejected": true,
+    "numeric_or_calculated_claims_still_require_calculation_id": true,
+    "raw_failed_response_retention": false,
+    "provider_response_id_retention": false,
+    "retry_of_v1_v2_or_v3": false
+  },
+  "local_validation": {
+    "v4_contract_regression": "passed_targeted_offline",
+    "v4_executor_regression": "passed",
+    "phase5r_suite": "passed_complete_phase5r_suite_after_v4_executor",
+    "new_api_calls_made_during_v4_planning": false
+  },
+  "cumulative_budget": {
+    "authorized_total_usd": "5.0000000",
+    "charged_or_reserved_before_v4_usd": "0.5378420",
+    "started_model_calls_before_v4": 16,
+    "remaining_authorized_usd_before_v4": "4.4621580",
+    "remaining_authorized_model_calls_before_v4": 14
+  },
+  "v4_call_layout": {
+    "luna_assessments": 2,
+    "terra_assessments": 2,
+    "sol_committees": 2,
+    "sol_critics": 2,
+    "maximum_new_model_calls": 8,
+    "maximum_new_reservation_usd": "1.5681600",
+    "combined_charged_ceiling_usd": "2.1060020",
+    "unallocated_authorized_usd": "2.8939980",
+    "per_call_limits": {
+      "maximum_input_tokens": 24000,
+      "maximum_output_tokens": 3800,
+      "timeout_seconds": 120,
+      "sdk_max_retries": 0,
+      "store": false,
+      "tools": []
+    }
+  },
+  "precommitted_packet_ids": {
+    "analyst_pair_packets": [
+      "9c0d080cd3b83bddf328b0204e5e511c7dae22fcdf7f71dab16cb4b4338b45ca",
+      "7777624168bbc66d4622ef9c2366382a168941a0daa4ad0abce053fd913d303d"
+    ],
+    "committee_and_critic_packets": [
+      "9c0d080cd3b83bddf328b0204e5e511c7dae22fcdf7f71dab16cb4b4338b45ca",
+      "7777624168bbc66d4622ef9c2366382a168941a0daa4ad0abce053fd913d303d"
+    ],
+    "selection_rationale": "Only packets with no started v3 inference; v3's terminal packet is excluded and never retried."
+  },
+  "execution_gates": [
+    "A fresh explicit user approval after review of this v4 plan.",
+    "A dedicated v4 executor that binds the source-ID-only schema and deterministic hash hydration before the unchanged validator.",
+    "Fresh read-only corpus, policy, runtime, storage, protected-state, and cumulative-budget checks.",
+    "The complete Phase 5R suite must pass after the v4 executor and regressions are added.",
+    "No retry, resume, reset, or alteration of v1, v2, or v3. No email, canonical influence, broker connection, order code, or automatic action."
+  ],
+  "execution_prohibited": true,
+  "plan_sha256": "ef67b46ed96b4e84ee94d00782286427effa3e7cf5c0a5e8a1223f0739175cdc"
+}

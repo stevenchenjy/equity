@@ -1,0 +1,101 @@
+{
+  "schema_version": "phase5r_model_pilot_replacement_plan_v5",
+  "status": "ready_for_explicit_user_authorization_execution_prohibited",
+  "execution_prohibited": true,
+  "purpose": "one-call shadow-only source-locked Structured Output diagnostic",
+  "source_v1": {
+    "plan_sha256": "c543725b4aac7eb14a79f8749ea67994f60a9d122c0c76c3c72f04bbaba70f4f",
+    "journal_file_sha256": "d32d0dadbb7e53a0ed0d2593d5c498d4ea8cd7be0ed0dbcc647dcc83e0e6ed57",
+    "v1_action": "preserve_immutable_no_resume_no_reset"
+  },
+  "source_v2": {
+    "execution_plan_file_sha256": "3169714fb24c85e491e597456e73e0032fa304e8890793c9d53bce24108ae449",
+    "journal_file_sha256": "e293387f299198bb1521371eb43423f450ce731b1b1745bb8d6e6e87da06109f",
+    "terminal_call_id": "0a64f1a82400f5183399-luna-assessment",
+    "failure_type": "ContractError",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "v2_action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v3": {
+    "replacement_plan_sha256": "03e794ad6d1c31737d675fe3898eba1281eba87ba3f453cb40d370e217aa52c5",
+    "execution_plan_sha256": "de5abb41717d24941bc729a3f6cc2c7c7f3726bf11c6c2b1ec876677e0aed8ce",
+    "journal_file_sha256": "59b9ae1e612052fdd17a9d909bc94f337aaf89c47b91e9fd444f84cd0e666341",
+    "terminal_call_id": "603b7d088db95802bba3-luna-assessment",
+    "failure_type": "ContractError",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "completed_receipts": 10,
+    "charged_or_reserved_usd": "0.2753095",
+    "v3_action": "preserve_terminal_no_resume_no_retry"
+  },
+  "source_v4": {
+    "replacement_plan_sha256": "ef67b46ed96b4e84ee94d00782286427effa3e7cf5c0a5e8a1223f0739175cdc",
+    "execution_plan_sha256": "dbdc98721c4dc372b3b57a750dfbb676d5055e669038fbb30816e4d8e67c14d4",
+    "journal_file_sha256": "601d114c6b842810c036b0f6aa78f86d706f1afd11ebc62c752f87f33d824a1e",
+    "terminal_call_id": "9c0d080cd3b83bddf328-luna-assessment",
+    "finite_failure_code": "analyst_claim_validation_failure",
+    "action": "preserve_terminal_no_resume_no_retry"
+  },
+  "diagnosis": {
+    "raw_failed_payload_retained": false,
+    "source_hash_alignment": "deterministically eliminated by v4 adapter",
+    "failed_packet_layout": "one same-ticker primary source and zero calculations",
+    "remaining_unobservable_failure_classes": [
+      "unknown_or_duplicate_source",
+      "unknown_ticker_or_empty_required_text",
+      "numeric_text_without_calculation",
+      "calculated_evidence_without_calculation"
+    ],
+    "future_diagnostic": "branch-specific content-free reason codes"
+  },
+  "diagnostic_change": {
+    "model_output_contract": "source_locked_no_identity_no_ticker_no_claim_id_no_citation_no_calculation_fields",
+    "adapter": "injects the sole same-ticker primary source, immutable identity, empty calculation list, and false safety flags",
+    "validator_or_schema_relaxation": false,
+    "forbid_calculated_evidence": true,
+    "exclude_v4_terminal_packet": true
+  },
+  "precommitted_packet_id": "7777624168bbc66d4622ef9c2366382a168941a0daa4ad0abce053fd913d303d",
+  "call_layout": [
+    {
+      "stage": "luna_assessment",
+      "model": "gpt-5.6-luna",
+      "maximum_physical_attempts": 1,
+      "retry_count": 0,
+      "reservation_usd": "0.05808"
+    }
+  ],
+  "budget": {
+    "charged_or_reserved_before_v5_usd": "0.595922",
+    "charged_model_calls_before_v5": 17,
+    "maximum_new_model_calls": 1,
+    "maximum_new_reservation_usd": "0.05808",
+    "cumulative_maximum_model_calls": 30,
+    "cumulative_maximum_usd": "5.000000",
+    "cumulative_reserved_if_started_usd": "0.654002"
+  },
+  "boundaries": {
+    "shadow_only": true,
+    "email_effect": false,
+    "canonical_effect": false,
+    "automatic_action_allowed": false,
+    "broker_used": false,
+    "order_code_created": false,
+    "store": false,
+    "tools": [],
+    "sdk_max_retries": 0,
+    "no_raw_provider_response_persistence": true
+  },
+  "authorization": {
+    "requires_new_explicit_user_approval": true,
+    "plan_creation_is_not_execution": true,
+    "no_provider_construction_during_plan_creation": true
+  },
+  "local_validation": {
+    "v5_contract_regression": "passed",
+    "v5_executor_regression": "passed_targeted_offline",
+    "v5_check_entrypoint": "passed",
+    "complete_phase5r_suite": "passed_complete_phase5r_suite_after_v5_executor",
+    "new_api_calls_during_planning": false
+  },
+  "plan_sha256": "8a2f7759b25b140fa3baffafa384c5268ff2fd70d401f0895560f0b12a197051"
+}

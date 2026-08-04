@@ -16,6 +16,7 @@ from phase5r_llm_provider import (
     OpenAIResponsesProvider,
     ProviderError,
     RetryableProviderTransportError,
+    safe_provider_failure_code,
 )
 
 
@@ -580,6 +581,51 @@ class ProviderTests(unittest.TestCase):
         self.assertNotIsInstance(
             malformed_error.exception,
             RetryableProviderTransportError,
+        )
+
+    def test_openai_failure_codes_are_finite_and_never_include_text(self) -> None:
+        RateLimitError = type("RateLimitError", (Exception,), {})
+        rate_limited = RateLimitError("canary-text-that-must-not-be-recorded")
+        rate_limited.status_code = 429
+
+        self.assertEqual(
+            safe_provider_failure_code(rate_limited),
+            "api_rate_limited",
+        )
+        self.assertNotIn(
+            "canary-text-that-must-not-be-recorded",
+            safe_provider_failure_code(rate_limited),
+        )
+        self.assertEqual(
+            safe_provider_failure_code(Exception("untrusted error text")),
+            "provider_error",
+        )
+
+    def test_openai_request_failure_exposes_only_safe_failure_code(self) -> None:
+        RateLimitError = type("RateLimitError", (Exception,), {})
+
+        class Responses:
+            def create(self, **kwargs: object) -> object:
+                del kwargs
+                raise RateLimitError("canary-text-that-must-not-be-recorded")
+
+        class Client:
+            responses = Responses()
+
+        with self.assertRaises(ProviderError) as failure:
+            OpenAIResponsesProvider(Client()).generate(
+                role="analyst",
+                model="gpt-5.6-terra",
+                reasoning_effort="medium",
+                schema={"type": "object"},
+                instructions="Return one object.",
+                input_payload={"packet": "fixture"},
+            )
+
+        self.assertEqual(failure.exception.failure_code, "api_rate_limited")
+        self.assertNotIn(
+            "canary-text-that-must-not-be-recorded",
+            failure.exception.failure_code,
         )
 
 

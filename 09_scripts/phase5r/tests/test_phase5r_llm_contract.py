@@ -6,6 +6,7 @@ import unittest
 from _support import materialized, rehash
 from phase5r_llm_contract import (
     ContractError,
+    _expected_verified_close_session,
     validate_analyst,
     validate_committee,
     validate_critic,
@@ -14,6 +15,18 @@ from phase5r_llm_contract import (
 
 
 class ContractTests(unittest.TestCase):
+    def test_verified_close_uses_last_open_session_on_weekend(self) -> None:
+        self.assertEqual(
+            _expected_verified_close_session("2026-08-01"),
+            "2026-07-31",
+        )
+        self.assertEqual(
+            _expected_verified_close_session("2026-07-31"),
+            "2026-07-31",
+        )
+        with self.assertRaisesRegex(ContractError, "cycle_date"):
+            _expected_verified_close_session("2026-08-01T00:00:00Z")
+
     def test_base_fixture_satisfies_all_closed_contracts(self) -> None:
         packet, responses, _ = materialized("g01_stable_hold")
         self.assertIs(validate_packet(packet), packet)

@@ -1,15 +1,15 @@
 # Phase 5R-B2 Data Report
 
-Generated: `2026-07-28T13:24:28-04:00`
+Generated: `2026-08-03T19:30:57-04:00`
 
 ## Summary
 
 - Public snapshot rows: `29`.
 - Canonical candidate rows: `27`.
 - Current-position price-monitoring rows: `2`.
-- Benchmark preflight: `passed`.
-- Full-universe retrieval: `full-universe public daily history retrieved`.
-- Data quality counts: `{'ok': 29}`.
+- Benchmark preflight: `failed`.
+- Full-universe retrieval: `not attempted because benchmark preflight failed`.
+- Data quality counts: `{'insufficient_data': 29}`.
 
 ## Interpretation Boundary
 

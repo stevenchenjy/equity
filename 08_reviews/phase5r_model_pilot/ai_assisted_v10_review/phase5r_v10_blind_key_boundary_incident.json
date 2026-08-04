@@ -1,0 +1,55 @@
+{
+  "schema_version": "phase5r_blind_key_boundary_incident_v1",
+  "status": "contained_non_substantive_boundary_contact",
+  "reported_at_et": "2026-08-02T16:13:45-04:00",
+  "last_updated_at_et": "2026-08-02T23:29:35-04:00",
+  "scope": "post-freeze governance-drafting and verifier work",
+  "events": [
+    {
+      "reported_by": "delegated read-only audit",
+      "event": "A shell wildcard in a file-hash command selected the sealed blind-key file and emitted its file SHA-256 to that delegated tool session.",
+      "blind_key_contents_read": false,
+      "runtime_assignment_derived": false
+    },
+    {
+      "reported_by": "root verifier development",
+      "event": "Early provider-free verifier runs parsed the completion record to check its no-go field. That record embeds a blind-key digest, so the verifier design indirectly read the digest reference.",
+      "blind_key_contents_read": false,
+      "runtime_assignment_derived": false
+    },
+    {
+      "reported_by": "root status check",
+      "event": "A status command printed the one-line completion record and therefore reproduced its embedded blind-key digest in local tool output.",
+      "blind_key_contents_read": false,
+      "runtime_assignment_derived": false
+    }
+  ],
+  "reported_exposure": {
+    "blind_key_contents_read": false,
+    "blind_key_contents_reproduced": false,
+    "blind_key_file_hash_reproduced_in_this_record": false,
+    "blind_key_digest_reference_seen_in_local_tool_output": true,
+    "runtime_assignment_derived": false,
+    "blind_key_compared_for_scoring": false,
+    "external_transfer_or_api_call": false
+  },
+  "relationship_to_frozen_ai_review": {
+    "occurred_after_ai_review_freeze": true,
+    "changes_frozen_ai_review_artifact": false,
+    "changes_frozen_ai_review_pre_freeze_attestation": false,
+    "may_not_be_used_to_claim_clean_post_freeze_blind_key_non_access": true
+  },
+  "immediate_containment": [
+    "The delegated audit was stopped immediately after its report.",
+    "The verifier was revised to avoid opening the completion record as well as the blind-key file.",
+    "No further blind-key access, hashing, comparison, deblinding, scoring, or assignment inference is authorized by this record.",
+    "The immutable source artifacts, completion record, and no_go_pending_independent_review state remain unchanged."
+  ],
+  "required_human_disposition": [
+    "The Project Owner classified the event as contained_non_substantive_boundary_contact and authorized only noncanonical internal quality use in the separate decision record.",
+    "Do not unblind, finalize, promote, or treat any review as satisfying the two-human-review protocol.",
+    "Any future review work requiring anonymity should use a clean, independently controlled environment and preserve the existing no-go state."
+  ],
+  "project_owner_disposition_record": "00_project_control/phase5r_v10_project_owner_internal_use_decision.json",
+  "notes": "This incident record intentionally omits the blind-key hash and all blind-key contents. It is a transparency and containment record only; it does not alter a sealed artifact or create any authority beyond the separately recorded noncanonical internal-use direction. The frozen AI-review attestation applies only to conduct before its freeze and must not be read as a clean-attestation for this later governance work."
+}

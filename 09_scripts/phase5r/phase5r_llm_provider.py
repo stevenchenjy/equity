@@ -29,12 +29,109 @@ from typing import Any, Protocol
 from phase5r_daily_common import ROOT, canonical_sha256
 
 
+_SAFE_PROVIDER_FAILURE_CODES = frozenset(
+    {
+        "provider_error",
+        "api_connection",
+        "api_timeout",
+        "api_authentication",
+        "api_bad_request",
+        "api_permission",
+        "api_not_found",
+        "api_conflict",
+        "api_rate_limited",
+        "api_server_error",
+        "api_unprocessable",
+        "api_http_4xx",
+        "api_http_5xx",
+        "response_missing_id",
+        "response_incomplete",
+        "response_unexpected_status",
+        "response_refusal",
+        "response_missing_output",
+        "response_invalid_json",
+        "response_non_object",
+        "response_usage_invalid",
+        "input_token_count_invalid",
+    }
+)
+
+
 class ProviderError(RuntimeError):
-    """External inference failed without changing any canonical state."""
+    """External inference failed without changing any canonical state.
+
+    ``failure_code`` is deliberately a small allowlist.  It is suitable for a
+    durable pilot receipt without persisting provider messages, response
+    bodies, request IDs, headers, error codes, or exception text.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        failure_code: str = "provider_error",
+    ) -> None:
+        super().__init__(message)
+        self.failure_code = (
+            failure_code
+            if failure_code in _SAFE_PROVIDER_FAILURE_CODES
+            else "provider_error"
+        )
 
 
 class RetryableProviderTransportError(ProviderError):
     """A narrow process/transport failure with no usable final response."""
+
+
+def safe_provider_failure_code(exc: BaseException) -> str:
+    """Map a provider exception to one non-sensitive, finite receipt value.
+
+    This function intentionally looks only at the exception's type name and
+    integer HTTP status.  It never reads exception text, provider error codes,
+    headers, request IDs, or response bodies.
+    """
+
+    if isinstance(exc, ProviderError):
+        return exc.failure_code
+
+    type_name = type(exc).__name__
+    by_type_name = {
+        "APIConnectionError": "api_connection",
+        "APITimeoutError": "api_timeout",
+        "AuthenticationError": "api_authentication",
+        "BadRequestError": "api_bad_request",
+        "ConflictError": "api_conflict",
+        "InternalServerError": "api_server_error",
+        "NotFoundError": "api_not_found",
+        "PermissionDeniedError": "api_permission",
+        "RateLimitError": "api_rate_limited",
+        "UnprocessableEntityError": "api_unprocessable",
+    }
+    if type_name in by_type_name:
+        return by_type_name[type_name]
+    if isinstance(exc, TimeoutError):
+        return "api_timeout"
+    if isinstance(exc, ConnectionError):
+        return "api_connection"
+
+    status_code = getattr(exc, "status_code", None)
+    if type(status_code) is int:
+        by_status_code = {
+            400: "api_bad_request",
+            401: "api_authentication",
+            403: "api_permission",
+            404: "api_not_found",
+            409: "api_conflict",
+            422: "api_unprocessable",
+            429: "api_rate_limited",
+        }
+        if status_code in by_status_code:
+            return by_status_code[status_code]
+        if 400 <= status_code <= 499:
+            return "api_http_4xx"
+        if 500 <= status_code <= 599:
+            return "api_server_error"
+    return "provider_error"
 
 
 @dataclass(frozen=True)
@@ -459,10 +556,14 @@ class OpenAIResponsesProvider:
     def _output_text(self, response: Any, role: str) -> str:
         status = self._field(response, "status", "")
         if status == "incomplete":
-            raise ProviderError(f"{role} Responses API result was incomplete")
+            raise ProviderError(
+                f"{role} Responses API result was incomplete",
+                failure_code="response_incomplete",
+            )
         if status != "completed":
             raise ProviderError(
-                f"{role} Responses API result status was not completed"
+                f"{role} Responses API result status was not completed",
+                failure_code="response_unexpected_status",
             )
 
         output = self._field(response, "output", [])
@@ -479,7 +580,8 @@ class OpenAIResponsesProvider:
                 part_type = self._field(part, "type", "")
                 if part_type == "refusal":
                     raise ProviderError(
-                        f"{role} Responses API result was a refusal"
+                        f"{role} Responses API result was a refusal",
+                        failure_code="response_refusal",
                     )
                 if part_type == "output_text":
                     text_value = self._field(part, "text", "")
@@ -491,7 +593,8 @@ class OpenAIResponsesProvider:
                 text_parts.append(fallback)
         if not text_parts:
             raise RetryableProviderTransportError(
-                f"{role} Responses API produced no final response"
+                f"{role} Responses API produced no final response",
+                failure_code="response_missing_output",
             )
         return "".join(text_parts)
 
@@ -520,7 +623,8 @@ class OpenAIResponsesProvider:
                 or value < 0
             ):
                 raise ProviderError(
-                    f"Responses API {name} usage is missing or invalid"
+                    f"Responses API {name} usage is missing or invalid",
+                    failure_code="response_usage_invalid",
                 )
         if total_tokens is not None and (
             not isinstance(total_tokens, int)
@@ -529,7 +633,8 @@ class OpenAIResponsesProvider:
             or total_tokens != input_tokens + output_tokens
         ):
             raise ProviderError(
-                "Responses API total_tokens usage is inconsistent"
+                "Responses API total_tokens usage is inconsistent",
+                failure_code="response_usage_invalid",
             )
 
         details = self._field(usage, "input_tokens_details", {})
@@ -549,11 +654,13 @@ class OpenAIResponsesProvider:
                 or value < 0
             ):
                 raise ProviderError(
-                    f"Responses API {name} usage is invalid"
+                    f"Responses API {name} usage is invalid",
+                    failure_code="response_usage_invalid",
                 )
         if cached_tokens + cache_write_tokens > input_tokens:
             raise ProviderError(
-                "Responses API cache usage exceeds total input tokens"
+                "Responses API cache usage exceeds total input tokens",
+                failure_code="response_usage_invalid",
             )
         return {
             "input_tokens": input_tokens - cache_write_tokens,
@@ -681,15 +788,18 @@ class OpenAIResponsesProvider:
             response = input_tokens_api(**count_request)
         except (TimeoutError, ConnectionError) as exc:
             raise RetryableProviderTransportError(
-                f"{role} Responses input-token count failed"
+                f"{role} Responses input-token count failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
         except self.retryable_exception_types as exc:
             raise RetryableProviderTransportError(
-                f"{role} Responses input-token count failed"
+                f"{role} Responses input-token count failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
         except Exception as exc:
             raise ProviderError(
-                f"{role} Responses input-token count failed"
+                f"{role} Responses input-token count failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
         count = self._field(response, "input_tokens")
         if (
@@ -698,7 +808,8 @@ class OpenAIResponsesProvider:
             or count < 0
         ):
             raise ProviderError(
-                f"{role} Responses input-token count is invalid"
+                f"{role} Responses input-token count is invalid",
+                failure_code="input_token_count_invalid",
             )
         return count
 
@@ -725,32 +836,38 @@ class OpenAIResponsesProvider:
             response = self.client.responses.create(**request)
         except (TimeoutError, ConnectionError) as exc:
             raise RetryableProviderTransportError(
-                f"{role} Responses API transport failed"
+                f"{role} Responses API transport failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
         except self.retryable_exception_types as exc:
             raise RetryableProviderTransportError(
-                f"{role} Responses API transport failed"
+                f"{role} Responses API transport failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
         except Exception as exc:
             raise ProviderError(
-                f"{role} Responses API request failed"
+                f"{role} Responses API request failed",
+                failure_code=safe_provider_failure_code(exc),
             ) from exc
 
         response_id = self._field(response, "id", "")
         if not isinstance(response_id, str) or not response_id:
             raise ProviderError(
-                f"{role} Responses API result lacks a response id"
+                f"{role} Responses API result lacks a response id",
+                failure_code="response_missing_id",
             )
         text_output = self._output_text(response, role)
         try:
             payload = json.loads(text_output)
         except json.JSONDecodeError as exc:
             raise ProviderError(
-                f"{role} Responses API result was not valid JSON"
+                f"{role} Responses API result was not valid JSON",
+                failure_code="response_invalid_json",
             ) from exc
         if not isinstance(payload, dict):
             raise ProviderError(
-                f"{role} Responses API result must be one JSON object"
+                f"{role} Responses API result must be one JSON object",
+                failure_code="response_non_object",
             )
         resolved_model = self._field(response, "model", "")
         if not isinstance(resolved_model, str):

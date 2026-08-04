@@ -13,6 +13,7 @@ import argparse
 import contextvars
 import csv
 import hashlib
+import io
 import json
 import math
 import os
@@ -488,10 +489,42 @@ def normalize_ledger_row(raw: dict[str, str]) -> dict[str, str]:
     }
 
 
-def read_ledger(path: Path) -> list[dict[str, str]]:
+def read_ledger(
+    path: Path,
+    *,
+    expected_snapshot_sha256: str | None = None,
+    expected_snapshot_distinct_accessions: int | None = None,
+) -> list[dict[str, str]]:
     if not path.is_file() or path.is_symlink():
         raise CorpusError(f"evidence ledger missing or unsafe: {path}")
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+    try:
+        ledger_raw = path.read_bytes()
+    except OSError as exc:
+        raise CorpusError(f"evidence ledger unreadable: {path}") from exc
+    snapshot_raw = ledger_raw
+    if expected_snapshot_sha256 is not None:
+        if (
+            SHA256_PATTERN.fullmatch(expected_snapshot_sha256) is None
+            or not isinstance(expected_snapshot_distinct_accessions, int)
+            or expected_snapshot_distinct_accessions <= 0
+        ):
+            raise CorpusError("invalid evidence ledger snapshot contract")
+        if sha256_bytes(ledger_raw) != expected_snapshot_sha256:
+            # Daily monitoring may append records after a replay cohort is
+            # frozen. Accept only the exact, hash-bound physical prefix that
+            # created the manifest; edits inside that prefix still fail.
+            physical_lines = ledger_raw.splitlines(keepends=True)
+            prefix_line_count = expected_snapshot_distinct_accessions + 1
+            if len(physical_lines) < prefix_line_count:
+                raise CorpusError("evidence ledger snapshot prefix missing")
+            snapshot_raw = b"".join(physical_lines[:prefix_line_count])
+            if sha256_bytes(snapshot_raw) != expected_snapshot_sha256:
+                raise CorpusError("evidence ledger snapshot hash mismatch")
+    try:
+        snapshot_text = snapshot_raw.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise CorpusError("evidence ledger is not valid UTF-8") from exc
+    with io.StringIO(snapshot_text, newline="") as handle:
         reader = csv.DictReader(handle)
         missing = REQUIRED_LEDGER_FIELDS - set(reader.fieldnames or [])
         if missing:
@@ -507,6 +540,11 @@ def read_ledger(path: Path) -> list[dict[str, str]]:
         deduplicated[row["accession"]] = row
     if not deduplicated:
         raise CorpusError("evidence ledger contains no filings")
+    if (
+        expected_snapshot_distinct_accessions is not None
+        and len(deduplicated) != expected_snapshot_distinct_accessions
+    ):
+        raise CorpusError("evidence ledger snapshot row count mismatch")
     return list(deduplicated.values())
 
 

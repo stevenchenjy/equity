@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any
 
+from create_phase5r_daily_decision_and_brief import expected_market_session
 from phase5r_daily_common import canonical_sha256
 from phase5r_evidence_freshness import (
     EvidenceFreshnessError,
@@ -660,6 +661,16 @@ def validate_schema(value: Any, schema: dict[str, Any], path: str = "$") -> None
     elif expected_type == "string":
         if not isinstance(value, str):
             raise ContractError(f"{path}: expected string")
+        minimum_length = schema.get("minLength")
+        if minimum_length is not None:
+            if (
+                not isinstance(minimum_length, int)
+                or isinstance(minimum_length, bool)
+                or minimum_length < 0
+            ):
+                raise ContractError(f"{path}: invalid minLength constraint")
+            if len(value) < minimum_length:
+                raise ContractError(f"{path}: string is shorter than minLength")
     elif expected_type == "boolean":
         if not isinstance(value, bool):
             raise ContractError(f"{path}: expected boolean")
@@ -902,6 +913,27 @@ def _normalized_utc_or_empty(value: Any) -> str:
 def _date_from_period(value: Any) -> str:
     match = re.search(r"\b\d{4}-\d{2}-\d{2}\b", str(value or ""))
     return match.group(0) if match else ""
+
+
+def _expected_verified_close_session(cycle_date: Any) -> str:
+    """Return the canonical completed market session for a packet cycle date.
+
+    A Saturday, Sunday, or US market holiday may legitimately use the most
+    recent completed session.  Keeping this calculation aligned with the
+    daily decision builder prevents a calendar-date mismatch from weakening
+    the separate freshness or shadow-transition gates.
+    """
+
+    if (
+        not isinstance(cycle_date, str)
+        or re.fullmatch(r"\d{4}-\d{2}-\d{2}", cycle_date) is None
+    ):
+        raise ContractError("packet: cycle_date is invalid")
+    try:
+        cycle_day = datetime.strptime(cycle_date, "%Y-%m-%d")
+    except ValueError as exc:
+        raise ContractError("packet: cycle_date is invalid") from exc
+    return expected_market_session(cycle_day).isoformat()
 
 
 def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
@@ -1210,7 +1242,8 @@ def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
         raise ContractError("packet: verified close session is invalid")
     if verified_session and (
         re.fullmatch(r"\d{4}-\d{2}-\d{2}", verified_session) is None
-        or verified_session != packet["cycle_date"]
+        or verified_session
+        != _expected_verified_close_session(packet["cycle_date"])
     ):
         raise ContractError("packet: verified close session is invalid")
     known_sources = set(ids)

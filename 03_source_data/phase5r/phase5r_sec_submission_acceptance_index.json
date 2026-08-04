@@ -7,8 +7,8 @@
     "public_sec_only": true,
     "smtp_used": false
   },
-  "generated_at": "2026-07-28T13:24:43.000-04:00",
-  "record_count": 609,
+  "generated_at": "2026-08-03T19:31:02.000-04:00",
+  "record_count": 611,
   "records": [
     {
       "accepted_at": "2023-09-14T20:14:43.000+00:00",
@@ -304,6 +304,24 @@
       "cik": "1973239",
       "filing_date": "2026-05-26",
       "record_sha256": "8b3635b2c844ba2d13f10d0a0933a58bb3fb4d2ba0f0156a0452ad52bd642d70",
+      "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-29T20:02:28.000+00:00",
+      "accession_number": "0001973239-26-000113",
+      "cik": "1973239",
+      "filing_date": "2026-07-29",
+      "record_sha256": "40874973d0eed8e3f197cc0e0717c603b026fba6eb177b315c3862fadc9aae72",
+      "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
+      "accession_number": "0001973239-26-000114",
+      "cik": "1973239",
+      "filing_date": "2026-07-29",
+      "record_sha256": "fae31b8e27d846a1c3ab5c6d7730293df52bf5c838c1605a1e1a5cb6e2c4d43c",
       "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
       "ticker": "ARM"
     },
