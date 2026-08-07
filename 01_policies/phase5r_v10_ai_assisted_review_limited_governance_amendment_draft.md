@@ -1,9 +1,9 @@
-# Draft — Limited Governance Amendment for Phase 5R v10 AI-Assisted Review
+# Limited Governance Amendment for Phase 5R v10 AI-Assisted Review
 
 ## Status and authority
 
-**Draft only — not adopted and not effective.** The user's authorization
-authorizes preparation of this draft only. It does not amend the existing
+**Adoption-controlled text — not effective unless a separately completed
+adoption record passes the offline verifier.** It does not amend the existing
 `phase5r_llm_decision_authority_policy.md`,
 `phase5r_llm_evaluation_policy.md`, or anonymous-review protocol until a
 separate, explicit adoption record is created by the designated human Project
@@ -140,6 +140,25 @@ This amendment may not, and does not:
 The existing stricter policy or technical boundary always controls if any
 wording conflicts with this draft.
 
+## Narrow internal-use waiver, without protocol completion
+
+An adoption record may set `human_review_requirement_waived: true` only when
+all of the following are simultaneously true:
+
+- `human_review_waiver_scope` is exactly
+  `project_owner_internal_noncanonical_use_only`;
+- `human_review_protocol_completed` is `false`;
+- `independent_human_validation_claim_permitted` is `false`; and
+- `original_protocol_status` is exactly
+  `no_go_pending_independent_review_preserved_historical`.
+
+This is a limited waiver of the two-human-review gate **only for the named
+Project Owner's noncanonical internal uses** of the completed AI-assisted
+review. It does not waive, satisfy, replace, or complete the original
+anonymous-review protocol; it cannot be represented as independent human
+validation. The historical v10 result remains
+`no_go_pending_independent_review`.
+
 ## Required controls and verification
 
 Before any adoption, run the provider-free verifier:
@@ -176,8 +195,10 @@ artifact.
 
 A Project Owner disposition may permit only separately documented,
 noncanonical internal-quality use. It does not itself adopt this amendment,
-complete or waive the two-human-review protocol, unblind the run, or authorize
-promotion. The current limited direction is recorded in
+complete the two-human-review protocol, unblind the run, or authorize
+promotion. A later valid adoption record may apply the narrow internal-use
+waiver defined above without changing the original protocol. The prior limited
+direction is recorded in
 `00_project_control/phase5r_v10_project_owner_internal_use_decision.json`.
 
 ## Status vocabulary: procedure and substance are separate

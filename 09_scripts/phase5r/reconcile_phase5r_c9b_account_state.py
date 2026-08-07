@@ -21,6 +21,7 @@ from phase5r_c9b_common import (
     PRICE_AWARE_ACTION_PLAN,
     RECONCILIATION_REPORT,
     ROOT,
+    applied_reconciliation_matches_current_state,
     append_c9b_log,
     as_float,
     execution_cash,
@@ -334,11 +335,16 @@ def main() -> None:
                 raise ValueError("execution is already reflected in canonical shares; replay is blocked")
             prior_rows = read_csv(RECONCILIATION_REPORT) if RECONCILIATION_REPORT.exists() else []
             prior = next((item for item in prior_rows if item.get("execution_id") == row["execution_id"]), {})
+            account = load_account_state()
             if (
                 prior.get("canonical_state_applied") != "yes"
                 or prior.get("reconciliation_status") != "applied"
-                or prior.get("positions_sha256_after") != sha256(CURRENT_POSITIONS)
-                or prior.get("account_sha256_after") != sha256(ACCOUNT_STATE)
+                or not applied_reconciliation_matches_current_state(
+                    prior,
+                    current_positions_sha256=sha256(CURRENT_POSITIONS),
+                    current_account_sha256=sha256(ACCOUNT_STATE),
+                    current_account_last_updated=account["last_updated"],
+                )
             ):
                 raise ValueError("canonical shares match shares_after but no verified applied reconciliation exists")
             state = "already_applied_no_replay"

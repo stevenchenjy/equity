@@ -1980,7 +1980,7 @@
   "cache_hit_count": 8,
   "chunk_chars": 4000,
   "chunk_overlap": 200,
-  "generated_at": "2026-08-03T23:31:03+00:00",
+  "generated_at": "2026-08-06T23:59:07+00:00",
   "ledger_path": "03_source_data/phase5r/phase5r_daily_evidence_ledger.csv",
   "ledger_sha256": "d498be6bbbbddb7e7ffcf774a6080735a7bbebad2792a54fdcb53472060b1247",
   "max_raw_bytes": 26214400,

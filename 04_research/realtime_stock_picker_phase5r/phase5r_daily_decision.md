@@ -1,4 +1,4 @@
-# Phase 5R 每日决策 — 2026-08-03
+# Phase 5R 每日决策 — 2026-08-06
 
 ## 决定性结论
 
@@ -10,8 +10,8 @@
 
 ## 当前持仓
 
-- IOT: 继续持有; 5.0000 股，约占 7.3657%；人工确认=no。
-- RBRK: 继续持有; 2.0000 股，约占 5.8156%；人工确认=no。
+- IOT: 减仓方案待人工复核; 5.0000 股，约占 8.0500%；人工确认=yes。
+- RBRK: 继续持有; 2.0000 股，约占 6.7561%；人工确认=no。
 
 ## 新候选
 
@@ -23,15 +23,15 @@
 
 ## 可靠性门槛
 
-- 市场数据：未通过；预期交易日 2026-08-03。
-- SEC 官方证据：未通过；今日重大新事件 0 条。
-- 长期基本面：未通过；收入趋势转弱标的 0 个。
+- 市场数据：未通过；预期交易日 2026-08-06。
+- SEC 官方证据：通过；今日重大新事件 0 条。
+- 长期基本面：通过；收入趋势转弱标的 0 个。
 - 账户与成交：结构化状态一致。
 
 ## 长期基本面
 
-- IOT: insufficient_trend；收入同比 n/a%；净利率 n/a%；期间 n/a。
-- RBRK: insufficient_trend；收入同比 n/a%；净利率 n/a%；期间 n/a。
+- IOT: strong_growth；收入同比 30.52%；净利率 9.29%；期间 CY2026Q1。
+- RBRK: strong_growth；收入同比 38.99%；净利率 -10.81%；期间 CY2026Q1。
 
 ## 深度与长期约束
 
@@ -43,7 +43,7 @@
 
 ## 运行边界
 
-- human_review_required=no
+- human_review_required=yes
 - automatic_action_allowed=no
 - send_recommended=yes
 - send_reason=weekday_daily_brief

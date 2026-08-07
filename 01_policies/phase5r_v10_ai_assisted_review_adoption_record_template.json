@@ -1,5 +1,5 @@
 {
-  "schema_version": "phase5r_governance_amendment_adoption_v1",
+  "schema_version": "phase5r_governance_amendment_adoption_v2",
   "amendment_version": "v10-ai-review-limited-1",
   "decision": "not_adopted",
   "policy_owner": "",
@@ -21,6 +21,10 @@
     "repository_initiated_provider_call_authorized": false
   },
   "human_review_requirement_waived": false,
+  "human_review_waiver_scope": "not_waived",
+  "human_review_protocol_completed": false,
+  "independent_human_validation_claim_permitted": false,
+  "original_protocol_status": "no_go_pending_independent_review_preserved_historical",
   "canonical_authority_created": false,
   "blind_key_access_authorized": false,
   "email_authority_created": false,

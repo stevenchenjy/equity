@@ -46,42 +46,52 @@ STEP_SPECS = [
         "create_phase5r_daily_decision_and_brief.py",
         False,
     ),
+    # The production-shadow companion reads only this already-sanitized,
+    # deterministic packet.  Building it here keeps any account-state reads
+    # inside the established local workflow, never in the shadow runner.
+    ("evidence_packet", "build_phase5r_decision_evidence_packet.py", False),
 ]
 
 
 def run_step(name: str, script_name: str, allowed_to_fail: bool) -> dict[str, Any]:
-    extra_arguments = ["--refresh"] if name == "sec_filing_artifacts" else []
+    extra_arguments = (
+        ["--refresh"]
+        if name == "sec_filing_artifacts"
+        else ["--build"]
+        if name == "evidence_packet"
+        else []
+    )
     try:
         completed = subprocess.run(
             [sys.executable, str(SCRIPT_DIR / script_name), *extra_arguments],
             cwd=ROOT,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            # Child diagnostics can contain third-party response fragments.
+            # The durable refresh state records only finite status fields, so
+            # do not capture or reflect stdout/stderr into a state file or a
+            # launchd log.
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
             timeout=240,
             check=False,
         )
-    except subprocess.TimeoutExpired as exc:
-        partial = exc.stdout or ""
-        if isinstance(partial, bytes):
-            partial = partial.decode("utf-8", errors="replace")
-        safe_summary = " ".join(str(partial).strip().split())[-400:]
+    except subprocess.TimeoutExpired:
         return {
             "name": name,
             "script": script_name,
             "exit_code": 124,
             "allowed_to_fail": allowed_to_fail,
             "outcome": "timed_out",
-            "safe_summary": safe_summary or "child_timeout_240_seconds",
+            "result_code": "child_timeout_240_seconds",
         }
-    safe_summary = " ".join(completed.stdout.strip().split())[-500:]
     return {
         "name": name,
         "script": script_name,
         "exit_code": completed.returncode,
         "allowed_to_fail": allowed_to_fail,
         "outcome": "passed" if completed.returncode == 0 else "failed",
-        "safe_summary": safe_summary,
+        "result_code": (
+            "child_completed" if completed.returncode == 0 else "child_nonzero_exit"
+        ),
     }
 
 

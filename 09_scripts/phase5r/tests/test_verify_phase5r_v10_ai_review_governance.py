@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+import tempfile
 import unittest
 from unittest import mock
+from pathlib import Path
 
 import verify_phase5r_v10_ai_review_governance as governance
 
@@ -51,6 +54,38 @@ class V10AiReviewGovernanceVerifierTests(unittest.TestCase):
 
         self.assertFalse(result["passed"])
         self.assertIn("anonymous_review_raw_file_hash_mismatch", result["issues"])
+
+    def test_completed_adoption_record_uses_only_a_narrow_internal_waiver(self) -> None:
+        result = governance.verify(
+            adoption_record_path=(
+                governance.ROOT
+                / "00_project_control/phase5r_v10_ai_assisted_review_governance_adoption.json"
+            )
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["adoption_record_status"], "provided")
+
+    def test_adoption_rejects_a_waiver_that_claims_protocol_completion(self) -> None:
+        completed = (
+            governance.ROOT
+            / "00_project_control/phase5r_v10_ai_assisted_review_governance_adoption.json"
+        )
+        record = json.loads(completed.read_text(encoding="utf-8"))
+        record["human_review_protocol_completed"] = True
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "invalid_adoption.json"
+            path.write_text(
+                json.dumps(record, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            result = governance.verify(adoption_record_path=path)
+
+        self.assertFalse(result["passed"])
+        self.assertIn(
+            "adoption_record_human_review_protocol_must_remain_incomplete",
+            result["issues"],
+        )
 
 
 if __name__ == "__main__":

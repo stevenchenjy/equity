@@ -59,6 +59,20 @@ _SIDECAR_IMPORT_ALLOWLISTS = {
         "typing",
         "unicodedata",
     },
+    "run_phase5r_future_v2_offline_integration.py": {
+        "argparse",
+        "datetime",
+        "hashlib",
+        "json",
+        "os",
+        "pathlib",
+        "re",
+        "stat",
+        "typing",
+        "zoneinfo",
+        "phase5r_assertion_span_contract_v3",
+        "phase5r_llm_evidence_contract_v2_handoff",
+    },
 }
 _FORBIDDEN_SIDECAR_IMPORT_ROOTS = {
     "http",

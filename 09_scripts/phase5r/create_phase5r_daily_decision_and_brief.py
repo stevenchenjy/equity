@@ -44,6 +44,8 @@ from phase5r_daily_common import (
     sha256_file,
     log_daily_run,
 )
+from phase5r_c9_common import load_account_state
+from phase5r_c9b_common import applied_reconciliation_matches_current_state
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -190,6 +192,7 @@ def execution_conflicts() -> list[str]:
         ROOT / "05_risk_and_positions" / "current_positions.local.csv"
     )
     current_account_hash = sha256_file(ACCOUNT_STATE_PATH)
+    current_account = load_account_state()
     for row in read_csv(CONFIRMED_EXECUTION_PATH):
         execution_id = row.get("execution_id", "").strip()
         status = row.get("order_status", "").strip().lower()
@@ -209,7 +212,12 @@ def execution_conflicts() -> list[str]:
             != current_positions_hash
         ):
             conflicts.append(f"positions_hash_mismatch:{execution_id}")
-        if reconciliation.get("account_sha256_after", "").strip() != current_account_hash:
+        if not applied_reconciliation_matches_current_state(
+            reconciliation,
+            current_positions_sha256=current_positions_hash,
+            current_account_sha256=current_account_hash,
+            current_account_last_updated=current_account["last_updated"],
+        ):
             conflicts.append(f"account_hash_mismatch:{execution_id}")
     return sorted(set(conflicts))
 

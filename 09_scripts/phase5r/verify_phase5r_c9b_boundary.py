@@ -24,6 +24,7 @@ from phase5r_c9b_common import (
     PRICE_AWARE_ACTION_PLAN,
     RECONCILIATION_REPORT,
     ROOT,
+    applied_reconciliation_matches_current_state,
     append_c9b_log,
     load_account_state,
     load_active_inhibit,
@@ -192,7 +193,12 @@ def main() -> int:
     elif applied:
         canonical_consistency = (
             sha256(CURRENT_POSITIONS) == recon.get("positions_sha256_after")
-            and sha256(ACCOUNT_STATE) == recon.get("account_sha256_after")
+            and applied_reconciliation_matches_current_state(
+                recon,
+                current_positions_sha256=sha256(CURRENT_POSITIONS),
+                current_account_sha256=sha256(ACCOUNT_STATE),
+                current_account_last_updated=account["last_updated"],
+            )
             and float(positions.get("IOT", {}).get("shares", -1)) == float(execution.get("shares_after", -2))
             and bool(post_weights)
         )

@@ -1,5 +1,5 @@
 {
-  "as_of_et": "2026-07-25T04:36:32-04:00",
+  "as_of_et": "2026-08-06T19:59:14-04:00",
   "boundaries": {
     "automatic_action_allowed": false,
     "broker_connected": false,
@@ -137,10 +137,10 @@
       "value": "-10.81"
     },
     {
-      "calculation_id": "calc:c9_score:ARM:2026-07-25",
+      "calculation_id": "calc:c9_score:ARM:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
+      "period": "2026-08-06",
       "recomputed_value": "6.72",
       "reconciled": true,
       "source_ids": [
@@ -151,10 +151,10 @@
       "value": "6.72"
     },
     {
-      "calculation_id": "calc:c9_score:AVGO:2026-07-25",
+      "calculation_id": "calc:c9_score:AVGO:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
+      "period": "2026-08-06",
       "recomputed_value": "7.61",
       "reconciled": true,
       "source_ids": [
@@ -165,24 +165,24 @@
       "value": "7.61"
     },
     {
-      "calculation_id": "calc:c9_score:IOT:2026-07-25",
+      "calculation_id": "calc:c9_score:IOT:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
-      "recomputed_value": "7.09",
+      "period": "2026-08-06",
+      "recomputed_value": "6.69",
       "reconciled": true,
       "source_ids": [
         "research-context:IOT:2026-07-18T18:11:42-04:00"
       ],
       "ticker": "IOT",
       "unit": "score_0_to_10",
-      "value": "7.09"
+      "value": "6.69"
     },
     {
-      "calculation_id": "calc:c9_score:MU:2026-07-25",
+      "calculation_id": "calc:c9_score:MU:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
+      "period": "2026-08-06",
       "recomputed_value": "7.10",
       "reconciled": true,
       "source_ids": [
@@ -193,10 +193,10 @@
       "value": "7.10"
     },
     {
-      "calculation_id": "calc:c9_score:PANW:2026-07-25",
+      "calculation_id": "calc:c9_score:PANW:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
+      "period": "2026-08-06",
       "recomputed_value": "7.16",
       "reconciled": true,
       "source_ids": [
@@ -207,24 +207,24 @@
       "value": "7.16"
     },
     {
-      "calculation_id": "calc:c9_score:RBRK:2026-07-25",
+      "calculation_id": "calc:c9_score:RBRK:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
-      "recomputed_value": "7.35",
+      "period": "2026-08-06",
+      "recomputed_value": "7.15",
       "reconciled": true,
       "source_ids": [
         "research-context:RBRK:2026-07-18T18:11:42-04:00"
       ],
       "ticker": "RBRK",
       "unit": "score_0_to_10",
-      "value": "7.35"
+      "value": "7.15"
     },
     {
-      "calculation_id": "calc:c9_score:SPY:2026-07-25",
+      "calculation_id": "calc:c9_score:SPY:2026-08-06",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-07-25",
+      "period": "2026-08-06",
       "recomputed_value": "6.91",
       "reconciled": true,
       "source_ids": [
@@ -235,29 +235,29 @@
       "value": "6.91"
     }
   ],
-  "cycle_date": "2026-07-24",
-  "decision_fingerprint": "20e74cb4cfa18b15ddc7e1e81c3958c6156f067910e5dbb94b6f2920ec192911",
+  "cycle_date": "2026-08-06",
+  "decision_fingerprint": "5cbe07271cdc0f80a3bc9f9b734dd62c77b7bbd1ad32f167f87bfd31e0825150",
   "entities": [
     {
       "cik": "1642896",
-      "concentration_status": "above_default_cap",
-      "deterministic_recommendation": "hold",
+      "concentration_status": "above_hard_cap",
+      "deterministic_recommendation": "trim_specific_shares_review",
       "holding_horizon": "medium_conviction",
       "invalidation_rule": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
-      "position_weight_band": "5_to_8_pct",
-      "position_weight_pct_rounded": "6.8",
+      "position_weight_band": "over_8_pct",
+      "position_weight_pct_rounded": "8.1",
       "role": "held",
       "thesis": "Growth software / connected-operations platform; existing position. Concentration is high for a [local_currency_redacted] account, so future reviews should focus on risk control rather than adding.",
       "ticker": "IOT"
     },
     {
       "cik": "1943896",
-      "concentration_status": "within_default_cap",
+      "concentration_status": "above_default_cap",
       "deterministic_recommendation": "hold",
       "holding_horizon": "medium_conviction",
       "invalidation_rule": "No fixed stop yet. Review if thesis weakens, earnings/news materially changes outlook, weekly trend breaks down, or unrealized loss exceeds the max-loss rule.",
       "position_weight_band": "5_to_8_pct",
-      "position_weight_pct_rounded": "6.0",
+      "position_weight_pct_rounded": "6.8",
       "role": "held",
       "thesis": "Cybersecurity / data security growth exposure; existing position. Concentration is high for a [local_currency_redacted] account, so future reviews should focus on risk control rather than adding.",
       "ticker": "RBRK"
@@ -323,42 +323,607 @@
       "ticker": "ARM"
     }
   ],
+  "evidence_freshness": [
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-1973239-0001973239-26-000113-0cda3ebc94c9e914:chunk:0",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:0",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:12",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:13",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:16",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:27",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:30",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:36",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:40",
+        "sec-xbrl:ARM:unknown"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "194feb07549a7959a3c690b31f0c737f8916c74377844bb046c8017bdaf1c073",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "ARM",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-1730168-0001193125-26-295589-b161757f0c8de8ac:chunk:0",
+        "sec-xbrl:AVGO:CY2026Q1"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "3873f274a1a2196ac0dda8914aee89ffde04bab501338c7e45d24cc69c0f32c9",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "AVGO",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:0",
+        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:1",
+        "sec-xbrl:IOT:CY2026Q1"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "ef1954f0a364ca441c843c30ba8a10e3cb2cf14d27f65d50084a1e1159abab84",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "IOT",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:0",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:20",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:23",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:30",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:39",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55",
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:59",
+        "sec-xbrl:MU:CY2026Q2"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "8554c95796c4cebac0841bd216a03a1c4bdb51c9d4b0e17b05d70a63a236f14b",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "MU",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:0",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:28",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:36",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:37",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:38",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:56",
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:84",
+        "sec-xbrl:PANW:CY2026Q1"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "272d7efaeef1bf784b43642d0b56a485dce4bc87bfd5fa6d7ccf700de844790c",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "PANW",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:0",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:100",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:12",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:26",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:27",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:29",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:33",
+        "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:67",
+        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:0",
+        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:1",
+        "sec-xbrl:RBRK:CY2026Q1"
+      ],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "e450efc1ba99f9546990b06b318134e6b22e30d0d695a31c50961b1f728b23b7",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "RBRK",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    },
+    {
+      "as_of_utc": "2026-08-06T23:59:14Z",
+      "durable_sec_source_ids": [],
+      "guardrails": {
+        "broker_or_execution_capability": false,
+        "current_sec_scan_required_for_transition": true,
+        "durable_sec_evidence_age_limit_applied": false,
+        "missing_or_expired_blocks_action_review": true,
+        "missing_or_expired_erases_research_classification": false
+      },
+      "market": {
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete"
+        ],
+        "complete_close": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_session_date": "2026-08-04",
+        "observed_at_utc": "2026-08-04T22:11:13Z"
+      },
+      "receipt_sha256": "fc07011bf27d8069e134e310ca819ea86da2a14026e54044e067297cb4c5044f",
+      "schema_version": "phase5r_evidence_freshness_v1",
+      "sec_scan": {
+        "age_seconds": 9,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-06T23:59:05Z",
+        "current": true,
+        "max_age_seconds": 172800,
+        "status_artifact_sha256": "9c4f9f8b0bcfa041d0ffe0a4c00c2b00f17999a20d0d95eebbc394e294e50f37",
+        "ticker_scanned": true
+      },
+      "ticker": "SPY",
+      "transition_freshness": {
+        "all_current": false,
+        "blocked_reasons": [
+          "expected_market_session_missing",
+          "market_close_incomplete",
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "market_current": false,
+        "sec_scan_current": true,
+        "valuation_current": false
+      },
+      "valuation": {
+        "blocked_reasons": [
+          "valuation_receipt_missing",
+          "valuation_receipt_as_of_missing",
+          "valuation_market_input_missing",
+          "valuation_market_session_missing",
+          "valuation_expected_market_session_missing",
+          "valuation_scenario_missing",
+          "valuation_incomplete"
+        ],
+        "complete": false,
+        "current": false,
+        "expected_market_session_date": "",
+        "market_input_at_utc": "",
+        "market_session_date": "",
+        "receipt_as_of_utc": "",
+        "scenario_age_seconds": null,
+        "scenario_max_age_seconds": 604800,
+        "scenario_refreshed_at_utc": "",
+        "valuation_receipt_sha256": ""
+      }
+    }
+  ],
   "filing_evidence": [
     {
-      "acceptance_source_id": "sec-acceptance:0001973239-26-000097",
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
-      "accession_number": "0001973239-26-000097",
+      "acceptance_source_id": "sec-acceptance:0001973239-26-000114",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
+      "accession_number": "0001973239-26-000114",
       "cik": "1973239",
-      "filing_date": "2026-05-26",
-      "form": "20-F",
+      "filing_date": "2026-07-29",
+      "form": "6-K",
       "items": "",
-      "material_event": "no",
-      "materiality": "high",
-      "metadata_source_id": "sec-filing-metadata:0001973239-26-000097",
+      "material_event": "yes",
+      "materiality": "medium",
+      "metadata_source_id": "sec-filing-metadata:0001973239-26-000114",
       "text_chunk_source_ids": [
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:0",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:1",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:75",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:150",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:222",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223",
-        "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:225"
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:0",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:12",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:13",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:16",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:27",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:30",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:36",
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:40"
       ],
       "ticker": "ARM"
     },
     {
-      "acceptance_source_id": "sec-acceptance:0001973239-26-000062",
-      "accepted_at": "2026-05-06T20:02:16.000+00:00",
-      "accession_number": "0001973239-26-000062",
+      "acceptance_source_id": "sec-acceptance:0001973239-26-000113",
+      "accepted_at": "2026-07-29T20:02:28.000+00:00",
+      "accession_number": "0001973239-26-000113",
       "cik": "1973239",
-      "filing_date": "2026-05-06",
+      "filing_date": "2026-07-29",
       "form": "6-K",
       "items": "",
-      "material_event": "no",
+      "material_event": "yes",
       "materiality": "medium",
-      "metadata_source_id": "sec-filing-metadata:0001973239-26-000062",
-      "text_chunk_source_ids": [],
+      "metadata_source_id": "sec-filing-metadata:0001973239-26-000113",
+      "text_chunk_source_ids": [
+        "sec-1973239-0001973239-26-000113-0cda3ebc94c9e914:chunk:0"
+      ],
       "ticker": "ARM"
     },
     {
@@ -543,7 +1108,7 @@
       "cash_latest": "2751000000.00",
       "cik": "1973239",
       "data_quality": "unavailable",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "",
       "latest_period_end": "",
       "liabilities_latest": "2417000000.00",
@@ -561,7 +1126,7 @@
       "cash_latest": "19628000000.00",
       "cik": "1730168",
       "data_quality": "ok",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "CY2026Q1",
       "latest_period_end": "2026-05-03",
       "liabilities_latest": "91467000000.00",
@@ -579,7 +1144,7 @@
       "cash_latest": "218986000.00",
       "cik": "1642896",
       "data_quality": "ok",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "CY2026Q1",
       "latest_period_end": "2026-05-02",
       "liabilities_latest": "1106480000.00",
@@ -597,7 +1162,7 @@
       "cash_latest": "24995000000.00",
       "cik": "723125",
       "data_quality": "ok",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "CY2026Q2",
       "latest_period_end": "2026-05-28",
       "liabilities_latest": "33388000000.00",
@@ -615,7 +1180,7 @@
       "cash_latest": "2364000000.00",
       "cik": "1327567",
       "data_quality": "ok",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "CY2026Q1",
       "latest_period_end": "2026-04-30",
       "liabilities_latest": "18598000000.00",
@@ -633,7 +1198,7 @@
       "cash_latest": "429397000.00",
       "cik": "1943896",
       "data_quality": "ok",
-      "fetched_at": "2026-07-25T00:03:31-04:00",
+      "fetched_at": "2026-08-06T19:58:23-04:00",
       "latest_frame": "CY2026Q1",
       "latest_period_end": "2026-04-30",
       "liabilities_latest": "3249572000.00",
@@ -662,6 +1227,7 @@
       ],
       "IOT": [
         "hold_existing",
+        "trim_review",
         "abstain"
       ],
       "MU": [
@@ -684,137 +1250,139 @@
         "abstain"
       ]
     },
-    "deterministic_action_stability_distinct_closes": 0,
-    "deterministic_transition_eligible_tickers": [],
+    "deterministic_action_stability_distinct_closes": 1,
+    "deterministic_transition_eligible_tickers": [
+      "IOT"
+    ],
     "deterministic_transition_pending_tickers": [],
     "filing_artifact_provenance_complete": true,
     "fundamental_held_coverage_complete": true,
     "market_data_action_grade": false,
     "market_data_action_grade_tickers": [],
-    "market_data_current": true,
+    "market_data_current": false,
     "point_in_time_safe": true,
     "prompt_injection_text_detected": false,
     "sec_acceptance_provenance_complete": true,
     "sec_held_coverage_complete": true,
     "valuation_action_grade_tickers": [],
-    "verified_close_session": "2026-07-24"
+    "verified_close_session": ""
   },
-  "generated_at": "2026-07-25T04:36:32-04:00",
+  "generated_at": "2026-08-06T19:59:14-04:00",
   "market_observations": [
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "495.0000",
-      "fifty_two_week_low": "281.6100",
-      "intraday_change_pct": "-2.6881",
-      "last_price": "381.9200",
-      "market_session_date": "2026-07-24",
-      "previous_close": "392.4700",
-      "relative_volume": "0.6277",
-      "source_id": "market:AVGO:2026-07-24",
+      "fifty_two_week_low": "281.8700",
+      "intraday_change_pct": "6.6109",
+      "last_price": "418.1600",
+      "market_session_date": "2026-08-04",
+      "previous_close": "392.2300",
+      "relative_volume": "1.3734",
+      "source_id": "market:AVGO:2026-08-04",
       "ticker": "AVGO",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "452.7000",
       "fifty_two_week_low": "100.0200",
-      "intraday_change_pct": "-8.1367",
-      "last_price": "260.0100",
-      "market_session_date": "2026-07-24",
-      "previous_close": "283.0400",
-      "relative_volume": "0.8055",
-      "source_id": "market:ARM:2026-07-24",
+      "intraday_change_pct": "17.3597",
+      "last_price": "280.5600",
+      "market_session_date": "2026-08-04",
+      "previous_close": "239.0600",
+      "relative_volume": "1.4838",
+      "source_id": "market:ARM:2026-08-04",
       "ticker": "ARM",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "1255.0000",
-      "fifty_two_week_low": "103.3800",
-      "intraday_change_pct": "-6.9945",
-      "last_price": "920.9500",
-      "market_session_date": "2026-07-24",
-      "previous_close": "990.2100",
-      "relative_volume": "0.8594",
-      "source_id": "market:MU:2026-07-24",
+      "fifty_two_week_low": "106.7500",
+      "intraday_change_pct": "7.6154",
+      "last_price": "892.6700",
+      "market_session_date": "2026-08-04",
+      "previous_close": "829.5000",
+      "relative_volume": "0.7813",
+      "source_id": "market:MU:2026-08-04",
       "ticker": "MU",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "368.8000",
       "fifty_two_week_low": "139.5700",
-      "intraday_change_pct": "-0.5651",
-      "last_price": "323.7900",
-      "market_session_date": "2026-07-24",
-      "previous_close": "325.6300",
-      "relative_volume": "0.7073",
-      "source_id": "market:PANW:2026-07-24",
+      "intraday_change_pct": "5.5339",
+      "last_price": "366.3400",
+      "market_session_date": "2026-08-04",
+      "previous_close": "347.1300",
+      "relative_volume": "1.2609",
+      "source_id": "market:PANW:2026-08-04",
       "ticker": "PANW",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
-      "fifty_two_week_high": "760.4000",
-      "fifty_two_week_low": "619.2900",
-      "intraday_change_pct": "0.1016",
-      "last_price": "738.9300",
-      "market_session_date": "2026-07-24",
-      "previous_close": "738.1800",
-      "relative_volume": "0.8663",
-      "source_id": "market:SPY:2026-07-24",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
+      "fifty_two_week_high": "773.4100",
+      "fifty_two_week_low": "627.0400",
+      "intraday_change_pct": "1.8029",
+      "last_price": "771.3300",
+      "market_session_date": "2026-08-04",
+      "previous_close": "757.6700",
+      "relative_volume": "1.1914",
+      "source_id": "market:SPY:2026-08-04",
       "ticker": "SPY",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "47.4700",
       "fifty_two_week_low": "23.3800",
-      "intraday_change_pct": "5.1445",
-      "last_price": "33.1100",
-      "market_session_date": "2026-07-24",
-      "previous_close": "31.4900",
-      "relative_volume": "0.7296",
-      "source_id": "market:IOT:2026-07-24",
+      "intraday_change_pct": "3.9591",
+      "last_price": "38.6000",
+      "market_session_date": "2026-08-04",
+      "previous_close": "37.1300",
+      "relative_volume": "0.9480",
+      "source_id": "market:IOT:2026-08-04",
       "ticker": "IOT",
       "usable_for_scoring": "yes"
     },
     {
-      "bar_state": "complete_close",
+      "bar_state": "intraday_or_unverified",
       "data_quality_label": "ok",
       "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-07-24T23:21:09-04:00",
+      "data_timestamp": "2026-08-05T06:11:13+08:00",
       "fifty_two_week_high": "99.7500",
       "fifty_two_week_low": "42.2500",
-      "intraday_change_pct": "0.8399",
-      "last_price": "73.2400",
-      "market_session_date": "2026-07-24",
-      "previous_close": "72.6300",
-      "relative_volume": "0.4766",
-      "source_id": "market:RBRK:2026-07-24",
+      "intraday_change_pct": "8.3623",
+      "last_price": "80.9900",
+      "market_session_date": "2026-08-04",
+      "previous_close": "74.7400",
+      "relative_volume": "1.0739",
+      "source_id": "market:RBRK:2026-08-04",
       "ticker": "RBRK",
       "usable_for_scoring": "yes"
     }
   ],
-  "packet_id": "0125bf68a4d8f02e31e586752ff3b8427268c833d0c66293eac0cf73d20cb3af",
+  "packet_id": "1a917a6f634c5e7909694cb5de648c6aaabad5725311fad49fc574f576f1f034",
   "portfolio_constraints": {
     "account_size_band": "under_10k",
     "active_stock_hard_cap_pct": 30.0,
@@ -878,15 +1446,15 @@
     {
       "business_quality_score": "8.0",
       "catalyst_news_quality_score": "7.5",
-      "deterministic_conviction_score": "7.09",
+      "deterministic_conviction_score": "6.69",
       "earnings_revenue_trend_score": "8.5",
       "evidence_checked_at": "2026-07-18T18:11:42-04:00",
       "filing_source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026041893/iot-20260502.htm",
-      "portfolio_fit_score": "6.0",
+      "portfolio_fit_score": "2.0",
       "primary_source_url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026040788/samsaraepr-q12027.htm",
-      "reason": "Dynamic weight 6.7782% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
-      "recommendation_label": "hold_existing",
-      "recommended_action": "hold",
+      "reason": "Dynamic weight 8.0500% exceeds the 8.00% hard cap; reducing 1 whole share(s) is the minimum current-price scenario at or below the cap.",
+      "recommendation_label": "trim_review",
+      "recommended_action": "trim_specific_shares_review",
       "source_id": "research-context:IOT:2026-07-18T18:11:42-04:00",
       "technical_entry_discipline_score": "6.6",
       "theme": "Connected operations software",
@@ -932,13 +1500,13 @@
     {
       "business_quality_score": "8.0",
       "catalyst_news_quality_score": "8.0",
-      "deterministic_conviction_score": "7.35",
+      "deterministic_conviction_score": "7.15",
       "earnings_revenue_trend_score": "8.5",
       "evidence_checked_at": "2026-07-18T18:11:42-04:00",
       "filing_source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000047/rbrk-20260430.htm",
-      "portfolio_fit_score": "8.0",
+      "portfolio_fit_score": "6.0",
       "primary_source_url": "https://ir.rubrik.com/financials/quarterly-results/default.aspx",
-      "reason": "Dynamic weight 5.9974% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
+      "reason": "Dynamic weight 6.7561% is at or below the 8.00% hard cap; no concentration-only trim is recommended, and no add is recommended today.",
       "recommendation_label": "hold_existing",
       "recommended_action": "hold",
       "source_id": "research-context:RBRK:2026-07-18T18:11:42-04:00",
@@ -969,107 +1537,107 @@
   "schema_version": "phase5r_llm_evidence_packet_v1",
   "source_catalog": [
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "7e7aa144504186fe28fd3f8ac98f1680755c30c6ed39d95be096771991aacf60",
+      "content_sha256": "e55043355583bd5ecfbbc20765bc8857b8b9300bb408dae01948e6c3e1786d61",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:AVGO:2026-07-24",
+      "source_id": "market:AVGO:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "AVGO"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "3d8293ba458daa4946a7678ee68130062439d18528b4b379c5e346df93397f3e",
+      "content_sha256": "00d2f92e88befcee06b1e3209ddb7112fa0733daf1de37c1702465cc6bda551d",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:ARM:2026-07-24",
+      "source_id": "market:ARM:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "0b9242aa7ff31f95840930517850bc9041e8645907c9bd1f214c9bd59a183ebe",
+      "content_sha256": "9f4b9f678abe0309c5a58e939a349f0b719c1e28d7a6b5bb5ad4cc666043565b",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:MU:2026-07-24",
+      "source_id": "market:MU:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "MU"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "bc1bf2d602176cb4af06a120c3635e024e98a6e36c381c366b21a101dafc072b",
+      "content_sha256": "8a299624fcee584fc828f0f2c79e64c0777cab80c3306e6c0dc5675bbfc9aa5f",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:PANW:2026-07-24",
+      "source_id": "market:PANW:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "PANW"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "77be98fe0004b44183037e4262a784beb27b79beb77c170f61dacbc9f592a66c",
+      "content_sha256": "e950fa84b483b2f60c4fb4a5f854a547ec88610755319195c67eed11ca216055",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:SPY:2026-07-24",
+      "source_id": "market:SPY:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "SPY"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "01d0ee34e5a09bf55876c421499ee36e95899b8ffd75a8ecceb08269fe16e1f1",
+      "content_sha256": "1e8846362430e6cfb48a4dd2c75103ad3671c9e639384b913be5ae9b7e554f07",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:IOT:2026-07-24",
+      "source_id": "market:IOT:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "IOT"
     },
     {
-      "accepted_at": "2026-07-24T23:21:09-04:00",
+      "accepted_at": "2026-08-05T06:11:13+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "5008bf7b07dcf21de0c928e3a3caa8082df718ae5bdb44d1a03cd95f81160cc2",
+      "content_sha256": "ddeb36de3db5c378cd21d90e360c7e367f2d205c05af5e704450c810250a4a70",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-07-24"
+        "session": "2026-08-04"
       },
-      "source_id": "market:RBRK:2026-07-24",
+      "source_id": "market:RBRK:2026-08-04",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "RBRK"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "4ab3a347375d814914bcf9064bd9171d1610df8db7bfa7f9d6d4eda7165928c0",
+      "content_sha256": "7579784667e6622829714a460516d724966555152a87dbb96dba26e2840962dd",
       "excerpt_text": "",
       "locator": {
         "cik": "1973239",
@@ -1082,9 +1650,9 @@
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "90f124607d54dbf5137e588722cfe4547499c8ee02934fd0f6810722c49d8fa3",
+      "content_sha256": "3613f29fb28da07640e21734897d6b8c79ab6399d491fd24a8570e8e84a2c36e",
       "excerpt_text": "",
       "locator": {
         "cik": "1730168",
@@ -1097,9 +1665,9 @@
       "ticker": "AVGO"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "6e84c6c2a65e3eacbce79ca5aff98509877b4a5737153f716de9b2cfcbcbadd5",
+      "content_sha256": "8a49b1c20cc06c026ee195c4d700e0357052de6b9a2cfbf63820e125b75f9d96",
       "excerpt_text": "",
       "locator": {
         "cik": "1642896",
@@ -1112,9 +1680,9 @@
       "ticker": "IOT"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "f206cd53bc7710f0d3b5c34b042608667834094665e0aad206a691f0dc9d1738",
+      "content_sha256": "5370f8d2726e349e6bd41979e5c51c3cbf8fbf63bde292fb99a52a5f5c261808",
       "excerpt_text": "",
       "locator": {
         "cik": "723125",
@@ -1127,9 +1695,9 @@
       "ticker": "MU"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "be497d6799d7d35760b6dc136f28d1e2c992d073d6954e5e249ef1211492c003",
+      "content_sha256": "9851f5c1054174d5c18240889fe09c99f929c375abe35e0d440eddb01c961f84",
       "excerpt_text": "",
       "locator": {
         "cik": "1327567",
@@ -1142,9 +1710,9 @@
       "ticker": "PANW"
     },
     {
-      "accepted_at": "2026-07-25T00:03:31-04:00",
+      "accepted_at": "2026-08-06T19:58:23-04:00",
       "authority": "primary_official",
-      "content_sha256": "3fb3bdb057fbcf4744d4c55e5d0cc9e9566b0df839a530a1a4233bac5a44d932",
+      "content_sha256": "7ca71756358a5cd105e5e3aaaf3e4141eda81d83c72e4d4ad0e46e7376f83774",
       "excerpt_text": "",
       "locator": {
         "cik": "1943896",
@@ -1157,235 +1725,256 @@
       "ticker": "RBRK"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official_metadata",
-      "content_sha256": "8b3635b2c844ba2d13f10d0a0933a58bb3fb4d2ba0f0156a0452ad52bd642d70",
+      "content_sha256": "fae31b8e27d846a1c3ab5c6d7730293df52bf5c838c1605a1e1a5cb6e2c4d43c",
       "excerpt_text": "",
       "locator": {
-        "accession_number": "0001973239-26-000097",
+        "accession_number": "0001973239-26-000114",
         "cik": "1973239",
         "field": "acceptanceDateTime",
-        "filing_date": "2026-05-26"
+        "filing_date": "2026-07-29"
       },
-      "source_id": "sec-acceptance:0001973239-26-000097",
+      "source_id": "sec-acceptance:0001973239-26-000114",
       "source_type": "sec_submission_acceptance",
       "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "4ccc1da248b86f835b8abc8e3618ec7daf9b952f39fa9b27d34677d04d0e1a52",
-      "excerpt_text": "arm-20260331\nxbrli:sharesiso4217:USDiso4217:USDxbrli:sharesarm:reporting_unitxbrli:purearm:leasearm:board_memberiso4217:GBPiso4217:EURarm:employeearm:executive_awardarm:segment00019732392025-04-012026-03-310001973239dei:BusinessContactMember2025-04-012026-03-3100019732392026-03-310001973239us-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239us-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239us-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239us-gaap:RelatedPartyMember2025-04-012026-03-310001973239us-gaap:RelatedPartyMember2024-04-012025-03-310001973239us-gaap:RelatedPartyMember2023-04-012024-03-3100019732392024-04-012025-03-3100019732392023-04-012024-03-3100019732392025-03-310001973239us-gaap:RelatedPartyMember2026-03-310001973239us-gaap:RelatedPartyMember2025-03-310001973239us-gaap:CommonStockMember2023-03-310001973239us-gaap:AdditionalPaidInCapitalMember2023-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2023-03-310001973239us-gaap:RetainedEarningsMember2023-03-3100019732392023-03-310001973239us-gaap:RetainedEarningsMember2023-04-012024-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2023-04-012024-03-310001973239us-gaap:AdditionalPaidInCapitalMember2023-04-012024-03-310001973239us-gaap:CommonStockMember2023-04-012024-03-310001973239us-gaap:CommonStockMember2024-03-310001973239us-gaap:AdditionalPaidInCapitalMember2024-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-03-310001973239us-gaap:RetainedEarningsMember2024-03-3100019732392024-03-310001973239us-gaap:RetainedEarningsMember2024-04-012025-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2024-04-012025-03-310001973239us-gaap:AdditionalPaidInCapitalMember2024-04-012025-03-310001973239us-gaap:CommonStockMember2024-04-012025-03-310001973239us-gaap:CommonStockMember2025-03-310001973239us-gaap:AdditionalPaidInCapitalMember2025-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-03-310001973239us-gaap:RetainedEarningsMember2025-03-310001973239us-gaap:RetainedEarningsMember2025-04-012026-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-04-012026-03-310001973239us-gaap:AdditionalPaidInCapitalMember2025-04-012026-03-310001973239us-gaap:CommonStockMember2025-04-012026-03-310001973239us-gaap:CommonStockMember2026-03-310001973239us-gaap:AdditionalPaidInCapitalMember2026-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-03-310001973239us-gaap:RetainedEarningsMember2026-03-310001973239arm:RestrictedStockUnitsLiabilityClassifiedMember2023-04-012024-03-310001973239us-gaap:IPOMember2023-09-182023-09-180001973239us-gaap:IPOMember2023-09-180001973239us-gaap:OverAllotmentOptionMember2023-09-182023-09-180001973239srt:MinimumMemberarm:PatentsAndLicensesMember2026-03-310001973239srt:MaximumMemberarm:PatentsAndLicensesMember2026-03-310001973239srt:MinimumMemberarm:SoftwareInternallyDevelopedMember2026-03-310001973239srt:MaximumMemberarm:SoftwareInternallyDevelopedMember2026-03-310001973239srt:MinimumMemberus-gaap:TechnologyBasedIntangibleAssetsMember2026-03-310001973239srt:MaximumMemberus-gaap:TechnologyBasedIntangibleAssetsMember2026-03-310001973239srt:MinimumMemberus-gaap:CustomerRelationshipsMember2026-03-310001973239srt:MaximumMemberus-gaap:CustomerRelationshipsMember2026-03-310001973239srt:MinimumMemberus-gaap:LeaseholdImprovementsMember2026-03-310001973239srt:MaximumMemberus-gaap:LeaseholdImprovementsMember2026-03-310001973239srt:MinimumMemberus-gaap:EquipmentMember2026-03-310001973239srt:MaximumMemberus-gaap:EquipmentMember2026-03-310001973239srt:MinimumMemberarm:FixturesAndVehiclesMember2026-03-310001973239srt:MaximumMemberarm:FixturesAndVehiclesMember2026-03-310001973239srt:MinimumMember2025-04-012026-03-310001973239srt:MaximumMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239a",
+      "content_sha256": "d2fde347ae9a9b437b5ecd8e6c9080f8f9384cd8aa56efd534c8e4ab324f52e7",
+      "excerpt_text": "arm-20260630\niso4217:USDiso4217:USDxbrli:sharesxbrli:sharesxbrli:pureiso4217:GBParm:segment00019732392026-04-012026-06-300001973239us-gaap:NonrelatedPartyMember2026-04-012026-06-300001973239us-gaap:NonrelatedPartyMember2025-04-012025-06-300001973239us-gaap:RelatedPartyMember2026-04-012026-06-300001973239us-gaap:RelatedPartyMember2025-04-012025-06-3000019732392025-04-012025-06-3000019732392026-06-3000019732392026-03-310001973239us-gaap:RelatedPartyMember2026-06-300001973239us-gaap:RelatedPartyMember2026-03-310001973239us-gaap:CommonStockMember2026-03-310001973239us-gaap:AdditionalPaidInCapitalMember2026-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-03-310001973239us-gaap:RetainedEarningsMember2026-03-310001973239us-gaap:RetainedEarningsMember2026-04-012026-06-300001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-04-012026-06-300001973239us-gaap:AdditionalPaidInCapitalMember2026-04-012026-06-300001973239us-gaap:CommonStockMember2026-04-012026-06-300001973239us-gaap:CommonStockMember2026-06-300001973239us-gaap:AdditionalPaidInCapitalMember2026-06-300001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2026-06-300001973239us-gaap:RetainedEarningsMember2026-06-300001973239us-gaap:CommonStockMember2025-03-310001973239us-gaap:AdditionalPaidInCapitalMember2025-03-310001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-03-310001973239us-gaap:RetainedEarningsMember2025-03-3100019732392025-03-310001973239us-gaap:RetainedEarningsMember2025-04-012025-06-300001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-04-012025-06-300001973239us-gaap:AdditionalPaidInCapitalMember2025-04-012025-06-300001973239us-gaap:CommonStockMember2025-04-012025-06-300001973239us-gaap:CommonStockMember2025-06-300001973239us-gaap:AdditionalPaidInCapitalMember2025-06-300001973239us-gaap:AccumulatedOtherComprehensiveIncomeMember2025-06-300001973239us-gaap:RetainedEarningsMember2025-06-3000019732392025-06-300001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2026-04-012026-06-300001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012025-06-300001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2026-04-012026-06-300001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2025-04-012025-06-300001973239arm:LicenseAndOtherRevenueMember2026-04-012026-06-300001973239arm:LicenseAndOtherRevenueMember2025-04-012025-06-300001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2026-04-012026-06-300001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2025-04-012025-06-300001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2026-04-012026-06-300001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2025-04-012025-06-300001973239us-gaap:RoyaltyMember2026-04-012026-06-300001973239us-gaap:RoyaltyMember2025-04-012025-06-300001973239us-gaap:TransferredOverTimeMember2026-04-012026-06-300001973239us-gaap:TransferredOverTimeMember2025-04-012025-06-300001973239us-gaap:TransferredAtPointInTimeMember2026-04-012026-06-300001973239us-gaap:TransferredAtPointInTimeMember2025-04-012025-06-300001973239country:US2026-04-012026-06-300001973239country:US2025-04-012025-06-300001973239country:CN2026-04-012026-06-300001973239country:CN2025-04-012025-06-300001973239country:JP2026-04-012026-06-300001973239country:JP2025-04-012025-06-300001973239country:TW2026-04-012026-06-300001973239country:TW2025-04-012025-06-300001973239country:KR2026-04-012026-06-300001973239country:KR2025-04-012025-06-300001973239arm:OtherCountriesMember2026-04-012026-06-300001973239arm:OtherCountriesMember2025-04-012025-06-3000019732392025-04-012026-03-3100019732392026-07-012026-06-3000019732392027-07-012026-06-3000019732392028-07-012026-06-300001973239arm:DreamBigSemiconductorInc.Member2025-10-012025-10-310001973239us-gaap:FairValueMeasuredAtNetAssetValuePerShareMember2026-06-300001973239us-gaap:FairValueMeasuredAtNetAssetValuePerShareMember2026-03-310001973239us-gaap:FairValueMeasuredAtNet",
       "locator": {
-        "accession_number": "0001973239-26-000097",
+        "accession_number": "0001973239-26-000114",
         "char_end": 4000,
         "char_start": 0,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:0",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:0",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "3a874bd17ce32034c50c1ae0fcce456afca46694949d268bd74f8adb231e719d",
-      "excerpt_text": "6-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239arm:LicenseAndOtherRevenueMember2025-04-012026-03-310001973239arm:LicenseAndOtherRevenueMember2024-04-012025-03-310001973239arm:LicenseAndOtherRevenueMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:NonrelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMemberus-gaap:RelatedPartyMember2023-04-012024-03-310001973239us-gaap:RoyaltyMember2025-04-012026-03-310001973239us-gaap:RoyaltyMember2024-04-012025-03-310001973239us-gaap:RoyaltyMember2023-04-012024-03-310001973239us-gaap:TransferredOverTimeMember2025-04-012026-03-310001973239us-gaap:TransferredOverTimeMember2024-04-012025-03-310001973239us-gaap:TransferredOverTimeMember2023-04-012024-03-310001973239us-gaap:TransferredAtPointInTimeMember2025-04-012026-03-310001973239us-gaap:TransferredAtPointInTimeMember2024-04-012025-03-310001973239us-gaap:TransferredAtPointInTimeMember2023-04-012024-03-310001973239country:US2025-04-012026-03-310001973239country:US2024-04-012025-03-310001973239country:US2023-04-012024-03-310001973239country:CN2025-04-012026-03-310001973239country:CN2024-04-012025-03-310001973239country:CN2023-04-012024-03-310001973239country:JP2025-04-012026-03-310001973239country:JP2024-04-012025-03-310001973239country:JP2023-04-012024-03-310001973239country:TW2025-04-012026-03-310001973239country:TW2024-04-012025-03-310001973239country:TW2023-04-012024-03-310001973239country:KR2025-04-012026-03-310001973239country:KR2024-04-012025-03-310001973239country:KR2023-04-012024-03-310001973239arm:OtherCountriesMember2025-04-012026-03-310001973239arm:OtherCountriesMember2024-04-012025-03-310001973239arm:OtherCountriesMember2023-04-012024-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2025-04-012026-03-310001973239arm:FourCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:SecondLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThirdLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:FourthLargestCustomerMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2024-04-012025-03-310001973239arm:ThreeLargestCustomersMemberus-gaap:CustomerConcentrationRiskMemberus-gaap:RevenueFromContractWithCustomerMember2023-04-012024-03-310001973239arm:LargestCustomerMemberus-gaap:CustomerConcentratio",
+      "content_sha256": "62ad8c597edfed892670dae7ef7f938212846c77da9ddba679945f52605ecbf9",
+      "excerpt_text": "d pursuant to the license.\n•Third-party arrangements — In certain arrangements, the Company arranges for third parties to provide products or services to customers. Revenue is recognized on a gross basis when the Company controls the product or service, and on a net margin basis when it acts as an agent. In agent arrangements, control passes directly from the third party to the customer, and the Company bears no inventory or performance risk.\n14\nTable of Contents\nArm Holdings plc\nNotes to Condensed Consolidated Financial Statements\n(Unaudited)\nRoyalty Revenue\nFor most IP license agreements, royalties are collected on products that incorporate the Company’s IP. The Company applies the royalty exception, under which revenue is recognized when the subsequent sale or usage occurs, assuming control of the license to which the royalty relates has transferred to the customer. Accordingly, royalties are recognized on an accrual basis in the quarter in which the customer ships their products, based on the Company’s technology that it contains. This estimation process for the royalty revenue accrual is based on a combination of methodologies, including the use of historical sales trends and macroeconomic factors for predictive analysis, the analysis of customer royalty reports and their sales trends and forecasts, as well as data and forecasts from third-party industry research providers. Data considered includes revenue, unit shipments, average selling price, product mix, market share and market penetration. Adjustments to revenue are required in subsequent periods to reflect changes in estimates as new information becomes available, primarily resulting from actual amounts subsequently reported by the licensees in the period following the accrual, including royalty audit resolutions.\nDisaggregation of Revenue\nA summary of the Company’s disaggregated revenue is as follows:\nThree Months Ended\nJune 30,\nExternal Customers\nRelated Parties\nTotal\n(in millions)\n2026\n2025\n2026\n2025\n2026\n2025\nLicense and Other Revenue(1)\n$\n310\n$\n255\n$\n264\n$\n213\n$\n574\n$\n468\nRoyalty Revenue\n591\n470\n124\n115\n715\n585\nTotal Revenue\n$\n901\n$\n725\n$\n388\n$\n328\n$\n1,289\n$\n1,053\n(1) Includes over-time revenue of $288 million and $221 million, and point-in-time revenue of $286 million and $247 million, for the three months ended June 30, 2026 and 2025, respectively.\nRevenue by geographic region is allocated to individual countries based on the principal headquarters of the customers. The geographical locations are not necessarily indicative of the country in which the customer sells products containing the Company’s technology IP. The following table summarizes information pertaining to revenue from customers based on the principal headquarters address by geographic regions:\nThree Months Ended\nJune 30,\n(in millions)\n2026\n2025\nUnited States\n$\n388\n$\n382\nPRC (1)\n200\n209\nJapan\n276\n154\nTaiwan\n176\n146\nRepublic of Korea\n117\n69\nOther countries\n132\n93\nTotal Revenue\n$\n1,289\n$\n1,053\n(1) “PRC” means the People’s Republic of China, including the Hong Kong Special Administrative Region and the Macau Special Administrative Region, but excluding Taiwan.\n15\nTable of Contents\nArm Holdings plc\nNotes to Condensed Consolidated Financial Statements\n(Unaudited)\nReceivables\nA summary of the components of accounts receivable, net is as follows:\nAs of\n(in millions)\nJune 30, 2026\nMarch 31, 2026\nAccounts receivable\n$\n1,150\n$\n1,331\nAllowance for current expected credit losses\n(31)\n(31)\nTotal accounts receivable, net\n$\n1,119\n$\n1,300\nA summary of the movement in the allowance for current expected credit losses is as follows:\nThree Months Ended\nJune 30,\n(in millions)\n2026\n2025\nBeginning balance\n$\n31\n$\n20\nAdditional (reversal of) provision\n—\n(1)\nEnding balance\n$\n31\n$\n19\nContract Assets\nThe timing of revenue recognition may differ from the timing of invoicing to customers. When revenue recognized exceeds the amount billed or billable to the customer, the Company records a contract asset. Contract assets are tr",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 7800,
-        "char_start": 3800,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 49600,
+        "char_start": 45600,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:1",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:12",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "080e0cb19399997a3f9d75f28f3b8c2d078f3d3f670a01c6166651e6e8da76ac",
-      "excerpt_text": "ions, financings, investments, to compensate consultants or advisors, or otherwise. Any such issuance could result in substantial dilution to our existing ADS holders and cause the market price of our ADSs to decline.\nWe may from time to time distribute rights to our shareholders, including rights to acquire our securities. However, we cannot make rights available to holders in the U.S. unless we register the offer and sale of the rights and the securities to which the rights relate under the Securities Act or an exemption from the registration requirements is available. Also, under the deposit agreement, the depositary bank will not make rights available to holders unless either both the rights and any related securities are registered under the Securities Act, or the distribution of them to ADS holders is exempted from registration under the Securities Act. We are under no obligation to file a registration statement with respect to any such rights or securities, to endeavor to cause such a registration statement to be declared effective or to establish an exemption from registration under the Securities Act. Accordingly, you may be unable to participate in such a rights offerings and may experience dilution in your holdings.\nThe market price of our ADSs may be volatile and may decline.\nThe market price of our ADSs could be volatile and may decline. The stock market in general, and the market for technology companies in particular, has experienced extreme volatility that has often been unrelated to the operating performance of particular companies, and the trading price of our ADSs may be volatile due to factors beyond our control. As a result of this volatility, you may not be able to sell your ADSs at or above the price at which you purchased your ADSs. The market price for our ADSs may be influenced by many factors, including, among others:\n•variations in our actual or anticipated annual or quarterly operating results or those of others in our industry;\n•results of operations that otherwise fail to meet the expectations of securities analysts and investors;\n•changes in earnings estimates or recommendations by securities analysts, or other changes in investor perceptions of the investment opportunity associated with our ordinary shares relative to other investment alternatives;\n•market conditions in the semiconductor industry;\n•changes to, or perceived changes to, our business model;\n•publications, reports or other media exposure of our licensed products, our business, or those of others in our industry, including reports or coverage by industry or equity research analysts, or of our industry generally;\n•announcements by us or others in our industry, or by our or their respective suppliers, distributors or other business partners, regarding, among other things, significant contracts, price reductions, capital commitments or other business developments, the entry into or termination of strategic transactions or relationships, securities offerings or other financing initiatives, and public reaction thereto;\n•additions or departures of key management;\n•significant lawsuits, including patent or shareholder litigation;\n49\n•regulatory actions involving us or others in our industry, or actual or anticipated changes in applicable government regulations or enforcement thereof;\n•the development and sustainability of an active trading market for our ordinary shares;\n•sales, or anticipated sales, of large blocks of our ADSs;\n•general economic and securities market conditions; and\n•other factors discussed in this “Risk Factors” section and elsewhere in this Annual Report.\nBroad market and industry factors may negatively affect the market price of our ADSs, regardless of our actual operating performance. Further, a decline in the financial markets and related factors beyond our control may cause the price of our ADSs to decline rapidly and unexpectedly. In the past, securities class action litigation has often been brought against a comp",
+      "content_sha256": "835f12dd0c4f62528992c60b076bfd55cb08c53f62586e108be5c67661db6d0a",
+      "excerpt_text": "nition may differ from the timing of invoicing to customers. When revenue recognized exceeds the amount billed or billable to the customer, the Company records a contract asset. Contract assets are transferred to accounts receivable when the right to invoice becomes unconditional. Contract assets increased by $259.1 million and $1,436.2 million due to the timing of billings to customers, which fell into subsequent periods, as of June 30, 2026 and March 31, 2026, respectively, offset by $308.7 million and $1,127.3 million of contract assets transferred to accounts receivable, as of June 30, 2026 and March 31, 2026, respectively. The balance and activity for loss allowances related to contract assets was immaterial for the periods presented.\nContract Liabilities\nA reconciliation of the movement in contract liabilities is as follows:\nAs of\n(in millions)\nJune 30, 2026\nMarch 31, 2026\nBeginning balance April 1,\n$\n1,046\n$\n911\nCustomer prepayment and billing in advance of performance\n110\n581\nRevenue recognized in the period that was included in the contract liability balance at the beginning of the period\n(138)\n(149)\nRevenue recognized in the period that was included in the contract liability balance during the period\n(79)\n(297)\nEnding balance\n$\n939\n$\n1,046\nSatisfied Performance Obligations\nFor the three months ended June 30, 2026 and 2025, revenue recognized from previously satisfied performance obligations in prior reporting periods was $735.8 million and $586.9 million, respectively. These amounts primarily represent royalties earned during the period.\n16\nTable of Contents\nArm Holdings plc\nNotes to Condensed Consolidated Financial Statements\n(Unaudited)\nRemaining Performance Obligations\nRemaining performance obligations represent the transaction price allocated to performance obligations that are unsatisfied, or partially unsatisfied, which includes unearned revenue and amounts that will be invoiced and recognized as revenue in future periods.\nThe Company has elected to exclude potential future royalty receipts from the disclosure of remaining performance obligations. In certain arrangements, the Company’s right to consideration may not correspond directly with the performance of obligations.\nIn the absence of sufficient information, where the timing of satisfaction of the remaining performance obligations is dependent on a customer’s action, the transaction price allocated to such performance obligation is included in the more than 2 years category unless the contract or option expiration aligns with an earlier period or category.\nAs of June 30, 2026, the aggregate transaction price allocated to remaining performance obligations was $2,122.6 million.\nThe Company expects to recognize approximately 24% of the remaining performance obligations as revenue over the next 12 months, 23% over the subsequent 13- to 24-month period, and the remainder thereafter.\n4 - Acquisitions\nAcquisitions\nIn October 2025, the Company entered into a definitive agreement to acquire all of the outstanding equity interests of DreamBig Semiconductor, Inc. (“DreamBig”) for approximately $265.0 million in cash, subject to purchase price adjustments. The addition of DreamBig’s advanced networking capabilities, technology, and engineering expertise is expected to enhance the Company’s portfolio and help it deliver more complete solutions. On July 1, 2026, the Company completed the acquisition of DreamBig. See Note 16 - Subsequent Events, for further details.\n5 - Equity Investments\nA summary of the components of equity investments is as follows:\nAs of\n(in millions)\nJune 30, 2026\nMarch 31, 2026\nEquity method investments under fair value option\n$\n141\n$\n148\nEquity investments in publicly listed companies\n290\n96\nEquity method investments under equity method\n12\n13\nNon-marketable equity securities\n146\n130\nTotal equity investments\n$\n589\n$\n387\nIncome (loss) from equity investments, net is as follows:\nThree Months Ended June 30,\n(in millions)\n2026\n2025\nEquity investments i",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 289000,
-        "char_start": 285000,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 53400,
+        "char_start": 49400,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:75",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:13",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "43f187393a35421a8ff65af2fa5f9c6fc892f22b264ca7b61dc4ccd2dab904dc",
-      "excerpt_text": "nterest income, net\n111\n2\n%\n116\n3\n%\n110\n3\n%\nOther non-operating income (loss), net\n132\n3\n%\n10\n0\n%\n11\n0\n%\nIncome (loss) before income taxes\n1,157\n24\n%\n720\n18\n%\n212\n7\n%\nIncome tax benefit (expense)\n(253)\n5\n%\n72\n2\n%\n94\n3\n%\nNet income (loss)\n$\n904\n18\n%\n$\n792\n20\n%\n$\n306\n9\n%\nPercentages are calculated from the amounts presented and may not add to their respective totals due to rounding.\nComparison of Performance for the Fiscal Years Ended March 31, 2026 and 2025\nTotal revenue\nFiscal Year Ended March 31,\nExternal Customers\nRelated Parties\nTotal\n(in millions, except percentages)\n2026\n2025\n% Change\n2026\n2025\n% Change\n2026\n2025\n% Change\nLicense and Other Revenue\n$\n1,298\n$\n1,421\n(9)\n%\n$\n1,009\n$\n418\n141\n%\n$\n2,307\n$\n1,839\n25\n%\nRoyalty Revenue\n2,123\n1,763\n20\n%\n490\n405\n21\n%\n2,613\n2,168\n21\n%\n$\n3,421\n$\n3,184\n7\n%\n$\n1,499\n$\n823\n82\n%\n$\n4,920\n$\n4,007\n23\n%\nTotal revenue increased $913 million, or 23%, to $4,920 million during the fiscal year ended March 31, 2026, from total revenue of $4,007 million during the fiscal year ended March 31, 2025. License and other revenue increased $468 million, or 25%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily driven by continued strong demand for Arm IP, as well as fluctuation in timing and size of multiple high-value license agreements and contributions from backlog into the current period from arrangements entered in prior periods. Royalty revenue increased $445 million, or 21%, during the fiscal year ended March 31, 2026 as compared to the fiscal\n72\nyear ended March 31, 2025, driven by an improved mix of products with higher royalty rates per chip, such as Armv9 technology.\nRevenue from external customers increased $237 million, or 7%, during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, driven by a $360 million, or 20%, increase in royalty revenue, offset by a $123 million, or 9%, decrease in license and other revenue. Revenue from related parties increased $676 million, or 82%, during the fiscal year ended March 31, 2026 as compared to the fiscal year ended March 31, 2025, primarily driven by a $591 million, or 141%, increase in license and other revenue and a $85 million, or 21%, increase in royalty revenue. The drivers for the changes in revenue from external customers for both periods were broadly aligned with the overall trends in license and other revenue and royalty revenue described above, with external customer revenue reflecting strong growth in royalty revenue that outweighed the decline in license and other revenue. For additional financial information relating to our revenue from related parties, see “Item 8. Financial Information—Note 20—Related Party Transactions” in the Notes to the Consolidated Financial Statements included in this Annual Report.\nIn March 2026, we announced the expansion of our compute platform into production silicon products with the Arm AGI CPU, which did not have a material impact to our revenue for the fiscal year ended March 31, 2026.\nDuring the fiscal years ended March 31, 2026 and 2025, revenue from sales to customers outside of the U.S. accounted for approximately 64% and approximately 57% of total revenue, respectively. Less than 2% of our total revenue is denominated in currencies other than U.S. dollars, and the impact of changes in foreign exchange rates on our revenue for the fiscal years ended March 31, 2026 and 2025 was immaterial.\nCost of sales\nFiscal Year Ended March 31,\n(in millions, except percentages)\n2026\n2025\n% Change\nCost of sales\n$\n(121)\n$\n(121)\n—\n%\nCost of sales remained flat during the fiscal year ended March 31, 2026, as compared to the fiscal year ended March 31, 2025, primarily due to decreases in activities associated with professional and design services, offset by increases in salaries and related expenses, share-based compensation costs and depreciation.\nResearch and development\nFiscal Year Ended March 31,\n(in millions, except percentag",
+      "content_sha256": "e4f7d9297bccb4168808eb39e29cb09dea40361d27e0593fa991e0bdbdd1f90a",
+      "excerpt_text": " currency, predominantly British Pound Sterling (“GBP”). These contracts are designated as cash flow hedges for hedge accounting treatment. Gains or losses on the contracts are recorded in accumulated other comprehensive income (loss) and reclassified to operating expenses when the related operating expenses are recognized in net income (loss) or ineffectiveness should occur.\n19\nTable of Contents\nArm Holdings plc\nNotes to Condensed Consolidated Financial Statements\n(Unaudited)\nAs of June 30, 2026, the notional value of outstanding foreign currency forward contracts designated as cash flow hedges was £470.0 million and the fair value was $(8.5) million.\nAs of March 31, 2026, the notional value of outstanding foreign currency forward contracts designated as cash flow hedges was £405.0 million and the fair value was $(9.5) million.\nThe following table presents the notional amounts of the Company’s outstanding derivative instruments:\nAs of\n(in millions)\nJune 30, 2026\nMarch 31, 2026\nDesignated as cash flow hedges\nForeign currency forward contracts\n$\n631\n$\n544\nThe following table presents the fair value of the Company’s outstanding derivative instruments:\nDerivative Assets\nDerivative Liabilities\nAs of\nAs of\n(in millions)\nJune 30,\n2026\nMarch 31,\n2026\nJune 30,\n2026\nMarch 31,\n2026\nDesignated as cash flow hedges\nForeign currency forward contracts\n$\n—\n$\n—\n$\n9\n$\n10\nCash Flow Hedge Gains (Losses)\nThe following table presents net gains (losses) on foreign currency forward contracts designated as cash flow hedges:\nThree Months Ended June 30,\n(in millions)\n2026\n2025\nCondensed Consolidated Statements of Comprehensive Income:\nChange in gains (losses) recognized in accumulated other comprehensive income (loss) on cash flow hedge derivatives\n$\n1\n$\n28\n(Gains) losses reclassified from accumulated other comprehensive income (loss) into income\n—\n(7)\nIncome tax benefit (expense) on cash flow hedges\n—\n(5)\nNet change in fair value of the effective portion of designated cash flow hedges, net of tax (1)\n$\n1\n$\n16\nCondensed Consolidated Income Statements, before tax:\nResearch and development\n$\n—\n$\n4\nSelling, general and administrative expenses\n$\n—\n$\n3\n(1) All amounts reported in accumulated other comprehensive income (loss) at the reporting date are expected to be reclassified into earnings within the next 12 months.\nFor the three months ended June 30, 2026 and 2025, the Company’s cash flow hedges were highly effective with immaterial amounts of ineffectiveness recorded in the Condensed Consolidated Income Statements for these designated cash flow hedges, and all components of each derivative instrument’s gain or loss were included in the assessment of hedge effectiveness.\nThe Company classifies foreign currency forward contracts as Level 2 fair value measurements pursuant to the fair value hierarchy. See Note 8 - Fair Value, for further details.\n20\nTable of Contents\nArm Holdings plc\nNotes to Condensed Consolidated Financial Statements\n(Unaudited)\n8 - Fair Value\nTo provide an indication about the reliability of the inputs used in determining fair value, the Company classifies its fair value financial instruments into the three levels prescribed under GAAP. An explanation of each level follows the tables and qualitative disclosures below. There were no transfers between fair value measurement levels for any periods presented.\nThe following table presents the Company’s fair value hierarchy for assets and liabilities measured and recognized at fair value, excluding investments where the NAV practical expedient has been elected, on a recurring basis:\nAs of June 30, 2026\nAs of March 31, 2026\n(in millions)\nLevel 1\nLevel 2\nLevel 3\nTotal\nLevel 1\nLevel 2\nLevel 3\nTotal\nFinancial assets\nMoney market funds\n$\n2,487\n$\n—\n$\n—\n$\n2,487\n$\n2,456\n$\n—\n$\n—\n$\n2,456\nShort-term investments (1)\n830\n—\n—\n830\n850\n—\n—\n850\nEquity investments (2)\n290\n—\n52\n342\n96\n—\n57\n153\nAvailable-for-sale debt securities\n—\n—\n18\n18\n—\n—\n13\n13\nTotal financial assets\n$\n3,607\n$\n—\n$\n70\n$\n3,677\n$\n3,402\n$\n—\n$\n70\n",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 399200,
-        "char_start": 395200,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 64800,
+        "char_start": 60800,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:104",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:16",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "cc184bcda18bcef87ca3f622cf8d0c67eafcdba10690fe9ad92463a3877e9ad4",
-      "excerpt_text": "lated transactions, has a value of over $20 million, in which case such transaction will be presented to the Board of Directors for review and approval or ratification; and\n•if the audit committee of our Board of Directors determines that a particular proposed transaction is to be conducted on an arm’s-length basis or upon terms generally available to third parties, such transaction will be exempt from the approval and ratification requirements of our related party transactions policy, provided that such transaction will be presented to our full Board of Directors for review and approval or ratification.\n•if the audit committee of our Board of Directors determines that a particular transaction does not meet the criteria in the preceding bullets, such transaction will require review and/or approval or ratification to the same extent as other related party transactions.\nIf one or more directors on the audit committee of our Board of Directors do not qualify as independent, determinations required to be made by the audit committee in accordance with the foregoing will be made by those directors on the audit committee which qualify as independent.\nInformation and Other Rights\nThe Shareholder Governance Agreement also provides, among other things, that, for so long as SoftBank Group consolidates us for the purposes of its consolidated financial statements or accounts for its investment in us under the equity method:\n•to the extent permitted by applicable law, we will in a timely manner provide SoftBank Group with information and data relating to our business and financial results so as to enable SoftBank Group and its controlled affiliates to satisfy their respective ongoing financial reporting, audit and other legal and regulatory requirements;\n•to the extent permitted by applicable law, we will in a timely manner provide SoftBank Group with access to our auditors, personnel, data, information and systems, in each case in the same manner as we do immediately prior to the date of our listing on Nasdaq and on or prior to any reasonable deadline set by SoftBank Group for receipt of such information, data or access;\n•to the extent permitted by applicable law, we will consult with SoftBank Group in a timely manner (i) prior to the disclosure and filing of our annual and quarterly earnings information and related periodic reports and (ii) prior to the disclosure of any information that may reasonably be considered material to SoftBank Group or in which\n116\nSoftBank Group is named, in each case taking into account all of SoftBank Group’s reasonable comments or advice prior to the filing thereof;\n•we will inform SoftBank Group promptly of any events or developments that might reasonably be expected to materially affect our financial results; and\n•certain of our executive officers and employees will provide quarterly certifications regarding our disclosure controls and procedures and internal control over financial reporting, as reasonably requested by SoftBank Group in a timely manner.\nWe have also agreed to provide SoftBank Group with such information as SoftBank Group may reasonably require to facilitate the compliance by SoftBank Group and its controlled affiliates with their respective global legal, regulatory and tax obligations in a timely manner.\nSoftBank Group Consultation Rights\nFor so long as we are a consolidated subsidiary of SoftBank Group, if we propose to (i) change our independent auditor to a firm outside of the professional services networks commonly referred to as the “Big Four accounting firms” or (ii) make any material changes in our accounting policies applicable to our financial statements prepared under International Financial Reporting Standards, the Shareholder Governance Agreement requires us to provide SoftBank Group with prior written notice of such proposed changes, consult with SoftBank Group in good faith regarding the rationale for such proposed changes, and use our reasonable endeavors to resolve any disa",
+      "content_sha256": "151b9516468a30d016b7fb3df36bd11fcb7eb2651fd33459c5ad73d368aefd50",
+      "excerpt_text": "cts to semiconductor companies, OEMs, CSPs and other organizations to design their chips. Our customers license our IP products for a fee, which gives them access to our designs and enables them to create Arm-based chips. Once a chip has been designed and manufactured with our products, we receive a per-unit royalty on substantially all chips shipped. The royalty has typically been based on a percentage of the ASP of the chip or a fixed fee per unit, and it typically increases as more Arm products are included in the chip. As of March 2026, we also expanded our offerings to include Arm-designed silicon products with the introduction of the Arm AGI CPU, with production expected by the end of calendar year 2026. Our business model enables the widest range of customers with a broad set of options to access Arm products through an agreement best suited to their particular business needs. Our business model includes:\n•Arm Total Access Agreements: Under an Arm Total Access agreement, we license a portfolio of CPU designs and related technologies to a customer in return for an annual fee determined at execution of the agreement. We retain the right, from time to time, to add or remove specific products from the package. The agreement is for a fixed term and may limit the number of concurrent chip designs that may use products from the package.\n•Arm Flexible Access Agreements: Under an Arm Flexible Access agreement, we license a portfolio of CPU designs and related technologies to a customer in return for an annual fee determined at execution of the agreement. Unlike an Arm Total Access license, the package of products licensed pursuant to an Arm Flexible Access agreement will not contain our latest products. Although customers are free to experiment with products contained in the Arm Flexible Access package, they must pay a single use license fee for specific products if they include Arm products in a final chip design “tape out,” when the final result of a semiconductor chip design is sent for manufacturing. As with an Arm Total Access agreement, we retain the right, from time to time, to add or remove specific products from the package.\n31\nTable of Contents\n•Technology Licensing Agreements (TLA): Under a TLA, we license a single CPU design or other technology design to a customer in return for a fixed license fee. The license may be limited by term (i.e., the number of years during which the licensee is entitled to incorporate our products in new chip designs, but licensees typically have the right to manufacture designs perpetually) and/or by number of uses (i.e., the number of concurrent chip designs that may use our products).\n•Architecture License Agreements (ALA): Under an ALA, the licensee is allowed to develop their own highly customized CPU designs that are compliant with the Arm instruction set architecture (“ISA”) for a fixed architecture license fee. As the creation of an optimized CPU is very costly and time consuming, architecture licensees will often also license Arm CPU designs to use either as a complementary processor alongside the licensee’s Arm-compliant CPU design, or in other chips where the licensee’s own design is unsuitable.\n•Royalty Fees: We generate the majority of our revenue from customers who enter into license agreements, pursuant to which we receive royalty fees based on average selling price of the customer’s Arm-based chip or a fixed fee per chip. Royalty revenue is impacted primarily by the adoption of our products by the licensee as well as other factors, such as product lifecycles, customer’s business performance, market trends and global supply constraints.\nKey Factors and Trends Affecting Our Operating Results\nWe believe that the growth of our business and our future success are dependent upon many factors, including those described in the section titled “Item 3. Key Information—D. Risk Factors” and elsewhere in the Annual Report as well as the factors described below. While each of these facto",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 574000,
-        "char_start": 570000,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 106600,
+        "char_start": 102600,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:150",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:27",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "f06a42b14926886fa7f7b5bb6f25f26f017daad438263ce5f2d436113a98fefc",
-      "excerpt_text": "ise risks that are subject to oversight by the Board of Directors, the Audit Committee, and management’s Risk Review Committee. The Company’s cybersecurity policies, standards and incident response practices generally follow recognized frameworks established by National Institute of Standards and Technology (“NIST”). The Company approaches cybersecurity threats, as such term is defined in Form 20-F, Part II, Item 16K(a), through a cross-functional, multilayered approach, with the specific goals of: (i) identifying, preventing and mitigating actual or potential cybersecurity threats to the Company; (ii) preserving the confidentiality, integrity and availability of the information that we collect and store to use in our business; (iii) protecting the Company’s intellectual property; (iv) maintaining the confidence of our customers, clients and business partners; and (v) providing appropriate public disclosure of cybersecurity risks and incidents when required.\nRisk Management and Strategy\nConsistent with overall ERM policies and practices, the Company’s cybersecurity program focuses on the following areas:\n•Vigilance: The Company maintains a global presence, with 24/7 cyber defense operations focusing on identifying, preventing and mitigating cybersecurity threats and responding to cybersecurity incidents and vulnerabilities in accordance with our established security incident response plan.\n•Systems Safeguards: The Company deploys system safeguards where feasible that are designed to protect the Company’s information systems from cybersecurity threats, including firewalls, intrusion prevention and detection systems, anti-malware functionality and access controls, which are evaluated and improved through ongoing vulnerability assessments and cybersecurity threat intelligence.\n•Incident Response and Recovery Planning: The Company has established comprehensive security incident response plans that fully address the Company’s response to a cybersecurity threat, including the recovery from a cybersecurity incident, which is tested outside of real incident response at least annually.\n•Collaboration: The Company’s security incident response plan contains mechanisms to collaborate with public and private entities, including intelligence and enforcement agencies, industry groups and third-party service providers, to identify, assess and respond to cybersecurity threats.\n•Third-Party Risk Management: The Company maintains a comprehensive, risk-based approach to identifying and overseeing cybersecurity risks presented by third parties, including vendors, service providers and other external users of the Company’s systems, as well as the systems of third parties that could adversely impact our business in the event of a cybersecurity threat affecting those third-party systems.\n•Training: The Company provides annual mandatory training for personnel regarding cybersecurity threats, which reinforces the Company’s information security policies, standards and practices, and such training is scaled to reflect the roles, responsibilities and information systems access of such personnel.\n•Communication, Coordination and Disclosure: The Company has established a cross-functional approach to address the risk from cybersecurity threats, involving management personnel from the Company’s enterprise security, technology, operations, legal, business continuity management, internal audit and other key business functions, as well as the members of the Board of Directors and the Audit Committee in an ongoing dialogue regarding cybersecurity threats and incidents, while also implementing controls and procedures for the escalation of cybersecurity incidents pursuant to established thresholds so that decisions regarding the disclosure and reporting of such incidents can be made by management in a timely manner.\n•Governance: The Board of Directors’ oversight of cybersecurity risk management is supported by the Audit Committee, which regularly interacts with the",
+      "content_sha256": "a2875d709fce84364b6ab8b21610d6cd819be02b3781e7c156d1f08eea77c4bb",
+      "excerpt_text": "pportunities to secure more design wins for our products, which results in greater opportunities to increase our recurring royalty revenue.\nPerformance of Arm China\nWe utilize our commercial relationship with Arm China to access the PRC market for IP revenue, and substantially all of our PRC-related revenue is generated through the IPLA with Arm China, a related party. Arm China has the right to sublicense our processor technology pursuant to the IPLA. Our responsibility under the IPLA is to facilitate delivery of our processor technology to Arm China’s end customers in accordance with detailed instructions and other specifications from Arm China. Our revenue is calculated as a percentage of license and royalty fees earned by Arm China from sub-license arrangements entered into with its end customers. Where our revenue is earned as a percentage of the license fee received by Arm China, we categorize such revenue as our license revenue. Our share of Arm China’s royalties is categorized as royalty revenue in our financial statements. Despite our reliance on Arm China through our commercial relationship with\n33\nTable of Contents\nit, both as a source of revenue and a conduit to the important PRC market, Arm China operates independently of us. Under the IPLA, Arm China’s payments due to us are determined based on the financial information that Arm China provides to us. Accordingly, we are dependent on Arm China providing us with reliable and timely financial information. Additionally, political actions, including trade and national security policies of the U.S. and PRC governments, such as tariffs, placing companies on restricted lists, or new end-use controls, have in the past, currently do and could in the future limit or prevent us, directly or through our commercial relationship with Arm China, from transacting business with certain PRC customers or suppliers, limit, prevent or discourage certain PRC customers or suppliers from transacting business with us or Arm China, or make it more expensive to do so, which could adversely affect demand for our products. Total revenue derived from Arm China decreased during the three months ended June 30, 2026 as compared to the three months ended June 30, 2025. License revenue from Arm China decreased during the three months ended June 30, 2026 as compared to the three months ended June 30, 2025 due to fluctuations in the timing and size of multiple high-value license agreements and in contributions from backlog into the current period from arrangements entered in prior periods. Royalty revenue increased during the three months ended June 30, 2026 as compared to the three months ended June 30, 2025, driven primarily by an improved mix of products with higher royalty rates per chip.\nDevelopments in Export Control Regulations\nThe Bureau of Industry and Security of the U.S. Department of Commerce (“BIS”), significantly extended the reach of U.S. export controls on the semiconductor industry, in particular advanced computing chips and services, in a series of rules and guidance published over the past year.\nThe collective impact of the rules, described below, have in the past and may in the future reduce our ability to license our products directly to entities and end users in affected countries and could potentially harm our commercial relationships by limiting the ability of certain of our customers and partners to manufacture, ship, or receive chips and end products incorporating certain of our products.\nIn June 2026, the U.S. Department of Defense (“DoD”) released an updated “Section 1260H” list, which identifies companies that the Secretary of Defense has determined are \"Chinese military companies operating directly or indirectly in the United States.\" Effective June 30, 2026, the DoD implemented a prohibition where it cannot procure products and services, through a contract or subcontract at any tier from 1260H listed entities as well as entities on the Department of Treasury’s Office of",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 847600,
-        "char_start": 843600,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 118000,
+        "char_start": 114000,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:222",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:30",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "3f70b59faddddae7a1ca0dde4d748fa647bc4283067bac52df0d7180ad3f9c1d",
-      "excerpt_text": "ts can be made by management in a timely manner.\n•Governance: The Board of Directors’ oversight of cybersecurity risk management is supported by the Audit Committee, which regularly interacts with the Company’s VP of Audit and Risk, the Chief Information Security Officer, and other members of management involved in overseeing risks from cybersecurity threats.\nA key part of the Company’s strategy for managing risks from cybersecurity threats is the ongoing assessment and testing of the Company’s processes and practices through auditing, assessments, tabletop exercises, threat modeling, vulnerability testing and other exercises focused on evaluating the effectiveness of our cybersecurity measures. The Company regularly engages third parties to perform assessments on our cybersecurity measures, including information security maturity assessments, penetration testing, audits and independent reviews of our information security control environment and operating effectiveness. The results of such assessments, audits and reviews are reported to the Audit\n199\nCommittee and the Board of Directors, and the Company adjusts its cybersecurity policies, standards, processes and practices as necessary based on the information provided by the assessments, audits and reviews.\nGovernance\nThe Board of Directors, in coordination with the Audit Committee, oversees the management of risks from cybersecurity threats, including the policies, standards, processes and practices that the Company’s management implements to address risks from cybersecurity threats. The Audit Committee receives regular presentations and reports on cybersecurity risks, which address a wide range of topics including, for example, recent developments, evolving standards, vulnerability assessments, third-party and independent reviews, the threat environment, technological trends and information security considerations arising with respect to the Company’s peers and third parties. The Audit Committee timely oversees any cybersecurity incident that meets established reporting thresholds, as well as ongoing updates regarding any such incident until it has been addressed. Risks of cybersecurity threats are also discussed with the Board of Directors in connection with other relevant matters such as enterprise risk management, operational budgeting, strategic planning, business continuity planning, mergers and acquisitions, and brand management.\nThe Company’s Chief Information Security Officer is the member of the Company’s management that is principally responsible for overseeing the Company’s security incident response plan and cybersecurity risk management program. The Chief Information Security Officer works in partnership with members of the Company’s Risk Review Committee and other business leaders across the Company, including the Chief Information Officer, Chief Accounting Officer, VP and Deputy General Counsel, Litigation, and the Chief Compliance Officer.\nThe Company’s Chief Information Security Officer reports to the CFO. This group has industry experience building and leading security teams and is responsible for overseeing data security and Company-wide preparedness. The Chief Information Security Officer is a qualified holder of CISSP and CISM certifications and has served in various roles in information technology and information security for over 10 years. Prior experience includes security leadership roles in financial services.\nThe Company’s Chief Information Security Officer manages a dedicated enterprise security team who provide information assurance governance and consultation across all regions of our business.\nThe enterprise security team works collaboratively across the Company to implement the Company’s security strategy, which includes evaluating and considering the relevance of specific cyber security capabilities to the Company’s business model and external threats. To facilitate the success of this strategy, multidisciplinary teams throughout the Company",
+      "content_sha256": "ce20bcf576b21eca19e27cdd9e42b0ec02f01bfeedbc279f0dce8ea335f3010f",
+      "excerpt_text": "quity method investments, and gains and losses on other marketable and non-marketable securities. Our proportionate share of income or loss from equity method investments accounted for under the equity method is recognized in the subsequent quarter of which such income or loss is recognized by our investee.\nInterest Income, Net\nInterest income consists primarily of interest received on cash and cash equivalents, short-term investments that we hold with various financial institutions, and loans receivable. Interest expense primarily relates to accretion on intangible asset obligations and interest on finance leases.\nOther Non-Operating Income (Loss), Net\nOther non-operating income (loss), net consists of one-time gains and losses and other miscellaneous income and expense items unrelated to our core operations, including gains or losses arising from changes in the fair value of derivative financial instruments, gains or losses on realized and unrealized foreign currency exchange including foreign exchange contracts, changes in the fair value of convertible loans receivable, and gains or losses on business divestitures.\nIncome Tax Benefit (Expense)\nIncome tax benefit (expense) consists of income taxes incurred in the United Kingdom and the foreign jurisdictions in which we operate. For additional information, see Note 11 - Income Taxes.\n38\nTable of Contents\nResults of Operations\nThe following table sets forth the components of operations from our unaudited Condensed Consolidated Income Statements and such data as a percentage of total revenue on an absolute basis, for the periods indicated:\nThree Months Ended June 30,\n(in millions, except percentages)\n2026\n% of revenue\n2025\n% of revenue\nRevenue:\nRevenue from external customers\n$\n901\n70\n%\n$\n725\n69\n%\nRevenue from related parties\n388\n30\n%\n328\n31\n%\nTotal revenue\n1,289\n100\n%\n1,053\n100\n%\nCost of sales\n(36)\n3\n%\n(30)\n3\n%\nGross profit (loss)\n1,253\n97\n%\n1,023\n97\n%\nOperating expenses:\nResearch and development\n(838)\n65\n%\n(650)\n62\n%\nSelling, general and administrative\n(317)\n25\n%\n(259)\n25\n%\nDisposal, restructuring and other operating expenses, net\n(7)\n1\n%\n—\n0\n%\nTotal operating expenses\n(1,162)\n90\n%\n(909)\n86\n%\nOperating income (loss)\n91\n7\n%\n114\n11\n%\nIncome (loss) from equity investments, net\n128\n10\n%\n4\n—\n%\nInterest income, net\n31\n2\n%\n27\n3\n%\nOther non-operating income (loss), net\n3\n—\n%\n1\n—\n%\nIncome (loss) before income taxes\n253\n20\n%\n146\n14\n%\nIncome tax benefit (expense)\n17\n1\n%\n(16)\n2\n%\nNet income (loss)\n$\n270\n21\n%\n$\n130\n12\n%\nPercentages are calculated from the amounts presented and may not add to their respective totals due to rounding.\nTotal revenue\nThree Months Ended June 30,\nExternal Customers\nRelated Parties\nTotal\n(in millions, except percentages)\n2026\n2025\n% Change\n2026\n2025\n% Change\n2026\n2025\n% Change\nLicense and Other Revenue\n$\n310\n$\n255\n22\n%\n$\n264\n$\n213\n24\n%\n$\n574\n$\n468\n23\n%\nRoyalty Revenue\n591\n470\n26\n%\n124\n115\n8\n%\n715\n585\n22\n%\n$\n901\n$\n725\n24\n%\n$\n388\n$\n328\n18\n%\n$\n1,289\n$\n1,053\n22\n%\nTotal revenue increased $236 million, or 22%, to $1,289 million during the three months ended June 30, 2026, from total revenue of $1,053 million during the three months ended June 30, 2025.\nLicense and other revenue increased $106 million, or 23%, during the three months ended June 30, 2026 as compared to the three months ended June 30, 2025. License and other revenue increase was driven by continued strong demand for Arm IP, as well as fluctuation in the timing and size of multiple high-value license agreements and contributions from backlog into the current period from arrangements entered in prior periods.\nRoyalty revenue increased $130 million, or 22%, during the three months ended June 30, 2026 as compared to the three months ended June 30, 2025. Royalty revenue increase was generally driven by an improved mix of products with\n39\nTable of Contents\nhigher royalty rates per chip, such as Armv9 and Arm CSS technology, and increased deployment of Arm-based chips in data centers.\nRevenue from external custo",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 851400,
-        "char_start": 847400,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 140800,
+        "char_start": 136800,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:223",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:36",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-26T20:35:23.000+00:00",
+      "accepted_at": "2026-07-29T20:05:46.000+00:00",
       "authority": "primary_official",
-      "content_sha256": "b42e3bc342170097b681f40cafa6ae09eb3c1274cb8a5e84f51a0bda35d704e7",
-      "excerpt_text": "1800\n11.1\n05/29/2024\n201\n101\nThe following materials from the Company’s Annual Report on Form 20-F for the year ended March 31, 2025, were formatted in Inline XBRL (Extensible Business Reporting Language): (i) Consolidated Balance Sheets, (ii) Consolidated Statements of Comprehensive Income, (iii) Consolidated Statements of Shareholders’ Equity, (iv) Consolidated Statements of Cash Flows, and (v) Notes to Consolidated Financial Statements. The instance document does not appear in the Interactive Data File because its XBRL tags are embedded within the Inline XBRL document.\nX\n104\nCover page Interactive Data File - the cover page XBRL tags are embedded within the Inline XBRL.\nX\n* Furnished herewith.\n202\nSIGNATURE\nThe registrant hereby certifies that it meets all of the requirements for filing on Form 20-F and that it has duly caused and authorized the undersigned to sign this annual report on its behalf.\nARM HOLDINGS PLC\nDate: May 26, 2026\nBy:\n/s/ Laura Bartels\nName:\nLaura Bartels\nTitle:\nChief Accounting Officer\n(Principal Accounting Officer)\n203",
+      "content_sha256": "df8b620b18acac6f676ad9b062db1c26e00c5ad653eb4ef65fea9ea5c5c033ac",
+      "excerpt_text": "at either do not generally require estimates and judgments that are as difficult or subjective, or it is less likely that such accounting policies would have a material impact on our reported results of operations for a given period.\nExcept for the accounting policies and estimates outlined under Note 1 - Description of Business and Summary of Significant Accounting Policies in the Notes to the Condensed Consolidated Financial Statements included in this Quarterly Report, there have been no material changes during the three months ended June 30, 2026 to the items that we disclosed as our significant accounting policies and estimates in the Management’s Discussion and Analysis of Financial Condition and Results of Operations section in our Annual Report.\n43\nTable of Contents\nSIGNATURE\nPursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned, thereunto duly authorized.\nARM HOLDINGS PLC\nDate: July 29, 2026\nBy:\n/s/ Laura Bartels\nName:\nLaura Bartels\nTitle:\nChief Accounting Officer\n(Principal Accounting Officer)\n44",
       "locator": {
-        "accession_number": "0001973239-26-000097",
-        "char_end": 856059,
-        "char_start": 855000,
+        "accession_number": "0001973239-26-000114",
+        "char_end": 153125,
+        "char_start": 152000,
         "cik": "1973239",
-        "form": "20-F",
+        "form": "6-K",
         "parser": {
           "id": "phase5r_sec_text_normalizer",
           "version": "1.0.0"
         }
       },
-      "source_id": "sec-1973239-0001973239-26-000097-4af06d10d13a0672:chunk:225",
+      "source_id": "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:40",
       "source_type": "sec_filing_text_chunk",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "accepted_at": "2026-07-29T17:19:27-04:00",
       "authority": "primary_official_metadata",
-      "content_sha256": "442f54c218a82eea747ad95d5f081b17059266d4b1403b4a8e99660d3ddb5e1f",
+      "content_sha256": "6b614f860e2186dbd1c969bca69df7ac954d71a1a5efb0608999571be7038add",
       "excerpt_text": "",
       "locator": {
-        "accession_number": "0001973239-26-000097",
+        "accession_number": "0001973239-26-000114",
         "cik": "1973239",
-        "filing_date": "2026-05-26",
-        "form": "20-F"
+        "filing_date": "2026-07-29",
+        "form": "6-K"
       },
-      "source_id": "sec-filing-metadata:0001973239-26-000097",
+      "source_id": "sec-filing-metadata:0001973239-26-000114",
       "source_type": "sec_filing_metadata",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000114/arm-20260630.htm",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-05-06T20:02:16.000+00:00",
+      "accepted_at": "2026-07-29T20:02:28.000+00:00",
       "authority": "primary_official_metadata",
-      "content_sha256": "ba65914b75972a7bc13c0ab86e473bb1d7e9550eedfe4c75aab4d4b3ea2bbbc1",
+      "content_sha256": "40874973d0eed8e3f197cc0e0717c603b026fba6eb177b315c3862fadc9aae72",
       "excerpt_text": "",
       "locator": {
-        "accession_number": "0001973239-26-000062",
+        "accession_number": "0001973239-26-000113",
         "cik": "1973239",
         "field": "acceptanceDateTime",
-        "filing_date": "2026-05-06"
+        "filing_date": "2026-07-29"
       },
-      "source_id": "sec-acceptance:0001973239-26-000062",
+      "source_id": "sec-acceptance:0001973239-26-000113",
       "source_type": "sec_submission_acceptance",
       "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-07-23T23:51:39-04:00",
+      "accepted_at": "2026-07-29T20:02:28.000+00:00",
+      "authority": "primary_official",
+      "content_sha256": "180928f01894482835c93b5cca6578463370eb6cc5ceddd8124a999198f344e1",
+      "excerpt_text": "arm-20260729\n00019732392026-07-292026-07-2900019732392026-04-012026-06-30\nUNITED STATES\nSECURITIES AND EXCHANGE COMMISSION\nWashington, D.C. 20549\nForm 6-K\nREPORT OF FOREIGN PRIVATE ISSUER PURSUANT TO RULE 13a-16 OR 15d-16 UNDER THE SECURITIES EXCHANGE ACT OF 1934\nFor the month of July, 2026\nCommission file number 001-41800\nArm Holdings plc\n110 Fulbourn Road\nCambridge\nUnited Kingdom\n(Address of principal executive office)\nIndicate by check mark whether the registrant files or will file annual reports under cover of Form 20-F or Form 40-F.\nForm 20-F ☒ Form 40-F ☐\nEXHIBIT INDEX\nExhibit Number\nDescription\n99.1\nEarnings Press Release dated July 29, 2026\n99.2\nShareholder Letter dated July 29, 2026\nSIGNATURES\nPursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned, thereunto duly authorized.\nARM HOLDINGS PLC\nDate: July 29, 2026\nBy:\n/s/ Laura Bartels\nName:\nLaura Bartels\nTitle:\nChief Accounting Officer\n(Principal Accounting Officer)",
+      "locator": {
+        "accession_number": "0001973239-26-000113",
+        "char_end": 1039,
+        "char_start": 0,
+        "cik": "1973239",
+        "form": "6-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000113-0cda3ebc94c9e914:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000113/arm-20260729.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-07-29T17:19:27-04:00",
       "authority": "primary_official_metadata",
-      "content_sha256": "dfec44ed829ef68ca839e766627a6abbc7e577281e8515673334d5cda80b110e",
+      "content_sha256": "c203425675d72d9b1aae33221dea34590d464117a0872d4959b75cf2cb462540",
       "excerpt_text": "",
       "locator": {
-        "accession_number": "0001973239-26-000062",
+        "accession_number": "0001973239-26-000113",
         "cik": "1973239",
-        "filing_date": "2026-05-06",
+        "filing_date": "2026-07-29",
         "form": "6-K"
       },
-      "source_id": "sec-filing-metadata:0001973239-26-000062",
+      "source_id": "sec-filing-metadata:0001973239-26-000113",
       "source_type": "sec_filing_metadata",
-      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000062/arm-20260506.htm",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000113/arm-20260729.htm",
       "ticker": "ARM"
     },
     {
@@ -2348,7 +2937,7 @@
     {
       "accepted_at": "2026-07-18T18:11:42-04:00",
       "authority": "derived_not_primary",
-      "content_sha256": "4bc8d4333b5c726bd28a50f1d0973c0f6e6799375105c83c5d65bce94305d1b7",
+      "content_sha256": "ce58ec08156186ee869c8865405f10b1ea762f424f4543220e33fda6f5dd40e1",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_c5_c9",
@@ -2390,7 +2979,7 @@
     {
       "accepted_at": "2026-07-18T18:11:42-04:00",
       "authority": "derived_not_primary",
-      "content_sha256": "8857486d8f1a879995987aa3fbb7e85b4db6df40d74f6345f2291f92de2439cc",
+      "content_sha256": "8266d897de5e3916cad21c8d687ab4fcdb6a15653f8c7351452391f5db6acef3",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_c5_c9",

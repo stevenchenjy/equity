@@ -1,6 +1,6 @@
 # Phase 5R-B2 Data Source Decision
 
-Generated: `2026-08-03T19:30:57-04:00`
+Generated: `2026-08-07T09:55:11+08:00`
 
 ## Decision
 
@@ -16,6 +16,11 @@ Generated: `2026-08-03T19:30:57-04:00`
 | QQQ | n/a | n/a | n/a | failed |
 | XLK | n/a | n/a | n/a | failed |
 | SPY | n/a | n/a | n/a | failed |
+
+## Failure Commit Boundary
+
+- The current source failure is blocking and this refresh exits nonzero.
+- The prior coherent canonical output trio was preserved byte-for-byte; it was not re-dated or treated as a successful current refresh.
 
 ## Boundary
 

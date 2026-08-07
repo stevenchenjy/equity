@@ -2,40 +2,35 @@
   "baseline_mode": false,
   "filings_recorded": 0,
   "fundamental_request_errors": [],
-  "fundamental_rows": 0,
-  "held_coverage_complete": false,
-  "held_failures": [
-    "IOT",
-    "RBRK"
-  ],
-  "held_fundamental_coverage_complete": false,
-  "held_fundamental_failures": [
-    "IOT",
-    "RBRK"
-  ],
+  "fundamental_rows": 6,
+  "held_coverage_complete": true,
+  "held_failures": [],
+  "held_fundamental_coverage_complete": true,
+  "held_fundamental_failures": [],
   "held_tickers": [
     "IOT",
     "RBRK"
   ],
-  "last_attempt_at": "2026-08-03T19:31:02-04:00",
-  "last_success_at": "2026-07-30T08:18:01-04:00",
+  "last_attempt_at": "2026-08-06T19:58:23-04:00",
+  "last_success_at": "2026-08-06T19:59:05-04:00",
   "network_used": true,
   "new_material_accessions": [],
   "new_material_event_count": 0,
   "optional_missing_tickers": [],
-  "reason": "held_ticker_sec_scan_failed",
-  "request_errors": [
-    "ARM:URLError",
-    "AVGO:URLError",
-    "IOT:URLError",
-    "MU:URLError",
-    "PANW:URLError",
-    "RBRK:URLError",
-    "SPY:URLError"
+  "reason": "complete",
+  "request_errors": [],
+  "scan_status": "ok",
+  "scanned_tickers": [
+    "ARM",
+    "AVGO",
+    "IOT",
+    "MU",
+    "PANW",
+    "RBRK",
+    "SPY"
   ],
-  "scan_status": "held_coverage_failed",
-  "scanned_tickers": [],
   "schema_version": "phase5r_daily_evidence_status_v1",
+  "sec_acceptance_reconciliation_count": 35,
   "sec_acceptance_record_count": 611,
   "sec_acceptance_source": "SEC submissions acceptanceDateTime"
 }

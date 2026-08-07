@@ -195,6 +195,10 @@ class EvidenceContractV2HandoffTests(unittest.TestCase):
         self.assertEqual(result["human_review_status"], "not_performed")
         self.assertEqual(result["hash_rule"], RAW_BYTES_HASH_RULE)
         self.assertTrue(result["execution_prohibited"])
+        self.assertEqual(
+            result["verified_local_artifacts"]["packet"]["packet_id"],
+            "packet-evidence-contract-v2",
+        )
         for field in (
             "upstream_validation_verified",
             "semantic_validation_established",

@@ -4,9 +4,10 @@ import csv
 import hashlib
 import math
 import os
+import re
 from datetime import datetime
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 from phase5r_c9_common import (
     ACCOUNT_STATE,
@@ -86,6 +87,14 @@ RUN_LOG_FIELDS = [
     "notes",
 ]
 
+_SHA256_PATTERN = re.compile(r"[0-9a-f]{64}")
+_APPLIED_RECONCILIATION_ACCEPTED_STATES = frozenset(
+    {
+        "historical_account_hash_match",
+        "owner_account_snapshot_after_reconciliation",
+    }
+)
+
 
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
@@ -93,6 +102,75 @@ def sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(65536), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def applied_reconciliation_current_state_status(
+    reconciliation: Mapping[str, object],
+    *,
+    current_positions_sha256: str,
+    current_account_sha256: str,
+    current_account_last_updated: object,
+) -> str:
+    """Classify whether a current C9 state remains consistent with one fill.
+
+    C9B reconciliation hashes are historical raw-byte evidence and must never
+    be rewritten merely because the Project Owner later confirms a current
+    account snapshot.  A later snapshot is compatible only when the reconciled
+    position bytes remain exact, the current account state has already passed
+    the C9 schema validator, and its timestamp is strictly after the
+    reconciliation's public-price reference.  This is not a fill replay or a
+    waiver of C9 arithmetic checks.
+    """
+
+    expected_positions = str(reconciliation.get("positions_sha256_after", "")).strip()
+    expected_account = str(reconciliation.get("account_sha256_after", "")).strip()
+    if (
+        _SHA256_PATTERN.fullmatch(expected_positions) is None
+        or _SHA256_PATTERN.fullmatch(expected_account) is None
+        or _SHA256_PATTERN.fullmatch(current_positions_sha256) is None
+        or _SHA256_PATTERN.fullmatch(current_account_sha256) is None
+    ):
+        return "reconciliation_hash_invalid"
+    if current_positions_sha256 != expected_positions:
+        return "positions_hash_mismatch"
+    if current_account_sha256 == expected_account:
+        return "historical_account_hash_match"
+
+    reference_timestamp = str(
+        reconciliation.get("reference_price_timestamp", "")
+    ).strip()
+    if not isinstance(current_account_last_updated, str):
+        return "account_refresh_timestamp_invalid"
+    try:
+        reference_at = datetime.fromisoformat(reference_timestamp)
+        updated_at = datetime.fromisoformat(current_account_last_updated)
+    except ValueError:
+        return "account_refresh_timestamp_invalid"
+    if reference_at.tzinfo is None or updated_at.tzinfo is None:
+        return "account_refresh_timestamp_invalid"
+    if updated_at <= reference_at:
+        return "account_refresh_timestamp_not_newer"
+    return "owner_account_snapshot_after_reconciliation"
+
+
+def applied_reconciliation_matches_current_state(
+    reconciliation: Mapping[str, object],
+    *,
+    current_positions_sha256: str,
+    current_account_sha256: str,
+    current_account_last_updated: object,
+) -> bool:
+    """Return the closed accepted subset of reconciliation-state statuses."""
+
+    return (
+        applied_reconciliation_current_state_status(
+            reconciliation,
+            current_positions_sha256=current_positions_sha256,
+            current_account_sha256=current_account_sha256,
+            current_account_last_updated=current_account_last_updated,
+        )
+        in _APPLIED_RECONCILIATION_ACCEPTED_STATES
+    )
 
 
 def optional_float(value: object, field: str) -> float | None:
@@ -296,6 +374,8 @@ def append_c9b_log(
 
 __all__ = [
     "ACCOUNT_STATE",
+    "applied_reconciliation_current_state_status",
+    "applied_reconciliation_matches_current_state",
     "C9B_RUN_LOG",
     "C9_INHIBIT",
     "CONFIRMED_REPORT",

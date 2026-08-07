@@ -1,0 +1,4 @@
+# Isolated production-shadow runtime dependency.
+# Authentication remains external to the repository; this file contains no key
+# or provider configuration.
+openai==2.49.0

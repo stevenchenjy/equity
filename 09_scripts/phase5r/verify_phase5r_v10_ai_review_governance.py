@@ -234,6 +234,10 @@ def _verify_adoption_record(
         "ai_review_legacy_canonical_sha256",
         "interactive_ai_session",
         "human_review_requirement_waived",
+        "human_review_waiver_scope",
+        "human_review_protocol_completed",
+        "independent_human_validation_claim_permitted",
+        "original_protocol_status",
         "canonical_authority_created",
         "blind_key_access_authorized",
         "email_authority_created",
@@ -248,7 +252,7 @@ def _verify_adoption_record(
     if set(record) != required:
         issues.append("adoption_record_schema_invalid")
         return
-    if record["schema_version"] != "phase5r_governance_amendment_adoption_v1":
+    if record["schema_version"] != "phase5r_governance_amendment_adoption_v2":
         issues.append("adoption_record_schema_version_invalid")
     if record["amendment_version"] != "v10-ai-review-limited-1":
         issues.append("adoption_record_amendment_version_invalid")
@@ -300,8 +304,23 @@ def _verify_adoption_record(
         or session.get("repository_initiated_provider_call_authorized") is not False
     ):
         issues.append("adoption_record_interactive_session_invalid")
+    if record["human_review_requirement_waived"] is not True:
+        issues.append("adoption_record_human_review_requirement_waiver_missing")
+    if (
+        record["human_review_waiver_scope"]
+        != "project_owner_internal_noncanonical_use_only"
+    ):
+        issues.append("adoption_record_human_review_waiver_scope_invalid")
+    if record["human_review_protocol_completed"] is not False:
+        issues.append("adoption_record_human_review_protocol_must_remain_incomplete")
+    if record["independent_human_validation_claim_permitted"] is not False:
+        issues.append("adoption_record_independent_human_validation_must_remain_false")
+    if (
+        record["original_protocol_status"]
+        != "no_go_pending_independent_review_preserved_historical"
+    ):
+        issues.append("adoption_record_original_protocol_status_invalid")
     prohibited_true = (
-        "human_review_requirement_waived",
         "canonical_authority_created",
         "blind_key_access_authorized",
         "email_authority_created",
@@ -558,10 +577,11 @@ def verify(
                         break
 
     required_draft_phrases = (
-        "Draft only — not adopted and not effective",
+        "Adoption-controlled text — not effective unless a separately completed",
         "repository-initiated API or provider",
         "presumed non-independent",
         "anonymous-review protocol remains unchanged",
+        "project_owner_internal_noncanonical_use_only",
         "SHA-256 over exact raw\nfile bytes",
         "phase5r_v10_ai_assisted_review_adoption_record_template.json",
     )

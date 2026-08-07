@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 from datetime import date, datetime, timezone
+import math
 from pathlib import Path
 from typing import Any
 
@@ -51,6 +52,11 @@ def timestamp() -> str:
 def read_csv(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
+
+
+def csv_header(path: Path) -> list[str]:
+    with path.open(newline="", encoding="utf-8") as handle:
+        return next(csv.reader(handle), [])
 
 
 def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
@@ -183,18 +189,45 @@ def market_row_from_history(ticker: str, history: Any | None, now: str) -> dict[
     return row
 
 
-def retrieve_full_universe(tickers: list[str], now: str) -> tuple[list[dict[str, str]], str]:
+def retrieve_full_universe(
+    tickers: list[str], now: str
+) -> tuple[list[dict[str, str]], str, bool]:
     try:
         dataset = yf.download(
             tickers=tickers, period="1y", interval="1d", group_by="ticker", auto_adjust=False,
             progress=False, threads=False,
         )
-        return [market_row_from_history(ticker, history_for_ticker(dataset, ticker), now) for ticker in tickers], "full-universe public daily history retrieved"
+        return (
+            [
+                market_row_from_history(
+                    ticker, history_for_ticker(dataset, ticker), now
+                )
+                for ticker in tickers
+            ],
+            "full-universe public daily history retrieved",
+            True,
+        )
     except Exception as exc:
-        return [empty_market_row(ticker, "yfinance_public_market_data_error", now) for ticker in tickers], f"full-universe retrieval failed safely: {exc.__class__.__name__}"
+        return (
+            [
+                empty_market_row(
+                    ticker, "yfinance_public_market_data_error", now
+                )
+                for ticker in tickers
+            ],
+            f"full-universe retrieval failed safely: {exc.__class__.__name__}",
+            False,
+        )
 
 
-def write_decision(smoke_rows: list[dict[str, str]], smoke_passed: bool, full_note: str, held_tickers: list[str]) -> None:
+def write_decision(
+    smoke_rows: list[dict[str, str]],
+    smoke_passed: bool,
+    full_note: str,
+    held_tickers: list[str],
+    *,
+    prior_outputs_preserved: bool = False,
+) -> None:
     lines = [
         "# Phase 5R-B2 Data Source Decision", "", f"Generated: `{timestamp()}`", "",
         "## Decision", "", "- Selected source: `yfinance_public_market_data`.",
@@ -206,6 +239,16 @@ def write_decision(smoke_rows: list[dict[str, str]], smoke_passed: bool, full_no
     ]
     for row in smoke_rows:
         lines.append(f"| {row['ticker']} | {row['last_price'] or 'n/a'} | {row['previous_close'] or 'n/a'} | {row['volume'] or 'n/a'} | {row['status']} |")
+    if prior_outputs_preserved:
+        lines.extend(
+            [
+                "",
+                "## Failure Commit Boundary",
+                "",
+                "- The current source failure is blocking and this refresh exits nonzero.",
+                "- The prior coherent canonical output trio was preserved byte-for-byte; it was not re-dated or treated as a successful current refresh.",
+            ]
+        )
     lines.extend([
         "", "## Boundary", "", "- Candidate rows come only from the canonical Phase 5R universe.",
         f"- Current-position price-monitoring rows: `{','.join(held_tickers) if held_tickers else 'none'}`; only current local ticker symbols were added to the public snapshot.",
@@ -215,7 +258,15 @@ def write_decision(smoke_rows: list[dict[str, str]], smoke_passed: bool, full_no
     DECISION_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_data_report(rows: list[dict[str, str]], candidate_count: int, held_count: int, smoke_passed: bool, full_note: str) -> None:
+def write_data_report(
+    rows: list[dict[str, str]],
+    candidate_count: int,
+    held_count: int,
+    smoke_passed: bool,
+    full_note: str,
+    *,
+    prior_outputs_preserved: bool = False,
+) -> None:
     counts: dict[str, int] = {}
     for row in rows:
         counts[row["data_quality_label"]] = counts.get(row["data_quality_label"], 0) + 1
@@ -228,6 +279,15 @@ def write_data_report(rows: list[dict[str, str]], candidate_count: int, held_cou
         f"- Full-universe retrieval: `{full_note}`.", f"- Data quality counts: `{counts}`.", "",
         "## Interpretation Boundary", "", "This is a read-only daily research snapshot. Public prices may be delayed and signals require independent, human review. It is not a broker-connected system and cannot execute a trade.",
     ]
+    if prior_outputs_preserved:
+        lines.extend(
+            [
+                "",
+                "## Failure Commit Boundary",
+                "",
+                "The current source failure remains blocking. The displayed rows are an unchanged prior coherent baseline, not a new market-data observation.",
+            ]
+        )
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
     REPORT_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -242,63 +302,399 @@ def append_audit(action: str, inputs: str, outputs: str, status: str, notes: str
     append_csv(RUN_LOG, row)
 
 
-def main() -> None:
+def finite_number(value: str) -> float | None:
+    parsed = number(value)
+    return parsed if parsed is not None and math.isfinite(parsed) else None
+
+
+def unique_rows_by_ticker(
+    rows: list[dict[str, str]], expected_tickers: set[str]
+) -> dict[str, dict[str, str]] | None:
+    indexed: dict[str, dict[str, str]] = {}
+    for row in rows:
+        ticker = row.get("ticker", "").strip().upper()
+        if not ticker or ticker not in expected_tickers or ticker in indexed:
+            return None
+        indexed[ticker] = row
+    return indexed if set(indexed) == expected_tickers else None
+
+
+def parse_iso_datetime(value: str) -> bool:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return parsed.tzinfo is not None
+
+
+def prior_outputs_are_coherent(
+    *,
+    universe: list[dict[str, str]],
+    tickers: list[str],
+    held_tickers: list[str],
+) -> tuple[bool, list[dict[str, str]], str]:
+    """Validate a prior B2 trio before leaving it untouched after source failure.
+
+    This intentionally does not judge freshness: preserved files retain their
+    original timestamps, and downstream market-session gates remain responsible
+    for rejecting an old observation.  It only prevents a failed current fetch
+    from replacing a structurally coherent prior baseline with empty rows.
+    """
+
+    required_paths = (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH)
+    if not all(path.exists() for path in required_paths):
+        return False, [], "prior_output_missing"
+    try:
+        if (
+            csv_header(SNAPSHOT_PATH) != MARKET_FIELDS
+            or csv_header(QUALITY_PATH) != QUALITY_FIELDS
+            or csv_header(CANDIDATES_PATH) != CANDIDATE_FIELDS
+        ):
+            return False, [], "prior_output_schema_mismatch"
+        market_rows = read_csv(SNAPSHOT_PATH)
+        quality_rows = read_csv(QUALITY_PATH)
+        candidate_rows = read_csv(CANDIDATES_PATH)
+    except (OSError, StopIteration, UnicodeError, csv.Error):
+        return False, [], "prior_output_unreadable"
+    if any(
+        None in row for rows in (market_rows, quality_rows, candidate_rows) for row in rows
+    ):
+        return False, [], "prior_output_extra_cells"
+
+    expected_market_tickers = {ticker.strip().upper() for ticker in tickers}
+    expected_candidate_tickers = {
+        row.get("ticker", "").strip().upper() for row in universe
+    }
+    if (
+        not expected_market_tickers
+        or not expected_candidate_tickers
+        or len(expected_market_tickers) != len(tickers)
+        or len(expected_candidate_tickers) != len(universe)
+    ):
+        return False, [], "current_input_ticker_coverage_invalid"
+    market_by_ticker = unique_rows_by_ticker(market_rows, expected_market_tickers)
+    quality_by_ticker = unique_rows_by_ticker(
+        quality_rows, expected_market_tickers
+    )
+    candidates_by_ticker = unique_rows_by_ticker(
+        candidate_rows, expected_candidate_tickers
+    )
+    if not market_by_ticker or not quality_by_ticker or not candidates_by_ticker:
+        return False, [], "prior_output_ticker_coverage_invalid"
+
+    required_positive_fields = {
+        "last_price",
+        "previous_close",
+    }
+    required_nonnegative_fields = {
+        "volume",
+        "average_volume",
+        "relative_volume",
+        "dollar_volume",
+    }
+    optional_positive_fields = {
+        "day_high",
+        "day_low",
+        "fifty_two_week_high",
+        "fifty_two_week_low",
+    }
+    held_set = {ticker.strip().upper() for ticker in held_tickers}
+    for ticker, market in market_by_ticker.items():
+        if (
+            market.get("data_source") != "yfinance_public_market_data"
+            or market.get("data_quality_label") != quality_label(market)
+            or market.get("data_quality_label") == "insufficient_data"
+            or not parse_iso_datetime(market.get("data_timestamp", ""))
+        ):
+            return False, [], f"prior_market_row_invalid:{ticker}"
+        if ticker in held_set and market.get("data_quality_label") != "ok":
+            return False, [], f"prior_held_market_quality_invalid:{ticker}"
+        try:
+            date.fromisoformat(market.get("market_session_date", ""))
+            age = int(market.get("market_age_calendar_days", ""))
+        except ValueError:
+            return False, [], f"prior_market_provenance_invalid:{ticker}"
+        if age < 0:
+            return False, [], f"prior_market_age_invalid:{ticker}"
+        if any(
+            finite_number(market.get(field, "")) is None
+            or finite_number(market.get(field, "")) <= 0
+            for field in required_positive_fields
+        ):
+            return False, [], f"prior_market_positive_value_invalid:{ticker}"
+        if any(
+            finite_number(market.get(field, "")) is None
+            or finite_number(market.get(field, "")) < 0
+            for field in required_nonnegative_fields
+        ) or finite_number(market.get("intraday_change_pct", "")) is None:
+            return False, [], f"prior_market_numeric_value_invalid:{ticker}"
+        if any(
+            market.get(field, "")
+            and (
+                finite_number(market[field]) is None
+                or finite_number(market[field]) <= 0
+            )
+            for field in optional_positive_fields
+        ):
+            return False, [], f"prior_market_optional_value_invalid:{ticker}"
+        quality = quality_by_ticker[ticker]
+        missing = [field for field in CORE_FIELDS if not market[field]]
+        usable = "yes" if not missing else "no"
+        expected_notes = (
+            "read-only public row ready for scoring"
+            if usable == "yes"
+            else "data unavailable; preserved as insufficient_data without invented values"
+        )
+        if (
+            quality.get("data_source") != market["data_source"]
+            or quality.get("data_quality_label") != market["data_quality_label"]
+            or quality.get("missing_fields") != ";".join(missing)
+            or quality.get("usable_for_scoring", "").lower() != usable
+            or quality.get("notes") != expected_notes
+        ):
+            return False, [], f"prior_quality_row_invalid:{ticker}"
+
+    universe_by_ticker = {
+        row["ticker"].strip().upper(): row for row in universe
+    }
+    seed_fields = (
+        "ticker",
+        "company_name",
+        "sector",
+        "industry",
+        "theme",
+        "liquidity_tier",
+        "volatility_tier",
+        "is_benchmark",
+        "max_position_pct",
+    )
+    for ticker, candidate in candidates_by_ticker.items():
+        market = market_by_ticker[ticker]
+        seed = universe_by_ticker[ticker]
+        missing = [field for field in CORE_FIELDS if not market[field]]
+        usable = "yes" if not missing else "no"
+        expected_candidate_note = (
+            "daily public data attached"
+            if usable == "yes"
+            else "insufficient public data; do not score"
+        )
+        if (
+            any(candidate.get(field) != seed.get(field) for field in seed_fields)
+            or any(
+                candidate.get(field) != market.get(field)
+                for field in MARKET_FIELDS[1:]
+            )
+            or candidate.get("market_data_usable", "").lower() != usable
+            or candidate.get("candidate_note") != expected_candidate_note
+        ):
+            return False, [], f"prior_candidate_row_invalid:{ticker}"
+    return True, market_rows, "prior_output_trio_coherent"
+
+
+def main() -> int:
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
         raise RuntimeError("Canonical Phase 5R universe is empty")
     if set(SMOKE_TICKERS) - set(candidate_tickers):
-        raise RuntimeError("Canonical universe must include QQQ, XLK, and SPY for the preflight")
+        raise RuntimeError(
+            "Canonical universe must include QQQ, XLK, and SPY for the preflight"
+        )
     if not LOCAL_POSITIONS_PATH.exists():
         raise RuntimeError("Current local positions are required for C9 price monitoring")
     current_positions = read_csv(LOCAL_POSITIONS_PATH)
-    held_tickers = sorted({row.get("ticker", "").strip().upper() for row in current_positions if row.get("ticker", "").strip()})
+    held_tickers = sorted(
+        {
+            row.get("ticker", "").strip().upper()
+            for row in current_positions
+            if row.get("ticker", "").strip()
+        }
+    )
     if not held_tickers:
         raise RuntimeError("Current local positions contain no ticker symbols")
     tickers = list(candidate_tickers)
-    tickers.extend(ticker for ticker in held_tickers if ticker not in set(candidate_tickers))
+    tickers.extend(
+        ticker for ticker in held_tickers if ticker not in set(candidate_tickers)
+    )
 
     smoke_rows, smoke_passed = smoke_test()
-    append_audit("benchmark_smoke_test", "QQQ;XLK;SPY", "in_memory_preflight_only", "passed" if smoke_passed else "failed", "sequence=1; full_universe_fetch_not_started_before_this_check")
+    append_audit(
+        "benchmark_smoke_test",
+        "QQQ;XLK;SPY",
+        "in_memory_preflight_only",
+        "passed" if smoke_passed else "failed",
+        "sequence=1; full_universe_fetch_not_started_before_this_check",
+    )
     now = timestamp()
+    source_failure = False
+    prior_outputs_preserved = False
+    prior_validation_reason = "not_checked"
     if smoke_passed:
-        market_rows, full_note = retrieve_full_universe(tickers, now)
-        append_audit("full_universe_market_data_refresh", ";".join(str(path.relative_to(ROOT)) for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]), str(SNAPSHOT_PATH.relative_to(ROOT)), "complete", "sequence=2; smoke_test_passed=yes; held_tickers_price_only=yes")
+        market_rows, full_note, full_retrieval_succeeded = retrieve_full_universe(
+            tickers, now
+        )
+        source_failure = not full_retrieval_succeeded
+        append_audit(
+            "full_universe_market_data_refresh",
+            ";".join(
+                str(path.relative_to(ROOT))
+                for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]
+            ),
+            str(SNAPSHOT_PATH.relative_to(ROOT)),
+            "complete" if full_retrieval_succeeded else "failed",
+            "sequence=2; smoke_test_passed=yes; "
+            f"full_retrieval_succeeded={'yes' if full_retrieval_succeeded else 'no'}; "
+            "held_tickers_price_only=yes; "
+            f"fail_safe_stop={'no' if full_retrieval_succeeded else 'yes'}",
+        )
     else:
-        market_rows = [empty_market_row(ticker, "yfinance_smoke_test_failed", now) for ticker in tickers]
+        market_rows = [
+            empty_market_row(ticker, "yfinance_smoke_test_failed", now)
+            for ticker in tickers
+        ]
         full_note = "not attempted because benchmark preflight failed"
-        append_audit("full_universe_market_data_refresh", ";".join(str(path.relative_to(ROOT)) for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]), str(SNAPSHOT_PATH.relative_to(ROOT)), "not_attempted", "sequence=2; smoke_test_passed=no; fail_safe_stop=yes; held_tickers_price_only=yes")
+        source_failure = True
+        append_audit(
+            "full_universe_market_data_refresh",
+            ";".join(
+                str(path.relative_to(ROOT))
+                for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]
+            ),
+            str(SNAPSHOT_PATH.relative_to(ROOT)),
+            "not_attempted",
+            "sequence=2; smoke_test_passed=no; fail_safe_stop=yes; "
+            "held_tickers_price_only=yes",
+        )
 
-    market_by_ticker = {row["ticker"]: row for row in market_rows}
-    quality_rows: list[dict[str, str]] = []
-    candidates: list[dict[str, str]] = []
-    for ticker in tickers:
-        market = market_by_ticker[ticker]
-        missing = [field for field in CORE_FIELDS if not market[field]]
-        usable = "yes" if not missing else "no"
-        quality_rows.append({
-            "ticker": ticker, "data_source": market["data_source"], "data_quality_label": market["data_quality_label"],
-            "missing_fields": ";".join(missing), "usable_for_scoring": usable,
-            "notes": "read-only public row ready for scoring" if usable == "yes" else "data unavailable; preserved as insufficient_data without invented values",
-        })
-    for seed in universe:
-        ticker = seed["ticker"].upper()
-        market = market_by_ticker[ticker]
-        missing = [field for field in CORE_FIELDS if not market[field]]
-        usable = "yes" if not missing else "no"
-        candidate = {key: seed[key] for key in ("ticker", "company_name", "sector", "industry", "theme", "liquidity_tier", "volatility_tier", "is_benchmark", "max_position_pct")}
-        candidate.update({field: market[field] for field in MARKET_FIELDS[1:]})
-        candidate.update({"market_data_usable": usable, "candidate_note": "daily public data attached" if usable == "yes" else "insufficient public data; do not score"})
-        candidates.append(candidate)
+    if source_failure:
+        (
+            prior_outputs_preserved,
+            prior_market_rows,
+            prior_validation_reason,
+        ) = prior_outputs_are_coherent(
+            universe=universe,
+            tickers=tickers,
+            held_tickers=held_tickers,
+        )
+        if prior_outputs_preserved:
+            market_rows = prior_market_rows
 
-    write_csv(SNAPSHOT_PATH, market_rows, MARKET_FIELDS)
-    write_csv(QUALITY_PATH, quality_rows, QUALITY_FIELDS)
-    write_csv(CANDIDATES_PATH, candidates, CANDIDATE_FIELDS)
-    write_decision(smoke_rows, smoke_passed, full_note, held_tickers)
-    write_data_report(market_rows, len(universe), len([ticker for ticker in held_tickers if ticker not in set(candidate_tickers)]), smoke_passed, full_note)
-    append_audit("write_b2_market_data_outputs", ";".join(str(path.relative_to(ROOT)) for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]), ";".join(str(path.relative_to(ROOT)) for path in [SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH, DECISION_PATH, REPORT_PATH]), "complete", f"snapshot_rows={len(market_rows)}; candidate_rows={len(universe)}; held_price_rows={len([ticker for ticker in held_tickers if ticker not in set(candidate_tickers)])}; smoke_test_passed={'yes' if smoke_passed else 'no'}")
-    print(f"Phase 5R-B2 smoke_test_passed={smoke_passed}; market_rows={len(market_rows)}")
+    if not prior_outputs_preserved:
+        market_by_ticker = {row["ticker"]: row for row in market_rows}
+        quality_rows: list[dict[str, str]] = []
+        candidates: list[dict[str, str]] = []
+        for ticker in tickers:
+            market = market_by_ticker[ticker]
+            missing = [field for field in CORE_FIELDS if not market[field]]
+            usable = "yes" if not missing else "no"
+            quality_rows.append(
+                {
+                    "ticker": ticker,
+                    "data_source": market["data_source"],
+                    "data_quality_label": market["data_quality_label"],
+                    "missing_fields": ";".join(missing),
+                    "usable_for_scoring": usable,
+                    "notes": (
+                        "read-only public row ready for scoring"
+                        if usable == "yes"
+                        else "data unavailable; preserved as insufficient_data without invented values"
+                    ),
+                }
+            )
+        for seed in universe:
+            ticker = seed["ticker"].upper()
+            market = market_by_ticker[ticker]
+            missing = [field for field in CORE_FIELDS if not market[field]]
+            usable = "yes" if not missing else "no"
+            candidate = {
+                key: seed[key]
+                for key in (
+                    "ticker",
+                    "company_name",
+                    "sector",
+                    "industry",
+                    "theme",
+                    "liquidity_tier",
+                    "volatility_tier",
+                    "is_benchmark",
+                    "max_position_pct",
+                )
+            }
+            candidate.update({field: market[field] for field in MARKET_FIELDS[1:]})
+            candidate.update(
+                {
+                    "market_data_usable": usable,
+                    "candidate_note": (
+                        "daily public data attached"
+                        if usable == "yes"
+                        else "insufficient public data; do not score"
+                    ),
+                }
+            )
+            candidates.append(candidate)
+
+        write_csv(SNAPSHOT_PATH, market_rows, MARKET_FIELDS)
+        write_csv(QUALITY_PATH, quality_rows, QUALITY_FIELDS)
+        write_csv(CANDIDATES_PATH, candidates, CANDIDATE_FIELDS)
+
+    write_decision(
+        smoke_rows,
+        smoke_passed,
+        full_note,
+        held_tickers,
+        prior_outputs_preserved=prior_outputs_preserved,
+    )
+    write_data_report(
+        market_rows,
+        len(universe),
+        len(
+            [
+                ticker
+                for ticker in held_tickers
+                if ticker not in set(candidate_tickers)
+            ]
+        ),
+        smoke_passed,
+        full_note,
+        prior_outputs_preserved=prior_outputs_preserved,
+    )
+    written_paths = [DECISION_PATH, REPORT_PATH]
+    if not prior_outputs_preserved:
+        written_paths = [
+            SNAPSHOT_PATH,
+            QUALITY_PATH,
+            CANDIDATES_PATH,
+            *written_paths,
+        ]
+    append_audit(
+        "write_b2_market_data_outputs",
+        ";".join(
+            str(path.relative_to(ROOT))
+            for path in [UNIVERSE_PATH, LOCAL_POSITIONS_PATH]
+        ),
+        ";".join(str(path.relative_to(ROOT)) for path in written_paths),
+        (
+            "source_failure_prior_outputs_preserved"
+            if source_failure and prior_outputs_preserved
+            else "source_failure_insufficient_outputs_written"
+            if source_failure
+            else "complete"
+        ),
+        f"snapshot_rows={len(market_rows)}; candidate_rows={len(universe)}; "
+        f"held_price_rows={len([ticker for ticker in held_tickers if ticker not in set(candidate_tickers)])}; "
+        f"smoke_test_passed={'yes' if smoke_passed else 'no'}; "
+        f"source_failure={'yes' if source_failure else 'no'}; "
+        f"prior_outputs_preserved={'yes' if prior_outputs_preserved else 'no'}; "
+        f"prior_validation={prior_validation_reason}",
+    )
+    print(
+        f"Phase 5R-B2 smoke_test_passed={smoke_passed}; "
+        f"market_rows={len(market_rows)}; "
+        f"source_failure_blocking={str(source_failure).lower()}; "
+        f"prior_outputs_preserved={str(prior_outputs_preserved).lower()}"
+    )
+    return 1 if source_failure else 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

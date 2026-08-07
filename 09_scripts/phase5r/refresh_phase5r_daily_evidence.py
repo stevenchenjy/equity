@@ -8,6 +8,7 @@ configuration, connects to a broker, or creates orders.
 from __future__ import annotations
 
 import argparse
+import csv
 import os
 import re
 import time
@@ -38,17 +39,21 @@ from phase5r_daily_common import (
 )
 from phase5r_sec_acceptance import (
     AcceptanceIndexError,
-    build_acceptance_index,
-    load_acceptance_index,
+    AcceptanceReconciliationError,
+    SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
+    load_immutable_acceptance_index,
     make_acceptance_record,
     normalize_acceptance_timestamp,
-    write_acceptance_index,
+    reconcile_current_acceptance_records,
+    write_acceptance_reconciliation_log,
 )
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+SEC_USER_AGENT_ENV = "PHASE5R_SEC_USER_AGENT"
+_SEC_USER_AGENT_MAX_CHARS = 512
 RELEVANT_FORMS = {
     "10-K",
     "10-Q",
@@ -396,6 +401,106 @@ def merge_seen_accessions(
     return merged
 
 
+def sec_user_agent_failure_reason(value: Any) -> str | None:
+    """Return a finite configuration result without retaining the value."""
+
+    if not isinstance(value, str) or not value.strip():
+        return "sec_user_agent_missing"
+    normalized = value.strip()
+    if (
+        len(normalized) > _SEC_USER_AGENT_MAX_CHARS
+        or "\r" in normalized
+        or "\n" in normalized
+        or "@localhost" in normalized.lower()
+        or "@" not in normalized
+    ):
+        return "sec_user_agent_invalid"
+    return None
+
+
+def write_early_evidence_failure_status(
+    *,
+    attempt_at: str,
+    state: dict[str, Any],
+    held_tickers: list[str],
+    reason: str,
+    network_used: bool,
+) -> None:
+    """Close the SEC gate before any current evidence artifact can advance."""
+
+    status = {
+        "schema_version": "phase5r_daily_evidence_status_v1",
+        "last_attempt_at": attempt_at,
+        "last_success_at": state.get("last_success_at", ""),
+        "scan_status": "failed",
+        "reason": reason,
+        "held_tickers": held_tickers,
+        "held_coverage_complete": False,
+        "new_material_event_count": 0,
+        "network_used": network_used,
+    }
+    atomic_write_json(EVIDENCE_STATUS_PATH, status)
+    log_daily_run(
+        component="evidence_refresh",
+        run_mode="live_public_read",
+        outcome="failed",
+        reason=reason,
+    )
+
+
+def acceptance_index_failure_reason(exc: AcceptanceIndexError) -> str:
+    """Map acceptance validation failures to closed, non-sensitive status codes."""
+
+    if isinstance(exc, AcceptanceReconciliationError):
+        return "sec_acceptance_reconciliation_rejected"
+    message = str(exc)
+    if "conflicting SEC acceptance records" in message:
+        return "sec_acceptance_conflict"
+    if "later than index generation time" in message:
+        return "sec_acceptance_future_timestamp"
+    return "sec_acceptance_index_invalid"
+
+
+def write_acceptance_index_failure_status(
+    *,
+    attempt_at: str,
+    state: dict[str, Any],
+    held_tickers: list[str],
+    reason: str,
+) -> None:
+    """Durably close the evidence gate without persisting uncommitted SEC data."""
+
+    status = {
+        "schema_version": "phase5r_daily_evidence_status_v1",
+        "last_attempt_at": attempt_at,
+        "last_success_at": state.get("last_success_at", ""),
+        "scan_status": "failed",
+        "reason": reason,
+        "held_tickers": held_tickers,
+        "scanned_tickers": [],
+        "held_coverage_complete": False,
+        "held_failures": held_tickers,
+        "held_fundamental_coverage_complete": False,
+        "held_fundamental_failures": held_tickers,
+        "optional_missing_tickers": [],
+        "request_errors": [reason],
+        "fundamental_request_errors": [],
+        "fundamental_rows": 0,
+        "filings_recorded": 0,
+        "baseline_mode": not bool(state.get("initialized")),
+        "new_material_event_count": 0,
+        "new_material_accessions": [],
+        "network_used": True,
+    }
+    atomic_write_json(EVIDENCE_STATUS_PATH, status)
+    log_daily_run(
+        component="evidence_refresh",
+        run_mode="live_public_read",
+        outcome="failed",
+        reason=reason,
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true", help="static no-network check")
@@ -413,10 +518,6 @@ def main() -> int:
         return 0
 
     attempt_at = iso_now()
-    user_agent = os.environ.get(
-        "PHASE5R_SEC_USER_AGENT",
-        "Phase5R-LocalResearch/1.0 research-contact@localhost",
-    )
     state = read_json(
         EVIDENCE_STATE_PATH,
         {
@@ -425,6 +526,18 @@ def main() -> int:
             "seen_accessions": {},
         },
     )
+    user_agent = os.environ.get(SEC_USER_AGENT_ENV, "")
+    user_agent_reason = sec_user_agent_failure_reason(user_agent)
+    if user_agent_reason is not None:
+        write_early_evidence_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=user_agent_reason,
+            network_used=False,
+        )
+        print(f"scan_status=failed reason={user_agent_reason}")
+        return 1
     initialized = bool(state.get("initialized"))
     seen_by_ticker = merge_seen_accessions(
         state.get("seen_accessions", {}),
@@ -435,30 +548,20 @@ def main() -> int:
     fundamental_rows: list[dict[str, str]] = []
     missing_tickers: list[str] = []
     new_material_events: list[dict[str, str]] = []
-    prior_acceptance_index = load_acceptance_index()
+    prior_acceptance_index = load_immutable_acceptance_index()
     new_acceptance_records: list[dict[str, str]] = []
+    pending_ledger_rows: list[dict[str, str]] = []
     filings_recorded = 0
 
     try:
         ticker_map = load_ticker_map(user_agent, args.force_ticker_map)
     except (OSError, ValueError, urllib.error.URLError) as exc:
-        status = {
-            "schema_version": "phase5r_daily_evidence_status_v1",
-            "last_attempt_at": attempt_at,
-            "last_success_at": state.get("last_success_at", ""),
-            "scan_status": "failed",
-            "reason": "sec_ticker_map_unavailable",
-            "held_tickers": held_tickers,
-            "held_coverage_complete": False,
-            "new_material_event_count": 0,
-            "network_used": True,
-        }
-        atomic_write_json(EVIDENCE_STATUS_PATH, status)
-        log_daily_run(
-            component="evidence_refresh",
-            run_mode="live_public_read",
-            outcome="failed",
+        write_early_evidence_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
             reason="sec_ticker_map_unavailable",
+            network_used=True,
         )
         print(f"scan_status=failed reason=sec_ticker_map_unavailable type={type(exc).__name__}")
         return 1
@@ -532,7 +635,10 @@ def main() -> int:
                 "material_event": material_event if is_new else "no",
                 "review_required": review_required if is_new else "no",
             }
-            append_csv_durable(EVIDENCE_LEDGER_PATH, LEDGER_FIELDS, row)
+            # Do not append an uncommitted filing row.  The acceptance index
+            # is validated as one merged snapshot below before any current
+            # evidence artifact is allowed to advance.
+            pending_ledger_rows.append(row)
             filings_recorded += 1
             existing.add(accession)
             if is_new and row["material_event"] == "yes":
@@ -561,13 +667,46 @@ def main() -> int:
         for ticker in held_tickers
         if fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
     )
+    # Validate current official records against the immutable acceptance index
+    # before mutating current fundamentals or the filing ledger. Only the
+    # separately auditable timestamp-reconciliation log may advance here; the
+    # historical index is never overwritten by this workflow.
+    try:
+        reconciliations = reconcile_current_acceptance_records(
+            historical_records=prior_acceptance_index["records"],
+            current_records=new_acceptance_records,
+            reconciled_at=iso_now(),
+        )
+        write_acceptance_reconciliation_log(
+            reconciliations,
+            path=SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
+        )
+    except AcceptanceIndexError as exc:
+        reason = acceptance_index_failure_reason(exc)
+        write_acceptance_index_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=reason,
+        )
+        print(f"scan_status=failed reason={reason}")
+        return 1
+    except (OSError, UnicodeError, csv.Error):
+        reason = "sec_acceptance_reconciliation_log_unavailable"
+        write_acceptance_index_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=reason,
+        )
+        print(f"scan_status=failed reason={reason}")
+        return 1
+
+    # Reconciliation-log persistence occurs before any current ledger or
+    # fundamentals write so a log failure cannot advance either artifact.
+    for row in pending_ledger_rows:
+        append_csv_durable(EVIDENCE_LEDGER_PATH, LEDGER_FIELDS, row)
     atomic_write_csv(FUNDAMENTALS_PATH, FUNDAMENTAL_FIELDS, fundamental_rows)
-    acceptance_index = build_acceptance_index(
-        prior_records=prior_acceptance_index["records"],
-        new_records=new_acceptance_records,
-        generated_at=iso_now(),
-    )
-    write_acceptance_index(acceptance_index)
     success_at = iso_now()
     state.update(
         {
@@ -608,8 +747,9 @@ def main() -> int:
         "new_material_accessions": [
             row["accession_number"] for row in new_material_events
         ],
-        "sec_acceptance_record_count": acceptance_index["record_count"],
-        "sec_acceptance_source": acceptance_index["source_authority"],
+        "sec_acceptance_record_count": prior_acceptance_index["record_count"],
+        "sec_acceptance_source": prior_acceptance_index["source_authority"],
+        "sec_acceptance_reconciliation_count": len(reconciliations),
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)

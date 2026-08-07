@@ -1,0 +1,28 @@
+{
+  "schema_version": "phase5r_future_v2_offline_integration_project_owner_authorization_v1",
+  "policy_owner": "Steven Chen",
+  "authority": "project owner",
+  "decision": "authorized_design_and_offline_implementation_only",
+  "effective_at_et": "2026-08-03T23:55:08-04:00",
+  "scope": "future-v2-offline-integration-v1",
+  "permitted_capabilities": [
+    "isolated_offline_cli",
+    "synthetic_or_local_future_handoff_artifacts",
+    "evidence_validation",
+    "citation_checks",
+    "claim_span_checks",
+    "disagreement_logging",
+    "noncanonical_internal_research_quality_outputs"
+  ],
+  "canonical_effect": false,
+  "reads_v10_sealed_artifacts": false,
+  "reads_blind_key": false,
+  "reads_completion_records": false,
+  "reads_credentials": false,
+  "reads_historical_runner_state": false,
+  "modifies_historical_pilots_journals_receipts_policies_or_runners": false,
+  "provider_api_browser_or_network_authorized": false,
+  "provider_integration_authorized": false,
+  "trading_broker_account_order_email_scheduler_or_execution_authority_created": false,
+  "notes": "This record captures the 2026-08-03 Project Owner authorization. It is limited to design, implementation, local verification, and offline internal-quality outputs. A separate exact-handoff owner-approval reference is still required by the CLI for each future handoff."
+}

@@ -15,6 +15,7 @@ from phase5r_daily_common import (
     load_inhibit,
     log_daily_run,
 )
+from phase5r_production_shadow_email_gate import observation_email_suppressed
 
 
 SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
@@ -95,6 +96,20 @@ def execute(send: bool) -> int:
             )
             print(
                 "daily_pipeline_outcome=passed mode=no_send "
+                "email_attempted=false email_sent=false"
+            )
+            return 0
+        if observation_email_suppressed():
+            log_daily_run(
+                component="daily_pipeline",
+                run_mode="scheduled_send_suppressed_observation",
+                outcome="passed",
+                reason="production_shadow_observation_email_suppressed",
+                email_attempted="no",
+                email_sent="no",
+            )
+            print(
+                "daily_pipeline_outcome=passed mode=observation_email_suppressed "
                 "email_attempted=false email_sent=false"
             )
             return 0

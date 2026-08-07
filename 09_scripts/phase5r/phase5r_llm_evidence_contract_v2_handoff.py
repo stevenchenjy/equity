@@ -823,6 +823,19 @@ def verify_future_v2_handoff(
             "blind_key_access_authorized": False,
             "unblinding_authorized": False,
             "independent_human_review_satisfied": False,
+            # These values are snapshots of artifacts whose raw-byte hashes and
+            # contract bindings were just validated above.  They are returned
+            # only for a separately authorized local post-check in the same
+            # offline process; they confer no authority and are not a new
+            # handoff artifact or a substitute for re-verification at any
+            # later use.
+            "verified_local_artifacts": {
+                "packet": packet,
+                "analyst_response": analyst_response,
+                "committee_response": committee_response,
+                "committee_ticker_decisions": committee_ticker_decisions,
+                "critic_coverage": critic_coverage,
+            },
         }
     finally:
         os.close(handoff_root_descriptor)
