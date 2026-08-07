@@ -19,3 +19,4 @@
   "broker_access_authorized": false,
   "email_effect_authorized": false,
   "revocation_authority": "project_owner"
+}
