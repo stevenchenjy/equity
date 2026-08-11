@@ -27,6 +27,9 @@ from phase5r_daily_common import (
 
 
 SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
+MARKET_SNAPSHOT_FETCH = "fetch"
+MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
+MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
 STEP_SPECS = [
     ("market_refresh", "run_phase5r_b2_full_universe_market_data.py", False),
     ("market_scoring", "score_phase5r_b2_candidates.py", False),
@@ -53,8 +56,17 @@ STEP_SPECS = [
 ]
 
 
-def run_step(name: str, script_name: str, allowed_to_fail: bool) -> dict[str, Any]:
+def run_step(
+    name: str,
+    script_name: str,
+    allowed_to_fail: bool,
+    *,
+    market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
+) -> dict[str, Any]:
     extra_arguments = (
+        ["--reuse-validated-snapshot"]
+        if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
+        else
         ["--refresh"]
         if name == "sec_filing_artifacts"
         else ["--build"]
@@ -112,13 +124,18 @@ def safe_check() -> int:
     return 0
 
 
-def run_refresh(no_lock: bool) -> int:
+def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH) -> int:
     load_active_state()
     load_inhibit()
+    if market_snapshot_mode not in MARKET_SNAPSHOT_MODES:
+        raise ValueError("invalid market snapshot mode")
     lock_context = nullcontext() if no_lock else ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH)
     started_at = iso_now()
     with lock_context:
-        steps = [run_step(*spec) for spec in STEP_SPECS]
+        steps = [
+            run_step(*spec, market_snapshot_mode=market_snapshot_mode)
+            for spec in STEP_SPECS
+        ]
     hard_failures = [
         row["name"]
         for row in steps
@@ -146,6 +163,7 @@ def run_refresh(no_lock: bool) -> int:
         "hard_failures": hard_failures,
         "soft_failures": soft_failures,
         "decision_created": decision_completed,
+        "market_snapshot_mode": market_snapshot_mode,
         "steps": steps,
         "email_attempted": False,
         "email_sent": False,
@@ -183,12 +201,18 @@ def main() -> int:
         action="store_true",
         help="internal: caller already owns the daily pipeline lock",
     )
+    parser.add_argument(
+        "--market-snapshot-mode",
+        choices=MARKET_SNAPSHOT_MODES,
+        default=MARKET_SNAPSHOT_FETCH,
+        help="internal: either fetch public data or reuse an exact validated local close",
+    )
     args = parser.parse_args()
     if args.safe_check:
         if args.no_lock:
             raise ValueError("--no-lock is valid only with --run")
         return safe_check()
-    return run_refresh(args.no_lock)
+    return run_refresh(args.no_lock, args.market_snapshot_mode)
 
 
 if __name__ == "__main__":

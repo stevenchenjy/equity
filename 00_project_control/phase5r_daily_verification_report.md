@@ -1,8 +1,8 @@
 # Phase 5R Daily Upgrade Verification Report
 
-Generated: `2026-07-27T22:44:20-04:00`
+Generated: `2026-08-11T06:36:45-04:00`
 
-Overall result: **PASS**
+Overall result: **FAIL**
 Verification mode: `operational`
 
 ## Checks
@@ -37,7 +37,7 @@ Verification mode: `operational`
 | sender.lock | PASS | second concurrent lock acquisition is rejected |
 | manual_review.reduced | PASS | HOLD rows do not require manual confirmation |
 | manual_review.all_outputs | PASS | routine HOLD/WATCH rows across C9/C9B require no confirmation |
-| fundamentals.held_coverage | PASS | held companies have current official SEC XBRL coverage |
+| fundamentals.held_coverage | FAIL | held companies have current official SEC XBRL coverage |
 | phase5r_e.absent | PASS | Phase 5R-E not created |
 | verification.non_mutating | PASS | legacy/new delivery ledgers and C7 run log unchanged |
 | smtp.non_modification | PASS | SMTP config stat unchanged; content never opened |

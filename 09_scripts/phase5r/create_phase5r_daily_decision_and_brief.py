@@ -9,9 +9,8 @@ material evidence ambiguity, or account conflicts are escalated.
 from __future__ import annotations
 
 import argparse
-import calendar
 import html
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import Any
 
 from phase5r_daily_common import (
@@ -35,6 +34,7 @@ from phase5r_daily_common import (
     atomic_write_text,
     canonical_sha256,
     cycle_date,
+    expected_market_session,
     iso_now,
     load_active_state,
     load_inhibit,
@@ -54,69 +54,6 @@ CONFIRMED_EXECUTION_PATH = (
 PENDING_EXECUTION_PATH = (
     ROOT / "06_execution_records" / "phase5r_c9b_pending_execution_report.csv"
 )
-
-
-def nth_weekday(year: int, month: int, weekday: int, ordinal: int) -> date:
-    first = date(year, month, 1)
-    shift = (weekday - first.weekday()) % 7
-    return first + timedelta(days=shift + 7 * (ordinal - 1))
-
-
-def last_weekday(year: int, month: int, weekday: int) -> date:
-    last_day = calendar.monthrange(year, month)[1]
-    value = date(year, month, last_day)
-    return value - timedelta(days=(value.weekday() - weekday) % 7)
-
-
-def observed(value: date) -> date:
-    if value.weekday() == 5:
-        return value - timedelta(days=1)
-    if value.weekday() == 6:
-        return value + timedelta(days=1)
-    return value
-
-
-def easter_sunday(year: int) -> date:
-    a = year % 19
-    b = year // 100
-    c = year % 100
-    d = b // 4
-    e = b % 4
-    f = (b + 8) // 25
-    g = (b - f + 1) // 3
-    h = (19 * a + b - d - g + 15) % 30
-    i = c // 4
-    k = c % 4
-    l = (32 + 2 * e + 2 * i - h - k) % 7
-    m = (a + 11 * h + 22 * l) // 451
-    month = (h + l - 7 * m + 114) // 31
-    day = ((h + l - 7 * m + 114) % 31) + 1
-    return date(year, month, day)
-
-
-def us_market_holidays(year: int) -> set[date]:
-    return {
-        observed(date(year, 1, 1)),
-        nth_weekday(year, 1, calendar.MONDAY, 3),
-        nth_weekday(year, 2, calendar.MONDAY, 3),
-        easter_sunday(year) - timedelta(days=2),
-        last_weekday(year, 5, calendar.MONDAY),
-        observed(date(year, 6, 19)),
-        observed(date(year, 7, 4)),
-        nth_weekday(year, 9, calendar.MONDAY, 1),
-        nth_weekday(year, 11, calendar.THURSDAY, 4),
-        observed(date(year, 12, 25)),
-    }
-
-
-def expected_market_session(current: datetime) -> date:
-    candidate = current.date()
-    holidays = us_market_holidays(candidate.year) | us_market_holidays(
-        candidate.year - 1
-    )
-    while candidate.weekday() >= 5 or candidate in holidays:
-        candidate -= timedelta(days=1)
-    return candidate
 
 
 def is_action_transition(action: str) -> bool:

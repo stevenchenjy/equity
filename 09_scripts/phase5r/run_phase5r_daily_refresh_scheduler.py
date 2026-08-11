@@ -18,6 +18,7 @@ from phase5r_daily_common import (
     atomic_write_json,
     cycle_date,
     iso_now,
+    is_us_market_session_date,
     load_active_state,
     load_inhibit,
     now_et,
@@ -26,6 +27,7 @@ from phase5r_daily_common import (
 
 
 REFRESH_PIPELINE = ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_refresh.py"
+SEC_EVIDENCE_REFRESH = ROOT / "09_scripts" / "phase5r" / "refresh_phase5r_daily_evidence.py"
 PRODUCTION_SHADOW_RUNNER = (
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_production_shadow.py"
 )
@@ -34,6 +36,9 @@ PRODUCTION_SHADOW_EMAIL_RUNNER = (
 )
 WEEKDAY_SLOTS = ("08:15", "12:30", "16:15", "17:45")
 WEEKEND_SLOTS = ("12:00",)
+POST_CLOSE_MARKET_SLOT = "17:45"
+MARKET_SNAPSHOT_FETCH = "fetch"
+MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
 _SAFE_SHADOW_OUTCOMES = frozenset(
     {"blocked", "completed", "completed_with_material_citation_issue", "terminal_failure"}
 )
@@ -52,12 +57,30 @@ AUTH_PRESENCE_PROBE_ENV = "PHASE5R_AUTH_PRESENCE_PROBE_20260804_5F17"
 AUTH_PRESENCE_PRESENT_EXIT = 71
 AUTH_PRESENCE_ABSENT_EXIT = 72
 AUTH_PRESENCE_INTERNAL_ERROR_EXIT = 73
+# A one-shot, externally initiated SEC-only path.  It uses this already
+# approved launchd runtime so the configured User-Agent remains external to
+# the repository.  It deliberately does not run B2, the deterministic refresh,
+# a provider, or email.  The caller must remove this temporary marker after
+# observing the child result; no credential value is read or emitted here.
+SEC_REFRESH_ONLY_ENV = "PHASE5R_SEC_REFRESH_ONLY_20260811_41C2"
+SEC_REFRESH_TIMEOUT_SECONDS = 240
 
 
 def due_slots(current: datetime) -> list[str]:
     slots = WEEKEND_SLOTS if current.weekday() >= 5 else WEEKDAY_SLOTS
     current_clock = current.strftime("%H:%M")
     return [slot for slot in slots if slot <= current_clock]
+
+
+def market_snapshot_mode(current: datetime, due: list[str]) -> str:
+    """Fetch only once after a regular-session close; otherwise reuse locally."""
+
+    if (
+        POST_CLOSE_MARKET_SLOT in due
+        and is_us_market_session_date(current.date())
+    ):
+        return MARKET_SNAPSHOT_FETCH
+    return MARKET_SNAPSHOT_REUSE
 
 
 def _safe_json_child_outcome(
@@ -122,6 +145,23 @@ def _auth_presence_probe_exit_code() -> int:
         # A probe must remain mute and fail closed even for an unusual runtime
         # environment implementation.
         return AUTH_PRESENCE_INTERNAL_ERROR_EXIT
+
+
+def _run_sec_refresh_only() -> int:
+    """Run the approved official-evidence refresh without other daily steps."""
+
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(SEC_EVIDENCE_REFRESH)],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=SEC_REFRESH_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124
+    return completed.returncode
 
 
 def _safe_refresh_child_status(returncode: int) -> str:
@@ -192,6 +232,8 @@ def main() -> int:
     # no-output launchd authentication-presence check.
     if os.environ.get(AUTH_PRESENCE_PROBE_ENV) == "1":
         return _auth_presence_probe_exit_code()
+    if os.environ.get(SEC_REFRESH_ONLY_ENV) == "1":
+        return _run_sec_refresh_only()
     parser = argparse.ArgumentParser()
     parser.add_argument("--safe-check", action="store_true")
     args = parser.parse_args()
@@ -234,10 +276,17 @@ def main() -> int:
     if not pending:
         print("scheduler_action=none reason=refresh_slots_already_completed")
         return 0
+    snapshot_mode = market_snapshot_mode(current, pending)
     refresh_started_at = iso_now()
     try:
         completed_process = subprocess.run(
-            [sys.executable, str(REFRESH_PIPELINE), "--run"],
+            [
+                sys.executable,
+                str(REFRESH_PIPELINE),
+                "--run",
+                "--market-snapshot-mode",
+                snapshot_mode,
+            ],
             cwd=ROOT,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -246,7 +295,13 @@ def main() -> int:
         )
     except subprocess.TimeoutExpired:
         completed_process = subprocess.CompletedProcess(
-            [sys.executable, str(REFRESH_PIPELINE), "--run"],
+            [
+                sys.executable,
+                str(REFRESH_PIPELINE),
+                "--run",
+                "--market-snapshot-mode",
+                snapshot_mode,
+            ],
             124,
         )
     shadow_process: subprocess.CompletedProcess[str] | None = None
@@ -255,7 +310,7 @@ def main() -> int:
         refresh_returncode=completed_process.returncode,
         refresh_started_at=refresh_started_at,
     )
-    if refresh_gate == "passed":
+    if refresh_gate == "passed" and snapshot_mode == MARKET_SNAPSHOT_FETCH:
         # This is a post-refresh, separately bounded companion.  It never
         # changes the deterministic refresh result and owns its own daily lock,
         # freshness gate, no-retry policy, and cost ledger.
@@ -301,10 +356,16 @@ def main() -> int:
                     124,
                     stdout="",
                 )
+    elif refresh_gate == "passed":
+        # A reused close can support local deterministic work, but it cannot
+        # trigger a provider-backed shadow.  The only eligible shadow attempt
+        # follows the one bounded post-close source fetch.
+        shadow_status = "not_started_market_snapshot_reused"
     else:
         shadow_status = refresh_gate
     date_state["refresh_last_attempt_at"] = iso_now()
     date_state["refresh_last_exit_code"] = completed_process.returncode
+    date_state["market_snapshot_mode"] = snapshot_mode
     date_state["refresh_last_shadow_gate"] = refresh_gate
     if shadow_process is not None:
         date_state["production_shadow_last_attempt_at"] = iso_now()
@@ -320,6 +381,7 @@ def main() -> int:
     print(
         f"scheduler_action=refresh exit_code={completed_process.returncode} "
         f"refresh_status={_safe_refresh_child_status(completed_process.returncode)} "
+        f"market_snapshot_mode={snapshot_mode} "
         f"refresh_gate={refresh_gate} "
         f"covered_slots={','.join(due)} shadow_exit="
         f"{shadow_process.returncode if shadow_process is not None else 'not_started'} "

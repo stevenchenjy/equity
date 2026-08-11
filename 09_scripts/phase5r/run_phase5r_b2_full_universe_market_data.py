@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import argparse
 import csv
-from datetime import date, datetime, timezone
+import json
+from datetime import date, datetime, time, timezone
 import math
 from pathlib import Path
+import sys
 from typing import Any
 
 import yfinance as yf
+
+from phase5r_daily_common import (
+    atomic_write_json,
+    last_completed_market_session,
+    now_et,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -14,6 +23,9 @@ DATA_DIR = ROOT / "03_source_data" / "phase5r"
 CONTROL_DIR = ROOT / "00_project_control"
 RESEARCH_DIR = ROOT / "04_research" / "realtime_stock_picker_phase5r"
 RUN_LOG = CONTROL_DIR / "run_logs" / "phase5r_b2_run_log.csv"
+B2_RATE_LIMIT_STATE_PATH = (
+    CONTROL_DIR / "run_logs" / "phase5r_b2_rate_limit_state.local.json"
+)
 
 UNIVERSE_PATH = DATA_DIR / "phase5r_universe_seed.csv"
 LOCAL_POSITIONS_PATH = ROOT / "05_risk_and_positions" / "current_positions.local.csv"
@@ -43,6 +55,18 @@ CANDIDATE_FIELDS = [
     "market_data_usable", "candidate_note",
 ]
 AUDIT_FIELDS = ["timestamp", "script_name", "action", "input_path", "output_path", "status", "safety_notes"]
+
+RATE_LIMIT_STATE_SCHEMA = "phase5r_b2_rate_limit_state_v1"
+RATE_LIMIT_CODE = "yfinance_rate_limited"
+RATE_LIMIT_COOLDOWN_CODE = "yfinance_rate_limited_cooldown"
+RATE_LIMIT_STATE_INVALID_CODE = "rate_limit_state_invalid"
+SMOKE_PRECHECK_ABORTED_CODE = "yfinance_smoke_preflight_aborted"
+FULL_UNIVERSE_INCOMPLETE_CODE = "yfinance_incomplete_full_universe_response"
+FULL_UNIVERSE_STALE_CODE = "yfinance_stale_full_universe_response"
+REUSE_VALIDATED_SNAPSHOT_CODE = "validated_local_snapshot_reused"
+REUSE_INVALID_SNAPSHOT_CODE = "local_snapshot_reuse_invalid"
+REUSE_STALE_SNAPSHOT_CODE = "local_snapshot_reuse_not_current"
+POST_CLOSE_RETRY_TIME_ET = time(17, 45)
 
 
 def timestamp() -> str:
@@ -119,9 +143,166 @@ def quality_label(row: dict[str, str]) -> str:
     return "partial" if optional_missing else "ok"
 
 
+def source_failure_code(exc: Exception) -> str:
+    """Map source exceptions to finite, non-sensitive audit codes."""
+
+    if (
+        exc.__class__.__name__ == "YFRateLimitError"
+        or getattr(exc, "status_code", None) == 429
+    ):
+        return RATE_LIMIT_CODE
+    if isinstance(exc, TimeoutError):
+        return "yfinance_timeout"
+    return "yfinance_request_failed"
+
+
+def _parse_aware_datetime(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def load_rate_limit_state(
+    current: datetime | None = None,
+) -> tuple[dict[str, object] | None, str]:
+    """Read only the bounded local circuit state; malformed state fails closed."""
+
+    if not B2_RATE_LIMIT_STATE_PATH.exists():
+        return None, "clear"
+    try:
+        payload = json.loads(B2_RATE_LIMIT_STATE_PATH.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return None, "invalid"
+    if not isinstance(payload, dict) or payload.get("schema_version") != RATE_LIMIT_STATE_SCHEMA:
+        return None, "invalid"
+    status = payload.get("status")
+    if status == "cleared":
+        return None, "clear"
+    if status != "active":
+        return None, "invalid"
+    detected_at = _parse_aware_datetime(payload.get("detected_at"))
+    rate_limit_date = payload.get("rate_limit_et_date")
+    post_close_retry_consumed = payload.get("post_close_retry_consumed")
+    if (
+        detected_at is None
+        or not isinstance(rate_limit_date, str)
+        or not isinstance(post_close_retry_consumed, bool)
+        or payload.get("source_failure_code") != RATE_LIMIT_CODE
+    ):
+        return None, "invalid"
+    try:
+        parsed_date = date.fromisoformat(rate_limit_date)
+    except ValueError:
+        return None, "invalid"
+    current = current or now_et()
+    if detected_at.astimezone(current.tzinfo).date() != parsed_date:
+        return None, "invalid"
+    return payload, "active"
+
+
+def rate_limit_attempt_allowed(
+    current: datetime | None = None,
+) -> tuple[bool, str]:
+    """Allow at most one post-close recovery attempt after a same-day 429."""
+
+    current = current or now_et()
+    state, state_status = load_rate_limit_state(current)
+    if state_status == "invalid":
+        return False, RATE_LIMIT_STATE_INVALID_CODE
+    if state is None:
+        return True, "rate_limit_state_clear"
+    rate_limit_date = date.fromisoformat(str(state["rate_limit_et_date"]))
+    current_date = current.date()
+    if rate_limit_date < current_date:
+        return True, "rate_limit_state_expired"
+    if rate_limit_date > current_date:
+        return False, RATE_LIMIT_STATE_INVALID_CODE
+    if current.timetz().replace(tzinfo=None) < POST_CLOSE_RETRY_TIME_ET:
+        return False, RATE_LIMIT_COOLDOWN_CODE
+    if bool(state["post_close_retry_consumed"]):
+        return False, RATE_LIMIT_COOLDOWN_CODE
+    return True, "rate_limit_post_close_retry_available"
+
+
+def record_rate_limit(current: datetime | None = None) -> None:
+    """Persist a finite 429 state without response text, URLs, or credentials."""
+
+    current = current or now_et()
+    atomic_write_json(
+        B2_RATE_LIMIT_STATE_PATH,
+        {
+            "schema_version": RATE_LIMIT_STATE_SCHEMA,
+            "status": "active",
+            "detected_at": current.isoformat(timespec="seconds"),
+            "rate_limit_et_date": current.date().isoformat(),
+            "post_close_retry_consumed": (
+                current.timetz().replace(tzinfo=None) >= POST_CLOSE_RETRY_TIME_ET
+            ),
+            "source_failure_code": RATE_LIMIT_CODE,
+        },
+    )
+
+
+def reserve_post_close_retry(current: datetime | None = None) -> None:
+    """Consume the single recovery allowance before making a network request."""
+
+    current = current or now_et()
+    state, state_status = load_rate_limit_state(current)
+    if state_status != "active" or state is None:
+        raise RuntimeError("post-close retry requires active rate-limit state")
+    updated = dict(state)
+    updated["post_close_retry_consumed"] = True
+    updated["post_close_retry_reserved_at"] = current.isoformat(timespec="seconds")
+    atomic_write_json(B2_RATE_LIMIT_STATE_PATH, updated)
+
+
+def clear_rate_limit_state(current: datetime | None = None) -> None:
+    """Retain a non-sensitive recovery marker after a successful full refresh."""
+
+    current = current or now_et()
+    atomic_write_json(
+        B2_RATE_LIMIT_STATE_PATH,
+        {
+            "schema_version": RATE_LIMIT_STATE_SCHEMA,
+            "status": "cleared",
+            "cleared_at": current.isoformat(timespec="seconds"),
+            "source_failure_code": "none",
+        },
+    )
+
+
+def rate_limit_cooldown_rows(
+    error_code: str = RATE_LIMIT_COOLDOWN_CODE,
+) -> list[dict[str, str]]:
+    return [
+        {
+            "ticker": ticker,
+            "last_price": "",
+            "previous_close": "",
+            "volume": "",
+            "status": "not_attempted",
+            "error_code": error_code,
+        }
+        for ticker in SMOKE_TICKERS
+    ]
+
+
+def smoke_failure_code(rows: list[dict[str, str]]) -> str:
+    codes = [row.get("error_code", "") for row in rows]
+    if RATE_LIMIT_CODE in codes:
+        return RATE_LIMIT_CODE
+    if RATE_LIMIT_COOLDOWN_CODE in codes:
+        return RATE_LIMIT_COOLDOWN_CODE
+    return next((code for code in codes if code), "yfinance_smoke_validation_failed")
+
+
 def smoke_test() -> tuple[list[dict[str, str]], bool]:
     results: list[dict[str, str]] = []
-    for ticker in SMOKE_TICKERS:
+    for index, ticker in enumerate(SMOKE_TICKERS):
         row = {"ticker": ticker, "last_price": "", "previous_close": "", "volume": "", "status": "failed"}
         try:
             history = yf.Ticker(ticker).history(period="5d", interval="1d", auto_adjust=False, raise_errors=False)
@@ -133,8 +314,32 @@ def smoke_test() -> tuple[list[dict[str, str]], bool]:
                 })
                 row["status"] = "passed" if row["last_price"] and row["previous_close"] else "failed"
         except Exception as exc:
-            row["error_type"] = exc.__class__.__name__
+            row["error_code"] = source_failure_code(exc)
+        if row["status"] != "passed" and "error_code" not in row:
+            row["error_code"] = "yfinance_smoke_validation_failed"
         results.append(row)
+        if row["status"] != "passed":
+            # A failed required benchmark already makes the preflight fail.
+            # Do not turn that result into extra source pressure by probing
+            # the remaining benchmarks.  A recognized 429 gets its distinct
+            # circuit code; other failures remain finite and non-sensitive.
+            remaining_code = (
+                RATE_LIMIT_COOLDOWN_CODE
+                if row.get("error_code") == RATE_LIMIT_CODE
+                else SMOKE_PRECHECK_ABORTED_CODE
+            )
+            results.extend(
+                {
+                    "ticker": remaining,
+                    "last_price": "",
+                    "previous_close": "",
+                    "volume": "",
+                    "status": "not_attempted",
+                    "error_code": remaining_code,
+                }
+                for remaining in SMOKE_TICKERS[index + 1 :]
+            )
+            break
     return results, all(row["status"] == "passed" for row in results)
 
 
@@ -191,7 +396,7 @@ def market_row_from_history(ticker: str, history: Any | None, now: str) -> dict[
 
 def retrieve_full_universe(
     tickers: list[str], now: str
-) -> tuple[list[dict[str, str]], str, bool]:
+) -> tuple[list[dict[str, str]], str, bool, str]:
     try:
         dataset = yf.download(
             tickers=tickers, period="1y", interval="1d", group_by="ticker", auto_adjust=False,
@@ -206,8 +411,10 @@ def retrieve_full_universe(
             ],
             "full-universe public daily history retrieved",
             True,
+            "none",
         )
     except Exception as exc:
+        failure_code = source_failure_code(exc)
         return (
             [
                 empty_market_row(
@@ -215,8 +422,9 @@ def retrieve_full_universe(
                 )
                 for ticker in tickers
             ],
-            f"full-universe retrieval failed safely: {exc.__class__.__name__}",
+            f"full-universe retrieval failed safely: {failure_code}",
             False,
+            failure_code,
         )
 
 
@@ -227,12 +435,14 @@ def write_decision(
     held_tickers: list[str],
     *,
     prior_outputs_preserved: bool = False,
+    source_failure_code: str = "none",
 ) -> None:
     lines = [
         "# Phase 5R-B2 Data Source Decision", "", f"Generated: `{timestamp()}`", "",
         "## Decision", "", "- Selected source: `yfinance_public_market_data`.",
         "- Source use: `public read-only market data`.",
         f"- Benchmark preflight: `{'passed' if smoke_passed else 'failed'}`.",
+        f"- Source-failure classification: `{source_failure_code}`.",
         f"- Full-universe action: `{full_note}`.", "",
         "## Benchmark Preflight", "", "| Ticker | Last Price | Previous Close | Volume | Status |",
         "| --- | ---: | ---: | ---: | --- |",
@@ -266,6 +476,7 @@ def write_data_report(
     full_note: str,
     *,
     prior_outputs_preserved: bool = False,
+    source_failure_code: str = "none",
 ) -> None:
     counts: dict[str, int] = {}
     for row in rows:
@@ -276,6 +487,7 @@ def write_data_report(
         f"- Canonical candidate rows: `{candidate_count}`.",
         f"- Current-position price-monitoring rows: `{held_count}`.",
         f"- Benchmark preflight: `{'passed' if smoke_passed else 'failed'}`.",
+        f"- Source-failure classification: `{source_failure_code}`.",
         f"- Full-universe retrieval: `{full_note}`.", f"- Data quality counts: `{counts}`.", "",
         "## Interpretation Boundary", "", "This is a read-only daily research snapshot. Public prices may be delayed and signals require independent, human review. It is not a broker-connected system and cannot execute a trade.",
     ]
@@ -491,7 +703,172 @@ def prior_outputs_are_coherent(
     return True, market_rows, "prior_output_trio_coherent"
 
 
-def main() -> int:
+def full_universe_rows_are_committable(
+    *,
+    market_rows: list[dict[str, str]],
+    tickers: list[str],
+    held_tickers: list[str],
+    current: datetime,
+) -> tuple[bool, str]:
+    """Accept a live B2 response only when every covered row is usable.
+
+    A successful ``yf.download`` call can still yield an empty or incomplete
+    frame for one ticker.  That is an upstream data failure, not a successful
+    refresh: rejecting the whole response before any output write keeps the
+    snapshot, quality report, and candidate attachment atomic as a trio.
+    """
+
+    expected_tickers = {ticker.strip().upper() for ticker in tickers}
+    if not expected_tickers or len(expected_tickers) != len(tickers):
+        return False, FULL_UNIVERSE_INCOMPLETE_CODE
+    market_by_ticker = unique_rows_by_ticker(market_rows, expected_tickers)
+    if market_by_ticker is None:
+        return False, FULL_UNIVERSE_INCOMPLETE_CODE
+
+    expected_session = last_completed_market_session(current).isoformat()
+    held_set = {ticker.strip().upper() for ticker in held_tickers}
+    required_positive_fields = {"last_price", "previous_close"}
+    required_nonnegative_fields = {
+        "volume",
+        "average_volume",
+        "relative_volume",
+        "dollar_volume",
+    }
+    optional_positive_fields = {
+        "day_high",
+        "day_low",
+        "fifty_two_week_high",
+        "fifty_two_week_low",
+    }
+    for ticker in tickers:
+        row = market_by_ticker[ticker]
+        if set(row) != set(MARKET_FIELDS):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if (
+            row.get("data_source") != "yfinance_public_market_data"
+            or row.get("data_quality_label") != quality_label(row)
+            or row.get("data_quality_label") == "insufficient_data"
+            or not parse_iso_datetime(row.get("data_timestamp", ""))
+        ):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if row.get("market_session_date") != expected_session:
+            return False, FULL_UNIVERSE_STALE_CODE
+        if ticker in held_set and row.get("data_quality_label") != "ok":
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        try:
+            session_date = date.fromisoformat(row["market_session_date"])
+            age = int(row["market_age_calendar_days"])
+        except (TypeError, ValueError):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if session_date.isoformat() != expected_session or age < 0:
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if any(
+            finite_number(row[field]) is None or finite_number(row[field]) <= 0
+            for field in required_positive_fields
+        ):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if (
+            any(
+                finite_number(row[field]) is None or finite_number(row[field]) < 0
+                for field in required_nonnegative_fields
+            )
+            or finite_number(row["intraday_change_pct"]) is None
+        ):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+        if any(
+            row[field]
+            and (
+                finite_number(row[field]) is None
+                or finite_number(row[field]) <= 0
+            )
+            for field in optional_positive_fields
+        ):
+            return False, FULL_UNIVERSE_INCOMPLETE_CODE
+    return True, "full_universe_response_committable"
+
+
+def validated_snapshot_reuse(
+    *,
+    universe: list[dict[str, str]],
+    tickers: list[str],
+    held_tickers: list[str],
+    current: datetime | None = None,
+) -> tuple[bool, str, str]:
+    """Accept only an exact, coherent local close for no-network reuse.
+
+    This is deliberately stricter than failure preservation: a coherent prior
+    trio can be retained after an upstream failure, but it cannot be presented
+    as a current reusable close unless every covered ticker has the most recent
+    completed U.S. market-session date.
+    """
+
+    current = current or now_et()
+    coherent, rows, _ = prior_outputs_are_coherent(
+        universe=universe,
+        tickers=tickers,
+        held_tickers=held_tickers,
+    )
+    if not coherent:
+        return False, REUSE_INVALID_SNAPSHOT_CODE, ""
+    expected_session = last_completed_market_session(current).isoformat()
+    observed_sessions = {row.get("market_session_date", "") for row in rows}
+    if observed_sessions != {expected_session}:
+        return False, REUSE_STALE_SNAPSHOT_CODE, expected_session
+    return True, REUSE_VALIDATED_SNAPSHOT_CODE, expected_session
+
+
+def reuse_validated_snapshot(
+    *,
+    universe: list[dict[str, str]],
+    tickers: list[str],
+    held_tickers: list[str],
+) -> int:
+    """Reuse a verified local B2 trio without touching the public provider."""
+
+    valid, reuse_code, expected_session = validated_snapshot_reuse(
+        universe=universe,
+        tickers=tickers,
+        held_tickers=held_tickers,
+    )
+    append_audit(
+        "reuse_validated_market_snapshot",
+        ";".join(
+            str(path.relative_to(ROOT))
+            for path in (
+                UNIVERSE_PATH,
+                LOCAL_POSITIONS_PATH,
+                SNAPSHOT_PATH,
+                QUALITY_PATH,
+                CANDIDATES_PATH,
+            )
+        ),
+        ";".join(
+            str(path.relative_to(ROOT))
+            for path in (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH)
+        ),
+        "complete" if valid else "failed",
+        "network_attempted=no; public_source_called=no; "
+        "snapshot_bytes_unchanged=yes; "
+        f"reuse_validation_code={reuse_code}; "
+        f"expected_completed_session={expected_session or 'unavailable'}",
+    )
+    print(
+        "Phase 5R-B2 "
+        f"snapshot_reuse_validated={str(valid).lower()}; "
+        "public_source_called=false; "
+        f"reuse_validation_code={reuse_code}"
+    )
+    return 0 if valid else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--reuse-validated-snapshot",
+        action="store_true",
+        help="validate and reuse only the current coherent local B2 trio",
+    )
+    args = parser.parse_args([] if argv is None else argv)
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
@@ -517,23 +894,87 @@ def main() -> int:
         ticker for ticker in held_tickers if ticker not in set(candidate_tickers)
     )
 
-    smoke_rows, smoke_passed = smoke_test()
+    if args.reuse_validated_snapshot:
+        return reuse_validated_snapshot(
+            universe=universe,
+            tickers=tickers,
+            held_tickers=held_tickers,
+        )
+
+    rate_limit_check_time = now_et()
+    network_attempt_allowed, rate_limit_state_reason = rate_limit_attempt_allowed(
+        rate_limit_check_time
+    )
+    if network_attempt_allowed:
+        if rate_limit_state_reason == "rate_limit_post_close_retry_available":
+            # Persist consumption before the request, so an interrupted process
+            # cannot issue a duplicate post-close recovery call.
+            reserve_post_close_retry(rate_limit_check_time)
+        smoke_rows, smoke_passed = smoke_test()
+        current_source_failure_code = (
+            "none" if smoke_passed else smoke_failure_code(smoke_rows)
+        )
+        if current_source_failure_code == RATE_LIMIT_CODE:
+            record_rate_limit(rate_limit_check_time)
+    else:
+        smoke_rows = rate_limit_cooldown_rows(rate_limit_state_reason)
+        smoke_passed = False
+        current_source_failure_code = rate_limit_state_reason
+    smoke_audit_status = (
+        "passed"
+        if smoke_passed
+        else "not_attempted"
+        if not network_attempt_allowed
+        else "failed"
+    )
     append_audit(
         "benchmark_smoke_test",
         "QQQ;XLK;SPY",
         "in_memory_preflight_only",
-        "passed" if smoke_passed else "failed",
-        "sequence=1; full_universe_fetch_not_started_before_this_check",
+        smoke_audit_status,
+        "sequence=1; full_universe_fetch_not_started_before_this_check; "
+        f"network_attempted={'yes' if network_attempt_allowed else 'no'}; "
+        f"source_failure_code={current_source_failure_code}; "
+        f"rate_limit_circuit={rate_limit_state_reason}",
     )
     now = timestamp()
     source_failure = False
+    full_retrieval_succeeded = False
     prior_outputs_preserved = False
     prior_validation_reason = "not_checked"
     if smoke_passed:
-        market_rows, full_note, full_retrieval_succeeded = retrieve_full_universe(
-            tickers, now
-        )
+        (
+            market_rows,
+            full_note,
+            full_retrieval_succeeded,
+            full_failure_code,
+        ) = retrieve_full_universe(tickers, now)
+        if full_retrieval_succeeded:
+            committable, commit_code = full_universe_rows_are_committable(
+                market_rows=market_rows,
+                tickers=tickers,
+                held_tickers=held_tickers,
+                current=rate_limit_check_time,
+            )
+            if not committable:
+                market_rows = [
+                    empty_market_row(
+                        ticker,
+                        "yfinance_public_market_data_error",
+                        now,
+                    )
+                    for ticker in tickers
+                ]
+                full_note = (
+                    "full-universe response rejected before commit: "
+                    f"{commit_code}"
+                )
+                full_retrieval_succeeded = False
+                full_failure_code = commit_code
         source_failure = not full_retrieval_succeeded
+        current_source_failure_code = full_failure_code
+        if current_source_failure_code == RATE_LIMIT_CODE:
+            record_rate_limit(rate_limit_check_time)
         append_audit(
             "full_universe_market_data_refresh",
             ";".join(
@@ -545,14 +986,28 @@ def main() -> int:
             "sequence=2; smoke_test_passed=yes; "
             f"full_retrieval_succeeded={'yes' if full_retrieval_succeeded else 'no'}; "
             "held_tickers_price_only=yes; "
+            f"source_failure_code={current_source_failure_code}; "
             f"fail_safe_stop={'no' if full_retrieval_succeeded else 'yes'}",
         )
     else:
+        source_name = (
+            "yfinance_rate_limit_circuit_open"
+            if current_source_failure_code
+            in {RATE_LIMIT_CODE, RATE_LIMIT_COOLDOWN_CODE, RATE_LIMIT_STATE_INVALID_CODE}
+            else "yfinance_smoke_test_failed"
+        )
         market_rows = [
-            empty_market_row(ticker, "yfinance_smoke_test_failed", now)
+            empty_market_row(ticker, source_name, now)
             for ticker in tickers
         ]
-        full_note = "not attempted because benchmark preflight failed"
+        full_note = (
+            "not attempted because benchmark preflight was rate limited"
+            if current_source_failure_code == RATE_LIMIT_CODE
+            else "not attempted because rate-limit circuit is active"
+            if current_source_failure_code
+            in {RATE_LIMIT_COOLDOWN_CODE, RATE_LIMIT_STATE_INVALID_CODE}
+            else "not attempted because benchmark preflight failed"
+        )
         source_failure = True
         append_audit(
             "full_universe_market_data_refresh",
@@ -563,7 +1018,9 @@ def main() -> int:
             str(SNAPSHOT_PATH.relative_to(ROOT)),
             "not_attempted",
             "sequence=2; smoke_test_passed=no; fail_safe_stop=yes; "
-            "held_tickers_price_only=yes",
+            "held_tickers_price_only=yes; "
+            f"source_failure_code={current_source_failure_code}; "
+            f"network_attempted={'yes' if network_attempt_allowed else 'no'}",
         )
 
     if source_failure:
@@ -643,6 +1100,7 @@ def main() -> int:
         full_note,
         held_tickers,
         prior_outputs_preserved=prior_outputs_preserved,
+        source_failure_code=current_source_failure_code,
     )
     write_data_report(
         market_rows,
@@ -657,7 +1115,14 @@ def main() -> int:
         smoke_passed,
         full_note,
         prior_outputs_preserved=prior_outputs_preserved,
+        source_failure_code=current_source_failure_code,
     )
+    # A successful provider response is not a completed recovery until all
+    # current B2 artifacts have been written.  Leaving an active 429 circuit
+    # intact on a local write failure is conservative and prevents a duplicate
+    # same-day public-source attempt after an interrupted commit.
+    if full_retrieval_succeeded:
+        clear_rate_limit_state(rate_limit_check_time)
     written_paths = [DECISION_PATH, REPORT_PATH]
     if not prior_outputs_preserved:
         written_paths = [
@@ -684,6 +1149,7 @@ def main() -> int:
         f"held_price_rows={len([ticker for ticker in held_tickers if ticker not in set(candidate_tickers)])}; "
         f"smoke_test_passed={'yes' if smoke_passed else 'no'}; "
         f"source_failure={'yes' if source_failure else 'no'}; "
+        f"source_failure_code={current_source_failure_code}; "
         f"prior_outputs_preserved={'yes' if prior_outputs_preserved else 'no'}; "
         f"prior_validation={prior_validation_reason}",
     )
@@ -697,4 +1163,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(main(sys.argv[1:]))

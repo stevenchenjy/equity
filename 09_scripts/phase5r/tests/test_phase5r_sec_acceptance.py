@@ -166,6 +166,9 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
     @staticmethod
     def _submissions_payload(*, accepted_at: str) -> dict[str, object]:
         return {
+            "cik": "1",
+            "tickers": ["TST"],
+            "name": "Test Issuer, Inc.",
             "filings": {
                 "recent": {
                     "accessionNumber": ["0000000001-26-000001"],
@@ -185,6 +188,7 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
         accepted_at: str,
         generated_at: str,
         expected_reason: str,
+        expected_unindexed_accession_count: int = 0,
     ) -> None:
         """Run an offline refresh that must fail before any evidence commit."""
 
@@ -193,6 +197,9 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             fundamentals_path = root / "fundamentals.csv"
             acceptance_path = root / "acceptance.json"
             reconciliation_path = root / "reconciliation.csv"
+            extension_dir = root / "extensions"
+            extension_audit_path = root / "extension-audit.csv"
+            extension_lock_path = root / "extension.lock"
             state_path = root / "state.json"
             status_path = root / "status.json"
             ledger_path = root / "ledger.csv"
@@ -242,12 +249,32 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 mock.patch.object(
                     daily_evidence,
                     "load_immutable_acceptance_index",
-                    side_effect=lambda: load_acceptance_index(acceptance_path),
+                    side_effect=lambda *_args: load_acceptance_index(acceptance_path),
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_INDEX_PATH",
+                    acceptance_path,
                 ),
                 mock.patch.object(
                     daily_evidence,
                     "SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH",
                     reconciliation_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_DIR",
+                    extension_dir,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH",
+                    extension_audit_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_LOCK_PATH",
+                    extension_lock_path,
                 ),
                 mock.patch.object(
                     daily_evidence,
@@ -284,6 +311,10 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             self.assertFalse(status["held_coverage_complete"])
             self.assertFalse(status["held_fundamental_coverage_complete"])
             self.assertEqual(status["request_errors"], [expected_reason])
+            self.assertEqual(
+                status["unindexed_accession_count"],
+                expected_unindexed_accession_count,
+            )
 
     def test_identity_conflict_fails_closed_without_mutation(self) -> None:
         prior = build_acceptance_index(
@@ -303,19 +334,118 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             prior_index=prior,
             accepted_at="2026-07-24T20:30:45.000Z",
             generated_at="2026-07-24T21:00:00+00:00",
-            expected_reason="sec_acceptance_reconciliation_rejected",
+            expected_reason="sec_acceptance_identity_mismatch",
         )
 
-    def test_unindexed_current_accession_fails_closed_without_mutation(self) -> None:
-        prior = build_acceptance_index(
-            generated_at="2026-07-24T21:00:00+00:00",
-        )
-        self._run_acceptance_failure(
-            prior_index=prior,
-            accepted_at="2026-07-24T20:30:45.000Z",
-            generated_at="2026-07-24T20:00:00+00:00",
-            expected_reason="sec_acceptance_reconciliation_rejected",
-        )
+    def test_unindexed_official_accession_is_admitted_to_versioned_extension(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sec-extension-integration-") as directory:
+            root = Path(directory)
+            fundamentals_path = root / "fundamentals.csv"
+            acceptance_path = root / "acceptance.json"
+            reconciliation_path = root / "reconciliation.csv"
+            extension_dir = root / "extensions"
+            extension_audit_path = root / "extension-audit.csv"
+            extension_lock_path = root / "extension.lock"
+            state_path = root / "state.json"
+            status_path = root / "status.json"
+            ledger_path = root / "ledger.csv"
+            prior = build_acceptance_index(
+                generated_at="2026-07-24T21:00:00+00:00",
+            )
+            write_acceptance_index(prior, acceptance_path)
+            before_acceptance = acceptance_path.read_bytes()
+            state_path.write_text(
+                '{"initialized": true, "last_success_at": "2026-07-23T20:00:00+00:00", '
+                '"seen_accessions": {}}\n',
+                encoding="utf-8",
+            )
+
+            def fake_request_json(url: str, _user_agent: str) -> dict[str, object]:
+                if "/submissions/" in url:
+                    return self._submissions_payload(
+                        accepted_at="2026-07-24T20:30:45.000Z"
+                    )
+                if "/companyfacts/" in url:
+                    return {"facts": {}}
+                raise AssertionError(f"unexpected public-source URL: {url}")
+
+            with (
+                mock.patch.object(daily_evidence, "EVIDENCE_STATE_PATH", state_path),
+                mock.patch.object(daily_evidence, "EVIDENCE_STATUS_PATH", status_path),
+                mock.patch.object(daily_evidence, "EVIDENCE_LEDGER_PATH", ledger_path),
+                mock.patch.object(daily_evidence, "FUNDAMENTALS_PATH", fundamentals_path),
+                mock.patch.object(
+                    daily_evidence,
+                    "researched_tickers",
+                    return_value=(["TST"], ["TST"]),
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "load_ticker_map",
+                    return_value={"TST": 1},
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_INDEX_PATH",
+                    acceptance_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH",
+                    reconciliation_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_DIR",
+                    extension_dir,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH",
+                    extension_audit_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_LOCK_PATH",
+                    extension_lock_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "request_json",
+                    side_effect=fake_request_json,
+                ),
+                mock.patch.object(daily_evidence.time, "sleep"),
+                mock.patch.object(
+                    daily_evidence,
+                    "iso_now",
+                    return_value="2026-07-24T21:00:00+00:00",
+                ),
+                mock.patch.object(daily_evidence, "log_daily_run") as log_daily_run,
+                mock.patch.dict(
+                    os.environ,
+                    {
+                        daily_evidence.SEC_USER_AGENT_ENV: self._VALID_TEST_USER_AGENT,
+                    },
+                ),
+                mock.patch.object(sys, "argv", ["refresh_phase5r_daily_evidence.py"]),
+            ):
+                self.assertEqual(daily_evidence.main(), 0)
+
+            self.assertEqual(acceptance_path.read_bytes(), before_acceptance)
+            self.assertTrue(
+                (extension_dir / "phase5r_sec_acceptance_extension_v1.json").exists()
+            )
+            self.assertTrue(extension_audit_path.exists())
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+            self.assertEqual(status["scan_status"], "ok")
+            self.assertEqual(status["sec_acceptance_extension_admission_count"], 1)
+            self.assertEqual(status["unindexed_accession_count"], 0)
+            log_daily_run.assert_called_once_with(
+                component="evidence_refresh",
+                run_mode="live_public_read",
+                outcome="passed",
+                reason="complete",
+            )
 
     def test_valid_reconciliation_releases_staged_ledger_without_index_mutation(self) -> None:
         """An accepted time representation change logs without rewriting the index."""
@@ -325,6 +455,9 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             fundamentals_path = root / "fundamentals.csv"
             acceptance_path = root / "acceptance.json"
             reconciliation_path = root / "reconciliation.csv"
+            extension_dir = root / "extensions"
+            extension_audit_path = root / "extension-audit.csv"
+            extension_lock_path = root / "extension.lock"
             state_path = root / "state.json"
             status_path = root / "status.json"
             ledger_path = root / "ledger.csv"
@@ -385,12 +518,32 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 mock.patch.object(
                     daily_evidence,
                     "load_immutable_acceptance_index",
-                    side_effect=lambda: load_acceptance_index(acceptance_path),
+                    side_effect=lambda *_args: load_acceptance_index(acceptance_path),
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_INDEX_PATH",
+                    acceptance_path,
                 ),
                 mock.patch.object(
                     daily_evidence,
                     "SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH",
                     reconciliation_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_DIR",
+                    extension_dir,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH",
+                    extension_audit_path,
+                ),
+                mock.patch.object(
+                    daily_evidence,
+                    "SEC_ACCEPTANCE_EXTENSION_LOCK_PATH",
+                    extension_lock_path,
                 ),
                 mock.patch.object(
                     daily_evidence,

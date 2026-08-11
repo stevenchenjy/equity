@@ -22,6 +22,7 @@ gmail_tokens/
 00_project_control/run_logs/phase5r_daily_decision_state.local.json
 00_project_control/run_logs/phase5r_daily_refresh_state.local.json
 00_project_control/run_logs/phase5r_daily_scheduler_state.local.json
+00_project_control/run_logs/phase5r_b2_rate_limit_state.local.json
 00_project_control/run_logs/phase5r_daily_delivery.lock
 00_project_control/run_logs/phase5r_daily_pipeline.lock
 00_project_control/run_logs/phase5r_llm_shadow_state.local.json

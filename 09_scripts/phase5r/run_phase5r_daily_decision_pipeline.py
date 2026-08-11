@@ -6,14 +6,18 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+from datetime import datetime
 
 from phase5r_daily_common import (
     DAILY_PIPELINE_LOCK_PATH,
+    DAILY_REFRESH_STATE_PATH,
     ROOT,
     ExclusiveFileLock,
+    iso_now,
     load_active_state,
     load_inhibit,
     log_daily_run,
+    read_json,
 )
 from phase5r_production_shadow_email_gate import observation_email_suppressed
 
@@ -21,6 +25,46 @@ from phase5r_production_shadow_email_gate import observation_email_suppressed
 SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
 REFRESH_SCRIPT = SCRIPT_DIR / "run_phase5r_daily_refresh.py"
 SENDER_SCRIPT = SCRIPT_DIR / "send_phase5r_daily_email.py"
+
+
+def _parse_aware_timestamp(value: object) -> datetime | None:
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo is not None else None
+
+
+def refresh_fully_passed(*, refresh_started_at: str) -> bool:
+    """Reject a stale, degraded, or incomplete refresh before any delivery."""
+
+    expected_start = _parse_aware_timestamp(refresh_started_at)
+    if expected_start is None:
+        return False
+    try:
+        state = read_json(DAILY_REFRESH_STATE_PATH, {})
+    except (OSError, TypeError, ValueError):
+        return False
+    if not isinstance(state, dict):
+        return False
+    if (
+        state.get("schema_version") != "phase5r_daily_refresh_state_v1"
+        or state.get("outcome") != "passed"
+        or state.get("decision_created") is not True
+        or state.get("hard_failures")
+        or state.get("soft_failures")
+    ):
+        return False
+    state_started = _parse_aware_timestamp(state.get("started_at"))
+    state_completed = _parse_aware_timestamp(state.get("completed_at"))
+    return bool(
+        state_started
+        and state_completed
+        and state_started >= expected_start
+        and state_completed >= state_started
+    )
 
 
 def run_command(arguments: list[str], timeout: int = 360) -> subprocess.CompletedProcess[str]:
@@ -72,18 +116,28 @@ def execute(send: bool) -> int:
         )
         return 2
     with ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH):
+        refresh_started_at = iso_now()
         refresh = run_command(
-            [sys.executable, str(REFRESH_SCRIPT), "--run", "--no-lock"]
+            [
+                sys.executable,
+                str(REFRESH_SCRIPT),
+                "--run",
+                "--no-lock",
+                "--market-snapshot-mode",
+                "reuse_validated_snapshot",
+            ]
         )
-        if refresh.returncode != 0:
+        if refresh.returncode != 0 or not refresh_fully_passed(
+            refresh_started_at=refresh_started_at
+        ):
             log_daily_run(
                 component="daily_pipeline",
                 run_mode="scheduled_send" if send else "protected_no_send",
                 outcome="failed",
-                reason="daily_decision_not_created",
+                reason="daily_refresh_not_fully_passed",
             )
             print(
-                "daily_pipeline_outcome=failed reason=daily_decision_not_created "
+                "daily_pipeline_outcome=failed reason=daily_refresh_not_fully_passed "
                 "email_attempted=false"
             )
             return 1

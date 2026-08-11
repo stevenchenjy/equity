@@ -1,6 +1,6 @@
 # Phase 5R-B2 Verification Report
 
-Generated: `2026-07-25T04:34:16-04:00`
+Generated: `2026-08-11T12:05:43+08:00`
 
 ## Required Checks
 
@@ -20,7 +20,7 @@ Generated: `2026-07-25T04:34:16-04:00`
 - **PASS** - candidate, score, and ticket rows remain universe-only: candidate=27, scores=27, tickets=27.
 - **PASS** - current IOT/RBRK rows are held-only price monitoring: price_rows=['IOT', 'RBRK'], held=['IOT', 'RBRK'], candidate_rows=[].
 - **PASS** - active 17-column market data schema is exact: snapshot header checked.
-- **PASS** - insufficient_data rows are preserved when data is missing: missing_core=[], insufficient=[].
+- **PASS** - insufficient_data rows are preserved when data is missing: missing_core=['AMD', 'ASML', 'AVGO', 'GOOGL', 'META', 'NOW', 'ORCL', 'VRT', 'ZS'], insufficient=['AMD', 'ASML', 'AVGO', 'GOOGL', 'META', 'NOW', 'ORCL', 'VRT', 'ZS'].
 - **PASS** - manual ticket constants are yes/no/no/no: ticket_rows=27.
 
 ## Summary
@@ -31,5 +31,5 @@ Generated: `2026-07-25T04:34:16-04:00`
 - Candidate rows: `27`.
 - Score rows: `27`.
 - Manual ticket rows: `27`.
-- Missing-core-data candidate rows preserved: `0`.
+- Missing-core-data candidate rows preserved: `9`.
 - The B2 dataset is a single daily, read-only public-market-data refresh. Held-only rows monitor existing positions but are never admitted to candidate scores or tickets. It remains manual-execution-only.

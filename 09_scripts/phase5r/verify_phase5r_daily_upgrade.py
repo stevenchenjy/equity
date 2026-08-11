@@ -60,6 +60,8 @@ NEW_JOBS = {
 }
 NEW_PYTHON_FILES = (
     "phase5r_daily_common.py",
+    "phase5r_sec_acceptance.py",
+    "phase5r_sec_acceptance_extensions.py",
     "refresh_phase5r_daily_evidence.py",
     "refresh_phase5r_sec_filing_artifacts.py",
     "create_phase5r_daily_decision_and_brief.py",

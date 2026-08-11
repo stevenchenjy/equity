@@ -36,16 +36,30 @@ from phase5r_daily_common import (
     read_json,
     log_daily_run,
     append_csv_durable,
+    ExclusiveFileLock,
 )
 from phase5r_sec_acceptance import (
     AcceptanceIndexError,
     AcceptanceReconciliationError,
     SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
+    SEC_ACCEPTANCE_INDEX_PATH,
     load_immutable_acceptance_index,
     make_acceptance_record,
     normalize_acceptance_timestamp,
     reconcile_current_acceptance_records,
     write_acceptance_reconciliation_log,
+)
+from phase5r_sec_acceptance_extensions import (
+    SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH,
+    SEC_ACCEPTANCE_EXTENSION_DIR,
+    SEC_ACCEPTANCE_EXTENSION_LOCK_PATH,
+    ExtensionValidationError,
+    extension_acceptance_records,
+    load_extension_artifacts,
+    plan_unindexed_current_records,
+    raw_file_sha256,
+    write_extension_admission_audit,
+    write_extension_artifact,
 )
 
 
@@ -228,6 +242,40 @@ def recent_filings(payload: dict[str, Any]) -> list[dict[str, str]]:
             }
         )
     return rows
+
+
+def current_submission_entity_name(
+    payload: dict[str, Any],
+    *,
+    ticker: str,
+    cik: int,
+) -> str:
+    """Prove that the current SEC submission endpoint identifies this issuer.
+
+    The extension policy relies only on the approved SEC submissions endpoint.
+    Its top-level CIK and ticker list must independently agree with the ticker
+    map used to construct that endpoint; the bounded official issuer name is
+    then retained in a separate extension artifact for auditability.
+    """
+
+    if not isinstance(payload, dict):
+        raise ExtensionValidationError("SEC acceptance extension submission payload is invalid")
+    response_cik = str(payload.get("cik", "")).strip()
+    if not response_cik.isdigit() or int(response_cik) != cik:
+        raise ExtensionValidationError("SEC acceptance extension CIK identity conflict")
+    tickers = payload.get("tickers")
+    if not isinstance(tickers, list) or ticker not in {
+        str(value).strip().upper() for value in tickers
+    }:
+        raise ExtensionValidationError("SEC acceptance extension ticker identity conflict")
+    entity_name = str(payload.get("name", "")).strip()
+    if (
+        not entity_name
+        or len(entity_name) > 256
+        or any(ord(character) < 32 for character in entity_name)
+    ):
+        raise ExtensionValidationError("SEC acceptance extension entity identity conflict")
+    return entity_name
 
 
 def fact_units(payload: dict[str, Any], tags: tuple[str, ...]) -> list[dict[str, Any]]:
@@ -451,7 +499,31 @@ def write_early_evidence_failure_status(
 def acceptance_index_failure_reason(exc: AcceptanceIndexError) -> str:
     """Map acceptance validation failures to closed, non-sensitive status codes."""
 
+    if isinstance(exc, ExtensionValidationError):
+        message = str(exc)
+        if "duplicate accession" in message:
+            return "sec_acceptance_extension_duplicate_accession"
+        if "identity" in message or "ticker" in message or "CIK" in message:
+            return "sec_acceptance_extension_identity_conflict"
+        if "source" in message or "provenance" in message:
+            return "sec_acceptance_extension_provenance_invalid"
+        if "future" in message:
+            return "sec_acceptance_extension_future_timestamp"
+        return "sec_acceptance_extension_validation_failed"
     if isinstance(exc, AcceptanceReconciliationError):
+        message = str(exc)
+        if "accession is absent from immutable index" in message:
+            return "sec_acceptance_unindexed_accession"
+        if "identity fields differ" in message:
+            return "sec_acceptance_identity_mismatch"
+        if "timestamp is not a permitted representation difference" in message:
+            return "sec_acceptance_timestamp_unreconciled"
+        if "timestamp is later than reconciliation time" in message:
+            return "sec_acceptance_current_future_timestamp"
+        if "current SEC response contains a duplicate accession" in message:
+            return "sec_acceptance_current_duplicate_accession"
+        if "immutable SEC index contains a duplicate accession" in message:
+            return "sec_acceptance_historical_duplicate_accession"
         return "sec_acceptance_reconciliation_rejected"
     message = str(exc)
     if "conflicting SEC acceptance records" in message:
@@ -461,12 +533,32 @@ def acceptance_index_failure_reason(exc: AcceptanceIndexError) -> str:
     return "sec_acceptance_index_invalid"
 
 
+def count_unindexed_acceptance_accessions(
+    *,
+    historical_records: list[dict[str, str]],
+    current_records: list[dict[str, str]],
+) -> int:
+    """Return a safe aggregate only; never retain or emit accession values."""
+
+    historical_accessions = {
+        str(row.get("accession_number", "")).strip()
+        for row in historical_records
+    }
+    current_accessions = {
+        str(row.get("accession_number", "")).strip()
+        for row in current_records
+    }
+    current_accessions.discard("")
+    return len(current_accessions - historical_accessions)
+
+
 def write_acceptance_index_failure_status(
     *,
     attempt_at: str,
     state: dict[str, Any],
     held_tickers: list[str],
     reason: str,
+    unindexed_accession_count: int = 0,
 ) -> None:
     """Durably close the evidence gate without persisting uncommitted SEC data."""
 
@@ -490,6 +582,7 @@ def write_acceptance_index_failure_status(
         "baseline_mode": not bool(state.get("initialized")),
         "new_material_event_count": 0,
         "new_material_accessions": [],
+        "unindexed_accession_count": unindexed_accession_count,
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)
@@ -548,8 +641,36 @@ def main() -> int:
     fundamental_rows: list[dict[str, str]] = []
     missing_tickers: list[str] = []
     new_material_events: list[dict[str, str]] = []
-    prior_acceptance_index = load_immutable_acceptance_index()
+    # Bind the separate extension layer to the exact historical index bytes.
+    # The historical index itself remains read-only throughout this refresh.
+    try:
+        prior_immutable_index_sha256 = raw_file_sha256(SEC_ACCEPTANCE_INDEX_PATH)
+        prior_acceptance_index = load_immutable_acceptance_index(
+            SEC_ACCEPTANCE_INDEX_PATH
+        )
+    except AcceptanceIndexError as exc:
+        reason = acceptance_index_failure_reason(exc)
+        write_acceptance_index_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=reason,
+        )
+        print(f"scan_status=failed reason={reason}")
+        return 1
+    except OSError:
+        reason = "sec_acceptance_index_unavailable"
+        write_acceptance_index_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=reason,
+        )
+        print(f"scan_status=failed reason={reason}")
+        return 1
     new_acceptance_records: list[dict[str, str]] = []
+    forms_by_accession: dict[str, str] = {}
+    entity_by_ticker: dict[str, str] = {}
     pending_ledger_rows: list[dict[str, str]] = []
     filings_recorded = 0
 
@@ -581,8 +702,13 @@ def main() -> int:
         try:
             filings = recent_filings(payload)
             submission_url = SEC_SUBMISSIONS_URL.format(cik=cik)
-            new_acceptance_records.extend(
-                make_acceptance_record(
+            entity_by_ticker[ticker] = current_submission_entity_name(
+                payload,
+                ticker=ticker,
+                cik=cik,
+            )
+            for filing in filings:
+                acceptance_record = make_acceptance_record(
                     accession_number=filing["accession_number"],
                     ticker=ticker,
                     cik=cik,
@@ -590,12 +716,24 @@ def main() -> int:
                     accepted_at=filing["accepted_at"],
                     source_url=submission_url,
                 )
-                for filing in filings
-                if filing["accepted_at"]
-            )
+                new_acceptance_records.append(acceptance_record)
+                accession = acceptance_record["accession_number"]
+                prior_form = forms_by_accession.get(accession)
+                if prior_form is not None and prior_form != filing["form"]:
+                    raise ExtensionValidationError(
+                        "SEC acceptance extension filing form identity conflict"
+                    )
+                forms_by_accession[accession] = filing["form"]
         except AcceptanceIndexError as exc:
-            errors.append(f"{ticker}:{type(exc).__name__}")
-            continue
+            reason = acceptance_index_failure_reason(exc)
+            write_acceptance_index_failure_status(
+                attempt_at=attempt_at,
+                state=state,
+                held_tickers=held_tickers,
+                reason=reason,
+            )
+            print(f"scan_status=failed reason={reason}")
+            return 1
 
         existing = seen_by_ticker.setdefault(ticker, set())
         for filing in filings:
@@ -667,20 +805,82 @@ def main() -> int:
         for ticker in held_tickers
         if fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
     )
-    # Validate current official records against the immutable acceptance index
-    # before mutating current fundamentals or the filing ledger. Only the
-    # separately auditable timestamp-reconciliation log may advance here; the
-    # historical index is never overwritten by this workflow.
+    # Validate current official records against the effective acceptance set
+    # before mutating current fundamentals or the filing ledger. The effective
+    # set is the immutable historical index plus fully validated, separately
+    # versioned extensions. The historical index is never overwritten.
+    historical_unindexed_accession_count = count_unindexed_acceptance_accessions(
+        historical_records=prior_acceptance_index["records"],
+        current_records=new_acceptance_records,
+    )
+    extension_artifacts: list[dict[str, Any]] = []
+    extension_admission_count = 0
+    unindexed_accession_count = historical_unindexed_accession_count
     try:
-        reconciliations = reconcile_current_acceptance_records(
-            historical_records=prior_acceptance_index["records"],
-            current_records=new_acceptance_records,
-            reconciled_at=iso_now(),
-        )
-        write_acceptance_reconciliation_log(
-            reconciliations,
-            path=SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
-        )
+        with ExclusiveFileLock(SEC_ACCEPTANCE_EXTENSION_LOCK_PATH):
+            if raw_file_sha256(SEC_ACCEPTANCE_INDEX_PATH) != prior_immutable_index_sha256:
+                raise ExtensionValidationError(
+                    "immutable SEC acceptance index changed during refresh"
+                )
+            locked_acceptance_index = load_immutable_acceptance_index(
+                SEC_ACCEPTANCE_INDEX_PATH
+            )
+            if locked_acceptance_index != prior_acceptance_index:
+                raise ExtensionValidationError(
+                    "immutable SEC acceptance index content changed during refresh"
+                )
+            retained_extensions = load_extension_artifacts(
+                historical_index_sha256=prior_immutable_index_sha256,
+                directory=SEC_ACCEPTANCE_EXTENSION_DIR,
+            )
+            planned_extensions, extension_admission_count = plan_unindexed_current_records(
+                historical_records=prior_acceptance_index["records"],
+                extension_artifacts=retained_extensions,
+                current_records=new_acceptance_records,
+                forms_by_accession=forms_by_accession,
+                expected_cik_by_ticker={
+                    ticker: str(cik) for ticker, cik in ticker_map.items()
+                },
+                expected_entity_by_ticker=entity_by_ticker,
+                permitted_forms=RELEVANT_FORMS,
+                historical_index_sha256=prior_immutable_index_sha256,
+                admitted_at=iso_now(),
+            )
+            effective_acceptance_records = [
+                *prior_acceptance_index["records"],
+                *extension_acceptance_records(planned_extensions),
+            ]
+            unindexed_accession_count = count_unindexed_acceptance_accessions(
+                historical_records=effective_acceptance_records,
+                current_records=new_acceptance_records,
+            )
+            if unindexed_accession_count:
+                raise ExtensionValidationError(
+                    "SEC acceptance extension left an unindexed accession"
+                )
+            reconciliations = reconcile_current_acceptance_records(
+                historical_records=effective_acceptance_records,
+                current_records=new_acceptance_records,
+                reconciled_at=iso_now(),
+            )
+            # All validation precedes persistence. The timestamp audit is
+            # append-only; the extension and its raw-byte-bound admission
+            # audit are written only after the whole source batch reconciles.
+            write_acceptance_reconciliation_log(
+                reconciliations,
+                path=SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
+            )
+            if extension_admission_count:
+                write_extension_artifact(
+                    planned_extensions[-1],
+                    directory=SEC_ACCEPTANCE_EXTENSION_DIR,
+                )
+            write_extension_admission_audit(
+                planned_extensions,
+                path=SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH,
+                directory=SEC_ACCEPTANCE_EXTENSION_DIR,
+            )
+            extension_artifacts = planned_extensions
     except AcceptanceIndexError as exc:
         reason = acceptance_index_failure_reason(exc)
         write_acceptance_index_failure_status(
@@ -688,16 +888,29 @@ def main() -> int:
             state=state,
             held_tickers=held_tickers,
             reason=reason,
+            unindexed_accession_count=historical_unindexed_accession_count,
         )
         print(f"scan_status=failed reason={reason}")
         return 1
-    except (OSError, UnicodeError, csv.Error):
-        reason = "sec_acceptance_reconciliation_log_unavailable"
+    except RuntimeError:
+        reason = "sec_acceptance_extension_lock_unavailable"
         write_acceptance_index_failure_status(
             attempt_at=attempt_at,
             state=state,
             held_tickers=held_tickers,
             reason=reason,
+            unindexed_accession_count=historical_unindexed_accession_count,
+        )
+        print(f"scan_status=failed reason={reason}")
+        return 1
+    except (OSError, UnicodeError, csv.Error):
+        reason = "sec_acceptance_extension_persistence_unavailable"
+        write_acceptance_index_failure_status(
+            attempt_at=attempt_at,
+            state=state,
+            held_tickers=held_tickers,
+            reason=reason,
+            unindexed_accession_count=historical_unindexed_accession_count,
         )
         print(f"scan_status=failed reason={reason}")
         return 1
@@ -747,9 +960,16 @@ def main() -> int:
         "new_material_accessions": [
             row["accession_number"] for row in new_material_events
         ],
-        "sec_acceptance_record_count": prior_acceptance_index["record_count"],
+        "sec_acceptance_historical_record_count": prior_acceptance_index["record_count"],
+        "sec_acceptance_record_count": (
+            prior_acceptance_index["record_count"]
+            + len(extension_acceptance_records(extension_artifacts))
+        ),
         "sec_acceptance_source": prior_acceptance_index["source_authority"],
         "sec_acceptance_reconciliation_count": len(reconciliations),
+        "sec_acceptance_extension_version_count": len(extension_artifacts),
+        "sec_acceptance_extension_admission_count": extension_admission_count,
+        "unindexed_accession_count": unindexed_accession_count,
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)

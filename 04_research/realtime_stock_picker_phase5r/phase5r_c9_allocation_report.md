@@ -1,6 +1,6 @@
 # Phase 5R-C9 Allocation Report
 
-Generated: `2026-08-07T07:59:10+08:00`
+Generated: `2026-08-10T23:47:29+08:00`
 
 | Role | Current Value | Current Weight | Target Weight | Target Value | Status |
 | --- | ---: | ---: | ---: | ---: | --- |

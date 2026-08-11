@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import calendar
 import fcntl
 import hashlib
 import json
@@ -11,7 +12,7 @@ import os
 import stat
 import tempfile
 from contextlib import AbstractContextManager
-from datetime import date, datetime
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
@@ -133,6 +134,96 @@ def iso_now() -> str:
 
 def cycle_date(value: datetime | None = None) -> str:
     return (value or now_et()).date().isoformat()
+
+
+def nth_weekday(year: int, month: int, weekday: int, ordinal: int) -> date:
+    first = date(year, month, 1)
+    shift = (weekday - first.weekday()) % 7
+    return first + timedelta(days=shift + 7 * (ordinal - 1))
+
+
+def last_weekday(year: int, month: int, weekday: int) -> date:
+    last_day = calendar.monthrange(year, month)[1]
+    value = date(year, month, last_day)
+    return value - timedelta(days=(value.weekday() - weekday) % 7)
+
+
+def observed(value: date) -> date:
+    if value.weekday() == 5:
+        return value - timedelta(days=1)
+    if value.weekday() == 6:
+        return value + timedelta(days=1)
+    return value
+
+
+def easter_sunday(year: int) -> date:
+    a = year % 19
+    b = year // 100
+    c = year % 100
+    d = b // 4
+    e = b % 4
+    f = (b + 8) // 25
+    g = (b - f + 1) // 3
+    h = (19 * a + b - d - g + 15) % 30
+    i = c // 4
+    k = c % 4
+    l = (32 + 2 * e + 2 * i - h - k) % 7
+    m = (a + 11 * h + 22 * l) // 451
+    month = (h + l - 7 * m + 114) // 31
+    day = ((h + l - 7 * m + 114) % 31) + 1
+    return date(year, month, day)
+
+
+def us_market_holidays(year: int) -> set[date]:
+    """Return the regular U.S. market holidays used by the daily gates."""
+
+    return {
+        observed(date(year, 1, 1)),
+        nth_weekday(year, 1, calendar.MONDAY, 3),
+        nth_weekday(year, 2, calendar.MONDAY, 3),
+        easter_sunday(year) - timedelta(days=2),
+        last_weekday(year, 5, calendar.MONDAY),
+        observed(date(year, 6, 19)),
+        observed(date(year, 7, 4)),
+        nth_weekday(year, 9, calendar.MONDAY, 1),
+        nth_weekday(year, 11, calendar.THURSDAY, 4),
+        observed(date(year, 12, 25)),
+    }
+
+
+def is_us_market_session_date(value: date) -> bool:
+    holidays = us_market_holidays(value.year) | us_market_holidays(value.year - 1)
+    return value.weekday() < 5 and value not in holidays
+
+
+def expected_market_session(current: datetime) -> date:
+    """Return the trading session expected by existing daily decision gates."""
+
+    candidate = current.date()
+    while not is_us_market_session_date(candidate):
+        candidate -= timedelta(days=1)
+    return candidate
+
+
+def last_completed_market_session(
+    current: datetime,
+    *,
+    close_time: time = time(16, 15),
+) -> date:
+    """Return the most recent session that can safely be reused as a close.
+
+    This intentionally mirrors the daily close boundary.  A pre-close weekday
+    can reuse only the preceding completed session; a holiday or weekend is
+    normalized back to the prior regular session.
+    """
+
+    candidate = current
+    if (
+        is_us_market_session_date(current.date())
+        and current.timetz().replace(tzinfo=None) < close_time
+    ):
+        candidate = current - timedelta(days=1)
+    return expected_market_session(candidate)
 
 
 def read_json(path: Path, default: Any | None = None) -> Any:

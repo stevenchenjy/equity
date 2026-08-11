@@ -3,14 +3,17 @@ from __future__ import annotations
 import tempfile
 import unittest
 from contextlib import ExitStack
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
 import run_phase5r_b2_full_universe_market_data as b2
 
 
 _FIXED_NOW = "2026-08-05T16:30:00-04:00"
+POST_CLOSE = datetime(2026, 8, 5, 17, 45, tzinfo=ZoneInfo("America/New_York"))
 
 
 def _seed(ticker: str) -> dict[str, str]:
@@ -99,6 +102,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             "decision": root / "00_project_control" / "phase5r_b2_data_source_decision.md",
             "report": root / "04_research" / "realtime_stock_picker_phase5r" / "phase5r_b2_data_report.md",
             "run_log": root / "00_project_control" / "run_logs" / "phase5r_b2_run_log.csv",
+            "rate_limit_state": root / "00_project_control" / "run_logs" / "phase5r_b2_rate_limit_state.local.json",
         }
 
     def _write_coherent_prior_outputs(self, paths: dict[str, Path]) -> None:
@@ -153,6 +157,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 ("DECISION_PATH", paths["decision"]),
                 ("REPORT_PATH", paths["report"]),
                 ("RUN_LOG", paths["run_log"]),
+                ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
             ):
                 stack.enter_context(patch.object(b2, name, path))
             stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
@@ -238,6 +243,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                     ("DECISION_PATH", paths["decision"]),
                     ("REPORT_PATH", paths["report"]),
                     ("RUN_LOG", paths["run_log"]),
+                    ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
                 ):
                     stack.enter_context(patch.object(b2, name, path))
                 stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
@@ -275,9 +281,126 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 audit[-1]["status"], "source_failure_prior_outputs_preserved"
             )
             self.assertIn(
-                "- Full-universe action: `full-universe retrieval failed safely: OSError`.",
+                "- Full-universe action: `full-universe retrieval failed safely: yfinance_request_failed`.",
                 paths["decision"].read_text(encoding="utf-8"),
             )
+
+    def test_incomplete_full_response_is_rejected_before_commit(self) -> None:
+        """A partial yfinance frame cannot clear the circuit or overwrite a trio."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = self._paths(root)
+            self._write_coherent_prior_outputs(paths)
+            prior_bytes = {
+                name: paths[name].read_bytes()
+                for name in ("snapshot", "quality", "candidates")
+            }
+            smoke_rows = [
+                {
+                    "ticker": ticker,
+                    "last_price": "100.0000",
+                    "previous_close": "99.0000",
+                    "volume": "100000",
+                    "status": "passed",
+                }
+                for ticker in b2.SMOKE_TICKERS
+            ]
+            full_rows = [
+                _market_row(ticker, str(100 + index))
+                for index, ticker in enumerate((*b2.SMOKE_TICKERS, "IOT"))
+            ]
+            for row in full_rows:
+                row["market_session_date"] = "2026-08-05"
+                row["market_age_calendar_days"] = "0"
+                row["data_timestamp"] = "2026-08-05T17:45:00-04:00"
+            full_rows[-1] = b2.empty_market_row(
+                "IOT", "yfinance_public_market_data", _FIXED_NOW
+            )
+
+            with ExitStack() as stack:
+                for name, path in (
+                    ("ROOT", root),
+                    ("DATA_DIR", paths["data"]),
+                    ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
+                    ("LOCAL_POSITIONS_PATH", paths["positions"]),
+                    ("SNAPSHOT_PATH", paths["snapshot"]),
+                    ("QUALITY_PATH", paths["quality"]),
+                    ("CANDIDATES_PATH", paths["candidates"]),
+                    ("AUDIT_PATH", paths["audit"]),
+                    ("DECISION_PATH", paths["decision"]),
+                    ("REPORT_PATH", paths["report"]),
+                    ("RUN_LOG", paths["run_log"]),
+                    ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
+                ):
+                    stack.enter_context(patch.object(b2, name, path))
+                stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                stack.enter_context(
+                    patch.object(b2, "smoke_test", return_value=(smoke_rows, True))
+                )
+                stack.enter_context(
+                    patch.object(
+                        b2,
+                        "retrieve_full_universe",
+                        return_value=(
+                            full_rows,
+                            "full-universe public daily history retrieved",
+                            True,
+                            "none",
+                        ),
+                    )
+                )
+                clear_rate_limit = stack.enter_context(
+                    patch.object(b2, "clear_rate_limit_state")
+                )
+                result = b2.main()
+
+            self.assertEqual(result, 1)
+            clear_rate_limit.assert_not_called()
+            for name, expected in prior_bytes.items():
+                with self.subTest(artifact=name):
+                    self.assertEqual(paths[name].read_bytes(), expected)
+            audit = b2.read_csv(paths["audit"])
+            self.assertEqual(
+                (audit[1]["action"], audit[1]["status"]),
+                ("full_universe_market_data_refresh", "failed"),
+            )
+            self.assertIn(
+                f"source_failure_code={b2.FULL_UNIVERSE_INCOMPLETE_CODE}",
+                audit[1]["safety_notes"],
+            )
+            self.assertIn(
+                "source_failure_prior_outputs_preserved", audit[-1]["status"],
+            )
+            self.assertIn(
+                f"full-universe response rejected before commit: {b2.FULL_UNIVERSE_INCOMPLETE_CODE}",
+                paths["decision"].read_text(encoding="utf-8"),
+            )
+
+    def test_full_response_requires_the_latest_completed_session(self) -> None:
+        """A complete-looking but delayed provider response is still uncommittable."""
+
+        rows = [
+            _market_row(ticker, str(100 + index))
+            for index, ticker in enumerate((*b2.SMOKE_TICKERS, "IOT"))
+        ]
+        for row in rows:
+            row["market_session_date"] = "2026-08-05"
+            row["market_age_calendar_days"] = "0"
+            row["data_timestamp"] = "2026-08-05T17:45:00-04:00"
+        rows[0]["market_session_date"] = "2026-08-04"
+        rows[0]["market_age_calendar_days"] = "1"
+
+        committable, code = b2.full_universe_rows_are_committable(
+            market_rows=rows,
+            tickers=[*b2.SMOKE_TICKERS, "IOT"],
+            held_tickers=["IOT"],
+            current=POST_CLOSE,
+        )
+
+        self.assertFalse(committable)
+        self.assertEqual(code, b2.FULL_UNIVERSE_STALE_CODE)
 
     def test_failed_smoke_replaces_an_incoherent_prior_trio_with_one_fallback(self) -> None:
         """A partial or contradictory baseline may never be selectively reused."""

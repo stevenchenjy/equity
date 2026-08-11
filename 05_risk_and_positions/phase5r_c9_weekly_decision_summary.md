@@ -1,6 +1,6 @@
 # Phase 5R-C9 Supporting Decision Summary (Daily Refresh)
 
-Generated: `2026-08-07T07:59:10+08:00`
+Generated: `2026-08-10T23:47:29+08:00`
 
 - Primary scenario: `c9_account_aware_manual_review`.
 - Account total: `$2397.53`.
@@ -8,7 +8,7 @@ Generated: `2026-08-07T07:59:10+08:00`
 - Current active-stock sleeve: `$354.98` (`14.8061%`).
 - Cash-deployment decision: `no_deployment_until_next_review`.
 - New eligible individual-stock count: `0`.
-- Next review date: `2026-08-07`.
+- Next review date: `2026-08-11`.
 
 ## Exact Current-Position Review
 
