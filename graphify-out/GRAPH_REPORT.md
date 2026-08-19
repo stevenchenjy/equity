@@ -1,7 +1,7 @@
 # Graph Report - equity  (2026-08-11)
 
 ## Corpus Check
-- 508 files · ~440,818 words
+- 508 files · ~442,189 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `45905c0f`
+- Built from commit: `28f23174`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -826,7 +826,7 @@ Nodes (8): Boundary, Canonical C9 Direction, Inputs That Can Mostly Remain, Main
 
 ### Community 93 - "Phase 0A Verification Report"
 Cohesion: 0.22
-Nodes (8): Phase 5R 每日决策 — 2026-08-10, 决定性结论, 可靠性门槛, 当前持仓, 新候选, 深度与长期约束, 运行边界, 长期基本面
+Nodes (8): Phase 5R 每日决策 — 2026-08-11, 决定性结论, 可靠性门槛, 当前持仓, 新候选, 深度与长期约束, 运行边界, 长期基本面
 
 ### Community 94 - "Phase 0B Verification Report"
 Cohesion: 0.42

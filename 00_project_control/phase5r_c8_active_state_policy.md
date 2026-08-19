@@ -31,14 +31,17 @@ without reading their contents.
 - Authorized sender: `send_phase5r_daily_email.py`
 - Execution: manual and outside the repository
 
-The active launchd jobs are only:
+The only standalone active launchd jobs are:
 
 - `com.steven.phase5r.dailyrefresh`
 - `com.steven.phase5r.dailydecision`
 
-`dailybrief`, `weeklyconviction`, `weeklycatchup`, and `llmshadow` remain
-unloaded unless the separately verified LLM activation process later
-authorizes only `llmshadow`.
+`dailybrief`, `weeklyconviction`, `weeklycatchup`, and the legacy standalone
+`llmshadow` job remain unloaded. The separately authorized
+`phase5r-production-shadow-v1` is not a LaunchAgent: the daily-refresh
+scheduler may invoke it as a noncanonical child only after the just-written
+deterministic refresh is fully passed. It cannot alter the deterministic
+decision, position, risk state, or normal daily email.
 
 ## Stale-File Guard
 
@@ -50,8 +53,10 @@ authorizes only `llmshadow`.
   evidence rather than old preview prose.
 - `current_positions.local.csv` and `current_account_state.local.json` are the
   only current local portfolio sources.
-- Model artifacts cannot influence the canonical decision or email until the
-  replay, provider, shadow, and activation gates pass.
+- Model artifacts cannot influence the canonical decision or normal daily
+  email. The separate production-shadow companion is limited to its own
+  validated, noncanonical report surface and remains blocked until its
+  deterministic freshness, evidence, contract, privacy, and cost gates pass.
 
 ## Pipeline Requirement
 

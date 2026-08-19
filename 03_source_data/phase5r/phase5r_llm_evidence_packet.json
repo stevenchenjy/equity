@@ -1,5 +1,5 @@
 {
-  "as_of_et": "2026-08-10T23:56:51-04:00",
+  "as_of_et": "2026-08-18T18:49:58-04:00",
   "boundaries": {
     "automatic_action_allowed": false,
     "broker_connected": false,
@@ -11,10 +11,136 @@
   },
   "calculations": [
     {
-      "calculation_id": "calc:c9_score:ARM:2026-08-10",
+      "calculation_id": "calc:revenue_yoy:AVGO:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "47.87",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:AVGO:CY2026Q1"
+      ],
+      "ticker": "AVGO",
+      "unit": "pct",
+      "value": "47.87"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:IOT:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "30.52",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:IOT:CY2026Q1"
+      ],
+      "ticker": "IOT",
+      "unit": "pct",
+      "value": "30.52"
+    },
+    {
+      "calculation_id": "calc:net_margin:IOT:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "9.29",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:IOT:CY2026Q1"
+      ],
+      "ticker": "IOT",
+      "unit": "pct",
+      "value": "9.29"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:MU:CY2026Q2",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q2",
+      "recomputed_value": "345.72",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:MU:CY2026Q2"
+      ],
+      "ticker": "MU",
+      "unit": "pct",
+      "value": "345.72"
+    },
+    {
+      "calculation_id": "calc:net_margin:MU:CY2026Q2",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q2",
+      "recomputed_value": "68.13",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:MU:CY2026Q2"
+      ],
+      "ticker": "MU",
+      "unit": "pct",
+      "value": "68.13"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:PANW:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "31.15",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:PANW:CY2026Q1"
+      ],
+      "ticker": "PANW",
+      "unit": "pct",
+      "value": "31.15"
+    },
+    {
+      "calculation_id": "calc:net_margin:PANW:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "-5.90",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:PANW:CY2026Q1"
+      ],
+      "ticker": "PANW",
+      "unit": "pct",
+      "value": "-5.90"
+    },
+    {
+      "calculation_id": "calc:revenue_yoy:RBRK:CY2026Q1",
+      "formula": "(revenue_latest/revenue_prior_year-1)*100",
+      "metric": "revenue_yoy_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "38.99",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:RBRK:CY2026Q1"
+      ],
+      "ticker": "RBRK",
+      "unit": "pct",
+      "value": "38.99"
+    },
+    {
+      "calculation_id": "calc:net_margin:RBRK:CY2026Q1",
+      "formula": "net_income_latest/revenue_latest*100",
+      "metric": "net_margin_pct",
+      "period": "CY2026Q1",
+      "recomputed_value": "-10.81",
+      "reconciled": true,
+      "source_ids": [
+        "sec-xbrl:RBRK:CY2026Q1"
+      ],
+      "ticker": "RBRK",
+      "unit": "pct",
+      "value": "-10.81"
+    },
+    {
+      "calculation_id": "calc:c9_score:ARM:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "6.72",
       "reconciled": true,
       "source_ids": [
@@ -25,10 +151,10 @@
       "value": "6.72"
     },
     {
-      "calculation_id": "calc:c9_score:AVGO:2026-08-10",
+      "calculation_id": "calc:c9_score:AVGO:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "7.61",
       "reconciled": true,
       "source_ids": [
@@ -39,10 +165,10 @@
       "value": "7.61"
     },
     {
-      "calculation_id": "calc:c9_score:IOT:2026-08-10",
+      "calculation_id": "calc:c9_score:IOT:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "6.69",
       "reconciled": true,
       "source_ids": [
@@ -53,10 +179,10 @@
       "value": "6.69"
     },
     {
-      "calculation_id": "calc:c9_score:MU:2026-08-10",
+      "calculation_id": "calc:c9_score:MU:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "7.10",
       "reconciled": true,
       "source_ids": [
@@ -67,10 +193,10 @@
       "value": "7.10"
     },
     {
-      "calculation_id": "calc:c9_score:PANW:2026-08-10",
+      "calculation_id": "calc:c9_score:PANW:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "7.16",
       "reconciled": true,
       "source_ids": [
@@ -81,10 +207,10 @@
       "value": "7.16"
     },
     {
-      "calculation_id": "calc:c9_score:RBRK:2026-08-10",
+      "calculation_id": "calc:c9_score:RBRK:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "7.15",
       "reconciled": true,
       "source_ids": [
@@ -95,10 +221,10 @@
       "value": "7.15"
     },
     {
-      "calculation_id": "calc:c9_score:SPY:2026-08-10",
+      "calculation_id": "calc:c9_score:SPY:2026-08-18",
       "formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*portfolio_fit",
       "metric": "account_aware_conviction_score",
-      "period": "2026-08-10",
+      "period": "2026-08-18",
       "recomputed_value": "6.91",
       "reconciled": true,
       "source_ids": [
@@ -109,11 +235,11 @@
       "value": "6.91"
     }
   ],
-  "cycle_date": "2026-08-10",
-  "decision_fingerprint": "a40702555b4fec88517b5be418f50b868efa3ef258142756fdb08b92ab300292",
+  "cycle_date": "2026-08-18",
+  "decision_fingerprint": "5cbe07271cdc0f80a3bc9f9b734dd62c77b7bbd1ad32f167f87bfd31e0825150",
   "entities": [
     {
-      "cik": "",
+      "cik": "1642896",
       "concentration_status": "above_hard_cap",
       "deterministic_recommendation": "trim_specific_shares_review",
       "holding_horizon": "medium_conviction",
@@ -125,7 +251,7 @@
       "ticker": "IOT"
     },
     {
-      "cik": "",
+      "cik": "1943896",
       "concentration_status": "above_default_cap",
       "deterministic_recommendation": "hold",
       "holding_horizon": "medium_conviction",
@@ -149,7 +275,7 @@
       "ticker": "SPY"
     },
     {
-      "cik": "",
+      "cik": "1730168",
       "concentration_status": "not_held",
       "deterministic_recommendation": "watch_only",
       "holding_horizon": "",
@@ -161,7 +287,7 @@
       "ticker": "AVGO"
     },
     {
-      "cik": "",
+      "cik": "1327567",
       "concentration_status": "not_held",
       "deterministic_recommendation": "watch_only",
       "holding_horizon": "",
@@ -173,7 +299,7 @@
       "ticker": "PANW"
     },
     {
-      "cik": "",
+      "cik": "723125",
       "concentration_status": "not_held",
       "deterministic_recommendation": "watch_only",
       "holding_horizon": "",
@@ -185,7 +311,7 @@
       "ticker": "MU"
     },
     {
-      "cik": "",
+      "cik": "1973239",
       "concentration_status": "not_held",
       "deterministic_recommendation": "watch_only",
       "holding_horizon": "",
@@ -199,7 +325,7 @@
   ],
   "evidence_freshness": [
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
         "sec-1973239-0001973239-26-000113-0cda3ebc94c9e914:chunk:0",
         "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:0",
@@ -209,7 +335,9 @@
         "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:27",
         "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:30",
         "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:36",
-        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:40"
+        "sec-1973239-0001973239-26-000114-6ff1e459afaf0ebf:chunk:40",
+        "sec-1973239-0001973239-26-000117-11303f435169b989:chunk:0",
+        "sec-xbrl:ARM:unknown"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -220,36 +348,33 @@
       },
       "market": {
         "blocked_reasons": [
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete"
         ],
         "complete_close": false,
         "current": false,
         "expected_market_session_date": "",
-        "market_session_date": "2026-08-10",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "market_session_date": "",
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "c5b3e7bb16b9f5ec0441b3da48cbf26a8523a1160014de72014d99a884f55133",
+      "receipt_sha256": "ad3bf1aa6e7d3a1b31331cd5d8fa5dbe5eca639aae37babdade7adcc1ce2a579",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "ARM",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
           "valuation_receipt_missing",
@@ -261,7 +386,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -287,9 +412,10 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
-        "sec-1730168-0001193125-26-295589-b161757f0c8de8ac:chunk:0"
+        "sec-1730168-0001193125-26-295589-b161757f0c8de8ac:chunk:0",
+        "sec-xbrl:AVGO:CY2026Q1"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -308,29 +434,24 @@
         "current": false,
         "expected_market_session_date": "",
         "market_session_date": "",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "50a8711b03efb2ae8a2b1ad439ba6ffc36e6cbc38b88ae5098e5a95d328d34fa",
+      "receipt_sha256": "63e61e68e1f587a86fd45af6f9674f9d950cef1e02e60e64044434f5e70cf137",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "AVGO",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
           "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
@@ -343,7 +464,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -369,10 +490,11 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
         "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:0",
-        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:1"
+        "sec-1642896-0001628280-26-049446-d29df3e012902685:chunk:1",
+        "sec-xbrl:IOT:CY2026Q1"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -391,29 +513,24 @@
         "current": false,
         "expected_market_session_date": "",
         "market_session_date": "",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "aa3d3202cd7601dcacfc9a87b087954f8d695daebecc8ee66f3a88eda0c24ac9",
+      "receipt_sha256": "c61a9f178e7d9d752e6f4b153d4aa0b09dd4d374b7236fc9e785ef67de76b610",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "IOT",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
           "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
@@ -426,7 +543,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -452,7 +569,7 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:0",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:17",
@@ -461,7 +578,8 @@
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:30",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:39",
         "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:55",
-        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:59"
+        "sec-723125-0000723125-26-000015-b5562c82d3240081:chunk:59",
+        "sec-xbrl:MU:CY2026Q2"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -472,36 +590,33 @@
       },
       "market": {
         "blocked_reasons": [
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete"
         ],
         "complete_close": false,
         "current": false,
         "expected_market_session_date": "",
-        "market_session_date": "2026-08-10",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "market_session_date": "",
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "fb68862c6faa3c21fa2140aef5c003912458b00c70f94a68c16dd63ebb2f4023",
+      "receipt_sha256": "eab4446d2f5263dbb11aa5187e92ab4f1ca326d64d5883a458644d9d4c3c51d7",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "MU",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
           "valuation_receipt_missing",
@@ -513,7 +628,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -539,7 +654,7 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:0",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:28",
@@ -548,7 +663,8 @@
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:38",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:39",
         "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:56",
-        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:84"
+        "sec-1327567-0001327567-26-000015-590e3b201956f26f:chunk:84",
+        "sec-xbrl:PANW:CY2026Q1"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -559,36 +675,33 @@
       },
       "market": {
         "blocked_reasons": [
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete"
         ],
         "complete_close": false,
         "current": false,
         "expected_market_session_date": "",
-        "market_session_date": "2026-08-10",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "market_session_date": "",
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "784e8cdcc15026165b4499d748a05fd762604117eaf7959b795428e4682a45d0",
+      "receipt_sha256": "11625ecc3456e9f01c9a2f0adff61a415bd3040629e85a5451e7e3b098371b8a",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "PANW",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
           "valuation_receipt_missing",
@@ -600,7 +713,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -626,7 +739,7 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:0",
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:100",
@@ -637,7 +750,8 @@
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:33",
         "sec-1943896-0001943896-26-000047-613af964279b2e60:chunk:67",
         "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:0",
-        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:1"
+        "sec-1943896-0001943896-26-000049-596a32a3588c1f55:chunk:1",
+        "sec-xbrl:RBRK:CY2026Q1"
       ],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -656,29 +770,24 @@
         "current": false,
         "expected_market_session_date": "",
         "market_session_date": "",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "5eeec0a848b29eb6a868fff7d2e0ce1ec45a086197e94bd5abac28f3efbe9f51",
+      "receipt_sha256": "0673e0252cf083a1013ea0f030aacbd1dcf9fbf7b33b1c38096793c98d7ef9c0",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "RBRK",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
           "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
@@ -691,7 +800,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -717,7 +826,7 @@
       }
     },
     {
-      "as_of_utc": "2026-08-11T03:56:51Z",
+      "as_of_utc": "2026-08-18T22:49:58Z",
       "durable_sec_source_ids": [],
       "guardrails": {
         "broker_or_execution_capability": false,
@@ -728,36 +837,33 @@
       },
       "market": {
         "blocked_reasons": [
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete"
         ],
         "complete_close": false,
         "current": false,
         "expected_market_session_date": "",
-        "market_session_date": "2026-08-10",
-        "observed_at_utc": "2026-08-10T23:00:34Z"
+        "market_session_date": "",
+        "observed_at_utc": "2026-08-18T21:56:38Z"
       },
-      "receipt_sha256": "88ab89aca9e4588ac25c154c9a12cbd1f2c7354b574982709775b4ce8ca304c2",
+      "receipt_sha256": "3fd0de1d3471042152a32dcea1035a81180e0b1e27b1b003cb407364e7ef41c7",
       "schema_version": "phase5r_evidence_freshness_v1",
       "sec_scan": {
-        "age_seconds": 43768,
-        "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete"
-        ],
-        "complete": false,
-        "completed_through_utc": "2026-08-10T15:47:23Z",
-        "current": false,
+        "age_seconds": 4,
+        "blocked_reasons": [],
+        "complete": true,
+        "completed_through_utc": "2026-08-18T22:49:54Z",
+        "current": true,
         "max_age_seconds": 172800,
-        "status_artifact_sha256": "fc415c3a0839a5b1da9492ad0990943dfb54fb08485d68dff48deabfc0161430",
-        "ticker_scanned": false
+        "status_artifact_sha256": "e0a14ce7fde289af2c68d67359b9949885f4ed85fbf3a52956580a01e2fc4c36",
+        "ticker_scanned": true
       },
       "ticker": "SPY",
       "transition_freshness": {
         "all_current": false,
         "blocked_reasons": [
-          "sec_scan_ticker_not_scanned",
-          "sec_scan_incomplete",
+          "market_session_missing",
           "expected_market_session_missing",
           "market_close_incomplete",
           "valuation_receipt_missing",
@@ -769,7 +875,7 @@
           "valuation_incomplete"
         ],
         "market_current": false,
-        "sec_scan_current": false,
+        "sec_scan_current": true,
         "valuation_current": false
       },
       "valuation": {
@@ -796,6 +902,22 @@
     }
   ],
   "filing_evidence": [
+    {
+      "acceptance_source_id": "",
+      "accepted_at": "",
+      "accession_number": "0001973239-26-000117",
+      "cik": "1973239",
+      "filing_date": "2026-08-10",
+      "form": "6-K",
+      "items": "",
+      "material_event": "yes",
+      "materiality": "medium",
+      "metadata_source_id": "sec-filing-metadata:0001973239-26-000117",
+      "text_chunk_source_ids": [
+        "sec-1973239-0001973239-26-000117-11303f435169b989:chunk:0"
+      ],
+      "ticker": "ARM"
+    },
     {
       "acceptance_source_id": "sec-acceptance:0001973239-26-000114",
       "accepted_at": "2026-07-29T20:05:46.000+00:00",
@@ -1011,7 +1133,116 @@
       "ticker": "RBRK"
     }
   ],
-  "fundamental_observations": [],
+  "fundamental_observations": [
+    {
+      "assets_latest": "10703000000.00",
+      "cash_latest": "2751000000.00",
+      "cik": "1973239",
+      "data_quality": "unavailable",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "",
+      "latest_period_end": "",
+      "liabilities_latest": "2417000000.00",
+      "net_income_latest": "",
+      "net_margin_pct": "",
+      "revenue_latest": "",
+      "revenue_prior_year": "",
+      "revenue_yoy_pct": "",
+      "source_id": "sec-xbrl:ARM:unknown",
+      "ticker": "ARM",
+      "trend_label": "insufficient_trend"
+    },
+    {
+      "assets_latest": "179158000000.00",
+      "cash_latest": "19628000000.00",
+      "cik": "1730168",
+      "data_quality": "ok",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-05-03",
+      "liabilities_latest": "91467000000.00",
+      "net_income_latest": "",
+      "net_margin_pct": "",
+      "revenue_latest": "22187000000.00",
+      "revenue_prior_year": "15004000000.00",
+      "revenue_yoy_pct": "47.87",
+      "source_id": "sec-xbrl:AVGO:CY2026Q1",
+      "ticker": "AVGO",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "2614070000.00",
+      "cash_latest": "218986000.00",
+      "cik": "1642896",
+      "data_quality": "ok",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-05-02",
+      "liabilities_latest": "1106480000.00",
+      "net_income_latest": "44508000.00",
+      "net_margin_pct": "9.29",
+      "revenue_latest": "478844000.00",
+      "revenue_prior_year": "366884000.00",
+      "revenue_yoy_pct": "30.52",
+      "source_id": "sec-xbrl:IOT:CY2026Q1",
+      "ticker": "IOT",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "134112000000.00",
+      "cash_latest": "24995000000.00",
+      "cik": "723125",
+      "data_quality": "ok",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "CY2026Q2",
+      "latest_period_end": "2026-05-28",
+      "liabilities_latest": "33388000000.00",
+      "net_income_latest": "28243000000.00",
+      "net_margin_pct": "68.13",
+      "revenue_latest": "41456000000.00",
+      "revenue_prior_year": "9301000000.00",
+      "revenue_yoy_pct": "345.72",
+      "source_id": "sec-xbrl:MU:CY2026Q2",
+      "ticker": "MU",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "46266000000.00",
+      "cash_latest": "2364000000.00",
+      "cik": "1327567",
+      "data_quality": "ok",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-04-30",
+      "liabilities_latest": "18598000000.00",
+      "net_income_latest": "-177000000.00",
+      "net_margin_pct": "-5.90",
+      "revenue_latest": "3002000000.00",
+      "revenue_prior_year": "2289000000.00",
+      "revenue_yoy_pct": "31.15",
+      "source_id": "sec-xbrl:PANW:CY2026Q1",
+      "ticker": "PANW",
+      "trend_label": "strong_growth"
+    },
+    {
+      "assets_latest": "2768247000.00",
+      "cash_latest": "429397000.00",
+      "cik": "1943896",
+      "data_quality": "ok",
+      "fetched_at": "2026-08-18T18:49:32-04:00",
+      "latest_frame": "CY2026Q1",
+      "latest_period_end": "2026-04-30",
+      "liabilities_latest": "3249572000.00",
+      "net_income_latest": "-41853000.00",
+      "net_margin_pct": "-10.81",
+      "revenue_latest": "387068000.00",
+      "revenue_prior_year": "278481000.00",
+      "revenue_yoy_pct": "38.99",
+      "source_id": "sec-xbrl:RBRK:CY2026Q1",
+      "ticker": "RBRK",
+      "trend_label": "strong_growth"
+    }
+  ],
   "gates": {
     "account_state_consistent": true,
     "allowed_classifications_by_ticker": {
@@ -1056,24 +1287,24 @@
     ],
     "deterministic_transition_pending_tickers": [],
     "filing_artifact_provenance_complete": true,
-    "fundamental_held_coverage_complete": false,
+    "fundamental_held_coverage_complete": true,
     "market_data_action_grade": false,
     "market_data_action_grade_tickers": [],
     "market_data_current": false,
     "point_in_time_safe": true,
     "prompt_injection_text_detected": false,
     "sec_acceptance_provenance_complete": true,
-    "sec_held_coverage_complete": false,
+    "sec_held_coverage_complete": true,
     "valuation_action_grade_tickers": [],
     "verified_close_session": ""
   },
-  "generated_at": "2026-08-10T23:56:51-04:00",
+  "generated_at": "2026-08-18T18:49:58-04:00",
   "market_observations": [
     {
       "bar_state": "intraday_or_unverified",
       "data_quality_label": "insufficient_data",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
       "fifty_two_week_high": "",
       "fifty_two_week_low": "",
       "intraday_change_pct": "",
@@ -1087,73 +1318,73 @@
     },
     {
       "bar_state": "intraday_or_unverified",
-      "data_quality_label": "ok",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
-      "fifty_two_week_high": "452.7000",
-      "fifty_two_week_low": "100.0200",
-      "intraday_change_pct": "-5.2093",
-      "last_price": "267.8500",
-      "market_session_date": "2026-08-10",
-      "previous_close": "282.5700",
-      "relative_volume": "0.5109",
-      "source_id": "market:ARM:2026-08-10",
+      "data_quality_label": "insufficient_data",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
+      "fifty_two_week_high": "",
+      "fifty_two_week_low": "",
+      "intraday_change_pct": "",
+      "last_price": "",
+      "market_session_date": "",
+      "previous_close": "",
+      "relative_volume": "",
+      "source_id": "market:ARM:",
       "ticker": "ARM",
-      "usable_for_scoring": "yes"
-    },
-    {
-      "bar_state": "intraday_or_unverified",
-      "data_quality_label": "ok",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
-      "fifty_two_week_high": "1255.0000",
-      "fifty_two_week_low": "113.4600",
-      "intraday_change_pct": "-1.8882",
-      "last_price": "861.0000",
-      "market_session_date": "2026-08-10",
-      "previous_close": "877.5700",
-      "relative_volume": "0.5802",
-      "source_id": "market:MU:2026-08-10",
-      "ticker": "MU",
-      "usable_for_scoring": "yes"
-    },
-    {
-      "bar_state": "intraday_or_unverified",
-      "data_quality_label": "ok",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
-      "fifty_two_week_high": "385.1699",
-      "fifty_two_week_low": "139.5700",
-      "intraday_change_pct": "5.8209",
-      "last_price": "385.0400",
-      "market_session_date": "2026-08-10",
-      "previous_close": "363.8600",
-      "relative_volume": "0.8901",
-      "source_id": "market:PANW:2026-08-10",
-      "ticker": "PANW",
-      "usable_for_scoring": "yes"
-    },
-    {
-      "bar_state": "intraday_or_unverified",
-      "data_quality_label": "ok",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
-      "fifty_two_week_high": "776.8500",
-      "fifty_two_week_low": "629.2800",
-      "intraday_change_pct": "-0.0297",
-      "last_price": "773.0300",
-      "market_session_date": "2026-08-10",
-      "previous_close": "773.2600",
-      "relative_volume": "0.6507",
-      "source_id": "market:SPY:2026-08-10",
-      "ticker": "SPY",
-      "usable_for_scoring": "yes"
+      "usable_for_scoring": "no"
     },
     {
       "bar_state": "intraday_or_unverified",
       "data_quality_label": "insufficient_data",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
+      "fifty_two_week_high": "",
+      "fifty_two_week_low": "",
+      "intraday_change_pct": "",
+      "last_price": "",
+      "market_session_date": "",
+      "previous_close": "",
+      "relative_volume": "",
+      "source_id": "market:MU:",
+      "ticker": "MU",
+      "usable_for_scoring": "no"
+    },
+    {
+      "bar_state": "intraday_or_unverified",
+      "data_quality_label": "insufficient_data",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
+      "fifty_two_week_high": "",
+      "fifty_two_week_low": "",
+      "intraday_change_pct": "",
+      "last_price": "",
+      "market_session_date": "",
+      "previous_close": "",
+      "relative_volume": "",
+      "source_id": "market:PANW:",
+      "ticker": "PANW",
+      "usable_for_scoring": "no"
+    },
+    {
+      "bar_state": "intraday_or_unverified",
+      "data_quality_label": "insufficient_data",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
+      "fifty_two_week_high": "",
+      "fifty_two_week_low": "",
+      "intraday_change_pct": "",
+      "last_price": "",
+      "market_session_date": "",
+      "previous_close": "",
+      "relative_volume": "",
+      "source_id": "market:SPY:",
+      "ticker": "SPY",
+      "usable_for_scoring": "no"
+    },
+    {
+      "bar_state": "intraday_or_unverified",
+      "data_quality_label": "insufficient_data",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
       "fifty_two_week_high": "",
       "fifty_two_week_low": "",
       "intraday_change_pct": "",
@@ -1168,8 +1399,8 @@
     {
       "bar_state": "intraday_or_unverified",
       "data_quality_label": "insufficient_data",
-      "data_source": "yfinance_public_market_data",
-      "data_timestamp": "2026-08-11T07:00:34+08:00",
+      "data_source": "yfinance_rate_limit_circuit_open",
+      "data_timestamp": "2026-08-19T05:56:38+08:00",
       "fifty_two_week_high": "",
       "fifty_two_week_low": "",
       "intraday_change_pct": "",
@@ -1182,7 +1413,7 @@
       "usable_for_scoring": "no"
     }
   ],
-  "packet_id": "8875e1a64c6f8195bf0b2ff454fa2b31968c2539f94247178d82dd123a674048",
+  "packet_id": "f8bd6e3c75f40255e2ea408ff3e24215807ad797b0e63694df8208e504386243",
   "portfolio_constraints": {
     "account_size_band": "under_10k",
     "active_stock_hard_cap_pct": 30.0,
@@ -1337,9 +1568,9 @@
   "schema_version": "phase5r_llm_evidence_packet_v1",
   "source_catalog": [
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "50f3b080118c98f6dc34d55da2be48a56c454610be843a5296bbf74d1566826f",
+      "content_sha256": "e2dd899354cbba86cadc36f553ef361c835d4044cd087000ed3fa32cf488002d",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -1351,65 +1582,65 @@
       "ticker": "AVGO"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "f432c45dddcc2c34de6595f9c1ad6c1614ea44fbe008022f91ad55012f649555",
+      "content_sha256": "7cb04c573f8c8778aa3d6877f42004fa286df797095dd2ed7c6a6526ada582f0",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-08-10"
+        "session": ""
       },
-      "source_id": "market:ARM:2026-08-10",
+      "source_id": "market:ARM:",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "ARM"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "0e57971dd744c6b7bdbca6fdad45f53e00bf55c527bf2ade4ae67f20c1648c18",
+      "content_sha256": "67390dde83092a85bffde2d0ce70a6ec82e1447f0b777fd2562928fbe9c1c63b",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-08-10"
+        "session": ""
       },
-      "source_id": "market:MU:2026-08-10",
+      "source_id": "market:MU:",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "MU"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "bc6056373ec83c52a402935e6777e3601cb66ab03c0d89be24bdcd52954bc72b",
+      "content_sha256": "6aafd270b22a8c106fc25e59c9f1a5b1dec53550251ff97eb440ca1863bc3fd3",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-08-10"
+        "session": ""
       },
-      "source_id": "market:PANW:2026-08-10",
+      "source_id": "market:PANW:",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "PANW"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "acc0effa5abb2dd6a20fafb385641a50291364269f26834a8aee83a234608f15",
+      "content_sha256": "5880b1fcb932be3f8c38d97d70de4f562f09c11298548f6b053ebd768715bfc8",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
-        "session": "2026-08-10"
+        "session": ""
       },
-      "source_id": "market:SPY:2026-08-10",
+      "source_id": "market:SPY:",
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "SPY"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "8005b291227c4054287a985356984ec2b1b67ecaec518d3e955b9c09d9fc54e2",
+      "content_sha256": "81d654e26250bb8ba9a8810f3f6483947fb4ac687b2fa5e241d64353659180fc",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -1421,9 +1652,9 @@
       "ticker": "IOT"
     },
     {
-      "accepted_at": "2026-08-11T07:00:34+08:00",
+      "accepted_at": "2026-08-19T05:56:38+08:00",
       "authority": "secondary_public_market_context",
-      "content_sha256": "986bb5b1c7e3663c729522209f36a4b279c56127c8a5829d00f878ef038d8073",
+      "content_sha256": "58abcef047ced99195f3f06cbd62ef169df20e359abe06cd8e47c69e76d1a863",
       "excerpt_text": "",
       "locator": {
         "dataset": "phase5r_b2_market_data_snapshot",
@@ -1433,6 +1664,133 @@
       "source_type": "public_market_observation",
       "source_url": "",
       "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "eb1e151770a4479f6e74e8a7fd6a6a16cfafeeba254c28148a566e64b4a7a643",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1973239",
+        "frame": "",
+        "period": ""
+      },
+      "source_id": "sec-xbrl:ARM:unknown",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001973239.json",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "05200e1f4d4528aadc7b57d9c1d53c46fdef7523590098f2d088b1d7caeb5770",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1730168",
+        "frame": "CY2026Q1",
+        "period": "2026-05-03"
+      },
+      "source_id": "sec-xbrl:AVGO:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001730168.json",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "4c8b4627aefe088e522649c603648503def9d5ce0306cb4f80924efed51a22aa",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1642896",
+        "frame": "CY2026Q1",
+        "period": "2026-05-02"
+      },
+      "source_id": "sec-xbrl:IOT:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001642896.json",
+      "ticker": "IOT"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "652f3876569eeaf180946c05fd37cc4e30bdec37437c87510036ec1c0ebeba4f",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "723125",
+        "frame": "CY2026Q2",
+        "period": "2026-05-28"
+      },
+      "source_id": "sec-xbrl:MU:CY2026Q2",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000723125.json",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "9ff62b07b10607241cb607e745010e6c63f3d3be6c483d555b63583959d0a56c",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1327567",
+        "frame": "CY2026Q1",
+        "period": "2026-04-30"
+      },
+      "source_id": "sec-xbrl:PANW:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001327567.json",
+      "ticker": "PANW"
+    },
+    {
+      "accepted_at": "2026-08-18T18:49:32-04:00",
+      "authority": "primary_official",
+      "content_sha256": "8b65ef36a1f0f08a3f133f3ffe77307209eaa5024e0230e33117725a4100d876",
+      "excerpt_text": "",
+      "locator": {
+        "cik": "1943896",
+        "frame": "CY2026Q1",
+        "period": "2026-04-30"
+      },
+      "source_id": "sec-xbrl:RBRK:CY2026Q1",
+      "source_type": "sec_companyfacts_xbrl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001943896.json",
+      "ticker": "RBRK"
+    },
+    {
+      "accepted_at": "",
+      "authority": "primary_official",
+      "content_sha256": "3e4bf8d3f6c20e8b959cbb040d700fb7e5d5d38ea720ce6e6579a3452bd5f347",
+      "excerpt_text": "arm-20260810\n00019732392026-08-102026-08-10\nUNITED STATES\nSECURITIES AND EXCHANGE COMMISSION\nWashington, D.C. 20549\nForm 6-K\nREPORT OF FOREIGN PRIVATE ISSUER PURSUANT TO RULE 13a-16 OR 15d-16 UNDER THE SECURITIES EXCHANGE ACT OF 1934\nFor the month of August, 2026\nCommission File Number 001-41800\nArm Holdings plc\n110 Fulbourn Road\nCambridge CB1 9NJ\nUnited Kingdom\n(Address of principal executive office)\nIndicate by check mark whether the registrant files or will file annual reports under cover of Form 20-F or Form 40-F.\nForm 20-F ☒ Form 40-F ☐\n2026 Annual General Meeting of Arm Holdings plc\nOn August 10, 2026, Arm Holdings plc (the “Company”) distributed to the holders of record of the Company’s ordinary shares, nominal value of £0.001 per share (“Ordinary Shares”), as of July 31, 2026 (A) a notice of the annual general meeting (the “Shareholders AGM Notice”) to be held at 110 Fulbourn Road, Cambridge CB1 9NJ, United Kingdom on September 9, 2026 at 3:00 p.m. (British Summer Time) (the “AGM”), and (B) the attendance card, the poll card and a form of proxy for the AGM (the “Proxy Materials”). The Shareholders AGM Notice and the Proxy Materials are furnished as Exhibits 99.1 and 99.2, respectively, to this report on Form 6-K.\nOn or about August 10, 2026, Citibank, N.A., in its capacity as the depositary bank (the “Depositary”) for the Company’s American depositary shares (“ADSs”), each representing one Ordinary Share, commenced mailing notice materials (the “Depositary’s Notice”) and voting instruction cards (the “ADS Voting Instruction Card”) to ADS holders to enable ADS holders of record as of July 31, 2026 to instruct the Depositary to vote the Ordinary Shares represented by their ADSs at the AGM. Additionally, on August 10, 2026, the Company distributed to the ADS holders of record as of July 31, 2026 a notice of the AGM (the “ADS AGM Notice”). The Depositary’s Notice, the ADS Voting Instruction Card and the ADS AGM Notice are furnished as Exhibits 99.3, 99.4 and 99.5, respectively, to this report on Form 6-K.\nThe Company’s annual report and accounts for the year ended March 31, 2026 (the “UK Annual Report”) and other materials related to the AGM are posted on the investor relations section of the Company’s website at https://investors.arm.com/ir-resources/annual-meeting.\nThe information contained in this report on Form 6-K, including Exhibits 99.1, 99.2, 99.3, 99.4 and 99.5, is intended to be furnished and shall not be deemed “filed” for purposes of Section 18 of the Securities Exchange Act of 1934, as amended (the “Exchange Act”), or incorporated by reference in any filing under the Securities Act of 1933, as amended, or the Exchange Act, unless expressly set forth by specific reference in such a filing.\nExhibits\nReference is made to the Exhibit Index included hereto.\nEXHIBIT INDEX\nExhibit Number\nDescription\n99.1\nNotice to Shareholders of Arm Holdings plc of Annual General Meeting\n99.2\nAttendance Card, Poll Card and Form of Proxy\n99.3\nDepositary’s Notice to ADS Holders of Arm Holdings plc of Annual General Meeting\n99.4\nADS Voting Instruction Card for Annual General Meeting\n99.5\nArm Holdings plc’s Notice to ADS Holders of Annual General Meeting\nSIGNATURES\nPursuant to the requirements of the Securities Exchange Act of 1934, the registrant has duly caused this report to be signed on its behalf by the undersigned, thereunto duly authorized.\nARM HOLDINGS PLC\nDate: August 10, 2026\nBy:\n/s/ Laura Bartels\nName:\nLaura Bartels\nTitle:\nChief Accounting Officer\n(Principal Accounting Officer)",
+      "locator": {
+        "accession_number": "0001973239-26-000117",
+        "char_end": 3543,
+        "char_start": 0,
+        "cik": "1973239",
+        "form": "6-K",
+        "parser": {
+          "id": "phase5r_sec_text_normalizer",
+          "version": "1.0.0"
+        }
+      },
+      "source_id": "sec-1973239-0001973239-26-000117-11303f435169b989:chunk:0",
+      "source_type": "sec_filing_text_chunk",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000117/arm-20260810.htm",
+      "ticker": "ARM"
+    },
+    {
+      "accepted_at": "2026-08-11T03:40:47-04:00",
+      "authority": "primary_official_metadata",
+      "content_sha256": "12a834a2668232dde11ff42cc0925de1fd2ff6215aa68da2b56b20612cbe2345",
+      "excerpt_text": "",
+      "locator": {
+        "accession_number": "0001973239-26-000117",
+        "cik": "1973239",
+        "filing_date": "2026-08-10",
+        "form": "6-K"
+      },
+      "source_id": "sec-filing-metadata:0001973239-26-000117",
+      "source_type": "sec_filing_metadata",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000117/arm-20260810.htm",
+      "ticker": "ARM"
     },
     {
       "accepted_at": "2026-07-29T20:05:46.000+00:00",

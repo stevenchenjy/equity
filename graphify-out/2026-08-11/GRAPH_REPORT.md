@@ -1,7 +1,7 @@
 # Graph Report - equity  (2026-08-11)
 
 ## Corpus Check
-- 507 files · ~440,735 words
+- 508 files · ~440,818 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

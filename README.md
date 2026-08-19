@@ -21,6 +21,10 @@ The active workflow is `daily_decision` and the only active email pipeline is
 - One decisive brief is eligible after 18:30 America/New_York on weekdays.
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
+- `phase5r-production-shadow-v1` is a conditional, noncanonical companion:
+  after a fully passed deterministic refresh it may produce at most one
+  evidence-bound AI research review per eligible trading day. It cannot change
+  the deterministic decision, positions, risk state, or normal daily email.
 - Daily analysis does not imply daily portfolio action.
 - HOLD, WATCH, and NO NEW POSITION need no manual confirmation. Any proposed
   portfolio change remains research for independent human review and can never
@@ -63,7 +67,10 @@ cd /Users/messssi/Desktop/equity
   09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/verify_phase5r_daily_upgrade.py --operational
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+  09_scripts/phase5r/verify_phase5r_production_shadow_readiness.py
 ```
 
 These checks do not read SMTP configuration, send email, connect to a broker,
-or create orders.
+or create orders. The production-shadow readiness check also does not create a
+provider client or probe credentials.

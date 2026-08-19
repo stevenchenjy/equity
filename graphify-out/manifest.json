@@ -240,8 +240,8 @@
     "semantic_hash": "3a8ee86b8f827b2b524442a73e08020d"
   },
   "09_scripts/phase5r/verify_phase5r_c8_active_state_guard.py": {
-    "mtime": 1785206600.506507,
-    "ast_hash": "2e24a4c5911008e883f8dd89facb3bc4",
+    "mtime": 1786463648.5201657,
+    "ast_hash": "c99aa550cb6d2cf06a539927e7040483",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_d1_scheduler_boundary.py": {
@@ -335,8 +335,8 @@
     "semantic_hash": ""
   },
   "00_project_control/active_decision_state.yaml": {
-    "mtime": 1784962861.2424994,
-    "ast_hash": "7f200464900e92f127b77f9052bd928b",
+    "mtime": 1786463673.5608215,
+    "ast_hash": "095105fa1100364dbf33a8970dba91ef",
     "semantic_hash": ""
   },
   "00_project_control/audit_reports/phase0a/phase0a_cleanup_plan.md": {
@@ -730,8 +730,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c8_active_state_policy.md": {
-    "mtime": 1785206505.1874456,
-    "ast_hash": "ab8b10a6bce44a17c0394bc0f9c5edde",
+    "mtime": 1786463648.5217514,
+    "ast_hash": "276febbad17ed09b1dae19d7e65e80cb",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c8_verification_report.md": {
@@ -1145,8 +1145,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_daily_research_preview.md": {
-    "mtime": 1786420549.072224,
-    "ast_hash": "34ce2cb5d9224ba8ae9bc75cc7b810b9",
+    "mtime": 1786451294.748434,
+    "ast_hash": "5a1cffff179dd6a1b8de90cb2159760d",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_manual_trade_tickets.md": {
@@ -1155,8 +1155,8 @@
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b2_watchlist.md": {
-    "mtime": 1786420549.0755117,
-    "ast_hash": "b210c9d5bd6ad8d88aa424ca2445ce75",
+    "mtime": 1786451294.7491941,
+    "ast_hash": "f639e951b17726002a63236196c8e87f",
     "semantic_hash": ""
   },
   "08_reviews/current/latest_phase5r_b_manual_trade_tickets.md": {
@@ -1195,8 +1195,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1784865510.729925,
-    "ast_hash": "51b6a67e0171fddb4843c494eb29972a",
+    "mtime": 1786463648.522689,
+    "ast_hash": "990033eaa668366c87253aa7d9b6a789",
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/SKILL.md": {
@@ -1495,13 +1495,13 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_daily_evidence_status.json": {
-    "mtime": 1786434070.254872,
-    "ast_hash": "9267b0d4bb1209a91966780d6b4b1253",
+    "mtime": 1786451389.9372048,
+    "ast_hash": "b46c20c750846000288f0bc02533afd6",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.json": {
-    "mtime": 1786420610.6308718,
-    "ast_hash": "458eddacbe10dfd4c25c8d332b5a4eea",
+    "mtime": 1786451397.8548431,
+    "ast_hash": "15608775b430c67db059875a01903fa6",
     "semantic_hash": ""
   },
   "07_automation/scheduler/activate_phase5r_daily_after_verification.sh": {
@@ -1600,13 +1600,13 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_verification_report.md": {
-    "mtime": 1786421144.9048128,
-    "ast_hash": "8573e76cc0da370f1c4e8eb49d81966c",
+    "mtime": 1786444605.7473292,
+    "ast_hash": "3aafbbb0e49a244755853e70016c16ea",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.md": {
-    "mtime": 1786420610.633674,
-    "ast_hash": "8967b274cacacd5e5836e18f4d9274a4",
+    "mtime": 1786451397.8575315,
+    "ast_hash": "23551e97e535156abdc5a6687400e3df",
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_upgrade_report.md": {
@@ -1615,18 +1615,18 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_daily_verification_report.md": {
-    "mtime": 1786421144.9050403,
-    "ast_hash": "8573e76cc0da370f1c4e8eb49d81966c",
+    "mtime": 1786444605.748027,
+    "ast_hash": "3aafbbb0e49a244755853e70016c16ea",
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.html": {
-    "mtime": 1786420610.6377995,
-    "ast_hash": "0b2759d584e84202a8e3e8c493e8455c",
+    "mtime": 1786451397.865266,
+    "ast_hash": "0f61cc1bfe14f2905352ad734d7b437c",
     "semantic_hash": ""
   },
   "07_automation/email_briefs/phase5r_daily_email_brief.txt": {
-    "mtime": 1786420610.6358516,
-    "ast_hash": "269b6bbcee55945d0ab0e4fdb7592d55",
+    "mtime": 1786451397.8633633,
+    "ast_hash": "39cd24d3f58a0988db414c706dcc315e",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_sec_filing_artifacts.py": {
@@ -1685,13 +1685,13 @@
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_llm_evidence_packet.json": {
-    "mtime": 1786420612.0882237,
-    "ast_hash": "aea06b464638014ea378ba1f9edfdb48",
+    "mtime": 1786451399.3640568,
+    "ast_hash": "47af06ac977f152a50f783bc6424f93b",
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_filing_artifact_index.json": {
-    "mtime": 1786420608.7798073,
-    "ast_hash": "19438cf113f1c34c559dedb39bb1e6b3",
+    "mtime": 1786451395.3669086,
+    "ast_hash": "785dae1ca6dc99dbb00b78e71bc9a0e6",
     "semantic_hash": ""
   },
   "07_automation/scheduler/check_phase5r_llm_shadow_status.sh": {

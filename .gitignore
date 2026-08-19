@@ -12,6 +12,10 @@ secrets/
 oauth_tokens/
 gmail_tokens/
 
+# Graphify's AST cache is reproducible local acceleration data. Keep the
+# curated graph/report artifacts, but do not add new cache entries to history.
+graphify-out/cache/
+
 07_automation/email_delivery/phase5r_email_config.local.json
 05_risk_and_positions/current_positions.local.csv
 05_risk_and_positions/current_account_state.local.json

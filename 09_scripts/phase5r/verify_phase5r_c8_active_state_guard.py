@@ -99,7 +99,11 @@ EXPECTED_STATE = {
     "order_code_allowed": "no",
     "manual_execution_only": "yes",
     "llm_shadow_canonical_influence": "disabled",
-    "llm_shadow_scheduler_status": "not_installed",
+    "llm_shadow_scheduler_status": "legacy_standalone_not_installed",
+    "production_shadow_status": "authorized_noncanonical_companion_pending_fresh_deterministic_refresh",
+    "production_shadow_scheduler_status": "dailyrefresh_child_no_standalone_launchagent",
+    "production_shadow_canonical_influence": "disabled",
+    "production_shadow_email_status": "no_normal_llm_email_first_fully_valid_noncanonical_report_only",
 }
 
 

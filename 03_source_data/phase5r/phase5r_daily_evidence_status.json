@@ -1,6 +1,6 @@
 {
   "baseline_mode": false,
-  "filings_recorded": 1,
+  "filings_recorded": 0,
   "fundamental_request_errors": [],
   "fundamental_rows": 6,
   "held_coverage_complete": true,
@@ -11,13 +11,11 @@
     "IOT",
     "RBRK"
   ],
-  "last_attempt_at": "2026-08-11T03:40:47-04:00",
-  "last_success_at": "2026-08-11T03:41:10-04:00",
+  "last_attempt_at": "2026-08-18T18:49:32-04:00",
+  "last_success_at": "2026-08-18T18:49:54-04:00",
   "network_used": true,
-  "new_material_accessions": [
-    "0001973239-26-000117"
-  ],
-  "new_material_event_count": 1,
+  "new_material_accessions": [],
+  "new_material_event_count": 0,
   "optional_missing_tickers": [],
   "reason": "complete",
   "request_errors": [],
@@ -32,7 +30,7 @@
     "SPY"
   ],
   "schema_version": "phase5r_daily_evidence_status_v1",
-  "sec_acceptance_extension_admission_count": 1,
+  "sec_acceptance_extension_admission_count": 0,
   "sec_acceptance_extension_version_count": 1,
   "sec_acceptance_historical_record_count": 611,
   "sec_acceptance_reconciliation_count": 0,
