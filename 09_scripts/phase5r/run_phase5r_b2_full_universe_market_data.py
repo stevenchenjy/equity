@@ -2,19 +2,25 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, timedelta, timezone
 import math
 from pathlib import Path
 import sys
 from typing import Any
 
-import yfinance as yf
-
 from phase5r_daily_common import (
-    atomic_write_json,
+    atomic_write_csv,
+    is_us_market_session_date,
     last_completed_market_session,
     now_et,
+)
+from phase5r_massive_b2_adapter import (
+    AUTH_MISSING_CODE,
+    MASSIVE_DATA_SOURCE,
+    MASSIVE_MIN_REQUEST_INTERVAL_SECONDS,
+    MassiveB2Error,
+    MassiveBasicEODClient,
+    REQUEST_FAILED_CODE,
 )
 
 
@@ -23,9 +29,6 @@ DATA_DIR = ROOT / "03_source_data" / "phase5r"
 CONTROL_DIR = ROOT / "00_project_control"
 RESEARCH_DIR = ROOT / "04_research" / "realtime_stock_picker_phase5r"
 RUN_LOG = CONTROL_DIR / "run_logs" / "phase5r_b2_run_log.csv"
-B2_RATE_LIMIT_STATE_PATH = (
-    CONTROL_DIR / "run_logs" / "phase5r_b2_rate_limit_state.local.json"
-)
 
 UNIVERSE_PATH = DATA_DIR / "phase5r_universe_seed.csv"
 LOCAL_POSITIONS_PATH = ROOT / "05_risk_and_positions" / "current_positions.local.csv"
@@ -37,6 +40,8 @@ DECISION_PATH = CONTROL_DIR / "phase5r_b2_data_source_decision.md"
 REPORT_PATH = RESEARCH_DIR / "phase5r_b2_data_report.md"
 
 SMOKE_TICKERS = ["QQQ", "XLK", "SPY"]
+EXPECTED_PRODUCTION_B2_TICKER_COUNT = 29
+REQUIRED_PRODUCTION_TICKERS = frozenset({"IOT", "RBRK", *SMOKE_TICKERS})
 MARKET_FIELDS = [
     "ticker", "last_price", "previous_close", "intraday_change_pct", "volume",
     "average_volume", "relative_volume", "dollar_volume", "day_high", "day_low",
@@ -56,17 +61,15 @@ CANDIDATE_FIELDS = [
 ]
 AUDIT_FIELDS = ["timestamp", "script_name", "action", "input_path", "output_path", "status", "safety_notes"]
 
-RATE_LIMIT_STATE_SCHEMA = "phase5r_b2_rate_limit_state_v1"
-RATE_LIMIT_CODE = "yfinance_rate_limited"
-RATE_LIMIT_COOLDOWN_CODE = "yfinance_rate_limited_cooldown"
-RATE_LIMIT_STATE_INVALID_CODE = "rate_limit_state_invalid"
-SMOKE_PRECHECK_ABORTED_CODE = "yfinance_smoke_preflight_aborted"
-FULL_UNIVERSE_INCOMPLETE_CODE = "yfinance_incomplete_full_universe_response"
-FULL_UNIVERSE_STALE_CODE = "yfinance_stale_full_universe_response"
+LEGACY_YFINANCE_DATA_SOURCE = "yfinance_public_market_data"
+COHERENT_DATA_SOURCES = {MASSIVE_DATA_SOURCE, LEGACY_YFINANCE_DATA_SOURCE}
+SMOKE_PRECHECK_ABORTED_CODE = "massive_smoke_preflight_aborted"
+SMOKE_VALIDATION_FAILED_CODE = "massive_smoke_validation_failed"
+FULL_UNIVERSE_INCOMPLETE_CODE = "massive_incomplete_full_universe_response"
+FULL_UNIVERSE_STALE_CODE = "massive_stale_full_universe_response"
 REUSE_VALIDATED_SNAPSHOT_CODE = "validated_local_snapshot_reused"
 REUSE_INVALID_SNAPSHOT_CODE = "local_snapshot_reuse_invalid"
 REUSE_STALE_SNAPSHOT_CODE = "local_snapshot_reuse_not_current"
-POST_CLOSE_RETRY_TIME_ET = time(17, 45)
 
 
 def timestamp() -> str:
@@ -84,11 +87,7 @@ def csv_header(path: Path) -> list[str]:
 
 
 def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(rows)
+    atomic_write_csv(path, fields, rows)
 
 
 def append_csv(path: Path, row: dict[str, str]) -> None:
@@ -146,188 +145,142 @@ def quality_label(row: dict[str, str]) -> str:
 def source_failure_code(exc: Exception) -> str:
     """Map source exceptions to finite, non-sensitive audit codes."""
 
-    if (
-        exc.__class__.__name__ == "YFRateLimitError"
-        or getattr(exc, "status_code", None) == 429
-    ):
-        return RATE_LIMIT_CODE
-    if isinstance(exc, TimeoutError):
-        return "yfinance_timeout"
-    return "yfinance_request_failed"
-
-
-def _parse_aware_datetime(value: object) -> datetime | None:
-    if not isinstance(value, str) or not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return parsed if parsed.tzinfo is not None else None
-
-
-def load_rate_limit_state(
-    current: datetime | None = None,
-) -> tuple[dict[str, object] | None, str]:
-    """Read only the bounded local circuit state; malformed state fails closed."""
-
-    if not B2_RATE_LIMIT_STATE_PATH.exists():
-        return None, "clear"
-    try:
-        payload = json.loads(B2_RATE_LIMIT_STATE_PATH.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
-        return None, "invalid"
-    if not isinstance(payload, dict) or payload.get("schema_version") != RATE_LIMIT_STATE_SCHEMA:
-        return None, "invalid"
-    status = payload.get("status")
-    if status == "cleared":
-        return None, "clear"
-    if status != "active":
-        return None, "invalid"
-    detected_at = _parse_aware_datetime(payload.get("detected_at"))
-    rate_limit_date = payload.get("rate_limit_et_date")
-    post_close_retry_consumed = payload.get("post_close_retry_consumed")
-    if (
-        detected_at is None
-        or not isinstance(rate_limit_date, str)
-        or not isinstance(post_close_retry_consumed, bool)
-        or payload.get("source_failure_code") != RATE_LIMIT_CODE
-    ):
-        return None, "invalid"
-    try:
-        parsed_date = date.fromisoformat(rate_limit_date)
-    except ValueError:
-        return None, "invalid"
-    current = current or now_et()
-    if detected_at.astimezone(current.tzinfo).date() != parsed_date:
-        return None, "invalid"
-    return payload, "active"
-
-
-def rate_limit_attempt_allowed(
-    current: datetime | None = None,
-) -> tuple[bool, str]:
-    """Allow at most one post-close recovery attempt after a same-day 429."""
-
-    current = current or now_et()
-    state, state_status = load_rate_limit_state(current)
-    if state_status == "invalid":
-        return False, RATE_LIMIT_STATE_INVALID_CODE
-    if state is None:
-        return True, "rate_limit_state_clear"
-    rate_limit_date = date.fromisoformat(str(state["rate_limit_et_date"]))
-    current_date = current.date()
-    if rate_limit_date < current_date:
-        return True, "rate_limit_state_expired"
-    if rate_limit_date > current_date:
-        return False, RATE_LIMIT_STATE_INVALID_CODE
-    if current.timetz().replace(tzinfo=None) < POST_CLOSE_RETRY_TIME_ET:
-        return False, RATE_LIMIT_COOLDOWN_CODE
-    if bool(state["post_close_retry_consumed"]):
-        return False, RATE_LIMIT_COOLDOWN_CODE
-    return True, "rate_limit_post_close_retry_available"
-
-
-def record_rate_limit(current: datetime | None = None) -> None:
-    """Persist a finite 429 state without response text, URLs, or credentials."""
-
-    current = current or now_et()
-    atomic_write_json(
-        B2_RATE_LIMIT_STATE_PATH,
-        {
-            "schema_version": RATE_LIMIT_STATE_SCHEMA,
-            "status": "active",
-            "detected_at": current.isoformat(timespec="seconds"),
-            "rate_limit_et_date": current.date().isoformat(),
-            "post_close_retry_consumed": (
-                current.timetz().replace(tzinfo=None) >= POST_CLOSE_RETRY_TIME_ET
-            ),
-            "source_failure_code": RATE_LIMIT_CODE,
-        },
-    )
-
-
-def reserve_post_close_retry(current: datetime | None = None) -> None:
-    """Consume the single recovery allowance before making a network request."""
-
-    current = current or now_et()
-    state, state_status = load_rate_limit_state(current)
-    if state_status != "active" or state is None:
-        raise RuntimeError("post-close retry requires active rate-limit state")
-    updated = dict(state)
-    updated["post_close_retry_consumed"] = True
-    updated["post_close_retry_reserved_at"] = current.isoformat(timespec="seconds")
-    atomic_write_json(B2_RATE_LIMIT_STATE_PATH, updated)
-
-
-def clear_rate_limit_state(current: datetime | None = None) -> None:
-    """Retain a non-sensitive recovery marker after a successful full refresh."""
-
-    current = current or now_et()
-    atomic_write_json(
-        B2_RATE_LIMIT_STATE_PATH,
-        {
-            "schema_version": RATE_LIMIT_STATE_SCHEMA,
-            "status": "cleared",
-            "cleared_at": current.isoformat(timespec="seconds"),
-            "source_failure_code": "none",
-        },
-    )
-
-
-def rate_limit_cooldown_rows(
-    error_code: str = RATE_LIMIT_COOLDOWN_CODE,
-) -> list[dict[str, str]]:
-    return [
-        {
-            "ticker": ticker,
-            "last_price": "",
-            "previous_close": "",
-            "volume": "",
-            "status": "not_attempted",
-            "error_code": error_code,
-        }
-        for ticker in SMOKE_TICKERS
-    ]
+    if isinstance(exc, MassiveB2Error):
+        return exc.code
+    return REQUEST_FAILED_CODE
 
 
 def smoke_failure_code(rows: list[dict[str, str]]) -> str:
     codes = [row.get("error_code", "") for row in rows]
-    if RATE_LIMIT_CODE in codes:
-        return RATE_LIMIT_CODE
-    if RATE_LIMIT_COOLDOWN_CODE in codes:
-        return RATE_LIMIT_COOLDOWN_CODE
-    return next((code for code in codes if code), "yfinance_smoke_validation_failed")
+    return next((code for code in codes if code), SMOKE_VALIDATION_FAILED_CODE)
 
 
-def smoke_test() -> tuple[list[dict[str, str]], bool]:
+def history_window(current: datetime) -> tuple[date, date]:
+    expected_session = last_completed_market_session(current)
+    return expected_session - timedelta(weeks=52), expected_session
+
+
+def previous_market_session(value: date) -> date:
+    candidate = value - timedelta(days=1)
+    while not is_us_market_session_date(candidate):
+        candidate -= timedelta(days=1)
+    return candidate
+
+
+def expected_history_sessions(current: datetime) -> list[date]:
+    start_date, end_date = history_window(current)
+    sessions: list[date] = []
+    candidate = start_date
+    while candidate <= end_date:
+        if is_us_market_session_date(candidate):
+            sessions.append(candidate)
+        candidate += timedelta(days=1)
+    return sessions
+
+
+def market_row_from_massive_bars(
+    ticker: str,
+    bars: list[dict[str, Any]],
+    now: str,
+    current: datetime,
+) -> dict[str, str]:
+    row = empty_market_row(ticker, MASSIVE_DATA_SOURCE, now)
+    try:
+        expected_sessions = expected_history_sessions(current)
+        observed_sessions = [bar["session_date"] for bar in bars]
+        if len(expected_sessions) < 20 or observed_sessions != expected_sessions:
+            return row
+        expected_session = last_completed_market_session(current)
+        expected_previous = previous_market_session(expected_session)
+        if (
+            bars[-1]["session_date"] != expected_session
+            or bars[-2]["session_date"] != expected_previous
+            or any(
+                not is_us_market_session_date(bar["session_date"])
+                for bar in bars
+            )
+        ):
+            return row
+        last = number(bars[-1]["close"])
+        previous = number(bars[-2]["close"])
+        volume = number(bars[-1]["volume"])
+        average_volume = number(
+            sum(float(bar["volume"]) for bar in bars[-20:]) / 20
+        )
+        day_high = number(bars[-1]["high"])
+        day_low = number(bars[-1]["low"])
+        year_high = number(max(float(bar["high"]) for bar in bars))
+        year_low = number(min(float(bar["low"]) for bar in bars))
+        change = (
+            ((last - previous) / previous) * 100
+            if last is not None and previous not in {None, 0.0}
+            else None
+        )
+        relative_volume = (
+            volume / average_volume
+            if volume is not None and average_volume not in {None, 0.0}
+            else None
+        )
+        dollar_volume = (
+            last * volume
+            if last is not None and volume is not None
+            else None
+        )
+        row.update(
+            {
+                "last_price": fmt_float(last),
+                "previous_close": fmt_float(previous),
+                "intraday_change_pct": fmt_float(change),
+                "volume": fmt_int(volume),
+                "average_volume": fmt_int(average_volume),
+                "relative_volume": fmt_float(relative_volume),
+                "dollar_volume": fmt_int(dollar_volume),
+                "day_high": fmt_float(day_high),
+                "day_low": fmt_float(day_low),
+                "fifty_two_week_high": fmt_float(year_high),
+                "fifty_two_week_low": fmt_float(year_low),
+                "market_session_date": expected_session.isoformat(),
+                "market_age_calendar_days": str(
+                    (current.date() - expected_session).days
+                ),
+            }
+        )
+        row["data_quality_label"] = quality_label(row)
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return empty_market_row(ticker, MASSIVE_DATA_SOURCE, now)
+    return row
+
+
+def smoke_test(
+    client: MassiveBasicEODClient,
+    *,
+    current: datetime,
+    now: str,
+) -> tuple[list[dict[str, str]], bool]:
+    start_date, end_date = history_window(current)
     results: list[dict[str, str]] = []
     for index, ticker in enumerate(SMOKE_TICKERS):
         row = {"ticker": ticker, "last_price": "", "previous_close": "", "volume": "", "status": "failed"}
         try:
-            history = yf.Ticker(ticker).history(period="5d", interval="1d", auto_adjust=False, raise_errors=False)
-            if len(history.index) >= 2:
+            bars = client.fetch_daily_bars(
+                ticker,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            market = market_row_from_massive_bars(ticker, bars, now, current)
+            if market["data_quality_label"] != "insufficient_data":
                 row.update({
-                    "last_price": fmt_float(history["Close"].iloc[-1]),
-                    "previous_close": fmt_float(history["Close"].iloc[-2]),
-                    "volume": fmt_int(history["Volume"].iloc[-1]),
+                    "last_price": market["last_price"],
+                    "previous_close": market["previous_close"],
+                    "volume": market["volume"],
                 })
                 row["status"] = "passed" if row["last_price"] and row["previous_close"] else "failed"
         except Exception as exc:
             row["error_code"] = source_failure_code(exc)
         if row["status"] != "passed" and "error_code" not in row:
-            row["error_code"] = "yfinance_smoke_validation_failed"
+            row["error_code"] = SMOKE_VALIDATION_FAILED_CODE
         results.append(row)
         if row["status"] != "passed":
-            # A failed required benchmark already makes the preflight fail.
-            # Do not turn that result into extra source pressure by probing
-            # the remaining benchmarks.  A recognized 429 gets its distinct
-            # circuit code; other failures remain finite and non-sensitive.
-            remaining_code = (
-                RATE_LIMIT_COOLDOWN_CODE
-                if row.get("error_code") == RATE_LIMIT_CODE
-                else SMOKE_PRECHECK_ABORTED_CODE
-            )
             results.extend(
                 {
                     "ticker": remaining,
@@ -335,7 +288,7 @@ def smoke_test() -> tuple[list[dict[str, str]], bool]:
                     "previous_close": "",
                     "volume": "",
                     "status": "not_attempted",
-                    "error_code": remaining_code,
+                    "error_code": SMOKE_PRECHECK_ABORTED_CODE,
                 }
                 for remaining in SMOKE_TICKERS[index + 1 :]
             )
@@ -343,73 +296,31 @@ def smoke_test() -> tuple[list[dict[str, str]], bool]:
     return results, all(row["status"] == "passed" for row in results)
 
 
-def history_for_ticker(dataset: Any, ticker: str) -> Any | None:
-    columns = getattr(dataset, "columns", None)
-    if columns is None or len(columns) == 0:
-        return None
-    try:
-        if getattr(columns, "nlevels", 1) > 1:
-            if ticker in columns.get_level_values(0):
-                return dataset[ticker]
-            if ticker in columns.get_level_values(1):
-                return dataset.xs(ticker, axis=1, level=1)
-        return dataset
-    except (KeyError, ValueError):
-        return None
-
-
-def market_row_from_history(ticker: str, history: Any | None, now: str) -> dict[str, str]:
-    row = empty_market_row(ticker, "yfinance_public_market_data", now)
-    if history is None:
-        return row
-    try:
-        history = history.dropna(how="all")
-        if len(history.index) < 2:
-            return row
-        last = number(history["Close"].iloc[-1])
-        previous = number(history["Close"].iloc[-2])
-        volume = number(history["Volume"].iloc[-1])
-        average_volume = number(history["Volume"].tail(min(20, len(history.index))).mean())
-        day_high = number(history["High"].iloc[-1])
-        day_low = number(history["Low"].iloc[-1])
-        year_high = number(history["High"].max())
-        year_low = number(history["Low"].min())
-        session_date = history.index[-1].date()
-        change = ((last - previous) / previous) * 100 if last is not None and previous not in {None, 0.0} else None
-        relative_volume = volume / average_volume if volume is not None and average_volume not in {None, 0.0} else None
-        dollar_volume = last * volume if last is not None and volume is not None else None
-        row.update({
-            "last_price": fmt_float(last), "previous_close": fmt_float(previous),
-            "intraday_change_pct": fmt_float(change), "volume": fmt_int(volume),
-            "average_volume": fmt_int(average_volume), "relative_volume": fmt_float(relative_volume),
-            "dollar_volume": fmt_int(dollar_volume), "day_high": fmt_float(day_high),
-            "day_low": fmt_float(day_low), "fifty_two_week_high": fmt_float(year_high),
-            "fifty_two_week_low": fmt_float(year_low),
-            "market_session_date": session_date.isoformat(),
-            "market_age_calendar_days": str((date.today() - session_date).days),
-        })
-        row["data_quality_label"] = quality_label(row)
-    except (KeyError, TypeError, ValueError):
-        pass
-    return row
-
-
 def retrieve_full_universe(
-    tickers: list[str], now: str
+    tickers: list[str],
+    now: str,
+    *,
+    client: MassiveBasicEODClient,
+    current: datetime,
 ) -> tuple[list[dict[str, str]], str, bool, str]:
+    start_date, end_date = history_window(current)
     try:
-        dataset = yf.download(
-            tickers=tickers, period="1y", interval="1d", group_by="ticker", auto_adjust=False,
-            progress=False, threads=False,
-        )
+        rows = [
+            market_row_from_massive_bars(
+                ticker,
+                client.fetch_daily_bars(
+                    ticker,
+                    start_date=start_date,
+                    end_date=end_date,
+                ),
+                now,
+                current,
+            )
+            for ticker in tickers
+        ]
         return (
-            [
-                market_row_from_history(
-                    ticker, history_for_ticker(dataset, ticker), now
-                )
-                for ticker in tickers
-            ],
-            "full-universe public daily history retrieved",
+            rows,
+            "full-universe Massive Stocks Basic EOD history retrieved",
             True,
             "none",
         )
@@ -418,7 +329,7 @@ def retrieve_full_universe(
         return (
             [
                 empty_market_row(
-                    ticker, "yfinance_public_market_data_error", now
+                    ticker, f"{MASSIVE_DATA_SOURCE}_error", now
                 )
                 for ticker in tickers
             ],
@@ -439,8 +350,9 @@ def write_decision(
 ) -> None:
     lines = [
         "# Phase 5R-B2 Data Source Decision", "", f"Generated: `{timestamp()}`", "",
-        "## Decision", "", "- Selected source: `yfinance_public_market_data`.",
-        "- Source use: `public read-only market data`.",
+        "## Decision", "", f"- Selected source: `{MASSIVE_DATA_SOURCE}`.",
+        "- Source use: `Massive Stocks Basic end-of-day read-only market data`.",
+        "- Price basis: `unadjusted`; this preserves the former B2 `auto_adjust=False` semantics.",
         f"- Benchmark preflight: `{'passed' if smoke_passed else 'failed'}`.",
         f"- Source-failure classification: `{source_failure_code}`.",
         f"- Full-universe action: `{full_note}`.", "",
@@ -462,7 +374,8 @@ def write_decision(
     lines.extend([
         "", "## Boundary", "", "- Candidate rows come only from the canonical Phase 5R universe.",
         f"- Current-position price-monitoring rows: `{','.join(held_tickers) if held_tickers else 'none'}`; only current local ticker symbols were added to the public snapshot.",
-        "- No stored position percentage, position note, archived holding file, broker, credential, API key, order, or email workflow was used.",
+        "- Provider authentication was supplied only by the external runtime; no API key value was printed, logged, persisted, hashed, or written to repository configuration.",
+        "- No stored position percentage, position note, archived holding file, broker, account, order, or email workflow was used.",
         "- This is one daily research refresh; it has no scheduler or intraday alert mechanism.",
     ])
     DECISION_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -508,7 +421,7 @@ def append_audit(action: str, inputs: str, outputs: str, status: str, notes: str
     row = {
         "timestamp": timestamp(), "script_name": Path(__file__).name, "action": action,
         "input_path": inputs, "output_path": outputs, "status": status,
-        "safety_notes": f"read_only_public_market_data=yes; canonical_candidate_universe=yes; current_position_price_monitoring=yes; no_broker=yes; no_orders=yes; no_email=yes; no_credentials=yes; archived_legacy_used=no; {notes}",
+        "safety_notes": f"read_only_public_market_data=yes; canonical_candidate_universe=yes; current_position_price_monitoring=yes; no_broker=yes; no_account=yes; no_orders=yes; no_email=yes; external_runtime_auth_only=yes; credential_value_logged=no; credential_value_persisted=no; archived_legacy_used=no; {notes}",
     }
     append_csv(AUDIT_PATH, row)
     append_csv(RUN_LOG, row)
@@ -613,7 +526,7 @@ def prior_outputs_are_coherent(
     held_set = {ticker.strip().upper() for ticker in held_tickers}
     for ticker, market in market_by_ticker.items():
         if (
-            market.get("data_source") != "yfinance_public_market_data"
+            market.get("data_source") not in COHERENT_DATA_SOURCES
             or market.get("data_quality_label") != quality_label(market)
             or market.get("data_quality_label") == "insufficient_data"
             or not parse_iso_datetime(market.get("data_timestamp", ""))
@@ -712,8 +625,8 @@ def full_universe_rows_are_committable(
 ) -> tuple[bool, str]:
     """Accept a live B2 response only when every covered row is usable.
 
-    A successful ``yf.download`` call can still yield an empty or incomplete
-    frame for one ticker.  That is an upstream data failure, not a successful
+    A successful provider request can still yield an empty or incomplete
+    series for one ticker.  That is an upstream data failure, not a successful
     refresh: rejecting the whole response before any output write keeps the
     snapshot, quality report, and candidate attachment atomic as a trio.
     """
@@ -745,7 +658,7 @@ def full_universe_rows_are_committable(
         if set(row) != set(MARKET_FIELDS):
             return False, FULL_UNIVERSE_INCOMPLETE_CODE
         if (
-            row.get("data_source") != "yfinance_public_market_data"
+            row.get("data_source") != MASSIVE_DATA_SOURCE
             or row.get("data_quality_label") != quality_label(row)
             or row.get("data_quality_label") == "insufficient_data"
             or not parse_iso_datetime(row.get("data_timestamp", ""))
@@ -901,30 +814,48 @@ def main(argv: list[str] | None = None) -> int:
             held_tickers=held_tickers,
         )
 
-    rate_limit_check_time = now_et()
-    network_attempt_allowed, rate_limit_state_reason = rate_limit_attempt_allowed(
-        rate_limit_check_time
-    )
-    if network_attempt_allowed:
-        if rate_limit_state_reason == "rate_limit_post_close_retry_available":
-            # Persist consumption before the request, so an interrupted process
-            # cannot issue a duplicate post-close recovery call.
-            reserve_post_close_retry(rate_limit_check_time)
-        smoke_rows, smoke_passed = smoke_test()
+    if (
+        len(tickers) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
+        or len(set(tickers)) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
+        or not REQUIRED_PRODUCTION_TICKERS.issubset(tickers)
+    ):
+        raise RuntimeError("production B2 ticker scope must be the exact approved 29")
+
+    refresh_time = now_et()
+    now = timestamp()
+    client: MassiveBasicEODClient | None = None
+    network_attempted = False
+    try:
+        client = MassiveBasicEODClient.from_environment()
+    except Exception as exc:
+        current_source_failure_code = source_failure_code(exc)
+        smoke_rows = [
+            {
+                "ticker": ticker,
+                "last_price": "",
+                "previous_close": "",
+                "volume": "",
+                "status": "not_attempted",
+                "error_code": current_source_failure_code,
+            }
+            for ticker in SMOKE_TICKERS
+        ]
+        smoke_passed = False
+    else:
+        network_attempted = True
+        smoke_rows, smoke_passed = smoke_test(
+            client,
+            current=refresh_time,
+            now=now,
+        )
         current_source_failure_code = (
             "none" if smoke_passed else smoke_failure_code(smoke_rows)
         )
-        if current_source_failure_code == RATE_LIMIT_CODE:
-            record_rate_limit(rate_limit_check_time)
-    else:
-        smoke_rows = rate_limit_cooldown_rows(rate_limit_state_reason)
-        smoke_passed = False
-        current_source_failure_code = rate_limit_state_reason
     smoke_audit_status = (
         "passed"
         if smoke_passed
         else "not_attempted"
-        if not network_attempt_allowed
+        if not network_attempted
         else "failed"
     )
     append_audit(
@@ -933,11 +864,11 @@ def main(argv: list[str] | None = None) -> int:
         "in_memory_preflight_only",
         smoke_audit_status,
         "sequence=1; full_universe_fetch_not_started_before_this_check; "
-        f"network_attempted={'yes' if network_attempt_allowed else 'no'}; "
+        f"network_attempted={'yes' if network_attempted else 'no'}; "
         f"source_failure_code={current_source_failure_code}; "
-        f"rate_limit_circuit={rate_limit_state_reason}",
+        "provider=massive_stocks_basic_eod; adjusted=false; retries=0; "
+        f"min_request_interval_seconds={MASSIVE_MIN_REQUEST_INTERVAL_SECONDS:.1f}",
     )
-    now = timestamp()
     source_failure = False
     full_retrieval_succeeded = False
     prior_outputs_preserved = False
@@ -948,19 +879,24 @@ def main(argv: list[str] | None = None) -> int:
             full_note,
             full_retrieval_succeeded,
             full_failure_code,
-        ) = retrieve_full_universe(tickers, now)
+        ) = retrieve_full_universe(
+            tickers,
+            now,
+            client=client,
+            current=refresh_time,
+        )
         if full_retrieval_succeeded:
             committable, commit_code = full_universe_rows_are_committable(
                 market_rows=market_rows,
                 tickers=tickers,
                 held_tickers=held_tickers,
-                current=rate_limit_check_time,
+                current=refresh_time,
             )
             if not committable:
                 market_rows = [
                     empty_market_row(
                         ticker,
-                        "yfinance_public_market_data_error",
+                        f"{MASSIVE_DATA_SOURCE}_error",
                         now,
                     )
                     for ticker in tickers
@@ -973,8 +909,6 @@ def main(argv: list[str] | None = None) -> int:
                 full_failure_code = commit_code
         source_failure = not full_retrieval_succeeded
         current_source_failure_code = full_failure_code
-        if current_source_failure_code == RATE_LIMIT_CODE:
-            record_rate_limit(rate_limit_check_time)
         append_audit(
             "full_universe_market_data_refresh",
             ";".join(
@@ -986,26 +920,19 @@ def main(argv: list[str] | None = None) -> int:
             "sequence=2; smoke_test_passed=yes; "
             f"full_retrieval_succeeded={'yes' if full_retrieval_succeeded else 'no'}; "
             "held_tickers_price_only=yes; "
+            f"maximum_provider_requests={len(tickers)}; "
             f"source_failure_code={current_source_failure_code}; "
             f"fail_safe_stop={'no' if full_retrieval_succeeded else 'yes'}",
         )
     else:
-        source_name = (
-            "yfinance_rate_limit_circuit_open"
-            if current_source_failure_code
-            in {RATE_LIMIT_CODE, RATE_LIMIT_COOLDOWN_CODE, RATE_LIMIT_STATE_INVALID_CODE}
-            else "yfinance_smoke_test_failed"
-        )
+        source_name = f"{MASSIVE_DATA_SOURCE}_unavailable"
         market_rows = [
             empty_market_row(ticker, source_name, now)
             for ticker in tickers
         ]
         full_note = (
-            "not attempted because benchmark preflight was rate limited"
-            if current_source_failure_code == RATE_LIMIT_CODE
-            else "not attempted because rate-limit circuit is active"
-            if current_source_failure_code
-            in {RATE_LIMIT_COOLDOWN_CODE, RATE_LIMIT_STATE_INVALID_CODE}
+            "not attempted because external Massive authentication is unavailable"
+            if current_source_failure_code == AUTH_MISSING_CODE
             else "not attempted because benchmark preflight failed"
         )
         source_failure = True
@@ -1020,7 +947,8 @@ def main(argv: list[str] | None = None) -> int:
             "sequence=2; smoke_test_passed=no; fail_safe_stop=yes; "
             "held_tickers_price_only=yes; "
             f"source_failure_code={current_source_failure_code}; "
-            f"network_attempted={'yes' if network_attempt_allowed else 'no'}",
+            f"network_attempted={'yes' if network_attempted else 'no'}; "
+            "retries=0",
         )
 
     if source_failure:
@@ -1036,7 +964,11 @@ def main(argv: list[str] | None = None) -> int:
         if prior_outputs_preserved:
             market_rows = prior_market_rows
 
-    if not prior_outputs_preserved:
+    # A provider or validation failure never publishes a replacement B2 trio.
+    # This remains true when the existing trio is already invalid: downstream
+    # gates keep rejecting those unchanged bytes until a complete Massive
+    # batch passes every commit check.
+    if not source_failure:
         market_by_ticker = {row["ticker"]: row for row in market_rows}
         quality_rows: list[dict[str, str]] = []
         candidates: list[dict[str, str]] = []
@@ -1117,14 +1049,8 @@ def main(argv: list[str] | None = None) -> int:
         prior_outputs_preserved=prior_outputs_preserved,
         source_failure_code=current_source_failure_code,
     )
-    # A successful provider response is not a completed recovery until all
-    # current B2 artifacts have been written.  Leaving an active 429 circuit
-    # intact on a local write failure is conservative and prevents a duplicate
-    # same-day public-source attempt after an interrupted commit.
-    if full_retrieval_succeeded:
-        clear_rate_limit_state(rate_limit_check_time)
     written_paths = [DECISION_PATH, REPORT_PATH]
-    if not prior_outputs_preserved:
+    if not source_failure:
         written_paths = [
             SNAPSHOT_PATH,
             QUALITY_PATH,
@@ -1141,7 +1067,7 @@ def main(argv: list[str] | None = None) -> int:
         (
             "source_failure_prior_outputs_preserved"
             if source_failure and prior_outputs_preserved
-            else "source_failure_insufficient_outputs_written"
+            else "source_failure_market_outputs_untouched"
             if source_failure
             else "complete"
         ),

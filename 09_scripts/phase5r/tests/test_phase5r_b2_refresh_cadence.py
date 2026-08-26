@@ -12,10 +12,12 @@ from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
+import phase5r_massive_b2_adapter as massive
 import run_phase5r_b2_full_universe_market_data as b2
 import run_phase5r_daily_decision_pipeline as final_pipeline
 import run_phase5r_daily_refresh as daily_refresh
 import run_phase5r_daily_refresh_scheduler as refresh_scheduler
+import score_phase5r_b2_candidates as scoring
 
 
 ET = ZoneInfo("America/New_York")
@@ -55,7 +57,7 @@ def _market_row(ticker: str, session: str) -> dict[str, str]:
         "market_session_date": session,
         "market_age_calendar_days": "1",
         "data_timestamp": f"{session}T20:15:00-04:00",
-        "data_source": "yfinance_public_market_data",
+        "data_source": b2.MASSIVE_DATA_SOURCE,
         "data_quality_label": "ok",
     }
 
@@ -73,7 +75,6 @@ class B2RefreshCadenceTests(unittest.TestCase):
             "decision": root / "00_project_control" / "phase5r_b2_data_source_decision.md",
             "report": root / "04_research" / "realtime_stock_picker_phase5r" / "phase5r_b2_data_report.md",
             "run_log": root / "00_project_control" / "run_logs" / "phase5r_b2_run_log.csv",
-            "rate_limit_state": root / "00_project_control" / "run_logs" / "phase5r_b2_rate_limit_state.local.json",
         }
 
     def _write_coherent_snapshot(self, paths: dict[str, Path], session: str) -> None:
@@ -138,7 +139,6 @@ class B2RefreshCadenceTests(unittest.TestCase):
             "DECISION_PATH",
             "REPORT_PATH",
             "RUN_LOG",
-            "B2_RATE_LIMIT_STATE_PATH",
         ):
             value = {
                 "ROOT": paths["root"],
@@ -152,11 +152,10 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 "DECISION_PATH": paths["decision"],
                 "REPORT_PATH": paths["report"],
                 "RUN_LOG": paths["run_log"],
-                "B2_RATE_LIMIT_STATE_PATH": paths["rate_limit_state"],
             }[name]
             stack.enter_context(patch.object(b2, name, value))
 
-    def test_preclose_reuse_keeps_current_local_snapshot_and_skips_yfinance(self) -> None:
+    def test_preclose_reuse_keeps_current_local_snapshot_and_skips_massive_client(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_coherent_snapshot(paths, "2026-08-04")
@@ -167,13 +166,13 @@ class B2RefreshCadenceTests(unittest.TestCase):
             with ExitStack() as stack:
                 self._patch_b2_paths(stack, paths)
                 stack.enter_context(patch.object(b2, "now_et", return_value=PRE_CLOSE))
-                ticker = stack.enter_context(patch.object(b2.yf, "Ticker"))
-                download = stack.enter_context(patch.object(b2.yf, "download"))
+                factory = stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment")
+                )
                 result = b2.main(["--reuse-validated-snapshot"])
 
             self.assertEqual(result, 0)
-            ticker.assert_not_called()
-            download.assert_not_called()
+            factory.assert_not_called()
             for name, original in prior.items():
                 self.assertEqual(paths[name].read_bytes(), original)
             audit = b2.read_csv(paths["audit"])
@@ -181,7 +180,31 @@ class B2RefreshCadenceTests(unittest.TestCase):
             self.assertEqual(audit[-1]["status"], "complete")
             self.assertIn("public_source_called=no", audit[-1]["safety_notes"])
 
-    def test_reuse_rejects_previous_close_at_current_close_boundary_without_yfinance(self) -> None:
+    def test_post_close_market_child_timeout_covers_bounded_import_budget(self) -> None:
+        completed = daily_refresh.subprocess.CompletedProcess(["child"], 0)
+        with patch.object(
+            daily_refresh.subprocess, "run", return_value=completed
+        ) as run:
+            result = daily_refresh.run_step(
+                "market_refresh",
+                "run_phase5r_b2_full_universe_market_data.py",
+                False,
+                market_snapshot_mode=daily_refresh.MARKET_SNAPSHOT_FETCH,
+            )
+
+        self.assertEqual(result["outcome"], "passed")
+        self.assertEqual(daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS, 480)
+        self.assertEqual(refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS, 900)
+        self.assertGreaterEqual(
+            daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS,
+            29 * massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS,
+        )
+        self.assertEqual(
+            run.call_args.kwargs["timeout"],
+            daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS,
+        )
+
+    def test_reuse_rejects_previous_close_at_current_close_boundary_without_massive_client(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_coherent_snapshot(paths, "2026-08-04")
@@ -191,13 +214,13 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 stack.enter_context(
                     patch.object(b2, "now_et", return_value=CLOSE_BOUNDARY)
                 )
-                ticker = stack.enter_context(patch.object(b2.yf, "Ticker"))
-                download = stack.enter_context(patch.object(b2.yf, "download"))
+                factory = stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment")
+                )
                 result = b2.main(["--reuse-validated-snapshot"])
 
             self.assertEqual(result, 1)
-            ticker.assert_not_called()
-            download.assert_not_called()
+            factory.assert_not_called()
             self.assertEqual(paths["snapshot"].read_bytes(), prior)
             audit = b2.read_csv(paths["audit"])
             self.assertIn(
@@ -278,6 +301,169 @@ class B2RefreshCadenceTests(unittest.TestCase):
         arguments = run.call_args.args[0]
         self.assertIn("--market-snapshot-mode", arguments)
         self.assertIn(refresh_scheduler.MARKET_SNAPSHOT_REUSE, arguments)
+        self.assertEqual(
+            run.call_args.kwargs["timeout"],
+            refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
+        )
+
+    def test_failed_post_close_massive_refresh_never_starts_shadow_or_email(self) -> None:
+        """A Massive B2 failure is a hard daily gate, not a shadow/email trigger."""
+
+        scheduler_state: dict[str, object] = {
+            "schema_version": "phase5r_daily_scheduler_state_v1",
+            "dates": {},
+        }
+        refresh_state = {
+            "schema_version": "phase5r_daily_refresh_state_v1",
+            "outcome": "degraded_decision_created",
+            "decision_created": True,
+            "hard_failures": ["market_refresh:massive_rate_limited"],
+            "soft_failures": [],
+            "started_at": "2026-08-05T17:45:00-04:00",
+            "completed_at": "2026-08-05T17:45:01-04:00",
+        }
+
+        def fake_read_json(path: Path, default: object) -> object:
+            if path == refresh_scheduler.DAILY_REFRESH_STATE_PATH:
+                return refresh_state
+            return scheduler_state
+
+        refresh = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(
+                    refresh_scheduler,
+                    "load_active_state",
+                    return_value={"operational_from": "2026-08-01"},
+                )
+            )
+            stack.enter_context(
+                patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False})
+            )
+            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-05"))
+            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=POST_CLOSE))
+            stack.enter_context(
+                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T17:45:00-04:00")
+            )
+            stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
+            stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
+            run = stack.enter_context(
+                patch.object(refresh_scheduler.subprocess, "run", return_value=refresh)
+            )
+            stack.enter_context(
+                patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"])
+            )
+            with redirect_stdout(io.StringIO()):
+                result = refresh_scheduler.main()
+
+        self.assertEqual(result, 0)
+        self.assertEqual(run.call_count, 1)
+        command = run.call_args.args[0]
+        self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), command)
+        self.assertNotIn(str(refresh_scheduler.PRODUCTION_SHADOW_RUNNER), command)
+        self.assertNotIn(str(refresh_scheduler.PRODUCTION_SHADOW_EMAIL_RUNNER), command)
+        date_state = scheduler_state["dates"]["2026-08-05"]
+        self.assertIn(
+            refresh_scheduler.POST_CLOSE_MARKET_SLOT,
+            date_state["refresh_slots_completed"],
+        )
+        self.assertEqual(
+            date_state["post_close_market_attempt_status"], "child_returned"
+        )
+        remaining = [
+            slot
+            for slot in refresh_scheduler.due_slots(POST_CLOSE)
+            if slot not in set(date_state["refresh_slots_completed"])
+        ]
+        self.assertEqual(
+            refresh_scheduler.market_snapshot_mode(POST_CLOSE, remaining),
+            refresh_scheduler.MARKET_SNAPSHOT_REUSE,
+        )
+
+    def test_stale_preserved_candidate_is_never_scored_as_actionable(self) -> None:
+        row = _seed("NVDA") | {
+            key: value
+            for key, value in _market_row("NVDA", "2026-08-04").items()
+            if key != "ticker"
+        }
+        row.update(
+            {"market_data_usable": "yes", "candidate_note": "daily public data attached"}
+        )
+
+        result = scoring.score_row(
+            row, expected_market_session="2026-08-05"
+        )
+
+        self.assertEqual(result["action_label"], "insufficient_data")
+        self.assertEqual(result["total_score"], "0.00")
+
+    def test_terminal_shadow_provider_failure_never_starts_email_child(self) -> None:
+        """Even after a valid refresh, terminal shadow output cannot authorize email."""
+
+        scheduler_state: dict[str, object] = {
+            "schema_version": "phase5r_daily_scheduler_state_v1",
+            "dates": {},
+        }
+        refresh_state = {
+            "schema_version": "phase5r_daily_refresh_state_v1",
+            "outcome": "passed",
+            "decision_created": True,
+            "hard_failures": [],
+            "soft_failures": [],
+            "started_at": "2026-08-05T17:45:00-04:00",
+            "completed_at": "2026-08-05T17:45:01-04:00",
+        }
+
+        def fake_read_json(path: Path, default: object) -> object:
+            if path == refresh_scheduler.DAILY_REFRESH_STATE_PATH:
+                return refresh_state
+            return scheduler_state
+
+        refresh = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
+        failed_shadow = refresh_scheduler.subprocess.CompletedProcess(
+            ["shadow"],
+            1,
+            stdout=json.dumps({"outcome": "terminal_failure", "reason": "api_authentication"}),
+        )
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(
+                    refresh_scheduler,
+                    "load_active_state",
+                    return_value={"operational_from": "2026-08-01"},
+                )
+            )
+            stack.enter_context(
+                patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False})
+            )
+            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-05"))
+            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=POST_CLOSE))
+            stack.enter_context(
+                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T17:45:00-04:00")
+            )
+            stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
+            stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
+            run = stack.enter_context(
+                patch.object(
+                    refresh_scheduler.subprocess,
+                    "run",
+                    side_effect=[refresh, failed_shadow],
+                )
+            )
+            stack.enter_context(
+                patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"])
+            )
+            with redirect_stdout(io.StringIO()):
+                result = refresh_scheduler.main()
+
+        self.assertEqual(result, 0)
+        self.assertEqual(run.call_count, 2)
+        commands = [call.args[0] for call in run.call_args_list]
+        self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), commands[0])
+        self.assertIn(str(refresh_scheduler.PRODUCTION_SHADOW_RUNNER), commands[1])
+        self.assertTrue(
+            all(str(refresh_scheduler.PRODUCTION_SHADOW_EMAIL_RUNNER) not in command for command in commands)
+        )
 
     def test_sec_only_runtime_marker_invokes_no_daily_or_shadow_path(self) -> None:
         """The existing launchd job can refresh SEC evidence without B2 or email."""
@@ -310,6 +496,34 @@ class B2RefreshCadenceTests(unittest.TestCase):
             timeout=refresh_scheduler.SEC_REFRESH_TIMEOUT_SECONDS,
             check=False,
         )
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_massive_runtime_auth_presence_probe_is_mute_and_boolean_only(self) -> None:
+        """The launchd boundary reveals only Massive-key presence via fixed exits."""
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch.dict(
+            os.environ,
+            {
+                refresh_scheduler.MASSIVE_AUTH_PRESENCE_PROBE_ENV: "1",
+                "MASSIVE_API_KEY": "test-presence-only-not-a-real-key",
+            },
+            clear=True,
+        ):
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                present = refresh_scheduler.main()
+        with patch.dict(
+            os.environ,
+            {refresh_scheduler.MASSIVE_AUTH_PRESENCE_PROBE_ENV: "1"},
+            clear=True,
+        ):
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                absent = refresh_scheduler.main()
+
+        self.assertEqual(present, refresh_scheduler.MASSIVE_AUTH_PRESENCE_PRESENT_EXIT)
+        self.assertEqual(absent, refresh_scheduler.MASSIVE_AUTH_PRESENCE_ABSENT_EXIT)
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
 

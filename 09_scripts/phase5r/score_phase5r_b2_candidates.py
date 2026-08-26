@@ -4,6 +4,8 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
+from phase5r_daily_common import last_completed_market_session, now_et
+
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "03_source_data" / "phase5r"
@@ -69,7 +71,9 @@ def clamp(value: float) -> float:
     return max(0.0, min(10.0, value))
 
 
-def score_row(row: dict[str, str]) -> dict[str, str]:
+def score_row(
+    row: dict[str, str], *, expected_market_session: str | None = None
+) -> dict[str, str]:
     ticker = row["ticker"].upper()
     if ticker in LEGACY_TICKERS:
         raise RuntimeError("Legacy IOT/RBRK tickers are excluded from Phase 5R-B2")
@@ -79,10 +83,23 @@ def score_row(row: dict[str, str]) -> dict[str, str]:
         "intraday_change_pct": row["intraday_change_pct"], "relative_volume": row["relative_volume"], "dollar_volume": row["dollar_volume"],
         "data_source": row["data_source"], "data_quality_label": row["data_quality_label"], "formula_version": FORMULA_VERSION,
     }
-    if row["market_data_usable"] != "yes" or None in {change, rel_volume, dollar_volume}:
+    current_session = (
+        expected_market_session is None
+        or row.get("market_session_date") == expected_market_session
+    )
+    if (
+        not current_session
+        or row["market_data_usable"] != "yes"
+        or None in {change, rel_volume, dollar_volume}
+    ):
+        explanation = (
+            "Market session is stale; no scoreable signal produced."
+            if not current_session
+            else "Incomplete public market data; no scoreable signal produced."
+        )
         return base | {
             "trend_score": "", "volume_score": "", "catalyst_score": "", "quality_score": "", "risk_penalty": "",
-            "total_score": "0.00", "action_label": "insufficient_data", "score_explanation": "Incomplete public market data; no scoreable signal produced.",
+            "total_score": "0.00", "action_label": "insufficient_data", "score_explanation": explanation,
         }
     trend = round(clamp(5.0 + change * 1.2), 2)
     volume = round(clamp(4.0 + rel_volume * 2.0 + (1.0 if dollar_volume >= 1_000_000_000 else 0.0)), 2)
@@ -122,7 +139,11 @@ def write_reviews(rows: list[dict[str, str]]) -> None:
 
 
 def main() -> None:
-    scores = [score_row(row) for row in read_csv(CANDIDATES_PATH)]
+    expected_session = last_completed_market_session(now_et()).isoformat()
+    scores = [
+        score_row(row, expected_market_session=expected_session)
+        for row in read_csv(CANDIDATES_PATH)
+    ]
     scores.sort(key=lambda row: (-float(row["total_score"]), row["ticker"]))
     for index, row in enumerate(scores, start=1):
         row["rank"] = str(index)

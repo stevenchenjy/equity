@@ -57,6 +57,15 @@ AUTH_PRESENCE_PROBE_ENV = "PHASE5R_AUTH_PRESENCE_PROBE_20260804_5F17"
 AUTH_PRESENCE_PRESENT_EXIT = 71
 AUTH_PRESENCE_ABSENT_EXIT = 72
 AUTH_PRESENCE_INTERNAL_ERROR_EXIT = 73
+# Equivalent no-output presence probe for the externally configured Massive
+# credential used by the B2 child. It returns only a fixed exit status and
+# never prints, hashes, persists, or sends the credential.
+MASSIVE_AUTH_PRESENCE_PROBE_ENV = (
+    "PHASE5R_MASSIVE_AUTH_PRESENCE_PROBE_20260820_B2E0"
+)
+MASSIVE_AUTH_PRESENCE_PRESENT_EXIT = 74
+MASSIVE_AUTH_PRESENCE_ABSENT_EXIT = 75
+MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT = 76
 # A one-shot, externally initiated SEC-only path.  It uses this already
 # approved launchd runtime so the configured User-Agent remains external to
 # the repository.  It deliberately does not run B2, the deterministic refresh,
@@ -64,6 +73,10 @@ AUTH_PRESENCE_INTERNAL_ERROR_EXIT = 73
 # observing the child result; no credential value is read or emitted here.
 SEC_REFRESH_ONLY_ENV = "PHASE5R_SEC_REFRESH_ONLY_20260811_41C2"
 SEC_REFRESH_TIMEOUT_SECONDS = 240
+# The post-close daily refresh can contain the bounded, paced 29-request market
+# import. Its parent timeout exceeds that child budget and leaves a finite
+# allowance for the existing local refresh steps; cadence remains 17:45 ET.
+DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 900
 
 
 def due_slots(current: datetime) -> list[str]:
@@ -145,6 +158,19 @@ def _auth_presence_probe_exit_code() -> int:
         # A probe must remain mute and fail closed even for an unusual runtime
         # environment implementation.
         return AUTH_PRESENCE_INTERNAL_ERROR_EXIT
+
+
+def _massive_auth_presence_probe_exit_code() -> int:
+    """Return only a fixed Massive-key presence result; never expose it."""
+
+    try:
+        return (
+            MASSIVE_AUTH_PRESENCE_PRESENT_EXIT
+            if bool(os.environ.get("MASSIVE_API_KEY"))
+            else MASSIVE_AUTH_PRESENCE_ABSENT_EXIT
+        )
+    except Exception:
+        return MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT
 
 
 def _run_sec_refresh_only() -> int:
@@ -230,6 +256,8 @@ def main() -> int:
     # This must run before argument parsing, state reads, locks, writes, or
     # scheduler execution.  It is used only for the externally initiated,
     # no-output launchd authentication-presence check.
+    if os.environ.get(MASSIVE_AUTH_PRESENCE_PROBE_ENV) == "1":
+        return _massive_auth_presence_probe_exit_code()
     if os.environ.get(AUTH_PRESENCE_PROBE_ENV) == "1":
         return _auth_presence_probe_exit_code()
     if os.environ.get(SEC_REFRESH_ONLY_ENV) == "1":
@@ -278,6 +306,16 @@ def main() -> int:
         return 0
     snapshot_mode = market_snapshot_mode(current, pending)
     refresh_started_at = iso_now()
+    if snapshot_mode == MARKET_SNAPSHOT_FETCH:
+        # Reserve the one post-close source attempt before starting the child.
+        # If this process or a later deterministic step fails, a future 15-minute
+        # tick may still run local reuse work but cannot repeat the Massive call.
+        date_state["post_close_market_attempt_reserved_at"] = refresh_started_at
+        date_state["post_close_market_attempt_status"] = "reserved_before_child"
+        completed.add(POST_CLOSE_MARKET_SLOT)
+        date_state["refresh_slots_completed"] = sorted(completed)
+        state["updated_at"] = refresh_started_at
+        atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
     try:
         completed_process = subprocess.run(
             [
@@ -290,7 +328,7 @@ def main() -> int:
             cwd=ROOT,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            timeout=420,
+            timeout=DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
             check=False,
         )
     except subprocess.TimeoutExpired:
@@ -367,6 +405,11 @@ def main() -> int:
     date_state["refresh_last_exit_code"] = completed_process.returncode
     date_state["market_snapshot_mode"] = snapshot_mode
     date_state["refresh_last_shadow_gate"] = refresh_gate
+    if snapshot_mode == MARKET_SNAPSHOT_FETCH:
+        date_state["post_close_market_attempt_status"] = "child_returned"
+        date_state["post_close_market_attempt_exit_code"] = (
+            completed_process.returncode
+        )
     if shadow_process is not None:
         date_state["production_shadow_last_attempt_at"] = iso_now()
         date_state["production_shadow_last_exit_code"] = shadow_process.returncode

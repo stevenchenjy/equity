@@ -15,6 +15,12 @@ RUN_LOG = CONTROL_DIR / "run_logs" / "phase5r_b2_run_log.csv"
 REPORT_PATH = CONTROL_DIR / "phase5r_b2_verification_report.md"
 RESEARCH_REPORT_PATH = RESEARCH_DIR / "phase5r_b2_verification_report.md"
 LOCAL_POSITIONS_PATH = ROOT / "05_risk_and_positions" / "current_positions.local.csv"
+MASSIVE_ADAPTER_PATH = SCRIPTS_DIR / "phase5r_massive_b2_adapter.py"
+SCHEDULER_PATH = SCRIPTS_DIR / "run_phase5r_daily_refresh_scheduler.py"
+MASSIVE_RUNTIME_KEY_ENV = "MASSIVE_API_KEY"
+# Keep this split so the verifier's own detection predicate is not classified
+# as a legacy-provider host literal.
+YAHOO_HOST_TOKEN = "yahoo" + ".com"
 
 LEGACY_TICKERS = {"IOT", "RBRK"}
 MARKET_FIELDS = [
@@ -29,12 +35,13 @@ REQUIRED_FILES = [
     "00_project_control/phase5r_b2_full_universe_data_policy.md", "00_project_control/phase5r_b2_data_source_decision.md", "00_project_control/phase5r_b2_verification_report.md",
     "03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv", "03_source_data/phase5r/phase5r_b2_market_data_quality_report.csv", "03_source_data/phase5r/phase5r_b2_candidates_with_market_data.csv", "03_source_data/phase5r/phase5r_b2_signal_scores.csv", "03_source_data/phase5r/phase5r_b2_manual_trade_tickets.csv", "03_source_data/phase5r/phase5r_b2_audit_trail.csv",
     "08_reviews/current/latest_phase5r_b2_daily_research_preview.md", "08_reviews/current/latest_phase5r_b2_watchlist.md", "08_reviews/current/latest_phase5r_b2_manual_trade_tickets.md",
-    "09_scripts/phase5r/run_phase5r_b2_full_universe_market_data.py", "09_scripts/phase5r/score_phase5r_b2_candidates.py", "09_scripts/phase5r/create_phase5r_b2_manual_trade_tickets.py", "09_scripts/phase5r/verify_phase5r_b2_read_only_boundary.py",
+    "09_scripts/phase5r/phase5r_massive_b2_adapter.py", "09_scripts/phase5r/run_phase5r_b2_full_universe_market_data.py", "09_scripts/phase5r/score_phase5r_b2_candidates.py", "09_scripts/phase5r/create_phase5r_b2_manual_trade_tickets.py", "09_scripts/phase5r/verify_phase5r_b2_read_only_boundary.py",
     "04_research/realtime_stock_picker_phase5r/phase5r_b2_data_report.md", "04_research/realtime_stock_picker_phase5r/phase5r_b2_verification_report.md", "00_project_control/run_logs/phase5r_b2_run_log.csv",
 ]
 B2_SCRIPTS = [
     SCRIPTS_DIR / "run_phase5r_b2_full_universe_market_data.py", SCRIPTS_DIR / "score_phase5r_b2_candidates.py",
-    SCRIPTS_DIR / "create_phase5r_b2_manual_trade_tickets.py", SCRIPTS_DIR / "verify_phase5r_b2_read_only_boundary.py",
+    SCRIPTS_DIR / "create_phase5r_b2_manual_trade_tickets.py", MASSIVE_ADAPTER_PATH,
+    SCRIPTS_DIR / "verify_phase5r_b2_read_only_boundary.py",
 ]
 BROKER_MODULES = {"alpaca", "alpaca_trade_api", "ib_insync", "robin_stocks", "schwab", "tda", "webull", "ccxt", "etrade", "tradier"}
 EMAIL_MODULES = {"smtplib", "imaplib", "gmail"}
@@ -57,14 +64,20 @@ def header(path: Path) -> list[str]:
         return next(csv.reader(handle))
 
 
-def scan_scripts() -> tuple[list[str], list[str], list[str], list[str], list[str]]:
+def scan_scripts() -> tuple[
+    list[str], list[str], list[str], list[str], list[str], list[str], list[str]
+]:
     broker: list[str] = []
     order: list[str] = []
-    env: list[str] = []
+    dotenv: list[str] = []
+    runtime_environment: list[str] = []
     email: list[str] = []
-    yfinance_imports: list[str] = []
+    massive_adapter_imports: list[str] = []
+    legacy_provider_imports: list[str] = []
+    yahoo_host_literals: list[str] = []
     for path in B2_SCRIPTS:
-        tree = ast.parse(path.read_text(encoding="utf-8"))
+        source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source)
         for node in ast.walk(tree):
             names: list[str] = []
             if isinstance(node, ast.Import):
@@ -77,9 +90,11 @@ def scan_scripts() -> tuple[list[str], list[str], list[str], list[str], list[str
                 if name in EMAIL_MODULES:
                     email.append(f"{path.name}: {name}")
                 if name in ENV_MODULES:
-                    env.append(f"{path.name}: {name}")
+                    dotenv.append(f"{path.name}: {name}")
+                if name == "phase5r_massive_b2_adapter":
+                    massive_adapter_imports.append(path.name)
                 if name == "yfinance":
-                    yfinance_imports.append(path.name)
+                    legacy_provider_imports.append(path.name)
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in BLOCKED_CALLS:
                 order.append(f"{path.name}: defines {node.name}")
             if isinstance(node, ast.Call):
@@ -87,9 +102,97 @@ def scan_scripts() -> tuple[list[str], list[str], list[str], list[str], list[str
                     order.append(f"{path.name}: calls {node.func.id}")
                 if isinstance(node.func, ast.Attribute) and node.func.attr in BLOCKED_CALLS:
                     order.append(f"{path.name}: calls {node.func.attr}")
-                if isinstance(node.func, ast.Attribute) and node.func.attr in {"getenv", "environ"}:
-                    env.append(f"{path.name}: environment access")
-    return broker, order, env, email, yfinance_imports
+                if isinstance(node.func, ast.Attribute) and node.func.attr == "getenv":
+                    runtime_environment.append(path.name)
+            if isinstance(node, ast.Attribute) and node.attr == "environ":
+                runtime_environment.append(path.name)
+            if (
+                isinstance(node, ast.Constant)
+                and isinstance(node.value, str)
+                and YAHOO_HOST_TOKEN in node.value.lower()
+            ):
+                yahoo_host_literals.append(path.name)
+    return (
+        broker,
+        order,
+        dotenv,
+        sorted(set(runtime_environment)),
+        email,
+        sorted(set(massive_adapter_imports)),
+        sorted(set(legacy_provider_imports + yahoo_host_literals)),
+    )
+
+
+def _string_assignments(path: Path) -> dict[str, str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    assignments: dict[str, str] = {}
+    for node in tree.body:
+        if (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            assignments[node.targets[0].id] = node.value.value
+    return assignments
+
+
+def massive_adapter_contract() -> tuple[bool, str]:
+    tree = ast.parse(
+        MASSIVE_ADAPTER_PATH.read_text(encoding="utf-8"),
+        filename=str(MASSIVE_ADAPTER_PATH),
+    )
+    assignments = _string_assignments(MASSIVE_ADAPTER_PATH)
+    adjusted_false = any(
+        isinstance(node, ast.Dict)
+        and any(
+            isinstance(key, ast.Constant)
+            and key.value == "adjusted"
+            and isinstance(value, ast.Constant)
+            and value.value == "false"
+            for key, value in zip(node.keys, node.values)
+        )
+        for node in ast.walk(tree)
+    )
+    authorization_header = any(
+        isinstance(node, ast.Constant) and node.value == "Authorization"
+        for node in ast.walk(tree)
+    )
+    passed = (
+        assignments.get("MASSIVE_API_KEY_ENV") == MASSIVE_RUNTIME_KEY_ENV
+        and assignments.get("MASSIVE_DATA_SOURCE") == "massive_stocks_basic_eod"
+        and adjusted_false
+        and authorization_header
+    )
+    return (
+        passed,
+        "runtime_key="
+        f"{assignments.get('MASSIVE_API_KEY_ENV')!r}; "
+        f"source={assignments.get('MASSIVE_DATA_SOURCE')!r}; "
+        f"adjusted_false={adjusted_false}; authorization_header={authorization_header}",
+    )
+
+
+def post_close_schedule_contract() -> tuple[bool, str]:
+    assignments = _string_assignments(SCHEDULER_PATH)
+    passed = assignments.get("POST_CLOSE_MARKET_SLOT") == "17:45"
+    return passed, f"post_close_market_slot={assignments.get('POST_CLOSE_MARKET_SLOT')!r}"
+
+
+def policy_source_contract() -> tuple[bool, str]:
+    text = (CONTROL_DIR / "phase5r_b2_full_universe_data_policy.md").read_text(
+        encoding="utf-8"
+    )
+    required = (
+        "Massive Stocks Basic end-of-day Custom Bars",
+        "`MASSIVE_API_KEY`",
+        "`adjusted=false`",
+        "17:45 ET",
+        "Yahoo/yfinance",
+    )
+    missing = [token for token in required if token not in text]
+    return not missing, f"missing_policy_tokens={missing}"
 
 
 def main() -> None:
@@ -106,7 +209,18 @@ def main() -> None:
     scores = read_csv(DATA_DIR / "phase5r_b2_signal_scores.csv")
     tickets = read_csv(DATA_DIR / "phase5r_b2_manual_trade_tickets.csv")
     audit = read_csv(DATA_DIR / "phase5r_b2_audit_trail.csv")
-    broker, order, env, email, yfinance_imports = scan_scripts()
+    (
+        broker,
+        order,
+        dotenv,
+        runtime_environment,
+        email,
+        massive_adapter_imports,
+        legacy_provider_imports,
+    ) = scan_scripts()
+    massive_contract_ok, massive_contract_detail = massive_adapter_contract()
+    post_close_ok, post_close_detail = post_close_schedule_contract()
+    policy_contract_ok, policy_contract_detail = policy_source_contract()
     universe_tickers = {row["ticker"].upper() for row in universe}
     held_tickers = {row["ticker"].upper() for row in positions}
     expected_price_tickers = universe_tickers | held_tickers
@@ -161,12 +275,15 @@ def main() -> None:
     checks = [
         ("Phase 5R-B2 files were created", not missing, f"missing={missing}"),
         ("benchmark smoke test ran before full universe fetch", smoke_index is not None and fetch_index is not None and smoke_index < fetch_index, f"smoke_index={smoke_index}, fetch_index={fetch_index}"),
-        ("yfinance is used only for public market data", yfinance_imports == ["run_phase5r_b2_full_universe_market_data.py"], f"imports={yfinance_imports}"),
+        ("Massive Basic EOD adapter is the only active market-data fetch path", massive_adapter_imports == ["run_phase5r_b2_full_universe_market_data.py"] and not legacy_provider_imports, f"massive_imports={massive_adapter_imports}, legacy_provider_imports={legacy_provider_imports}"),
+        ("Massive adapter pins external-runtime authentication and unadjusted bars", massive_contract_ok, massive_contract_detail),
         ("no broker libraries imported", not broker, f"violations={broker}"),
         ("no order code created", not order, f"violations={order}"),
-        ("no .env read", not env, f"violations={env}"),
-        ("no API keys used", not env, "no environment or credential access found"),
+        ("no .env or repository credential loader imported", not dotenv, f"violations={dotenv}"),
+        ("only the Massive adapter accesses the external process runtime", runtime_environment == [MASSIVE_ADAPTER_PATH.name], f"environment_access={runtime_environment}"),
         ("no email code created", not email, f"violations={email}"),
+        ("the existing post-close B2 slot remains 17:45 ET", post_close_ok, post_close_detail),
+        ("B2 policy pins Massive-only, external-runtime, unadjusted source rules", policy_contract_ok, policy_contract_detail),
         ("no archived legacy data used", not archive_inputs, f"archive_inputs={archive_inputs}"),
         ("canonical universe remains 27 unique research tickers", len(universe) == 27 and len(ticker_lists["universe"]) == len(universe_tickers), f"universe_rows={len(universe)}, unique={len(universe_tickers)}"),
         ("all ticker-keyed outputs are unique", not duplicate_outputs, f"duplicates={duplicate_outputs}"),
@@ -194,7 +311,7 @@ def main() -> None:
         )
         if not exists:
             writer.writeheader()
-        writer.writerow({"timestamp": timestamp(), "script_name": Path(__file__).name, "action": "verify_phase5r_b2_read_only_boundary", "input_path": "phase5r_b2 outputs", "output_path": f"{REPORT_PATH.relative_to(ROOT)};{RESEARCH_REPORT_PATH.relative_to(ROOT)}", "status": "complete" if all(item[1] for item in checks) else "failed", "safety_notes": "verification_only=yes; no_broker=yes; no_orders=yes; no_email=yes; no_credentials=yes; archived_legacy_used=no"})
+        writer.writerow({"timestamp": timestamp(), "script_name": Path(__file__).name, "action": "verify_phase5r_b2_read_only_boundary", "input_path": "phase5r_b2 outputs", "output_path": f"{REPORT_PATH.relative_to(ROOT)};{RESEARCH_REPORT_PATH.relative_to(ROOT)}", "status": "complete" if all(item[1] for item in checks) else "failed", "safety_notes": "verification_only=yes; no_broker=yes; no_orders=yes; no_email=yes; external_runtime_auth_only=yes; credential_value_logged=no; credential_value_persisted=no; archived_legacy_used=no"})
     if not all(item[1] for item in checks):
         raise RuntimeError("Phase 5R-B2 verification failed; see verification report")
     print(f"Wrote Phase 5R-B2 verification reports; snapshot_rows={len(snapshot)}")

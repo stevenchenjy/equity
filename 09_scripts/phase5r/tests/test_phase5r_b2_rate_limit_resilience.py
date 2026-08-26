@@ -1,177 +1,344 @@
 from __future__ import annotations
 
-import tempfile
+import io
 import unittest
-from contextlib import ExitStack
-from datetime import datetime
-from pathlib import Path
+from contextlib import redirect_stderr, redirect_stdout
+from datetime import date, datetime, timezone
+from urllib.error import HTTPError
+from urllib.parse import parse_qs, urlsplit
 from unittest.mock import Mock, patch
-from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
-import run_phase5r_b2_full_universe_market_data as b2
+import phase5r_massive_b2_adapter as massive
 
 
-ET = ZoneInfo("America/New_York")
-PRE_CLOSE = datetime(2026, 8, 5, 9, 0, tzinfo=ET)
-POST_CLOSE = datetime(2026, 8, 5, 17, 45, tzinfo=ET)
+START = date(2026, 8, 3)
+END = date(2026, 8, 5)
+_CANARY_KEY = "massive-test-key-presence-only-7e4a"
 
 
-def _seed(ticker: str) -> dict[str, str]:
+def _timestamp(day: int) -> int:
+    # Massive daily stock bars are aligned to the start of the ET aggregate
+    # window; in August that midnight boundary is 04:00 UTC.
+    return int(datetime(2026, 8, day, 4, tzinfo=timezone.utc).timestamp() * 1000)
+
+
+def _payload(
+    ticker: str = "IOT",
+    *,
+    status: object = "OK",
+    adjusted: object = False,
+    next_url: object = None,
+) -> dict[str, object]:
+    results = [
+        {"t": _timestamp(3), "o": 10.0, "h": 11.0, "l": 9.0, "c": 10.5, "v": 1000},
+        {"t": _timestamp(4), "o": 11.0, "h": 12.0, "l": 10.0, "c": 11.5, "v": 1200},
+    ]
     return {
+        "status": status,
         "ticker": ticker,
-        "company_name": f"{ticker} Holdings",
-        "sector": "Technology",
-        "industry": "Software",
-        "theme": "research",
-        "liquidity_tier": "high",
-        "volatility_tier": "medium",
-        "is_benchmark": "yes",
-        "max_position_pct": "0.10",
+        "adjusted": adjusted,
+        "next_url": next_url,
+        "resultsCount": len(results),
+        "results": results,
     }
 
 
-class B2RateLimitResilienceTests(unittest.TestCase):
-    def _paths(self, root: Path) -> dict[str, Path]:
-        return {
-            "data": root / "03_source_data" / "phase5r",
-            "positions": root / "05_risk_and_positions" / "current_positions.local.csv",
-            "snapshot": root / "03_source_data" / "phase5r" / "phase5r_b2_market_data_snapshot.csv",
-            "quality": root / "03_source_data" / "phase5r" / "phase5r_b2_market_data_quality_report.csv",
-            "candidates": root / "03_source_data" / "phase5r" / "phase5r_b2_candidates_with_market_data.csv",
-            "audit": root / "03_source_data" / "phase5r" / "phase5r_b2_audit_trail.csv",
-            "decision": root / "00_project_control" / "phase5r_b2_data_source_decision.md",
-            "report": root / "04_research" / "realtime_stock_picker_phase5r" / "phase5r_b2_data_report.md",
-            "run_log": root / "00_project_control" / "run_logs" / "phase5r_b2_run_log.csv",
-            "rate_limit_state": root / "00_project_control" / "run_logs" / "phase5r_b2_rate_limit_state.local.json",
-        }
+def _real_shaped_payload(ticker: str = "IOT") -> dict[str, object]:
+    """Sanitized current Custom Bars shape, including optional metadata."""
 
-    def _write_inputs(self, paths: dict[str, Path]) -> None:
-        seeds = [_seed(ticker) for ticker in b2.SMOKE_TICKERS]
-        b2.write_csv(
-            paths["data"] / "phase5r_universe_seed.csv", seeds, list(seeds[0])
+    payload = _payload(ticker, status="DELAYED")
+    payload["queryCount"] = 2
+    payload["request_id"] = "opaque-provider-request-id"
+    for index, row in enumerate(payload["results"]):
+        row.update(
+            {
+                "vw": 10.75 + index,
+                "n": 123 + index,
+                "otc": False,
+            }
         )
-        b2.write_csv(paths["positions"], [{"ticker": "IOT"}], ["ticker"])
+    return payload
 
-    def _patch_paths(self, stack: ExitStack, paths: dict[str, Path]) -> None:
-        for name, path in (
-            ("ROOT", paths["data"].parents[1]),
-            ("DATA_DIR", paths["data"]),
-            ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
-            ("LOCAL_POSITIONS_PATH", paths["positions"]),
-            ("SNAPSHOT_PATH", paths["snapshot"]),
-            ("QUALITY_PATH", paths["quality"]),
-            ("CANDIDATES_PATH", paths["candidates"]),
-            ("AUDIT_PATH", paths["audit"]),
-            ("DECISION_PATH", paths["decision"]),
-            ("REPORT_PATH", paths["report"]),
-            ("RUN_LOG", paths["run_log"]),
-            ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
-        ):
-            stack.enter_context(patch.object(b2, name, path))
 
-    def test_rate_limit_stops_remaining_benchmark_probes(self) -> None:
-        rate_limit = type("YFRateLimitError", (Exception,), {})
-        ticker = Mock()
-        ticker.history.side_effect = rate_limit("upstream text must not persist")
-        with patch.object(b2.yf, "Ticker", return_value=ticker) as factory:
-            rows, passed = b2.smoke_test()
-
-        self.assertFalse(passed)
-        factory.assert_called_once_with("QQQ")
-        ticker.history.assert_called_once()
-        self.assertEqual(rows[0]["error_code"], b2.RATE_LIMIT_CODE)
-        self.assertEqual([row["status"] for row in rows], ["failed", "not_attempted", "not_attempted"])
-        self.assertTrue(
-            all("upstream text must not persist" not in str(row) for row in rows)
+class MassiveB2AdapterResilienceTests(unittest.TestCase):
+    def _client(self, http_get, *, monotonic=None, sleep=None):
+        kwargs = {"http_get": http_get}
+        if monotonic is not None:
+            kwargs["monotonic"] = monotonic
+        if sleep is not None:
+            kwargs["sleep"] = sleep
+        return massive.MassiveBasicEODClient.from_environment(
+            {massive.MASSIVE_API_KEY_ENV: _CANARY_KEY}, **kwargs
         )
 
-    def test_same_day_circuit_allows_only_one_post_close_recovery(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            state_path = Path(directory) / "phase5r_b2_rate_limit_state.local.json"
-            with patch.object(b2, "B2_RATE_LIMIT_STATE_PATH", state_path):
-                b2.record_rate_limit(PRE_CLOSE)
-                self.assertEqual(
-                    b2.rate_limit_attempt_allowed(
-                        datetime(2026, 8, 5, 12, 30, tzinfo=ET)
-                    ),
-                    (False, b2.RATE_LIMIT_COOLDOWN_CODE),
-                )
-                self.assertEqual(
-                    b2.rate_limit_attempt_allowed(POST_CLOSE),
-                    (True, "rate_limit_post_close_retry_available"),
-                )
-                b2.reserve_post_close_retry(POST_CLOSE)
-                self.assertEqual(
-                    b2.rate_limit_attempt_allowed(
-                        datetime(2026, 8, 5, 18, 0, tzinfo=ET)
-                    ),
-                    (False, b2.RATE_LIMIT_COOLDOWN_CODE),
-                )
-                self.assertEqual(
-                    b2.rate_limit_attempt_allowed(
-                        datetime(2026, 8, 6, 8, 15, tzinfo=ET)
-                    ),
-                    (True, "rate_limit_state_expired"),
-                )
+    def test_environment_key_is_header_only_with_no_output_or_query_exposure(self) -> None:
+        """The external-runtime key authorizes one request but never enters its URL/output."""
 
-    def test_main_persists_only_finite_rate_limit_audit_data(self) -> None:
-        rate_limit = type("YFRateLimitError", (Exception,), {})
-        with tempfile.TemporaryDirectory() as directory:
-            paths = self._paths(Path(directory))
-            self._write_inputs(paths)
-            ticker = Mock()
-            ticker.history.side_effect = rate_limit("upstream text must not persist")
-            full_retrieval = Mock(
-                side_effect=AssertionError("full-universe retrieval must not run")
+        calls: list[tuple[str, dict[str, str], float]] = []
+
+        def http_get(path: str, headers: dict[str, str], timeout: float):
+            calls.append((path, dict(headers), timeout))
+            return _payload()
+
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            bars = self._client(http_get).fetch_daily_bars(
+                "IOT", start_date=START, end_date=END
             )
-            with ExitStack() as stack:
-                self._patch_paths(stack, paths)
-                stack.enter_context(patch.object(b2, "timestamp", return_value="2026-08-05T09:00:00-04:00"))
-                stack.enter_context(patch.object(b2, "now_et", return_value=PRE_CLOSE))
-                stack.enter_context(patch.object(b2.yf, "Ticker", return_value=ticker))
-                stack.enter_context(
-                    patch.object(b2, "retrieve_full_universe", full_retrieval)
-                )
-                result = b2.main()
-                state = b2.load_rate_limit_state(PRE_CLOSE)[0]
 
-            self.assertEqual(result, 1)
-            full_retrieval.assert_not_called()
-            ticker.history.assert_called_once()
-            audit = b2.read_csv(paths["audit"])
-            self.assertEqual(audit[0]["status"], "failed")
-            self.assertIn("source_failure_code=yfinance_rate_limited", audit[0]["safety_notes"])
-            self.assertNotIn("upstream text must not persist", "\n".join(row["safety_notes"] for row in audit))
-            self.assertIsNotNone(state)
-            self.assertEqual(state["source_failure_code"], b2.RATE_LIMIT_CODE)
-            decision = paths["decision"].read_text(encoding="utf-8")
-            self.assertIn("Source-failure classification: `yfinance_rate_limited`", decision)
+        self.assertEqual(len(bars), 2)
+        self.assertEqual(bars[0]["session_date"], START)
+        self.assertEqual(bars[-1]["session_date"], date(2026, 8, 4))
+        self.assertEqual(len(calls), 1)
+        path, headers, timeout = calls[0]
+        parsed = urlsplit(path)
+        self.assertEqual(
+            parsed.path,
+            "/v2/aggs/ticker/IOT/range/1/day/2026-08-03/2026-08-05",
+        )
+        self.assertEqual(
+            parse_qs(parsed.query),
+            {"adjusted": ["false"], "sort": ["asc"], "limit": ["50000"]},
+        )
+        self.assertNotIn(_CANARY_KEY, path)
+        self.assertNotIn(_CANARY_KEY, parsed.query)
+        self.assertEqual(headers["Authorization"], f"Bearer {_CANARY_KEY}")
+        self.assertEqual(headers["Accept"], "application/json")
+        self.assertEqual(timeout, massive.MASSIVE_HTTP_TIMEOUT_SECONDS)
+        self.assertNotIn(_CANARY_KEY, repr(bars))
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
 
-    def test_active_circuit_does_not_touch_yfinance_before_post_close(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            paths = self._paths(Path(directory))
-            self._write_inputs(paths)
-            with ExitStack() as stack:
-                self._patch_paths(stack, paths)
-                stack.enter_context(patch.object(b2, "timestamp", return_value="2026-08-05T12:30:00-04:00"))
-                stack.enter_context(patch.object(b2, "now_et", return_value=PRE_CLOSE))
-                b2.record_rate_limit(PRE_CLOSE)
-                factory = stack.enter_context(patch.object(b2.yf, "Ticker"))
-                full_retrieval = stack.enter_context(
-                    patch.object(b2, "retrieve_full_universe")
-                )
-                result = b2.main()
+    def test_real_stocks_basic_delayed_shape_normalizes_exactly(self) -> None:
+        """The Basic delayed shape normalizes without leaking provider metadata."""
 
-            self.assertEqual(result, 1)
-            factory.assert_not_called()
-            full_retrieval.assert_not_called()
-            audit = b2.read_csv(paths["audit"])
-            self.assertEqual(audit[0]["status"], "not_attempted")
-            self.assertIn(
-                "source_failure_code=yfinance_rate_limited_cooldown",
-                audit[0]["safety_notes"],
+        bars = self._client(
+            lambda path, headers, timeout: _real_shaped_payload()
+        ).fetch_daily_bars("IOT", start_date=START, end_date=END)
+
+        self.assertEqual(len(bars), 2)
+        self.assertEqual(
+            set(bars[0]),
+            {
+                "session_date",
+                "open",
+                "high",
+                "low",
+                "close",
+                "volume",
+                "timestamp_ms",
+            },
+        )
+        self.assertEqual(bars[0]["session_date"], START)
+        self.assertEqual(bars[-1]["session_date"], date(2026, 8, 4))
+        self.assertEqual(bars[0]["open"], 10.0)
+        self.assertEqual(bars[0]["high"], 11.0)
+        self.assertEqual(bars[0]["low"], 9.0)
+        self.assertEqual(bars[0]["close"], 10.5)
+        self.assertEqual(bars[0]["volume"], 1000.0)
+        self.assertEqual(bars[0]["timestamp_ms"], _timestamp(3))
+        self.assertNotIn("queryCount", bars[0])
+        self.assertNotIn("request_id", bars[0])
+        self.assertNotIn("vw", bars[0])
+        self.assertNotIn("n", bars[0])
+        self.assertNotIn("otc", bars[0])
+
+    def test_response_status_success_allowlist_is_exact(self) -> None:
+        for status in ("OK", "DELAYED"):
+            with self.subTest(status=status):
+                bars = self._client(
+                    lambda path, headers, timeout, status=status: _payload(
+                        status=status
+                    )
+                ).fetch_daily_bars("IOT", start_date=START, end_date=END)
+                self.assertEqual(len(bars), 2)
+
+    def test_smoke_ticker_cache_keeps_the_full_batch_to_twenty_nine_requests(self) -> None:
+        calls: list[str] = []
+
+        def http_get(path: str, headers: dict[str, str], timeout: float):
+            calls.append(path)
+            return _payload()
+
+        client = self._client(http_get)
+        first = client.fetch_daily_bars("IOT", start_date=START, end_date=END)
+        second = client.fetch_daily_bars("IOT", start_date=START, end_date=END)
+
+        self.assertEqual(first, second)
+        self.assertIsNot(first, second)
+        self.assertEqual(len(calls), 1)
+
+    def test_exact_response_validation_failures_are_finite_and_nonreflective(self) -> None:
+        """Ticker, adjustment, pagination, and malformed data each stop once."""
+
+        provider_canary = "provider-detail-must-not-be-reflected"
+        count_mismatch = _payload()
+        count_mismatch["resultsCount"] = 3
+        cases = (
+            (
+                "unsupported_status",
+                _payload(status="ERROR"),
+                massive.MALFORMED_RESPONSE_CODE,
+            ),
+            (
+                "invalid_status_type",
+                _payload(status=True),
+                massive.MALFORMED_RESPONSE_CODE,
+            ),
+            ("ticker", _payload("WRONG"), massive.TICKER_MISMATCH_CODE),
+            ("adjustment", _payload(adjusted=True), massive.ADJUSTMENT_MISMATCH_CODE),
+            (
+                "pagination",
+                _payload(
+                    next_url=(
+                        "https://api.massive.com/v2/next?cursor=opaque&apiKey="
+                        + provider_canary
+                    )
+                ),
+                massive.PAGINATION_CODE,
+            ),
+            (
+                "provider_error_envelope",
+                {"status": "ERROR", "error": provider_canary},
+                massive.MALFORMED_RESPONSE_CODE,
+            ),
+            (
+                "results_count_mismatch",
+                count_mismatch,
+                massive.MALFORMED_RESPONSE_CODE,
+            ),
+            (
+                "malformed",
+                {
+                    "status": "OK",
+                    "ticker": "IOT",
+                    "adjusted": False,
+                    "next_url": None,
+                    "resultsCount": 1,
+                    "results": [{"t": "not-an-integer"}],
+                },
+                massive.MALFORMED_RESPONSE_CODE,
+            ),
+        )
+        for label, payload, expected_code in cases:
+            with self.subTest(case=label):
+                calls = 0
+
+                def http_get(path: str, headers: dict[str, str], timeout: float):
+                    nonlocal calls
+                    calls += 1
+                    return payload
+
+                with self.assertRaises(massive.MassiveB2Error) as raised:
+                    self._client(http_get).fetch_daily_bars(
+                        "IOT", start_date=START, end_date=END
+                    )
+                self.assertEqual(raised.exception.code, expected_code)
+                self.assertEqual(str(raised.exception), expected_code)
+                self.assertNotIn(provider_canary, str(raised.exception))
+                self.assertNotIn(_CANARY_KEY, str(raised.exception))
+                self.assertEqual(calls, 1)
+
+    def test_invalid_json_body_is_rejected_without_reflection(self) -> None:
+        provider_canary = "invalid-json-provider-detail-must-not-be-reflected"
+
+        class Response:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, traceback):
+                return False
+
+            def read(self, maximum_bytes: int) -> bytes:
+                self.maximum_bytes = maximum_bytes
+                return ('{"status":"OK","detail":"' + provider_canary).encode()
+
+        response = Response()
+        opener = Mock()
+        opener.open.return_value = response
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with patch.object(massive, "build_opener", return_value=opener):
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                with self.assertRaises(massive.MassiveB2Error) as raised:
+                    massive.MassiveBasicEODClient(_CANARY_KEY).fetch_daily_bars(
+                        "IOT", start_date=START, end_date=END
+                    )
+
+        self.assertEqual(raised.exception.code, massive.MALFORMED_RESPONSE_CODE)
+        self.assertEqual(str(raised.exception), massive.MALFORMED_RESPONSE_CODE)
+        self.assertNotIn(provider_canary, str(raised.exception))
+        self.assertNotIn(provider_canary, stdout.getvalue())
+        self.assertNotIn(provider_canary, stderr.getvalue())
+        opener.open.assert_called_once()
+        self.assertEqual(
+            response.maximum_bytes,
+            massive.MASSIVE_MAX_RESPONSE_BYTES + 1,
+        )
+
+    def test_http_429_maps_to_exact_finite_code_without_retry_or_error_reflection(self) -> None:
+        """A provider 429 is one request and exposes neither URL detail nor key."""
+
+        provider_detail = f"https://provider.invalid/?apiKey={_CANARY_KEY}"
+        error = HTTPError(provider_detail, 429, "rate limited", None, None)
+        client = massive.MassiveBasicEODClient(_CANARY_KEY)
+        opener = Mock()
+        opener.open.side_effect = error
+        with patch.object(massive, "build_opener", return_value=opener) as build_opener:
+            with self.assertRaises(massive.MassiveB2Error) as raised:
+                client.fetch_daily_bars("IOT", start_date=START, end_date=END)
+
+        self.assertEqual(raised.exception.code, massive.RATE_LIMIT_CODE)
+        self.assertEqual(str(raised.exception), massive.RATE_LIMIT_CODE)
+        self.assertNotIn(_CANARY_KEY, str(raised.exception))
+        build_opener.assert_called_once()
+        opener.open.assert_called_once()
+
+    def test_pacing_is_strictly_below_five_requests_per_minute_and_failures_retry_zero_times(self) -> None:
+        """Every new ticker is locally paced, while a failed request is never retried."""
+
+        clock = [0.0]
+        sleeps: list[float] = []
+        successful_calls: list[str] = []
+
+        def monotonic() -> float:
+            return clock[0]
+
+        def sleep(seconds: float) -> None:
+            sleeps.append(seconds)
+            clock[0] += seconds
+
+        def success(path: str, headers: dict[str, str], timeout: float):
+            successful_calls.append(path)
+            ticker = path.split("/ticker/", 1)[1].split("/", 1)[0]
+            return _payload(ticker)
+
+        client = self._client(success, monotonic=monotonic, sleep=sleep)
+        client.fetch_daily_bars("IOT", start_date=START, end_date=END)
+        client.fetch_daily_bars("RBRK", start_date=START, end_date=END)
+
+        self.assertEqual(len(successful_calls), 2)
+        self.assertEqual(sleeps, [massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS])
+        self.assertGreater(massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS, 12.0)
+        self.assertLess(60.0 / massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS, 5.0)
+
+        failed_calls = 0
+
+        def rate_limited(path: str, headers: dict[str, str], timeout: float):
+            nonlocal failed_calls
+            failed_calls += 1
+            raise massive.MassiveB2Error(massive.RATE_LIMIT_CODE)
+
+        with self.assertRaises(massive.MassiveB2Error) as raised:
+            self._client(rate_limited).fetch_daily_bars(
+                "IOT", start_date=START, end_date=END
             )
+        self.assertEqual(raised.exception.code, massive.RATE_LIMIT_CODE)
+        self.assertEqual(failed_calls, 1)
 
 
 if __name__ == "__main__":

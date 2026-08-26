@@ -30,6 +30,12 @@ SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
 MARKET_SNAPSHOT_FETCH = "fetch"
 MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
 MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
+# The isolated post-close market importer has a bounded 29-request plan paced
+# at least 13 seconds between request starts. Keep a fixed allowance for HTTP
+# time, process startup, local validation, and commit; all other children
+# retain the historical short timeout.
+DEFAULT_CHILD_TIMEOUT_SECONDS = 240
+POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS = 480
 STEP_SPECS = [
     ("market_refresh", "run_phase5r_b2_full_universe_market_data.py", False),
     ("market_scoring", "score_phase5r_b2_candidates.py", False),
@@ -63,6 +69,12 @@ def run_step(
     *,
     market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
 ) -> dict[str, Any]:
+    timeout_seconds = (
+        POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS
+        if name == "market_refresh"
+        and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
+        else DEFAULT_CHILD_TIMEOUT_SECONDS
+    )
     extra_arguments = (
         ["--reuse-validated-snapshot"]
         if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
@@ -83,7 +95,7 @@ def run_step(
             # launchd log.
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            timeout=240,
+            timeout=timeout_seconds,
             check=False,
         )
     except subprocess.TimeoutExpired:
@@ -93,7 +105,7 @@ def run_step(
             "exit_code": 124,
             "allowed_to_fail": allowed_to_fail,
             "outcome": "timed_out",
-            "result_code": "child_timeout_240_seconds",
+            "result_code": f"child_timeout_{timeout_seconds}_seconds",
         }
     return {
         "name": name,

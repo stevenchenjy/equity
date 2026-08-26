@@ -3,17 +3,27 @@ from __future__ import annotations
 import tempfile
 import unittest
 from contextlib import ExitStack
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
+import phase5r_massive_b2_adapter as massive
 import run_phase5r_b2_full_universe_market_data as b2
 
 
-_FIXED_NOW = "2026-08-05T16:30:00-04:00"
+_FIXED_NOW = "2026-08-05T17:45:00-04:00"
 POST_CLOSE = datetime(2026, 8, 5, 17, 45, tzinfo=ZoneInfo("America/New_York"))
+UNIVERSE_TICKERS = [
+    *b2.SMOKE_TICKERS,
+    *[f"T{index:02d}" for index in range(1, 25)],
+]
+HELD_TICKERS = ["IOT", "RBRK"]
+B2_TICKERS = [*UNIVERSE_TICKERS, *HELD_TICKERS]
+assert len(UNIVERSE_TICKERS) == 27
+assert len(B2_TICKERS) == 29
+_CANARY = "massive-provider-detail-must-not-persist-7e4a"
 
 
 def _seed(ticker: str) -> dict[str, str]:
@@ -44,10 +54,10 @@ def _market_row(ticker: str, price: str) -> dict[str, str]:
         "day_low": "98.0000",
         "fifty_two_week_high": "120.0000",
         "fifty_two_week_low": "75.0000",
-        "market_session_date": "2026-08-04",
-        "market_age_calendar_days": "1",
-        "data_timestamp": "2026-08-04T20:15:00-04:00",
-        "data_source": "yfinance_public_market_data",
+        "market_session_date": "2026-08-05",
+        "market_age_calendar_days": "0",
+        "data_timestamp": _FIXED_NOW,
+        "data_source": massive.MASSIVE_DATA_SOURCE,
         "data_quality_label": "ok",
     }
 
@@ -63,9 +73,7 @@ def _quality_row(market: dict[str, str]) -> dict[str, str]:
     }
 
 
-def _candidate_row(
-    seed: dict[str, str], market: dict[str, str]
-) -> dict[str, str]:
+def _candidate_row(seed: dict[str, str], market: dict[str, str]) -> dict[str, str]:
     row = {
         key: seed[key]
         for key in (
@@ -90,9 +98,68 @@ def _candidate_row(
     return row
 
 
+def _valid_bars(current: datetime) -> list[dict[str, object]]:
+    return [
+        {
+            "session_date": session,
+            "open": 90.0 + index,
+            "high": 92.0 + index,
+            "low": 89.0 + index,
+            "close": 91.0 + index,
+            "volume": 100000.0 + index,
+        }
+        for index, session in enumerate(b2.expected_history_sessions(current))
+    ]
+
+
+class _PartialTwentyNineTickerClient:
+    def __init__(self, current: datetime, missing_ticker: str) -> None:
+        self.current = current
+        self.missing_ticker = missing_ticker
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        if ticker == self.missing_ticker:
+            return []
+        return _valid_bars(self.current)
+
+
+class _FailingFullFetchClient:
+    def __init__(self, current: datetime) -> None:
+        self.current = current
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        if len(self.calls) <= len(b2.SMOKE_TICKERS):
+            return _valid_bars(self.current)
+        raise OSError(_CANARY)
+
+
+class _CompleteCachedClient:
+    def __init__(self, current: datetime) -> None:
+        self.current = current
+        self.calls: list[str] = []
+        self.cache: dict[str, list[dict[str, object]]] = {}
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        if ticker not in self.cache:
+            self.calls.append(ticker)
+            self.cache[ticker] = _valid_bars(self.current)
+        return [dict(bar) for bar in self.cache[ticker]]
+
+
 class B2MarketRefreshFailureCommitTests(unittest.TestCase):
     def _paths(self, root: Path) -> dict[str, Path]:
         return {
+            "root": root,
             "data": root / "03_source_data" / "phase5r",
             "positions": root / "05_risk_and_positions" / "current_positions.local.csv",
             "snapshot": root / "03_source_data" / "phase5r" / "phase5r_b2_market_data_snapshot.csv",
@@ -102,20 +169,37 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             "decision": root / "00_project_control" / "phase5r_b2_data_source_decision.md",
             "report": root / "04_research" / "realtime_stock_picker_phase5r" / "phase5r_b2_data_report.md",
             "run_log": root / "00_project_control" / "run_logs" / "phase5r_b2_run_log.csv",
-            "rate_limit_state": root / "00_project_control" / "run_logs" / "phase5r_b2_rate_limit_state.local.json",
         }
 
-    def _write_coherent_prior_outputs(self, paths: dict[str, Path]) -> None:
-        seeds = [_seed(ticker) for ticker in b2.SMOKE_TICKERS]
+    def _patch_paths(self, stack: ExitStack, paths: dict[str, Path]) -> None:
+        for name, path in (
+            ("ROOT", paths["root"]),
+            ("DATA_DIR", paths["data"]),
+            ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
+            ("LOCAL_POSITIONS_PATH", paths["positions"]),
+            ("SNAPSHOT_PATH", paths["snapshot"]),
+            ("QUALITY_PATH", paths["quality"]),
+            ("CANDIDATES_PATH", paths["candidates"]),
+            ("AUDIT_PATH", paths["audit"]),
+            ("DECISION_PATH", paths["decision"]),
+            ("REPORT_PATH", paths["report"]),
+            ("RUN_LOG", paths["run_log"]),
+        ):
+            stack.enter_context(patch.object(b2, name, path))
+
+    def _write_prior_outputs(self, paths: dict[str, Path]) -> None:
+        seeds = [_seed(ticker) for ticker in UNIVERSE_TICKERS]
         market_rows = [
-            _market_row("QQQ", "100.0000"),
-            _market_row("XLK", "101.0000"),
-            _market_row("SPY", "102.0000"),
-            _market_row("IOT", "103.0000"),
+            _market_row(ticker, f"{100 + index:.4f}")
+            for index, ticker in enumerate(B2_TICKERS)
         ]
         market_by_ticker = {row["ticker"]: row for row in market_rows}
         b2.write_csv(paths["data"] / "phase5r_universe_seed.csv", seeds, list(seeds[0]))
-        b2.write_csv(paths["positions"], [{"ticker": "IOT"}], ["ticker"])
+        b2.write_csv(
+            paths["positions"],
+            [{"ticker": ticker} for ticker in HELD_TICKERS],
+            ["ticker"],
+        )
         b2.write_csv(paths["snapshot"], market_rows, b2.MARKET_FIELDS)
         b2.write_csv(
             paths["quality"],
@@ -128,332 +212,229 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             b2.CANDIDATE_FIELDS,
         )
 
-    def _run_failed_smoke(
-        self, paths: dict[str, Path]
-    ) -> tuple[object, Mock]:
-        smoke_rows = [
-            {
-                "ticker": ticker,
-                "last_price": "",
-                "previous_close": "",
-                "volume": "",
-                "status": "failed",
-            }
-            for ticker in b2.SMOKE_TICKERS
-        ]
-        full_retrieval = Mock(
-            side_effect=AssertionError("full-universe retrieval must not run")
-        )
+    @staticmethod
+    def _trio_bytes(paths: dict[str, Path]) -> dict[str, bytes]:
+        return {
+            name: paths[name].read_bytes()
+            for name in ("snapshot", "quality", "candidates")
+        }
+
+    def _run_with_client(
+        self, paths: dict[str, Path], client: object
+    ) -> int:
         with ExitStack() as stack:
-            for name, path in (
-                ("ROOT", paths["data"].parents[1]),
-                ("DATA_DIR", paths["data"]),
-                ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
-                ("LOCAL_POSITIONS_PATH", paths["positions"]),
-                ("SNAPSHOT_PATH", paths["snapshot"]),
-                ("QUALITY_PATH", paths["quality"]),
-                ("CANDIDATES_PATH", paths["candidates"]),
-                ("AUDIT_PATH", paths["audit"]),
-                ("DECISION_PATH", paths["decision"]),
-                ("REPORT_PATH", paths["report"]),
-                ("RUN_LOG", paths["run_log"]),
-                ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
-            ):
-                stack.enter_context(patch.object(b2, name, path))
+            self._patch_paths(stack, paths)
             stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+            stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
             stack.enter_context(
-                patch.object(b2, "smoke_test", return_value=(smoke_rows, False))
+                patch.object(
+                    b2.MassiveBasicEODClient,
+                    "from_environment",
+                    return_value=client,
+                )
             )
-            stack.enter_context(
-                patch.object(b2, "retrieve_full_universe", full_retrieval)
-            )
-            return b2.main(), full_retrieval
+            return b2.main()
 
-    def test_failed_smoke_preserves_coherent_prior_trio_and_returns_nonzero(self) -> None:
-        """A failed current source probe must not replace a usable prior baseline."""
+    def test_full_massive_provider_failure_preserves_coherent_prior_trio_and_logs_only_code(self) -> None:
+        """A post-preflight provider failure cannot overwrite the last complete batch."""
 
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            paths = self._paths(root)
-            self._write_coherent_prior_outputs(paths)
-            prior_bytes = {
-                name: paths[name].read_bytes()
-                for name in ("snapshot", "quality", "candidates")
-            }
-            result, full_retrieval = self._run_failed_smoke(paths)
-
-            with self.subTest(contract="failed current source is nonzero"):
-                self.assertEqual(result, 1)
-            with self.subTest(contract="full-universe retrieval is skipped"):
-                full_retrieval.assert_not_called()
-            for name, expected in prior_bytes.items():
-                with self.subTest(artifact=name):
-                    self.assertEqual(paths[name].read_bytes(), expected)
-
-            audit = b2.read_csv(paths["audit"])
-            self.assertGreaterEqual(len(audit), 2)
-            self.assertEqual(
-                (audit[0]["action"], audit[0]["status"]),
-                ("benchmark_smoke_test", "failed"),
-            )
-            self.assertEqual(
-                (audit[1]["action"], audit[1]["status"]),
-                ("full_universe_market_data_refresh", "not_attempted"),
-            )
-            self.assertIn("smoke_test_passed=no", audit[1]["safety_notes"])
-            self.assertIn("fail_safe_stop=yes", audit[1]["safety_notes"])
-            decision = paths["decision"].read_text(encoding="utf-8")
-            self.assertIn("- Benchmark preflight: `failed`.", decision)
-            self.assertIn(
-                "- Full-universe action: `not attempted because benchmark preflight failed`.",
-                decision,
-            )
-
-    def test_full_retrieval_exception_after_passed_smoke_preserves_prior_trio(self) -> None:
-        """The post-preflight source failure has the same fail-closed commit rule."""
-
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            paths = self._paths(root)
-            self._write_coherent_prior_outputs(paths)
-            prior_bytes = {
-                name: paths[name].read_bytes()
-                for name in ("snapshot", "quality", "candidates")
-            }
-            smoke_rows = [
-                {
-                    "ticker": ticker,
-                    "last_price": "100.0000",
-                    "previous_close": "99.0000",
-                    "volume": "100000",
-                    "status": "passed",
-                }
-                for ticker in b2.SMOKE_TICKERS
-            ]
-            with ExitStack() as stack:
-                for name, path in (
-                    ("ROOT", root),
-                    ("DATA_DIR", paths["data"]),
-                    ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
-                    ("LOCAL_POSITIONS_PATH", paths["positions"]),
-                    ("SNAPSHOT_PATH", paths["snapshot"]),
-                    ("QUALITY_PATH", paths["quality"]),
-                    ("CANDIDATES_PATH", paths["candidates"]),
-                    ("AUDIT_PATH", paths["audit"]),
-                    ("DECISION_PATH", paths["decision"]),
-                    ("REPORT_PATH", paths["report"]),
-                    ("RUN_LOG", paths["run_log"]),
-                    ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
-                ):
-                    stack.enter_context(patch.object(b2, name, path))
-                stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
-                stack.enter_context(
-                    patch.object(b2, "smoke_test", return_value=(smoke_rows, True))
-                )
-                download = stack.enter_context(
-                    patch.object(
-                        b2.yf,
-                        "download",
-                        side_effect=OSError("offline test source failure"),
-                    )
-                )
-                result = b2.main()
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _FailingFullFetchClient(POST_CLOSE)
+            result = self._run_with_client(paths, client)
 
             self.assertEqual(result, 1)
-            download.assert_called_once()
-            for name, expected in prior_bytes.items():
-                with self.subTest(artifact=name):
-                    self.assertEqual(paths[name].read_bytes(), expected)
-            audit = b2.read_csv(paths["audit"])
-            self.assertGreaterEqual(len(audit), 3)
-            self.assertEqual(
-                (audit[0]["action"], audit[0]["status"]),
-                ("benchmark_smoke_test", "passed"),
-            )
-            self.assertEqual(
-                (audit[1]["action"], audit[1]["status"]),
-                ("full_universe_market_data_refresh", "failed"),
-            )
-            self.assertIn("smoke_test_passed=yes", audit[1]["safety_notes"])
-            self.assertIn("full_retrieval_succeeded=no", audit[1]["safety_notes"])
-            self.assertIn("fail_safe_stop=yes", audit[1]["safety_notes"])
-            self.assertEqual(
-                audit[-1]["status"], "source_failure_prior_outputs_preserved"
+            self.assertEqual(client.calls, [*b2.SMOKE_TICKERS, b2.SMOKE_TICKERS[0]])
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (paths["audit"], paths["decision"], paths["report"], paths["run_log"])
             )
             self.assertIn(
-                "- Full-universe action: `full-universe retrieval failed safely: yfinance_request_failed`.",
-                paths["decision"].read_text(encoding="utf-8"),
+                f"source_failure_code={massive.REQUEST_FAILED_CODE}", persisted
             )
+            self.assertNotIn(_CANARY, persisted)
 
-    def test_incomplete_full_response_is_rejected_before_commit(self) -> None:
-        """A partial yfinance frame cannot clear the circuit or overwrite a trio."""
-
+    def test_complete_valid_batch_commits_all_twenty_nine_rows_once(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            paths = self._paths(root)
-            self._write_coherent_prior_outputs(paths)
-            prior_bytes = {
-                name: paths[name].read_bytes()
-                for name in ("snapshot", "quality", "candidates")
-            }
-            smoke_rows = [
-                {
-                    "ticker": ticker,
-                    "last_price": "100.0000",
-                    "previous_close": "99.0000",
-                    "volume": "100000",
-                    "status": "passed",
-                }
-                for ticker in b2.SMOKE_TICKERS
-            ]
-            full_rows = [
-                _market_row(ticker, str(100 + index))
-                for index, ticker in enumerate((*b2.SMOKE_TICKERS, "IOT"))
-            ]
-            for row in full_rows:
-                row["market_session_date"] = "2026-08-05"
-                row["market_age_calendar_days"] = "0"
-                row["data_timestamp"] = "2026-08-05T17:45:00-04:00"
-            full_rows[-1] = b2.empty_market_row(
-                "IOT", "yfinance_public_market_data", _FIXED_NOW
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _CompleteCachedClient(POST_CLOSE)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 0)
+            self.assertEqual(len(client.calls), 29)
+            self.assertEqual(set(client.calls), set(B2_TICKERS))
+            self.assertTrue(any(paths[name].read_bytes() != prior[name] for name in prior))
+            snapshot = b2.read_csv(paths["snapshot"])
+            quality = b2.read_csv(paths["quality"])
+            candidates = b2.read_csv(paths["candidates"])
+            self.assertEqual(len(snapshot), 29)
+            self.assertEqual(len(quality), 29)
+            self.assertEqual(len(candidates), 27)
+            self.assertEqual({row["ticker"] for row in snapshot}, set(B2_TICKERS))
+            self.assertEqual(
+                {row["data_source"] for row in snapshot},
+                {massive.MASSIVE_DATA_SOURCE},
+            )
+            self.assertEqual(
+                {row["market_session_date"] for row in snapshot},
+                {"2026-08-05"},
             )
 
+    def test_thirtieth_ticker_is_rejected_before_client_construction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            extra_seed = _seed("EXTRA")
+            seeds = [_seed(ticker) for ticker in UNIVERSE_TICKERS] + [extra_seed]
+            b2.write_csv(
+                paths["data"] / "phase5r_universe_seed.csv",
+                seeds,
+                list(seeds[0]),
+            )
             with ExitStack() as stack:
-                for name, path in (
-                    ("ROOT", root),
-                    ("DATA_DIR", paths["data"]),
-                    ("UNIVERSE_PATH", paths["data"] / "phase5r_universe_seed.csv"),
-                    ("LOCAL_POSITIONS_PATH", paths["positions"]),
-                    ("SNAPSHOT_PATH", paths["snapshot"]),
-                    ("QUALITY_PATH", paths["quality"]),
-                    ("CANDIDATES_PATH", paths["candidates"]),
-                    ("AUDIT_PATH", paths["audit"]),
-                    ("DECISION_PATH", paths["decision"]),
-                    ("REPORT_PATH", paths["report"]),
-                    ("RUN_LOG", paths["run_log"]),
-                    ("B2_RATE_LIMIT_STATE_PATH", paths["rate_limit_state"]),
-                ):
-                    stack.enter_context(patch.object(b2, name, path))
-                stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+                self._patch_paths(stack, paths)
                 stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
-                stack.enter_context(
-                    patch.object(b2, "smoke_test", return_value=(smoke_rows, True))
+                factory = stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment")
                 )
-                stack.enter_context(
-                    patch.object(
-                        b2,
-                        "retrieve_full_universe",
-                        return_value=(
-                            full_rows,
-                            "full-universe public daily history retrieved",
-                            True,
-                            "none",
-                        ),
-                    )
-                )
-                clear_rate_limit = stack.enter_context(
-                    patch.object(b2, "clear_rate_limit_state")
-                )
-                result = b2.main()
+                with self.assertRaisesRegex(RuntimeError, "exact approved 29"):
+                    b2.main()
+
+            factory.assert_not_called()
+
+    def test_partial_twenty_nine_ticker_fetch_cannot_commit_any_part_of_prior_trio(self) -> None:
+        """A single unusable ticker makes the complete 29-ticker batch noncommittable."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _PartialTwentyNineTickerClient(POST_CLOSE, B2_TICKERS[-1])
+            result = self._run_with_client(paths, client)
 
             self.assertEqual(result, 1)
-            clear_rate_limit.assert_not_called()
-            for name, expected in prior_bytes.items():
-                with self.subTest(artifact=name):
-                    self.assertEqual(paths[name].read_bytes(), expected)
+            self.assertEqual(client.calls[:3], b2.SMOKE_TICKERS)
+            self.assertEqual(client.calls[3:], B2_TICKERS)
+            self.assertEqual(len(client.calls[3:]), 29)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
             audit = b2.read_csv(paths["audit"])
-            self.assertEqual(
-                (audit[1]["action"], audit[1]["status"]),
-                ("full_universe_market_data_refresh", "failed"),
-            )
             self.assertIn(
                 f"source_failure_code={b2.FULL_UNIVERSE_INCOMPLETE_CODE}",
                 audit[1]["safety_notes"],
             )
-            self.assertIn(
-                "source_failure_prior_outputs_preserved", audit[-1]["status"],
+
+    def test_failed_source_leaves_even_an_invalid_prior_trio_byte_for_byte_unchanged(self) -> None:
+        """Failure is not authority to replace a malformed baseline with fallback rows."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            malformed_candidates = paths["candidates"].read_bytes() + b"truncated,prior,row\n"
+            paths["candidates"].write_bytes(malformed_candidates)
+            prior = self._trio_bytes(paths)
+            smoke_rows = [
+                {
+                    "ticker": ticker,
+                    "last_price": "",
+                    "previous_close": "",
+                    "volume": "",
+                    "status": "failed",
+                    "error_code": massive.MALFORMED_RESPONSE_CODE,
+                }
+                for ticker in b2.SMOKE_TICKERS
+            ]
+            full_retrieval = Mock(
+                side_effect=AssertionError("failed smoke must prevent full fetch")
             )
-            self.assertIn(
-                f"full-universe response rejected before commit: {b2.FULL_UNIVERSE_INCOMPLETE_CODE}",
-                paths["decision"].read_text(encoding="utf-8"),
-            )
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment", return_value=object())
+                )
+                stack.enter_context(
+                    patch.object(b2, "smoke_test", return_value=(smoke_rows, False))
+                )
+                stack.enter_context(
+                    patch.object(b2, "retrieve_full_universe", full_retrieval)
+                )
+                result = b2.main()
+
+            self.assertEqual(result, 1)
+            full_retrieval.assert_not_called()
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
 
     def test_full_response_requires_the_latest_completed_session(self) -> None:
-        """A complete-looking but delayed provider response is still uncommittable."""
+        """A complete-looking delayed Massive response remains noncommittable."""
 
         rows = [
             _market_row(ticker, str(100 + index))
-            for index, ticker in enumerate((*b2.SMOKE_TICKERS, "IOT"))
+            for index, ticker in enumerate(B2_TICKERS)
         ]
-        for row in rows:
-            row["market_session_date"] = "2026-08-05"
-            row["market_age_calendar_days"] = "0"
-            row["data_timestamp"] = "2026-08-05T17:45:00-04:00"
         rows[0]["market_session_date"] = "2026-08-04"
         rows[0]["market_age_calendar_days"] = "1"
 
         committable, code = b2.full_universe_rows_are_committable(
             market_rows=rows,
-            tickers=[*b2.SMOKE_TICKERS, "IOT"],
-            held_tickers=["IOT"],
+            tickers=B2_TICKERS,
+            held_tickers=HELD_TICKERS,
             current=POST_CLOSE,
         )
 
         self.assertFalse(committable)
         self.assertEqual(code, b2.FULL_UNIVERSE_STALE_CODE)
 
-    def test_failed_smoke_replaces_an_incoherent_prior_trio_with_one_fallback(self) -> None:
-        """A partial or contradictory baseline may never be selectively reused."""
+    def test_massive_bars_preserve_all_existing_b2_calculations(self) -> None:
+        bars = [
+            {
+                "session_date": session,
+                "open": 100.0,
+                "high": 105.0,
+                "low": 95.0,
+                "close": 100.0,
+                "volume": 1000.0,
+            }
+            for session in b2.expected_history_sessions(POST_CLOSE)
+        ]
+        bars[-2]["close"] = 99.0
+        bars[-1].update(
+            {"high": 111.0, "low": 98.0, "close": 110.0, "volume": 2000.0}
+        )
 
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            paths = self._paths(root)
-            self._write_coherent_prior_outputs(paths)
-            candidates = b2.read_csv(paths["candidates"])
-            candidates[0]["last_price"] = "999.0000"
-            b2.write_csv(paths["candidates"], candidates, b2.CANDIDATE_FIELDS)
+        row = b2.market_row_from_massive_bars(
+            "IOT", bars, _FIXED_NOW, POST_CLOSE
+        )
 
-            result, full_retrieval = self._run_failed_smoke(paths)
+        self.assertEqual(row["last_price"], "110.0000")
+        self.assertEqual(row["previous_close"], "99.0000")
+        self.assertEqual(row["intraday_change_pct"], "11.1111")
+        self.assertEqual(row["volume"], "2000")
+        self.assertEqual(row["average_volume"], "1050")
+        self.assertEqual(row["relative_volume"], "1.9048")
+        self.assertEqual(row["dollar_volume"], "220000")
+        self.assertEqual(row["day_high"], "111.0000")
+        self.assertEqual(row["day_low"], "98.0000")
+        self.assertEqual(row["fifty_two_week_high"], "111.0000")
+        self.assertEqual(row["fifty_two_week_low"], "95.0000")
+        self.assertEqual(row["market_session_date"], "2026-08-05")
+        self.assertEqual(row["data_source"], massive.MASSIVE_DATA_SOURCE)
+        self.assertEqual(row["data_quality_label"], "ok")
 
-            self.assertEqual(result, 1)
-            full_retrieval.assert_not_called()
-            snapshot = b2.read_csv(paths["snapshot"])
-            quality = b2.read_csv(paths["quality"])
-            candidates = b2.read_csv(paths["candidates"])
-            self.assertEqual(
-                {row["ticker"] for row in snapshot}, {"QQQ", "XLK", "SPY", "IOT"}
-            )
-            self.assertEqual(
-                {row["ticker"] for row in quality}, {"QQQ", "XLK", "SPY", "IOT"}
-            )
-            self.assertEqual(
-                {row["ticker"] for row in candidates}, set(b2.SMOKE_TICKERS)
-            )
-            self.assertTrue(
-                all(
-                    row["data_source"] == "yfinance_smoke_test_failed"
-                    and row["data_quality_label"] == "insufficient_data"
-                    and all(not row[field] for field in b2.CORE_FIELDS)
-                    for row in snapshot
-                )
-            )
-            self.assertTrue(
-                all(
-                    row["data_source"] == "yfinance_smoke_test_failed"
-                    and row["data_quality_label"] == "insufficient_data"
-                    and row["usable_for_scoring"] == "no"
-                    for row in quality
-                )
-            )
-            self.assertTrue(
-                all(
-                    row["data_source"] == "yfinance_smoke_test_failed"
-                    and row["data_quality_label"] == "insufficient_data"
-                    and row["market_data_usable"] == "no"
-                    and all(not row[field] for field in b2.CORE_FIELDS)
-                    for row in candidates
-                )
-            )
+        del bars[len(bars) // 2]
+        incomplete = b2.market_row_from_massive_bars(
+            "IOT", bars, _FIXED_NOW, POST_CLOSE
+        )
+        self.assertEqual(incomplete["data_quality_label"], "insufficient_data")
 
 
 if __name__ == "__main__":
