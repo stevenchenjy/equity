@@ -1,5 +1,70 @@
 {
-  "generated_at": "2026-08-19T03:13:29.489744+00:00",
-  "nodes": {},
+  "generated_at": "2026-08-20T03:21:55.469481+00:00",
+  "nodes": {
+    "00_project_control_phase5r_b_data_adapter_policy_fallback_rule": {
+      "code_fingerprint": "8974a72b9a376a5b230d903bc00b2787652950c726f8472f0427456451a1169c",
+      "label": "Fallback Rule",
+      "last": "2026-08-19T03:16:53.422381+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:16:53.422381+00:00",
+          "outcome": "useful",
+          "q": "那还有其他方案吗"
+        }
+      ],
+      "score": 0.977081044,
+      "source_file": "00_project_control/phase5r_b_data_adapter_policy.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "01_policies_data_source_policy_data_source_policy": {
+      "code_fingerprint": "4f1fdc3a5897ae1ad4fff09bcbd77231c338e1709fe9856c8a36d2eb4ca3dd73",
+      "label": "Data Source Policy",
+      "last": "2026-08-19T03:16:53.422381+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:16:53.422381+00:00",
+          "outcome": "useful",
+          "q": "那还有其他方案吗"
+        }
+      ],
+      "score": 0.977081044,
+      "source_file": "01_policies/data_source_policy.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "09_scripts_phase5r_phase5r_massive_payload_adapter_normalize_massive_fixture": {
+      "code_fingerprint": "0e7fa76b919e440a80382edbc42e138fda6554b49be010e4dede437f616ad58c",
+      "label": "normalize_massive_fixture()",
+      "last": "2026-08-19T03:16:53.422381+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:16:53.422381+00:00",
+          "outcome": "useful",
+          "q": "那还有其他方案吗"
+        }
+      ],
+      "score": 0.977081044,
+      "source_file": "09_scripts/phase5r/phase5r_massive_payload_adapter.py",
+      "status": "tentative",
+      "uses": 1
+    },
+    "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode": {
+      "code_fingerprint": "58d151cd4fd635f42117592e34b937ec79436d0ba6b99c230af2709e54c25851",
+      "label": "market_snapshot_mode()",
+      "last": "2026-08-19T03:16:53.422381+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-19T03:16:53.422381+00:00",
+          "outcome": "useful",
+          "q": "那还有其他方案吗"
+        }
+      ],
+      "score": 0.977081044,
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
   "version": 1
 }

@@ -1,11 +1,11 @@
-# Graph Report - equity  (2026-08-22)
+# Graph Report - equity  (2026-08-20)
 
 ## Corpus Check
-- 510 files · ~444,485 words
+- 510 files · ~444,224 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5401 nodes · 13170 edges · 422 communities (377 shown, 45 thin omitted)
+- 5396 nodes · 13161 edges · 420 communities (375 shown, 45 thin omitted)
 - Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 2051 edges (avg confidence: 0.74)
 - Token cost: 0 input · 0 output
 
@@ -433,8 +433,6 @@
 - MassiveB2AdapterResilienceTests
 - verify_phase5r_d3f_hotfix.py
 - main
-- _provider_failure_category
-- time
 - .__init__
 - Q: 那还有其他方案吗
 
@@ -465,11 +463,11 @@
 ## Import Cycles
 - None detected.
 
-## Communities (422 total, 45 thin omitted)
+## Communities (420 total, 45 thin omitted)
 
 ### Community 0 - "phase5r_market_data_adapter.py"
 Cohesion: 0.11
-Nodes (75): _assert_no_imperative_action_language(), adversarial_probe_input(), build_runtime_replay_packet(), _canonical_bytes(), canonical_sha256(), _closed_schema(), CorpusBinding, critic_control_cases() (+67 more)
+Nodes (77): _assert_no_imperative_action_language(), adversarial_probe_input(), build_runtime_replay_packet(), _canonical_bytes(), canonical_sha256(), _closed_schema(), CorpusBinding, critic_control_cases() (+69 more)
 
 ### Community 1 - "run_phase5r_b2_full_universe_market_data.py"
 Cohesion: 0.12
@@ -484,16 +482,16 @@ Cohesion: 0.08
 Nodes (55): _annualized_cagr(), _annualized_dispersion(), block_bootstrap_twr_ci(), build_monthly_performance_ledger_row(), cash_dividend_receipt(), cash_drag_receipt(), compare_required_baselines(), _decimal() (+47 more)
 
 ### Community 4 - "send_phase5r_c2_daily_email.py"
-Cohesion: 0.10
-Nodes (57): _budget_policy(), check_replay_readiness(), _citation_quality(), _code_bindings(), _collection_lock(), _copy_private_file(), _decimal(), execute_provider_replay() (+49 more)
+Cohesion: 0.08
+Nodes (59): _adversarial_quality(), _budget_policy(), check_replay_readiness(), _citation_quality(), _code_bindings(), _collection_input_config(), _collection_lock(), _copy_private_file() (+51 more)
 
 ### Community 5 - "score_phase5r_b_candidates.py"
-Cohesion: 0.06
-Nodes (32): ExclusiveFileLock, Process lock using flock over a private, non-linked regular file., AnthropicMessagesProvider, CodexCliProvider, OpenAIResponsesProvider, ProviderError, Any, BaseException (+24 more)
+Cohesion: 0.10
+Nodes (12): ProviderError, Path, RuntimeError, Hash one non-linked executable and reject path replacement during hashing., Return the minimum environment needed by the external authenticated CLI., Recheck the pinned executable immediately before each process launch., External inference failed without changing any canonical state.      ``failure_c, Map a provider exception to one non-sensitive, finite receipt value.      This f (+4 more)
 
 ### Community 6 - "check_phase5r_b1_market_data_source.py"
-Cohesion: 0.14
-Nodes (13): AcceptanceIndexError, build_acceptance_index(), make_acceptance_record(), ValueError, The SEC acceptance index failed its closed validation contract., validate_acceptance_index(), Regression coverage for the SEC acceptance precommit boundary., Run an offline refresh that must fail before any evidence commit. (+5 more)
+Cohesion: 0.10
+Nodes (19): acceptance_map(), AcceptanceIndexError, build_acceptance_index(), Bind an extension to exact immutable historical-index bytes., raw_file_sha256(), load_acceptance_index(), make_acceptance_record(), ValueError (+11 more)
 
 ### Community 7 - "run_phase5r_c7_weekly_conviction_pipeline.py"
 Cohesion: 0.11
@@ -509,26 +507,26 @@ Nodes (39): build_decision_snapshot(), build_market_period_receipt(), build_sequ
 
 ### Community 10 - "_support.py"
 Cohesion: 0.07
-Nodes (65): _analyst_packet_view(), _assert_semantic_references_visible(), _atomic_write_bytes(), _audit_binding(), _audit_row(), _cached(), CachedBundleIntegrityError, _committee_packet_view() (+57 more)
+Nodes (67): _analyst_packet_view(), _assert_semantic_references_visible(), _atomic_write_bytes(), _audit_binding(), _audit_row(), _cached(), CachedBundleIntegrityError, _committee_packet_view() (+59 more)
 
 ### Community 11 - "create_phase5r_c1_daily_email_brief.py"
 Cohesion: 0.16
 Nodes (32): ActivationReceiptError, atomic_json_bytes(), build_activation_receipt(), _exact_keys(), main(), _positive_int(), Any, Path (+24 more)
 
 ### Community 12 - "score_phase5r_b2_candidates.py"
-Cohesion: 0.10
-Nodes (16): FixtureProvider, Return recorded responses with no process, file, or network side effect., apply_verified_close_stability(), execute_shadow(), load_registry(), output_paths(), Nonblocking model-output lock that refuses symlinks and hard links., Re-adjudicate from the hashed canonical daily close-stability evidence. (+8 more)
+Cohesion: 0.08
+Nodes (22): FixtureProvider, Return recorded responses with no process, file, or network side effect., A narrow process/transport failure with no usable final response., RetryableProviderTransportError, apply_verified_close_stability(), execute_shadow(), load_registry(), output_paths() (+14 more)
 
 ### Community 13 - "verify_phase5r_c6_weekly_email_boundary.py"
-Cohesion: 0.10
-Nodes (21): iso_now(), _append_ledger_event(), _make_owner_approval(), _model_instructions(), _parse_ledger(), _provider_metadata(), ProviderFactory, BaseException (+13 more)
+Cohesion: 0.67
+Nodes (3): BaseException, Map all terminal exceptions to a finite, non-sensitive receipt code., _safe_failure_code()
 
 ### Community 14 - "verify_phase5r_c7_weekly_pipeline_boundary.py"
 Cohesion: 0.19
 Nodes (29): _allowed_classifications_by_ticker(), _artifact_map(), build_packet(), _date_from_period(), _decimal(), _decision_tickers(), _entities(), _evidence_freshness_receipts() (+21 more)
 
 ### Community 15 - "main"
-Cohesion: 0.09
+Cohesion: 0.10
 Nodes (9): _analyst_response(), _committee_response(), _critic_response(), ProviderReplayGateTests, Any, Path, _write_bytes(), _write_json() (+1 more)
 
 ### Community 16 - "verify_phase5r_b1_data_enablement.py"
@@ -540,12 +538,12 @@ Cohesion: 0.26
 Nodes (13): _apply_minimum_text_length(), hydrate_source_locked_assessment_v6(), Any, Strict, source-locked v6 assessment contract.  v6 preserves the closed Phase 5R, Project a packet into one deterministic source-visible analyst view., Restore deterministic fields before the unchanged closed validator runs., Require every model-written string to be non-empty without relaxing v1., Return the strict analyst schema with all deterministic fields removed. (+5 more)
 
 ### Community 18 - "verify_phase5r_c5t_manual_action_boundary.py"
-Cohesion: 0.21
-Nodes (7): canonical_sha256(), _canonical_value(), _planned_call(), Any, Return a stable SHA-256 for JSON-compatible semantic content., Hash one proposal-free semantic evidence view., semantic_sha256()
+Cohesion: 0.17
+Nodes (8): canonical_sha256(), _canonical_value(), Any, Return a stable SHA-256 for JSON-compatible semantic content., Hash one proposal-free semantic evidence view., Pinned role, provider, model, semantic contract, and call envelope., RoleCallSpec, semantic_sha256()
 
 ### Community 19 - "verify_phase5r_d2_weekly_scheduler_boundary.py"
-Cohesion: 0.11
-Nodes (38): _budget_projection(), BudgetProjection, build_reusable_role_result(), CycleCeilings, CycleUsage, _dependency_tuple(), _has_material_change(), _high_impact_transition() (+30 more)
+Cohesion: 0.10
+Nodes (39): _budget_projection(), BudgetProjection, build_reusable_role_result(), CycleCeilings, CycleUsage, _dependency_tuple(), _has_material_change(), _high_impact_transition() (+31 more)
 
 ### Community 20 - "verify_phase5r_manual_execution_boundary.py"
 Cohesion: 0.26
@@ -576,8 +574,8 @@ Cohesion: 0.06
 Nodes (30): Actual implementation state, Actual upgrade plan, Authority matrix, Completed local mechanics, Concrete role and authority flow, Decisive conclusion, Evaluation, Evidence-backed architecture selected (+22 more)
 
 ### Community 27 - "verify_phase5r_b2_read_only_boundary.py"
-Cohesion: 0.16
-Nodes (9): AcceptanceAndSelectionTests, build_small_corpus(), FakeClock, FakeSources, ledger_row(), OfflineBoundaryTests, Path, RefreshAndVerifierTests (+1 more)
+Cohesion: 0.05
+Nodes (61): append_log(), build_log_row(), live_send_row_count(), main(), make_run_id(), parse_args(), Namespace, Path (+53 more)
 
 ### Community 28 - "verify_phase5r_c2_email_delivery_boundary.py"
 Cohesion: 0.17
@@ -604,8 +602,8 @@ Cohesion: 0.24
 Nodes (12): check_v9_readiness(), execute_model_pilot_v9(), _load_v9_plan(), main(), Any, Path, Run the v8 binding and full v9 collection readiness without a provider., Execute the new v9 collection; any started call remains terminal. (+4 more)
 
 ### Community 34 - "create_phase5r_c5t_manual_action_plan.py"
-Cohesion: 0.11
-Nodes (26): _apply_scenario(), _committee_decision(), _critic_review(), evaluate_case(), evaluate_manifest(), load_manifest(), main(), materialize_case() (+18 more)
+Cohesion: 0.10
+Nodes (27): _apply_scenario(), _committee_decision(), _critic_review(), evaluate_case(), evaluate_manifest(), load_manifest(), main(), materialize_case() (+19 more)
 
 ### Community 35 - "main"
 Cohesion: 0.13
@@ -621,7 +619,7 @@ Nodes (34): AcquisitionContext, audit_strict_pilot(), build_xbrl_reconciliation(
 
 ### Community 38 - "ContractError"
 Cohesion: 0.14
-Nodes (18): api_key_from_environment(), _default_http_get(), _finite_number(), _http_failure_code(), MassiveB2Error, MassiveBasicEODClient, _NoRedirectHandler, _normalized_bars() (+10 more)
+Nodes (9): AnthropicMessagesProvider, OpenAIResponsesProvider, Any, BaseException, Use an externally constructed OpenAI client without reading credentials.      Th, Normalize provider-native Responses usage for exact cost metering.          Open, Return the provider's exact pre-inference input token count.          The OpenAI, Use an externally configured Anthropic client for the blinded role.      The rep (+1 more)
 
 ### Community 39 - "create_phase5r_c4_position_template.py"
 Cohesion: 0.40
@@ -644,8 +642,8 @@ Cohesion: 0.09
 Nodes (43): EvidenceContractV2HandoffError, _open_handoff_root(), Any, Decimal, Path, ValueError, Offline handoff verification for the future Phase 5R evidence-contract v2.  This, A proposed future-v2 handoff failed a local integrity or boundary gate. (+35 more)
 
 ### Community 44 - "check_phase5r_d2_scheduler_status.sh"
-Cohesion: 0.19
-Nodes (20): build_citation_review_template(), CitationReviewError, claim_evidence_bundle_sha256(), _exact_keys(), Any, Path, ValueError, Recompute the exact bundle identity used by the offline replay gate. (+12 more)
+Cohesion: 0.29
+Nodes (16): build_citation_review_template(), CitationReviewError, claim_evidence_bundle_sha256(), _exact_keys(), Any, Path, ValueError, Recompute the exact bundle identity used by the offline replay gate. (+8 more)
 
 ### Community 45 - "install_phase5r_d1_scheduler.sh"
 Cohesion: 0.31
@@ -660,16 +658,16 @@ Cohesion: 0.28
 Nodes (15): append_log(), as_float(), blank_row(), fmt_float(), fmt_int(), main(), Any, Path (+7 more)
 
 ### Community 48 - "Phase 0B Migration Plan"
-Cohesion: 0.14
-Nodes (29): append_csv_durable(), bool_value(), cycle_date(), delivery_guard(), load_active_state(), load_inhibit(), log_daily_run(), Any (+21 more)
+Cohesion: 0.11
+Nodes (33): bool_value(), cycle_date(), delivery_guard(), ExclusiveFileLock, load_active_state(), load_inhibit(), now_et(), Any (+25 more)
 
 ### Community 49 - "Scoring"
 Cohesion: 0.08
-Nodes (48): InferencePlan, PlannedRoleCall, One exact, non-fallback provider call reservation., Closed deterministic routing result with no executable authority., ProviderResult, _atomic_private_json(), cycle_execution_ledger_path(), _decimal_text() (+40 more)
+Nodes (38): InferencePlan, PlannedRoleCall, One exact, non-fallback provider call reservation., Closed deterministic routing result with no executable authority., _atomic_private_json(), cycle_execution_ledger_path(), _decimal_text(), default_execution_ledger_root() (+30 more)
 
 ### Community 50 - "Completed Phases"
-Cohesion: 0.05
-Nodes (53): Reconcile values and independently check the fixture's formula inputs., verify_numeric_integrity(), adjudicate(), _assert_no_forbidden_packet_keys(), _assert_no_private_currency(), _assert_no_sensitive_markers(), _calculation_ids(), _closed_object() (+45 more)
+Cohesion: 0.07
+Nodes (25): Verify point-in-time, hash, and locator integrity without network access., verify_source_integrity(), adjudicate(), ContractError, _expected_verified_close_session(), ValueError, Return a deterministic, fail-closed research classification.      The returned o, A structured response or evidence packet violated a closed contract. (+17 more)
 
 ### Community 51 - "phase5r_valuation_input_bundle.py"
 Cohesion: 0.24
@@ -704,16 +702,16 @@ Cohesion: 0.17
 Nodes (11): Active Entrypoints, Broken Path Resolution, Classification Counts In Migration Map, Duplicate Resolution, Human Review Gate, Next Gate Before Phase 5R, Non-Actions In Phase 0B, Phase 0B Migration Plan (+3 more)
 
 ### Community 59 - "Red-Team Checklist"
-Cohesion: 0.15
-Nodes (27): ModelProvider, Protocol, _adversarial_calls(), _adversarial_quality(), _build_external_provider(), _call_provider(), CallBudget, _collection_config() (+19 more)
+Cohesion: 0.22
+Nodes (19): ModelProvider, Protocol, _adversarial_calls(), _call_provider(), CallBudget, _collection_config(), _counterfactual_calls(), _critic_control_calls() (+11 more)
 
 ### Community 60 - "Workflow"
 Cohesion: 0.36
 Nodes (11): action_label(), append_csv(), clamp(), main(), Path, quality_score(), risk_penalty(), timestamp() (+3 more)
 
 ### Community 61 - "graphify reference: extra exports and benchmark"
-Cohesion: 0.19
-Nodes (23): _canonical_raw(), _completed_trading_days(), _cost_exposure(), current_cost_exposure(), _decimal_from_event(), _decimal_text(), _failure_receipt(), FrozenHandoff (+15 more)
+Cohesion: 0.16
+Nodes (19): _assert_execution_root(), _authorization_receipt(), _binding(), _build_execution_plan(), check_v8_qualification_readiness(), _completion(), execute_v8_qualification(), _input_payload() (+11 more)
 
 ### Community 62 - "Phase 0C Verification Report"
 Cohesion: 0.16
@@ -736,8 +734,8 @@ Cohesion: 0.42
 Nodes (10): append_log(), candidate_line(), format_change(), html_table(), main(), Path, read_csv(), ticker_list() (+2 more)
 
 ### Community 67 - "Phase 5R Data Contract"
-Cohesion: 0.14
-Nodes (40): admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path(), _extension_number(), extension_set_sha256() (+32 more)
+Cohesion: 0.16
+Nodes (36): admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path(), _extension_number(), extension_set_sha256() (+28 more)
 
 ### Community 68 - "Phase 5R Data Contract"
 Cohesion: 0.38
@@ -841,7 +839,7 @@ Nodes (8): Boundary, Canonical C9 Direction, Inputs That Can Mostly Remain, Main
 
 ### Community 93 - "Phase 0A Verification Report"
 Cohesion: 0.22
-Nodes (8): Phase 5R 每日决策 — 2026-08-21, 决定性结论, 可靠性门槛, 当前持仓, 新候选, 深度与长期约束, 运行边界, 长期基本面
+Nodes (8): Phase 5R 每日决策 — 2026-08-19, 决定性结论, 可靠性门槛, 当前持仓, 新候选, 深度与长期约束, 运行边界, 长期基本面
 
 ### Community 94 - "Phase 0B Verification Report"
 Cohesion: 0.42
@@ -956,8 +954,8 @@ Cohesion: 0.46
 Nodes (7): append_log(), concentration_status(), main(), parse_number(), Path, timestamp(), write_csv()
 
 ### Community 122 - "._write_coherent_prior_outputs"
-Cohesion: 0.13
-Nodes (17): B2MarketRefreshFailureCommitTests, _candidate_row(), _CompleteCachedClient, _FailingFullFetchClient, _market_row(), _PartialTwentyNineTickerClient, date, datetime (+9 more)
+Cohesion: 0.05
+Nodes (42): api_key_from_environment(), _default_http_get(), _finite_number(), _http_failure_code(), MassiveB2Error, MassiveBasicEODClient, _NoRedirectHandler, _normalized_bars() (+34 more)
 
 ### Community 123 - "Phase 5R-D2 Scheduler Report"
 Cohesion: 0.46
@@ -1720,8 +1718,8 @@ Cohesion: 0.50
 Nodes (3): base_fixture, cases, schema_version
 
 ### Community 313 - "phase5r_daily_common.py"
-Cohesion: 0.23
-Nodes (10): _transition_split_fixture(), TransitionSplitTests, counterfactual_transition_input(), frozen_transition_folds(), frozen_transition_split(), PacketBinding, Return the exact role-scoped primary inputs used for hash verification., Build expanding-window, issuer-isolated, purged time folds.      Each SEC CIK be (+2 more)
+Cohesion: 0.27
+Nodes (8): _transition_split_fixture(), TransitionSplitTests, counterfactual_transition_input(), frozen_transition_folds(), frozen_transition_split(), PacketBinding, Build expanding-window, issuer-isolated, purged time folds.      Each SEC CIK be, Remove the current packet's decisive primary evidence, not just its label.
 
 ### Community 314 - "phase5r_llm_contract.py"
 Cohesion: 0.50
@@ -1772,20 +1770,20 @@ Cohesion: 0.16
 Nodes (5): Return parsed, schema-shaped data that fails only local validation., Regression: future terminal records distinguish this from transport., ReplacementPilotV6Tests, _V6FixtureProvider, _V6PostParseContractFailureProvider
 
 ### Community 366 - "semantic_sha256"
-Cohesion: 0.27
-Nodes (8): Pinned role, provider, model, semantic contract, and call envelope., RoleCallSpec, _plan(), _policy(), _prices(), _request(), RoleExecutionLedgerTests, _schema()
+Cohesion: 0.21
+Nodes (16): ProviderResult, DurableRoleExecutionLedger, ExecutionBudgetError, ExecutionRecoveryRequired, Sealed semantic request supplied to one exact planned role., Private append-only accounting for one immutable inference plan., A reservation or reported provider charge exceeds a frozen ceiling., A prior provider outcome is unknown and cannot be called again. (+8 more)
 
 ### Community 367 - "phase5r_daily_common.py"
-Cohesion: 0.17
-Nodes (23): atomic_write_csv(), atomic_write_json(), atomic_write_text(), canonical_sha256(), easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session() (+15 more)
+Cohesion: 0.16
+Nodes (22): atomic_write_csv(), atomic_write_json(), atomic_write_text(), canonical_sha256(), easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session() (+14 more)
 
 ### Community 368 - "test_phase5r_strict_replay_artifacts.py"
 Cohesion: 0.38
 Nodes (5): context_for(), filing_index(), Fetcher, replay_row(), StrictReplayArtifactTests
 
 ### Community 369 - "_publish_completion_candidate"
-Cohesion: 0.05
-Nodes (118): _anonymous_materials(), _append_event(), _assert_model_identity_blind(), _assert_receipt_journal_coherence(), _assert_runtime_safety(), _assessment_by_label(), _assessment_claims(), _blind_mapping() (+110 more)
+Cohesion: 0.15
+Nodes (54): _append_event(), _assert_receipt_journal_coherence(), _assert_runtime_safety(), _call_events(), _canonical_bytes(), _canonical_sha256(), _charged_budget(), _closed_object() (+46 more)
 
 ### Community 370 - "Phase 5R Strict Pilot Corpus Completion Report"
 Cohesion: 0.29
@@ -1808,16 +1806,16 @@ Cohesion: 0.30
 Nodes (18): _assert_v7_execution_root(), _authorization(), _build_execution_plan(), check_v7_readiness(), _completion(), execute_model_pilot_v7(), Any, Decimal (+10 more)
 
 ### Community 376 - "main"
-Cohesion: 0.14
-Nodes (26): acceptance_index_failure_reason(), classify_materiality(), count_unindexed_acceptance_accessions(), current_submission_entity_name(), fact_units(), fundamental_row(), latest_instant(), load_ticker_map() (+18 more)
+Cohesion: 0.15
+Nodes (28): append_csv_durable(), log_daily_run(), acceptance_index_failure_reason(), classify_materiality(), count_unindexed_acceptance_accessions(), current_submission_entity_name(), fact_units(), fundamental_row() (+20 more)
 
 ### Community 377 - "Phase 5R Anonymous Model-Pilot Review Protocol"
 Cohesion: 0.40
 Nodes (4): Adjudication gate, Phase 5R Anonymous Model-Pilot Review Protocol, Required review, Separation
 
 ### Community 378 - "CollectionCallStore"
-Cohesion: 0.32
-Nodes (3): _attempt_count(), CollectionCallStore, Content-hashed response cache with an auditable bounded retry chain.
+Cohesion: 0.22
+Nodes (11): _attempt_count(), CollectionCallStore, _initial_progress(), _json_bytes(), _open_or_create_collection(), Any, Content-hashed response cache with an auditable bounded retry chain., _transport_metadata() (+3 more)
 
 ### Community 379 - "cycle_execution_ledger_path"
 Cohesion: 0.12
@@ -1860,8 +1858,8 @@ Cohesion: 0.35
 Nodes (7): _bundle(), _input(), Path, _source(), ValuationInputBundleTests, _write_bundle(), _write_source()
 
 ### Community 390 - "phase5r_llm_contract.py"
-Cohesion: 0.16
-Nodes (9): build_blinded_challenger_input(), execute_blinded_challenger(), Any, Return the exact proposal-free semantic input for the challenger., Run one blinded proposal, then compare and adjudicate locally.      ``provider``, BlindedChallengerTests, _challenger_from_committee(), _FakeAnthropicClient (+1 more)
+Cohesion: 0.09
+Nodes (37): build_blinded_challenger_input(), execute_blinded_challenger(), Any, Return the exact proposal-free semantic input for the challenger., Run one blinded proposal, then compare and adjudicate locally.      ``provider``, _assert_no_forbidden_packet_keys(), _assert_no_private_currency(), _assert_no_sensitive_markers() (+29 more)
 
 ### Community 391 - "run_phase5r_model_pilot_v9.py"
 Cohesion: 0.13
@@ -1880,8 +1878,8 @@ Cohesion: 0.33
 Nodes (5): Claim-review results, Critic review and non-deblinded comparison, Decision and next action, Phase 5R v10 AI-Assisted Substantive Review, Scope and freeze
 
 ### Community 395 - ".begin_attempt"
-Cohesion: 0.13
-Nodes (36): check_current_readiness(), _create_frozen_handoff(), _current_decision_context(), _current_decision_snapshot_context(), _date_from_iso(), _ensure_pricing_current(), _input_envelope_bytes(), _load_current_approved_packet() (+28 more)
+Cohesion: 0.08
+Nodes (92): _append_ledger_event(), _build_postcall_span_bundle(), _canonical_raw(), check_current_readiness(), _completed_trading_days(), _cost_exposure(), _create_frozen_handoff(), current_cost_exposure() (+84 more)
 
 ### Community 396 - "ExclusiveFileLock"
 Cohesion: 0.40
@@ -1897,11 +1895,11 @@ Nodes (4): Decision, Phase 5R v9 terminal diagnosis, Required change before anot
 
 ### Community 399 - "test_phase5r_llm_replay_inventory.py"
 Cohesion: 0.12
-Nodes (31): acceptance_map(), AcceptanceReconciliationError, load_acceptance_index(), load_acceptance_reconciliation_log(), load_immutable_acceptance_index(), _make_reconciliation_row(), normalize_acceptance_timestamp(), _normalize_generated_at() (+23 more)
+Nodes (29): AcceptanceReconciliationError, load_acceptance_reconciliation_log(), load_immutable_acceptance_index(), _make_reconciliation_row(), normalize_acceptance_timestamp(), _normalize_generated_at(), Any, datetime (+21 more)
 
 ### Community 400 - "main"
-Cohesion: 0.21
-Nodes (22): acquire_cycle_lock(), active_state_protections(), append_check_log(), cycle_context(), default_local_state(), local_zone(), main(), parse_args() (+14 more)
+Cohesion: 0.22
+Nodes (21): _anonymous_materials(), _assert_model_identity_blind(), _assessment_by_label(), _assessment_claims(), _blind_mapping(), _call_id(), _committee_contexts(), _control_probe() (+13 more)
 
 ### Community 401 - "Phase 5R SEC Acceptance-Index Extension Policy v1"
 Cohesion: 0.29
@@ -1912,8 +1910,8 @@ Cohesion: 0.22
 Nodes (8): Criteria before considering an LLM email summary, Limited first-report email companion, New artifact roots, Observation controls, Operating commands, Phase 5R Production Shadow v1, Valuation boundary, Workflow
 
 ### Community 403 - "_critic_packet_view"
-Cohesion: 0.12
-Nodes (28): hydrate_source_locked_assessment(), Any, Source-locked, execution-prohibited v5 assessment contract.  This contract remov, Inject closed-world identity and evidence bindings without relaxation., Return strict model output schema with deterministic fields omitted., _single_primary_source(), source_locked_assessment_schema(), _authorization_receipt() (+20 more)
+Cohesion: 0.22
+Nodes (18): _authorization_receipt(), _build_execution_plan(), _call(), _charged_budget(), check_v5_readiness(), _completion(), execute_model_pilot_v5(), _load_v5_plan() (+10 more)
 
 ### Community 404 - "test_phase5r_llm_replay_inventory.py"
 Cohesion: 0.25
@@ -1924,8 +1922,8 @@ Cohesion: 0.33
 Nodes (5): Absolute boundaries, Incident disposition, Permitted internal use, Phase 5R v10 — Noncanonical Internal-Use Policy, Status
 
 ### Community 406 - "verify_phase5r_daily_upgrade.py"
-Cohesion: 0.15
-Nodes (10): MassiveB2AdapterResilienceTests, _payload(), Optional provider metadata is accepted but never enters B2 bars., Ticker, adjustment, pagination, and malformed data each stop once., A provider 429 is one request and exposes neither URL detail nor key., Every new ticker is locally paced, while a failed request is never retried., Sanitized current Custom Bars shape, including optional metadata., The external-runtime key authorizes one request but never enters its URL/output. (+2 more)
+Cohesion: 0.16
+Nodes (10): CodexCliProvider, Run a constrained, ephemeral model process outside the project tree.      Authen, _build_external_provider(), CollectionPaused, _LazyExternalProvider, _ProviderMustNotRun, The explicit per-invocation call ceiling was reached safely., Fail closed if artifact-only recovery unexpectedly needs inference. (+2 more)
 
 ### Community 407 - "main"
 Cohesion: 0.16
@@ -1940,36 +1938,28 @@ Cohesion: 0.15
 Nodes (9): B2RefreshCadenceTests, _market_row(), ExitStack, Path, A Massive B2 failure is a hard daily gate, not a shadow/email trigger., Even after a valid refresh, terminal shadow output cannot authorize email., The existing launchd job can refresh SEC evidence without B2 or email., The launchd boundary reveals only Massive-key presence via fixed exits. (+1 more)
 
 ### Community 411 - "phase5r_production_shadow_v1.py"
-Cohesion: 0.20
-Nodes (18): _build_postcall_span_bundle(), _first_span_text(), _known_sources(), _make_preflight_span_bundle(), _new_run_id(), ProductionShadowError, RuntimeError, The isolated production-shadow workflow failed closed. (+10 more)
+Cohesion: 0.24
+Nodes (10): hydrate_source_locked_assessment(), Any, Source-locked, execution-prohibited v5 assessment contract.  This contract remov, Inject closed-world identity and evidence bindings without relaxation., Return strict model output schema with deterministic fields omitted., _single_primary_source(), source_locked_assessment_schema(), packet_context() (+2 more)
 
 ### Community 412 - "run_phase5r_c7_weekly_conviction_pipeline.py"
-Cohesion: 0.30
-Nodes (14): append_log(), build_log_row(), live_send_row_count(), main(), make_run_id(), parse_args(), Namespace, Path (+6 more)
+Cohesion: 0.24
+Nodes (8): execute_model_pilot(), _execution_mode(), _pilot_lock(), Hold one exclusive authorization lock across the entire pilot., Execute or safely resume the immutable thirty-call pilot.      ``provider_factor, _validate_output_root(), ModelPilotTests, new_state()
 
 ### Community 413 - "hydrate_cited_excerpt_hashes"
-Cohesion: 0.27
-Nodes (14): d3f_rows(), digest(), launchd_details(), loaded(), main(), metadata(), phase5r_e_files(), CompletedProcess (+6 more)
+Cohesion: 0.39
+Nodes (8): _build_metrics(), _build_plan(), _decimal(), _decimal_text(), _jaccard(), _metered_usage(), _reservation_usd(), _wilson_lower()
 
 ### Community 414 - "_safe_failure_code"
-Cohesion: 0.42
-Nodes (11): read_json(), add_check(), append_verification_log(), file_digest_or_absent(), loaded(), main(), plist_checks(), pure_guard_tests() (+3 more)
-
-### Community 415 - "MassiveB2AdapterResilienceTests"
-Cohesion: 0.29
-Nodes (10): _finalize_unknown_launch_claims(), main(), _persist_scheduler_state(), CompletedProcess, Path, Run the local planner before activation or provider construction., Suppress weekend inference unless deterministic state materially changed., _run_explicit_router_gate() (+2 more)
+Cohesion: 0.15
+Nodes (22): iso_now(), read_json(), _finalize_unknown_launch_claims(), main(), _persist_scheduler_state(), CompletedProcess, Path, Run the local planner before activation or provider construction. (+14 more)
 
 ### Community 416 - "verify_phase5r_d3f_hotfix.py"
-Cohesion: 0.38
-Nodes (4): Any, RecordingFixtureProvider, _replace_packet_id(), RoleScopedProviderInputTests
+Cohesion: 0.29
+Nodes (6): check_pilot_readiness(), _directory_storage_bytes(), main(), Perform the complete read-only gate without constructing a provider., Count one non-symlink tree without following links., _storage_binding()
 
 ### Community 417 - "main"
 Cohesion: 0.43
 Nodes (7): external_runtime_provider_factory(), main(), _print(), Any, Inspect only the installed SDK package; never construct a client., Build one SDK client without touching credential values in repository code., _sdk_runtime_status()
-
-### Community 418 - "_provider_failure_category"
-Cohesion: 0.50
-Nodes (4): _provider_failure_category(), Exception, Classify only a narrow, stable set of transport/process failures., _semantic_failure_category()
 
 ### Community 421 - "Q: 那还有其他方案吗"
 Cohesion: 0.40
@@ -1983,12 +1973,12 @@ Nodes (4): Answer, Outcome, Q: 那还有其他方案吗, Source Nodes
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ContractError` connect `Completed Phases` to `phase5r_market_data_adapter.py`, `.__init__`, `send_phase5r_c2_daily_email.py`, `score_phase5r_b_candidates.py`, `phase5r_llm_contract.py`, `_support.py`, `.begin_attempt`, `score_phase5r_b2_candidates.py`, `verify_phase5r_c6_weekly_email_boundary.py`, `create_phase5r_c1_daily_email_brief.py`, `verify_phase5r_c5_deep_research_boundary.py`, `_critic_packet_view`, `main`, `phase5r_valuation_evidence_v1.py`, `create_phase5r_c5_company_research_packets.py`, `phase5r_production_shadow_v1.py`, `execute_v8_qualification`, `verify_phase5r_d3f_hotfix.py`, `create_phase5r_c5t_manual_action_plan.py`, `main`, `check_phase5r_d2_scheduler_status.sh`, `phase5r_daily_common.py`, `Red-Team Checklist`, `graphify reference: extra exports and benchmark`, `return_objective_payload`, `hydrate_cited_excerpt_hashes`, `_publish_completion_candidate`, `CodexCliProvider`, `execute_v8_qualification`, `CollectionCallStore`?**
-  _High betweenness centrality (0.051) - this node is a cross-community bridge._
-- **Why does `ProviderResult` connect `Scoring` to `.__init__`, `send_phase5r_c2_daily_email.py`, `score_phase5r_b_candidates.py`, `.begin_attempt`, `verify_phase5r_c6_weekly_email_boundary.py`, `_critic_packet_view`, `create_phase5r_c5_company_research_packets.py`, `create_phase5r_c6_weekly_email_brief.py`, `phase5r_production_shadow_v1.py`, `verify_phase5r_d3f_hotfix.py`, `create_phase5r_c5_weekly_conviction_memo.py`, `check_phase5r_d2_scheduler_status.sh`, `Red-Team Checklist`, `graphify reference: extra exports and benchmark`, `hydrate_cited_excerpt_hashes`, `semantic_sha256`, `_publish_completion_candidate`, `.__init__`, `CodexCliProvider`, `iso_now`, `execute_v8_qualification`, `CollectionCallStore`, `RecordingFixtureProvider`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `ModelProvider` connect `Red-Team Checklist` to `.__init__`, `send_phase5r_c2_daily_email.py`, `score_phase5r_b_candidates.py`, `phase5r_llm_contract.py`, `_support.py`, `.begin_attempt`, `score_phase5r_b2_candidates.py`, `verify_phase5r_c6_weekly_email_boundary.py`, `_critic_packet_view`, `create_phase5r_c5_company_research_packets.py`, `phase5r_production_shadow_v1.py`, `create_phase5r_c5_research_queue.py`, `check_phase5r_d2_scheduler_status.sh`, `Scoring`, `graphify reference: extra exports and benchmark`, `phase5r_valuation_input_bundle.py`, `_publish_completion_candidate`, `.__init__`, `CodexCliProvider`, `iso_now`, `execute_v8_qualification`, `CollectionCallStore`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Why does `ContractError` connect `Completed Phases` to `phase5r_market_data_adapter.py`, `.__init__`, `send_phase5r_c2_daily_email.py`, `phase5r_llm_contract.py`, `_support.py`, `.begin_attempt`, `score_phase5r_b2_candidates.py`, `create_phase5r_c1_daily_email_brief.py`, `main`, `verify_phase5r_c5_deep_research_boundary.py`, `main`, `phase5r_valuation_evidence_v1.py`, `verify_phase5r_daily_upgrade.py`, `create_phase5r_c5_company_research_packets.py`, `phase5r_production_shadow_v1.py`, `execute_v8_qualification`, `create_phase5r_c5t_manual_action_plan.py`, `ContractError`, `main`, `check_phase5r_d2_scheduler_status.sh`, `Phase 0B Migration Plan`, `phase5r_daily_common.py`, `Red-Team Checklist`, `return_objective_payload`, `hydrate_cited_excerpt_hashes`, `_publish_completion_candidate`, `CodexCliProvider`, `execute_v8_qualification`, `CollectionCallStore`?**
+  _High betweenness centrality (0.057) - this node is a cross-community bridge._
+- **Why does `ModelProvider` connect `Red-Team Checklist` to `.__init__`, `send_phase5r_c2_daily_email.py`, `score_phase5r_b_candidates.py`, `phase5r_llm_contract.py`, `_support.py`, `.begin_attempt`, `score_phase5r_b2_candidates.py`, `main`, `_critic_packet_view`, `verify_phase5r_daily_upgrade.py`, `create_phase5r_c5_company_research_packets.py`, `run_phase5r_c7_weekly_conviction_pipeline.py`, `create_phase5r_c5_research_queue.py`, `ContractError`, `Phase 0B Migration Plan`, `Scoring`, `graphify reference: extra exports and benchmark`, `phase5r_valuation_input_bundle.py`, `semantic_sha256`, `_publish_completion_candidate`, `.__init__`, `CodexCliProvider`, `iso_now`, `execute_v8_qualification`, `CollectionCallStore`?**
+  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+- **Why does `ProviderResult` connect `semantic_sha256` to `.__init__`, `send_phase5r_c2_daily_email.py`, `score_phase5r_b_candidates.py`, `.begin_attempt`, `score_phase5r_b2_candidates.py`, `main`, `_critic_packet_view`, `verify_phase5r_daily_upgrade.py`, `create_phase5r_c5_company_research_packets.py`, `create_phase5r_c6_weekly_email_brief.py`, `run_phase5r_c7_weekly_conviction_pipeline.py`, `MassiveB2AdapterResilienceTests`, `ContractError`, `create_phase5r_c5_weekly_conviction_memo.py`, `Phase 0B Migration Plan`, `Scoring`, `Red-Team Checklist`, `graphify reference: extra exports and benchmark`, `hydrate_cited_excerpt_hashes`, `_publish_completion_candidate`, `.__init__`, `CodexCliProvider`, `iso_now`, `execute_v8_qualification`, `CollectionCallStore`, `RecordingFixtureProvider`?**
+  _High betweenness centrality (0.019) - this node is a cross-community bridge._
 - **Are the 150 inferred relationships involving `ContractError` (e.g. with `_apply_scenario()` and `evaluate_case()`) actually correct?**
   _`ContractError` has 150 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 112 inferred relationships involving `materialized()` (e.g. with `materialize_case()` and `.test_expired_scan_receipt_blocks_action_without_erasing_research()`) actually correct?**
