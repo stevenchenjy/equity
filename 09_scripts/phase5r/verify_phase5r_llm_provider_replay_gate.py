@@ -324,6 +324,7 @@ RUNTIME_EVALUATION_CODE_PATHS = (
     / "phase5r"
     / "run_phase5r_daily_refresh_scheduler.py",
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_scheduler.py",
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_runtime_scheduler.py",
     ROOT / "09_scripts" / "phase5r" / "send_phase5r_daily_email.py",
     ROOT
     / "09_scripts"

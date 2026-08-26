@@ -1,10 +1,11 @@
 #!/bin/zsh
 set -euo pipefail
 
-project_root="/Users/messssi/Desktop/equity"
+project_root="/Users/messssi/LocalRuntime/equity"
 launch_domain="gui/$(/usr/bin/id -u)"
 launch_agents_dir="/Users/messssi/Library/LaunchAgents"
 check_failed=0
+disabled_dump="$(/bin/launchctl print-disabled "${launch_domain}")"
 
 for legacy_suffix in dailybrief weeklyconviction weeklycatchup; do
     legacy_label="com.steven.phase5r.${legacy_suffix}"
@@ -32,7 +33,13 @@ for job_suffix in dailyrefresh dailydecision; do
         plist_state="missing_or_mismatch"
         check_failed=1
     fi
-    /usr/bin/printf '%s\n' "${job_label}=${loaded_state}; plist=${plist_state}"
+    if [[ "${disabled_dump}" == *"\"${job_label}\" => disabled"* ]]; then
+        enabled_state="disabled"
+        check_failed=1
+    else
+        enabled_state="enabled"
+    fi
+    /usr/bin/printf '%s\n' "${job_label}=${loaded_state}; ${enabled_state}; plist=${plist_state}"
 done
 
 if (( check_failed != 0 )); then

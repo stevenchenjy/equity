@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-project_root="/Users/messssi/Desktop/equity"
+project_root="/Users/messssi/LocalRuntime/equity"
 python_bin="/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
 launch_domain="gui/$(/usr/bin/id -u)"
 activation_log="${project_root}/00_project_control/run_logs/phase5r_daily_activation_log.csv"
@@ -35,7 +35,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-root = Path("/Users/messssi/Desktop/equity")
+root = Path("/Users/messssi/LocalRuntime/equity")
 verification = root / "00_project_control/phase5r_daily_verification_report.md"
 if not verification.exists() or "Overall result: **PASS**" not in verification.read_text():
     raise SystemExit("activation_blocked=verification_report_not_pass")

@@ -26,6 +26,13 @@ SCHEDULER_DIR = ROOT / "07_automation" / "scheduler"
 SCRIPT_DIR = ROOT / "09_scripts" / "phase5r"
 LAUNCH_AGENTS = Path.home() / "Library" / "LaunchAgents"
 LAUNCH_DOMAIN = f"gui/{os.getuid()}"
+PRODUCTION_RUNTIME_ROOT = Path("/Users/messssi/LocalRuntime/equity")
+PRODUCTION_RUNTIME_WRAPPER = (
+    PRODUCTION_RUNTIME_ROOT
+    / "09_scripts"
+    / "phase5r"
+    / "run_phase5r_runtime_scheduler.py"
+)
 
 STATE_PATH = CONTROL_DIR / "active_decision_state.yaml"
 INHIBIT_PATH = (
@@ -48,12 +55,8 @@ SMTP_CONFIG_PATH = (
 )
 
 ACTIVE_JOBS = {
-    "com.steven.phase5r.dailyrefresh": (
-        "run_phase5r_daily_refresh_scheduler.py"
-    ),
-    "com.steven.phase5r.dailydecision": (
-        "run_phase5r_daily_scheduler.py"
-    ),
+    "com.steven.phase5r.dailyrefresh": "dailyrefresh",
+    "com.steven.phase5r.dailydecision": "dailydecision",
 }
 RETIRED_JOBS = (
     "com.steven.phase5r.dailybrief",
@@ -67,6 +70,7 @@ CANONICAL_RUNTIME_FILES = (
     "run_phase5r_daily_decision_pipeline.py",
     "run_phase5r_daily_refresh_scheduler.py",
     "run_phase5r_daily_scheduler.py",
+    "run_phase5r_runtime_scheduler.py",
     "create_phase5r_daily_decision_and_brief.py",
     "send_phase5r_daily_email.py",
 )
@@ -244,7 +248,7 @@ def _canonical_source_issues() -> list[str]:
 
 def _plist_issues() -> list[str]:
     issues: list[str] = []
-    for label, script_name in ACTIVE_JOBS.items():
+    for label, job_name in ACTIVE_JOBS.items():
         template = SCHEDULER_DIR / f"{label}.plist.template"
         installed = LAUNCH_AGENTS / f"{label}.plist"
         if not _loaded(label):
@@ -265,9 +269,14 @@ def _plist_issues() -> list[str]:
             and payload.get("KeepAlive") is False
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload
-            and payload.get("WorkingDirectory") == str(ROOT)
-            and len(arguments) == 2
-            and arguments[1] == str(SCRIPT_DIR / script_name)
+            and payload.get("WorkingDirectory") == str(PRODUCTION_RUNTIME_ROOT)
+            and arguments
+            == [
+                "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+                str(PRODUCTION_RUNTIME_WRAPPER),
+                "--job",
+                job_name,
+            ]
         ):
             issues.append(f"{label}:invariants")
     for label in RETIRED_JOBS:

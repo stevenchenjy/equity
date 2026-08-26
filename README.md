@@ -2,15 +2,24 @@
 
 Educational research workspace for a $2,000 cash-account learning portfolio focused on publicly traded early-stage growth companies, recent IPOs, AI infrastructure, clean tech, and biotech.
 
-## Active Path
+## Repository Paths
 
-The active project path is:
+The iCloud authoring/reference path is:
 
 ```text
 /Users/messssi/Desktop/equity
 ```
 
-During Phase 0A, `/Users/messssi/Documents/equity` was not found. Future commands and prompts should use the Desktop path above.
+The Mac mini production scheduler path is outside iCloud:
+
+```text
+/Users/messssi/LocalRuntime/equity
+```
+
+Code flows from an authoring commit through GitHub `main` to the Mac mini
+runtime clone. The LaunchAgents never execute from Desktop. See
+[`00_project_control/phase5r_macbook_github_macmini_workflow.md`](00_project_control/phase5r_macbook_github_macmini_workflow.md)
+for the synchronization, lock, failure, and operator procedures.
 
 ## Current Workflow
 
@@ -58,15 +67,15 @@ The active workflow is `daily_decision` and the only active email pipeline is
 
 ## Current Safe Status Commands
 
-Run from the active project path:
+Run production status checks from the Mac mini runtime path:
 
 ```bash
-cd /Users/messssi/Desktop/equity
+cd /Users/messssi/LocalRuntime/equity
 /bin/zsh 07_automation/scheduler/check_phase5r_daily_scheduler_status.sh
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py --safe-check
+  09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailyrefresh --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/verify_phase5r_daily_upgrade.py --operational
+  09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailydecision --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/verify_phase5r_production_shadow_readiness.py
 ```

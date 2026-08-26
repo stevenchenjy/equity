@@ -32,6 +32,7 @@ SOURCE_FILES = (
     "run_phase5r_daily_refresh.py",
     "run_phase5r_daily_refresh_scheduler.py",
     "run_phase5r_daily_decision_pipeline.py",
+    "run_phase5r_runtime_scheduler.py",
 )
 FORBIDDEN_IMPORT_ROOTS = {"smtplib", "requests", "urllib", "webbrowser", "selenium"}
 FORBIDDEN_CALLS = {
