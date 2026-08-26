@@ -1,3 +1,0 @@
-priority,ticker,asset_role,current_weight_pct,concentration_status,current_research_score,current_label,recommended_action,whole_share_scenario,next_review_condition,human_confirmation_required,automatic_action_allowed
-1,IOT,active_stock,8.0500,above_hard_cap,6.69,trim_review,trim_specific_shares_review,change=1; target_shares=4.0000; resulting_weight_pct=6.4400,"Review only while refreshed weight remains above 8.00%; at $38.60, the minimum whole-share scenario reduces 1 share(s).",yes,no
-2,RBRK,active_stock,6.7561,above_default_cap,7.15,hold_existing,hold,change=0; target_shares=2.0000; resulting_weight_pct=6.7561,Reopen trim review only if refreshed weight rises above 8.00% or independent research evidence weakens.,no,no

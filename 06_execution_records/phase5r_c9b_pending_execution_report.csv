@@ -1,1 +1,0 @@
-execution_id,ticker,side,shares,order_type,order_submitted_at,order_status,limit_price_optional,fill_date,fill_price,fees,shares_before,shares_after,cash_before,cash_after,account_total_after,source,notes,validation_status,fill_price_known,positions_sha256_at_intake,account_state_sha256_at_intake,position_mutation_allowed,account_mutation_allowed

@@ -41,3 +41,51 @@ graphify-out/cache/
 08_reviews/phase5r_model_pilot/quarantine/
 04_data/phase5r/phase5r_valuation_inputs.local.json
 04_data/phase5r/phase5r_valuation_source_*.local.*
+
+# Phase 5R active-runtime artifacts. These files remain on the authoritative
+# runtime machine, but scheduled refreshes must not dirty the source checkout.
+# Immutable/versioned SEC acceptance extensions, their admission audit, the
+# official evidence ledger, and curated Graphify outputs intentionally remain
+# tracked.
+00_project_control/phase5r_b2_data_source_decision.md
+00_project_control/phase5r_b2_verification_report.md
+00_project_control/phase5r_daily_verification_report.md
+00_project_control/run_logs/phase5r_b2_run_log.csv
+00_project_control/run_logs/phase5r_c9_run_log.csv
+00_project_control/run_logs/phase5r_c9b_run_log.csv
+00_project_control/run_logs/phase5r_daily_run_log.csv
+00_project_control/run_logs/phase5r_daily_verification_log.csv
+00_project_control/run_logs/phase5r_sec_acceptance_extension.lock
+
+03_source_data/phase5r/phase5r_b2_audit_trail.csv
+03_source_data/phase5r/phase5r_b2_candidates_with_market_data.csv
+03_source_data/phase5r/phase5r_b2_manual_trade_tickets.csv
+03_source_data/phase5r/phase5r_b2_market_data_quality_report.csv
+03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv
+03_source_data/phase5r/phase5r_b2_signal_scores.csv
+03_source_data/phase5r/phase5r_daily_evidence_status.json
+03_source_data/phase5r/phase5r_daily_fundamentals.csv
+03_source_data/phase5r/phase5r_llm_evidence_packet.json
+03_source_data/phase5r/phase5r_sec_filing_artifact_index.json
+
+04_research/realtime_stock_picker_phase5r/phase5r_b2_data_report.md
+04_research/realtime_stock_picker_phase5r/phase5r_b2_verification_report.md
+04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.json
+04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.md
+04_research/realtime_stock_picker_phase5r/phase5r_daily_verification_report.md
+04_research/realtime_stock_picker_phase5r/phase5r_c9_*.csv
+04_research/realtime_stock_picker_phase5r/phase5r_c9_*.md
+04_research/realtime_stock_picker_phase5r/phase5r_c9b_*.md
+
+05_risk_and_positions/phase5r_c9_*.csv
+05_risk_and_positions/phase5r_c9_*.md
+05_risk_and_positions/phase5r_c9b_*.csv
+05_risk_and_positions/phase5r_c9b_*.md
+06_execution_records/phase5r_c9b_*.csv
+
+07_automation/email_briefs/phase5r_daily_email_brief.html
+07_automation/email_briefs/phase5r_daily_email_brief.txt
+07_automation/email_delivery/phase5r_daily_delivery_ledger.csv
+08_reviews/current/latest_phase5r_b2_daily_research_preview.md
+08_reviews/current/latest_phase5r_b2_manual_trade_tickets.md
+08_reviews/current/latest_phase5r_b2_watchlist.md
