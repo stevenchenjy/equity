@@ -11,6 +11,7 @@ import json
 import os
 import stat
 import tempfile
+import time as time_module
 from contextlib import AbstractContextManager
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
@@ -20,6 +21,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[2]
 ET = ZoneInfo("America/New_York")
+RUNTIME_EXPECTED_CYCLE_DATE_ENV = "PHASE5R_RUNTIME_EXPECTED_CYCLE_DATE"
 
 ACTIVE_STATE_PATH = ROOT / "00_project_control" / "active_decision_state.yaml"
 INHIBIT_PATH = (
@@ -394,9 +396,23 @@ def unresolved_execution_conflicts() -> list[str]:
 class ExclusiveFileLock(AbstractContextManager["ExclusiveFileLock"]):
     """Process lock using flock over a private, non-linked regular file."""
 
-    def __init__(self, path: Path) -> None:
+    def __init__(
+        self,
+        path: Path,
+        *,
+        wait_timeout_seconds: float = 0.0,
+        poll_interval_seconds: float = 0.25,
+    ) -> None:
+        if wait_timeout_seconds < 0:
+            raise ValueError("lock wait timeout cannot be negative")
+        if poll_interval_seconds <= 0:
+            raise ValueError("lock poll interval must be positive")
         self.path = path
+        self.wait_timeout_seconds = wait_timeout_seconds
+        self.poll_interval_seconds = poll_interval_seconds
         self.handle: Any | None = None
+        self.contention_observed = False
+        self.waited_seconds = 0.0
 
     def __enter__(self) -> "ExclusiveFileLock":
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -425,12 +441,28 @@ class ExclusiveFileLock(AbstractContextManager["ExclusiveFileLock"]):
         except Exception:
             os.close(file_descriptor)
             raise
-        try:
-            fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError as exc:
-            self.handle.close()
-            self.handle = None
-            raise RuntimeError(f"lock already held: {self.path}") from exc
+        started = time_module.monotonic()
+        deadline = started + self.wait_timeout_seconds
+        while True:
+            try:
+                fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError as exc:
+                self.contention_observed = True
+                remaining = deadline - time_module.monotonic()
+                if self.wait_timeout_seconds == 0:
+                    self.handle.close()
+                    self.handle = None
+                    raise RuntimeError(f"lock already held: {self.path}") from exc
+                if remaining <= 0:
+                    self.waited_seconds = time_module.monotonic() - started
+                    self.handle.close()
+                    self.handle = None
+                    raise RuntimeError(
+                        f"lock wait timed out: {self.path}"
+                    ) from exc
+                time_module.sleep(min(self.poll_interval_seconds, remaining))
+        self.waited_seconds = time_module.monotonic() - started
         self.handle.seek(0)
         self.handle.truncate()
         self.handle.write(f"pid={os.getpid()} acquired_at={iso_now()}\n")

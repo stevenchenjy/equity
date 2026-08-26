@@ -38,7 +38,18 @@ inspects Git. The same advisory `flock` remains open through the scheduler
 process, including any normal child pipeline. This serializes both schedulers
 and prevents a later scheduled invocation from changing checked-out code
 under an active run. A normal exit or crash closes the file descriptor, so no
-stale PID file can permanently block execution.
+stale PID file can permanently block execution. Because both LaunchAgents have
+the same 900-second cadence, a contending invocation waits up to one hour for
+the bounded active run to release the lock. It then evaluates its own cumulative
+due state immediately instead of discarding the check and waiting another 15
+minutes. A one-hour timeout is reported explicitly as an abnormal stuck-holder
+condition; it does not mark a refresh slot complete or consume a decision
+attempt. If a contended handoff or preflight crosses the ET cycle-date boundary,
+the wrapper also fails explicitly and records that condition instead of letting
+the scheduler silently reinterpret the queued check as a new day's work. The
+wrapper passes the expected ET date through `exec`, and each production
+scheduler validates it before reading or writing due state, closing the final
+process-start boundary.
 
 While holding the lock, the wrapper verifies all of the following:
 
@@ -67,7 +78,8 @@ lock and this ledger are not committed.
 | GitHub has a newer descendant commit | Fast-forward, revalidate clean state, record the new commit, run |
 | Runtime tracked files are dirty | Fail closed before fetch; do not run |
 | Runtime is ahead or histories diverge | Fetch the remote-tracking ref, leave local HEAD/worktree unchanged, do not run |
-| Another run holds the runtime lock | Exit with `runtime_lock_held`; launchd can try again at the next 900-second interval |
+| Another run holds the runtime lock | Wait for the active bounded run, acquire the same lock, then evaluate this job's due state; after one abnormal hour, exit 75 with `runtime_lock_wait_timeout` without changing due state |
+| Lock handoff or preflight crosses midnight ET | Fail closed with an explicit cycle-date error and do not reinterpret the prior check as current-day work |
 | GitHub, DNS, or authentication is unavailable | Exit with `git_fetch_failed`; do not run stale code |
 | Origin, branch, upstream, root, or `.git` is unexpected | Fail closed and do not run |
 

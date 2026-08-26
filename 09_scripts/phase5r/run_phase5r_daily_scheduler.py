@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 
 from phase5r_daily_common import (
     DAILY_SCHEDULER_STATE_PATH,
     ROOT,
+    RUNTIME_EXPECTED_CYCLE_DATE_ENV,
     atomic_write_json,
     cycle_date,
     iso_now,
@@ -28,6 +30,13 @@ MAX_AUTOMATIC_ATTEMPTS = 2
 
 
 def main() -> int:
+    expected_cycle_date = os.environ.get(RUNTIME_EXPECTED_CYCLE_DATE_ENV)
+    if expected_cycle_date and cycle_date() != expected_cycle_date:
+        print(
+            "scheduler_action=none reason=runtime_invocation_cycle_date_changed "
+            "pipeline_invoked=false"
+        )
+        return 70
     parser = argparse.ArgumentParser()
     parser.add_argument("--safe-check", action="store_true")
     args = parser.parse_args()

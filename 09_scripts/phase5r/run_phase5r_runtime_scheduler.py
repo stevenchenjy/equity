@@ -3,8 +3,10 @@
 
 The two production LaunchAgents share this wrapper.  One runtime-level flock is
 held from before Git inspection through the complete scheduler process, so a
-second invocation cannot update code while the first invocation is active.
-Ignored runtime state is never cleaned, reset, stashed, or copied by this code.
+second invocation cannot update code while the first invocation is active. A
+phase-aligned second invocation waits for a bounded handoff instead of losing
+its due-state check. Ignored runtime state is never cleaned, reset, stashed, or
+copied by this code.
 """
 
 from __future__ import annotations
@@ -17,12 +19,15 @@ import stat
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import NoReturn, Sequence
 from zoneinfo import ZoneInfo
 
-from phase5r_daily_common import ExclusiveFileLock
+from phase5r_daily_common import (
+    RUNTIME_EXPECTED_CYCLE_DATE_ENV,
+    ExclusiveFileLock,
+)
 
 
 PRODUCTION_RUNTIME_ROOT = Path("/Users/messssi/LocalRuntime/equity")
@@ -38,6 +43,14 @@ EXECUTION_LOG_RELATIVE_PATH = Path(
 )
 FETCH_TIMEOUT_SECONDS = 180
 GIT_TIMEOUT_SECONDS = 60
+# A pathological but still bounded holder can consume the individual Git
+# command budgets plus the refresh scheduler's 900-second deterministic child,
+# 360-second shadow child, and 90-second shadow-email child. One hour exceeds
+# that aggregate budget with margin while still surfacing a genuinely stuck
+# holder. The waiting launchd job remains active, so launchd cannot start a
+# duplicate instance of that label while it is queued here.
+RUNTIME_LOCK_WAIT_TIMEOUT_SECONDS = 3600
+RUNTIME_LOCK_POLL_INTERVAL_SECONDS = 0.25
 ET = ZoneInfo("America/New_York")
 GIT_BINARY = "/usr/bin/git"
 
@@ -371,17 +384,49 @@ def _scheduler_command(root: Path, job: str, *, safe_check: bool) -> list[str]:
     return command
 
 
-def _exec_scheduler(root: Path, job: str, lock: ExclusiveFileLock) -> NoReturn:
+def _exec_scheduler(
+    root: Path,
+    job: str,
+    lock: ExclusiveFileLock,
+    *,
+    expected_cycle_date: date,
+    expected_commit: str,
+    sync_action: str,
+) -> NoReturn:
     if lock.handle is None:
         raise RuntimeSyncError("runtime_lock_handle_missing")
     os.set_inheritable(lock.handle.fileno(), True)
     environment = os.environ.copy()
-    environment["PHASE5R_RUNTIME_COMMIT"] = _git(
+    commit = _git(
         root,
         ["rev-parse", "HEAD"],
         error_code="head_unreadable_before_exec",
     )
+    if commit != expected_commit:
+        raise RuntimeSyncError("head_changed_before_exec")
+    ready_at = datetime.now(ET)
+    if ready_at.date() != expected_cycle_date:
+        raise RuntimeSyncError(
+            "runtime_preflight_crossed_cycle_date",
+            f"expected_date={expected_cycle_date.isoformat()} "
+            f"ready_at={ready_at.isoformat()}",
+        )
+    environment["PHASE5R_RUNTIME_COMMIT"] = commit
     environment["PHASE5R_RUNTIME_JOB"] = job
+    environment[RUNTIME_EXPECTED_CYCLE_DATE_ENV] = expected_cycle_date.isoformat()
+    _append_execution_record(
+        root,
+        job=job,
+        event="scheduler_exec_authorized",
+        outcome="authorized",
+        commit=commit,
+        sync_action=sync_action,
+    )
+    print(
+        f"runtime_preflight=passed job={job} "
+        f"sync_action={sync_action} commit={commit}",
+        flush=True,
+    )
     os.chdir(root)
     try:
         os.execve(
@@ -423,10 +468,32 @@ def main() -> int:
     args = parser.parse_args()
 
     root = PRODUCTION_RUNTIME_ROOT
+    invocation_started_at = datetime.now(ET)
     try:
         assert_non_icloud_runtime_root(root)
-        with ExclusiveFileLock(RUNTIME_LOCK_PATH) as lock:
+        with ExclusiveFileLock(
+            RUNTIME_LOCK_PATH,
+            wait_timeout_seconds=RUNTIME_LOCK_WAIT_TIMEOUT_SECONDS,
+            poll_interval_seconds=RUNTIME_LOCK_POLL_INTERVAL_SECONDS,
+        ) as lock:
             try:
+                acquired_at = datetime.now(ET)
+                if lock.contention_observed:
+                    print(
+                        f"runtime_preflight=lock_acquired_after_wait job={args.job} "
+                        f"waited_seconds={lock.waited_seconds:.3f}",
+                        flush=True,
+                    )
+                    if (
+                        not args.safe_check
+                        and not args.sync_only
+                        and acquired_at.date() != invocation_started_at.date()
+                    ):
+                        raise RuntimeSyncError(
+                            "runtime_lock_wait_crossed_cycle_date",
+                            f"started_at={invocation_started_at.isoformat()} "
+                            f"acquired_at={acquired_at.isoformat()}",
+                        )
                 if args.safe_check:
                     inspect_runtime_repository(root)
                     process = subprocess.run(
@@ -458,20 +525,21 @@ def main() -> int:
                     )
                     return 0
 
-                _append_execution_record(
+                ready_at = datetime.now(ET)
+                if ready_at.date() != invocation_started_at.date():
+                    raise RuntimeSyncError(
+                        "runtime_preflight_crossed_cycle_date",
+                        f"started_at={invocation_started_at.isoformat()} "
+                        f"ready_at={ready_at.isoformat()}",
+                    )
+                _exec_scheduler(
                     root,
-                    job=args.job,
-                    event="scheduler_exec_started",
-                    outcome="started",
-                    commit=result.commit,
+                    args.job,
+                    lock,
+                    expected_cycle_date=invocation_started_at.date(),
+                    expected_commit=result.commit,
                     sync_action=result.action,
                 )
-                print(
-                    f"runtime_preflight=passed job={args.job} "
-                    f"sync_action={result.action} commit={result.commit}",
-                    flush=True,
-                )
-                _exec_scheduler(root, args.job, lock)
             except RuntimeSyncError as exc:
                 _best_effort_failure_record(root, args.job, exc)
                 raise
@@ -483,11 +551,12 @@ def main() -> int:
         )
         return 70
     except RuntimeError as exc:
-        reason = (
-            "runtime_lock_held"
-            if "lock already held" in str(exc)
-            else "runtime_lock_failed"
-        )
+        if "lock wait timed out" in str(exc):
+            reason = "runtime_lock_wait_timeout"
+        elif "lock already held" in str(exc):
+            reason = "runtime_lock_held"
+        else:
+            reason = "runtime_lock_failed"
         print(
             f"runtime_preflight=blocked reason={reason}",
             file=sys.stderr,
