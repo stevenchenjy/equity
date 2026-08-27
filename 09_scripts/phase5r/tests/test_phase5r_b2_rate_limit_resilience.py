@@ -241,6 +241,34 @@ class MassiveB2AdapterResilienceTests(unittest.TestCase):
                 self.assertNotIn(_CANARY_KEY, str(raised.exception))
                 self.assertEqual(calls, 1)
 
+    def test_duplicate_provider_session_has_finite_b_code_and_safe_date(self) -> None:
+        provider_canary = "duplicate-provider-detail-must-not-be-reflected"
+        payload = _payload()
+        payload["request_id"] = provider_canary
+        payload["results"][1]["t"] = payload["results"][0]["t"]
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            with self.assertRaises(massive.MassiveB2Error) as raised:
+                self._client(
+                    lambda path, headers, timeout: payload
+                ).fetch_daily_bars("IOT", start_date=START, end_date=END)
+
+        self.assertEqual(
+            raised.exception.code,
+            massive.HISTORICAL_SESSION_SEQUENCE_CODE,
+        )
+        self.assertEqual(
+            raised.exception.diagnostic,
+            {"duplicate_session_dates": "2026-08-03"},
+        )
+        self.assertEqual(str(raised.exception), massive.HISTORICAL_SESSION_SEQUENCE_CODE)
+        self.assertNotIn(provider_canary, str(raised.exception))
+        self.assertNotIn(_CANARY_KEY, str(raised.exception))
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+
     def test_invalid_json_body_is_rejected_without_reflection(self) -> None:
         provider_canary = "invalid-json-provider-detail-must-not-be-reflected"
 

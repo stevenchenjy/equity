@@ -123,7 +123,7 @@ class _PartialTwentyNineTickerClient:
     ) -> list[dict[str, object]]:
         self.calls.append(ticker)
         if ticker == self.missing_ticker:
-            return []
+            return _valid_bars(self.current)[:-1]
         return _valid_bars(self.current)
 
 
@@ -154,6 +154,32 @@ class _CompleteCachedClient:
             self.calls.append(ticker)
             self.cache[ticker] = _valid_bars(self.current)
         return [dict(bar) for bar in self.cache[ticker]]
+
+
+class _StaticBarsClient:
+    def __init__(self, bars: list[dict[str, object]]) -> None:
+        self.bars = bars
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        return [dict(bar) for bar in self.bars]
+
+
+class _DuplicateSessionErrorClient:
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        raise massive.MassiveB2Error(
+            massive.HISTORICAL_SESSION_SEQUENCE_CODE,
+            diagnostic={"duplicate_session_dates": "2026-07-17"},
+        )
 
 
 class B2MarketRefreshFailureCommitTests(unittest.TestCase):
@@ -286,6 +312,8 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 {row["market_session_date"] for row in snapshot},
                 {"2026-08-05"},
             )
+            audit = b2.read_csv(paths["audit"])
+            self.assertIn("session_diagnostic=passed", audit[0]["safety_notes"])
 
     def test_thirtieth_ticker_is_rejected_before_client_construction(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -327,7 +355,15 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 self.assertEqual(paths[name].read_bytes(), expected, name)
             audit = b2.read_csv(paths["audit"])
             self.assertIn(
-                f"source_failure_code={b2.FULL_UNIVERSE_INCOMPLETE_CODE}",
+                f"source_failure_code={b2.SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE}",
+                audit[1]["safety_notes"],
+            )
+            self.assertIn(
+                f"full_session_diagnostic_ticker={B2_TICKERS[-1]}",
+                audit[1]["safety_notes"],
+            )
+            self.assertIn(
+                "full_session_diagnostic_missing_session_dates=2026-08-05",
                 audit[1]["safety_notes"],
             )
 
@@ -393,6 +429,179 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
 
         self.assertFalse(committable)
         self.assertEqual(code, b2.FULL_UNIVERSE_STALE_CODE)
+
+    def test_current_session_publication_lag_is_exact_and_nonreflective(self) -> None:
+        """A is emitted only when the newest session alone is unavailable."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)[:-1]
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE, persisted)
+            self.assertIn("missing_session_dates=2026-08-05", persisted)
+            self.assertIn("expected_latest_session=2026-08-05", persisted)
+            self.assertIn("observed_latest_session=2026-08-04", persisted)
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_historical_gap_and_duplicate_dates_are_reported_exactly(self) -> None:
+        """B records only normalized affected dates, never raw bar contents."""
+
+        bars = _valid_bars(POST_CLOSE)
+        missing_date = bars[len(bars) // 2]["session_date"]
+        del bars[len(bars) // 2]
+        gap = b2.session_coverage_diagnostic(bars, POST_CLOSE)
+
+        self.assertEqual(
+            gap["validation_code"],
+            b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE,
+        )
+        self.assertEqual(gap["missing_session_dates"], missing_date.isoformat())
+        self.assertEqual(gap["duplicate_session_dates"], "")
+
+        duplicate_bars = _valid_bars(POST_CLOSE)
+        duplicate_date = duplicate_bars[len(duplicate_bars) // 2]["session_date"]
+        duplicate_bars.insert(
+            len(duplicate_bars) // 2,
+            dict(duplicate_bars[len(duplicate_bars) // 2]),
+        )
+        duplicate = b2.session_coverage_diagnostic(duplicate_bars, POST_CLOSE)
+
+        self.assertEqual(
+            duplicate["validation_code"],
+            b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE,
+        )
+        self.assertEqual(
+            duplicate["duplicate_session_dates"], duplicate_date.isoformat()
+        )
+        self.assertEqual(duplicate["missing_session_dates"], "")
+
+    def test_historical_gap_is_persisted_without_payload_or_partial_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)
+            missing_date = bars[len(bars) // 2]["session_date"]
+            del bars[len(bars) // 2]
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE, persisted)
+            self.assertIn(
+                f"missing_session_dates={missing_date.isoformat()}", persisted
+            )
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_adapter_duplicate_session_diagnostic_survives_main_safely(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _DuplicateSessionErrorClient()
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(massive.HISTORICAL_SESSION_SEQUENCE_CODE, persisted)
+            self.assertIn("duplicate_session_dates=2026-07-17", persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_concrete_calculation_mismatch_has_finite_c_code(self) -> None:
+        bars = _valid_bars(POST_CLOSE)
+        for bar in bars[-20:]:
+            bar["volume"] = 0.0
+        diagnostic: dict[str, str] = {}
+
+        row = b2.market_row_from_massive_bars(
+            "QQQ",
+            bars,
+            _FIXED_NOW,
+            POST_CLOSE,
+            diagnostic=diagnostic,
+        )
+
+        self.assertEqual(row["data_quality_label"], "insufficient_data")
+        self.assertEqual(
+            diagnostic["validation_code"],
+            b2.SMOKE_MARKET_ROW_VALIDATION_CODE,
+        )
+        self.assertEqual(diagnostic["missing_session_dates"], "")
+        self.assertEqual(diagnostic["unexpected_session_dates"], "")
+        self.assertEqual(diagnostic["duplicate_session_dates"], "")
+
+    def test_concrete_calculation_mismatch_is_end_to_end_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)
+            for bar in bars[-20:]:
+                bar["volume"] = 0.0
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_MARKET_ROW_VALIDATION_CODE, persisted)
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
 
     def test_massive_bars_preserve_all_existing_b2_calculations(self) -> None:
         bars = [

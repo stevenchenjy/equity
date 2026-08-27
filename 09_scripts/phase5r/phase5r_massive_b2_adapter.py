@@ -44,6 +44,7 @@ PAGINATION_CODE = "massive_unexpected_pagination"
 TICKER_MISMATCH_CODE = "massive_ticker_mismatch"
 ADJUSTMENT_MISMATCH_CODE = "massive_adjustment_mismatch"
 STALE_RESPONSE_CODE = "massive_stale_response"
+HISTORICAL_SESSION_SEQUENCE_CODE = "massive_historical_session_sequence_invalid"
 
 FINITE_FAILURE_CODES = frozenset(
     {
@@ -60,6 +61,7 @@ FINITE_FAILURE_CODES = frozenset(
         TICKER_MISMATCH_CODE,
         ADJUSTMENT_MISMATCH_CODE,
         STALE_RESPONSE_CODE,
+        HISTORICAL_SESSION_SEQUENCE_CODE,
     }
 )
 
@@ -72,10 +74,27 @@ HttpGet = Callable[[str, Mapping[str, str], float], Any]
 class MassiveB2Error(RuntimeError):
     """Finite, non-sensitive provider failure safe for local audit fields."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        *,
+        diagnostic: Mapping[str, str] | None = None,
+    ) -> None:
         if code not in FINITE_FAILURE_CODES:
             raise ValueError("unsupported Massive B2 failure code")
+        safe_diagnostic: dict[str, str] = {}
+        for key, value in dict(diagnostic or {}).items():
+            if key == "duplicate_session_dates":
+                if re.fullmatch(r"\d{4}-\d{2}-\d{2}(,\d{4}-\d{2}-\d{2})*", value) is None:
+                    raise ValueError("unsafe Massive B2 diagnostic")
+            elif key == "session_order_mismatch":
+                if value not in {"yes", "no"}:
+                    raise ValueError("unsafe Massive B2 diagnostic")
+            else:
+                raise ValueError("unsupported Massive B2 diagnostic field")
+            safe_diagnostic[key] = value
         self.code = code
+        self.diagnostic = safe_diagnostic
         super().__init__(code)
 
 
@@ -217,6 +236,7 @@ def _normalized_bars(
 
     bars: list[dict[str, Any]] = []
     seen_timestamps: set[int] = set()
+    seen_session_dates: set[date] = set()
     prior_timestamp = 0
     for raw in results:
         if not isinstance(raw, dict):
@@ -225,8 +245,7 @@ def _normalized_bars(
         if (
             not isinstance(timestamp_ms, int)
             or isinstance(timestamp_ms, bool)
-            or timestamp_ms <= prior_timestamp
-            or timestamp_ms in seen_timestamps
+            or timestamp_ms <= 0
         ):
             raise MassiveB2Error(MALFORMED_RESPONSE_CODE)
         if raw.get("otc") is True:
@@ -240,6 +259,21 @@ def _normalized_bars(
             raise MassiveB2Error(MALFORMED_RESPONSE_CODE) from None
         if session_date < start_date or session_date > end_date:
             raise MassiveB2Error(MALFORMED_RESPONSE_CODE)
+        if timestamp_ms <= prior_timestamp or timestamp_ms in seen_timestamps:
+            diagnostic = (
+                {"duplicate_session_dates": session_date.isoformat()}
+                if timestamp_ms in seen_timestamps
+                else {"session_order_mismatch": "yes"}
+            )
+            raise MassiveB2Error(
+                HISTORICAL_SESSION_SEQUENCE_CODE,
+                diagnostic=diagnostic,
+            )
+        if session_date in seen_session_dates:
+            raise MassiveB2Error(
+                HISTORICAL_SESSION_SEQUENCE_CODE,
+                diagnostic={"duplicate_session_dates": session_date.isoformat()},
+            )
 
         open_price = _finite_number(raw.get("o"))
         high = _finite_number(raw.get("h"))
@@ -268,6 +302,7 @@ def _normalized_bars(
         )
         prior_timestamp = timestamp_ms
         seen_timestamps.add(timestamp_ms)
+        seen_session_dates.add(session_date)
     return bars
 
 
@@ -373,6 +408,7 @@ __all__ = [
     "AUTH_FAILED_CODE",
     "AUTH_MISSING_CODE",
     "FINITE_FAILURE_CODES",
+    "HISTORICAL_SESSION_SEQUENCE_CODE",
     "MALFORMED_RESPONSE_CODE",
     "MASSIVE_API_KEY_ENV",
     "MASSIVE_DATA_SOURCE",

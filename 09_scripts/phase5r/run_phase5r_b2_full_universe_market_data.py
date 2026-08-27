@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import csv
 from datetime import date, datetime, timedelta, timezone
 import math
@@ -16,6 +17,7 @@ from phase5r_daily_common import (
 )
 from phase5r_massive_b2_adapter import (
     AUTH_MISSING_CODE,
+    HISTORICAL_SESSION_SEQUENCE_CODE,
     MASSIVE_DATA_SOURCE,
     MASSIVE_MIN_REQUEST_INTERVAL_SECONDS,
     MassiveB2Error,
@@ -65,6 +67,9 @@ LEGACY_YFINANCE_DATA_SOURCE = "yfinance_public_market_data"
 COHERENT_DATA_SOURCES = {MASSIVE_DATA_SOURCE, LEGACY_YFINANCE_DATA_SOURCE}
 SMOKE_PRECHECK_ABORTED_CODE = "massive_smoke_preflight_aborted"
 SMOKE_VALIDATION_FAILED_CODE = "massive_smoke_validation_failed"
+SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE = "massive_current_session_not_published"
+SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE = HISTORICAL_SESSION_SEQUENCE_CODE
+SMOKE_MARKET_ROW_VALIDATION_CODE = "massive_market_row_validation_failed"
 FULL_UNIVERSE_INCOMPLETE_CODE = "massive_incomplete_full_universe_response"
 FULL_UNIVERSE_STALE_CODE = "massive_stale_full_universe_response"
 REUSE_VALIDATED_SNAPSHOT_CODE = "validated_local_snapshot_reused"
@@ -178,13 +183,107 @@ def expected_history_sessions(current: datetime) -> list[date]:
     return sessions
 
 
+SMOKE_DIAGNOSTIC_FIELDS = (
+    "validation_code",
+    "expected_session_count",
+    "observed_session_count",
+    "expected_latest_session",
+    "observed_latest_session",
+    "missing_session_count",
+    "missing_session_dates",
+    "unexpected_session_count",
+    "unexpected_session_dates",
+    "duplicate_session_count",
+    "duplicate_session_dates",
+    "session_order_mismatch",
+)
+
+
+def _session_date_list(values: list[date]) -> str:
+    """Serialize only normalized calendar dates for bounded local diagnostics."""
+
+    return ",".join(value.isoformat() for value in values)
+
+
+def session_coverage_diagnostic(
+    bars: Any, current: datetime
+) -> dict[str, str]:
+    """Classify exact session coverage without retaining provider payloads.
+
+    The returned values contain only finite codes, counts, booleans, and ISO
+    market-session dates derived from the already-normalized in-memory bars.
+    Prices, volumes, provider metadata, response text, URLs, and credentials
+    never enter this diagnostic.
+    """
+
+    expected = expected_history_sessions(current)
+    expected_latest = expected[-1] if expected else None
+    observed: list[date] = []
+    invalid_session_value = not isinstance(bars, list)
+    normalized_bars = bars if isinstance(bars, list) else []
+    for bar in normalized_bars:
+        value = bar.get("session_date") if isinstance(bar, dict) else None
+        if type(value) is not date:
+            invalid_session_value = True
+            continue
+        observed.append(value)
+
+    counts = Counter(observed)
+    duplicates = sorted(value for value, count in counts.items() if count > 1)
+    observed_set = set(observed)
+    expected_set = set(expected)
+    missing = sorted(expected_set - observed_set)
+    unexpected = sorted(observed_set - expected_set)
+    observed_latest = max(observed) if observed else None
+    order_mismatch = observed != expected
+
+    if invalid_session_value:
+        code = SMOKE_MARKET_ROW_VALIDATION_CODE
+    elif observed == expected:
+        code = "none"
+    elif observed == expected[:-1] and expected_latest is not None:
+        # Category A is deliberately exact: every earlier expected session is
+        # present once and only the newest completed session is unavailable.
+        code = SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE
+    else:
+        # Category B covers any historical gap, duplicate, unexpected session,
+        # or ordering mismatch. Exact affected dates remain available below.
+        code = SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE
+
+    return {
+        "validation_code": code,
+        "expected_session_count": str(len(expected)),
+        "observed_session_count": str(len(observed)),
+        "expected_latest_session": (
+            expected_latest.isoformat() if expected_latest else ""
+        ),
+        "observed_latest_session": (
+            observed_latest.isoformat() if observed_latest else ""
+        ),
+        "missing_session_count": str(len(missing)),
+        "missing_session_dates": _session_date_list(missing),
+        "unexpected_session_count": str(len(unexpected)),
+        "unexpected_session_dates": _session_date_list(unexpected),
+        "duplicate_session_count": str(len(duplicates)),
+        "duplicate_session_dates": _session_date_list(duplicates),
+        "session_order_mismatch": "yes" if order_mismatch else "no",
+    }
+
+
 def market_row_from_massive_bars(
     ticker: str,
     bars: list[dict[str, Any]],
     now: str,
     current: datetime,
+    *,
+    diagnostic: dict[str, str] | None = None,
 ) -> dict[str, str]:
     row = empty_market_row(ticker, MASSIVE_DATA_SOURCE, now)
+    coverage = session_coverage_diagnostic(bars, current)
+    if diagnostic is not None:
+        diagnostic.update(coverage)
+    if coverage["validation_code"] != "none":
+        return row
     try:
         expected_sessions = expected_history_sessions(current)
         observed_sessions = [bar["session_date"] for bar in bars]
@@ -247,7 +346,11 @@ def market_row_from_massive_bars(
         )
         row["data_quality_label"] = quality_label(row)
     except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        if diagnostic is not None:
+            diagnostic["validation_code"] = SMOKE_MARKET_ROW_VALIDATION_CODE
         return empty_market_row(ticker, MASSIVE_DATA_SOURCE, now)
+    if row["data_quality_label"] == "insufficient_data" and diagnostic is not None:
+        diagnostic["validation_code"] = SMOKE_MARKET_ROW_VALIDATION_CODE
     return row
 
 
@@ -267,7 +370,20 @@ def smoke_test(
                 start_date=start_date,
                 end_date=end_date,
             )
-            market = market_row_from_massive_bars(ticker, bars, now, current)
+            diagnostic: dict[str, str] = {}
+            market = market_row_from_massive_bars(
+                ticker,
+                bars,
+                now,
+                current,
+                diagnostic=diagnostic,
+            )
+            row.update(
+                {
+                    field: diagnostic.get(field, "")
+                    for field in SMOKE_DIAGNOSTIC_FIELDS
+                }
+            )
             if market["data_quality_label"] != "insufficient_data":
                 row.update({
                     "last_price": market["last_price"],
@@ -277,8 +393,25 @@ def smoke_test(
                 row["status"] = "passed" if row["last_price"] and row["previous_close"] else "failed"
         except Exception as exc:
             row["error_code"] = source_failure_code(exc)
+            if (
+                isinstance(exc, MassiveB2Error)
+                and exc.code == HISTORICAL_SESSION_SEQUENCE_CODE
+            ):
+                row["validation_code"] = exc.code
+                for field in (
+                    "duplicate_session_dates",
+                    "session_order_mismatch",
+                ):
+                    if field in exc.diagnostic:
+                        row[field] = exc.diagnostic[field]
+                if row.get("duplicate_session_dates"):
+                    row["duplicate_session_count"] = str(
+                        len(row["duplicate_session_dates"].split(","))
+                    )
         if row["status"] != "passed" and "error_code" not in row:
-            row["error_code"] = SMOKE_VALIDATION_FAILED_CODE
+            row["error_code"] = (
+                row.get("validation_code") or SMOKE_VALIDATION_FAILED_CODE
+            )
         results.append(row)
         if row["status"] != "passed":
             results.extend(
@@ -296,17 +429,64 @@ def smoke_test(
     return results, all(row["status"] == "passed" for row in results)
 
 
+def validation_diagnostic_notes(
+    row: dict[str, str] | None, *, prefix: str
+) -> str:
+    """Return bounded date/count metadata for one validation result."""
+
+    if row is None:
+        return f"{prefix}_diagnostic=not_available"
+    if row.get("validation_code") == "none":
+        return f"{prefix}_diagnostic=passed"
+    fields = ["ticker", *SMOKE_DIAGNOSTIC_FIELDS]
+    return "; ".join(
+        f"{prefix}_diagnostic_{field}={row.get(field, '') or 'none'}"
+        for field in fields
+    )
+
+
+def smoke_diagnostic_notes(rows: list[dict[str, str]]) -> str:
+    """Return finite audit notes for the first locally diagnosed smoke row."""
+
+    diagnosed = next(
+        (
+            candidate
+            for candidate in rows
+            if candidate.get("validation_code")
+            and candidate.get("validation_code") != "none"
+        ),
+        None,
+    )
+    observed = next(
+        (candidate for candidate in rows if candidate.get("validation_code")),
+        None,
+    )
+    return validation_diagnostic_notes(
+        diagnosed or observed,
+        prefix="session",
+    )
+
+
 def retrieve_full_universe(
     tickers: list[str],
     now: str,
     *,
     client: MassiveBasicEODClient,
     current: datetime,
-) -> tuple[list[dict[str, str]], str, bool, str]:
+) -> tuple[
+    list[dict[str, str]],
+    str,
+    bool,
+    str,
+    dict[str, str] | None,
+]:
     start_date, end_date = history_window(current)
     try:
-        rows = [
-            market_row_from_massive_bars(
+        rows: list[dict[str, str]] = []
+        first_diagnostic: dict[str, str] | None = None
+        for ticker in tickers:
+            diagnostic: dict[str, str] = {}
+            row = market_row_from_massive_bars(
                 ticker,
                 client.fetch_daily_bars(
                     ticker,
@@ -315,17 +495,47 @@ def retrieve_full_universe(
                 ),
                 now,
                 current,
+                diagnostic=diagnostic,
             )
-            for ticker in tickers
-        ]
+            rows.append(row)
+            if (
+                first_diagnostic is None
+                and diagnostic.get("validation_code")
+                and diagnostic.get("validation_code") != "none"
+            ):
+                first_diagnostic = {"ticker": ticker, **diagnostic}
+        if first_diagnostic is not None:
+            failure_code = first_diagnostic["validation_code"]
+            return (
+                rows,
+                f"full-universe response rejected before commit: {failure_code}",
+                False,
+                failure_code,
+                first_diagnostic,
+            )
         return (
             rows,
             "full-universe Massive Stocks Basic EOD history retrieved",
             True,
             "none",
+            None,
         )
     except Exception as exc:
         failure_code = source_failure_code(exc)
+        failure_diagnostic: dict[str, str] | None = None
+        if (
+            isinstance(exc, MassiveB2Error)
+            and exc.code == HISTORICAL_SESSION_SEQUENCE_CODE
+        ):
+            failure_diagnostic = {
+                "ticker": ticker,
+                "validation_code": exc.code,
+                **{
+                    field: value
+                    for field, value in exc.diagnostic.items()
+                    if field in SMOKE_DIAGNOSTIC_FIELDS
+                },
+            }
         return (
             [
                 empty_market_row(
@@ -336,6 +546,7 @@ def retrieve_full_universe(
             f"full-universe retrieval failed safely: {failure_code}",
             False,
             failure_code,
+            failure_diagnostic,
         )
 
 
@@ -347,6 +558,7 @@ def write_decision(
     *,
     prior_outputs_preserved: bool = False,
     source_failure_code: str = "none",
+    full_diagnostic: dict[str, str] | None = None,
 ) -> None:
     lines = [
         "# Phase 5R-B2 Data Source Decision", "", f"Generated: `{timestamp()}`", "",
@@ -361,6 +573,28 @@ def write_decision(
     ]
     for row in smoke_rows:
         lines.append(f"| {row['ticker']} | {row['last_price'] or 'n/a'} | {row['previous_close'] or 'n/a'} | {row['volume'] or 'n/a'} | {row['status']} |")
+    diagnosed_rows = [
+        row
+        for row in smoke_rows
+        if row.get("validation_code")
+        and row.get("validation_code") != "none"
+    ]
+    if full_diagnostic is not None:
+        diagnosed_rows.append(full_diagnostic)
+    if diagnosed_rows:
+        lines.extend(["", "## Finite Session Diagnostic", ""])
+        for row in diagnosed_rows:
+            lines.append(
+                f"- `{row['ticker']}`: code=`{row['validation_code']}`; "
+                f"expected_count=`{row.get('expected_session_count') or 'unknown'}`; "
+                f"observed_count=`{row.get('observed_session_count') or 'unknown'}`; "
+                f"expected_latest=`{row.get('expected_latest_session') or 'none'}`; "
+                f"observed_latest=`{row.get('observed_latest_session') or 'none'}`; "
+                f"missing_dates=`{row.get('missing_session_dates') or 'none'}`; "
+                f"unexpected_dates=`{row.get('unexpected_session_dates') or 'none'}`; "
+                f"duplicate_dates=`{row.get('duplicate_session_dates') or 'none'}`; "
+                f"order_mismatch=`{row.get('session_order_mismatch') or 'unknown'}`."
+            )
     if prior_outputs_preserved:
         lines.extend(
             [
@@ -867,10 +1101,12 @@ def main(argv: list[str] | None = None) -> int:
         f"network_attempted={'yes' if network_attempted else 'no'}; "
         f"source_failure_code={current_source_failure_code}; "
         "provider=massive_stocks_basic_eod; adjusted=false; retries=0; "
-        f"min_request_interval_seconds={MASSIVE_MIN_REQUEST_INTERVAL_SECONDS:.1f}",
+        f"min_request_interval_seconds={MASSIVE_MIN_REQUEST_INTERVAL_SECONDS:.1f}; "
+        f"{smoke_diagnostic_notes(smoke_rows)}",
     )
     source_failure = False
     full_retrieval_succeeded = False
+    full_diagnostic: dict[str, str] | None = None
     prior_outputs_preserved = False
     prior_validation_reason = "not_checked"
     if smoke_passed:
@@ -879,6 +1115,7 @@ def main(argv: list[str] | None = None) -> int:
             full_note,
             full_retrieval_succeeded,
             full_failure_code,
+            full_diagnostic,
         ) = retrieve_full_universe(
             tickers,
             now,
@@ -922,7 +1159,8 @@ def main(argv: list[str] | None = None) -> int:
             "held_tickers_price_only=yes; "
             f"maximum_provider_requests={len(tickers)}; "
             f"source_failure_code={current_source_failure_code}; "
-            f"fail_safe_stop={'no' if full_retrieval_succeeded else 'yes'}",
+            f"fail_safe_stop={'no' if full_retrieval_succeeded else 'yes'}; "
+            f"{validation_diagnostic_notes(full_diagnostic, prefix='full_session')}",
         )
     else:
         source_name = f"{MASSIVE_DATA_SOURCE}_unavailable"
@@ -1033,6 +1271,7 @@ def main(argv: list[str] | None = None) -> int:
         held_tickers,
         prior_outputs_preserved=prior_outputs_preserved,
         source_failure_code=current_source_failure_code,
+        full_diagnostic=full_diagnostic,
     )
     write_data_report(
         market_rows,
