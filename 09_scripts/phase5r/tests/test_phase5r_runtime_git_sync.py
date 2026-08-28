@@ -553,7 +553,14 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
 
         commit = "b" * 40
         command = ["python3", "scheduler.py"]
+        canary = "offline-runtime-secret-presence-canary"
+        stdout = io.StringIO()
         with (
+            patch.dict(
+                runtime_wrapper.os.environ,
+                {"MASSIVE_API_KEY": canary},
+                clear=True,
+            ),
             patch.object(runtime_wrapper.os, "set_inheritable"),
             patch.object(runtime_wrapper, "_git", return_value=commit),
             patch.object(runtime_wrapper, "datetime", FakeDateTime),
@@ -561,7 +568,7 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
             patch.object(runtime_wrapper, "_scheduler_command", return_value=command),
             patch.object(runtime_wrapper.os, "chdir"),
             patch.object(runtime_wrapper.os, "execve") as execve,
-            redirect_stdout(io.StringIO()),
+            redirect_stdout(stdout),
         ):
             runtime_wrapper._exec_scheduler(
                 Path("/isolated/runtime"),
@@ -582,6 +589,8 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
         )
         execve.assert_called_once()
         environment = execve.call_args.args[2]
+        self.assertEqual(environment["MASSIVE_API_KEY"], canary)
+        self.assertNotIn(canary, stdout.getvalue())
         self.assertEqual(environment["PHASE5R_RUNTIME_COMMIT"], commit)
         self.assertEqual(environment["PHASE5R_RUNTIME_JOB"], "dailydecision")
         self.assertEqual(

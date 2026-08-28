@@ -75,6 +75,9 @@ FULL_UNIVERSE_STALE_CODE = "massive_stale_full_universe_response"
 REUSE_VALIDATED_SNAPSHOT_CODE = "validated_local_snapshot_reused"
 REUSE_INVALID_SNAPSHOT_CODE = "local_snapshot_reuse_invalid"
 REUSE_STALE_SNAPSHOT_CODE = "local_snapshot_reuse_not_current"
+MASSIVE_AUTH_PROBE_PRESENT_EXIT = 0
+MASSIVE_AUTH_PROBE_ABSENT_EXIT = 2
+MASSIVE_AUTH_PROBE_INTERNAL_ERROR_EXIT = 3
 
 
 def timestamp() -> str:
@@ -1008,6 +1011,20 @@ def reuse_validated_snapshot(
     return 0 if valid else 1
 
 
+def massive_auth_probe_exit_code() -> int:
+    """Construct the Massive client without I/O and disclose only fixed status."""
+
+    try:
+        MassiveBasicEODClient.from_environment()
+    except MassiveB2Error as exc:
+        if exc.code == AUTH_MISSING_CODE:
+            return MASSIVE_AUTH_PROBE_ABSENT_EXIT
+        return MASSIVE_AUTH_PROBE_INTERNAL_ERROR_EXIT
+    except Exception:
+        return MASSIVE_AUTH_PROBE_INTERNAL_ERROR_EXIT
+    return MASSIVE_AUTH_PROBE_PRESENT_EXIT
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -1015,7 +1032,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="validate and reuse only the current coherent local B2 trio",
     )
+    parser.add_argument(
+        "--massive-auth-presence-probe",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args([] if argv is None else argv)
+    if args.massive_auth_presence_probe:
+        return massive_auth_probe_exit_code()
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
