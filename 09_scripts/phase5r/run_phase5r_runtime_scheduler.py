@@ -106,6 +106,9 @@ def _run_git_process(
     timeout: int = GIT_TIMEOUT_SECONDS,
 ) -> subprocess.CompletedProcess[str]:
     environment = os.environ.copy()
+    # The Keychain launcher scopes Massive authentication to the production
+    # scheduler. Git synchronization never needs or receives the credential.
+    environment.pop("MASSIVE_API_KEY", None)
     environment["GIT_TERMINAL_PROMPT"] = "0"
     environment["GIT_OPTIONAL_LOCKS"] = "0"
     try:

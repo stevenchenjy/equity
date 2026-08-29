@@ -56,6 +56,10 @@ PRODUCTION_RUNTIME_WRAPPER = (
     / "phase5r"
     / "run_phase5r_runtime_scheduler.py"
 )
+EXTERNAL_DAILYREFRESH_LAUNCHER = Path(
+    "/Users/messssi/Library/Application Support/Phase5R/bin/"
+    "phase5r_dailyrefresh_launcher.py"
+)
 LEGACY_LABELS = (
     "com.steven.phase5r.dailybrief",
     "com.steven.phase5r.weeklyconviction",
@@ -164,6 +168,26 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
         with template.open("rb") as handle:
             payload = plistlib.load(handle)
         arguments = payload.get("ProgramArguments", [])
+        expected_arguments = (
+            [str(EXTERNAL_DAILYREFRESH_LAUNCHER)]
+            if job_name == "dailyrefresh"
+            else [
+                "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+                str(PRODUCTION_RUNTIME_WRAPPER),
+                "--job",
+                job_name,
+            ]
+        )
+        launcher_ready = (
+            job_name != "dailyrefresh"
+            or (
+                EXTERNAL_DAILYREFRESH_LAUNCHER.is_file()
+                and not EXTERNAL_DAILYREFRESH_LAUNCHER.is_symlink()
+                and EXTERNAL_DAILYREFRESH_LAUNCHER.stat().st_uid == os.getuid()
+                and (EXTERNAL_DAILYREFRESH_LAUNCHER.stat().st_mode & 0o777)
+                in {0o500, 0o700}
+            )
+        )
         invariant = (
             payload.get("Label") == label
             and payload.get("RunAtLoad") is True
@@ -171,13 +195,8 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload
             and payload.get("WorkingDirectory") == str(PRODUCTION_RUNTIME_ROOT)
-            and arguments
-            == [
-                "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
-                str(PRODUCTION_RUNTIME_WRAPPER),
-                "--job",
-                job_name,
-            ]
+            and arguments == expected_arguments
+            and launcher_ready
             and all(
                 token not in " ".join(arguments).lower()
                 for token in ("c2", "c3", "c6", "c7", "weekly", "sender")

@@ -29,6 +29,9 @@ from phase5r_daily_common import (
 
 REFRESH_PIPELINE = ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_refresh.py"
 SEC_EVIDENCE_REFRESH = ROOT / "09_scripts" / "phase5r" / "refresh_phase5r_daily_evidence.py"
+MASSIVE_B2_RUNNER = (
+    ROOT / "09_scripts" / "phase5r" / "run_phase5r_b2_full_universe_market_data.py"
+)
 PRODUCTION_SHADOW_RUNNER = (
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_production_shadow.py"
 )
@@ -67,6 +70,10 @@ MASSIVE_AUTH_PRESENCE_PROBE_ENV = (
 MASSIVE_AUTH_PRESENCE_PRESENT_EXIT = 74
 MASSIVE_AUTH_PRESENCE_ABSENT_EXIT = 75
 MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT = 76
+MASSIVE_B2_PROBE_PRESENT_EXIT = 0
+MASSIVE_B2_PROBE_ABSENT_EXIT = 2
+MASSIVE_B2_PROBE_INTERNAL_ERROR_EXIT = 3
+MASSIVE_B2_PROBE_TIMEOUT_SECONDS = 15
 # A one-shot, externally initiated SEC-only path.  It uses this already
 # approved launchd runtime so the configured User-Agent remains external to
 # the repository.  It deliberately does not run B2, the deterministic refresh,
@@ -162,16 +169,28 @@ def _auth_presence_probe_exit_code() -> int:
 
 
 def _massive_auth_presence_probe_exit_code() -> int:
-    """Return only a fixed Massive-key presence result; never expose it."""
+    """Prove the B2 child can construct its client, without provider I/O."""
 
     try:
-        return (
-            MASSIVE_AUTH_PRESENCE_PRESENT_EXIT
-            if bool(os.environ.get("MASSIVE_API_KEY"))
-            else MASSIVE_AUTH_PRESENCE_ABSENT_EXIT
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(MASSIVE_B2_RUNNER),
+                "--massive-auth-presence-probe",
+            ],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=MASSIVE_B2_PROBE_TIMEOUT_SECONDS,
+            check=False,
         )
     except Exception:
         return MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT
+    return {
+        MASSIVE_B2_PROBE_PRESENT_EXIT: MASSIVE_AUTH_PRESENCE_PRESENT_EXIT,
+        MASSIVE_B2_PROBE_ABSENT_EXIT: MASSIVE_AUTH_PRESENCE_ABSENT_EXIT,
+        MASSIVE_B2_PROBE_INTERNAL_ERROR_EXIT: MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT,
+    }.get(completed.returncode, MASSIVE_AUTH_PRESENCE_INTERNAL_ERROR_EXIT)
 
 
 def _run_sec_refresh_only() -> int:

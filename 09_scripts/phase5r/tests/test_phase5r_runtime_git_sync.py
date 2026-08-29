@@ -86,6 +86,33 @@ class LocalRepositoryFixture:
 
 
 class RuntimeGitSyncTests(unittest.TestCase):
+    def test_git_child_never_receives_massive_authentication(self) -> None:
+        canary = "offline-git-boundary-canary"
+        completed = runtime_wrapper.subprocess.CompletedProcess(
+            [runtime_wrapper.GIT_BINARY, "status"],
+            0,
+            stdout="",
+            stderr="",
+        )
+        with (
+            patch.dict(
+                runtime_wrapper.os.environ,
+                {"MASSIVE_API_KEY": canary},
+                clear=True,
+            ),
+            patch.object(
+                runtime_wrapper.subprocess,
+                "run",
+                return_value=completed,
+            ) as run,
+        ):
+            result = runtime_wrapper._run_git_process(Path("/runtime"), ["status"])
+
+        self.assertIs(result, completed)
+        environment = run.call_args.kwargs["env"]
+        self.assertNotIn("MASSIVE_API_KEY", environment)
+        self.assertNotIn(canary, str(run.call_args))
+
     def test_identical_runtime_continues_without_changing_head(self) -> None:
         with tempfile.TemporaryDirectory(prefix="phase5r-sync-equal-") as directory:
             fixture = LocalRepositoryFixture(Path(directory))
@@ -553,7 +580,14 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
 
         commit = "b" * 40
         command = ["python3", "scheduler.py"]
+        canary = "offline-runtime-secret-presence-canary"
+        stdout = io.StringIO()
         with (
+            patch.dict(
+                runtime_wrapper.os.environ,
+                {"MASSIVE_API_KEY": canary},
+                clear=True,
+            ),
             patch.object(runtime_wrapper.os, "set_inheritable"),
             patch.object(runtime_wrapper, "_git", return_value=commit),
             patch.object(runtime_wrapper, "datetime", FakeDateTime),
@@ -561,7 +595,7 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
             patch.object(runtime_wrapper, "_scheduler_command", return_value=command),
             patch.object(runtime_wrapper.os, "chdir"),
             patch.object(runtime_wrapper.os, "execve") as execve,
-            redirect_stdout(io.StringIO()),
+            redirect_stdout(stdout),
         ):
             runtime_wrapper._exec_scheduler(
                 Path("/isolated/runtime"),
@@ -582,6 +616,8 @@ class RuntimeLockConcurrencyTests(unittest.TestCase):
         )
         execve.assert_called_once()
         environment = execve.call_args.args[2]
+        self.assertEqual(environment["MASSIVE_API_KEY"], canary)
+        self.assertNotIn(canary, stdout.getvalue())
         self.assertEqual(environment["PHASE5R_RUNTIME_COMMIT"], commit)
         self.assertEqual(environment["PHASE5R_RUNTIME_JOB"], "dailydecision")
         self.assertEqual(

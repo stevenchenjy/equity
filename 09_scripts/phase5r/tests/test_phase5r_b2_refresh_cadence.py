@@ -499,31 +499,76 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
 
-    def test_massive_runtime_auth_presence_probe_is_mute_and_boolean_only(self) -> None:
-        """The launchd boundary reveals only Massive-key presence via fixed exits."""
+    def test_b2_auth_probe_constructs_client_without_network_and_is_mute(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch.dict(
+                os.environ,
+                {massive.MASSIVE_API_KEY_ENV: "offline-presence-canary"},
+                clear=True,
+            ),
+            patch.object(
+                b2.MassiveBasicEODClient,
+                "fetch_daily_bars",
+                side_effect=AssertionError("network path must not run"),
+            ) as fetch,
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            result = b2.main(["--massive-auth-presence-probe"])
+
+        self.assertEqual(result, b2.MASSIVE_AUTH_PROBE_PRESENT_EXIT)
+        fetch.assert_not_called()
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+
+    def test_b2_auth_probe_fails_closed_when_auth_is_absent(self) -> None:
+        with patch.dict(os.environ, {}, clear=True):
+            result = b2.main(["--massive-auth-presence-probe"])
+        self.assertEqual(result, b2.MASSIVE_AUTH_PROBE_ABSENT_EXIT)
+
+    def test_massive_runtime_auth_presence_probe_reaches_b2_child_and_is_mute(self) -> None:
+        """The launchd probe maps only fixed status from the no-network B2 child."""
 
         stdout = io.StringIO()
         stderr = io.StringIO()
-        with patch.dict(
-            os.environ,
-            {
-                refresh_scheduler.MASSIVE_AUTH_PRESENCE_PROBE_ENV: "1",
-                "MASSIVE_API_KEY": "test-presence-only-not-a-real-key",
-            },
-            clear=True,
+        completed = [
+            refresh_scheduler.subprocess.CompletedProcess(["b2-probe"], 0),
+            refresh_scheduler.subprocess.CompletedProcess(["b2-probe"], 2),
+        ]
+        with (
+            patch.dict(
+                os.environ,
+                {refresh_scheduler.MASSIVE_AUTH_PRESENCE_PROBE_ENV: "1"},
+                clear=True,
+            ),
+            patch.object(
+                refresh_scheduler.subprocess,
+                "run",
+                side_effect=completed,
+            ) as run,
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
         ):
-            with redirect_stdout(stdout), redirect_stderr(stderr):
-                present = refresh_scheduler.main()
-        with patch.dict(
-            os.environ,
-            {refresh_scheduler.MASSIVE_AUTH_PRESENCE_PROBE_ENV: "1"},
-            clear=True,
-        ):
-            with redirect_stdout(stdout), redirect_stderr(stderr):
-                absent = refresh_scheduler.main()
+            present = refresh_scheduler.main()
+            absent = refresh_scheduler.main()
 
         self.assertEqual(present, refresh_scheduler.MASSIVE_AUTH_PRESENCE_PRESENT_EXIT)
         self.assertEqual(absent, refresh_scheduler.MASSIVE_AUTH_PRESENCE_ABSENT_EXIT)
+        self.assertEqual(run.call_count, 2)
+        run.assert_called_with(
+            [
+                refresh_scheduler.sys.executable,
+                str(refresh_scheduler.MASSIVE_B2_RUNNER),
+                "--massive-auth-presence-probe",
+            ],
+            cwd=refresh_scheduler.ROOT,
+            stdout=refresh_scheduler.subprocess.DEVNULL,
+            stderr=refresh_scheduler.subprocess.DEVNULL,
+            timeout=refresh_scheduler.MASSIVE_B2_PROBE_TIMEOUT_SECONDS,
+            check=False,
+        )
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
 
