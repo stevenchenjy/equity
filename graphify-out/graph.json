@@ -18606,7 +18606,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_cachedbundleintegrityerror",
-      "community": 22,
+      "community": 7,
       "norm_label": "cachedbundleintegrityerror"
     },
     {
@@ -18626,7 +18626,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowoutputlock",
-      "community": 2,
+      "community": 22,
       "norm_label": "shadowoutputlock"
     },
     {
@@ -18636,7 +18636,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowoutputlock_init",
-      "community": 2,
+      "community": 22,
       "norm_label": ".__init__()"
     },
     {
@@ -18666,7 +18666,7 @@
       "source_location": "L252",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowoutputlock_exit",
-      "community": 2,
+      "community": 22,
       "norm_label": ".__exit__()"
     },
     {
@@ -18846,7 +18846,7 @@
       "source_location": "L755",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_validate_progress",
-      "community": 22,
+      "community": 7,
       "norm_label": "._validate_progress()"
     },
     {
@@ -18856,7 +18856,7 @@
       "source_location": "L921",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_event",
-      "community": 22,
+      "community": 7,
       "norm_label": "._event()"
     },
     {
@@ -18866,7 +18866,7 @@
       "source_location": "L951",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_attempt_count",
-      "community": 22,
+      "community": 7,
       "norm_label": "._attempt_count()"
     },
     {
@@ -18876,7 +18876,7 @@
       "source_location": "L959",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_terminal_kind",
-      "community": 22,
+      "community": 7,
       "norm_label": "._terminal_kind()"
     },
     {
@@ -18886,7 +18886,7 @@
       "source_location": "L974",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_terminal_event",
-      "community": 22,
+      "community": 7,
       "norm_label": "._terminal_event()"
     },
     {
@@ -18896,7 +18896,7 @@
       "source_location": "L993",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_receipt_path",
-      "community": 22,
+      "community": 7,
       "norm_label": "._receipt_path()"
     },
     {
@@ -18906,7 +18906,7 @@
       "source_location": "L996",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_begin_attempt",
-      "community": 22,
+      "community": 7,
       "norm_label": ".begin_attempt()"
     },
     {
@@ -18916,7 +18916,7 @@
       "source_location": "L1025",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_persist_failure",
-      "community": 22,
+      "community": 7,
       "norm_label": ".persist_failure()"
     },
     {
@@ -18946,7 +18946,7 @@
       "source_location": "L1081",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_validate_receipt",
-      "community": 22,
+      "community": 7,
       "norm_label": "._validate_receipt()"
     },
     {
@@ -18956,7 +18956,7 @@
       "source_location": "L1144",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_persist_success",
-      "community": 22,
+      "community": 7,
       "norm_label": "._persist_success()"
     },
     {
@@ -18966,7 +18966,7 @@
       "source_location": "L1170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_load_or_recover",
-      "community": 22,
+      "community": 7,
       "norm_label": ".load_or_recover()"
     },
     {
@@ -18976,7 +18976,7 @@
       "source_location": "L1249",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_commit_success",
-      "community": 22,
+      "community": 7,
       "norm_label": ".commit_success()"
     },
     {
@@ -18986,7 +18986,7 @@
       "source_location": "L1273",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_retry_authorized",
-      "community": 22,
+      "community": 7,
       "norm_label": ".retry_authorized()"
     },
     {
@@ -18996,7 +18996,7 @@
       "source_location": "L1288",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_authorizes_failure_retry",
-      "community": 22,
+      "community": 7,
       "norm_label": ".authorizes_failure_retry()"
     },
     {
@@ -19006,7 +19006,7 @@
       "source_location": "L1309",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_authorizes_inflight_recovery",
-      "community": 22,
+      "community": 7,
       "norm_label": ".authorizes_inflight_recovery()"
     },
     {
@@ -19016,7 +19016,7 @@
       "source_location": "L1336",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_terminal_failure",
-      "community": 22,
+      "community": 7,
       "norm_label": ".terminal_failure()"
     },
     {
@@ -19026,7 +19026,7 @@
       "source_location": "L1356",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_candidate_path",
-      "community": 7,
+      "community": 22,
       "norm_label": ".candidate_path()"
     },
     {
@@ -19036,7 +19036,7 @@
       "source_location": "L1360",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_completion_manifest_path",
-      "community": 7,
+      "community": 22,
       "norm_label": ".completion_manifest_path()"
     },
     {
@@ -19136,7 +19136,7 @@
       "source_location": "L1612",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_generate_persisted_role",
-      "community": 22,
+      "community": 7,
       "norm_label": "_generate_persisted_role()"
     },
     {
@@ -19486,7 +19486,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_65",
-      "community": 22,
+      "community": 7,
       "norm_label": "a completed same-run cache exists but cannot be trusted."
     },
     {
@@ -19496,7 +19496,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_219",
-      "community": 2,
+      "community": 22,
       "norm_label": "nonblocking model-output lock that refuses symlinks and hard links."
     },
     {
@@ -19516,7 +19516,7 @@
       "source_location": "L1310",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_1310",
-      "community": 22,
+      "community": 7,
       "norm_label": "permit receipt/unknown-outcome recovery, never a new attempt."
     },
     {
@@ -19526,7 +19526,7 @@
       "source_location": "L1337",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_1337",
-      "community": 22,
+      "community": 7,
       "norm_label": "return the exact non-retryable role failure, if one exists."
     },
     {
@@ -24456,7 +24456,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
-      "community": 27,
+      "community": 52,
       "norm_label": ".test_recommendation_labels_are_explicit()"
     },
     {
@@ -30506,7 +30506,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_terminalproviderfailure",
-      "community": 2,
+      "community": 22,
       "norm_label": "terminalproviderfailure"
     },
     {
@@ -30516,7 +30516,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_terminalproviderfailure_init",
-      "community": 2,
+      "community": 22,
       "norm_label": ".__init__()"
     },
     {
@@ -30526,7 +30526,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_terminalproviderfailure_generate",
-      "community": 2,
+      "community": 22,
       "norm_label": ".generate()"
     },
     {
@@ -30826,7 +30826,7 @@
       "source_location": "L1803",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_provider_failure_remains_retryable_for_scheduler",
-      "community": 7,
+      "community": 22,
       "norm_label": ".test_provider_failure_remains_retryable_for_scheduler()"
     },
     {
@@ -30876,7 +30876,7 @@
       "source_location": "L1944",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_audit_append_refuses_symlink_target",
-      "community": 22,
+      "community": 7,
       "norm_label": ".test_audit_append_refuses_symlink_target()"
     },
     {
@@ -30896,7 +30896,7 @@
       "source_location": "L1979",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_shadow_output_lock_refuses_symlink",
-      "community": 2,
+      "community": 22,
       "norm_label": ".test_shadow_output_lock_refuses_symlink()"
     },
     {
@@ -41593,7 +41593,7 @@
       "label": "Evidence",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L16",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "00_project_control_phase5r_ai_operating_decision_evidence",
       "community": 127,
@@ -41603,7 +41603,7 @@
       "label": "Allowed future evaluation",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L30",
+      "source_location": "L31",
       "_origin": "ast",
       "id": "00_project_control_phase5r_ai_operating_decision_allowed_future_evaluation",
       "community": 127,
@@ -41613,7 +41613,7 @@
       "label": "Boundaries",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L48",
+      "source_location": "L49",
       "_origin": "ast",
       "id": "00_project_control_phase5r_ai_operating_decision_boundaries",
       "community": 127,
@@ -54613,7 +54613,7 @@
       "label": "Safety Boundaries",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L56",
+      "source_location": "L57",
       "_origin": "ast",
       "id": "readme_safety_boundaries",
       "community": 127,
@@ -54623,7 +54623,7 @@
       "label": "What The System Can Do",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L65",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "readme_what_the_system_can_do",
       "community": 127,
@@ -54633,7 +54633,7 @@
       "label": "What The System Cannot Do",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L74",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "readme_what_the_system_cannot_do",
       "community": 127,
@@ -54643,7 +54643,7 @@
       "label": "Current Safe Status Commands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L82",
+      "source_location": "L83",
       "_origin": "ast",
       "id": "readme_current_safe_status_commands",
       "community": 127,
@@ -187659,7 +187659,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "00_project_control_phase5r_ai_operating_decision_phase_5r_ai_operating_decision",
       "target": "00_project_control_phase5r_ai_operating_decision_allowed_future_evaluation",
@@ -187669,7 +187669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "00_project_control_phase5r_ai_operating_decision_phase_5r_ai_operating_decision",
       "target": "00_project_control_phase5r_ai_operating_decision_boundaries",
@@ -187689,7 +187689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_ai_operating_decision.md",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "00_project_control_phase5r_ai_operating_decision_phase_5r_ai_operating_decision",
       "target": "00_project_control_phase5r_ai_operating_decision_evidence",
@@ -198649,7 +198649,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_current_safe_status_commands",
@@ -198679,7 +198679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_safety_boundaries",
@@ -198689,7 +198689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L65",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_what_the_system_can_do",
@@ -198699,7 +198699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_what_the_system_cannot_do",
@@ -199247,5 +199247,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1fab201a57fe5a7ee3f409e2e78af1973d122a2d"
+  "built_at_commit": "298963a3d21dc1fc0b588fee7d4ea55faa13e0e8"
 }

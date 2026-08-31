@@ -37,7 +37,7 @@
     "unchanged_daily_email": false
   },
   "model_policy": {
-    "status": "restricted_inactive_api_authorization_absent_0_of_10_observations",
+    "status": "removed_from_active_production_path_0_of_10_observations",
     "operating_decision": "00_project_control/phase5r_ai_operating_decision.md",
     "default_action": "no_call",
     "prompt_version": "phase5r_material_critic_v1",

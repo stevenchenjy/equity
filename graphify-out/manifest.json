@@ -1160,8 +1160,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788194752.2519732,
-    "ast_hash": "2d4858a9e8372d44e4a689fad490ce76",
+    "mtime": 1788194954.8683927,
+    "ast_hash": "72e49d3aac132ab0e350e16218d7cb53",
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/SKILL.md": {
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_active_production_config.json": {
-    "mtime": 1788194752.2497292,
-    "ast_hash": "67eae1b7dfbbf6bf92e2e977f37601f9",
+    "mtime": 1788194954.8666062,
+    "ast_hash": "44bddfdf3ae720e76b9ff12cdcce0643",
     "semantic_hash": ""
   },
   "01_policies/phase5r_valuation_scenario_policy.json": {
@@ -2625,8 +2625,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_ai_operating_decision.md": {
-    "mtime": 1788194752.250719,
-    "ast_hash": "9b6f10aff332a781c56dc31fcd7ce2e9",
+    "mtime": 1788194954.8675404,
+    "ast_hash": "e68b9966996e083cb220d941661c3a17",
     "semantic_hash": ""
   }
 }

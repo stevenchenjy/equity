@@ -1,7 +1,7 @@
 # Graph Report - equity  (2026-08-31)
 
 ## Corpus Check
-- 508 files · ~441,780 words
+- 508 files · ~441,798 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1fab201a`
+- Built from commit: `298963a3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -472,8 +472,8 @@ Cohesion: 0.12
 Nodes (45): atomic_write_bytes(), atomic_write_json(), build_case_specs(), build_packet(), _cached_source(), canonical_sha256(), deterministic_replay_evaluation_context(), fetch_public_resource() (+37 more)
 
 ### Community 2 - "AST"
-Cohesion: 0.05
-Nodes (36): AnthropicMessagesProvider, CodexCliProvider, FixtureProvider, OpenAIResponsesProvider, ProviderError, Any, BaseException, Path (+28 more)
+Cohesion: 0.06
+Nodes (33): AnthropicMessagesProvider, CodexCliProvider, FixtureProvider, OpenAIResponsesProvider, ProviderError, Any, BaseException, Path (+25 more)
 
 ### Community 3 - "send_phase5r_c6_weekly_email.py"
 Cohesion: 0.06
@@ -492,8 +492,8 @@ Cohesion: 0.05
 Nodes (78): main(), create_if_missing(), main(), main(), main(), assert_c9_source_scenario(), blank_row(), main() (+70 more)
 
 ### Community 7 - "run_phase5r_c7_weekly_conviction_pipeline.py"
-Cohesion: 0.08
-Nodes (63): _analyst_packet_view(), _assert_semantic_references_visible(), _atomic_write_bytes(), _audit_binding(), _audit_row(), _cached(), _committee_packet_view(), _completion_manifest() (+55 more)
+Cohesion: 0.07
+Nodes (68): _analyst_packet_view(), _assert_semantic_references_visible(), _atomic_write_bytes(), _audit_binding(), _audit_row(), _cached(), CachedBundleIntegrityError, _committee_packet_view() (+60 more)
 
 ### Community 8 - "run_phase5r_c3_daily_email_pipeline.py"
 Cohesion: 0.17
@@ -552,8 +552,8 @@ Cohesion: 0.15
 Nodes (39): build_decision_snapshot(), build_market_period_receipt(), build_sequential_simulation_policy(), _constraint_breaches(), _decimal(), _decimal_string(), _month_index(), _nonempty_string() (+31 more)
 
 ### Community 22 - "main"
-Cohesion: 0.09
-Nodes (16): apply_verified_close_stability(), CachedBundleIntegrityError, execute_shadow(), _generate_persisted_role(), load_registry(), output_paths(), Permit receipt/unknown-outcome recovery, never a new attempt., Return the exact non-retryable role failure, if one exists. (+8 more)
+Cohesion: 0.10
+Nodes (14): apply_verified_close_stability(), execute_shadow(), load_registry(), output_paths(), Nonblocking model-output lock that refuses symlinks and hard links., Re-adjudicate from the hashed canonical daily close-stability evidence., Private per-run role receipts with bounded, auditable retries., ShadowOutputLock (+6 more)
 
 ### Community 23 - "phase5r_valuation_evidence_v1.py"
 Cohesion: 0.10
@@ -672,7 +672,7 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 52 - "Scoring"
-Cohesion: 0.26
+Cohesion: 0.24
 Nodes (15): atomic_write_csv(), append_jsonl(), classification(), evaluate(), jsonl(), main(), number(), persist_snapshots() (+7 more)
 
 ### Community 53 - "Completed Phases"

@@ -4,13 +4,14 @@ Decision date: `2026-08-31`
 
 ## Decision
 
-Retain the bounded AI shadow implementation, but keep it **inactive,
-noncanonical, and unable to affect normal recommendations or email**. Do not
-spend the evaluation budget and do not promote an AI role on the evidence
-currently available.
+**Remove AI from the active production path.** Retain only the dormant bounded
+shadow implementation for a future, separately authorized evaluation. It is
+inactive, noncanonical, and unable to affect normal recommendations or email.
+Do not spend the evaluation budget and do not promote an AI role on the
+evidence currently available.
 
-This is the required evidence-backed restriction decision in lieu of ten real
-shadow observations. The deterministic research system remains the production
+This is the required evidence-backed remove decision in lieu of ten real
+shadow observations. The deterministic research system is the sole production
 authority.
 
 ## Evidence
