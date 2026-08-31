@@ -39,6 +39,10 @@ The active workflow is `daily_decision` and the only active email pipeline is
   after a fully passed deterministic refresh it may produce at most one
   evidence-bound AI research review per eligible trading day. It cannot change
   the deterministic decision, positions, risk state, or normal daily email.
+- The current AI operating decision is
+  [`00_project_control/phase5r_ai_operating_decision.md`](00_project_control/phase5r_ai_operating_decision.md):
+  retain the bounded implementation but keep it inactive at `0/10` real
+  observations and `$0` spend until a separately authorized evaluation window.
 - Daily analysis does not imply daily portfolio action.
 - Current research packets are regenerated from the latest completed close and
   SEC evidence; the historical C5 narrative is not a production input.
