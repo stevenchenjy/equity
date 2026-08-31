@@ -347,6 +347,8 @@ def load_registry() -> dict[str, Any]:
         raise ContractError("model registry must be a JSON object")
     required = {
         "schema_version",
+        "authority_status",
+        "superseded_by",
         "mode",
         "live_shadow_enabled",
         "canonical_influence_enabled",
@@ -370,6 +372,12 @@ def load_registry() -> dict[str, Any]:
         raise ContractError("model registry fields do not match the closed contract")
     if registry["schema_version"] != "phase5r_llm_model_registry_v1":
         raise ContractError("model registry schema version mismatch")
+    if (
+        registry["authority_status"] != "historical_nonproduction_fixture"
+        or registry["superseded_by"]
+        != "00_project_control/phase5r_active_production_config.json"
+    ):
+        raise ContractError("model registry authority metadata mismatch")
     if registry["provider"] != "codex_cli_external_auth":
         raise ContractError("model registry provider is not allowlisted")
     if Path(str(registry["provider_executable"])) != ALLOWED_PROVIDER_EXECUTABLE:

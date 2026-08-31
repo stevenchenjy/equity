@@ -16,8 +16,11 @@ from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Any
 
-from create_phase5r_daily_decision_and_brief import expected_market_session
-from phase5r_daily_common import canonical_sha256
+from phase5r_daily_common import (
+    canonical_sha256,
+    expected_market_session,
+    last_completed_market_session,
+)
 from phase5r_evidence_freshness import (
     EvidenceFreshnessError,
     freshness_action_review_reasons,
@@ -915,7 +918,10 @@ def _date_from_period(value: Any) -> str:
     return match.group(0) if match else ""
 
 
-def _expected_verified_close_session(cycle_date: Any) -> str:
+def _expected_verified_close_session(
+    cycle_date: Any,
+    as_of_et: Any | None = None,
+) -> str:
     """Return the canonical completed market session for a packet cycle date.
 
     A Saturday, Sunday, or US market holiday may legitimately use the most
@@ -933,7 +939,15 @@ def _expected_verified_close_session(cycle_date: Any) -> str:
         cycle_day = datetime.strptime(cycle_date, "%Y-%m-%d")
     except ValueError as exc:
         raise ContractError("packet: cycle_date is invalid") from exc
-    return expected_market_session(cycle_day).isoformat()
+    if as_of_et is None:
+        return expected_market_session(cycle_day).isoformat()
+    try:
+        as_of = datetime.fromisoformat(str(as_of_et))
+    except ValueError as exc:
+        raise ContractError("packet: as_of_et must be an ISO timestamp") from exc
+    if as_of.tzinfo is None:
+        raise ContractError("packet: as_of_et must include a timezone")
+    return last_completed_market_session(as_of).isoformat()
 
 
 def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
@@ -1243,7 +1257,10 @@ def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
     if verified_session and (
         re.fullmatch(r"\d{4}-\d{2}-\d{2}", verified_session) is None
         or verified_session
-        != _expected_verified_close_session(packet["cycle_date"])
+        != _expected_verified_close_session(
+            packet["cycle_date"],
+            packet["as_of_et"],
+        )
     ):
         raise ContractError("packet: verified close session is invalid")
     known_sources = set(ids)

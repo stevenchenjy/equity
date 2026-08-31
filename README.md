@@ -30,6 +30,9 @@ The active workflow is `daily_decision` and the only active email pipeline is
 - One decisive brief is eligible after 18:30 America/New_York only for a
   material change, plus a Friday weekly summary. Unchanged weekday email is
   suppressed.
+- Newly added research tickers retain their complete SEC backfill, but only
+  newly discovered material filings dated within seven calendar days can
+  trigger an event alert; historical backlog never creates an email burst.
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
 - `phase5r-production-shadow-v1` is a conditional, noncanonical companion:

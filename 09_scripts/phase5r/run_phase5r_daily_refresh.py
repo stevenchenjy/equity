@@ -74,8 +74,12 @@ STEP_SPECS = [
     # deterministic packet.  Building it here keeps any account-state reads
     # inside the established local workflow, never in the shadow runner.
     ("evidence_packet", "build_phase5r_decision_evidence_packet.py", False),
-    ("current_status", "generate_phase5r_current_status.py", False),
 ]
+CURRENT_STATUS_SPEC = (
+    "current_status",
+    "generate_phase5r_current_status.py",
+    True,
+)
 
 
 def run_step(
@@ -140,7 +144,7 @@ def safe_check() -> int:
     load_inhibit()
     missing = [
         script_name
-        for _, script_name, _ in STEP_SPECS
+        for _, script_name, _ in [*STEP_SPECS, CURRENT_STATUS_SPEC]
         if not (SCRIPT_DIR / script_name).exists()
     ]
     if missing:
@@ -199,6 +203,17 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         "broker_account_read": False,
         "order_code_created": False,
     }
+    atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
+    # The status report must observe this run's final outcome rather than the
+    # prior run.  Treat reporting as non-canonical: a rendering failure is
+    # recorded but cannot turn an otherwise valid deterministic decision into
+    # a failed research cycle.
+    status_step = run_step(
+        *CURRENT_STATUS_SPEC,
+        market_snapshot_mode=market_snapshot_mode,
+    )
+    state["current_status_update"] = status_step
+    state["completed_at"] = iso_now()
     atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
     log_daily_run(
         component="daily_refresh",

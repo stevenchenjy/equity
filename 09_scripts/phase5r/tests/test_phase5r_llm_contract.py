@@ -27,6 +27,22 @@ class ContractTests(unittest.TestCase):
         with self.assertRaisesRegex(ContractError, "cycle_date"):
             _expected_verified_close_session("2026-08-01T00:00:00Z")
 
+    def test_verified_close_uses_prior_session_before_market_close(self) -> None:
+        self.assertEqual(
+            _expected_verified_close_session(
+                "2026-08-31",
+                "2026-08-31T12:30:00-04:00",
+            ),
+            "2026-08-28",
+        )
+        self.assertEqual(
+            _expected_verified_close_session(
+                "2026-08-31",
+                "2026-08-31T16:30:00-04:00",
+            ),
+            "2026-08-31",
+        )
+
     def test_base_fixture_satisfies_all_closed_contracts(self) -> None:
         packet, responses, _ = materialized("g01_stable_hold")
         self.assertIs(validate_packet(packet), packet)

@@ -26,6 +26,7 @@
     "event_driven": true,
     "weekly_summary_weekday": "friday",
     "send_after_et": "18:30",
+    "new_filing_lookback_calendar_days": 7,
     "material_events": [
       "portfolio_action_transition",
       "account_state_conflict",

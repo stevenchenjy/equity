@@ -61,6 +61,16 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         raise ActiveConfigError("one-time model evaluation budget exceeds $5")
     if int(policy.get("maximum_output_tokens", 0)) not in range(1, 4001):
         raise ActiveConfigError("maximum_output_tokens must be between 1 and 4000")
+    notifications = config.get("notifications", {})
+    filing_lookback = notifications.get("new_filing_lookback_calendar_days")
+    if (
+        notifications.get("event_driven") is not True
+        or type(filing_lookback) is not int
+        or filing_lookback not in range(1, 31)
+    ):
+        raise ActiveConfigError(
+            "event-driven notifications require a 1-30 day filing lookback"
+        )
     return config
 
 

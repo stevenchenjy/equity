@@ -1160,8 +1160,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788191589.2899325,
-    "ast_hash": "3c45c32ff6d5eba130ac65953b0d810a",
+    "mtime": 1788193643.6755013,
+    "ast_hash": "13ce0fa9987523a5806a62c3ca08d404",
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/SKILL.md": {
@@ -1450,13 +1450,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py": {
-    "mtime": 1788191844.1628392,
-    "ast_hash": "5bb2913f0795db7937e9d1fc968e145b",
+    "mtime": 1788193643.6734135,
+    "ast_hash": "e3dcbd4d9a5577adf3f6f0312073bcea",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_daily_common.py": {
-    "mtime": 1787712597.1676285,
-    "ast_hash": "31f8e59db1620a38b8be9141c44e9b64",
+    "mtime": 1788193975.0872858,
+    "ast_hash": "03e7732f8ef8861ee336cf97b0461bbc",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_daily_evidence.py": {
@@ -1470,8 +1470,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_refresh.py": {
-    "mtime": 1788191070.0427792,
-    "ast_hash": "7a4f76c8869aa26d10441d197c63c47c",
+    "mtime": 1788193414.4649925,
+    "ast_hash": "7f7f0c7f9d10c0b11123fe04a9258f06",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_contract.py": {
-    "mtime": 1785645560.4971774,
-    "ast_hash": "247c46042d21c7e71a108fcd47c410f4",
+    "mtime": 1788193337.2854986,
+    "ast_hash": "875ba87ddc3a650bc0c25890bd8b6834",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_llm_provider.py": {
@@ -1565,8 +1565,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_llm_shadow.py": {
-    "mtime": 1784987482.958008,
-    "ast_hash": "d4dd8aa9818b83a42ee3c903b2bcfa91",
+    "mtime": 1788193823.958334,
+    "ast_hash": "7f7c1c882c4fafd8e7992694f0a7657d",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_llm_evaluation_policy.md": {
@@ -1635,8 +1635,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_contract.py": {
-    "mtime": 1785612548.978598,
-    "ast_hash": "1a7c8451bc242733238fe970240ae09f",
+    "mtime": 1788193337.2867203,
+    "ast_hash": "be1c2a3503072650c1e3c3facdd16fa1",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_llm_numeric.py": {
@@ -2555,8 +2555,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_active_production_config.json": {
-    "mtime": 1788190945.6311314,
-    "ast_hash": "42db02b0ef96ad73908423b07fc907ec",
+    "mtime": 1788193643.6705844,
+    "ast_hash": "1a6f9e55c94b5bb725f3bcc45c65f227",
     "semantic_hash": ""
   },
   "01_policies/phase5r_valuation_scenario_policy.json": {
@@ -2575,8 +2575,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_active_config.py": {
-    "mtime": 1788189545.2981608,
-    "ast_hash": "0b2ca087869376682017b58e1edbbdd9",
+    "mtime": 1788193643.6717365,
+    "ast_hash": "7b1905ae8964cad35d011e04e246489a",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_model_router.py": {
@@ -2595,8 +2595,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_active_production.py": {
-    "mtime": 1788191340.9974205,
-    "ast_hash": "3ad8eed6240fd6ed9d7632f76a8612ef",
+    "mtime": 1788193823.9595604,
+    "ast_hash": "307acc2d4b4d5eb1d2a436d27ac6f7f4",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/track_phase5r_recommendation_outcomes.py": {
@@ -2612,6 +2612,16 @@
   "00_project_control/phase5r_open_source_adoption_decision.md": {
     "mtime": 1788189545.299061,
     "ast_hash": "682c2eafe0c3bb434b24cdca1b900701",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v3.json": {
+    "mtime": 1788192684.7244737,
+    "ast_hash": "77473d114a3c6741f62ac9f716cae860",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v4.json": {
+    "mtime": 1788192808.0,
+    "ast_hash": "30f21dfbcfdeb334b7cf8787d7661b5a",
     "semantic_hash": ""
   }
 }

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import copy
 import unittest
+from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 
@@ -10,6 +12,9 @@ import phase5r_production_shadow_v1 as shadow
 from track_phase5r_recommendation_outcomes import classification
 from refresh_phase5r_valuation_scenarios import selected_band
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
+import run_phase5r_daily_refresh as daily_refresh
+import create_phase5r_daily_decision_and_brief as decision_builder
+from run_phase5r_llm_shadow import load_registry
 
 
 class ActiveProductionTests(unittest.TestCase):
@@ -93,6 +98,84 @@ class ActiveProductionTests(unittest.TestCase):
             _SOURCE_POLICIES["deterministic_valuation_policy"],
             ("deterministic_policy", ("01_policies",)),
         )
+
+    def test_current_status_observes_the_just_persisted_refresh_outcome(self) -> None:
+        calls: list[str] = []
+        writes: list[dict] = []
+
+        def fake_run_step(name: str, script: str, allowed: bool, **_: object) -> dict:
+            calls.append(name)
+            return {
+                "name": name,
+                "script": script,
+                "exit_code": 0,
+                "allowed_to_fail": allowed,
+                "outcome": "passed",
+                "result_code": "child_completed",
+            }
+
+        with (
+            patch.object(daily_refresh, "load_active_state"),
+            patch.object(daily_refresh, "load_inhibit"),
+            patch.object(daily_refresh, "log_daily_run"),
+            patch.object(daily_refresh, "run_step", side_effect=fake_run_step),
+            patch.object(
+                daily_refresh,
+                "atomic_write_json",
+                side_effect=lambda _path, state: writes.append(copy.deepcopy(state)),
+            ),
+        ):
+            result = daily_refresh.run_refresh(
+                no_lock=True,
+                market_snapshot_mode=daily_refresh.MARKET_SNAPSHOT_REUSE,
+            )
+
+        self.assertEqual(result, 0)
+        self.assertEqual(calls[-1], "current_status")
+        self.assertEqual(writes[0]["outcome"], "passed")
+        self.assertNotIn("current_status_update", writes[0])
+        self.assertEqual(
+            writes[-1]["current_status_update"]["outcome"],
+            "passed",
+        )
+
+    def test_historical_backfill_is_not_a_current_material_event(self) -> None:
+        rows = [
+            {
+                "cycle_date": "2026-08-31",
+                "filing_date": "2026-08-27",
+                "is_new": "yes",
+                "material_event": "yes",
+                "ticker": "RBRK",
+            },
+            {
+                "cycle_date": "2026-08-31",
+                "filing_date": "2025-08-27",
+                "is_new": "yes",
+                "material_event": "yes",
+                "ticker": "BACKFILL",
+            },
+        ]
+        with (
+            patch.object(decision_builder, "cycle_date", return_value="2026-08-31"),
+            patch.object(decision_builder, "read_csv", return_value=rows),
+        ):
+            events = decision_builder.material_events_for_cycle(
+                {"new_filing_lookback_calendar_days": 7}
+            )
+        self.assertEqual([row["ticker"] for row in events], ["RBRK"])
+
+    def test_legacy_registry_is_explicitly_nonproduction(self) -> None:
+        registry = load_registry()
+        self.assertEqual(
+            registry["authority_status"],
+            "historical_nonproduction_fixture",
+        )
+        self.assertEqual(
+            registry["superseded_by"],
+            "00_project_control/phase5r_active_production_config.json",
+        )
+        self.assertFalse(registry["live_shadow_enabled"])
 
 
 if __name__ == "__main__":

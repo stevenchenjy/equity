@@ -280,7 +280,12 @@ def atomic_write_csv(
         with os.fdopen(
             file_descriptor, "w", encoding="utf-8", newline=""
         ) as handle:
-            writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+            writer = csv.DictWriter(
+                handle,
+                fieldnames=fieldnames,
+                extrasaction="ignore",
+                lineterminator="\n",
+            )
             writer.writeheader()
             writer.writerows(rows)
             handle.flush()
@@ -299,7 +304,12 @@ def append_csv_durable(
     path.parent.mkdir(parents=True, exist_ok=True)
     existed = path.exists() and path.stat().st_size > 0
     with path.open("a", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=fieldnames,
+            extrasaction="ignore",
+            lineterminator="\n",
+        )
         if not existed:
             writer.writeheader()
         writer.writerow(row)

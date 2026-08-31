@@ -161,14 +161,28 @@ def execution_conflicts() -> list[str]:
     return sorted(set(conflicts))
 
 
-def material_events_for_cycle() -> list[dict[str, str]]:
-    return [
-        row
-        for row in read_csv(EVIDENCE_LEDGER_PATH)
-        if row.get("cycle_date") == cycle_date()
-        and row.get("is_new") == "yes"
-        and row.get("material_event") == "yes"
-    ]
+def material_events_for_cycle(
+    notification_policy: dict[str, Any],
+) -> list[dict[str, str]]:
+    current_cycle = cycle_date()
+    current_day = date.fromisoformat(current_cycle)
+    lookback_days = int(notification_policy["new_filing_lookback_calendar_days"])
+    earliest_filing_day = current_day - timedelta(days=lookback_days)
+    events: list[dict[str, str]] = []
+    for row in read_csv(EVIDENCE_LEDGER_PATH):
+        if (
+            row.get("cycle_date") != current_cycle
+            or row.get("is_new") != "yes"
+            or row.get("material_event") != "yes"
+        ):
+            continue
+        try:
+            filing_day = date.fromisoformat(row.get("filing_date", ""))
+        except ValueError:
+            continue
+        if earliest_filing_day <= filing_day <= current_day:
+            events.append(row)
+    return events
 
 
 def normalized_held_rows() -> list[dict[str, Any]]:
@@ -303,7 +317,7 @@ def main() -> int:
         if row.get("trend_label") == "contracting"
     ]
     conflicts = execution_conflicts()
-    material_events = material_events_for_cycle()
+    material_events = material_events_for_cycle(active_config["notifications"])
     candidate_recommendations = read_csv(NEW_CANDIDATE_PATH)
     prior_state = read_json(DAILY_DECISION_STATE_PATH, {})
     market_session = (
