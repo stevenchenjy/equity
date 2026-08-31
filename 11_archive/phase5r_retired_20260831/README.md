@@ -20,10 +20,11 @@ The archive preserves 520 previously tracked artifacts, including:
 - dated research outputs, previews, position templates, and review material.
 
 Large ignored runtime evidence is stored outside both Git worktrees at
-`/Users/messssi/LocalArchive/equity/phase5r_retired_20260831/` (684 files,
+`/Users/messssi/LocalArchive/equity/phase5r_retired_20260831/` (693 files,
 approximately 76 MiB). That external archive contains the authoring and runtime
 copies of the model replay corpus, their distinct pilot quarantine records, and
-13 stale ignored authoring reports/previews.
+13 stale ignored authoring reports/previews plus 9 stale ignored runtime
+reports/previews.
 
 ## Recovery
 

@@ -21,7 +21,7 @@ focused test modules.
 2. Recovery tag: `phase5r-pre-cleanup-20260831` preserves the exact pre-cleanup
    tree at commit `5790e00040dcd07973f4366eaea480eff210c306`.
 3. Large ignored evidence: `/Users/messssi/LocalArchive/equity/phase5r_retired_20260831/`
-   holds 684 retired ignored artifacts outside the authoring and runtime clones.
+   holds 693 retired ignored artifacts outside the authoring and runtime clones.
 
 External archive tree digests use SHA-256 over sorted relative-path/file-hash
 pairs:
@@ -33,13 +33,16 @@ pairs:
 | Authoring pilot quarantine | 132 | 1,269,764 | `89167061f51830b7736f5b07a0c264b020f0fa4aaebd1db09c5c73ce97aaba07` |
 | Runtime pilot quarantine | 133 | 1,277,960 | `ae9de740b4bfe9e16088008b1d77b6afb981a291cb6bba64c8090a553eecc7c9` |
 | Authoring retired reports/previews | 13 | 75,002 | `ff2ce40a47dd9c5813beb9f83948e750352727cb37827253612f779dae851bfc` |
+| Runtime retired reports/previews | 9 | 19,784 | `3b1818e64d362189d906a6f5006d5bc094dcc9f03b93d18a435ad6fb22424431` |
 
 ## Reproducible clutter removed
 
 - 1,292 tracked Graphify cache and dated-snapshot files;
 - the obsolete `.gitignore.orig` copy;
-- 277 stale Python bytecode files, including caches for retired modules; and
-- untracked `.DS_Store`, `.pytest_cache`, and empty retired directories.
+- 547 stale Python bytecode files across the authoring and runtime clones,
+  including caches for retired modules;
+- six untracked `.DS_Store` files, 45 runtime Graphify cache files,
+  `.pytest_cache`, and empty retired directories.
 
 The active B2 scorer now writes only its canonical signal CSV and audit row; it
 no longer regenerates deprecated Markdown watchlist/preview copies.
