@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-08-31T12:09:17.000-04:00",
+  "artifact_sha256": "8b4244af3879b238dae5d819ba204172a02091aeee2526d33b2b527cd49f00d8",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v3",
+  "prior_extension_set_sha256": "d35ffe1571918b1ebd85ea5f2cf5c090fdfa0c4cd4bd5aa6b03ddd23e0237e56",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-08-26T12:06:55.000+00:00",
+      "accession_number": "0001104659-26-101067",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-08-31T12:09:17.000-04:00",
+      "cik": "723125",
+      "entity_name": "MICRON TECHNOLOGY INC",
+      "extension_record_sha256": "893b967da8ec1345ce27285185515bfeca7b3b56ff24a3b06e56f5228b0abb5e",
+      "extension_version": "v3",
+      "filing_date": "2026-08-26",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "2a4b6690fe1e00bffa3751acfdb4c1282e4a36abe748f85b91c49192fd4895f2",
+      "source_url": "https://data.sec.gov/submissions/CIK0000723125.json",
+      "ticker": "MU"
+    },
+    {
+      "accepted_at": "2026-08-27T20:06:19.000+00:00",
+      "accession_number": "0001943896-26-000055",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-08-31T12:09:17.000-04:00",
+      "cik": "1943896",
+      "entity_name": "Rubrik, Inc.",
+      "extension_record_sha256": "96780c5d6b9140843e633c960b94008462dd410162601bb6f452930c8ed36f9d",
+      "extension_version": "v3",
+      "filing_date": "2026-08-27",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "47b1cd24f2e275dd82abef5f2d76f9d62a3167886ae88de1b6a4079692a9589a",
+      "source_url": "https://data.sec.gov/submissions/CIK0001943896.json",
+      "ticker": "RBRK"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
