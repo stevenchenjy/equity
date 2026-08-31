@@ -32,16 +32,10 @@ Daily analysis does not imply daily action.
   a concentration or invalidation condition.
 - Every action proposal has `automatic_action_allowed=no`.
 
-## Current Verified Decision
+## Current-State Authority
 
-As of 2026-07-23:
-
-- Headline: `继续持有现有仓位｜今天不新增仓位`.
-- IOT: hold 5 shares; no routine review.
-- RBRK: hold 2 shares; no routine review.
-- IOT SEC revenue trend: strong growth in the latest available quarter.
-- RBRK SEC revenue trend: strong growth, while the reported net margin remains
-  negative and stays visible in the long-term section.
-- Eligible new individual-stock action candidates: none.
-- Account/execution conflicts: none.
-- Automatic action: prohibited.
+This policy contains no dated position, share-count, recommendation, or
+fundamental snapshot. The current decision is the validated
+`04_research/realtime_stock_picker_phase5r/phase5r_daily_decision.json`
+artifact generated from the current local account, current market session, and
+current official evidence. Automatic action remains prohibited in every state.

@@ -5,7 +5,8 @@
 - If dynamic weight is above 8%, generate a whole-share `trim_specific_shares_review` scenario unless an independent thesis break requires `exit_review`.
 - The trim count is the minimum whole-share reduction whose resulting current-price weight is at or below 8%; it is recalculated every run.
 - If dynamic weight is at or below 8% and research remains adequate, use `hold`; do not produce a concentration-only trim.
-- No add is recommended for IOT or RBRK this week.
+- A current holding receives no add proposal unless the current deterministic
+  evidence and every portfolio gate independently support it.
 
 ## Allowed Exact Actions
 

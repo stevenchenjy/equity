@@ -31,17 +31,7 @@ graphify-out/20??-??-??/
 00_project_control/run_logs/phase5r_daily_delivery.lock
 00_project_control/run_logs/phase5r_daily_pipeline.lock
 00_project_control/run_logs/phase5r_runtime_execution_log.csv
-00_project_control/run_logs/phase5r_llm_shadow_state.local.json
-00_project_control/run_logs/phase5r_llm_shadow_scheduler_state.local.json
-00_project_control/run_logs/phase5r_llm_shadow.lock
-00_project_control/phase5r_production_shadow_v1/production_shadow.lock
-00_project_control/run_logs/phase5r_llm_shadow_runs/
-00_project_control/run_logs/phase5r_llm_activation_receipt.local.json
 02_filings/phase5r_daily/
-02_filings/phase5r_replay/
-02_filings/phase5r_llm_replay/
-08_reviews/phase5r_llm_provider_replay/quarantine/
-08_reviews/phase5r_model_pilot/quarantine/
 04_data/phase5r/phase5r_valuation_inputs.local.json
 04_data/phase5r/phase5r_valuation_source_*.local.*
 04_data/phase5r/phase5r_valuation_scenarios.local.json

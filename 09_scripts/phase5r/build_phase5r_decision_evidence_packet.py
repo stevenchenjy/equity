@@ -40,7 +40,7 @@ from phase5r_daily_common import (
     read_json,
     sha256_file,
 )
-from phase5r_llm_contract import PACKET_SCHEMA_VERSION, validate_packet
+from phase5r_packet_contract import PACKET_SCHEMA_VERSION, validate_packet
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
 from phase5r_sec_acceptance import SEC_ACCEPTANCE_INDEX_PATH, acceptance_map

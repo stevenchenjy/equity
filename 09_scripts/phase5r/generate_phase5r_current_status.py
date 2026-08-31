@@ -3,10 +3,7 @@
 
 from __future__ import annotations
 
-import json
-import os
 import subprocess
-from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -37,49 +34,10 @@ OUTCOME_PATH = (
     ROOT / "04_research" / "realtime_stock_picker_phase5r"
     / "phase5r_recommendation_outcomes.local.csv"
 )
-OBSERVATION_PATH = (
-    ROOT / "00_project_control" / "phase5r_production_shadow_v1"
-    / "observation_state.json"
-)
-SHADOW_LEDGER_PATH = (
-    ROOT / "08_reviews" / "phase5r_production_shadow_v1"
-    / "ledger" / "production_shadow_ledger.jsonl"
-)
-
-
 def jsonl_count(path: Path) -> int:
     if not path.exists():
         return 0
     return sum(bool(line.strip()) for line in path.read_text(encoding="utf-8").splitlines())
-
-
-def shadow_cost() -> str:
-    total = Decimal("0")
-    if SHADOW_LEDGER_PATH.exists():
-        for line in SHADOW_LEDGER_PATH.read_text(encoding="utf-8").splitlines():
-            if not line.strip():
-                continue
-            try:
-                value = json.loads(line).get("metered_cost_usd")
-                if value not in {None, "", "unknown"}:
-                    total += Decimal(str(value))
-            except (json.JSONDecodeError, InvalidOperation, AttributeError):
-                continue
-    return format(total, ".6f")
-
-
-def model_authorization_is_blocker(
-    config: dict[str, Any],
-    observation: dict[str, Any],
-    environment: dict[str, str] | None = None,
-) -> bool:
-    active_environment = os.environ if environment is None else environment
-    model_status = str(config.get("model_policy", {}).get("status", ""))
-    return (
-        not model_status.startswith("removed_from_active_production_path_")
-        and not active_environment.get("OPENAI_API_KEY")
-        and observation.get("completed_review_count", 0) < 10
-    )
 
 
 def main() -> int:
@@ -89,7 +47,6 @@ def main() -> int:
     decision = read_json(DAILY_DECISION_JSON_PATH, {})
     account = read_json(ACCOUNT_STATE_PATH, {})
     valuation = read_json(VALUATION_PATH, {"records": []})
-    observation = read_json(OBSERVATION_PATH, {})
     market_rows = read_csv(MARKET_SNAPSHOT_PATH)
     valid_market = [row for row in market_rows if row.get("data_quality_label") in {"ok", "partial"}]
     sessions = sorted({row.get("market_session_date", "") for row in valid_market if row.get("market_session_date")})
@@ -100,8 +57,6 @@ def main() -> int:
         blockers.append("current_market_snapshot_invalid")
     if evidence.get("scan_status") != "ok":
         blockers.append(str(evidence.get("reason") or "official_evidence_refresh_not_ok"))
-    if model_authorization_is_blocker(config, observation):
-        blockers.append("optional_openai_shadow_authorization_absent")
     completed_valuations = sum(
         row.get("status") == "complete" for row in valuation.get("records", [])
         if isinstance(row, dict)
@@ -159,11 +114,12 @@ def main() -> int:
         },
         "model": {
             "status": config["model_policy"]["status"],
-            "completed_real_shadow_observations": observation.get("completed_review_count", 0),
-            "target_real_shadow_observations": 10,
-            "metered_cost_usd": shadow_cost(),
+            "active": False,
+            "calls_allowed": False,
+            "completed_real_shadow_observations": 0,
+            "metered_cost_usd": "0.000000",
             "monthly_hard_cap_usd": config["model_policy"]["monthly_hard_cap_usd"],
-            "api_authorized_in_this_runtime": bool(os.environ.get("OPENAI_API_KEY")),
+            "historical_archive": config["model_policy"]["historical_archive"],
         },
         "blockers": sorted(set(blockers)),
         "boundaries": config["boundaries"],
@@ -180,7 +136,7 @@ def main() -> int:
         f"- Decision: `{status['decision']['code']}`; email `{status['decision']['send_reason'] or 'not generated'}`.",
         f"- Valuation: `{status['valuation']['complete_records']}/{status['valuation']['total_records']}` complete records.",
         f"- Outcome evidence: `{status['outcomes']['recommendation_snapshots']}` snapshots, `{status['outcomes']['evaluated_horizon_rows']}` evaluated horizon rows.",
-        f"- Optional model: `{status['model']['completed_real_shadow_observations']}/10` real observations; metered cost `${status['model']['metered_cost_usd']}`; monthly hard cap `${status['model']['monthly_hard_cap_usd']}`.",
+        f"- Model: removed from active production; calls allowed `{status['model']['calls_allowed']}`; metered cost `${status['model']['metered_cost_usd']}`.",
         f"- Current blockers: `{', '.join(status['blockers']) or 'none'}`.",
         "- Boundaries: research only; no broker read, automatic order, or trade placement.",
         "",

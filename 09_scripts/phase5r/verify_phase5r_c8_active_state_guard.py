@@ -48,9 +48,7 @@ STALE_REPORT_PATH = (
     CONTROL_DIR / "phase5r_c8_stale_file_guard_report.csv"
 )
 POLICY_PATH = CONTROL_DIR / "phase5r_c8_active_state_policy.md"
-MODEL_REGISTRY_PATH = (
-    CONTROL_DIR / "phase5r_llm_model_registry.json"
-)
+ACTIVE_CONFIG_PATH = CONTROL_DIR / "phase5r_active_production_config.json"
 SMTP_CONFIG_PATH = (
     ROOT
     / "07_automation"
@@ -89,6 +87,10 @@ FORBIDDEN_CANONICAL_MARKERS = (
     "phase5r_c6",
     "phase5r_c7",
     "send_phase5r_c",
+    "production_shadow",
+    "phase5r_llm_provider",
+    "run_phase5r_llm_shadow",
+    "openai_api_key",
 )
 EXPECTED_STATE = {
     "current_workflow": "daily_decision",
@@ -106,12 +108,12 @@ EXPECTED_STATE = {
     "broker_connection_allowed": "no",
     "order_code_allowed": "no",
     "manual_execution_only": "yes",
-    "llm_shadow_canonical_influence": "disabled",
-    "llm_shadow_scheduler_status": "legacy_standalone_not_installed",
-    "production_shadow_status": "authorized_noncanonical_companion_pending_fresh_deterministic_refresh",
-    "production_shadow_scheduler_status": "dailyrefresh_child_no_standalone_launchagent",
+    "llm_shadow_canonical_influence": "disabled_archived",
+    "llm_shadow_scheduler_status": "retired_archived_not_installed",
+    "production_shadow_status": "retired_archived",
+    "production_shadow_scheduler_status": "retired_archived_no_launchagent",
     "production_shadow_canonical_influence": "disabled",
-    "production_shadow_email_status": "no_normal_llm_email_first_fully_valid_noncanonical_report_only",
+    "production_shadow_email_status": "retired_archived",
 }
 
 
@@ -395,23 +397,23 @@ def collect_checks(*, include_runtime: bool) -> list[Check]:
         )
     )
 
-    registry = _read_json(MODEL_REGISTRY_PATH)
+    registry = _read_json(ACTIVE_CONFIG_PATH).get("model_policy", {})
     model_disabled = (
-        registry.get("mode") == "offline_fixture"
-        and registry.get("live_shadow_enabled") is False
-        and registry.get("canonical_influence_enabled") is False
-        and registry.get("email_eligible") is False
-        and registry.get("automatic_action_allowed") is False
-        and registry.get("broker_connection_allowed") is False
-        and registry.get("order_code_allowed") is False
+        registry.get("status") == "removed_from_active_production"
+        and registry.get("active") is False
+        and registry.get("calls_allowed") is False
+        and registry.get("actual_calls") == 0
+        and registry.get("metered_cost_usd") == 0.0
+        and registry.get("monthly_hard_cap_usd") == 0.0
+        and registry.get("canonical_authority") is False
     )
     checks.append(
         Check(
             "model_influence.disabled",
             model_disabled,
             (
-                f"mode={registry.get('mode')!r};"
-                f"live={registry.get('live_shadow_enabled')!r}"
+                f"status={registry.get('status')!r};"
+                f"calls_allowed={registry.get('calls_allowed')!r}"
             ),
         )
     )
@@ -423,6 +425,7 @@ def collect_checks(*, include_runtime: bool) -> list[Check]:
         ALLOWED_PATH,
         DEPRECATED_PATH,
         STALE_REPORT_PATH,
+        ACTIVE_CONFIG_PATH,
     )
     missing_control = [
         str(path.relative_to(ROOT))

@@ -35,15 +35,11 @@ The active workflow is `daily_decision` and the only active email pipeline is
   trigger an event alert; historical backlog never creates an email burst.
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
-- `phase5r-production-shadow-v1` is a conditional, noncanonical companion:
-  after a fully passed deterministic refresh it may produce at most one
-  evidence-bound AI research review per eligible trading day. It cannot change
-  the deterministic decision, positions, risk state, or normal daily email.
 - The current AI operating decision is
   [`00_project_control/phase5r_ai_operating_decision.md`](00_project_control/phase5r_ai_operating_decision.md):
-  remove AI from the active production path at `0/10` real observations and
-  `$0` spend, retaining only dormant code for a separately authorized future
-  evaluation window.
+  AI is removed from active production at `0/10` real observations and `$0`
+  spend. Historical model code and evidence are archived; production performs
+  no model credential lookup or provider call.
 - Daily analysis does not imply daily portfolio action.
 - Current research packets are regenerated from the latest completed close and
   SEC evidence; the historical C5 narrative is not a production input.
@@ -95,22 +91,20 @@ cd /Users/messssi/LocalRuntime/equity
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailydecision --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/verify_phase5r_production_shadow_readiness.py
-/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/generate_phase5r_current_status.py
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/run_phase5r_active_tests.py
 ```
 
-These checks do not read SMTP configuration, send email, connect to a broker,
-or create orders. The production-shadow readiness check also does not create a
-provider client or probe credentials.
+These checks do not read SMTP configuration, send email, invoke a model,
+connect to a broker, or create orders.
 
 The single active configuration is
 [`00_project_control/phase5r_active_production_config.json`](00_project_control/phase5r_active_production_config.json).
 The generated current status is
-`00_project_control/phase5r_current_production_status.local.md`; older dated
-pilot registries and reports are historical evidence.
+`00_project_control/phase5r_current_production_status.local.md`. Retired
+material is isolated under `11_archive/phase5r_retired_20260831/`; the complete
+pre-cleanup workspace is recoverable from tag `phase5r-pre-cleanup-20260831`.
 
 After a manual trade or cash change, preview and then explicitly apply the
 entire current position set in one command:

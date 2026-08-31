@@ -3,14 +3,13 @@ from __future__ import annotations
 from copy import deepcopy
 import unittest
 
-from _support import SCRIPT_DIR, materialized, rehash  # noqa: F401
+from _support import SCRIPT_DIR  # noqa: F401
 from phase5r_evidence_freshness import (
     EvidenceFreshnessError,
     build_evidence_freshness_receipt,
     freshness_action_review_reasons,
     validate_evidence_freshness_receipt,
 )
-from phase5r_llm_contract import adjudicate
 
 
 AS_OF = "2026-07-26T18:00:00Z"
@@ -198,128 +197,6 @@ class EvidenceFreshnessTests(unittest.TestCase):
             build_evidence_freshness_receipt(
                 **inputs  # type: ignore[arg-type]
             )
-
-    def test_legacy_non_transition_packet_without_receipt_is_compatible(
-        self,
-    ) -> None:
-        packet, responses, closes = materialized("g01_stable_hold")
-        del packet["evidence_freshness"]
-        packet = rehash(packet)
-        for response in responses.values():
-            response["packet_id"] = packet["packet_id"]
-        result = adjudicate(
-            packet,
-            responses["analyst"],
-            responses["committee"],
-            responses["critic"],
-            distinct_valid_closes=closes,
-        )
-        decision = result["ticker_decisions"][0]
-        self.assertEqual(decision["research_classification"], "hold_existing")
-        self.assertEqual(decision["classification"], "hold_existing")
-        self.assertEqual(decision["action_review_status"], "not_applicable")
-        self.assertNotIn(
-            "transition_freshness_receipt_missing:TST",
-            decision["action_review_reasons"],
-        )
-
-    def test_legacy_transition_without_receipt_blocks_action_only(
-        self,
-    ) -> None:
-        packet, responses, closes = materialized("g08_add_second_close")
-        del packet["evidence_freshness"]
-        packet = rehash(packet)
-        for response in responses.values():
-            response["packet_id"] = packet["packet_id"]
-        result = adjudicate(
-            packet,
-            responses["analyst"],
-            responses["committee"],
-            responses["critic"],
-            distinct_valid_closes=closes,
-        )
-        decision = result["ticker_decisions"][0]
-        self.assertEqual(
-            decision["research_classification"],
-            "paper_trade_candidate",
-        )
-        self.assertEqual(decision["classification"], "hold_existing")
-        self.assertEqual(decision["action_review_status"], "blocked")
-        self.assertIn(
-            "transition_freshness_receipt_missing:TST",
-            decision["action_review_reasons"],
-        )
-        self.assertNotIn(
-            "transition_freshness_receipt_missing:TST",
-            decision["research_reasons"],
-        )
-        self.assertTrue(decision["validation_passed"])
-
-    def test_expired_scan_receipt_blocks_action_without_erasing_research(
-        self,
-    ) -> None:
-        packet, responses, closes = materialized("g08_add_second_close")
-        current = packet["evidence_freshness"][0]
-        expired = build_evidence_freshness_receipt(
-            ticker="TST",
-            as_of_utc=current["as_of_utc"],
-            sec_scan={
-                "status_artifact_sha256": current["sec_scan"][
-                    "status_artifact_sha256"
-                ],
-                "completed_through_utc": "2026-07-20T22:20:00Z",
-                "ticker_scanned": True,
-                "complete": True,
-            },
-            market={
-                key: current["market"][key]
-                for key in (
-                    "observed_at_utc",
-                    "market_session_date",
-                    "expected_market_session_date",
-                    "complete_close",
-                )
-            },
-            valuation={
-                key: current["valuation"][key]
-                for key in (
-                    "valuation_receipt_sha256",
-                    "receipt_as_of_utc",
-                    "market_input_at_utc",
-                    "market_session_date",
-                    "expected_market_session_date",
-                    "scenario_refreshed_at_utc",
-                    "complete",
-                )
-            },
-            durable_sec_source_ids=current["durable_sec_source_ids"],
-        )
-        packet["evidence_freshness"][0] = expired
-        packet = rehash(packet)
-        for response in responses.values():
-            response["packet_id"] = packet["packet_id"]
-        result = adjudicate(
-            packet,
-            responses["analyst"],
-            responses["committee"],
-            responses["critic"],
-            distinct_valid_closes=closes,
-        )
-        decision = result["ticker_decisions"][0]
-        self.assertEqual(
-            decision["research_classification"],
-            "paper_trade_candidate",
-        )
-        self.assertEqual(decision["classification"], "hold_existing")
-        self.assertIn(
-            "transition_sec_scan_not_current:TST",
-            decision["action_review_reasons"],
-        )
-        self.assertNotIn(
-            "transition_sec_scan_not_current:TST",
-            decision["research_reasons"],
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

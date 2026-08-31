@@ -249,25 +249,11 @@ class B2RefreshCadenceTests(unittest.TestCase):
             refresh_scheduler.MARKET_SNAPSHOT_REUSE,
         )
 
-    def test_scheduler_reuse_never_starts_shadow_or_a_second_child(self) -> None:
+    def test_scheduler_reuse_starts_only_one_deterministic_child(self) -> None:
         scheduler_state: dict[str, object] = {
             "schema_version": "phase5r_daily_scheduler_state_v1",
             "dates": {},
         }
-        refresh_state = {
-            "schema_version": "phase5r_daily_refresh_state_v1",
-            "outcome": "passed",
-            "decision_created": True,
-            "hard_failures": [],
-            "soft_failures": [],
-            "started_at": "2026-08-05T12:30:00-04:00",
-            "completed_at": "2026-08-05T12:30:01-04:00",
-        }
-
-        def fake_read_json(path: Path, default: object) -> object:
-            if path == refresh_scheduler.DAILY_REFRESH_STATE_PATH:
-                return refresh_state
-            return scheduler_state
 
         completed = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
         with ExitStack() as stack:
@@ -286,15 +272,8 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(
                 patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T12:30:00-04:00")
             )
-            stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
+            stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
-            stack.enter_context(
-                patch.object(
-                    refresh_scheduler,
-                    "production_shadow_scheduler_enabled",
-                    return_value=True,
-                )
-            )
             run = stack.enter_context(
                 patch.object(refresh_scheduler.subprocess, "run", return_value=completed)
             )
@@ -313,28 +292,13 @@ class B2RefreshCadenceTests(unittest.TestCase):
             refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
         )
 
-    def test_failed_post_close_massive_refresh_never_starts_shadow_or_email(self) -> None:
-        """A Massive B2 failure is a hard daily gate, not a shadow/email trigger."""
+    def test_failed_post_close_refresh_never_starts_a_second_child(self) -> None:
+        """A failed deterministic child still reserves the one market fetch."""
 
         scheduler_state: dict[str, object] = {
             "schema_version": "phase5r_daily_scheduler_state_v1",
             "dates": {},
         }
-        refresh_state = {
-            "schema_version": "phase5r_daily_refresh_state_v1",
-            "outcome": "degraded_decision_created",
-            "decision_created": True,
-            "hard_failures": ["market_refresh:massive_rate_limited"],
-            "soft_failures": [],
-            "started_at": "2026-08-05T17:45:00-04:00",
-            "completed_at": "2026-08-05T17:45:01-04:00",
-        }
-
-        def fake_read_json(path: Path, default: object) -> object:
-            if path == refresh_scheduler.DAILY_REFRESH_STATE_PATH:
-                return refresh_state
-            return scheduler_state
-
         refresh = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
         with ExitStack() as stack:
             stack.enter_context(
@@ -352,7 +316,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(
                 patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T17:45:00-04:00")
             )
-            stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
+            stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
             run = stack.enter_context(
                 patch.object(refresh_scheduler.subprocess, "run", return_value=refresh)
@@ -367,8 +331,6 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
         command = run.call_args.args[0]
         self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), command)
-        self.assertNotIn(str(refresh_scheduler.PRODUCTION_SHADOW_RUNNER), command)
-        self.assertNotIn(str(refresh_scheduler.PRODUCTION_SHADOW_EMAIL_RUNNER), command)
         date_state = scheduler_state["dates"]["2026-08-05"]
         self.assertIn(
             refresh_scheduler.POST_CLOSE_MARKET_SLOT,
@@ -404,82 +366,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(result["action_label"], "insufficient_data")
         self.assertEqual(result["total_score"], "0.00")
 
-    def test_terminal_shadow_provider_failure_never_starts_email_child(self) -> None:
-        """Even after a valid refresh, terminal shadow output cannot authorize email."""
-
-        scheduler_state: dict[str, object] = {
-            "schema_version": "phase5r_daily_scheduler_state_v1",
-            "dates": {},
-        }
-        refresh_state = {
-            "schema_version": "phase5r_daily_refresh_state_v1",
-            "outcome": "passed",
-            "decision_created": True,
-            "hard_failures": [],
-            "soft_failures": [],
-            "started_at": "2026-08-05T17:45:00-04:00",
-            "completed_at": "2026-08-05T17:45:01-04:00",
-        }
-
-        def fake_read_json(path: Path, default: object) -> object:
-            if path == refresh_scheduler.DAILY_REFRESH_STATE_PATH:
-                return refresh_state
-            return scheduler_state
-
-        refresh = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
-        failed_shadow = refresh_scheduler.subprocess.CompletedProcess(
-            ["shadow"],
-            1,
-            stdout=json.dumps({"outcome": "terminal_failure", "reason": "api_authentication"}),
-        )
-        with ExitStack() as stack:
-            stack.enter_context(
-                patch.object(
-                    refresh_scheduler,
-                    "load_active_state",
-                    return_value={"operational_from": "2026-08-01"},
-                )
-            )
-            stack.enter_context(
-                patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False})
-            )
-            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-05"))
-            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=POST_CLOSE))
-            stack.enter_context(
-                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T17:45:00-04:00")
-            )
-            stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
-            stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
-            stack.enter_context(
-                patch.object(
-                    refresh_scheduler,
-                    "production_shadow_scheduler_enabled",
-                    return_value=True,
-                )
-            )
-            run = stack.enter_context(
-                patch.object(
-                    refresh_scheduler.subprocess,
-                    "run",
-                    side_effect=[refresh, failed_shadow],
-                )
-            )
-            stack.enter_context(
-                patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"])
-            )
-            with redirect_stdout(io.StringIO()):
-                result = refresh_scheduler.main()
-
-        self.assertEqual(result, 0)
-        self.assertEqual(run.call_count, 2)
-        commands = [call.args[0] for call in run.call_args_list]
-        self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), commands[0])
-        self.assertIn(str(refresh_scheduler.PRODUCTION_SHADOW_RUNNER), commands[1])
-        self.assertTrue(
-            all(str(refresh_scheduler.PRODUCTION_SHADOW_EMAIL_RUNNER) not in command for command in commands)
-        )
-
-    def test_sec_only_runtime_marker_invokes_no_daily_or_shadow_path(self) -> None:
+    def test_sec_only_runtime_marker_invokes_no_daily_or_model_path(self) -> None:
         """The existing launchd job can refresh SEC evidence without B2 or email."""
 
         completed = refresh_scheduler.subprocess.CompletedProcess(["sec"], 0)

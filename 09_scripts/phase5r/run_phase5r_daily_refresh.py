@@ -70,9 +70,8 @@ STEP_SPECS = [
         "track_phase5r_recommendation_outcomes.py",
         False,
     ),
-    # The production-shadow companion reads only this already-sanitized,
-    # deterministic packet.  Building it here keeps any account-state reads
-    # inside the established local workflow, never in the shadow runner.
+    # Persist the sanitized deterministic packet as an auditable research
+    # artifact. No model or external inference path consumes it in production.
     ("evidence_packet", "build_phase5r_decision_evidence_packet.py", False),
 ]
 CURRENT_STATUS_SPEC = (

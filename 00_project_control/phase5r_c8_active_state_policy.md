@@ -3,9 +3,10 @@
 ## Purpose
 
 Phase 5R has one canonical low-attention operating workflow:
-`daily_decision / phase5r_daily`. Historical C1–C7 weekly or direct-send
-artifacts remain available only for audit provenance. Their existence never
-authorizes them as decision inputs, senders, or schedulers.
+`daily_decision / phase5r_daily`. Historical C1–C7, Phase 0, model-pilot,
+replay, and shadow artifacts are isolated beneath
+`11_archive/phase5r_retired_20260831/`. Their existence never authorizes them
+as decision inputs, senders, providers, or schedulers.
 
 ## Authority Order
 
@@ -36,12 +37,10 @@ The only standalone active launchd jobs are:
 - `com.steven.phase5r.dailyrefresh`
 - `com.steven.phase5r.dailydecision`
 
-`dailybrief`, `weeklyconviction`, `weeklycatchup`, and the legacy standalone
-`llmshadow` job remain unloaded. The separately authorized
-`phase5r-production-shadow-v1` is not a LaunchAgent: the daily-refresh
-scheduler may invoke it as a noncanonical child only after the just-written
-deterministic refresh is fully passed. It cannot alter the deterministic
-decision, position, risk state, or normal daily email.
+`dailybrief`, `weeklyconviction`, `weeklycatchup`, and `llmshadow` remain
+unloaded and their installers are archived. The daily-refresh launcher reads
+only the market-data credential; no model credential or provider path exists
+in the active scheduler.
 
 ## Stale-File Guard
 
@@ -54,9 +53,8 @@ decision, position, risk state, or normal daily email.
 - `current_positions.local.csv` and `current_account_state.local.json` are the
   only current local portfolio sources.
 - Model artifacts cannot influence the canonical decision or normal daily
-  email. The separate production-shadow companion is limited to its own
-  validated, noncanonical report surface and remains blocked until its
-  deterministic freshness, evidence, contract, privacy, and cost gates pass.
+  email. Restoring any provider code is a separately reviewed future project,
+  not an active configuration switch.
 
 ## Pipeline Requirement
 

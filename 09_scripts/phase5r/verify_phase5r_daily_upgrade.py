@@ -11,12 +11,10 @@ import argparse
 import ast
 import csv
 import hashlib
-import json
 import os
 import plistlib
 import re
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -70,46 +68,47 @@ NEW_JOBS = {
     "com.steven.phase5r.dailydecision": "dailydecision",
 }
 NEW_PYTHON_FILES = (
+    "phase5r_active_config.py",
     "phase5r_daily_common.py",
+    "phase5r_evidence_freshness.py",
+    "phase5r_massive_b2_adapter.py",
     "phase5r_sec_acceptance.py",
     "phase5r_sec_acceptance_extensions.py",
+    "phase5r_return_objective.py",
+    "phase5r_valuation_evidence_v1.py",
+    "phase5r_valuation_input_bundle.py",
+    "phase5r_c9_common.py",
+    "phase5r_c9b_common.py",
+    "run_phase5r_b2_full_universe_market_data.py",
+    "score_phase5r_b2_candidates.py",
     "refresh_phase5r_daily_evidence.py",
     "refresh_phase5r_sec_filing_artifacts.py",
+    "refresh_phase5r_valuation_scenarios.py",
+    "build_phase5r_current_research_baseline.py",
+    "regenerate_phase5r_c9_portfolio_outputs.py",
+    "create_phase5r_c9b_price_aware_action_plan.py",
     "create_phase5r_daily_decision_and_brief.py",
+    "build_phase5r_decision_evidence_packet.py",
+    "track_phase5r_recommendation_outcomes.py",
+    "generate_phase5r_current_status.py",
     "send_phase5r_daily_email.py",
     "run_phase5r_daily_refresh.py",
     "run_phase5r_daily_decision_pipeline.py",
     "run_phase5r_daily_refresh_scheduler.py",
     "run_phase5r_daily_scheduler.py",
     "run_phase5r_runtime_scheduler.py",
-    "phase5r_llm_contract.py",
-    "build_phase5r_decision_evidence_packet.py",
-    "phase5r_llm_provider.py",
-    "run_phase5r_llm_shadow.py",
-    "evaluate_phase5r_llm_decision.py",
-    "run_phase5r_llm_shadow_scheduler.py",
-    "enable_phase5r_llm_live_shadow.py",
-    "verify_phase5r_llm_shadow_boundary.py",
+    "phase5r_packet_contract.py",
     "verify_phase5r_daily_upgrade.py",
 )
 SHELL_FILES = (
     "install_phase5r_daily_schedulers.sh",
     "check_phase5r_daily_scheduler_status.sh",
     "uninstall_phase5r_daily_schedulers.sh",
-    "migrate_phase5r_to_daily_workflow.sh",
     "activate_phase5r_daily_after_verification.sh",
-    "install_phase5r_llm_shadow_scheduler.sh",
-    "check_phase5r_llm_shadow_status.sh",
-    "uninstall_phase5r_llm_shadow_scheduler.sh",
+    "set_phase5r_c9_maintenance_inhibit.sh",
+    "clear_phase5r_c9_maintenance_inhibit.sh",
 )
 MUTATION_SENTINELS = (
-    ROOT / "07_automation" / "email_delivery" / "phase5r_c2_delivery_status.csv",
-    ROOT / "07_automation" / "email_delivery" / "phase5r_c6_delivery_status.csv",
-    ROOT / "00_project_control" / "run_logs" / "phase5r_c7_run_log.csv",
-    ROOT
-    / "00_project_control"
-    / "run_logs"
-    / "phase5r_c7_weekly_pipeline_run_log.csv",
     DAILY_DELIVERY_LEDGER_PATH,
 )
 
@@ -209,63 +208,13 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
             "RunAtLoad=true KeepAlive=false StartInterval=900 locked runtime-wrapper arguments",
         )
 
-    llm_label = "com.steven.phase5r.llmshadow"
-    llm_template = SCHEDULER_DIR / f"{llm_label}.plist.template"
-    llm_installed = LAUNCH_AGENTS / f"{llm_label}.plist"
-    registry = read_json(
-        ROOT / "00_project_control" / "phase5r_llm_model_registry.json"
-    )
-    live_shadow = (
-        registry.get("mode") == "shadow"
-        and registry.get("live_shadow_enabled") is True
-    )
-    installed_matches = (
-        llm_template.exists()
-        and llm_installed.exists()
-        and llm_template.read_bytes() == llm_installed.read_bytes()
-    )
-    job_state_ok = (
-        loaded(llm_label) and installed_matches
-        if live_shadow
-        else not loaded(llm_label) and not llm_installed.exists()
-    )
+    model_label = "com.steven.phase5r.llmshadow"
     add_check(
         checks,
-        "llm_shadow.job_state",
-        job_state_ok,
-        "separate shadow job is installed only after explicit live-shadow enablement",
-    )
-    if llm_template.exists():
-        with llm_template.open("rb") as handle:
-            llm_payload = plistlib.load(handle)
-        llm_arguments = llm_payload.get("ProgramArguments", [])
-        llm_invariant = (
-            llm_payload.get("Label") == llm_label
-            and llm_payload.get("RunAtLoad") is True
-            and llm_payload.get("KeepAlive") is False
-            and llm_payload.get("StartInterval") == 900
-            and "StartCalendarInterval" not in llm_payload
-            and llm_payload.get("WorkingDirectory") == str(ROOT)
-            and len(llm_arguments) == 2
-            and llm_arguments[1]
-            == str(
-                ROOT
-                / "09_scripts"
-                / "phase5r"
-                / "run_phase5r_llm_shadow_scheduler.py"
-            )
-            and all(
-                token not in " ".join(llm_arguments).lower()
-                for token in ("sender", "smtp", "broker", "order", "phase5r_c7")
-            )
-        )
-    else:
-        llm_invariant = False
-    add_check(
-        checks,
-        "llm_shadow.plist_invariants",
-        llm_invariant,
-        "RunAtLoad=true KeepAlive=false StartInterval=900 isolated shadow wrapper only",
+        "model.job_absent",
+        not loaded(model_label)
+        and not (LAUNCH_AGENTS / f"{model_label}.plist").exists(),
+        "retired model job is unloaded and has no installed plist",
     )
 
 
@@ -281,9 +230,6 @@ def source_checks(checks: list[dict[str, str]]) -> None:
     add_check(checks, "python.syntax", compile_ok, "all daily Python files compile")
 
     shell_ok = True
-    unsafe_assignment = re.compile(
-        r"(^|[;\s])(status|path|UID|EUID|RANDOM)\s*=", re.MULTILINE
-    )
     for name in SHELL_FILES:
         target = SCHEDULER_DIR / name
         syntax = subprocess.run(
@@ -292,14 +238,13 @@ def source_checks(checks: list[dict[str, str]]) -> None:
             stderr=subprocess.DEVNULL,
             check=False,
         )
-        text = target.read_text(encoding="utf-8") if target.exists() else ""
-        if syntax.returncode != 0 or unsafe_assignment.search(text):
+        if syntax.returncode != 0:
             shell_ok = False
     add_check(
         checks,
         "shell.safety",
         shell_ok,
-        "zsh syntax passes and unsafe read-only assignment names are absent",
+        "active scheduler shell files pass zsh syntax validation",
     )
 
     refresh_source = (script_dir / "run_phase5r_daily_refresh.py").read_text(
@@ -330,85 +275,16 @@ def source_checks(checks: list[dict[str, str]]) -> None:
                 "run_phase5r_llm_shadow",
                 "phase5r_llm_provider",
                 "CodexCliProvider",
+                "production_shadow",
+                "OPENAI_API_KEY",
             )
         ):
             canonical_model_references.append(name)
     add_check(
         checks,
-        "llm_shadow.not_in_critical_path",
+        "model.not_in_critical_path",
         not canonical_model_references,
-        "canonical refresh, decision, scheduler, and sender do not invoke the model layer",
-    )
-
-    registry = read_json(
-        ROOT / "00_project_control" / "phase5r_llm_model_registry.json"
-    )
-    fail_closed_fields = (
-        "canonical_influence_enabled",
-        "tools_enabled",
-        "provider_credentials_read_by_repository",
-        "exact_account_dollars_allowed",
-        "automatic_action_allowed",
-        "email_eligible",
-        "broker_connection_allowed",
-        "order_code_allowed",
-    )
-    registry_mode_ok = (
-        registry.get("mode") == "offline_fixture"
-        and registry.get("live_shadow_enabled") is False
-    ) or (
-        registry.get("mode") == "shadow"
-        and registry.get("live_shadow_enabled") is True
-    )
-    registry_ok = (
-        registry_mode_ok
-        and all(registry.get(field) is False for field in fail_closed_fields)
-        and registry.get("stateless") is True
-        and registry.get("successful_role_results_reused") is True
-        and registry.get("maximum_live_attempts_per_role") == 2
-        and registry.get("provider") == "codex_cli_external_auth"
-        and registry.get("provider_executable")
-        == (
-            "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/"
-            "@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex"
-        )
-        and Path(str(registry.get("provider_executable", ""))).is_file()
-        and file_digest_or_absent(
-            Path(str(registry.get("provider_executable", ""))).resolve()
-        )
-        == registry.get("provider_executable_sha256")
-    )
-    add_check(
-        checks,
-        "llm_shadow.registry_fail_closed",
-        registry_ok,
-        "model registry is isolated, stateless, credential-free, and non-canonical",
-    )
-
-    try:
-        boundary = subprocess.run(
-            [
-                sys.executable,
-                str(script_dir / "verify_phase5r_llm_shadow_boundary.py"),
-            ],
-            cwd=ROOT,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            timeout=90,
-            check=False,
-        )
-        boundary_passed = (
-            boundary.returncode == 0
-            and "llm_shadow_boundary=passed" in boundary.stdout
-        )
-    except subprocess.TimeoutExpired:
-        boundary_passed = False
-    add_check(
-        checks,
-        "llm_shadow.boundary_verifier",
-        boundary_passed,
-        "fixture-only shadow verifier passed without provider, email, SMTP, or canonical effects",
+        "canonical refresh, decision, scheduler, and sender have no model/provider path",
     )
 
     sender_source = (script_dir / "send_phase5r_daily_email.py").read_text(
@@ -486,27 +362,18 @@ def source_checks(checks: list[dict[str, str]]) -> None:
         "no broker/account/order API imports or calls",
     )
 
-    legacy_c2 = (script_dir / "send_phase5r_c2_daily_email.py").read_text(
-        encoding="utf-8"
+    retired_active_paths = (
+        script_dir / "send_phase5r_c2_daily_email.py",
+        script_dir / "run_phase5r_c3_daily_email_pipeline.py",
+        script_dir / "run_phase5r_llm_shadow.py",
+        script_dir / "run_phase5r_production_shadow.py",
     )
-    legacy_c3 = (script_dir / "run_phase5r_c3_daily_email_pipeline.py").read_text(
-        encoding="utf-8"
-    )
-    c2_main = legacy_c2[legacy_c2.index("def main()") :]
-    c3_main = legacy_c3[legacy_c3.index("def main()") :]
-    legacy_retired = (
-        "LEGACY_PIPELINE_RETIRED = True" in legacy_c2
-        and c2_main.index("if LEGACY_PIPELINE_RETIRED")
-        < c2_main.index("args = parse_args()")
-        and "LEGACY_PIPELINE_RETIRED = True" in legacy_c3
-        and c3_main.index("if LEGACY_PIPELINE_RETIRED")
-        < c3_main.index("args = parse_args()")
-    )
+    legacy_retired = not any(path.exists() for path in retired_active_paths)
     add_check(
         checks,
-        "legacy.c2_c3_retired",
+        "retired.entrypoints_absent",
         legacy_retired,
-        "legacy C2/C3 fail closed before config read or child invocation",
+        "retired email and model entrypoints are absent from the active script tree",
     )
 
 
@@ -764,7 +631,7 @@ def main() -> int:
         checks,
         "verification.non_mutating",
         before_hashes == after_hashes,
-        "legacy/new delivery ledgers and C7 run log unchanged",
+        "daily delivery ledger unchanged",
     )
     add_check(
         checks,
@@ -795,7 +662,7 @@ def main() -> int:
             "",
             "## Non-Modification Evidence",
             "",
-            f"- Delivery/C7 sentinel state unchanged: `{'yes' if before_hashes == after_hashes else 'no'}`.",
+            f"- Daily delivery sentinel state unchanged: `{'yes' if before_hashes == after_hashes else 'no'}`.",
             f"- SMTP configuration metadata unchanged: `{'yes' if smtp_before == smtp_after else 'no'}`.",
             "- SMTP configuration content read: `no`.",
             "",

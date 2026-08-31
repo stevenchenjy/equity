@@ -140,6 +140,7 @@ The two active daily plist templates and their installer/status tooling point
 to `LocalRuntime`. Phase5R Python runtime paths derive `ROOT` from the checked
 out script location and therefore work in both authoring and runtime clones.
 Older `dailybrief`, `weeklyconviction`, `weeklycatchup`, and standalone
-`llmshadow` plist templates retain historical Desktop paths because those jobs
-are retired/uninstalled and are explicitly rejected by the active status
-guards. They are not production entrypoints.
+`llmshadow` plist templates are under
+`11_archive/phase5r_retired_20260831/07_automation/scheduler/`. Those jobs are
+retired/uninstalled, are rejected by the active status guards, and are not
+production entrypoints.

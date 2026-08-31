@@ -33,8 +33,6 @@ POSITION_DIR = ROOT / "05_risk_and_positions"
 RESEARCH_DIR = ROOT / "04_research" / "realtime_stock_picker_phase5r"
 
 EXECUTION_FILE = EXECUTION_DIR / "manual_executions.local.csv"
-EXECUTION_TEMPLATE = EXECUTION_DIR / "manual_executions.local.csv.template"
-EXECUTION_EXAMPLE = EXECUTION_DIR / "manual_executions.local.csv.example"
 PENDING_REPORT = EXECUTION_DIR / "phase5r_c9b_pending_execution_report.csv"
 CONFIRMED_REPORT = EXECUTION_DIR / "phase5r_c9b_confirmed_execution_report.csv"
 RECONCILIATION_REPORT = EXECUTION_DIR / "phase5r_c9b_reconciliation_report.csv"
@@ -380,11 +378,9 @@ __all__ = [
     "C9_INHIBIT",
     "CONFIRMED_REPORT",
     "CURRENT_POSITIONS",
-    "EXECUTION_EXAMPLE",
     "EXECUTION_FIELDS",
     "EXECUTION_FILE",
     "EXECUTION_RESEARCH_REPORT",
-    "EXECUTION_TEMPLATE",
     "MARKET_SNAPSHOT",
     "PENDING_REPORT",
     "POST_EXECUTION_SUMMARY",

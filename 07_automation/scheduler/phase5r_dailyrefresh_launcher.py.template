@@ -1,5 +1,5 @@
 #!/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
-"""Load runtime-only credentials from Keychain and exec daily refresh."""
+"""Load the runtime-only market-data credential and exec daily refresh."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ SECURITY = "/usr/bin/security"
 KEYCHAIN = "/Users/messssi/Library/Keychains/login.keychain-db"
 KEYCHAIN_ACCOUNT = "phase5r-production"
 MASSIVE_KEYCHAIN_SERVICE = "com.steven.phase5r.massive-api-key"
-OPENAI_KEYCHAIN_SERVICE = "com.steven.phase5r.openai-api-key"
 SEC_USER_AGENT = "Phase5R personal equity research stevenchenjy326@gmail.com"
 PYTHON = "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
 RUNTIME_SCHEDULER = (
@@ -23,7 +22,7 @@ KEYCHAIN_UNAVAILABLE_EXIT = 78
 LAUNCH_FAILED_EXIT = 79
 
 
-def keychain_value(service: str, *, required: bool) -> bytes | None:
+def keychain_value(service: str) -> bytes | None:
     security_environment = os.environ.copy()
     security_environment.pop("MASSIVE_API_KEY", None)
     security_environment.pop("OPENAI_API_KEY", None)
@@ -62,13 +61,10 @@ def main() -> int:
     child_environment.pop(b"MASSIVE_API_KEY", None)
     child_environment.pop(b"OPENAI_API_KEY", None)
     child_environment[b"PHASE5R_SEC_USER_AGENT"] = SEC_USER_AGENT.encode("utf-8")
-    massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE, required=True)
+    massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE)
     if massive_secret is None:
         return KEYCHAIN_UNAVAILABLE_EXIT
     child_environment[b"MASSIVE_API_KEY"] = massive_secret
-    openai_secret = keychain_value(OPENAI_KEYCHAIN_SERVICE, required=False)
-    if openai_secret is not None:
-        child_environment[b"OPENAI_API_KEY"] = openai_secret
     try:
         os.execve(
             PYTHON,

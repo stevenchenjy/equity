@@ -37,56 +37,16 @@
     "unchanged_daily_email": false
   },
   "model_policy": {
-    "status": "removed_from_active_production_path_0_of_10_observations",
+    "status": "removed_from_active_production",
     "operating_decision": "00_project_control/phase5r_ai_operating_decision.md",
+    "active": false,
+    "calls_allowed": false,
     "default_action": "no_call",
-    "prompt_version": "phase5r_material_critic_v1",
-    "maximum_output_tokens": 4000,
-    "one_time_evaluation_budget_usd": 5.0,
-    "monthly_hard_cap_usd": 2.0,
-    "monthly_target_usd": 1.0,
-    "daily_hard_cap_usd": 0.18,
-    "routes": [
-      {
-        "condition": "unchanged_or_insufficient_evidence",
-        "model": null,
-        "reasoning_effort": null,
-        "action": "no_call"
-      },
-      {
-        "condition": "bounded_extraction_or_low_impact_normalization",
-        "model": "gpt-5.6-luna",
-        "reasoning_effort": "medium",
-        "action": "shadow_only"
-      },
-      {
-        "condition": "material_filing_or_cross_source_disagreement",
-        "model": "gpt-5.6-terra",
-        "reasoning_effort": "medium",
-        "action": "shadow_critic"
-      },
-      {
-        "condition": "complex_valuation_or_fundamental_conflict",
-        "model": "gpt-5.6-terra",
-        "reasoning_effort": "high",
-        "action": "shadow_critic"
-      },
-      {
-        "condition": "rare_high_impact_action_candidate_after_terra_disagreement",
-        "model": "gpt-5.6-sol",
-        "reasoning_effort": "high",
-        "action": "shadow_escalation"
-      }
-    ],
-    "pricing_usd_per_million_tokens": {
-      "verified_on": "2026-08-31",
-      "valid_through": "2026-09-30",
-      "source": "https://developers.openai.com/api/docs/models/compare",
-      "gpt-5.6-luna": {"input": 0.2, "cached_input": 0.02, "output": 1.2},
-      "gpt-5.6-terra": {"input": 2.0, "cached_input": 0.2, "output": 12.0},
-      "gpt-5.6-sol": {"input": 4.0, "cached_input": 0.4, "output": 20.0}
-    },
-    "promotion_rule": "at least 10 completed real shadow observations, or a documented environment/budget constraint and evidence-backed restrict/remove decision",
+    "actual_calls": 0,
+    "metered_cost_usd": 0.0,
+    "monthly_hard_cap_usd": 0.0,
+    "historical_archive": "11_archive/phase5r_retired_20260831/",
+    "recovery_tag": "phase5r-pre-cleanup-20260831",
     "canonical_authority": false
   },
   "outcome_tracking": {

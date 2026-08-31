@@ -6,7 +6,10 @@ For every held ticker:
 
 `current_weight_pct = current_shares × latest_canonical_B2_price ÷ account_total_value × 100`
 
-The account denominator is `2500.00 USD` for the initial confirmed C9 state. After a validated C9B reconciliation is explicitly applied, the denominator is the updated current `account_total_value`. The formula and price provenance must be written with each dynamic weight.
+The denominator is always the validated current `account_total_value`. The
+formula, account timestamp, and price provenance must be written with each
+dynamic weight. No historical account value or policy example may substitute
+for the current local state.
 
 ## Stored Percentage Boundary
 

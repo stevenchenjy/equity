@@ -7,21 +7,20 @@
 - Current prices and provenance: `03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv`.
 - Current public research evidence: controlled C5 packet fields; portfolio-fit fields from the old packet are not authoritative.
 
-## Confirmed State
+## Runtime State
 
-- Account total: `2500.00 USD`.
-- Prior account value: `1000.00 USD` as historical funding provenance only.
-- New external cash: `1500.00 USD`.
-- Reported cash available: `2026.58 USD`.
-- Reserved cash: `500.00 USD`.
-- Investment horizon: at least `5 years`.
-- Cash needed within three years: `no`.
-
-The old `1000 USD` value may appear in the account file only as `prior_account_value`; it cannot be a calculation denominator.
+No dollar amount, share count, or position weight in this policy is current
+account truth. Runtime values come only from the validated local account and
+position inputs above. Contribution-history fields may be retained for
+provenance, but they can never become the current calculation denominator.
 
 ## Validation
 
-The account JSON must contain exactly the C9 fields, use finite non-negative numbers, include a timezone-aware `last_updated`, keep reserved cash at or below available cash, and make core/active/cash targets total 100%. In the initial C9 state, prior value plus external cash reconciles to the $2,500 account total. After a validated C9B fill, those two fields remain contribution history while `account_total_value` becomes current confirmed or explicitly estimated equity and may differ because of market movement or fees.
+The account JSON must contain exactly the C9 fields, use finite non-negative
+numbers, include a timezone-aware `last_updated`, keep reserved cash at or
+below available cash, and make core/active/cash targets total 100%.
+Contribution-history fields need not equal current equity after market movement,
+cash flows, or fees and are never silently rewritten to force equality.
 
 Current positions require positive shares. Each held ticker and SPY require exactly one canonical B2 row with a positive price, `data_quality_label=ok`, source, and timestamp.
 

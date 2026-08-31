@@ -13,23 +13,28 @@
 
 An execution row is evidence, not an instruction. Every mutation of the canonical positions/account files requires a separate explicit `--apply` invocation after validation.
 
-For a confirmed full fill, record only actual values with:
+For a confirmed full fill, record only actual values with an explicit execution
+identifier:
 
-`python3 09_scripts/phase5r/validate_phase5r_c9b_execution_fill.py --execution-id C9B-IOT-PENDING-001 --record-status filled --fill-date YYYY-MM-DD --fill-price CONFIRMED_PRICE --fees CONFIRMED_FEES`
+`python3 09_scripts/phase5r/validate_phase5r_c9b_execution_fill.py --execution-id EXECUTION_ID --record-status filled --fill-date YYYY-MM-DD --fill-price CONFIRMED_PRICE --fees CONFIRMED_FEES`
 
 Then run reconciliation without `--apply` first to inspect the preview. Applying canonical state requires the separate explicit form:
 
-`python3 09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py --execution-id C9B-IOT-PENDING-001 --apply`
+`python3 09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py --execution-id EXECUTION_ID --apply`
 
 Placeholders must be replaced only with human-confirmed values. These commands record/reconcile an already-completed manual execution; they do not communicate with or control an order venue.
 
-## Current Intake
+## Current-State Authority
 
-The current record is `C9B-IOT-PENDING-001`: a user-reported pending sale of 3 IOT shares, from 8 shares to 5. The order type and submission timestamp are not known precisely, so they are not invented. The fill price and all post-fill financial values remain blank.
+This policy contains no current execution identifier, ticker, share count, or
+fill state. The private local execution ledger and the validated pending,
+confirmed, and reconciliation reports are the only execution-state authority.
+Historical one-off setup and verification material is archived.
 
 ## Boundaries
 
 - No broker libraries, credential reads, order endpoints, email sends, schedulers, or archived position files.
-- The C9 maintenance inhibit remains active throughout validation and reconciliation.
+- The C9 state must validate before processing; a cleared state may authorize
+  only the canonical `phase5r_daily` workflow.
 - The local execution file is mode `0600` and must stay Git-ignored.
 - SMTP configuration is outside the execution workflow and must not be read or modified.

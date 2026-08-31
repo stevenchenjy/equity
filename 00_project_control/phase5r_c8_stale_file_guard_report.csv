@@ -4,16 +4,16 @@ SG-002,active_pipeline,09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py
 SG-003,refresh_pipeline,09_scripts/phase5r/run_phase5r_daily_refresh.py,exists,active_no_send,yes,control,Refresh has no sender or SMTP reference.
 SG-004,current_positions,05_risk_and_positions/current_positions.local.csv,exists_gitignored,authoritative_current_positions,yes,control,Only current position source.
 SG-005,current_account,05_risk_and_positions/current_account_state.local.json,exists_gitignored,authoritative_current_account,yes,control,Only current account-state source.
-SG-006,deprecated_entrypoint,09_scripts/phase5r/send_phase5r_c2_daily_email.py,exists,retired,no,warning,Historical direct sender.
-SG-007,deprecated_entrypoint,09_scripts/phase5r/run_phase5r_c3_daily_email_pipeline.py,exists,retired,no,warning,Historical direct daily pipeline.
-SG-008,retired_weekly_pipeline,09_scripts/phase5r/run_phase5r_c7_weekly_conviction_pipeline.py,exists,retired_evidence_only,no,critical,Weekly pipeline cannot be invoked by canonical daily code.
-SG-009,retired_weekly_sender,09_scripts/phase5r/send_phase5r_c6_weekly_email.py,exists,retired_evidence_only,no,critical,Weekly sender is unauthorized.
+SG-006,deprecated_entrypoint,11_archive/phase5r_retired_20260831/09_scripts/phase5r/send_phase5r_c2_daily_email.py,archived,exclude_all,no,warning,Historical direct sender.
+SG-007,deprecated_entrypoint,11_archive/phase5r_retired_20260831/09_scripts/phase5r/run_phase5r_c3_daily_email_pipeline.py,archived,exclude_all,no,warning,Historical direct daily pipeline.
+SG-008,retired_weekly_pipeline,11_archive/phase5r_retired_20260831/09_scripts/phase5r/run_phase5r_c7_weekly_conviction_pipeline.py,archived,exclude_all,no,critical,Weekly pipeline cannot be invoked by canonical daily code.
+SG-009,retired_weekly_sender,11_archive/phase5r_retired_20260831/09_scripts/phase5r/send_phase5r_c6_weekly_email.py,archived,exclude_all,no,critical,Weekly sender is unauthorized.
 SG-010,retired_scheduler,~/Library/LaunchAgents/com.steven.phase5r.dailybrief.plist,absent,remain_unloaded,no,control,Old dailybrief job is retired.
 SG-011,retired_scheduler,~/Library/LaunchAgents/com.steven.phase5r.weeklyconviction.plist,absent,remain_unloaded,no,control,D2 is retired.
 SG-012,retired_scheduler,~/Library/LaunchAgents/com.steven.phase5r.weeklycatchup.plist,absent,remain_unloaded,no,control,D3 is retired.
 SG-013,active_scheduler,~/Library/LaunchAgents/com.steven.phase5r.dailyrefresh.plist,installed_loaded,template_match,yes,control,Only refresh scheduler.
 SG-014,active_scheduler,~/Library/LaunchAgents/com.steven.phase5r.dailydecision.plist,installed_loaded,template_match,yes,control,Only decision scheduler.
-SG-015,model_shadow,~/Library/LaunchAgents/com.steven.phase5r.llmshadow.plist,absent,activation_gate_required,no,critical,Model remains outside canonical workflow until qualification.
+SG-015,model_shadow,~/Library/LaunchAgents/com.steven.phase5r.llmshadow.plist,absent,remain_unloaded,no,critical,Model implementation is retired and archived.
 SG-016,archive_boundary,11_archive/**,contents_not_scanned,exclude_all,no,critical,Archived folders may never be active inputs.
-SG-017,historical_weekly_outputs,04_research/realtime_stock_picker_phase5r/phase5r_c5*;07_automation/email_briefs/phase5r_c6*,exists,evidence_only,no,warning,Weekly artifacts cannot override daily state.
-SG-018,old_preview,08_reviews/current/latest_phase5r_b2_*.md,exists,context_only,no,warning,Preview prose cannot override current source CSV/JSON.
+SG-017,historical_weekly_outputs,11_archive/phase5r_retired_20260831/04_research/realtime_stock_picker_phase5r/phase5r_c5*;11_archive/phase5r_retired_20260831/07_automation/email_briefs/phase5r_c6*,archived,exclude_all,no,warning,Weekly artifacts cannot override daily state.
+SG-018,old_preview,11_archive/phase5r_retired_20260831/08_reviews/current/latest_phase5r_b2_*.md,archived,exclude_all,no,warning,Preview prose cannot override current source CSV/JSON.

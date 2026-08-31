@@ -149,7 +149,7 @@ def write_pending_outputs(row: dict[str, str]) -> None:
             "",
             "Current positions and current account state remain unchanged. Final portfolio recommendations are not regenerated until a confirmed fill is validated and explicitly applied.",
             "",
-            "D3 maintenance remains active. No broker, order, or email action occurred.",
+            "The active workflow state was validated. No broker, order, or email action occurred.",
         ]
     ) + "\n"
     write_text(POST_EXECUTION_SUMMARY, summary)
@@ -305,7 +305,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
             f"- Difference from public-price estimate: `${total_difference:.2f}`.",
             f"- RBRK shares remain `{float(rbrk_after):.0f}`.",
             "",
-            "Public prices are references, not broker quotes. The maintenance inhibit remains required; no email or automatic transaction is authorized.",
+            "Public prices are references, not broker quotes. The active workflow state was validated; no email or automatic transaction is authorized.",
         ]
     ) + "\n"
     write_text(POST_EXECUTION_SUMMARY, summary)

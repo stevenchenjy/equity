@@ -36,7 +36,7 @@ Social media and archived legacy project files are not active inputs.
 - SEC values and filing metadata are facts with source URLs.
 - Local account value uses the canonical local state with public-price
   estimates, not broker account truth.
-- Scores and trend labels are model rules, not facts.
+- Scores and trend labels are deterministic research rules, not facts.
 - The email must state that it is research, not a buy/sell instruction.
 
 ## Long-Term Interpretation

@@ -9,13 +9,10 @@ from phase5r_daily_common import last_completed_market_session, now_et
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "03_source_data" / "phase5r"
-REVIEWS_DIR = ROOT / "08_reviews" / "current"
 RUN_LOG = ROOT / "00_project_control" / "run_logs" / "phase5r_b2_run_log.csv"
 CANDIDATES_PATH = DATA_DIR / "phase5r_b2_candidates_with_market_data.csv"
 SCORES_PATH = DATA_DIR / "phase5r_b2_signal_scores.csv"
 AUDIT_PATH = DATA_DIR / "phase5r_b2_audit_trail.csv"
-WATCHLIST_PATH = REVIEWS_DIR / "latest_phase5r_b2_watchlist.md"
-PREVIEW_PATH = REVIEWS_DIR / "latest_phase5r_b2_daily_research_preview.md"
 
 LEGACY_TICKERS = {"IOT", "RBRK"}
 FORMULA_VERSION = "phase5r_b2_daily_read_only_v1"
@@ -115,29 +112,6 @@ def score_row(
     }
 
 
-def write_reviews(rows: list[dict[str, str]]) -> None:
-    watch_rows = [row for row in rows if row["action_label"] in {"possible_buy_manual_review", "watch"}]
-    overview = [
-        "# Latest Phase 5R-B2 Daily Research Preview", "", f"Generated: `{timestamp()}`", "",
-        "One daily public-data research snapshot for manual review. It has no intraday alert, scheduler, email sending, broker connection, or execution capability.", "",
-        f"- Scored universe rows: `{len(rows)}`.", f"- Manual-review candidates: `{sum(row['action_label'] == 'possible_buy_manual_review' for row in rows)}`.",
-        f"- Watch candidates: `{sum(row['action_label'] == 'watch' for row in rows)}`.", f"- Insufficient-data rows: `{sum(row['action_label'] == 'insufficient_data' for row in rows)}`.", "",
-        "| Rank | Ticker | Theme | Last Price | Daily Change % | Score | Action |", "| ---: | --- | --- | ---: | ---: | ---: | --- |",
-    ]
-    watchlist = [
-        "# Latest Phase 5R-B2 Watchlist", "", f"Generated: `{timestamp()}`", "",
-        "Daily research prioritization only. Every action requires independent human review; no script can connect to a broker or execute a trade.", "",
-        "| Rank | Ticker | Company | Theme | Price | Relative Volume | Score | Action |", "| ---: | --- | --- | --- | ---: | ---: | ---: | --- |",
-    ]
-    for row in rows:
-        overview.append(f"| {row['rank']} | {row['ticker']} | {row['theme']} | {row['last_price'] or 'n/a'} | {row['intraday_change_pct'] or 'n/a'} | {row['total_score']} | {row['action_label']} |")
-    for row in watch_rows:
-        watchlist.append(f"| {row['rank']} | {row['ticker']} | {row['company_name']} | {row['theme']} | {row['last_price'] or 'n/a'} | {row['relative_volume'] or 'n/a'} | {row['total_score']} | {row['action_label']} |")
-    REVIEWS_DIR.mkdir(parents=True, exist_ok=True)
-    PREVIEW_PATH.write_text("\n".join(overview) + "\n", encoding="utf-8")
-    WATCHLIST_PATH.write_text("\n".join(watchlist) + "\n", encoding="utf-8")
-
-
 def main() -> None:
     expected_session = last_completed_market_session(now_et()).isoformat()
     scores = [
@@ -148,8 +122,7 @@ def main() -> None:
     for index, row in enumerate(scores, start=1):
         row["rank"] = str(index)
     write_csv(SCORES_PATH, scores, SCORE_FIELDS)
-    write_reviews(scores)
-    append_audit("score_phase5r_b2_candidates", ";".join(str(path.relative_to(ROOT)) for path in [SCORES_PATH, PREVIEW_PATH, WATCHLIST_PATH]))
+    append_audit("score_phase5r_b2_candidates", str(SCORES_PATH.relative_to(ROOT)))
     print(f"Wrote Phase 5R-B2 score rows: {len(scores)}")
 
 

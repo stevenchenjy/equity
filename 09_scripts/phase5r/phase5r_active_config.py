@@ -55,12 +55,16 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         if boundaries.get(field) is not False:
             raise ActiveConfigError(f"{field} must remain false")
     policy = config.get("model_policy", {})
-    if float(policy.get("monthly_hard_cap_usd", -1)) > 2.0:
-        raise ActiveConfigError("monthly model hard cap exceeds $2")
-    if float(policy.get("one_time_evaluation_budget_usd", -1)) > 5.0:
-        raise ActiveConfigError("one-time model evaluation budget exceeds $5")
-    if int(policy.get("maximum_output_tokens", 0)) not in range(1, 4001):
-        raise ActiveConfigError("maximum_output_tokens must be between 1 and 4000")
+    if (
+        policy.get("status") != "removed_from_active_production"
+        or policy.get("active") is not False
+        or policy.get("calls_allowed") is not False
+        or policy.get("default_action") != "no_call"
+        or float(policy.get("monthly_hard_cap_usd", -1)) != 0.0
+        or int(policy.get("actual_calls", -1)) != 0
+        or float(policy.get("metered_cost_usd", -1)) != 0.0
+    ):
+        raise ActiveConfigError("model path must remain removed with zero calls and cost")
     notifications = config.get("notifications", {})
     filing_lookback = notifications.get("new_filing_lookback_calendar_days")
     if (
@@ -72,15 +76,6 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
             "event-driven notifications require a 1-30 day filing lookback"
         )
     return config
-
-
-def model_removed_from_active_production(
-    config: dict[str, Any] | None = None,
-) -> bool:
-    active_config = load_active_config() if config is None else config
-    return str(active_config.get("model_policy", {}).get("status", "")).startswith(
-        "removed_from_active_production_path_"
-    )
 
 
 def main() -> int:

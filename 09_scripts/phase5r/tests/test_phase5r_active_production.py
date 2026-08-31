@@ -8,101 +8,25 @@ from unittest.mock import patch
 from _support import SCRIPT_DIR  # noqa: F401
 
 from phase5r_active_config import load_active_config
-from phase5r_model_router import route_model
-import phase5r_production_shadow_v1 as shadow
 from track_phase5r_recommendation_outcomes import classification
 from refresh_phase5r_valuation_scenarios import selected_band, utc_now_text
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
 import run_phase5r_daily_refresh as daily_refresh
 import run_phase5r_daily_refresh_scheduler as refresh_scheduler
 import create_phase5r_daily_decision_and_brief as decision_builder
-from run_phase5r_llm_shadow import load_registry
-from generate_phase5r_current_status import model_authorization_is_blocker
 from create_phase5r_c9_exact_action_plan import valuation_trim_review_required
 
 
 class ActiveProductionTests(unittest.TestCase):
-    @staticmethod
-    def future_evaluation_config() -> dict:
-        config = copy.deepcopy(load_active_config())
-        config["model_policy"]["status"] = "future_shadow_evaluation_authorized"
-        return config
-
     def test_active_configuration_holds_cost_and_execution_boundaries(self) -> None:
         config = load_active_config()
-        self.assertLessEqual(config["model_policy"]["one_time_evaluation_budget_usd"], 5)
-        self.assertLessEqual(config["model_policy"]["monthly_hard_cap_usd"], 2)
-        self.assertLessEqual(config["model_policy"]["maximum_output_tokens"], 4000)
+        self.assertEqual(config["model_policy"]["status"], "removed_from_active_production")
+        self.assertFalse(config["model_policy"]["active"])
+        self.assertFalse(config["model_policy"]["calls_allowed"])
+        self.assertEqual(config["model_policy"]["monthly_hard_cap_usd"], 0)
+        self.assertEqual(config["model_policy"]["actual_calls"], 0)
         self.assertFalse(config["boundaries"]["broker_connected"])
         self.assertFalse(config["boundaries"]["automatic_action_allowed"])
-
-    def test_ten_reserved_shadow_days_fit_monthly_cap(self) -> None:
-        self.assertLessEqual(shadow.maximum_provider_cost_usd(), shadow.DAILY_COST_CAP_USD)
-        self.assertLessEqual(
-            shadow.DAILY_COST_CAP_USD * shadow.OBSERVATION_COMPLETED_TRADING_DAYS,
-            shadow.MONTHLY_COST_CAP_USD,
-        )
-
-    def test_router_blocks_before_deterministic_pass(self) -> None:
-        route = route_model(
-            {}, completed_shadow_observations=0,
-            deterministic_refresh_passed=False, api_authorized=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual(route["action"], "no_call")
-
-    def test_router_blocks_without_api_authorization(self) -> None:
-        route = route_model(
-            {}, completed_shadow_observations=0,
-            deterministic_refresh_passed=True, api_authorized=False,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual(route["reason"], "api_authorization_absent")
-
-    def test_router_uses_terra_medium_only_for_evaluation_window(self) -> None:
-        route = route_model(
-            {}, completed_shadow_observations=9,
-            deterministic_refresh_passed=True, api_authorized=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "medium"))
-
-    def test_router_makes_no_call_for_unchanged_post_evaluation_decision(self) -> None:
-        route = route_model(
-            {}, completed_shadow_observations=10,
-            deterministic_refresh_passed=True, api_authorized=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual(route["action"], "no_call")
-
-    def test_router_uses_terra_for_material_filing(self) -> None:
-        route = route_model(
-            {"material_events": [{"ticker": "IOT"}]},
-            completed_shadow_observations=10,
-            deterministic_refresh_passed=True,
-            api_authorized=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "medium"))
-
-    def test_router_uses_high_terra_for_complex_conflict(self) -> None:
-        route = route_model(
-            {"account_conflicts": ["test"]}, completed_shadow_observations=10,
-            deterministic_refresh_passed=True, api_authorized=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "high"))
-
-    def test_router_reserves_sol_for_prior_measured_disagreement(self) -> None:
-        route = route_model(
-            {"eligible_new_position_review_candidates": ["NVDA"]},
-            completed_shadow_observations=10,
-            deterministic_refresh_passed=True,
-            api_authorized=True,
-            prior_terra_disagreement=True,
-            config_override=self.future_evaluation_config(),
-        )
-        self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-sol", "high"))
 
     def test_recommendation_labels_are_explicit(self) -> None:
         self.assertEqual(classification("trim_specific_shares_review"), "TRIM")
@@ -194,40 +118,9 @@ class ActiveProductionTests(unittest.TestCase):
             )
         self.assertEqual([row["ticker"] for row in events], ["RBRK"])
 
-    def test_legacy_registry_is_explicitly_nonproduction(self) -> None:
-        registry = load_registry()
-        self.assertEqual(
-            registry["authority_status"],
-            "historical_nonproduction_fixture",
-        )
-        self.assertEqual(
-            registry["superseded_by"],
-            "00_project_control/phase5r_active_production_config.json",
-        )
-        self.assertFalse(registry["live_shadow_enabled"])
-
-    def test_removed_ai_does_not_create_a_credential_blocker(self) -> None:
-        config = load_active_config()
-        self.assertFalse(
-            model_authorization_is_blocker(
-                config,
-                {"completed_review_count": 0},
-                {},
-            )
-        )
-
-    def test_removed_ai_router_is_a_durable_no_call(self) -> None:
-        route = route_model(
-            {"material_events": [{"ticker": "IOT"}]},
-            completed_shadow_observations=0,
-            deterministic_refresh_passed=True,
-            api_authorized=True,
-        )
-        self.assertEqual(route["action"], "no_call")
-        self.assertEqual(route["reason"], "model_removed_from_active_production")
-
-    def test_removed_ai_is_not_scheduler_eligible(self) -> None:
-        self.assertFalse(refresh_scheduler.production_shadow_scheduler_enabled())
+    def test_removed_model_surface_is_absent_from_scheduler(self) -> None:
+        self.assertFalse(hasattr(refresh_scheduler, "PRODUCTION_SHADOW_RUNNER"))
+        self.assertFalse(hasattr(refresh_scheduler, "AUTH_PRESENCE_PROBE_ENV"))
 
     def test_adverse_complete_valuation_opens_only_a_trim_review(self) -> None:
         valuation = {
