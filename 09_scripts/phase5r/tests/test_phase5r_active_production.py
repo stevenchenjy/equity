@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import unittest
+from datetime import datetime
 from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
@@ -10,7 +11,7 @@ from phase5r_active_config import load_active_config
 from phase5r_model_router import route_model
 import phase5r_production_shadow_v1 as shadow
 from track_phase5r_recommendation_outcomes import classification
-from refresh_phase5r_valuation_scenarios import selected_band
+from refresh_phase5r_valuation_scenarios import selected_band, utc_now_text
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
 import run_phase5r_daily_refresh as daily_refresh
 import run_phase5r_daily_refresh_scheduler as refresh_scheduler
@@ -260,6 +261,12 @@ class ActiveProductionTests(unittest.TestCase):
                 policy,
             )
         )
+
+    def test_valuation_bundle_clock_matches_packet_precision(self) -> None:
+        prepared_at = datetime.fromisoformat(
+            utc_now_text().replace("Z", "+00:00")
+        )
+        self.assertEqual(prepared_at.microsecond, 0)
 
 
 if __name__ == "__main__":

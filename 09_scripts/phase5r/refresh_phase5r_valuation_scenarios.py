@@ -50,6 +50,16 @@ def utc_text(value: str) -> str:
     return parsed.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def utc_now_text() -> str:
+    """Match the packet clock's whole-second point-in-time precision."""
+
+    return (
+        datetime.now(timezone.utc)
+        .isoformat(timespec="seconds")
+        .replace("+00:00", "Z")
+    )
+
+
 def line_excerpt(path: Path, ticker: str) -> tuple[int, int, str]:
     text = path.read_text(encoding="utf-8")
     offset = 0
@@ -111,7 +121,10 @@ def main() -> int:
     fundamentals = {row["ticker"].upper(): row for row in read_csv(FUNDAMENTALS_PATH)}
     market = {row["ticker"].upper(): row for row in read_csv(MARKET_SNAPSHOT_PATH)}
     policy_text = POLICY_PATH.read_text(encoding="utf-8").rstrip("\n")
-    prepared_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    # The downstream packet clock is second-resolution.  Retaining
+    # microseconds here can make a bundle produced in the same second appear
+    # fractionally future-dated and fail an otherwise valid refresh.
+    prepared_at = utc_now_text()
     scenario_records: list[dict[str, Any]] = []
     bundle_records: list[dict[str, Any]] = []
     updated_rows: list[dict[str, str]] = []
