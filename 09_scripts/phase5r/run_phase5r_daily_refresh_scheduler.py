@@ -11,6 +11,7 @@ import sys
 from datetime import datetime
 import re
 
+from phase5r_active_config import model_removed_from_active_production
 from phase5r_daily_common import (
     DAILY_REFRESH_STATE_PATH,
     DAILY_SCHEDULER_STATE_PATH,
@@ -107,6 +108,12 @@ def market_snapshot_mode(current: datetime, due: list[str]) -> str:
     ):
         return MARKET_SNAPSHOT_FETCH
     return MARKET_SNAPSHOT_REUSE
+
+
+def production_shadow_scheduler_enabled() -> bool:
+    """Return false when the active configuration removes AI from production."""
+
+    return not model_removed_from_active_production()
 
 
 def _safe_json_child_outcome(
@@ -399,7 +406,10 @@ def main() -> int:
         refresh_returncode=completed_process.returncode,
         refresh_started_at=refresh_started_at,
     )
-    if refresh_gate == "passed" and snapshot_mode == MARKET_SNAPSHOT_FETCH:
+    shadow_enabled = production_shadow_scheduler_enabled()
+    if refresh_gate == "passed" and not shadow_enabled:
+        shadow_status = "not_started_model_removed_from_active_production"
+    elif refresh_gate == "passed" and snapshot_mode == MARKET_SNAPSHOT_FETCH:
         # This is a post-refresh, separately bounded companion.  It never
         # changes the deterministic refresh result and owns its own daily lock,
         # freshness gate, no-retry policy, and cost ledger.

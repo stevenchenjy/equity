@@ -74,6 +74,15 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     return config
 
 
+def model_removed_from_active_production(
+    config: dict[str, Any] | None = None,
+) -> bool:
+    active_config = load_active_config() if config is None else config
+    return str(active_config.get("model_policy", {}).get("status", "")).startswith(
+        "removed_from_active_production_path_"
+    )
+
+
 def main() -> int:
     config = load_active_config()
     print(

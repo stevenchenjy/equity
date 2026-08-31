@@ -13,12 +13,19 @@ from track_phase5r_recommendation_outcomes import classification
 from refresh_phase5r_valuation_scenarios import selected_band
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
 import run_phase5r_daily_refresh as daily_refresh
+import run_phase5r_daily_refresh_scheduler as refresh_scheduler
 import create_phase5r_daily_decision_and_brief as decision_builder
 from run_phase5r_llm_shadow import load_registry
 from generate_phase5r_current_status import model_authorization_is_blocker
 
 
 class ActiveProductionTests(unittest.TestCase):
+    @staticmethod
+    def future_evaluation_config() -> dict:
+        config = copy.deepcopy(load_active_config())
+        config["model_policy"]["status"] = "future_shadow_evaluation_authorized"
+        return config
+
     def test_active_configuration_holds_cost_and_execution_boundaries(self) -> None:
         config = load_active_config()
         self.assertLessEqual(config["model_policy"]["one_time_evaluation_budget_usd"], 5)
@@ -35,19 +42,35 @@ class ActiveProductionTests(unittest.TestCase):
         )
 
     def test_router_blocks_before_deterministic_pass(self) -> None:
-        route = route_model({}, completed_shadow_observations=0, deterministic_refresh_passed=False, api_authorized=True)
+        route = route_model(
+            {}, completed_shadow_observations=0,
+            deterministic_refresh_passed=False, api_authorized=True,
+            config_override=self.future_evaluation_config(),
+        )
         self.assertEqual(route["action"], "no_call")
 
     def test_router_blocks_without_api_authorization(self) -> None:
-        route = route_model({}, completed_shadow_observations=0, deterministic_refresh_passed=True, api_authorized=False)
+        route = route_model(
+            {}, completed_shadow_observations=0,
+            deterministic_refresh_passed=True, api_authorized=False,
+            config_override=self.future_evaluation_config(),
+        )
         self.assertEqual(route["reason"], "api_authorization_absent")
 
     def test_router_uses_terra_medium_only_for_evaluation_window(self) -> None:
-        route = route_model({}, completed_shadow_observations=9, deterministic_refresh_passed=True, api_authorized=True)
+        route = route_model(
+            {}, completed_shadow_observations=9,
+            deterministic_refresh_passed=True, api_authorized=True,
+            config_override=self.future_evaluation_config(),
+        )
         self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "medium"))
 
     def test_router_makes_no_call_for_unchanged_post_evaluation_decision(self) -> None:
-        route = route_model({}, completed_shadow_observations=10, deterministic_refresh_passed=True, api_authorized=True)
+        route = route_model(
+            {}, completed_shadow_observations=10,
+            deterministic_refresh_passed=True, api_authorized=True,
+            config_override=self.future_evaluation_config(),
+        )
         self.assertEqual(route["action"], "no_call")
 
     def test_router_uses_terra_for_material_filing(self) -> None:
@@ -56,6 +79,7 @@ class ActiveProductionTests(unittest.TestCase):
             completed_shadow_observations=10,
             deterministic_refresh_passed=True,
             api_authorized=True,
+            config_override=self.future_evaluation_config(),
         )
         self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "medium"))
 
@@ -63,6 +87,7 @@ class ActiveProductionTests(unittest.TestCase):
         route = route_model(
             {"account_conflicts": ["test"]}, completed_shadow_observations=10,
             deterministic_refresh_passed=True, api_authorized=True,
+            config_override=self.future_evaluation_config(),
         )
         self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-terra", "high"))
 
@@ -73,6 +98,7 @@ class ActiveProductionTests(unittest.TestCase):
             deterministic_refresh_passed=True,
             api_authorized=True,
             prior_terra_disagreement=True,
+            config_override=self.future_evaluation_config(),
         )
         self.assertEqual((route["model"], route["reasoning_effort"]), ("gpt-5.6-sol", "high"))
 
@@ -187,6 +213,19 @@ class ActiveProductionTests(unittest.TestCase):
                 {},
             )
         )
+
+    def test_removed_ai_router_is_a_durable_no_call(self) -> None:
+        route = route_model(
+            {"material_events": [{"ticker": "IOT"}]},
+            completed_shadow_observations=0,
+            deterministic_refresh_passed=True,
+            api_authorized=True,
+        )
+        self.assertEqual(route["action"], "no_call")
+        self.assertEqual(route["reason"], "model_removed_from_active_production")
+
+    def test_removed_ai_is_not_scheduler_eligible(self) -> None:
+        self.assertFalse(refresh_scheduler.production_shadow_scheduler_enabled())
 
 
 if __name__ == "__main__":

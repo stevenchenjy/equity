@@ -288,6 +288,13 @@ class B2RefreshCadenceTests(unittest.TestCase):
             )
             stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
+            stack.enter_context(
+                patch.object(
+                    refresh_scheduler,
+                    "production_shadow_scheduler_enabled",
+                    return_value=True,
+                )
+            )
             run = stack.enter_context(
                 patch.object(refresh_scheduler.subprocess, "run", return_value=completed)
             )
@@ -443,6 +450,13 @@ class B2RefreshCadenceTests(unittest.TestCase):
             )
             stack.enter_context(patch.object(refresh_scheduler, "read_json", side_effect=fake_read_json))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
+            stack.enter_context(
+                patch.object(
+                    refresh_scheduler,
+                    "production_shadow_scheduler_enabled",
+                    return_value=True,
+                )
+            )
             run = stack.enter_context(
                 patch.object(
                     refresh_scheduler.subprocess,

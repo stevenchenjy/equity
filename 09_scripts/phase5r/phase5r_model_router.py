@@ -5,7 +5,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from phase5r_active_config import load_active_config
+from phase5r_active_config import (
+    load_active_config,
+    model_removed_from_active_production,
+)
 
 
 def route_model(
@@ -15,8 +18,16 @@ def route_model(
     deterministic_refresh_passed: bool,
     api_authorized: bool,
     prior_terra_disagreement: bool = False,
+    config_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    config = load_active_config()
+    config = load_active_config() if config_override is None else config_override
+    if model_removed_from_active_production(config):
+        return {
+            "action": "no_call",
+            "reason": "model_removed_from_active_production",
+            "model": None,
+            "reasoning_effort": None,
+        }
     if not deterministic_refresh_passed:
         return {"action": "no_call", "reason": "deterministic_refresh_not_passed", "model": None, "reasoning_effort": None}
     if not api_authorized:
