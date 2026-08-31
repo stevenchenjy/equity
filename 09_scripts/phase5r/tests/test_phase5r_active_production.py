@@ -15,6 +15,7 @@ from phase5r_valuation_input_bundle import _SOURCE_POLICIES
 import run_phase5r_daily_refresh as daily_refresh
 import create_phase5r_daily_decision_and_brief as decision_builder
 from run_phase5r_llm_shadow import load_registry
+from generate_phase5r_current_status import model_authorization_is_blocker
 
 
 class ActiveProductionTests(unittest.TestCase):
@@ -176,6 +177,16 @@ class ActiveProductionTests(unittest.TestCase):
             "00_project_control/phase5r_active_production_config.json",
         )
         self.assertFalse(registry["live_shadow_enabled"])
+
+    def test_removed_ai_does_not_create_a_credential_blocker(self) -> None:
+        config = load_active_config()
+        self.assertFalse(
+            model_authorization_is_blocker(
+                config,
+                {"completed_review_count": 0},
+                {},
+            )
+        )
 
 
 if __name__ == "__main__":

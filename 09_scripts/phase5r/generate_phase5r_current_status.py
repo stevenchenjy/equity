@@ -68,6 +68,20 @@ def shadow_cost() -> str:
     return format(total, ".6f")
 
 
+def model_authorization_is_blocker(
+    config: dict[str, Any],
+    observation: dict[str, Any],
+    environment: dict[str, str] | None = None,
+) -> bool:
+    active_environment = os.environ if environment is None else environment
+    model_status = str(config.get("model_policy", {}).get("status", ""))
+    return (
+        not model_status.startswith("removed_from_active_production_path_")
+        and not active_environment.get("OPENAI_API_KEY")
+        and observation.get("completed_review_count", 0) < 10
+    )
+
+
 def main() -> int:
     config = load_active_config()
     refresh = read_json(DAILY_REFRESH_STATE_PATH, {})
@@ -86,7 +100,7 @@ def main() -> int:
         blockers.append("current_market_snapshot_invalid")
     if evidence.get("scan_status") != "ok":
         blockers.append(str(evidence.get("reason") or "official_evidence_refresh_not_ok"))
-    if not os.environ.get("OPENAI_API_KEY") and observation.get("completed_review_count", 0) < 10:
+    if model_authorization_is_blocker(config, observation):
         blockers.append("optional_openai_shadow_authorization_absent")
     completed_valuations = sum(
         row.get("status") == "complete" for row in valuation.get("records", [])
