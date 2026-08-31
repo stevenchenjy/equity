@@ -1,0 +1,83 @@
+#!/Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+"""Load runtime-only credentials from Keychain and exec daily refresh."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+
+
+SECURITY = "/usr/bin/security"
+KEYCHAIN = "/Users/messssi/Library/Keychains/login.keychain-db"
+KEYCHAIN_ACCOUNT = "phase5r-production"
+MASSIVE_KEYCHAIN_SERVICE = "com.steven.phase5r.massive-api-key"
+OPENAI_KEYCHAIN_SERVICE = "com.steven.phase5r.openai-api-key"
+SEC_USER_AGENT = "Phase5R personal equity research stevenchenjy326@gmail.com"
+PYTHON = "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
+RUNTIME_SCHEDULER = (
+    "/Users/messssi/LocalRuntime/equity/09_scripts/phase5r/"
+    "run_phase5r_runtime_scheduler.py"
+)
+KEYCHAIN_TIMEOUT_SECONDS = 8
+KEYCHAIN_UNAVAILABLE_EXIT = 78
+LAUNCH_FAILED_EXIT = 79
+
+
+def keychain_value(service: str, *, required: bool) -> bytes | None:
+    security_environment = os.environ.copy()
+    security_environment.pop("MASSIVE_API_KEY", None)
+    security_environment.pop("OPENAI_API_KEY", None)
+    try:
+        lookup = subprocess.run(
+            [
+                SECURITY,
+                "find-generic-password",
+                "-w",
+                "-a",
+                KEYCHAIN_ACCOUNT,
+                "-s",
+                service,
+                KEYCHAIN,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            env=security_environment,
+            timeout=KEYCHAIN_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except Exception:
+        return None
+    if lookup.returncode != 0:
+        return None
+    secret = lookup.stdout.rstrip(b"\r\n")
+    if not secret or any(byte <= 32 or byte == 127 for byte in secret):
+        return None
+    return secret
+
+
+def main() -> int:
+    os.umask(0o077)
+    child_environment = os.environb.copy()
+    child_environment.pop(b"MASSIVE_API_KEY", None)
+    child_environment.pop(b"OPENAI_API_KEY", None)
+    child_environment[b"PHASE5R_SEC_USER_AGENT"] = SEC_USER_AGENT.encode("utf-8")
+    massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE, required=True)
+    if massive_secret is None:
+        return KEYCHAIN_UNAVAILABLE_EXIT
+    child_environment[b"MASSIVE_API_KEY"] = massive_secret
+    openai_secret = keychain_value(OPENAI_KEYCHAIN_SERVICE, required=False)
+    if openai_secret is not None:
+        child_environment[b"OPENAI_API_KEY"] = openai_secret
+    try:
+        os.execve(
+            PYTHON,
+            [PYTHON, RUNTIME_SCHEDULER, "--job", "dailyrefresh"],
+            child_environment,
+        )
+    except OSError:
+        return LAUNCH_FAILED_EXIT
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

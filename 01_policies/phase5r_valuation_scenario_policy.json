@@ -1,0 +1,27 @@
+{
+  "schema_version": "phase5r_valuation_scenario_policy_v1",
+  "effective_from": "2026-08-31",
+  "review_by": "2026-09-30",
+  "method": "enterprise_value_to_ttm_revenue",
+  "purpose": "research range, not a price target or order instruction",
+  "growth_bands": [
+    {"minimum_yoy_pct": 25.0, "bear_multiple": 5.0, "base_multiple": 8.0, "bull_multiple": 11.0},
+    {"minimum_yoy_pct": 15.0, "bear_multiple": 3.5, "base_multiple": 6.0, "bull_multiple": 8.5},
+    {"minimum_yoy_pct": 5.0, "bear_multiple": 2.5, "base_multiple": 4.5, "bull_multiple": 6.5},
+    {"minimum_yoy_pct": -100.0, "bear_multiple": 1.5, "base_multiple": 3.0, "bull_multiple": 4.5}
+  ],
+  "adjustments": {
+    "positive_fcf_margin_pct_at_least_10": 0.5,
+    "negative_fcf_margin_pct": -0.75,
+    "net_cash_to_revenue_pct_at_least_20": 0.5,
+    "share_dilution_pct_above_5": -0.5
+  },
+  "caps": {"minimum_multiple": 1.0, "maximum_multiple": 14.0},
+  "boundaries": {
+    "research_only": true,
+    "automatic_action_allowed": false,
+    "broker_connected": false,
+    "order_code_created": false,
+    "trade_placed": false
+  }
+}

@@ -33,6 +33,10 @@ PRODUCTION_RUNTIME_WRAPPER = (
     / "phase5r"
     / "run_phase5r_runtime_scheduler.py"
 )
+EXTERNAL_DAILYREFRESH_LAUNCHER = Path(
+    "/Users/messssi/Library/Application Support/Phase5R/bin/"
+    "phase5r_dailyrefresh_launcher.py"
+)
 
 STATE_PATH = CONTROL_DIR / "active_decision_state.yaml"
 INHIBIT_PATH = (
@@ -263,6 +267,16 @@ def _plist_issues() -> list[str]:
         with template.open("rb") as handle:
             payload = plistlib.load(handle)
         arguments = payload.get("ProgramArguments", [])
+        expected_arguments = (
+            [str(EXTERNAL_DAILYREFRESH_LAUNCHER)]
+            if label == "com.steven.phase5r.dailyrefresh"
+            else [
+                "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+                str(PRODUCTION_RUNTIME_WRAPPER),
+                "--job",
+                job_name,
+            ]
+        )
         if not (
             payload.get("Label") == label
             and payload.get("RunAtLoad") is True
@@ -270,13 +284,7 @@ def _plist_issues() -> list[str]:
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload
             and payload.get("WorkingDirectory") == str(PRODUCTION_RUNTIME_ROOT)
-            and arguments
-            == [
-                "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
-                str(PRODUCTION_RUNTIME_WRAPPER),
-                "--job",
-                job_name,
-            ]
+            and arguments == expected_arguments
         ):
             issues.append(f"{label}:invariants")
     for label in RETIRED_JOBS:

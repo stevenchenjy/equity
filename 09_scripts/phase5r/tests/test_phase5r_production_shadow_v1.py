@@ -317,7 +317,7 @@ class ProductionShadowTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "completed")
         self.assertEqual(len(provider.calls), 1)
         self.assertEqual(provider.calls[0]["model"], shadow.MODEL)
-        self.assertEqual(provider.calls[0]["reasoning_effort"], "high")
+        self.assertEqual(provider.calls[0]["reasoning_effort"], "medium")
         self.assertEqual(provider.calls[0]["role"], "analyst")
         self.assertFalse(result["canonical_effect"])
         self.assertFalse(report["canonical_effect"])
@@ -413,7 +413,7 @@ class ProductionShadowTests(unittest.TestCase):
         self.assertEqual(ledger_rows[-1]["validation_status"], "terminal_failure")
         self.assertEqual(ledger_rows[-1]["citation_quality"], "not_accepted")
         self.assertIsNone(ledger_rows[-1]["llm_challenge"])
-        self.assertEqual(exposure["daily_metered_usd"], "0.001750")
+        self.assertEqual(exposure["daily_metered_usd"], "0.001400")
 
     def test_unbound_human_finding_is_terminal(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

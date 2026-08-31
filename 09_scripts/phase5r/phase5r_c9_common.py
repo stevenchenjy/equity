@@ -20,7 +20,9 @@ ACCOUNT_STATE = POSITION_DIR / "current_account_state.local.json"
 CURRENT_POSITIONS = POSITION_DIR / "current_positions.local.csv"
 MARKET_SNAPSHOT = DATA_DIR / "phase5r_b2_market_data_snapshot.csv"
 MARKET_QUALITY = DATA_DIR / "phase5r_b2_market_data_quality_report.csv"
-C5_PACKETS = RESEARCH_DIR / "phase5r_c5_company_research_packets.csv"
+# Compatibility name retained for the mature C9 child modules. Production now
+# consumes a baseline regenerated from current market and SEC evidence.
+C5_PACKETS = RESEARCH_DIR / "phase5r_current_research_baseline.csv"
 C9_INHIBIT = SCHEDULER_DIR / "phase5r_c9_maintenance_inhibit.local.json"
 C9_RUN_LOG = CONTROL_DIR / "run_logs" / "phase5r_c9_run_log.csv"
 

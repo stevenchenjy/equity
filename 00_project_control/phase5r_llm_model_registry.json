@@ -1,5 +1,7 @@
 {
   "schema_version": "phase5r_llm_model_registry_v1",
+  "authority_status": "historical_nonproduction_fixture",
+  "superseded_by": "00_project_control/phase5r_active_production_config.json",
   "mode": "offline_fixture",
   "live_shadow_enabled": false,
   "canonical_influence_enabled": false,

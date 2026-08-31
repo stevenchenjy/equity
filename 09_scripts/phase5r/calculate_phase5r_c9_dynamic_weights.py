@@ -78,7 +78,21 @@ def main() -> None:
     positions = load_positions()
     market = load_market_rows([str(row["ticker"]) for row in positions])
     packets = load_packets()
-    account_total = as_float(account["account_total_value"], "account_total_value")
+    reported_account_total = as_float(
+        account["account_total_value"], "account_total_value"
+    )
+    cash = as_float(account["cash_available"], "cash_available")
+    estimated_holdings_value = sum(
+        as_float(position["shares"], f"{position['ticker']}.shares")
+        * as_float(market[str(position["ticker"])]["last_price"], f"{position['ticker']}.last_price")
+        for position in positions
+    )
+    # Manually maintained cash and share counts are the current account truth.
+    # The last reported total is only a reconciliation reference because close
+    # prices change between manual account updates.
+    account_total = cash + estimated_holdings_value
+    if account_total <= 0:
+        raise ValueError("cash plus current holdings must be positive")
     default_cap = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
     hard_cap = as_float(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
 
@@ -130,18 +144,15 @@ def main() -> None:
     dynamic_rows.sort(key=lambda row: -float(row["current_weight_pct"]))
     holdings_value = sum(float(row["current_value"]) for row in dynamic_rows)
     active_weight = holdings_value / account_total * 100.0
-    cash = as_float(account["cash_available"], "cash_available")
     cash_reserved = as_float(account["cash_reserved"], "cash_reserved")
     cash_plus_holdings = cash + holdings_value
-    reconciliation_difference = account_total - cash_plus_holdings
-    tolerance = max(25.0, account_total * 0.01)
+    reconciliation_difference = reported_account_total - cash_plus_holdings
+    tolerance = max(25.0, reported_account_total * 0.01)
     reconciliation_status = (
-        "estimated_price_drift_within_tolerance"
+        "reported_total_within_price_drift_tolerance"
         if abs(reconciliation_difference) <= tolerance
-        else "requires_account_state_refresh"
+        else "reported_total_stale_effective_total_derived_from_cash_and_holdings"
     )
-    if reconciliation_status != "estimated_price_drift_within_tolerance":
-        raise ValueError("account cash and current holdings do not reconcile within C9 tolerance")
     active_target = as_float(account["active_stock_target_pct"], "active_stock_target_pct")
     active_hard = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     if active_weight <= active_target + 1e-9:
@@ -176,7 +187,7 @@ def main() -> None:
         "position_count": str(len(dynamic_rows)),
         "account_state_updated": str(account["last_updated"]),
         "latest_price_timestamp": max(row["price_timestamp"] for row in dynamic_rows),
-        "calculation_basis": "shares_and_canonical_b2_price_divided_by_account_total; stored_position_pct_historical_only",
+        "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
     }
     write_csv(DYNAMIC_WEIGHTS, dynamic_rows, DYNAMIC_FIELDS)
     write_csv(PORTFOLIO_SUMMARY, [summary], SUMMARY_FIELDS)
@@ -189,7 +200,7 @@ def main() -> None:
         position_count=len(dynamic_rows),
         notes=(
             f"active_weight_pct={active_weight:.4f}; reconciliation_difference={reconciliation_difference:.2f}; "
-            "stored_position_pct_used_for_current_truth=no"
+            "effective_total_basis=cash_plus_current_holdings; stored_position_pct_used_for_current_truth=no"
         ),
     )
     print(

@@ -143,6 +143,17 @@ FUNDAMENTAL_FIELDS = [
     "cash_latest",
     "assets_latest",
     "liabilities_latest",
+    "ttm_revenue",
+    "ttm_revenue_prior_year",
+    "ttm_revenue_yoy_pct",
+    "ttm_operating_cash_flow",
+    "ttm_capex",
+    "ttm_free_cash_flow",
+    "ttm_free_cash_flow_margin_pct",
+    "diluted_shares_latest",
+    "diluted_shares_prior_year",
+    "share_dilution_pct",
+    "debt_latest",
     "trend_label",
     "data_quality",
     "source_url",
@@ -159,6 +170,27 @@ CASH_TAGS = (
 )
 ASSET_TAGS = ("Assets",)
 LIABILITY_TAGS = ("Liabilities",)
+OPERATING_CASH_FLOW_TAGS = ("NetCashProvidedByUsedInOperatingActivities",)
+CAPEX_TAGS = (
+    "PaymentsToAcquirePropertyPlantAndEquipment",
+    "PaymentsForProceedsFromOtherPropertyPlantAndEquipment",
+)
+DILUTED_SHARES_TAGS = (
+    "WeightedAverageNumberOfDilutedSharesOutstanding",
+    "WeightedAverageNumberOfSharesOutstandingBasic",
+)
+SHARES_OUTSTANDING_TAGS = (
+    "EntityCommonStockSharesOutstanding",
+    "CommonStockSharesOutstanding",
+)
+DEBT_CURRENT_TAGS = (
+    "LongTermDebtAndFinanceLeaseObligationsCurrent",
+    "LongTermDebtCurrent",
+)
+DEBT_NONCURRENT_TAGS = (
+    "LongTermDebtAndFinanceLeaseObligationsNoncurrent",
+    "LongTermDebtNoncurrent",
+)
 
 
 def request_json(url: str, user_agent: str) -> Any:
@@ -186,16 +218,20 @@ def researched_tickers() -> tuple[list[str], list[str]]:
             ticker = row.get("ticker", "").strip().upper()
             if ticker:
                 watched.add(ticker)
-    queue_path = (
-        ROOT
-        / "04_research"
-        / "realtime_stock_picker_phase5r"
-        / "phase5r_c5_company_research_packets.csv"
+    score_path = ROOT / "03_source_data" / "phase5r" / "phase5r_b2_signal_scores.csv"
+    current_scores = [
+        row for row in read_csv(score_path)
+        if row.get("ticker", "").strip()
+        and row.get("data_quality_label") in {"ok", "partial"}
+        and row.get("total_score", "").strip()
+    ]
+    current_scores.sort(key=lambda row: (-float(row["total_score"]), row["ticker"]))
+    watched.add("SPY")
+    watched.update(
+        row["ticker"].strip().upper()
+        for row in current_scores[:8]
+        if row["ticker"].strip().upper() != "SPY"
     )
-    for row in read_csv(queue_path):
-        ticker = row.get("ticker", "").strip().upper()
-        if ticker:
-            watched.add(ticker)
     return sorted(held), sorted(watched | held)
 
 
@@ -278,22 +314,26 @@ def current_submission_entity_name(
     return entity_name
 
 
-def fact_units(payload: dict[str, Any], tags: tuple[str, ...]) -> list[dict[str, Any]]:
+def fact_units(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+) -> list[dict[str, Any]]:
     facts = payload.get("facts", {})
     for taxonomy in ("us-gaap", "ifrs-full"):
         taxonomy_facts = facts.get(taxonomy, {})
         for tag in tags:
             record = taxonomy_facts.get(tag, {})
             units = record.get("units", {})
-            values = units.get("USD", [])
+            values = units.get(unit, [])
             if values:
                 return [item for item in values if isinstance(item.get("val"), (int, float))]
     return []
 
 
-def quarterly_values(payload: dict[str, Any], tags: tuple[str, ...]) -> list[dict[str, Any]]:
+def quarterly_values(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+) -> list[dict[str, Any]]:
     selected: dict[str, dict[str, Any]] = {}
-    for item in fact_units(payload, tags):
+    for item in fact_units(payload, tags, unit):
         frame = str(item.get("frame", ""))
         if not re.fullmatch(r"CY\d{4}Q[1-4]", frame):
             continue
@@ -314,10 +354,12 @@ def quarterly_values(payload: dict[str, Any], tags: tuple[str, ...]) -> list[dic
     return sorted(selected.values(), key=lambda item: str(item.get("frame", "")))
 
 
-def latest_instant(payload: dict[str, Any], tags: tuple[str, ...]) -> float | None:
+def latest_instant(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+) -> float | None:
     values = [
         item
-        for item in fact_units(payload, tags)
+        for item in fact_units(payload, tags, unit)
         if item.get("form") in {"10-Q", "10-K", "20-F", "40-F"}
         and item.get("end")
     ]
@@ -325,6 +367,20 @@ def latest_instant(payload: dict[str, Any], tags: tuple[str, ...]) -> float | No
         return None
     latest = max(values, key=lambda item: (str(item.get("end", "")), str(item.get("filed", ""))))
     return float(latest["val"])
+
+
+def trailing_four(values: list[dict[str, Any]]) -> tuple[float | None, float | None]:
+    """Return current and prior four-quarter sums from normalized CY frames."""
+
+    if len(values) < 4:
+        return None, None
+    current = sum(float(item["val"]) for item in values[-4:])
+    prior = (
+        sum(float(item["val"]) for item in values[-8:-4])
+        if len(values) >= 8
+        else None
+    )
+    return current, prior
 
 
 def money(value: float | None) -> str:
@@ -371,6 +427,45 @@ def fundamental_row(
     cash = latest_instant(payload, CASH_TAGS)
     assets = latest_instant(payload, ASSET_TAGS)
     liabilities = latest_instant(payload, LIABILITY_TAGS)
+    ttm_revenue, ttm_revenue_prior = trailing_four(revenue)
+    ttm_revenue_yoy = (
+        (ttm_revenue / ttm_revenue_prior - 1.0) * 100.0
+        if ttm_revenue is not None and ttm_revenue_prior not in {None, 0.0}
+        else None
+    )
+    operating_cash_flow, _ = trailing_four(
+        quarterly_values(payload, OPERATING_CASH_FLOW_TAGS)
+    )
+    capex, _ = trailing_four(quarterly_values(payload, CAPEX_TAGS))
+    free_cash_flow = (
+        operating_cash_flow - capex
+        if operating_cash_flow is not None and capex is not None
+        else None
+    )
+    free_cash_flow_margin = (
+        free_cash_flow / ttm_revenue * 100.0
+        if free_cash_flow is not None and ttm_revenue not in {None, 0.0}
+        else None
+    )
+    share_values = quarterly_values(payload, DILUTED_SHARES_TAGS, "shares")
+    diluted_shares = (
+        float(share_values[-1]["val"])
+        if share_values
+        else latest_instant(payload, SHARES_OUTSTANDING_TAGS, "shares")
+    )
+    diluted_prior = float(share_values[-5]["val"]) if len(share_values) >= 5 else None
+    share_dilution = (
+        (diluted_shares / diluted_prior - 1.0) * 100.0
+        if diluted_shares is not None and diluted_prior not in {None, 0.0}
+        else None
+    )
+    debt_parts = [
+        latest_instant(payload, DEBT_CURRENT_TAGS),
+        latest_instant(payload, DEBT_NONCURRENT_TAGS),
+    ]
+    debt = sum(value for value in debt_parts if value is not None)
+    if all(value is None for value in debt_parts):
+        debt = None
     if revenue_yoy is None:
         trend = "insufficient_trend"
     elif revenue_yoy >= 15.0:
@@ -401,6 +496,17 @@ def fundamental_row(
         "cash_latest": money(cash),
         "assets_latest": money(assets),
         "liabilities_latest": money(liabilities),
+        "ttm_revenue": money(ttm_revenue),
+        "ttm_revenue_prior_year": money(ttm_revenue_prior),
+        "ttm_revenue_yoy_pct": "" if ttm_revenue_yoy is None else f"{ttm_revenue_yoy:.2f}",
+        "ttm_operating_cash_flow": money(operating_cash_flow),
+        "ttm_capex": money(capex),
+        "ttm_free_cash_flow": money(free_cash_flow),
+        "ttm_free_cash_flow_margin_pct": "" if free_cash_flow_margin is None else f"{free_cash_flow_margin:.2f}",
+        "diluted_shares_latest": money(diluted_shares),
+        "diluted_shares_prior_year": money(diluted_prior),
+        "share_dilution_pct": "" if share_dilution is None else f"{share_dilution:.2f}",
+        "debt_latest": money(debt),
         "trend_label": trend,
         "data_quality": quality,
         "source_url": SEC_COMPANYFACTS_URL.format(cik=cik),

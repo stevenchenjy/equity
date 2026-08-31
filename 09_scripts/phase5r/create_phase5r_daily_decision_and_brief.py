@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import argparse
 import html
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from phase5r_daily_common import (
@@ -35,6 +35,7 @@ from phase5r_daily_common import (
     canonical_sha256,
     cycle_date,
     expected_market_session,
+    last_completed_market_session,
     iso_now,
     load_active_state,
     load_inhibit,
@@ -45,6 +46,7 @@ from phase5r_daily_common import (
     log_daily_run,
 )
 from phase5r_c9_common import load_account_state
+from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
 
 
@@ -71,7 +73,7 @@ def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, An
     }
     failures: list[str] = []
     session_dates: dict[str, str] = {}
-    expected = expected_market_session(current).isoformat()
+    expected = last_completed_market_session(current).isoformat()
     for ticker in held_tickers:
         row = rows.get(ticker)
         quality_row = quality.get(ticker)
@@ -171,19 +173,34 @@ def material_events_for_cycle() -> list[dict[str, str]]:
 
 def normalized_held_rows() -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
+    recommendations = {
+        row.get("ticker", "").strip().upper(): row
+        for row in read_csv(POSITION_RECOMMENDATION_PATH)
+    }
     for row in read_csv(EXACT_ACTION_PATH):
         action = row.get("recommended_action", "").strip().lower() or "hold"
+        recommendation = recommendations.get(row.get("ticker", "").strip().upper(), {})
         rows.append(
             {
                 "ticker": row.get("ticker", "").strip().upper(),
                 "action": action,
                 "current_shares": row.get("current_shares", ""),
+                "current_price": row.get("current_price", ""),
                 "current_weight_pct": row.get("current_weight_pct", ""),
                 "target_shares": row.get("target_shares", ""),
                 "whole_shares_to_change": row.get("whole_shares_to_change", ""),
                 "confidence": row.get("recommendation_confidence", ""),
                 "reason": row.get("reason", ""),
                 "invalidation": row.get("invalidation_price_or_condition", ""),
+                "holding_horizon": row.get("holding_horizon", ""),
+                "valuation_bear_price": recommendation.get("valuation_bear_price", ""),
+                "valuation_base_price": recommendation.get("valuation_base_price", ""),
+                "valuation_bull_price": recommendation.get("valuation_bull_price", ""),
+                "expected_upside_pct": recommendation.get("expected_upside_pct", ""),
+                "reward_to_risk_estimate": recommendation.get("reward_to_risk_estimate", ""),
+                "strongest_positive_evidence": recommendation.get("strongest_positive_evidence", ""),
+                "strongest_negative_evidence": recommendation.get("strongest_negative_evidence", ""),
+                "valuation_source": recommendation.get("valuation_source", ""),
                 "human_confirmation_required": (
                     "yes" if is_action_transition(action) else "no"
                 ),
@@ -239,6 +256,7 @@ def main() -> int:
     args = parser.parse_args()
 
     active_state = load_active_state()
+    active_config = load_active_config()
     inhibit = load_inhibit()
     held_rows = normalized_held_rows()
     if not held_rows:
@@ -286,6 +304,7 @@ def main() -> int:
     ]
     conflicts = execution_conflicts()
     material_events = material_events_for_cycle()
+    candidate_recommendations = read_csv(NEW_CANDIDATE_PATH)
     prior_state = read_json(DAILY_DECISION_STATE_PATH, {})
     market_session = (
         market_gate["expected_market_session"]
@@ -317,6 +336,37 @@ def main() -> int:
     data_gate_passed = (
         market_gate["passed"] and evidence_gate_passed and fundamental_gate_passed
     )
+    proposed_new_candidates = [
+        row for row in candidate_recommendations
+        if row.get("eligibility_label") == "eligible_buy_review"
+    ]
+    new_candidate_fingerprint = canonical_sha256([
+        {
+            "ticker": row.get("ticker", ""),
+            "maximum_review_price": row.get("maximum_review_price", ""),
+            "suggested_whole_shares": row.get("suggested_whole_shares", ""),
+        }
+        for row in proposed_new_candidates
+    ])
+    prior_new_fingerprint = prior_state.get("new_candidate_proposal_fingerprint", "")
+    prior_new_session = prior_state.get("new_candidate_proposal_session", "")
+    prior_new_count = int(prior_state.get("new_candidate_proposal_distinct_closes", 0) or 0)
+    if not proposed_new_candidates or not market_session:
+        new_candidate_stability_count = 0
+    elif new_candidate_fingerprint == prior_new_fingerprint:
+        new_candidate_stability_count = prior_new_count + (
+            1 if market_session != prior_new_session else 0
+        )
+    else:
+        new_candidate_stability_count = 1
+    eligible_new_candidates = (
+        proposed_new_candidates
+        if data_gate_passed and new_candidate_stability_count >= 2
+        else []
+    )
+    pending_new_candidates = (
+        proposed_new_candidates if proposed_new_candidates and not eligible_new_candidates else []
+    )
     if conflicts:
         headline = "暂停新增动作｜先解决账户状态冲突"
         decisive_advice = "不要改变仓位；先校准本地账户和已确认成交状态。"
@@ -330,11 +380,17 @@ def main() -> int:
         headline = f"维持现有仓位但暂停新增｜{weakening} 长期收入趋势需复核"
         decisive_advice = "不因单日价格动作；先核对最新官方财务趋势是否削弱长期逻辑。"
         decision_code = "fundamental_weakening_review"
-    elif eligible_transitions:
+    elif eligible_transitions or eligible_new_candidates:
         transition_text = "；".join(
             f"{row['ticker']}：{plain_action(row['action'])}"
             for row in eligible_transitions
         )
+        if eligible_new_candidates:
+            candidate_text = "；".join(
+                f"{row['ticker']}：最多复核 {row.get('suggested_whole_shares', '0')} 股，最高 ${row.get('maximum_review_price', 'n/a')}"
+                for row in eligible_new_candidates
+            )
+            transition_text = "；".join(filter(None, (transition_text, candidate_text)))
         headline = f"明确行动候选｜{transition_text}"
         decisive_advice = "这是需要人工判断的研究方案；仓位不会自动改变。"
         decision_code = "action_review_candidate"
@@ -353,7 +409,7 @@ def main() -> int:
     ]
     if conflicts:
         substantive_code = "account_conflict_hold"
-    elif eligible_transitions:
+    elif eligible_transitions or eligible_new_candidates:
         substantive_code = "action_review_candidate"
     elif weakening_tickers:
         substantive_code = "fundamental_weakening_review"
@@ -371,6 +427,16 @@ def main() -> int:
                 row.get("ticker", ""): row.get("trend_label", "")
                 for row in held_fundamentals
             },
+            "candidate_reviews": [
+                {
+                    "ticker": row.get("ticker", ""),
+                    "eligibility": row.get("eligibility_label", ""),
+                    "action": row.get("recommended_action", ""),
+                    "maximum_review_price": row.get("maximum_review_price", ""),
+                    "suggested_whole_shares": row.get("suggested_whole_shares", ""),
+                }
+                for row in candidate_recommendations
+            ],
         }
     )
     prior_fingerprint = prior_state.get("decision_fingerprint", "")
@@ -393,12 +459,29 @@ def main() -> int:
             else "weekend_no_material_change"
         )
     else:
-        send_recommended = True
-        send_reason = "weekday_daily_brief"
+        weekly_summary_due = current.weekday() == 4
+        first_material_baseline = not prior_fingerprint and bool(
+            eligible_transitions or eligible_new_candidates or conflicts or material_events or weakening_tickers
+        )
+        send_recommended = bool(
+            weekly_summary_due
+            or decision_changed
+            or material_events
+            or conflicts
+            or weakening_tickers
+            or first_material_baseline
+        )
+        send_reason = (
+            "friday_weekly_summary" if weekly_summary_due
+            else "material_decision_change" if send_recommended
+            else "unchanged_daily_email_suppressed"
+        )
 
     review_reasons: list[str] = []
     if eligible_transitions:
         review_reasons.append("portfolio_action_transition")
+    if eligible_new_candidates:
+        review_reasons.append("new_position_review_candidate")
     if conflicts:
         review_reasons.append("account_state_conflict")
     if material_events:
@@ -408,16 +491,44 @@ def main() -> int:
     human_review_required = bool(review_reasons)
 
     watch_rows = []
-    for row in read_csv(NEW_CANDIDATE_PATH)[:5]:
+    pending_candidate_tickers = {
+        row.get("ticker", "") for row in pending_new_candidates
+    }
+    eligible_candidate_tickers = {
+        row.get("ticker", "") for row in eligible_new_candidates
+    }
+    for row in candidate_recommendations[:5]:
+        ticker = row.get("ticker", "")
+        displayed_action = row.get("recommended_action", "")
+        if ticker in pending_candidate_tickers:
+            displayed_action = "pending_second_distinct_close"
         watch_rows.append(
             {
-                "ticker": row.get("ticker", ""),
+                "ticker": ticker,
                 "label": row.get("eligibility_label", ""),
-                "action": row.get("recommended_action", ""),
+                "action": displayed_action,
                 "score": row.get("account_aware_conviction_score", ""),
-                "human_confirmation_required": "no",
+                "confidence": row.get("recommendation_confidence", ""),
+                "human_confirmation_required": "yes" if ticker in eligible_candidate_tickers else "no",
+                "current_price": row.get("current_price", ""),
+                "valuation_bear_price": row.get("valuation_bear_price", ""),
+                "valuation_base_price": row.get("valuation_base_price", ""),
+                "valuation_bull_price": row.get("valuation_bull_price", ""),
+                "maximum_review_price": row.get("maximum_review_price", ""),
+                "suggested_whole_shares": row.get("suggested_whole_shares", ""),
+                "suggested_position_pct": row.get("suggested_position_pct", ""),
+                "holding_horizon": row.get("holding_horizon", ""),
+                "invalidation": row.get("invalidation_condition", ""),
+                "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),
+                "strongest_negative_evidence": row.get("strongest_negative_evidence", ""),
+                "valuation_source": row.get("valuation_source", ""),
             }
         )
+
+    days_to_friday = (4 - current.weekday()) % 7
+    if days_to_friday == 0:
+        days_to_friday = 7
+    next_review_date = (current.date() + timedelta(days=days_to_friday)).isoformat()
 
     decision = {
         "schema_version": "phase5r_daily_decision_v1",
@@ -436,8 +547,10 @@ def main() -> int:
         ],
         "pending_stability_candidates": [
             row["ticker"] for row in pending_stability
-        ],
+        ] + sorted(pending_candidate_tickers),
+        "eligible_new_position_review_candidates": sorted(eligible_candidate_tickers),
         "action_stability_distinct_closes": stability_count,
+        "new_candidate_stability_distinct_closes": new_candidate_stability_count,
         "market_gate": market_gate,
         "evidence_gate": {
             "passed": evidence_gate_passed,
@@ -490,6 +603,19 @@ def main() -> int:
         "send_recommended": send_recommended,
         "send_reason": send_reason,
         "weekend_policy": "material_change_only",
+        "notification_policy": {
+            "event_driven": active_config["notifications"]["event_driven"],
+            "weekly_summary_weekday": active_config["notifications"]["weekly_summary_weekday"],
+            "unchanged_daily_email": active_config["notifications"]["unchanged_daily_email"],
+        },
+        "next_scheduled_review": next_review_date,
+        "model_assistance": {
+            "used_for_deterministic_decision": False,
+            "route": "no_call",
+            "cycle_cost_usd": 0.0,
+            "monthly_hard_cap_usd": active_config["model_policy"]["monthly_hard_cap_usd"],
+            "status": active_config["model_policy"]["status"],
+        },
         "boundaries": {
             "research_only": True,
             "broker_connected": False,
@@ -502,13 +628,18 @@ def main() -> int:
 
     held_lines = "\n".join(
         f"- {row['ticker']}: {plain_action(row['action'])}; "
-        f"{row['current_shares']} 股，约占 {row['current_weight_pct']}%；"
+        f"现价 ${row['current_price'] or 'n/a'}，{row['current_shares']} 股，约占 {row['current_weight_pct']}%；"
+        f"估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
+        f"期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}；"
+        f"最强正面：{row['strongest_positive_evidence'] or 'n/a'}；最强负面：{row['strongest_negative_evidence'] or 'n/a'}；"
         f"人工确认={row['human_confirmation_required']}。"
         for row in held_rows
     )
     watch_lines = "\n".join(
         f"- {row['ticker']}: {row['action'] or row['label']}，"
-        f"分数 {row['score'] or 'n/a'}；继续观察，无需人工复核。"
+        f"现价 ${row['current_price'] or 'n/a'}，估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
+        f"最多复核 {row['suggested_whole_shares'] or '0'} 股（约 {row['suggested_position_pct'] or '0'}%），最高复核价 ${row['maximum_review_price'] or 'n/a'}；"
+        f"分数 {row['score'] or 'n/a'}；期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}。"
         for row in watch_rows
     ) or "- 当前没有进入展示阈值的新候选。"
     gate_lines = (
@@ -559,7 +690,9 @@ def main() -> int:
 - 每日更新信息不等于每日改变仓位；新增方案至少需要两个不同有效收盘日保持一致。
 - HOLD / WATCH / NO NEW POSITION 不要求人工确认。
 - 只有增减仓等状态变化、账户冲突或新的重大官方文件才升级复核。
-- 发送策略：工作日每日一次；周末无重大变化不发送。
+- 发送策略：只在重大变化时发送，另加周五周报；无变化的普通工作日不发送。
+- 下次计划复核：{next_review_date}。
+- 本次确定性决策模型成本：$0；月度模型硬上限：${active_config['model_policy']['monthly_hard_cap_usd']}。
 
 ## 运行边界
 
@@ -595,6 +728,8 @@ def main() -> int:
 
 说明：这是研究建议，不是买卖指令。不会连接券商或自动下单。
 人工复核：{'需要（' + '、'.join(review_reasons) + '）' if human_review_required else '不需要'}
+下次计划复核：{next_review_date}
+本次确定性决策模型成本：$0；月度模型硬上限：${active_config['model_policy']['monthly_hard_cap_usd']}
 """
     atomic_write_text(DAILY_BRIEF_TEXT_PATH, plain)
     html_body = f"""<!doctype html>
@@ -603,10 +738,10 @@ def main() -> int:
 <p style="font-size:17px"><strong>{html.escape(decisive_advice)}</strong></p>
 <p style="background:#f3f6f8;padding:10px">研究建议，不是买卖指令；不会连接券商或自动下单。</p>
 <h2>当前持仓</h2><ul>
-{''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(plain_action(row['action']))}；{html.escape(str(row['current_shares']))} 股，约占 {html.escape(str(row['current_weight_pct']))}%。</li>" for row in held_rows)}
+{''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(plain_action(row['action']))}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，{html.escape(str(row['current_shares']))} 股，约占 {html.escape(str(row['current_weight_pct']))}%；估值 ${html.escape(str(row['valuation_bear_price'] or 'n/a'))}/${html.escape(str(row['valuation_base_price'] or 'n/a'))}/${html.escape(str(row['valuation_bull_price'] or 'n/a'))}。</li>" for row in held_rows)}
 </ul>
 <h2>观察候选</h2><ul>
-{''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}，无需人工复核。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
+{''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，估值 ${html.escape(str(row['valuation_bear_price'] or 'n/a'))}/${html.escape(str(row['valuation_base_price'] or 'n/a'))}/${html.escape(str(row['valuation_bull_price'] or 'n/a'))}；最多复核 {html.escape(str(row['suggested_whole_shares'] or '0'))} 股。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
 </ul>
 <h2>可靠性</h2>
 <p>市场数据：{'通过' if market_gate['passed'] else '未通过'}；SEC 官方证据：{'通过' if evidence_gate_passed else '未通过'}；长期基本面：{'通过' if fundamental_gate_passed else '未通过'}；账户状态：{'需复核' if conflicts else '一致'}。</p>
@@ -614,6 +749,7 @@ def main() -> int:
 {''.join(f"<li>{html.escape(row.get('ticker', ''))}：{html.escape(row.get('trend_label', 'insufficient_trend'))}；收入同比 {html.escape(row.get('revenue_yoy_pct') or 'n/a')}%；净利率 {html.escape(row.get('net_margin_pct') or 'n/a')}%。</li>" for row in held_fundamentals)}
 </ul>
 <p>每日更新信息不等于每日操作；新增方案至少需要两个不同有效收盘日保持一致。</p>
+<p>下次计划复核：{html.escape(next_review_date)}。本次确定性决策模型成本：$0；月度模型硬上限：${html.escape(str(active_config['model_policy']['monthly_hard_cap_usd']))}。</p>
 </body></html>
 """
     atomic_write_text(DAILY_BRIEF_HTML_PATH, html_body)
@@ -630,6 +766,11 @@ def main() -> int:
             or prior_state.get("action_proposal_session", "")
         ),
         "action_proposal_distinct_closes": stability_count,
+        "new_candidate_proposal_fingerprint": new_candidate_fingerprint,
+        "new_candidate_proposal_session": (
+            market_session or prior_state.get("new_candidate_proposal_session", "")
+        ),
+        "new_candidate_proposal_distinct_closes": new_candidate_stability_count,
     }
     atomic_write_json(DAILY_DECISION_STATE_PATH, state)
     log_daily_run(

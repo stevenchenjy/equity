@@ -59,7 +59,7 @@ payload = {
     "operational_from": (now.date() + timedelta(days=1)).isoformat(),
     "decision_timezone": "America/New_York",
     "analysis_cadence": "weekday_08:15_12:30_16:15_17:45_plus_18:30_final;weekend_12:00_plus_18:30_decision",
-    "email_cadence": "weekday_daily_once;weekend_material_change_only",
+    "email_cadence": "material_change_only_plus_friday_weekly_summary",
     "weekend_email_policy": "material_change_only",
     "daily_pipeline_status": "protected_verification",
     "d1_scheduler_status": "retired_unloaded",

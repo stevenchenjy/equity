@@ -87,16 +87,16 @@ LEDGER_SCHEMA_VERSION = "phase5r_production_shadow_ledger_event_v1"
 OBSERVATION_SCHEMA_VERSION = "phase5r_production_shadow_observation_state_v1"
 
 MODEL = "gpt-5.6-terra"
-REASONING_EFFORT = "high"
+REASONING_EFFORT = "medium"
 SDK_MAX_RETRIES = 0
 REQUEST_TIMEOUT_SECONDS = 120
-MAX_OUTPUT_TOKENS = 12_000
+MAX_OUTPUT_TOKENS = 4_000
 MAX_INPUT_PAYLOAD_BYTES = 15_000
 MAX_REQUEST_ENVELOPE_BYTES = 30_000
 MAX_EVIDENCE_EXCERPT_BYTES = 20_000
 MAX_EVIDENCE_SOURCES = 8
-DAILY_COST_CAP_USD = Decimal("0.50")
-MONTHLY_COST_CAP_USD = Decimal("10.00")
+DAILY_COST_CAP_USD = Decimal("0.18")
+MONTHLY_COST_CAP_USD = Decimal("2.00")
 OBSERVATION_COMPLETED_TRADING_DAYS = 10
 
 # A conservative local ceiling.  The input rate and cache-write multiplier are
@@ -104,13 +104,13 @@ OBSERVATION_COMPLETED_TRADING_DAYS = 10
 # request/output caps stay well below the daily authorization.  The runner
 # reserves the full daily cap before any client is constructed, so aggregate
 # exposure remains bounded even if a terminal request outcome is unknown.
-TERRA_INPUT_USD_PER_MILLION = Decimal("2.50")
-TERRA_CACHED_INPUT_USD_PER_MILLION = Decimal("0.25")
-TERRA_OUTPUT_USD_PER_MILLION = Decimal("15.00")
+TERRA_INPUT_USD_PER_MILLION = Decimal("2.00")
+TERRA_CACHED_INPUT_USD_PER_MILLION = Decimal("0.20")
+TERRA_OUTPUT_USD_PER_MILLION = Decimal("12.00")
 CACHE_WRITE_MULTIPLIER = Decimal("1.25")
 BILLING_SAFETY_MULTIPLIER = Decimal("1.10")
-PRICING_VERIFIED_ON = "2026-08-04"
-PRICING_VALID_THROUGH = "2026-08-31"
+PRICING_VERIFIED_ON = "2026-08-31"
+PRICING_VALID_THROUGH = "2026-09-30"
 
 PRODUCTION_ROOT = ROOT / "08_reviews" / "phase5r_production_shadow_v1"
 HANDOFF_ROOT = PRODUCTION_ROOT / "handoffs"

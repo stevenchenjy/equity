@@ -27,7 +27,9 @@ The active workflow is `daily_decision` and the only active email pipeline is
 `phase5r_daily`.
 
 - Public market and SEC evidence refreshes run several times on weekdays.
-- One decisive brief is eligible after 18:30 America/New_York on weekdays.
+- One decisive brief is eligible after 18:30 America/New_York only for a
+  material change, plus a Friday weekly summary. Unchanged weekday email is
+  suppressed.
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
 - `phase5r-production-shadow-v1` is a conditional, noncanonical companion:
@@ -35,6 +37,11 @@ The active workflow is `daily_decision` and the only active email pipeline is
   evidence-bound AI research review per eligible trading day. It cannot change
   the deterministic decision, positions, risk state, or normal daily email.
 - Daily analysis does not imply daily portfolio action.
+- Current research packets are regenerated from the latest completed close and
+  SEC evidence; the historical C5 narrative is not a production input.
+- Source-bound bear/base/bull valuations and whole-share sizing are computed
+  deterministically. Recommendation snapshots are evaluated after 1, 5, 20,
+  and 60 market sessions against SPY and QQQ.
 - HOLD, WATCH, and NO NEW POSITION need no manual confirmation. Any proposed
   portfolio change remains research for independent human review and can never
   execute automatically.
@@ -78,8 +85,29 @@ cd /Users/messssi/LocalRuntime/equity
   09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailydecision --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
   09_scripts/phase5r/verify_phase5r_production_shadow_readiness.py
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+  09_scripts/phase5r/generate_phase5r_current_status.py
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
+  09_scripts/phase5r/run_phase5r_active_tests.py
 ```
 
 These checks do not read SMTP configuration, send email, connect to a broker,
 or create orders. The production-shadow readiness check also does not create a
 provider client or probe credentials.
+
+The single active configuration is
+[`00_project_control/phase5r_active_production_config.json`](00_project_control/phase5r_active_production_config.json).
+The generated current status is
+`00_project_control/phase5r_current_production_status.local.md`; older dated
+pilot registries and reports are historical evidence.
+
+After a manual trade or cash change, preview and then explicitly apply the
+entire current position set in one command:
+
+```bash
+python3 09_scripts/phase5r/update_phase5r_manual_account.py \
+  --cash 1900 --position IOT=4@36.44 --position RBRK=2@84.40 --preview
+```
+
+Replace `--preview` with `--apply` only after checking the aggregates. This
+command reads no broker and creates no order.

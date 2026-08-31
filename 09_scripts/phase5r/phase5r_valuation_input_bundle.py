@@ -88,6 +88,10 @@ _SOURCE_POLICIES = {
         "human_research_scenario",
         ("04_data/phase5r",),
     ),
+    "deterministic_valuation_policy": (
+        "deterministic_policy",
+        ("01_policies",),
+    ),
 }
 _TICKER = re.compile(r"[A-Z][A-Z0-9.-]{0,14}")
 _HEX_64 = re.compile(r"[0-9a-f]{64}")

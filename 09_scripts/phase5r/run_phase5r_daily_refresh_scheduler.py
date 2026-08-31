@@ -81,6 +81,11 @@ MASSIVE_B2_PROBE_TIMEOUT_SECONDS = 15
 # observing the child result; no credential value is read or emitted here.
 SEC_REFRESH_ONLY_ENV = "PHASE5R_SEC_REFRESH_ONLY_20260811_41C2"
 SEC_REFRESH_TIMEOUT_SECONDS = 240
+# One-shot completed-close import for repair/validation through the approved
+# Keychain-backed launcher. It runs only B2 and cannot invoke a provider,
+# sender, broker, portfolio action, or order surface.
+MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
+MARKET_REFRESH_TIMEOUT_SECONDS = 480
 # The post-close daily refresh can contain the bounded, paced 29-request market
 # import. Its parent timeout exceeds that child budget and leaves a finite
 # allowance for the existing local refresh steps; cadence remains 17:45 ET.
@@ -210,6 +215,23 @@ def _run_sec_refresh_only() -> int:
     return completed.returncode
 
 
+def _run_market_refresh_only() -> int:
+    """Run one bounded Massive completed-close import and nothing else."""
+
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(MASSIVE_B2_RUNNER)],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=MARKET_REFRESH_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124
+    return completed.returncode
+
+
 def _safe_refresh_child_status(returncode: int) -> str:
     if returncode == 0:
         return "completed"
@@ -282,6 +304,8 @@ def main() -> int:
         return _auth_presence_probe_exit_code()
     if os.environ.get(SEC_REFRESH_ONLY_ENV) == "1":
         return _run_sec_refresh_only()
+    if os.environ.get(MARKET_REFRESH_ONLY_ENV) == "1":
+        return _run_market_refresh_only()
     expected_cycle_date = os.environ.get(RUNTIME_EXPECTED_CYCLE_DATE_ENV)
     if expected_cycle_date and cycle_date() != expected_cycle_date:
         print(

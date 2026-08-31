@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -19,6 +20,7 @@ from phase5r_c9_common import (
     MARKET_SNAPSHOT,
     PORTFOLIO_SUMMARY,
     REVIEW_QUEUE,
+    ROOT,
     TARGET_ALLOCATION_REPORT,
     WEEKLY_DECISION_SUMMARY,
     append_run_log,
@@ -67,6 +69,7 @@ POSITION_FIELDS = [
     "priority",
     "ticker",
     "current_value",
+    "current_price",
     "current_weight_pct",
     "concentration_status",
     "account_aware_conviction_score",
@@ -84,6 +87,14 @@ POSITION_FIELDS = [
     "reason",
     "human_confirmation_required",
     "automatic_action_allowed",
+    "valuation_bear_price",
+    "valuation_base_price",
+    "valuation_bull_price",
+    "expected_upside_pct",
+    "reward_to_risk_estimate",
+    "strongest_positive_evidence",
+    "strongest_negative_evidence",
+    "valuation_source",
 ]
 NEW_FIELDS = [
     "weekly_rank",
@@ -108,7 +119,23 @@ NEW_FIELDS = [
     "reason",
     "human_confirmation_required",
     "automatic_action_allowed",
+    "current_price",
+    "valuation_bear_price",
+    "valuation_base_price",
+    "valuation_bull_price",
+    "maximum_review_price",
+    "suggested_whole_shares",
+    "suggested_position_pct",
+    "holding_horizon",
+    "invalidation_condition",
+    "strongest_positive_evidence",
+    "strongest_negative_evidence",
+    "valuation_source",
 ]
+
+VALUATION_SCENARIO_PATH = (
+    ROOT / "04_data" / "phase5r" / "phase5r_valuation_scenarios.local.json"
+)
 
 
 def run_children() -> None:
@@ -129,6 +156,11 @@ def main() -> None:
     maintenance_active = inhibit.get("active") is True
     run_children()
     account = load_account_state()
+    valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
+    valuation_by_ticker = {
+        row["ticker"]: row for row in valuation_payload.get("records", [])
+        if isinstance(row, dict) and row.get("ticker")
+    }
     packets = load_packets()
     weights = {row["ticker"]: row for row in read_csv(DYNAMIC_WEIGHTS)}
     actions = {row["ticker"]: row for row in read_csv(EXACT_ACTION_PLAN)}
@@ -204,11 +236,14 @@ def main() -> None:
     ):
         ticker = action["ticker"]
         score = score_by_ticker[ticker]
+        valuation = valuation_by_ticker.get(ticker, {})
+        prices = valuation.get("scenario_prices", {})
         position_rows.append(
             {
                 "priority": str(priority),
                 "ticker": ticker,
                 "current_value": action["current_value"],
+                "current_price": action["current_price"],
                 "current_weight_pct": action["current_weight_pct"],
                 "concentration_status": weights[ticker]["concentration_status"],
                 "account_aware_conviction_score": score["account_aware_conviction_score"],
@@ -226,21 +261,65 @@ def main() -> None:
                 "reason": action["reason"],
                 "human_confirmation_required": action["human_confirmation_required"],
                 "automatic_action_allowed": "no",
+                "valuation_bear_price": str(prices.get("bear", "")),
+                "valuation_base_price": str(prices.get("base", "")),
+                "valuation_bull_price": str(prices.get("bull", "")),
+                "expected_upside_pct": str(valuation.get("expected_upside_pct", "")),
+                "reward_to_risk_estimate": str(valuation.get("reward_to_risk", "")),
+                "strongest_positive_evidence": valuation.get("strongest_positive_evidence", ""),
+                "strongest_negative_evidence": valuation.get("strongest_negative_evidence", ""),
+                "valuation_source": valuation.get("fundamental_source_url", ""),
             }
         )
     write_csv(C9_POSITION_RECOMMENDATIONS, position_rows, POSITION_FIELDS)
 
     new_rows: list[dict[str, str]] = []
+    individual_eligible_used = False
+    deployable_cash = as_float(summary["deployable_cash"], "deployable_cash")
+    account_total = as_float(summary["account_total_value"], "account_total_value")
+    default_cap_pct = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     for score in scored:
         if score["asset_role"] == "current_position":
             continue
         ticker = score["ticker"]
         packet = packets[ticker]
+        valuation = valuation_by_ticker.get(ticker, {})
+        prices = valuation.get("scenario_prices", {}) if valuation.get("status") == "complete" else {}
+        current_price = as_float(str(valuation.get("current_price", 0) or 0), f"{ticker}.current_price")
+        expected_upside = as_float(str(valuation.get("expected_upside_pct", 0) or 0), f"{ticker}.expected_upside_pct")
+        reward_to_risk = as_float(str(valuation.get("reward_to_risk", 0) or 0), f"{ticker}.reward_to_risk")
+        base_price = as_float(str(prices.get("base", 0) or 0), f"{ticker}.base_price")
+        maximum_review_price = base_price / 1.15 if base_price > 0 else 0.0
+        maximum_position_value = min(
+            deployable_cash,
+            account_total * default_cap_pct / 100.0,
+            max(0.0, account_total * (active_hard_pct - active_weight) / 100.0),
+        )
+        suggested_whole_shares = (
+            int(maximum_position_value // current_price) if current_price > 0 else 0
+        )
+        suggested_position_pct = (
+            suggested_whole_shares * current_price / account_total * 100.0
+            if account_total > 0 else 0.0
+        )
         is_core = score["asset_role"] == "core_allocation_candidate"
         weekly_pass = float(score["account_aware_conviction_score"]) >= 7.5
         confidence_pass = score["recommendation_confidence"] in {"medium_high", "high"}
         entry_pass = as_float(packet["technical_entry_discipline_score"], f"{ticker}.technical") >= 6.0
         fit_pass = float(score["portfolio_fit_score"]) >= 5.0
+        expected_upside_pass = expected_upside >= 15.0 and current_price <= maximum_review_price
+        reward_to_risk_pass = reward_to_risk >= 1.5
+        caps_pass = suggested_whole_shares >= 1 and suggested_position_pct <= default_cap_pct + 1e-9
+        all_individual_pass = all((
+            weekly_pass,
+            confidence_pass,
+            expected_upside_pass,
+            reward_to_risk_pass,
+            entry_pass,
+            fit_pass,
+            caps_pass,
+        )) and valuation.get("status") == "complete"
         if is_core:
             eligibility_label = "separate_core_review"
             action = "core_allocation_tranche_review"
@@ -253,14 +332,30 @@ def main() -> None:
                 )
             )
             resulting_caps_pass = "yes"
+        elif all_individual_pass and not individual_eligible_used:
+            individual_eligible_used = True
+            eligibility_label = "eligible_buy_review"
+            action = "eligible_buy_review"
+            reason = (
+                f"All deterministic gates pass at the completed close: expected upside {expected_upside:.2f}%, "
+                f"reward/risk {reward_to_risk:.2f}, and a {suggested_whole_shares}-share scenario remains "
+                f"within the {default_cap_pct:.2f}% default cap. Independent human review is required."
+            )
+            resulting_caps_pass = "yes"
         else:
             eligibility_label = "wait_for_more_evidence"
             action = "watch_only"
-            reason = (
-                "Expected upside and reward-to-risk estimates are unavailable, so individual-stock eligibility is incomplete; "
-                "no value was invented and no purchase review is recommended."
-            )
-            resulting_caps_pass = "no"
+            failed = [
+                label for label, passed in (
+                    ("score", weekly_pass), ("confidence", confidence_pass),
+                    ("upside", expected_upside_pass), ("reward_to_risk", reward_to_risk_pass),
+                    ("entry", entry_pass), ("portfolio_fit", fit_pass), ("whole_share_caps", caps_pass),
+                ) if not passed
+            ]
+            if all_individual_pass and individual_eligible_used:
+                failed.append("one_candidate_attention_limit")
+            reason = "Deterministic purchase-review gates not all satisfied: " + ",".join(failed or ["valuation_incomplete"])
+            resulting_caps_pass = "yes" if caps_pass else "no"
         new_rows.append(
             {
                 "weekly_rank": score["weekly_rank"],
@@ -271,12 +366,12 @@ def main() -> None:
                 "portfolio_fit_score": score["portfolio_fit_score"],
                 "recommendation_confidence": score["recommendation_confidence"],
                 "controlled_research_packet_exists": "yes",
-                "expected_upside_pct": "",
-                "reward_to_risk_estimate": "",
+                "expected_upside_pct": f"{expected_upside:.2f}" if valuation.get("status") == "complete" else "",
+                "reward_to_risk_estimate": f"{reward_to_risk:.2f}" if valuation.get("status") == "complete" else "",
                 "weekly_score_pass": "yes" if weekly_pass else "no",
                 "confidence_pass": "yes" if confidence_pass else "no",
-                "expected_upside_pass": "no",
-                "reward_to_risk_pass": "no",
+                "expected_upside_pass": "yes" if expected_upside_pass else "no",
+                "reward_to_risk_pass": "yes" if reward_to_risk_pass else "no",
                 "entry_discipline_pass": "yes" if entry_pass else "no",
                 "portfolio_fit_pass": "yes" if fit_pass else "no",
                 "resulting_caps_pass": resulting_caps_pass,
@@ -287,6 +382,18 @@ def main() -> None:
                     "yes" if action in {"eligible_buy_review", "add_specific_dollars_review"} else "no"
                 ),
                 "automatic_action_allowed": "no",
+                "current_price": f"{current_price:.2f}" if current_price > 0 else "",
+                "valuation_bear_price": str(prices.get("bear", "")),
+                "valuation_base_price": str(prices.get("base", "")),
+                "valuation_bull_price": str(prices.get("bull", "")),
+                "maximum_review_price": f"{maximum_review_price:.2f}" if maximum_review_price > 0 else "",
+                "suggested_whole_shares": str(suggested_whole_shares) if suggested_whole_shares else "0",
+                "suggested_position_pct": f"{suggested_position_pct:.4f}",
+                "holding_horizon": packet["holding_horizon_candidate"],
+                "invalidation_condition": packet["exit_or_trim_conditions"],
+                "strongest_positive_evidence": valuation.get("strongest_positive_evidence", ""),
+                "strongest_negative_evidence": valuation.get("strongest_negative_evidence", ""),
+                "valuation_source": valuation.get("fundamental_source_url", ""),
             }
         )
     write_csv(C9_NEW_RECOMMENDATIONS, new_rows, NEW_FIELDS)
@@ -338,7 +445,7 @@ def main() -> None:
         "",
         "## New Individual Stocks",
         "",
-        f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. Expected-upside and reward-to-risk evidence is unavailable, so no individual-stock purchase is recommended.",
+        f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. At most one candidate is surfaced per refresh; every scenario remains research-only and requires independent human confirmation.",
         "",
         "## Next Review",
         "",

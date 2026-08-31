@@ -5,6 +5,9 @@ project_root="/Users/messssi/LocalRuntime/equity"
 python_bin="/Library/Frameworks/Python.framework/Versions/3.13/bin/python3"
 launch_domain="gui/$(/usr/bin/id -u)"
 launch_agents_dir="/Users/messssi/Library/LaunchAgents"
+launcher_dir="/Users/messssi/Library/Application Support/Phase5R/bin"
+launcher_template="${project_root}/07_automation/scheduler/phase5r_dailyrefresh_launcher.py.template"
+launcher_path="${launcher_dir}/phase5r_dailyrefresh_launcher.py"
 runtime_wrapper="${project_root}/09_scripts/phase5r/run_phase5r_runtime_scheduler.py"
 
 [[ -x "${python_bin}" ]]
@@ -21,7 +24,10 @@ for legacy_suffix in dailybrief weeklyconviction weeklycatchup; do
     fi
 done
 
-/bin/mkdir -p "${launch_agents_dir}" "/Users/messssi/Library/Logs"
+/bin/mkdir -p "${launch_agents_dir}" "/Users/messssi/Library/Logs" "${launcher_dir}"
+[[ -f "${launcher_template}" ]]
+/bin/cp "${launcher_template}" "${launcher_path}"
+/bin/chmod 700 "${launcher_path}"
 
 for job_suffix in dailyrefresh dailydecision; do
     job_label="com.steven.phase5r.${job_suffix}"

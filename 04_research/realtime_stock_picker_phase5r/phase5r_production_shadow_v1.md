@@ -9,7 +9,7 @@
 3. The new runner reads only the current sanitized packet plus non-sensitive decision/refresh state. It requires a same-day fully passed refresh, complete verified close, current evidence receipts, passed packet gates, and a current pricing configuration.
 4. Before copying or transmitting evidence, it rejects privacy-sensitive packet/model-input text. It then freezes a primary-source, exact-excerpt projection; a production manifest; a v3 preflight span bundle; a future-v2-shaped offline owner approval reference with all provider authority fields `false`; and a separately bound runtime authorization for the one permitted request.
 5. It validates the lower-level future-v2 evidence metadata contract and v3 literal-span contract before constructing a provider client.
-6. It reserves `$0.50` before one `gpt-5.6-terra` request at high reasoning effort. The dedicated SDK client is configured with `max_retries=0`; the adapter uses strict JSON, `store=false`, and `tools=[]`.
+6. It reserves `$0.18` before one `gpt-5.6-terra` request at medium reasoning effort, with at most 4,000 output tokens. The dedicated SDK client is configured with `max_retries=0`; the adapter uses strict JSON, `store=false`, and `tools=[]`.
 7. It validates the returned citations, exact literal anchors, future-v2 bindings, response boundaries, and the provider receipt's canonical input hash. It writes a report, validation receipt, and hash-chained ledger entry under the new production-shadow roots only. A rejected response with a known usage receipt remains visible in metered-cost reporting.
 
 ## Valuation boundary
@@ -25,7 +25,7 @@ The old full future-v2 handoff verifier is intentionally not used as a live pre-
 
 - One provider attempt is reserved per ET trading day; failures and unknown outcomes retain their full reservation and block another attempt that day.
 - Later refresh slots consult the reservation ledger before freezing another handoff. The scheduler emits only a closed child outcome code, never raw provider stdout/stderr.
-- Monthly reservations cannot exceed `$10.00`.
+- Monthly reservations cannot exceed `$2.00`; ten fully reserved observation days fit below that hard cap.
 - The observation target is ten completed trading-day reviews.
 - Once the first real request is reserved and until the tenth completed review, the existing scheduled daily email is suppressed—even if the first request later fails authentication, transport, citation, or span checks. The shadow runner never sends email and never includes an LLM summary in the normal daily email.
 - Each reservation/completion record starts with `human_usefulness_status=awaiting_human_assessment`; usefulness is not inferred automatically.

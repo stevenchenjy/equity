@@ -1,0 +1,105 @@
+{
+  "schema_version": "phase5r_active_production_config_v1",
+  "effective_from": "2026-08-31",
+  "review_by": "2026-09-30",
+  "authority": "active production configuration; historical Phase 5R pilot policies are non-authoritative",
+  "workflow": {
+    "baseline": "deterministic_public_evidence",
+    "market_provider": "Massive Basic end-of-day, read-only",
+    "official_fundamentals_provider": "SEC submissions and companyfacts",
+    "portfolio_execution": "manual only",
+    "broker_connectivity_allowed": false,
+    "automatic_orders_allowed": false
+  },
+  "account": {
+    "investment_horizon_years": 5,
+    "core_target_pct": 60.0,
+    "active_target_pct": 20.0,
+    "cash_target_pct": 20.0,
+    "single_stock_default_cap_pct": 6.0,
+    "single_stock_hard_cap_pct": 8.0,
+    "cash_reserved_usd": 500.0,
+    "state_source": "05_risk_and_positions/current_account_state.local.json",
+    "positions_source": "05_risk_and_positions/current_positions.local.csv"
+  },
+  "notifications": {
+    "event_driven": true,
+    "weekly_summary_weekday": "friday",
+    "send_after_et": "18:30",
+    "material_events": [
+      "portfolio_action_transition",
+      "account_state_conflict",
+      "new_material_official_filing",
+      "long_term_fundamental_weakening",
+      "decision_fingerprint_change"
+    ],
+    "unchanged_daily_email": false
+  },
+  "model_policy": {
+    "status": "inactive_until_deterministic_refresh_passes_and_api_authorization_exists",
+    "default_action": "no_call",
+    "prompt_version": "phase5r_material_critic_v1",
+    "maximum_output_tokens": 4000,
+    "one_time_evaluation_budget_usd": 5.0,
+    "monthly_hard_cap_usd": 2.0,
+    "monthly_target_usd": 1.0,
+    "daily_hard_cap_usd": 0.18,
+    "routes": [
+      {
+        "condition": "unchanged_or_insufficient_evidence",
+        "model": null,
+        "reasoning_effort": null,
+        "action": "no_call"
+      },
+      {
+        "condition": "bounded_extraction_or_low_impact_normalization",
+        "model": "gpt-5.6-luna",
+        "reasoning_effort": "medium",
+        "action": "shadow_only"
+      },
+      {
+        "condition": "material_filing_or_cross_source_disagreement",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "medium",
+        "action": "shadow_critic"
+      },
+      {
+        "condition": "complex_valuation_or_fundamental_conflict",
+        "model": "gpt-5.6-terra",
+        "reasoning_effort": "high",
+        "action": "shadow_critic"
+      },
+      {
+        "condition": "rare_high_impact_action_candidate_after_terra_disagreement",
+        "model": "gpt-5.6-sol",
+        "reasoning_effort": "high",
+        "action": "shadow_escalation"
+      }
+    ],
+    "pricing_usd_per_million_tokens": {
+      "verified_on": "2026-08-31",
+      "valid_through": "2026-09-30",
+      "source": "https://developers.openai.com/api/docs/models/compare",
+      "gpt-5.6-luna": {"input": 0.2, "cached_input": 0.02, "output": 1.2},
+      "gpt-5.6-terra": {"input": 2.0, "cached_input": 0.2, "output": 12.0},
+      "gpt-5.6-sol": {"input": 4.0, "cached_input": 0.4, "output": 20.0}
+    },
+    "promotion_rule": "at least 10 completed real shadow observations, or a documented environment/budget constraint and evidence-backed restrict/remove decision",
+    "canonical_authority": false
+  },
+  "outcome_tracking": {
+    "horizons_market_sessions": [1, 5, 20, 60],
+    "benchmarks": ["SPY", "QQQ"],
+    "price_basis": "officially completed daily close",
+    "retrospective_every_material_reviews": 10
+  },
+  "boundaries": {
+    "research_only": true,
+    "email_may_send_when_policy_eligible": true,
+    "broker_connected": false,
+    "broker_account_read": false,
+    "automatic_action_allowed": false,
+    "order_code_created": false,
+    "trade_placed": false
+  }
+}

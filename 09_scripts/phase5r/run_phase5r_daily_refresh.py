@@ -45,6 +45,16 @@ STEP_SPECS = [
         "refresh_phase5r_sec_filing_artifacts.py",
         True,
     ),
+    (
+        "current_research_baseline",
+        "build_phase5r_current_research_baseline.py",
+        False,
+    ),
+    (
+        "valuation_scenarios",
+        "refresh_phase5r_valuation_scenarios.py",
+        False,
+    ),
     # portfolio_outputs owns the account/weight/action/cash child sequence.
     # Running those children here as well duplicated C9 work and widened the
     # refresh race window without changing the result.
@@ -55,10 +65,16 @@ STEP_SPECS = [
         "create_phase5r_daily_decision_and_brief.py",
         False,
     ),
+    (
+        "outcome_tracking",
+        "track_phase5r_recommendation_outcomes.py",
+        False,
+    ),
     # The production-shadow companion reads only this already-sanitized,
     # deterministic packet.  Building it here keeps any account-state reads
     # inside the established local workflow, never in the shadow runner.
     ("evidence_packet", "build_phase5r_decision_evidence_packet.py", False),
+    ("current_status", "generate_phase5r_current_status.py", False),
 ]
 
 

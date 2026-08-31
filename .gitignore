@@ -15,6 +15,7 @@ gmail_tokens/
 # Graphify's AST cache is reproducible local acceleration data. Keep the
 # curated graph/report artifacts, but do not add new cache entries to history.
 graphify-out/cache/
+graphify-out/20??-??-??/
 
 07_automation/email_delivery/phase5r_email_config.local.json
 05_risk_and_positions/current_positions.local.csv
@@ -42,6 +43,15 @@ graphify-out/cache/
 08_reviews/phase5r_model_pilot/quarantine/
 04_data/phase5r/phase5r_valuation_inputs.local.json
 04_data/phase5r/phase5r_valuation_source_*.local.*
+04_data/phase5r/phase5r_valuation_scenarios.local.json
+04_research/realtime_stock_picker_phase5r/phase5r_current_research_baseline.csv
+04_research/realtime_stock_picker_phase5r/phase5r_recommendation_snapshots.local.jsonl
+04_research/realtime_stock_picker_phase5r/phase5r_recommendation_outcomes.local.csv
+04_research/realtime_stock_picker_phase5r/phase5r_recommendation_feedback.local.jsonl
+03_source_data/phase5r/phase5r_market_close_history.local.csv
+00_project_control/phase5r_current_production_status.local.json
+00_project_control/phase5r_current_production_status.local.md
+08_reviews/current/phase5r_retrospective.local.md
 
 # Phase 5R active-runtime artifacts. These files remain on the authoritative
 # runtime machine, but scheduled refreshes must not dirty the source checkout.

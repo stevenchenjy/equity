@@ -64,7 +64,7 @@ C5_PACKET_PATH = (
     ROOT
     / "04_research"
     / "realtime_stock_picker_phase5r"
-    / "phase5r_c5_company_research_packets.csv"
+    / "phase5r_current_research_baseline.csv"
 )
 C9_SCORE_PATH = (
     ROOT
