@@ -17,6 +17,14 @@
     "share_dilution_pct_above_5": -0.5
   },
   "caps": {"minimum_multiple": 1.0, "maximum_multiple": 14.0},
+  "held_position_review": {
+    "require_current_price_above_bull_scenario": true,
+    "maximum_expected_upside_pct": 0.0,
+    "exclusive_maximum_reward_to_risk": 1.0,
+    "minimum_weight_rule": "above_single_stock_default_cap",
+    "classification": "trim_specific_shares_review",
+    "execution": "human_review_only"
+  },
   "boundaries": {
     "research_only": true,
     "automatic_action_allowed": false,

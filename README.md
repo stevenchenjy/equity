@@ -50,6 +50,9 @@ The active workflow is `daily_decision` and the only active email pipeline is
 - Source-bound bear/base/bull valuations and whole-share sizing are computed
   deterministically. Recommendation snapshots are evaluated after 1, 5, 20,
   and 60 market sessions against SPY and QQQ.
+- A held stock above the default single-stock cap can open a human trim review
+  only when complete valuation is adverse on all three scenarios, expected
+  upside is nonpositive, and reward/risk is below one. This never executes.
 - HOLD, WATCH, and NO NEW POSITION need no manual confirmation. Any proposed
   portfolio change remains research for independent human review and can never
   execute automatically.

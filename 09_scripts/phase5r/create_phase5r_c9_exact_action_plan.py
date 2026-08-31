@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from phase5r_c9_common import (
     DYNAMIC_WEIGHTS,
     EXACT_ACTION_PLAN,
     REVIEW_QUEUE,
+    ROOT,
     append_run_log,
     as_float,
     load_account_state,
@@ -18,6 +20,14 @@ from phase5r_c9_common import (
     load_positions,
     read_csv,
     write_csv,
+)
+
+
+VALUATION_SCENARIO_PATH = (
+    ROOT / "04_data" / "phase5r" / "phase5r_valuation_scenarios.local.json"
+)
+VALUATION_POLICY_PATH = (
+    ROOT / "01_policies" / "phase5r_valuation_scenario_policy.json"
 )
 
 
@@ -71,14 +81,66 @@ ALLOWED_ACTIONS = {
 }
 
 
+def valuation_trim_review_required(
+    valuation: dict[str, object],
+    current_price: float,
+    policy: dict[str, object],
+) -> bool:
+    if valuation.get("status") != "complete" or current_price <= 0:
+        return False
+    prices = valuation.get("scenario_prices", {})
+    if (
+        not isinstance(prices, dict)
+        or "bull" not in prices
+        or "expected_upside_pct" not in valuation
+        or "reward_to_risk" not in valuation
+    ):
+        return False
+    bull_price = as_float(str(prices.get("bull", 0) or 0), "bull_price")
+    expected_upside = as_float(
+        str(valuation.get("expected_upside_pct", 0) or 0),
+        "expected_upside_pct",
+    )
+    reward_to_risk = as_float(
+        str(valuation.get("reward_to_risk", 0) or 0),
+        "reward_to_risk",
+    )
+    return (
+        policy.get("require_current_price_above_bull_scenario") is True
+        and bull_price > 0
+        and current_price > bull_price
+        and expected_upside <= as_float(
+            str(policy["maximum_expected_upside_pct"]),
+            "maximum_expected_upside_pct",
+        )
+        and reward_to_risk < as_float(
+            str(policy["exclusive_maximum_reward_to_risk"]),
+            "exclusive_maximum_reward_to_risk",
+        )
+    )
+
+
 def main() -> None:
     load_active_inhibit()
     account = load_account_state()
     positions = {str(row["ticker"]): row for row in load_positions()}
     packets = load_packets()
     weights = read_csv(DYNAMIC_WEIGHTS)
+    valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
+    valuation_by_ticker = {
+        row["ticker"]: row
+        for row in valuation_payload.get("records", [])
+        if isinstance(row, dict) and row.get("ticker")
+    }
+    valuation_policy = json.loads(VALUATION_POLICY_PATH.read_text(encoding="utf-8"))
+    held_review_policy = valuation_policy["held_position_review"]
     account_total = as_float(account["account_total_value"], "account_total_value")
+    default_cap = as_float(
+        account["single_stock_default_cap_pct"],
+        "single_stock_default_cap_pct",
+    )
     hard_cap = as_float(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
+    default_cap_value = account_total * default_cap / 100.0
     cap_value = account_total * hard_cap / 100.0
 
     actions: list[dict[str, str]] = []
@@ -92,6 +154,7 @@ def main() -> None:
         value = as_float(weight_row["current_value"], f"{ticker}.current_value")
         weight = as_float(weight_row["current_weight_pct"], f"{ticker}.current_weight_pct")
         label = weight_row["current_recommendation_label"]
+        valuation = valuation_by_ticker.get(ticker, {})
 
         if label == "exit_review":
             recommended_action = "exit_review"
@@ -119,6 +182,47 @@ def main() -> None:
             trim_condition = (
                 f"Review only while refreshed weight remains above {hard_cap:.2f}%; "
                 f"at ${price:.2f}, the minimum whole-share scenario reduces {change} share(s)."
+            )
+        elif (
+            weight > default_cap + 1e-9
+            and valuation_trim_review_required(
+                valuation,
+                price,
+                held_review_policy,
+            )
+        ):
+            maximum_whole_shares = max(
+                0,
+                math.floor(default_cap_value / price + 1e-12),
+            )
+            change = max(0, math.ceil(shares - maximum_whole_shares - 1e-9))
+            target_shares = max(0.0, shares - change)
+            target_weight = default_cap
+            target_value = default_cap_value
+            cash_change = change * price
+            resulting_weight = target_shares * price / account_total * 100.0
+            recommended_action = "trim_specific_shares_review"
+            bull_price = as_float(
+                str(valuation["scenario_prices"]["bull"]),
+                f"{ticker}.bull_price",
+            )
+            expected_upside = as_float(
+                str(valuation["expected_upside_pct"]),
+                f"{ticker}.expected_upside_pct",
+            )
+            reward_to_risk = as_float(
+                str(valuation["reward_to_risk"]),
+                f"{ticker}.reward_to_risk",
+            )
+            reason = (
+                f"Dynamic weight {weight:.4f}% exceeds the {default_cap:.2f}% default cap, "
+                f"current price ${price:.2f} is above the ${bull_price:.2f} bull scenario, "
+                f"expected upside is {expected_upside:.2f}%, and reward/risk is {reward_to_risk:.2f}; "
+                f"reducing {change} whole share(s) is the minimum default-cap review scenario."
+            )
+            trim_condition = (
+                "Human review only while complete valuation remains adverse and the refreshed "
+                f"weight remains above {default_cap:.2f}%; this is not an automatic sell rule."
             )
         else:
             recommended_action = "hold"

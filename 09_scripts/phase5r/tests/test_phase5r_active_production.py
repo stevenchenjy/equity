@@ -17,6 +17,7 @@ import run_phase5r_daily_refresh_scheduler as refresh_scheduler
 import create_phase5r_daily_decision_and_brief as decision_builder
 from run_phase5r_llm_shadow import load_registry
 from generate_phase5r_current_status import model_authorization_is_blocker
+from create_phase5r_c9_exact_action_plan import valuation_trim_review_required
 
 
 class ActiveProductionTests(unittest.TestCase):
@@ -226,6 +227,39 @@ class ActiveProductionTests(unittest.TestCase):
 
     def test_removed_ai_is_not_scheduler_eligible(self) -> None:
         self.assertFalse(refresh_scheduler.production_shadow_scheduler_enabled())
+
+    def test_adverse_complete_valuation_opens_only_a_trim_review(self) -> None:
+        valuation = {
+            "status": "complete",
+            "scenario_prices": {"bull": 72.0},
+            "expected_upside_pct": -43.0,
+            "reward_to_risk": 0.0,
+        }
+        policy = {
+            "require_current_price_above_bull_scenario": True,
+            "maximum_expected_upside_pct": 0.0,
+            "exclusive_maximum_reward_to_risk": 1.0,
+        }
+        self.assertTrue(
+            valuation_trim_review_required(valuation, 93.0, policy)
+        )
+        self.assertFalse(
+            valuation_trim_review_required(valuation, 70.0, policy)
+        )
+        self.assertFalse(
+            valuation_trim_review_required(
+                {"status": "complete", "scenario_prices": {"bull": 72.0}},
+                93.0,
+                policy,
+            )
+        )
+        self.assertFalse(
+            valuation_trim_review_required(
+                {**valuation, "reward_to_risk": 1.0},
+                93.0,
+                policy,
+            )
+        )
 
 
 if __name__ == "__main__":

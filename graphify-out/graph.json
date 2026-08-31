@@ -736,7 +736,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline",
-      "community": 414,
+      "community": 48,
       "norm_label": "build_phase5r_current_research_baseline.py"
     },
     {
@@ -746,7 +746,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_number",
-      "community": 414,
+      "community": 48,
       "norm_label": "number()"
     },
     {
@@ -756,7 +756,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_clamp",
-      "community": 414,
+      "community": 48,
       "norm_label": "clamp()"
     },
     {
@@ -766,7 +766,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_selected_tickers",
-      "community": 414,
+      "community": 48,
       "norm_label": "selected_tickers()"
     },
     {
@@ -776,7 +776,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_main",
-      "community": 414,
+      "community": 48,
       "norm_label": "main()"
     },
     {
@@ -2210,10 +2210,20 @@
       "norm_label": "create_phase5r_c9_exact_action_plan.py"
     },
     {
+      "label": "valuation_trim_review_required()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
+      "source_location": "L84",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
+      "community": 6,
+      "norm_label": "valuation_trim_review_required()"
+    },
+    {
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L74",
+      "source_location": "L123",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "community": 6,
@@ -2416,7 +2426,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template",
-      "community": 367,
+      "community": 33,
       "norm_label": "create_phase5r_llm_transition_annotation_template.py"
     },
     {
@@ -2426,7 +2436,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_build_incomplete_template",
-      "community": 367,
+      "community": 33,
       "norm_label": "build_incomplete_template()"
     },
     {
@@ -2436,7 +2446,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_py_any",
-      "community": 367,
+      "community": 33,
       "norm_label": "any"
     },
     {
@@ -2446,7 +2456,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_exclusive_write_json",
-      "community": 367,
+      "community": 33,
       "norm_label": "_exclusive_write_json()"
     },
     {
@@ -2456,7 +2466,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_py_path",
-      "community": 367,
+      "community": 33,
       "norm_label": "path"
     },
     {
@@ -2466,7 +2476,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_main",
-      "community": 367,
+      "community": 33,
       "norm_label": "main()"
     },
     {
@@ -2476,7 +2486,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_llm_transition_annotation_template_rationale_43",
-      "community": 367,
+      "community": 33,
       "norm_label": "return transition bindings with all judgment fields left incomplete."
     },
     {
@@ -2856,7 +2866,7 @@
       "source_location": "L298",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_llm_decision_verify_source_integrity",
-      "community": 26,
+      "community": 16,
       "norm_label": "verify_source_integrity()"
     },
     {
@@ -2866,7 +2876,7 @@
       "source_location": "L355",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_llm_decision_verify_numeric_integrity",
-      "community": 26,
+      "community": 16,
       "norm_label": "verify_numeric_integrity()"
     },
     {
@@ -2926,7 +2936,7 @@
       "source_location": "L299",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_llm_decision_rationale_299",
-      "community": 26,
+      "community": 16,
       "norm_label": "verify point-in-time, hash, and locator integrity without network access."
     },
     {
@@ -2936,7 +2946,7 @@
       "source_location": "L356",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_llm_decision_rationale_356",
-      "community": 26,
+      "community": 16,
       "norm_label": "reconcile values and independently check the fixture's formula inputs."
     },
     {
@@ -2946,7 +2956,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status",
-      "community": 27,
+      "community": 402,
       "norm_label": "generate_phase5r_current_status.py"
     },
     {
@@ -2956,7 +2966,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_jsonl_count",
-      "community": 27,
+      "community": 402,
       "norm_label": "jsonl_count()"
     },
     {
@@ -2966,7 +2976,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_py_path",
-      "community": 27,
+      "community": 402,
       "norm_label": "path"
     },
     {
@@ -2976,7 +2986,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_shadow_cost",
-      "community": 27,
+      "community": 402,
       "norm_label": "shadow_cost()"
     },
     {
@@ -2986,7 +2996,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_model_authorization_is_blocker",
-      "community": 27,
+      "community": 402,
       "norm_label": "model_authorization_is_blocker()"
     },
     {
@@ -2996,7 +3006,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_py_any",
-      "community": 27,
+      "community": 402,
       "norm_label": "any"
     },
     {
@@ -3006,7 +3016,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_main",
-      "community": 27,
+      "community": 402,
       "norm_label": "main()"
     },
     {
@@ -4096,7 +4106,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_now_et",
-      "community": 414,
+      "community": 48,
       "norm_label": "now_et()"
     },
     {
@@ -4116,7 +4126,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_iso_now",
-      "community": 8,
+      "community": 65,
       "norm_label": "iso_now()"
     },
     {
@@ -4196,7 +4206,7 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_is_us_market_session_date",
-      "community": 48,
+      "community": 78,
       "norm_label": "is_us_market_session_date()"
     },
     {
@@ -4216,7 +4226,7 @@
       "source_location": "L210",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_last_completed_market_session",
-      "community": 48,
+      "community": 78,
       "norm_label": "last_completed_market_session()"
     },
     {
@@ -4226,7 +4236,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "time",
-      "community": 197,
+      "community": 412,
       "norm_label": "time"
     },
     {
@@ -4376,7 +4386,7 @@
       "source_location": "L376",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_delivery_guard",
-      "community": 414,
+      "community": 360,
       "norm_label": "delivery_guard()"
     },
     {
@@ -4426,7 +4436,7 @@
       "source_location": "L483",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_exit",
-      "community": 360,
+      "community": 5,
       "norm_label": ".__exit__()"
     },
     {
@@ -4466,7 +4476,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_215",
-      "community": 48,
+      "community": 78,
       "norm_label": "return the most recent session that can safely be reused as a close.      this i"
     },
     {
@@ -5026,7 +5036,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger",
-      "community": 2,
+      "community": 12,
       "norm_label": "phase5r_llm_blinded_challenger.py"
     },
     {
@@ -5036,7 +5046,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger_build_blinded_challenger_input",
-      "community": 16,
+      "community": 12,
       "norm_label": "build_blinded_challenger_input()"
     },
     {
@@ -5046,7 +5056,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger_py_any",
-      "community": 16,
+      "community": 12,
       "norm_label": "any"
     },
     {
@@ -5056,7 +5066,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger_execute_blinded_challenger",
-      "community": 16,
+      "community": 12,
       "norm_label": "execute_blinded_challenger()"
     },
     {
@@ -5066,7 +5076,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger_rationale_59",
-      "community": 16,
+      "community": 12,
       "norm_label": "return the exact proposal-free semantic input for the challenger."
     },
     {
@@ -5076,7 +5086,7 @@
       "source_location": "L94",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_blinded_challenger_rationale_94",
-      "community": 16,
+      "community": 12,
       "norm_label": "run one blinded proposal, then compare and adjudicate locally.      ``provider``"
     },
     {
@@ -5256,7 +5266,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract",
-      "community": 16,
+      "community": 12,
       "norm_label": "phase5r_llm_contract.py"
     },
     {
@@ -5286,7 +5296,7 @@
       "source_location": "L282",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_closed_object",
-      "community": 16,
+      "community": 12,
       "norm_label": "_closed_object()"
     },
     {
@@ -5296,7 +5306,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_py_any",
-      "community": 16,
+      "community": 12,
       "norm_label": "any"
     },
     {
@@ -5306,7 +5316,7 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_string_array",
-      "community": 16,
+      "community": 12,
       "norm_label": "_string_array()"
     },
     {
@@ -5316,7 +5326,7 @@
       "source_location": "L638",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_schema",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_schema()"
     },
     {
@@ -5326,7 +5336,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_assert_no_sensitive_markers",
-      "community": 16,
+      "community": 12,
       "norm_label": "_assert_no_sensitive_markers()"
     },
     {
@@ -5336,7 +5346,7 @@
       "source_location": "L711",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_assert_no_forbidden_packet_keys",
-      "community": 16,
+      "community": 12,
       "norm_label": "_assert_no_forbidden_packet_keys()"
     },
     {
@@ -5346,7 +5356,7 @@
       "source_location": "L727",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_assert_no_private_currency",
-      "community": 16,
+      "community": 12,
       "norm_label": "_assert_no_private_currency()"
     },
     {
@@ -5366,7 +5376,7 @@
       "source_location": "L769",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_source_ids",
-      "community": 16,
+      "community": 12,
       "norm_label": "_source_ids()"
     },
     {
@@ -5376,7 +5386,7 @@
       "source_location": "L777",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_calculation_ids",
-      "community": 16,
+      "community": 12,
       "norm_label": "_calculation_ids()"
     },
     {
@@ -5386,7 +5396,7 @@
       "source_location": "L785",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_tickers",
-      "community": 16,
+      "community": 12,
       "norm_label": "_tickers()"
     },
     {
@@ -5396,7 +5406,7 @@
       "source_location": "L793",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_held_tickers",
-      "community": 16,
+      "community": 12,
       "norm_label": "_held_tickers()"
     },
     {
@@ -5406,7 +5416,7 @@
       "source_location": "L801",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_entity_roles",
-      "community": 16,
+      "community": 12,
       "norm_label": "_entity_roles()"
     },
     {
@@ -5416,7 +5426,7 @@
       "source_location": "L809",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rollup_classifications",
-      "community": 16,
+      "community": 12,
       "norm_label": "_rollup_classifications()"
     },
     {
@@ -5426,7 +5436,7 @@
       "source_location": "L818",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_references",
-      "community": 16,
+      "community": 12,
       "norm_label": "_validate_references()"
     },
     {
@@ -5436,7 +5446,7 @@
       "source_location": "L840",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_ticker_references",
-      "community": 16,
+      "community": 12,
       "norm_label": "_validate_ticker_references()"
     },
     {
@@ -5446,7 +5456,7 @@
       "source_location": "L896",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_normalized_utc_or_empty",
-      "community": 16,
+      "community": 12,
       "norm_label": "_normalized_utc_or_empty()"
     },
     {
@@ -5456,7 +5466,7 @@
       "source_location": "L916",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_date_from_period",
-      "community": 16,
+      "community": 12,
       "norm_label": "_date_from_period()"
     },
     {
@@ -5466,7 +5476,7 @@
       "source_location": "L921",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_expected_verified_close_session",
-      "community": 16,
+      "community": 12,
       "norm_label": "_expected_verified_close_session()"
     },
     {
@@ -5476,7 +5486,7 @@
       "source_location": "L953",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_packet",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_packet()"
     },
     {
@@ -5486,7 +5496,7 @@
       "source_location": "L1550",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_analyst",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_analyst()"
     },
     {
@@ -5496,7 +5506,7 @@
       "source_location": "L1648",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_committee",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_committee()"
     },
     {
@@ -5506,7 +5516,7 @@
       "source_location": "L1942",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_challenger",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_challenger()"
     },
     {
@@ -5516,7 +5526,7 @@
       "source_location": "L1973",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_compare_blinded_challenger",
-      "community": 16,
+      "community": 12,
       "norm_label": "compare_blinded_challenger()"
     },
     {
@@ -5526,7 +5536,7 @@
       "source_location": "L2096",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_validate_critic",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate_critic()"
     },
     {
@@ -5536,7 +5546,7 @@
       "source_location": "L2255",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_decimal_round",
-      "community": 26,
+      "community": 12,
       "norm_label": "decimal_round()"
     },
     {
@@ -5546,7 +5556,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_py_decimal",
-      "community": 26,
+      "community": 12,
       "norm_label": "decimal"
     },
     {
@@ -5556,7 +5566,7 @@
       "source_location": "L2265",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_reconcile_calculations",
-      "community": 16,
+      "community": 12,
       "norm_label": "reconcile_calculations()"
     },
     {
@@ -5566,7 +5576,7 @@
       "source_location": "L2285",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_transition_confidence_sanity_reasons",
-      "community": 16,
+      "community": 12,
       "norm_label": "_transition_confidence_sanity_reasons()"
     },
     {
@@ -5586,7 +5596,7 @@
       "source_location": "L2987",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_response_schema",
-      "community": 16,
+      "community": 12,
       "norm_label": "response_schema()"
     },
     {
@@ -5606,7 +5616,7 @@
       "source_location": "L639",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_639",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate the supported closed json-schema subset used by this project."
     },
     {
@@ -5616,7 +5626,7 @@
       "source_location": "L850",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_850",
-      "community": 16,
+      "community": 12,
       "norm_label": "require cited evidence and calculations to belong to the stated ticker."
     },
     {
@@ -5626,7 +5636,7 @@
       "source_location": "L925",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_925",
-      "community": 16,
+      "community": 12,
       "norm_label": "return the canonical completed market session for a packet cycle date.      a sa"
     },
     {
@@ -5636,7 +5646,7 @@
       "source_location": "L1947",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_1947",
-      "community": 16,
+      "community": 12,
       "norm_label": "validate a source-bound decision made before seeing the committee.      structur"
     },
     {
@@ -5646,7 +5656,7 @@
       "source_location": "L1979",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_1979",
-      "community": 16,
+      "community": 12,
       "norm_label": "compare two independently formed source-bound research proposals.      the chall"
     },
     {
@@ -5656,7 +5666,7 @@
       "source_location": "L2289",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_contract_rationale_2289",
-      "community": 16,
+      "community": 12,
       "norm_label": "reject structurally empty confidence without claiming calibration."
     },
     {
@@ -5826,7 +5836,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_rolecallspec",
-      "community": 79,
+      "community": 47,
       "norm_label": "rolecallspec"
     },
     {
@@ -5846,7 +5856,7 @@
       "source_location": "L255",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_rolecallspec_max_total_tokens",
-      "community": 79,
+      "community": 47,
       "norm_label": ".max_total_tokens()"
     },
     {
@@ -5886,7 +5896,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_routerpolicy_by_role",
-      "community": 79,
+      "community": 47,
       "norm_label": ".by_role()"
     },
     {
@@ -6066,7 +6076,7 @@
       "source_location": "L729",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_plannedrolecall_binding",
-      "community": 14,
+      "community": 79,
       "norm_label": ".binding()"
     },
     {
@@ -6216,7 +6226,7 @@
       "source_location": "L1170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_planned_call",
-      "community": 23,
+      "community": 79,
       "norm_label": "_planned_call()"
     },
     {
@@ -6286,7 +6296,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_cost_aware_router_rationale_207",
-      "community": 79,
+      "community": 47,
       "norm_label": "pinned role, provider, model, semantic contract, and call envelope."
     },
     {
@@ -7346,7 +7356,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider",
-      "community": 2,
+      "community": 75,
       "norm_label": "phase5r_llm_provider.py"
     },
     {
@@ -7386,7 +7396,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider_retryableprovidertransporterror",
-      "community": 2,
+      "community": 74,
       "norm_label": "retryableprovidertransporterror"
     },
     {
@@ -7416,7 +7426,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider_providerresult",
-      "community": 47,
+      "community": 14,
       "norm_label": "providerresult"
     },
     {
@@ -7496,7 +7506,7 @@
       "source_location": "L278",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider_fixtureprovider",
-      "community": 2,
+      "community": 74,
       "norm_label": "fixtureprovider"
     },
     {
@@ -7706,7 +7716,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider_rationale_83",
-      "community": 2,
+      "community": 74,
       "norm_label": "a narrow process/transport failure with no usable final response."
     },
     {
@@ -7746,7 +7756,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_provider_rationale_279",
-      "community": 2,
+      "community": 74,
       "norm_label": "return recorded responses with no process, file, or network side effect."
     },
     {
@@ -7846,7 +7856,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_executionbudgeterror",
-      "community": 47,
+      "community": 14,
       "norm_label": "executionbudgeterror"
     },
     {
@@ -7856,7 +7866,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_executionrecoveryrequired",
-      "community": 47,
+      "community": 14,
       "norm_label": "executionrecoveryrequired"
     },
     {
@@ -7976,7 +7986,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_roleexecutionrequest",
-      "community": 47,
+      "community": 14,
       "norm_label": "roleexecutionrequest"
     },
     {
@@ -7986,7 +7996,7 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_roleexecutionrequest_post_init",
-      "community": 47,
+      "community": 14,
       "norm_label": ".__post_init__()"
     },
     {
@@ -8206,7 +8216,7 @@
       "source_location": "L491",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_durableroleexecutionledger",
-      "community": 47,
+      "community": 14,
       "norm_label": "durableroleexecutionledger"
     },
     {
@@ -8386,7 +8396,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_rationale_67",
-      "community": 47,
+      "community": 14,
       "norm_label": "a reservation or reported provider charge exceeds a frozen ceiling."
     },
     {
@@ -8396,7 +8406,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_rationale_71",
-      "community": 47,
+      "community": 14,
       "norm_label": "a prior provider outcome is unknown and cannot be called again."
     },
     {
@@ -8436,7 +8446,7 @@
       "source_location": "L186",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_rationale_186",
-      "community": 47,
+      "community": 14,
       "norm_label": "sealed semantic request supplied to one exact planned role."
     },
     {
@@ -8446,7 +8456,7 @@
       "source_location": "L492",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_llm_role_execution_ledger_rationale_492",
-      "community": 47,
+      "community": 14,
       "norm_label": "private append-only accounting for one immutable inference plan."
     },
     {
@@ -9786,7 +9796,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract",
-      "community": 36,
+      "community": 361,
       "norm_label": "phase5r_model_pilot_v4_contract.py"
     },
     {
@@ -9796,7 +9806,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_source_id_only_assessment_schema",
-      "community": 36,
+      "community": 361,
       "norm_label": "source_id_only_assessment_schema()"
     },
     {
@@ -9806,7 +9816,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_py_any",
-      "community": 36,
+      "community": 361,
       "norm_label": "any"
     },
     {
@@ -9816,7 +9826,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_hydrate_cited_excerpt_hashes",
-      "community": 36,
+      "community": 361,
       "norm_label": "hydrate_cited_excerpt_hashes()"
     },
     {
@@ -9826,7 +9836,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_rationale_1",
-      "community": 36,
+      "community": 361,
       "norm_label": "strict source-id-only structured output adapter for a future v4 pilot.  models s"
     },
     {
@@ -9836,7 +9846,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_rationale_49",
-      "community": 36,
+      "community": 361,
       "norm_label": "return the strict pilot schema with model-supplied excerpt hashes removed."
     },
     {
@@ -9846,7 +9856,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_model_pilot_v4_contract_rationale_61",
-      "community": 36,
+      "community": 361,
       "norm_label": "derive each cited hash from a chosen frozen source id, never from model text."
     },
     {
@@ -10566,7 +10576,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate",
-      "community": 360,
+      "community": 403,
       "norm_label": "phase5r_production_shadow_email_gate.py"
     },
     {
@@ -10576,7 +10586,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_read_json_object",
-      "community": 360,
+      "community": 403,
       "norm_label": "_read_json_object()"
     },
     {
@@ -10586,7 +10596,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_py_path",
-      "community": 360,
+      "community": 403,
       "norm_label": "path"
     },
     {
@@ -10596,7 +10606,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_py_any",
-      "community": 360,
+      "community": 403,
       "norm_label": "any"
     },
     {
@@ -10606,7 +10616,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_state_requires_suppression",
-      "community": 360,
+      "community": 403,
       "norm_label": "_state_requires_suppression()"
     },
     {
@@ -10616,7 +10626,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_ledger_requires_suppression",
-      "community": 360,
+      "community": 403,
       "norm_label": "_ledger_requires_suppression()"
     },
     {
@@ -10626,7 +10636,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_observation_email_suppressed",
-      "community": 360,
+      "community": 403,
       "norm_label": "observation_email_suppressed()"
     },
     {
@@ -10636,7 +10646,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_rationale_40",
-      "community": 360,
+      "community": 403,
       "norm_label": "return a local control object; ``none`` means missing, never invalid."
     },
     {
@@ -10646,7 +10656,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_email_gate_rationale_160",
-      "community": 360,
+      "community": 403,
       "norm_label": "return whether automatic email must remain disabled, failing closed."
     },
     {
@@ -10656,7 +10666,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1",
-      "community": 35,
+      "community": 8,
       "norm_label": "phase5r_production_shadow_v1.py"
     },
     {
@@ -10666,7 +10676,7 @@
       "source_location": "L246",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_productionshadowerror",
-      "community": 35,
+      "community": 65,
       "norm_label": "productionshadowerror"
     },
     {
@@ -10676,7 +10686,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_py_runtimeerror",
-      "community": 35,
+      "community": 65,
       "norm_label": "runtimeerror"
     },
     {
@@ -10696,7 +10706,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_providerfactory",
-      "community": 53,
+      "community": 409,
       "norm_label": "providerfactory"
     },
     {
@@ -10706,7 +10716,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_py_protocol",
-      "community": 53,
+      "community": 409,
       "norm_label": "protocol"
     },
     {
@@ -10716,7 +10726,7 @@
       "source_location": "L255",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_providerfactory_call",
-      "community": 53,
+      "community": 409,
       "norm_label": ".__call__()"
     },
     {
@@ -10726,7 +10736,7 @@
       "source_location": "L259",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_frozenhandoff",
-      "community": 35,
+      "community": 367,
       "norm_label": "frozenhandoff"
     },
     {
@@ -10746,7 +10756,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_py_any",
-      "community": 8,
+      "community": 65,
       "norm_label": "any"
     },
     {
@@ -10756,7 +10766,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_raw_sha256",
-      "community": 35,
+      "community": 8,
       "norm_label": "_raw_sha256()"
     },
     {
@@ -10786,7 +10796,7 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_safe_text",
-      "community": 35,
+      "community": 65,
       "norm_label": "_safe_text()"
     },
     {
@@ -10796,7 +10806,7 @@
       "source_location": "L296",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_safe_model_text",
-      "community": 35,
+      "community": 65,
       "norm_label": "_safe_model_text()"
     },
     {
@@ -10806,7 +10816,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_safe_identifier",
-      "community": 35,
+      "community": 65,
       "norm_label": "_safe_identifier()"
     },
     {
@@ -10816,7 +10826,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_require_sha256",
-      "community": 35,
+      "community": 400,
       "norm_label": "_require_sha256()"
     },
     {
@@ -10826,7 +10836,7 @@
       "source_location": "L320",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_require_closed_object",
-      "community": 35,
+      "community": 400,
       "norm_label": "_require_closed_object()"
     },
     {
@@ -10866,7 +10876,7 @@
       "source_location": "L355",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_read_exact_json",
-      "community": 35,
+      "community": 8,
       "norm_label": "_read_exact_json()"
     },
     {
@@ -10896,7 +10906,7 @@
       "source_location": "L415",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_maximum_provider_cost_usd",
-      "community": 35,
+      "community": 367,
       "norm_label": "maximum_provider_cost_usd()"
     },
     {
@@ -10916,7 +10926,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_current_decision_snapshot_context",
-      "community": 35,
+      "community": 400,
       "norm_label": "_current_decision_snapshot_context()"
     },
     {
@@ -10966,7 +10976,7 @@
       "source_location": "L641",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_validate_shadow_valuation_scope",
-      "community": 35,
+      "community": 400,
       "norm_label": "_validate_shadow_valuation_scope()"
     },
     {
@@ -11016,7 +11026,7 @@
       "source_location": "L784",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_first_span_text",
-      "community": 35,
+      "community": 367,
       "norm_label": "_first_span_text()"
     },
     {
@@ -11026,7 +11036,7 @@
       "source_location": "L799",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_make_preflight_span_bundle",
-      "community": 35,
+      "community": 367,
       "norm_label": "_make_preflight_span_bundle()"
     },
     {
@@ -11046,7 +11056,7 @@
       "source_location": "L947",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_model_instructions",
-      "community": 35,
+      "community": 408,
       "norm_label": "_model_instructions()"
     },
     {
@@ -11056,7 +11066,7 @@
       "source_location": "L969",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_shadow_output_schema",
-      "community": 8,
+      "community": 408,
       "norm_label": "shadow_output_schema()"
     },
     {
@@ -11066,7 +11076,7 @@
       "source_location": "L1128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_model_input",
-      "community": 35,
+      "community": 400,
       "norm_label": "_model_input()"
     },
     {
@@ -11076,7 +11086,7 @@
       "source_location": "L1173",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_validate_model_input_privacy",
-      "community": 35,
+      "community": 400,
       "norm_label": "_validate_model_input_privacy()"
     },
     {
@@ -11086,7 +11096,7 @@
       "source_location": "L1194",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_input_envelope_bytes",
-      "community": 35,
+      "community": 408,
       "norm_label": "_input_envelope_bytes()"
     },
     {
@@ -11096,7 +11106,7 @@
       "source_location": "L1204",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_new_run_id",
-      "community": 35,
+      "community": 367,
       "norm_label": "_new_run_id()"
     },
     {
@@ -11106,7 +11116,7 @@
       "source_location": "L1212",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_make_owner_approval",
-      "community": 8,
+      "community": 367,
       "norm_label": "_make_owner_approval()"
     },
     {
@@ -11116,7 +11126,7 @@
       "source_location": "L1237",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_make_runtime_authorization",
-      "community": 35,
+      "community": 367,
       "norm_label": "_make_runtime_authorization()"
     },
     {
@@ -11126,7 +11136,7 @@
       "source_location": "L1291",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_manifest",
-      "community": 35,
+      "community": 367,
       "norm_label": "_manifest()"
     },
     {
@@ -11156,7 +11166,7 @@
       "source_location": "L1424",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_create_frozen_handoff",
-      "community": 35,
+      "community": 367,
       "norm_label": "_create_frozen_handoff()"
     },
     {
@@ -11166,7 +11176,7 @@
       "source_location": "L1555",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_verify_frozen_handoff",
-      "community": 35,
+      "community": 400,
       "norm_label": "_verify_frozen_handoff()"
     },
     {
@@ -11176,7 +11186,7 @@
       "source_location": "L1737",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_parse_ledger",
-      "community": 8,
+      "community": 65,
       "norm_label": "_parse_ledger()"
     },
     {
@@ -11186,7 +11196,7 @@
       "source_location": "L1768",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_append_ledger_event",
-      "community": 8,
+      "community": 65,
       "norm_label": "_append_ledger_event()"
     },
     {
@@ -11226,7 +11236,7 @@
       "source_location": "L1870",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_reserve_one_request",
-      "community": 8,
+      "community": 65,
       "norm_label": "_reserve_one_request()"
     },
     {
@@ -11246,7 +11256,7 @@
       "source_location": "L1913",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_usage_cost",
-      "community": 8,
+      "community": 65,
       "norm_label": "_usage_cost()"
     },
     {
@@ -11256,7 +11266,7 @@
       "source_location": "L1954",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_known_sources",
-      "community": 8,
+      "community": 65,
       "norm_label": "_known_sources()"
     },
     {
@@ -11266,7 +11276,7 @@
       "source_location": "L1964",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_validate_source_ids",
-      "community": 35,
+      "community": 65,
       "norm_label": "_validate_source_ids()"
     },
     {
@@ -11276,7 +11286,7 @@
       "source_location": "L1973",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_validate_model_payload",
-      "community": 35,
+      "community": 65,
       "norm_label": "_validate_model_payload()"
     },
     {
@@ -11286,7 +11296,7 @@
       "source_location": "L2303",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_build_postcall_span_bundle",
-      "community": 8,
+      "community": 65,
       "norm_label": "_build_postcall_span_bundle()"
     },
     {
@@ -11296,7 +11306,7 @@
       "source_location": "L2359",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_v2_postcall_artifacts",
-      "community": 8,
+      "community": 65,
       "norm_label": "_v2_postcall_artifacts()"
     },
     {
@@ -11306,7 +11316,7 @@
       "source_location": "L2554",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_provider_metadata",
-      "community": 8,
+      "community": 65,
       "norm_label": "_provider_metadata()"
     },
     {
@@ -11356,7 +11366,7 @@
       "source_location": "L2715",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_result_markdown",
-      "community": 8,
+      "community": 65,
       "norm_label": "_result_markdown()"
     },
     {
@@ -11376,7 +11386,7 @@
       "source_location": "L2910",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_run_production_shadow",
-      "community": 8,
+      "community": 65,
       "norm_label": "run_production_shadow()"
     },
     {
@@ -11386,7 +11396,7 @@
       "source_location": "L3184",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_current_cost_exposure",
-      "community": 8,
+      "community": 257,
       "norm_label": "current_cost_exposure()"
     },
     {
@@ -11406,7 +11416,7 @@
       "source_location": "L3221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_record_human_usefulness",
-      "community": 8,
+      "community": 65,
       "norm_label": "record_human_usefulness()"
     },
     {
@@ -11416,7 +11426,7 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_247",
-      "community": 35,
+      "community": 65,
       "norm_label": "the isolated production-shadow workflow failed closed."
     },
     {
@@ -11436,7 +11446,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_297",
-      "community": 35,
+      "community": 65,
       "norm_label": "accept only non-sensitive, non-executable model prose."
     },
     {
@@ -11446,7 +11456,7 @@
       "source_location": "L416",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_416",
-      "community": 35,
+      "community": 367,
       "norm_label": "return a conservative physical-request cost ceiling for one call."
     },
     {
@@ -11466,7 +11476,7 @@
       "source_location": "L444",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_444",
-      "community": 35,
+      "community": 400,
       "norm_label": "read parsed deterministic state and its raw hashes from the same bytes."
     },
     {
@@ -11516,7 +11526,7 @@
       "source_location": "L785",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_785",
-      "community": 35,
+      "community": 367,
       "norm_label": "return a literal short sentence fragment suitable for preflight v3."
     },
     {
@@ -11526,7 +11536,7 @@
       "source_location": "L970",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_970",
-      "community": 8,
+      "community": 408,
       "norm_label": "closed structured outputs schema for exactly one shadow review."
     },
     {
@@ -11536,7 +11546,7 @@
       "source_location": "L1174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_1174",
-      "community": 35,
+      "community": 400,
       "norm_label": "reject secret-shaped text in every field that could reach the provider."
     },
     {
@@ -11556,7 +11566,7 @@
       "source_location": "L1425",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_1425",
-      "community": 35,
+      "community": 367,
       "norm_label": "freeze an excerpt-only input after all freshness checks pass."
     },
     {
@@ -11566,7 +11576,7 @@
       "source_location": "L1556",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_1556",
-      "community": 35,
+      "community": 400,
       "norm_label": "re-open frozen artifacts and reject raw-byte or authority drift."
     },
     {
@@ -11596,7 +11606,7 @@
       "source_location": "L2911",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_2911",
-      "community": 8,
+      "community": 65,
       "norm_label": "run at most one externally provided review after all local gates pass.      ``pr"
     },
     {
@@ -11606,7 +11616,7 @@
       "source_location": "L3185",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_3185",
-      "community": 8,
+      "community": 257,
       "norm_label": "return read-only current daily/monthly reservation and metered exposure."
     },
     {
@@ -11626,7 +11636,7 @@
       "source_location": "L3224",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_production_shadow_v1_rationale_3224",
-      "community": 8,
+      "community": 65,
       "norm_label": "append one bounded human-quality assessment without changing a review.      the"
     },
     {
@@ -13486,7 +13496,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_valuation_input_bundle_valuationinputbundleerror",
-      "community": 58,
+      "community": 326,
       "norm_label": "valuationinputbundleerror"
     },
     {
@@ -13496,7 +13506,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_valuation_input_bundle_py_valueerror",
-      "community": 58,
+      "community": 326,
       "norm_label": "valueerror"
     },
     {
@@ -13686,7 +13696,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_valuation_input_bundle_rationale_107",
-      "community": 58,
+      "community": 326,
       "norm_label": "raised when a local valuation bundle is unsafe or inconsistent."
     },
     {
@@ -13826,7 +13836,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_httpresult",
-      "community": 197,
+      "community": 1,
       "norm_label": "httpresult"
     },
     {
@@ -13846,7 +13856,7 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_textextractor",
-      "community": 197,
+      "community": 405,
       "norm_label": "_textextractor"
     },
     {
@@ -13856,7 +13866,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_py_htmlparser",
-      "community": 197,
+      "community": 405,
       "norm_label": "htmlparser"
     },
     {
@@ -13866,7 +13876,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_textextractor_init",
-      "community": 197,
+      "community": 405,
       "norm_label": ".__init__()"
     },
     {
@@ -13876,7 +13886,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_textextractor_handle_data",
-      "community": 197,
+      "community": 405,
       "norm_label": ".handle_data()"
     },
     {
@@ -13886,7 +13896,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_requestlimiter",
-      "community": 197,
+      "community": 1,
       "norm_label": "requestlimiter"
     },
     {
@@ -13896,7 +13906,7 @@
       "source_location": "L206",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_requestlimiter_init",
-      "community": 197,
+      "community": 405,
       "norm_label": ".__init__()"
     },
     {
@@ -13926,7 +13936,7 @@
       "source_location": "L224",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_requestlimiter_wait",
-      "community": 197,
+      "community": 1,
       "norm_label": ".wait()"
     },
     {
@@ -14116,7 +14126,7 @@
       "source_location": "L643",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_validate_user_agent",
-      "community": 197,
+      "community": 1,
       "norm_label": "_validate_user_agent()"
     },
     {
@@ -14126,7 +14136,7 @@
       "source_location": "L655",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_fetch_public_resource",
-      "community": 197,
+      "community": 1,
       "norm_label": "fetch_public_resource()"
     },
     {
@@ -14166,7 +14176,7 @@
       "source_location": "L758",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_fetch_sec",
-      "community": 197,
+      "community": 1,
       "norm_label": "_fetch_sec()"
     },
     {
@@ -14356,7 +14366,7 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "09_scripts_phase5r_prepare_phase5r_llm_replay_corpus_rationale_204",
-      "community": 197,
+      "community": 1,
       "norm_label": "monotonic request limiter with a hard ceiling of two requests/second."
     },
     {
@@ -14466,7 +14476,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_record_phase5r_production_shadow_human_assessment",
-      "community": 35,
+      "community": 65,
       "norm_label": "record_phase5r_production_shadow_human_assessment.py"
     },
     {
@@ -14476,7 +14486,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_record_phase5r_production_shadow_human_assessment_main",
-      "community": 35,
+      "community": 65,
       "norm_label": "main()"
     },
     {
@@ -15286,7 +15296,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios",
-      "community": 27,
+      "community": 401,
       "norm_label": "refresh_phase5r_valuation_scenarios.py"
     },
     {
@@ -15296,7 +15306,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_number",
-      "community": 27,
+      "community": 401,
       "norm_label": "number()"
     },
     {
@@ -15306,7 +15316,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_utc_text",
-      "community": 27,
+      "community": 401,
       "norm_label": "utc_text()"
     },
     {
@@ -15316,7 +15326,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_line_excerpt",
-      "community": 27,
+      "community": 401,
       "norm_label": "line_excerpt()"
     },
     {
@@ -15326,7 +15336,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_py_path",
-      "community": 27,
+      "community": 401,
       "norm_label": "path"
     },
     {
@@ -15336,7 +15346,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_source",
-      "community": 27,
+      "community": 401,
       "norm_label": "source()"
     },
     {
@@ -15346,7 +15356,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_py_any",
-      "community": 27,
+      "community": 401,
       "norm_label": "any"
     },
     {
@@ -15356,7 +15366,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_valuation_input",
-      "community": 27,
+      "community": 401,
       "norm_label": "valuation_input()"
     },
     {
@@ -15366,7 +15376,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_selected_band",
-      "community": 27,
+      "community": 401,
       "norm_label": "selected_band()"
     },
     {
@@ -15376,7 +15386,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_main",
-      "community": 27,
+      "community": 401,
       "norm_label": "main()"
     },
     {
@@ -15466,7 +15476,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_timestamp",
-      "community": 78,
+      "community": 80,
       "norm_label": "timestamp()"
     },
     {
@@ -15476,7 +15486,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_read_csv",
-      "community": 78,
+      "community": 80,
       "norm_label": "read_csv()"
     },
     {
@@ -15486,7 +15496,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_py_path",
-      "community": 78,
+      "community": 80,
       "norm_label": "path"
     },
     {
@@ -15506,7 +15516,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_write_csv",
-      "community": 78,
+      "community": 80,
       "norm_label": "write_csv()"
     },
     {
@@ -15516,7 +15526,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_append_csv",
-      "community": 78,
+      "community": 80,
       "norm_label": "append_csv()"
     },
     {
@@ -15586,7 +15596,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_source_failure_code",
-      "community": 78,
+      "community": 411,
       "norm_label": "source_failure_code()"
     },
     {
@@ -15596,7 +15606,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_py_exception",
-      "community": 78,
+      "community": 411,
       "norm_label": "exception"
     },
     {
@@ -15606,7 +15616,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_smoke_failure_code",
-      "community": 78,
+      "community": 80,
       "norm_label": "smoke_failure_code()"
     },
     {
@@ -15706,7 +15716,7 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_validation_diagnostic_notes",
-      "community": 78,
+      "community": 80,
       "norm_label": "validation_diagnostic_notes()"
     },
     {
@@ -15716,7 +15726,7 @@
       "source_location": "L451",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_smoke_diagnostic_notes",
-      "community": 78,
+      "community": 80,
       "norm_label": "smoke_diagnostic_notes()"
     },
     {
@@ -15736,7 +15746,7 @@
       "source_location": "L556",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_write_decision",
-      "community": 78,
+      "community": 80,
       "norm_label": "write_decision()"
     },
     {
@@ -15746,7 +15756,7 @@
       "source_location": "L621",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_write_data_report",
-      "community": 78,
+      "community": 80,
       "norm_label": "write_data_report()"
     },
     {
@@ -15756,7 +15766,7 @@
       "source_location": "L657",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_append_audit",
-      "community": 78,
+      "community": 80,
       "norm_label": "append_audit()"
     },
     {
@@ -15826,7 +15836,7 @@
       "source_location": "L970",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_reuse_validated_snapshot",
-      "community": 78,
+      "community": 80,
       "norm_label": "reuse_validated_snapshot()"
     },
     {
@@ -15836,7 +15846,7 @@
       "source_location": "L1014",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_massive_auth_probe_exit_code",
-      "community": 78,
+      "community": 80,
       "norm_label": "massive_auth_probe_exit_code()"
     },
     {
@@ -15846,7 +15856,7 @@
       "source_location": "L1028",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_main",
-      "community": 78,
+      "community": 80,
       "norm_label": "main()"
     },
     {
@@ -15856,7 +15866,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_rationale_154",
-      "community": 78,
+      "community": 411,
       "norm_label": "map source exceptions to finite, non-sensitive audit codes."
     },
     {
@@ -15886,7 +15896,7 @@
       "source_location": "L438",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_rationale_438",
-      "community": 78,
+      "community": 80,
       "norm_label": "return bounded date/count metadata for one validation result."
     },
     {
@@ -15896,7 +15906,7 @@
       "source_location": "L452",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_rationale_452",
-      "community": 78,
+      "community": 80,
       "norm_label": "return finite audit notes for the first locally diagnosed smoke row."
     },
     {
@@ -15936,7 +15946,7 @@
       "source_location": "L976",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_rationale_976",
-      "community": 78,
+      "community": 80,
       "norm_label": "reuse a verified local b2 trio without touching the public provider."
     },
     {
@@ -15946,7 +15956,7 @@
       "source_location": "L1015",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_b2_full_universe_market_data_rationale_1015",
-      "community": 78,
+      "community": 80,
       "norm_label": "construct the massive client without i/o and disclose only fixed status."
     },
     {
@@ -17006,7 +17016,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_scheduler_main",
-      "community": 414,
+      "community": 48,
       "norm_label": "main()"
     },
     {
@@ -17366,7 +17376,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation",
-      "community": 83,
+      "community": 4,
       "norm_label": "run_phase5r_llm_provider_replay_evaluation.py"
     },
     {
@@ -17396,7 +17406,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_collectionpaused",
-      "community": 70,
+      "community": 2,
       "norm_label": "collectionpaused"
     },
     {
@@ -17406,7 +17416,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_providermustnotrun",
-      "community": 70,
+      "community": 2,
       "norm_label": "_providermustnotrun"
     },
     {
@@ -17416,7 +17426,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_providermustnotrun_generate",
-      "community": 70,
+      "community": 2,
       "norm_label": ".generate()"
     },
     {
@@ -17556,7 +17566,7 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_callbudget_validate",
-      "community": 83,
+      "community": 4,
       "norm_label": ".validate()"
     },
     {
@@ -17616,7 +17626,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_callbudget_consume",
-      "community": 4,
+      "community": 2,
       "norm_label": ".consume()"
     },
     {
@@ -17636,7 +17646,7 @@
       "source_location": "L352",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_decimal",
-      "community": 83,
+      "community": 4,
       "norm_label": "_decimal()"
     },
     {
@@ -17646,7 +17656,7 @@
       "source_location": "L362",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_zero_violations",
-      "community": 83,
+      "community": 4,
       "norm_label": "_zero_violations()"
     },
     {
@@ -17656,7 +17666,7 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_safe_error",
-      "community": 83,
+      "community": 4,
       "norm_label": "_safe_error()"
     },
     {
@@ -17666,7 +17676,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_py_exception",
-      "community": 415,
+      "community": 4,
       "norm_label": "exception"
     },
     {
@@ -17676,7 +17686,7 @@
       "source_location": "L385",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_provider_failure_category",
-      "community": 415,
+      "community": 4,
       "norm_label": "_provider_failure_category()"
     },
     {
@@ -17686,7 +17696,7 @@
       "source_location": "L403",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_semantic_failure_category",
-      "community": 415,
+      "community": 4,
       "norm_label": "_semantic_failure_category()"
     },
     {
@@ -17696,7 +17706,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_selected_annotations",
-      "community": 83,
+      "community": 4,
       "norm_label": "_selected_annotations()"
     },
     {
@@ -17706,7 +17716,7 @@
       "source_location": "L432",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_load_replay_inputs",
-      "community": 83,
+      "community": 4,
       "norm_label": "load_replay_inputs()"
     },
     {
@@ -17726,7 +17736,7 @@
       "source_location": "L515",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_check_replay_readiness",
-      "community": 83,
+      "community": 4,
       "norm_label": "check_replay_readiness()"
     },
     {
@@ -17746,7 +17756,7 @@
       "source_location": "L722",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_json_bytes",
-      "community": 83,
+      "community": 4,
       "norm_label": "_json_bytes()"
     },
     {
@@ -17866,7 +17876,7 @@
       "source_location": "L1135",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_unsigned_progress",
-      "community": 83,
+      "community": 4,
       "norm_label": "_unsigned_progress()"
     },
     {
@@ -17876,7 +17886,7 @@
       "source_location": "L1141",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_validate_progress",
-      "community": 83,
+      "community": 4,
       "norm_label": "_validate_progress()"
     },
     {
@@ -17896,7 +17906,7 @@
       "source_location": "L1303",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_physical_attempt_count",
-      "community": 83,
+      "community": 4,
       "norm_label": "_physical_attempt_count()"
     },
     {
@@ -17906,7 +17916,7 @@
       "source_location": "L1310",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_terminal_invalid_call_ids",
-      "community": 83,
+      "community": 4,
       "norm_label": "_terminal_invalid_call_ids()"
     },
     {
@@ -17916,7 +17926,7 @@
       "source_location": "L1319",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_exhausted_retry_call_ids",
-      "community": 83,
+      "community": 4,
       "norm_label": "_exhausted_retry_call_ids()"
     },
     {
@@ -17936,7 +17946,7 @@
       "source_location": "L1346",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_collectioncallstore_init",
-      "community": 83,
+      "community": 4,
       "norm_label": ".__init__()"
     },
     {
@@ -18126,7 +18136,7 @@
       "source_location": "L2363",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_jaccard",
-      "community": 83,
+      "community": 4,
       "norm_label": "_jaccard()"
     },
     {
@@ -18156,7 +18166,7 @@
       "source_location": "L2448",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_stability_quality",
-      "community": 83,
+      "community": 4,
       "norm_label": "_stability_quality()"
     },
     {
@@ -18246,7 +18256,7 @@
       "source_location": "L3432",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_provider_transport",
-      "community": 83,
+      "community": 4,
       "norm_label": "_provider_transport()"
     },
     {
@@ -18256,7 +18266,7 @@
       "source_location": "L3453",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_report_boundaries",
-      "community": 83,
+      "community": 4,
       "norm_label": "_report_boundaries()"
     },
     {
@@ -18266,7 +18276,7 @@
       "source_location": "L3469",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_plan_payload",
-      "community": 67,
+      "community": 4,
       "norm_label": "_plan_payload()"
     },
     {
@@ -18316,7 +18326,7 @@
       "source_location": "L3585",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_budget_policy",
-      "community": 83,
+      "community": 4,
       "norm_label": "_budget_policy()"
     },
     {
@@ -18356,7 +18366,7 @@
       "source_location": "L3661",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_initial_progress",
-      "community": 83,
+      "community": 4,
       "norm_label": "_initial_progress()"
     },
     {
@@ -18386,7 +18396,7 @@
       "source_location": "L3781",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_build_external_provider",
-      "community": 4,
+      "community": 83,
       "norm_label": "_build_external_provider()"
     },
     {
@@ -18406,7 +18416,7 @@
       "source_location": "L3815",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_validated_budget_policy",
-      "community": 83,
+      "community": 4,
       "norm_label": "_validated_budget_policy()"
     },
     {
@@ -18426,7 +18436,7 @@
       "source_location": "L4034",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_holdout_quality",
-      "community": 83,
+      "community": 4,
       "norm_label": "_holdout_quality()"
     },
     {
@@ -18446,7 +18456,7 @@
       "source_location": "L4197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_execute_provider_replay",
-      "community": 83,
+      "community": 4,
       "norm_label": "execute_provider_replay()"
     },
     {
@@ -18486,7 +18496,7 @@
       "source_location": "L5429",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_main",
-      "community": 83,
+      "community": 4,
       "norm_label": "main()"
     },
     {
@@ -18506,7 +18516,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_151",
-      "community": 70,
+      "community": 2,
       "norm_label": "the explicit per-invocation call ceiling was reached safely."
     },
     {
@@ -18516,7 +18526,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_155",
-      "community": 70,
+      "community": 2,
       "norm_label": "fail closed if artifact-only recovery unexpectedly needs inference."
     },
     {
@@ -18536,7 +18546,7 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_367",
-      "community": 83,
+      "community": 4,
       "norm_label": "return only a non-sensitive failure class and closed reason token."
     },
     {
@@ -18546,7 +18556,7 @@
       "source_location": "L386",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_386",
-      "community": 415,
+      "community": 4,
       "norm_label": "classify only a narrow, stable set of transport/process failures."
     },
     {
@@ -18556,7 +18566,7 @@
       "source_location": "L523",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_523",
-      "community": 83,
+      "community": 4,
       "norm_label": "read-only check: no provider, network, authentication, or writes."
     },
     {
@@ -18626,7 +18636,7 @@
       "source_location": "L4221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_provider_replay_evaluation_rationale_4221",
-      "community": 83,
+      "community": 4,
       "norm_label": "collect or resume provider calls in quarantine; never publish a pass."
     },
     {
@@ -18866,7 +18876,7 @@
       "source_location": "L699",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore",
-      "community": 7,
+      "community": 74,
       "norm_label": "shadowroleresultstore"
     },
     {
@@ -19076,7 +19086,7 @@
       "source_location": "L1356",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_candidate_path",
-      "community": 7,
+      "community": 74,
       "norm_label": ".candidate_path()"
     },
     {
@@ -19086,7 +19096,7 @@
       "source_location": "L1360",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_shadowroleresultstore_completion_manifest_path",
-      "community": 7,
+      "community": 74,
       "norm_label": ".completion_manifest_path()"
     },
     {
@@ -19126,7 +19136,7 @@
       "source_location": "L1500",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_lazyprovider",
-      "community": 2,
+      "community": 7,
       "norm_label": "_lazyprovider"
     },
     {
@@ -19136,7 +19146,7 @@
       "source_location": "L1503",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_lazyprovider_init",
-      "community": 2,
+      "community": 7,
       "norm_label": ".__init__()"
     },
     {
@@ -19496,7 +19506,7 @@
       "source_location": "L3321",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_verify_activation_for_transport",
-      "community": 11,
+      "community": 7,
       "norm_label": "_verify_activation_for_transport()"
     },
     {
@@ -19556,7 +19566,7 @@
       "source_location": "L700",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_700",
-      "community": 7,
+      "community": 74,
       "norm_label": "private per-run role receipts with bounded, auditable retries."
     },
     {
@@ -19586,7 +19596,7 @@
       "source_location": "L1501",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_llm_shadow_rationale_1501",
-      "community": 2,
+      "community": 7,
       "norm_label": "create the provider only after a role attempt intent is durable."
     },
     {
@@ -20786,7 +20796,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10",
-      "community": 80,
+      "community": 61,
       "norm_label": "run_phase5r_model_pilot_v10.py"
     },
     {
@@ -20796,7 +20806,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_v9_terminal",
-      "community": 80,
+      "community": 61,
       "norm_label": "_v9_terminal()"
     },
     {
@@ -20806,7 +20816,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_py_any",
-      "community": 80,
+      "community": 61,
       "norm_label": "any"
     },
     {
@@ -20816,7 +20826,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_load_v10_plan",
-      "community": 80,
+      "community": 61,
       "norm_label": "_load_v10_plan()"
     },
     {
@@ -20826,7 +20836,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_py_path",
-      "community": 80,
+      "community": 61,
       "norm_label": "path"
     },
     {
@@ -20836,7 +20846,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_reservation_usd",
-      "community": 80,
+      "community": 61,
       "norm_label": "_reservation_usd()"
     },
     {
@@ -20846,7 +20856,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_py_decimal",
-      "community": 80,
+      "community": 61,
       "norm_label": "decimal"
     },
     {
@@ -20856,7 +20866,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_build_execution_plan_v10",
-      "community": 80,
+      "community": 61,
       "norm_label": "_build_execution_plan_v10()"
     },
     {
@@ -20866,7 +20876,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_v10_engine_bindings",
-      "community": 80,
+      "community": 61,
       "norm_label": "_v10_engine_bindings()"
     },
     {
@@ -20876,7 +20886,7 @@
       "source_location": "L202",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_check_v10_readiness",
-      "community": 80,
+      "community": 61,
       "norm_label": "check_v10_readiness()"
     },
     {
@@ -20886,7 +20896,7 @@
       "source_location": "L240",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_execute_model_pilot_v10",
-      "community": 80,
+      "community": 61,
       "norm_label": "execute_model_pilot_v10()"
     },
     {
@@ -20896,7 +20906,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_main",
-      "community": 80,
+      "community": 61,
       "norm_label": "main()"
     },
     {
@@ -20906,7 +20916,7 @@
       "source_location": "L207",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_rationale_207",
-      "community": 80,
+      "community": 61,
       "norm_label": "validate the v9 stop binding and v10 sealed plan without a provider."
     },
     {
@@ -20916,7 +20926,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v10_rationale_249",
-      "community": 80,
+      "community": 61,
       "norm_label": "run v10; a started call still terminates the fresh collection."
     },
     {
@@ -22016,7 +22026,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7",
-      "community": 65,
+      "community": 61,
       "norm_label": "run_phase5r_model_pilot_v7.py"
     },
     {
@@ -22026,7 +22036,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_v7_plan",
-      "community": 65,
+      "community": 61,
       "norm_label": "_v7_plan()"
     },
     {
@@ -22036,7 +22046,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_py_path",
-      "community": 65,
+      "community": 61,
       "norm_label": "path"
     },
     {
@@ -22046,7 +22056,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_py_any",
-      "community": 65,
+      "community": 61,
       "norm_label": "any"
     },
     {
@@ -22056,7 +22066,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_v6_assignments",
-      "community": 65,
+      "community": 61,
       "norm_label": "_v6_assignments()"
     },
     {
@@ -22066,7 +22076,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_v6_source_state",
-      "community": 65,
+      "community": 61,
       "norm_label": "_v6_source_state()"
     },
     {
@@ -22076,7 +22086,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_build_execution_plan",
-      "community": 65,
+      "community": 61,
       "norm_label": "_build_execution_plan()"
     },
     {
@@ -22086,7 +22096,7 @@
       "source_location": "L341",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_check_v7_readiness",
-      "community": 65,
+      "community": 61,
       "norm_label": "check_v7_readiness()"
     },
     {
@@ -22096,7 +22106,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_write_or_validate",
-      "community": 65,
+      "community": 61,
       "norm_label": "_write_or_validate()"
     },
     {
@@ -22106,7 +22116,7 @@
       "source_location": "L398",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_authorization",
-      "community": 65,
+      "community": 61,
       "norm_label": "_authorization()"
     },
     {
@@ -22116,7 +22126,7 @@
       "source_location": "L417",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_assert_v7_execution_root",
-      "community": 65,
+      "community": 61,
       "norm_label": "_assert_v7_execution_root()"
     },
     {
@@ -22126,7 +22136,7 @@
       "source_location": "L436",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_v7_audit",
-      "community": 65,
+      "community": 61,
       "norm_label": "_v7_audit()"
     },
     {
@@ -22136,7 +22146,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_py_decimal",
-      "community": 65,
+      "community": 61,
       "norm_label": "decimal"
     },
     {
@@ -22146,7 +22156,7 @@
       "source_location": "L500",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_completion",
-      "community": 65,
+      "community": 61,
       "norm_label": "_completion()"
     },
     {
@@ -22156,7 +22166,7 @@
       "source_location": "L540",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_report",
-      "community": 65,
+      "community": 61,
       "norm_label": "_report()"
     },
     {
@@ -22166,7 +22176,7 @@
       "source_location": "L558",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_execute_model_pilot_v7",
-      "community": 65,
+      "community": 61,
       "norm_label": "execute_model_pilot_v7()"
     },
     {
@@ -22176,7 +22186,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_rationale_1",
-      "community": 65,
+      "community": 61,
       "norm_label": "budget-limited v7 shadow pilot built from immutable v6 evidence.  this runner ne"
     },
     {
@@ -22186,7 +22196,7 @@
       "source_location": "L344",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_rationale_344",
-      "community": 65,
+      "community": 61,
       "norm_label": "run v7's source, budget, and boundary checks with no provider."
     },
     {
@@ -22196,7 +22206,7 @@
       "source_location": "L567",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v7_rationale_567",
-      "community": 65,
+      "community": 61,
       "norm_label": "execute exactly the sealed v7 calls, terminally stopping on any error."
     },
     {
@@ -22376,7 +22386,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9",
-      "community": 76,
+      "community": 61,
       "norm_label": "run_phase5r_model_pilot_v9.py"
     },
     {
@@ -22386,7 +22396,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_v8_completion",
-      "community": 76,
+      "community": 61,
       "norm_label": "_v8_completion()"
     },
     {
@@ -22396,7 +22406,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_py_any",
-      "community": 76,
+      "community": 61,
       "norm_label": "any"
     },
     {
@@ -22406,7 +22416,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_load_v9_plan",
-      "community": 76,
+      "community": 61,
       "norm_label": "_load_v9_plan()"
     },
     {
@@ -22416,7 +22426,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_py_path",
-      "community": 76,
+      "community": 61,
       "norm_label": "path"
     },
     {
@@ -22426,7 +22436,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_v9_engine_bindings",
-      "community": 76,
+      "community": 61,
       "norm_label": "_v9_engine_bindings()"
     },
     {
@@ -22436,7 +22446,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_check_v9_readiness",
-      "community": 76,
+      "community": 61,
       "norm_label": "check_v9_readiness()"
     },
     {
@@ -22446,7 +22456,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_execute_model_pilot_v9",
-      "community": 76,
+      "community": 61,
       "norm_label": "execute_model_pilot_v9()"
     },
     {
@@ -22456,7 +22466,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_main",
-      "community": 76,
+      "community": 61,
       "norm_label": "main()"
     },
     {
@@ -22466,7 +22476,7 @@
       "source_location": "L85",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_rationale_85",
-      "community": 76,
+      "community": 61,
       "norm_label": "temporarily bind the v6 engine to v9-only immutable paths."
     },
     {
@@ -22476,7 +22486,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_rationale_107",
-      "community": 76,
+      "community": 61,
       "norm_label": "run the v8 binding and full v9 collection readiness without a provider."
     },
     {
@@ -22486,7 +22496,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_model_pilot_v9_rationale_148",
-      "community": 76,
+      "community": 61,
       "norm_label": "execute the new v9 collection; any started call remains terminal."
     },
     {
@@ -24246,7 +24256,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_support_digest_or_absent",
-      "community": 74,
+      "community": 26,
       "norm_label": "digest_or_absent()"
     },
     {
@@ -24256,7 +24266,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_support_py_path",
-      "community": 74,
+      "community": 26,
       "norm_label": "path"
     },
     {
@@ -24403,7 +24413,7 @@
       "label": "ActiveProductionTests",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L22",
+      "source_location": "L23",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "community": 27,
@@ -24413,7 +24423,7 @@
       "label": ".future_evaluation_config()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L24",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
       "community": 27,
@@ -24423,7 +24433,7 @@
       "label": ".test_active_configuration_holds_cost_and_execution_boundaries()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L29",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_active_configuration_holds_cost_and_execution_boundaries",
       "community": 27,
@@ -24433,7 +24443,7 @@
       "label": ".test_ten_reserved_shadow_days_fit_monthly_cap()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L37",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_ten_reserved_shadow_days_fit_monthly_cap",
       "community": 27,
@@ -24443,7 +24453,7 @@
       "label": ".test_router_blocks_before_deterministic_pass()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L44",
+      "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_before_deterministic_pass",
       "community": 27,
@@ -24453,7 +24463,7 @@
       "label": ".test_router_blocks_without_api_authorization()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L52",
+      "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_without_api_authorization",
       "community": 27,
@@ -24463,7 +24473,7 @@
       "label": ".test_router_uses_terra_medium_only_for_evaluation_window()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L60",
+      "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_medium_only_for_evaluation_window",
       "community": 27,
@@ -24473,7 +24483,7 @@
       "label": ".test_router_makes_no_call_for_unchanged_post_evaluation_decision()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L68",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_makes_no_call_for_unchanged_post_evaluation_decision",
       "community": 27,
@@ -24483,7 +24493,7 @@
       "label": ".test_router_uses_terra_for_material_filing()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L76",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_for_material_filing",
       "community": 27,
@@ -24493,7 +24503,7 @@
       "label": ".test_router_uses_high_terra_for_complex_conflict()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L86",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_high_terra_for_complex_conflict",
       "community": 27,
@@ -24503,7 +24513,7 @@
       "label": ".test_router_reserves_sol_for_prior_measured_disagreement()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L94",
+      "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_reserves_sol_for_prior_measured_disagreement",
       "community": 27,
@@ -24513,17 +24523,17 @@
       "label": ".test_recommendation_labels_are_explicit()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L105",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
-      "community": 27,
+      "community": 52,
       "norm_label": ".test_recommendation_labels_are_explicit()"
     },
     {
       "label": ".test_growth_band_selection_is_deterministic()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L111",
+      "source_location": "L112",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
       "community": 27,
@@ -24533,7 +24543,7 @@
       "label": ".test_deterministic_policy_is_an_allowed_valuation_source()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L123",
+      "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_deterministic_policy_is_an_allowed_valuation_source",
       "community": 27,
@@ -24543,7 +24553,7 @@
       "label": ".test_current_status_observes_the_just_persisted_refresh_outcome()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L129",
+      "source_location": "L130",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_current_status_observes_the_just_persisted_refresh_outcome",
       "community": 27,
@@ -24553,7 +24563,7 @@
       "label": ".test_historical_backfill_is_not_a_current_material_event()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L169",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_historical_backfill_is_not_a_current_material_event",
       "community": 27,
@@ -24563,7 +24573,7 @@
       "label": ".test_legacy_registry_is_explicitly_nonproduction()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L195",
+      "source_location": "L196",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_legacy_registry_is_explicitly_nonproduction",
       "community": 27,
@@ -24573,17 +24583,17 @@
       "label": ".test_removed_ai_does_not_create_a_credential_blocker()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L207",
+      "source_location": "L208",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_does_not_create_a_credential_blocker",
-      "community": 27,
+      "community": 402,
       "norm_label": ".test_removed_ai_does_not_create_a_credential_blocker()"
     },
     {
       "label": ".test_removed_ai_router_is_a_durable_no_call()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L217",
+      "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_router_is_a_durable_no_call",
       "community": 27,
@@ -24593,11 +24603,21 @@
       "label": ".test_removed_ai_is_not_scheduler_eligible()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L227",
+      "source_location": "L228",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_is_not_scheduler_eligible",
       "community": 27,
       "norm_label": ".test_removed_ai_is_not_scheduler_eligible()"
+    },
+    {
+      "label": ".test_adverse_complete_valuation_opens_only_a_trim_review()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
+      "source_location": "L231",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
+      "community": 27,
+      "norm_label": ".test_adverse_complete_valuation_opens_only_a_trim_review()"
     },
     {
       "label": "test_phase5r_assertion_span_contract_v3.py",
@@ -25496,7 +25516,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience",
-      "community": 54,
+      "community": 76,
       "norm_label": "test_phase5r_b2_rate_limit_resilience.py"
     },
     {
@@ -25506,7 +25526,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_timestamp",
-      "community": 54,
+      "community": 76,
       "norm_label": "_timestamp()"
     },
     {
@@ -25516,7 +25536,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_payload",
-      "community": 54,
+      "community": 76,
       "norm_label": "_payload()"
     },
     {
@@ -25526,7 +25546,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_real_shaped_payload",
-      "community": 54,
+      "community": 76,
       "norm_label": "_real_shaped_payload()"
     },
     {
@@ -25536,7 +25556,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests",
-      "community": 54,
+      "community": 76,
       "norm_label": "massiveb2adapterresiliencetests"
     },
     {
@@ -25546,7 +25566,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_client",
-      "community": 54,
+      "community": 76,
       "norm_label": "._client()"
     },
     {
@@ -25556,7 +25576,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_environment_key_is_header_only_with_no_output_or_query_exposure",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_environment_key_is_header_only_with_no_output_or_query_exposure()"
     },
     {
@@ -25566,7 +25586,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_real_stocks_basic_delayed_shape_normalizes_exactly",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_real_stocks_basic_delayed_shape_normalizes_exactly()"
     },
     {
@@ -25576,7 +25596,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_response_status_success_allowlist_is_exact",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_response_status_success_allowlist_is_exact()"
     },
     {
@@ -25586,7 +25606,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_smoke_ticker_cache_keeps_the_full_batch_to_twenty_nine_requests",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_smoke_ticker_cache_keeps_the_full_batch_to_twenty_nine_requests()"
     },
     {
@@ -25596,7 +25616,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_exact_response_validation_failures_are_finite_and_nonreflective",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_exact_response_validation_failures_are_finite_and_nonreflective()"
     },
     {
@@ -25606,7 +25626,7 @@
       "source_location": "L244",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_duplicate_provider_session_has_finite_b_code_and_safe_date",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_duplicate_provider_session_has_finite_b_code_and_safe_date()"
     },
     {
@@ -25616,7 +25636,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_invalid_json_body_is_rejected_without_reflection",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_invalid_json_body_is_rejected_without_reflection()"
     },
     {
@@ -25626,7 +25646,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_http_429_maps_to_exact_finite_code_without_retry_or_error_reflection",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_http_429_maps_to_exact_finite_code_without_retry_or_error_reflection()"
     },
     {
@@ -25636,7 +25656,7 @@
       "source_location": "L329",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_massiveb2adapterresiliencetests_test_pacing_is_strictly_below_five_requests_per_minute_and_failures_retry_zero_times",
-      "community": 54,
+      "community": 76,
       "norm_label": ".test_pacing_is_strictly_below_five_requests_per_minute_and_failures_retry_zero_times()"
     },
     {
@@ -25646,7 +25666,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_48",
-      "community": 54,
+      "community": 76,
       "norm_label": "sanitized current custom bars shape, including optional metadata."
     },
     {
@@ -25656,7 +25676,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_76",
-      "community": 54,
+      "community": 76,
       "norm_label": "the external-runtime key authorizes one request but never enters its url/output."
     },
     {
@@ -25666,7 +25686,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_115",
-      "community": 54,
+      "community": 76,
       "norm_label": "the basic delayed shape normalizes without leaking provider metadata."
     },
     {
@@ -25676,7 +25696,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_174",
-      "community": 54,
+      "community": 76,
       "norm_label": "ticker, adjustment, pagination, and malformed data each stop once."
     },
     {
@@ -25686,7 +25706,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_312",
-      "community": 54,
+      "community": 76,
       "norm_label": "a provider 429 is one request and exposes neither url detail nor key."
     },
     {
@@ -25696,7 +25716,7 @@
       "source_location": "L330",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_rate_limit_resilience_rationale_330",
-      "community": 54,
+      "community": 76,
       "norm_label": "every new ticker is locally paced, while a failed request is never retried."
     },
     {
@@ -26256,7 +26276,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger",
-      "community": 2,
+      "community": 399,
       "norm_label": "test_phase5r_llm_blinded_challenger.py"
     },
     {
@@ -26266,7 +26286,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_challenger_from_committee",
-      "community": 16,
+      "community": 399,
       "norm_label": "_challenger_from_committee()"
     },
     {
@@ -26276,7 +26296,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_fakeanthropicmessages",
-      "community": 2,
+      "community": 399,
       "norm_label": "_fakeanthropicmessages"
     },
     {
@@ -26286,7 +26306,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_fakeanthropicmessages_init",
-      "community": 2,
+      "community": 399,
       "norm_label": ".__init__()"
     },
     {
@@ -26306,7 +26326,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_fakeanthropicclient",
-      "community": 2,
+      "community": 399,
       "norm_label": "_fakeanthropicclient"
     },
     {
@@ -26316,7 +26336,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_fakeanthropicclient_init",
-      "community": 2,
+      "community": 399,
       "norm_label": ".__init__()"
     },
     {
@@ -26326,7 +26346,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests",
-      "community": 16,
+      "community": 399,
       "norm_label": "blindedchallengertests"
     },
     {
@@ -26336,7 +26356,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_challenger_input_hash_is_independent_of_committee_output",
-      "community": 16,
+      "community": 12,
       "norm_label": ".test_challenger_input_hash_is_independent_of_committee_output()"
     },
     {
@@ -26346,7 +26366,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_exact_blinded_agreement_preserves_transition_research",
-      "community": 16,
+      "community": 399,
       "norm_label": ".test_exact_blinded_agreement_preserves_transition_research()"
     },
     {
@@ -26356,7 +26376,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_transition_disagreement_abstains_without_cross_ticker_upgrade",
-      "community": 16,
+      "community": 399,
       "norm_label": ".test_transition_disagreement_abstains_without_cross_ticker_upgrade()"
     },
     {
@@ -26366,7 +26386,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_required_missing_challenger_fails_transition_closed",
-      "community": 16,
+      "community": 399,
       "norm_label": ".test_required_missing_challenger_fails_transition_closed()"
     },
     {
@@ -26376,7 +26396,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_challenger_schema_is_closed_and_declares_blindness",
-      "community": 16,
+      "community": 399,
       "norm_label": ".test_challenger_schema_is_closed_and_declares_blindness()"
     },
     {
@@ -26396,7 +26416,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_blinded_challenger_blindedchallengertests_test_anthropic_adapter_uses_strict_tool_free_injected_client",
-      "community": 2,
+      "community": 399,
       "norm_label": ".test_anthropic_adapter_uses_strict_tool_free_injected_client()"
     },
     {
@@ -26416,7 +26436,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests",
-      "community": 26,
+      "community": 16,
       "norm_label": "citationtests"
     },
     {
@@ -26426,7 +26446,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_primary_source_hash_span_and_time_are_valid",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_primary_source_hash_span_and_time_are_valid()"
     },
     {
@@ -26436,7 +26456,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_missing_material_claim_citation_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_missing_material_claim_citation_is_rejected()"
     },
     {
@@ -26456,7 +26476,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_source_hash_mismatch_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_source_hash_mismatch_is_rejected()"
     },
     {
@@ -26466,7 +26486,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_future_source_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_future_source_is_rejected()"
     },
     {
@@ -26476,7 +26496,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_path_traversal_locator_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_path_traversal_locator_is_rejected()"
     },
     {
@@ -26486,7 +26506,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_citations_citationtests_test_invalid_span_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_invalid_span_is_rejected()"
     },
     {
@@ -26526,7 +26546,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_contract_contracttests_test_verified_close_uses_prior_session_before_market_close",
-      "community": 16,
+      "community": 12,
       "norm_label": ".test_verified_close_uses_prior_session_before_market_close()"
     },
     {
@@ -26536,7 +26556,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_contract_contracttests_test_base_fixture_satisfies_all_closed_contracts",
-      "community": 16,
+      "community": 12,
       "norm_label": ".test_base_fixture_satisfies_all_closed_contracts()"
     },
     {
@@ -27546,7 +27566,7 @@
       "source_location": "L1010",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_evidence_contract_v2_evidencecontractv2tests_test_v1_contracts_remain_unchanged_and_reject_v2_sidecars",
-      "community": 16,
+      "community": 12,
       "norm_label": ".test_v1_contracts_remain_unchanged_and_reject_v2_sidecars()"
     },
     {
@@ -28096,7 +28116,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests",
-      "community": 26,
+      "community": 16,
       "norm_label": "numerictests"
     },
     {
@@ -28106,7 +28126,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_decimal_examples_round_exactly",
-      "community": 26,
+      "community": 12,
       "norm_label": ".test_decimal_examples_round_exactly()"
     },
     {
@@ -28116,7 +28136,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_valid_numeric_fixture_reconciles",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_valid_numeric_fixture_reconciles()"
     },
     {
@@ -28126,7 +28146,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_numeric_mismatch_fails_closed",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_numeric_mismatch_fails_closed()"
     },
     {
@@ -28136,7 +28156,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_unit_and_period_mismatch_fails_closed",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_unit_and_period_mismatch_fails_closed()"
     },
     {
@@ -28146,7 +28166,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_zero_prior_value_is_rejected",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_zero_prior_value_is_rejected()"
     },
     {
@@ -28156,7 +28176,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_numeric_numerictests_test_nonfinite_decimal_is_rejected_by_core",
-      "community": 26,
+      "community": 16,
       "norm_label": ".test_nonfinite_decimal_is_rejected_by_core()"
     },
     {
@@ -28166,7 +28186,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_policy_gate",
-      "community": 16,
+      "community": 75,
       "norm_label": "test_phase5r_llm_policy_gate.py"
     },
     {
@@ -28176,7 +28196,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_policy_gate_add_synthetic_ticker_valuation",
-      "community": 16,
+      "community": 13,
       "norm_label": "_add_synthetic_ticker_valuation()"
     },
     {
@@ -28446,7 +28466,7 @@
       "source_location": "L894",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_policy_gate_policygatetests_test_live_close_stability_isolated_per_candidate_ticker",
-      "community": 16,
+      "community": 74,
       "norm_label": ".test_live_close_stability_isolated_per_candidate_ticker()"
     },
     {
@@ -28456,7 +28476,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider",
-      "community": 2,
+      "community": 75,
       "norm_label": "test_phase5r_llm_provider.py"
     },
     {
@@ -28616,7 +28636,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate",
-      "community": 19,
+      "community": 313,
       "norm_label": "test_phase5r_llm_provider_replay_gate.py"
     },
     {
@@ -28666,7 +28686,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_zero_violations",
-      "community": 19,
+      "community": 313,
       "norm_label": "_zero_violations()"
     },
     {
@@ -28676,7 +28696,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_analyst_response",
-      "community": 19,
+      "community": 313,
       "norm_label": "_analyst_response()"
     },
     {
@@ -28686,7 +28706,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_committee_response",
-      "community": 19,
+      "community": 313,
       "norm_label": "_committee_response()"
     },
     {
@@ -28696,7 +28716,7 @@
       "source_location": "L258",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_critic_response",
-      "community": 19,
+      "community": 313,
       "norm_label": "_critic_response()"
     },
     {
@@ -28876,7 +28896,7 @@
       "source_location": "L1423",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_role_bindings",
-      "community": 19,
+      "community": 313,
       "norm_label": "._role_bindings()"
     },
     {
@@ -28886,7 +28906,7 @@
       "source_location": "L1446",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_build_report",
-      "community": 19,
+      "community": 313,
       "norm_label": "._build_report()"
     },
     {
@@ -28946,7 +28966,7 @@
       "source_location": "L2382",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_test_valid_external_provider_report_passes_without_side_effects",
-      "community": 0,
+      "community": 19,
       "norm_label": ".test_valid_external_provider_report_passes_without_side_effects()"
     },
     {
@@ -28966,7 +28986,7 @@
       "source_location": "L2431",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_test_synthetic_fake_cik_text_corpus_fails_strict_prerequisite",
-      "community": 0,
+      "community": 19,
       "norm_label": ".test_synthetic_fake_cik_text_corpus_fails_strict_prerequisite()"
     },
     {
@@ -28976,7 +28996,7 @@
       "source_location": "L2455",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_test_registry_cannot_lower_packet_or_issuer_hard_floors",
-      "community": 0,
+      "community": 19,
       "norm_label": ".test_registry_cannot_lower_packet_or_issuer_hard_floors()"
     },
     {
@@ -29236,7 +29256,7 @@
       "source_location": "L2930",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_test_activation_receipt_binds_code_and_human_reviews",
-      "community": 11,
+      "community": 19,
       "norm_label": ".test_activation_receipt_binds_code_and_human_reviews()"
     },
     {
@@ -29286,7 +29306,7 @@
       "source_location": "L3117",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_gate_providerreplaygatetests_test_active_receipt_revalidates_physical_attempt_ledger",
-      "community": 11,
+      "community": 19,
       "norm_label": ".test_active_receipt_revalidates_physical_attempt_ledger()"
     },
     {
@@ -29506,7 +29526,7 @@
       "source_location": "L1005",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_runner_providerreplayrunnertests_test_exclusive_publication_rejects_parent_symlink_escape",
-      "community": 83,
+      "community": 39,
       "norm_label": ".test_exclusive_publication_rejects_parent_symlink_escape()"
     },
     {
@@ -29626,7 +29646,7 @@
       "source_location": "L1670",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_provider_replay_runner_providerreplayrunnertests_test_check_failure_is_read_only_and_never_constructs_provider",
-      "community": 83,
+      "community": 39,
       "norm_label": ".test_check_failure_is_read_only_and_never_constructs_provider()"
     },
     {
@@ -29746,7 +29766,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_replay_corpus_market_payload",
-      "community": 197,
+      "community": 412,
       "norm_label": "market_payload()"
     },
     {
@@ -29786,7 +29806,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_replay_corpus_fakeclock_sleep",
-      "community": 54,
+      "community": 76,
       "norm_label": ".sleep()"
     },
     {
@@ -29816,7 +29836,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_replay_corpus_fakesources_sec",
-      "community": 197,
+      "community": 54,
       "norm_label": ".sec()"
     },
     {
@@ -29826,7 +29846,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_replay_corpus_fakesources_market",
-      "community": 197,
+      "community": 412,
       "norm_label": ".market()"
     },
     {
@@ -30526,7 +30546,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_role_inputs_rolescopedproviderinputtests_test_role_scoping_does_not_change_existing_fixture_result",
-      "community": 9,
+      "community": 74,
       "norm_label": ".test_role_scoping_does_not_change_existing_fixture_result()"
     },
     {
@@ -30556,7 +30576,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_recordingfixtureprovider_init",
-      "community": 2,
+      "community": 74,
       "norm_label": ".__init__()"
     },
     {
@@ -30596,7 +30616,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_terminalproviderfailure",
-      "community": 2,
+      "community": 74,
       "norm_label": "terminalproviderfailure"
     },
     {
@@ -30606,7 +30626,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_terminalproviderfailure_init",
-      "community": 2,
+      "community": 74,
       "norm_label": ".__init__()"
     },
     {
@@ -30656,7 +30676,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_smtp_stat",
-      "community": 74,
+      "community": 26,
       "norm_label": "smtp_stat()"
     },
     {
@@ -30906,7 +30926,7 @@
       "source_location": "L1785",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_canonical_child_shadow_artifact_read_is_rejected",
-      "community": 12,
+      "community": 75,
       "norm_label": ".test_canonical_child_shadow_artifact_read_is_rejected()"
     },
     {
@@ -30916,7 +30936,7 @@
       "source_location": "L1803",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_provider_failure_remains_retryable_for_scheduler",
-      "community": 74,
+      "community": 7,
       "norm_label": ".test_provider_failure_remains_retryable_for_scheduler()"
     },
     {
@@ -30936,7 +30956,7 @@
       "source_location": "L1878",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_llm_shadow_boundary_boundarytests_test_offline_evaluation_does_not_touch_operational_state",
-      "community": 74,
+      "community": 26,
       "norm_label": ".test_offline_evaluation_does_not_touch_operational_state()"
     },
     {
@@ -31716,7 +31736,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v10",
-      "community": 361,
+      "community": 61,
       "norm_label": "test_phase5r_model_pilot_v10.py"
     },
     {
@@ -31726,7 +31746,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v10_v10readinesstests",
-      "community": 361,
+      "community": 61,
       "norm_label": "v10readinesstests"
     },
     {
@@ -31736,7 +31756,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v10_v10readinesstests_test_v10_raises_only_the_critic_output_cap",
-      "community": 361,
+      "community": 61,
       "norm_label": ".test_v10_raises_only_the_critic_output_cap()"
     },
     {
@@ -31746,7 +31766,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v10_v10readinesstests_test_v10_execution_plan_reserves_the_extra_tokens_only_for_critics",
-      "community": 361,
+      "community": 61,
       "norm_label": ".test_v10_execution_plan_reserves_the_extra_tokens_only_for_critics()"
     },
     {
@@ -31886,7 +31906,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v3_prompt",
-      "community": 16,
+      "community": 26,
       "norm_label": "test_phase5r_model_pilot_v3_prompt.py"
     },
     {
@@ -31896,7 +31916,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v3_prompt_replacementpilotv3prompttests",
-      "community": 16,
+      "community": 26,
       "norm_label": "replacementpilotv3prompttests"
     },
     {
@@ -31906,7 +31926,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v3_prompt_replacementpilotv3prompttests_test_plan_binds_the_exact_prompt_only_repair",
-      "community": 16,
+      "community": 26,
       "norm_label": ".test_plan_binds_the_exact_prompt_only_repair()"
     },
     {
@@ -32016,7 +32036,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract",
-      "community": 36,
+      "community": 361,
       "norm_label": "test_phase5r_model_pilot_v4_contract.py"
     },
     {
@@ -32026,7 +32046,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_source_id_only_payload",
-      "community": 36,
+      "community": 361,
       "norm_label": "source_id_only_payload()"
     },
     {
@@ -32036,7 +32056,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_replacementpilotv4contracttests",
-      "community": 36,
+      "community": 361,
       "norm_label": "replacementpilotv4contracttests"
     },
     {
@@ -32046,7 +32066,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_replacementpilotv4contracttests_test_source_id_only_prompt_never_asks_model_to_emit_hashes",
-      "community": 36,
+      "community": 361,
       "norm_label": ".test_source_id_only_prompt_never_asks_model_to_emit_hashes()"
     },
     {
@@ -32056,7 +32076,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_replacementpilotv4contracttests_test_schema_prohibits_model_supplied_excerpt_hashes",
-      "community": 36,
+      "community": 361,
       "norm_label": ".test_schema_prohibits_model_supplied_excerpt_hashes()"
     },
     {
@@ -32066,7 +32086,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_replacementpilotv4contracttests_test_adapter_derives_hashes_and_closed_validator_still_passes",
-      "community": 36,
+      "community": 361,
       "norm_label": ".test_adapter_derives_hashes_and_closed_validator_still_passes()"
     },
     {
@@ -32076,7 +32096,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v4_contract_replacementpilotv4contracttests_test_unknown_source_remains_rejected_before_validation",
-      "community": 36,
+      "community": 361,
       "norm_label": ".test_unknown_source_remains_rejected_before_validation()"
     },
     {
@@ -32206,7 +32226,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6",
-      "community": 66,
+      "community": 75,
       "norm_label": "test_phase5r_model_pilot_v6.py"
     },
     {
@@ -32216,7 +32236,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider",
-      "community": 66,
+      "community": 75,
       "norm_label": "_v6fixtureprovider"
     },
     {
@@ -32226,7 +32246,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider_count_input_tokens",
-      "community": 66,
+      "community": 75,
       "norm_label": ".count_input_tokens()"
     },
     {
@@ -32236,7 +32256,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider_generate",
-      "community": 66,
+      "community": 75,
       "norm_label": ".generate()"
     },
     {
@@ -32246,7 +32266,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider_assert_min_length",
-      "community": 66,
+      "community": 75,
       "norm_label": "._assert_min_length()"
     },
     {
@@ -32256,7 +32276,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider_classification",
-      "community": 66,
+      "community": 75,
       "norm_label": "._classification()"
     },
     {
@@ -32266,7 +32286,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_v6fixtureprovider_payload",
-      "community": 66,
+      "community": 75,
       "norm_label": "._payload()"
     },
     {
@@ -32296,7 +32316,7 @@
       "source_location": "L189",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests",
-      "community": 66,
+      "community": 75,
       "norm_label": "replacementpilotv6tests"
     },
     {
@@ -32306,7 +32326,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_setup",
-      "community": 66,
+      "community": 75,
       "norm_label": ".setup()"
     },
     {
@@ -32316,7 +32336,7 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_analyst_payload",
-      "community": 66,
+      "community": 75,
       "norm_label": "._analyst_payload()"
     },
     {
@@ -32336,7 +32356,7 @@
       "source_location": "L229",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_test_all_v6_stage_schemas_are_strict_and_capability_gated",
-      "community": 66,
+      "community": 75,
       "norm_label": ".test_all_v6_stage_schemas_are_strict_and_capability_gated()"
     },
     {
@@ -32346,7 +32366,7 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_test_readiness_is_offline_and_freshly_sealed",
-      "community": 66,
+      "community": 75,
       "norm_label": ".test_readiness_is_offline_and_freshly_sealed()"
     },
     {
@@ -32366,7 +32386,7 @@
       "source_location": "L282",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_test_v7_plan_is_sealed_and_limited_to_v6_budget_remainder",
-      "community": 66,
+      "community": 75,
       "norm_label": ".test_v7_plan_is_sealed_and_limited_to_v6_budget_remainder()"
     },
     {
@@ -32376,7 +32396,7 @@
       "source_location": "L300",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v6_replacementpilotv6tests_test_complete_fixture_collection_never_persists_provider_response_ids",
-      "community": 66,
+      "community": 75,
       "norm_label": ".test_complete_fixture_collection_never_persists_provider_response_ids()"
     },
     {
@@ -32406,7 +32426,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7",
-      "community": 199,
+      "community": 75,
       "norm_label": "test_phase5r_model_pilot_v7.py"
     },
     {
@@ -32416,7 +32436,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_v7fixtureprovider",
-      "community": 199,
+      "community": 75,
       "norm_label": "_v7fixtureprovider"
     },
     {
@@ -32426,7 +32446,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_v7fixtureprovider_generate",
-      "community": 199,
+      "community": 75,
       "norm_label": ".generate()"
     },
     {
@@ -32436,7 +32456,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_replacementpilotv7tests",
-      "community": 199,
+      "community": 75,
       "norm_label": "replacementpilotv7tests"
     },
     {
@@ -32446,7 +32466,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_replacementpilotv7tests_test_readiness_is_offline_and_source_v6_is_unchanged",
-      "community": 199,
+      "community": 75,
       "norm_label": ".test_readiness_is_offline_and_source_v6_is_unchanged()"
     },
     {
@@ -32456,7 +32476,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_replacementpilotv7tests_test_fixture_v7_consumes_only_sealed_new_calls_and_stays_no_go",
-      "community": 199,
+      "community": 75,
       "norm_label": ".test_fixture_v7_consumes_only_sealed_new_calls_and_stays_no_go()"
     },
     {
@@ -32466,7 +32486,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v7_rationale_16",
-      "community": 199,
+      "community": 75,
       "norm_label": "match the real carried v6 claim cardinality in critic fixtures."
     },
     {
@@ -32576,7 +32596,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v9",
-      "community": 76,
+      "community": 61,
       "norm_label": "test_phase5r_model_pilot_v9.py"
     },
     {
@@ -32586,7 +32606,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v9_v9readinesstests",
-      "community": 76,
+      "community": 61,
       "norm_label": "v9readinesstests"
     },
     {
@@ -32596,7 +32616,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_model_pilot_v9_v9readinesstests_test_v9_is_fresh_and_gated_by_the_completed_v8_qualification",
-      "community": 76,
+      "community": 61,
       "norm_label": ".test_v9_is_fresh_and_gated_by_the_completed_v8_qualification()"
     },
     {
@@ -34146,7 +34166,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions",
-      "community": 2,
+      "community": 75,
       "norm_label": "test_phase5r_security_regressions.py"
     },
     {
@@ -34156,7 +34176,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions_bind_responses_to_packet",
-      "community": 2,
+      "community": 75,
       "norm_label": "_bind_responses_to_packet()"
     },
     {
@@ -34246,7 +34266,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions_canonicallockregressiontests",
-      "community": 2,
+      "community": 5,
       "norm_label": "canonicallockregressiontests"
     },
     {
@@ -34256,7 +34276,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions_canonicallockregressiontests_test_exclusive_lock_refuses_symlink_without_touching_target",
-      "community": 2,
+      "community": 5,
       "norm_label": ".test_exclusive_lock_refuses_symlink_without_touching_target()"
     },
     {
@@ -34266,7 +34286,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions_canonicallockregressiontests_test_exclusive_lock_refuses_hardlink_without_touching_target",
-      "community": 2,
+      "community": 5,
       "norm_label": ".test_exclusive_lock_refuses_hardlink_without_touching_target()"
     },
     {
@@ -34816,7 +34836,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_valuation_input_bundle_valuationinputbundletests_test_absent_bundle_is_the_only_empty_success",
-      "community": 326,
+      "community": 58,
       "norm_label": ".test_absent_bundle_is_the_only_empty_success()"
     },
     {
@@ -37206,7 +37226,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix",
-      "community": 406,
+      "community": 199,
       "norm_label": "verify_phase5r_d3f_hotfix.py"
     },
     {
@@ -37216,7 +37236,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_timestamp",
-      "community": 406,
+      "community": 199,
       "norm_label": "timestamp()"
     },
     {
@@ -37226,7 +37246,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_digest",
-      "community": 406,
+      "community": 199,
       "norm_label": "digest()"
     },
     {
@@ -37236,7 +37256,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_py_path",
-      "community": 406,
+      "community": 199,
       "norm_label": "path"
     },
     {
@@ -37246,7 +37266,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_metadata",
-      "community": 406,
+      "community": 199,
       "norm_label": "metadata()"
     },
     {
@@ -37256,7 +37276,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_loaded",
-      "community": 406,
+      "community": 199,
       "norm_label": "loaded()"
     },
     {
@@ -37266,7 +37286,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_launchd_details",
-      "community": 406,
+      "community": 199,
       "norm_label": "launchd_details()"
     },
     {
@@ -37276,7 +37296,7 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_run",
-      "community": 406,
+      "community": 199,
       "norm_label": "run()"
     },
     {
@@ -37286,7 +37306,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_py_completedprocess",
-      "community": 406,
+      "community": 199,
       "norm_label": "completedprocess"
     },
     {
@@ -37296,7 +37316,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_successful_send_count",
-      "community": 406,
+      "community": 199,
       "norm_label": "successful_send_count()"
     },
     {
@@ -37306,7 +37326,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_d3f_rows",
-      "community": 406,
+      "community": 199,
       "norm_label": "d3f_rows()"
     },
     {
@@ -37316,7 +37336,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_state_protections",
-      "community": 406,
+      "community": 199,
       "norm_label": "state_protections()"
     },
     {
@@ -37326,7 +37346,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_scan_wrapper_boundary",
-      "community": 406,
+      "community": 199,
       "norm_label": "scan_wrapper_boundary()"
     },
     {
@@ -37336,7 +37356,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_phase5r_e_files",
-      "community": 406,
+      "community": 199,
       "norm_label": "phase5r_e_files()"
     },
     {
@@ -37346,7 +37366,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_d3f_hotfix_main",
-      "community": 406,
+      "community": 199,
       "norm_label": "main()"
     },
     {
@@ -37776,7 +37796,7 @@
       "source_location": "L1192",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_provider_replay_gate_replay_primary_inputs",
-      "community": 0,
+      "community": 313,
       "norm_label": "replay_primary_inputs()"
     },
     {
@@ -37836,7 +37856,7 @@
       "source_location": "L1943",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_provider_replay_gate_critic_control_input",
-      "community": 0,
+      "community": 313,
       "norm_label": "critic_control_input()"
     },
     {
@@ -38046,7 +38066,7 @@
       "source_location": "L3493",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_provider_replay_gate_negative_control_cases",
-      "community": 0,
+      "community": 313,
       "norm_label": "negative_control_cases()"
     },
     {
@@ -38226,7 +38246,7 @@
       "source_location": "L1197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_provider_replay_gate_rationale_1197",
-      "community": 0,
+      "community": 313,
       "norm_label": "return the exact role-scoped primary inputs used for hash verification."
     },
     {
@@ -38276,7 +38296,7 @@
       "source_location": "L3496",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_provider_replay_gate_rationale_3496",
-      "community": 0,
+      "community": 313,
       "norm_label": "return 50 deterministic same-packet controls without human labels."
     },
     {
@@ -38406,7 +38426,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary",
-      "community": 12,
+      "community": 75,
       "norm_label": "verify_phase5r_llm_shadow_boundary.py"
     },
     {
@@ -38416,7 +38436,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_digest_or_absent",
-      "community": 12,
+      "community": 75,
       "norm_label": "digest_or_absent()"
     },
     {
@@ -38426,7 +38446,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_py_path",
-      "community": 12,
+      "community": 75,
       "norm_label": "path"
     },
     {
@@ -38436,7 +38456,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_smtp_stat_only",
-      "community": 12,
+      "community": 75,
       "norm_label": "smtp_stat_only()"
     },
     {
@@ -38446,7 +38466,7 @@
       "source_location": "L147",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_canonical_model_reference_markers",
-      "community": 12,
+      "community": 75,
       "norm_label": "canonical_model_reference_markers()"
     },
     {
@@ -38456,7 +38476,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_static_source_check",
-      "community": 12,
+      "community": 75,
       "norm_label": "static_source_check()"
     },
     {
@@ -38466,7 +38486,7 @@
       "source_location": "L212",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_fixture",
-      "community": 12,
+      "community": 75,
       "norm_label": "_fixture()"
     },
     {
@@ -38476,7 +38496,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_py_any",
-      "community": 12,
+      "community": 75,
       "norm_label": "any"
     },
     {
@@ -38486,7 +38506,7 @@
       "source_location": "L401",
       "_origin": "ast",
       "id": "09_scripts_phase5r_verify_phase5r_llm_shadow_boundary_main",
-      "community": 12,
+      "community": 75,
       "norm_label": "main()"
     },
     {
@@ -54703,7 +54723,7 @@
       "label": "Safety Boundaries",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L57",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "readme_safety_boundaries",
       "community": 127,
@@ -54713,7 +54733,7 @@
       "label": "What The System Can Do",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L66",
+      "source_location": "L69",
       "_origin": "ast",
       "id": "readme_what_the_system_can_do",
       "community": 127,
@@ -54723,7 +54743,7 @@
       "label": "What The System Cannot Do",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L75",
+      "source_location": "L78",
       "_origin": "ast",
       "id": "readme_what_the_system_cannot_do",
       "community": 127,
@@ -54733,7 +54753,7 @@
       "label": "Current Safe Status Commands",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L83",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "readme_current_safe_status_commands",
       "community": 127,
@@ -59379,10 +59399,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L74",
+      "source_location": "L123",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
       "target": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
+      "target": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
       "confidence_score": 1.0
     },
     {
@@ -59390,10 +59420,32 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L6",
+      "source_location": "L7",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
       "target": "09_scripts_phase5r_phase5r_c9_common",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_active_production",
+      "target": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
+      "source_location": "L188",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
+      "target": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
       "confidence_score": 1.0
     },
     {
@@ -59401,8 +59453,19 @@
       "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
+      "source_location": "L244",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
+      "target": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L193",
+      "source_location": "L297",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_append_run_log"
@@ -59413,7 +59476,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L76",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_account_state"
@@ -59424,7 +59487,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L75",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_active_inhibit"
@@ -59435,7 +59498,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L78",
+      "source_location": "L127",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_packets"
@@ -59446,7 +59509,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py",
-      "source_location": "L77",
+      "source_location": "L126",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_positions"
@@ -62204,7 +62267,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L210",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_does_not_create_a_credential_blocker",
       "target": "09_scripts_phase5r_generate_phase5r_current_status_model_authorization_is_blocker"
@@ -63759,7 +63822,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -63770,7 +63833,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L30",
+      "source_location": "L31",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_active_configuration_holds_cost_and_execution_boundaries",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -63781,7 +63844,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L112",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -63792,7 +63855,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L208",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_does_not_create_a_credential_blocker",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -98157,7 +98220,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L218",
+      "source_location": "L219",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_router_is_a_durable_no_call",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98168,7 +98231,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_before_deterministic_pass",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98179,7 +98242,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L53",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_without_api_authorization",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98190,7 +98253,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L69",
+      "source_location": "L70",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_makes_no_call_for_unchanged_post_evaluation_decision",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98201,7 +98264,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L95",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_reserves_sol_for_prior_measured_disagreement",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98212,7 +98275,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L87",
+      "source_location": "L88",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_high_terra_for_complex_conflict",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98223,7 +98286,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L77",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_for_material_filing",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -98234,7 +98297,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L61",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_medium_only_for_evaluation_window",
       "target": "09_scripts_phase5r_phase5r_model_router_route_model"
@@ -118039,7 +118102,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
       "target": "09_scripts_phase5r_refresh_phase5r_valuation_scenarios_selected_band"
@@ -130790,7 +130853,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L196",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_legacy_registry_is_explicitly_nonproduction",
       "target": "09_scripts_phase5r_run_phase5r_llm_shadow_load_registry"
@@ -151373,7 +151436,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
@@ -151394,7 +151457,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151404,7 +151467,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L29",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_active_configuration_holds_cost_and_execution_boundaries",
@@ -151414,7 +151477,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L129",
+      "source_location": "L231",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
+      "source_location": "L130",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_current_status_observes_the_just_persisted_refresh_outcome",
@@ -151424,7 +151497,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L123",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_deterministic_policy_is_an_allowed_valuation_source",
@@ -151434,7 +151507,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L111",
+      "source_location": "L112",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
@@ -151444,7 +151517,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_historical_backfill_is_not_a_current_material_event",
@@ -151454,7 +151527,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L195",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_legacy_registry_is_explicitly_nonproduction",
@@ -151464,7 +151537,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L105",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
@@ -151474,7 +151547,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L207",
+      "source_location": "L208",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_does_not_create_a_credential_blocker",
@@ -151484,7 +151557,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L227",
+      "source_location": "L228",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_is_not_scheduler_eligible",
@@ -151494,7 +151567,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L217",
+      "source_location": "L218",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_removed_ai_router_is_a_durable_no_call",
@@ -151504,7 +151577,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_before_deterministic_pass",
@@ -151514,7 +151587,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_without_api_authorization",
@@ -151524,7 +151597,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_makes_no_call_for_unchanged_post_evaluation_decision",
@@ -151534,7 +151607,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L94",
+      "source_location": "L95",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_reserves_sol_for_prior_measured_disagreement",
@@ -151544,7 +151617,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L86",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_high_terra_for_complex_conflict",
@@ -151554,7 +151627,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L76",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_for_material_filing",
@@ -151564,7 +151637,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L60",
+      "source_location": "L61",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_medium_only_for_evaluation_window",
@@ -151574,7 +151647,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L37",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_ten_reserved_shadow_days_fit_monthly_cap",
@@ -151585,7 +151658,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_before_deterministic_pass",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151596,7 +151669,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L56",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_blocks_without_api_authorization",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151607,7 +151680,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L72",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_makes_no_call_for_unchanged_post_evaluation_decision",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151618,7 +151691,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L101",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_reserves_sol_for_prior_measured_disagreement",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151629,7 +151702,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_high_terra_for_complex_conflict",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151640,7 +151713,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L82",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_for_material_filing",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151651,7 +151724,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_router_uses_terra_medium_only_for_evaluation_window",
       "target": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_future_evaluation_config",
@@ -151663,7 +151736,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_active_production.py",
-      "source_location": "L106",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
       "target": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_classification"
@@ -199050,7 +199123,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L83",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_current_safe_status_commands",
@@ -199080,7 +199153,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L57",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_safety_boundaries",
@@ -199090,7 +199163,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L66",
+      "source_location": "L69",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_what_the_system_can_do",
@@ -199100,7 +199173,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L75",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "readme_early_public_equity_lab",
       "target": "readme_what_the_system_cannot_do",
@@ -199648,5 +199721,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5efc90022e2dce14da2dc324b92e7e63384a8575"
+  "built_at_commit": "f2e63e4bb7abb874b1174f07eb19a9efcf48049c"
 }
