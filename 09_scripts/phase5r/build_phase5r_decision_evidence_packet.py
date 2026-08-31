@@ -43,7 +43,11 @@ from phase5r_daily_common import (
 from phase5r_llm_contract import PACKET_SCHEMA_VERSION, validate_packet
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
-from phase5r_sec_acceptance import acceptance_map
+from phase5r_sec_acceptance import SEC_ACCEPTANCE_INDEX_PATH, acceptance_map
+from phase5r_sec_acceptance_extensions import (
+    extension_acceptance_records,
+    load_extension_artifacts,
+)
 from phase5r_valuation_evidence_v1 import valuation_packet_calculations
 from phase5r_valuation_input_bundle import (
     DEFAULT_BUNDLE_PATH as DEFAULT_VALUATION_BUNDLE_PATH,
@@ -439,6 +443,47 @@ def _artifact_map() -> dict[str, list[dict[str, Any]]]:
     return by_accession
 
 
+def _effective_acceptance_map() -> dict[str, dict[str, str]]:
+    """Return the immutable index plus every validated append-only extension."""
+
+    records = dict(acceptance_map())
+    artifacts = load_extension_artifacts(
+        historical_index_sha256=sha256_file(SEC_ACCEPTANCE_INDEX_PATH),
+    )
+    for record in extension_acceptance_records(artifacts):
+        accession = record["accession_number"]
+        previous = records.get(accession)
+        if previous is not None and previous != record:
+            raise ValueError("SEC effective acceptance set contains a conflict")
+        records[accession] = record
+    return records
+
+
+def _selected_filing_rows(
+    rows: list[dict[str, str]],
+    current_material_accessions: set[str],
+) -> list[dict[str, str]]:
+    ordered = sorted(
+        rows,
+        key=lambda row: (
+            row.get("filing_date", ""),
+            row.get("accession_number", ""),
+        ),
+        reverse=True,
+    )
+    selected = ordered[:2]
+    selected_accessions = {
+        row.get("accession_number", "") for row in selected
+    }
+    selected.extend(
+        row
+        for row in ordered[2:]
+        if row.get("accession_number", "") in current_material_accessions
+        and row.get("accession_number", "") not in selected_accessions
+    )
+    return selected
+
+
 def _verified_artifact_chunks(
     artifact: dict[str, Any],
     *,
@@ -756,9 +801,10 @@ def _fundamental_observations(
 
 def _filing_evidence(
     tickers: set[str],
+    current_material_accessions: set[str],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], set[str]]:
     artifacts = _artifact_map()
-    acceptance_records = acceptance_map()
+    acceptance_records = _effective_acceptance_map()
     by_ticker: dict[str, list[dict[str, str]]] = defaultdict(list)
     for row in read_csv(EVIDENCE_LEDGER_PATH):
         ticker = row.get("ticker", "").upper()
@@ -768,20 +814,9 @@ def _filing_evidence(
     sources: list[dict[str, Any]] = []
     covered: set[str] = set()
     for ticker, rows in sorted(by_ticker.items()):
-        rows.sort(
-            key=lambda row: (
-                row.get("filing_date", ""),
-                row.get("accession_number", ""),
-            ),
-            reverse=True,
-        )
-        selected = rows[:2]
-        selected_accessions = {row.get("accession_number", "") for row in selected}
-        selected.extend(
-            row
-            for row in rows[2:]
-            if row.get("material_event") == "yes"
-            and row.get("accession_number", "") not in selected_accessions
+        selected = _selected_filing_rows(
+            rows,
+            current_material_accessions,
         )
         for row in selected:
             accession = row.get("accession_number", "")
@@ -1029,7 +1064,15 @@ def build_packet(
     fundamental, fundamental_sources, fundamental_calculations = (
         _fundamental_observations(tickers)
     )
-    filings, filing_sources, artifact_covered = _filing_evidence(tickers)
+    current_material_accessions = {
+        str(row.get("accession_number", ""))
+        for row in decision.get("material_events", [])
+        if isinstance(row, dict) and row.get("accession_number")
+    }
+    filings, filing_sources, artifact_covered = _filing_evidence(
+        tickers,
+        current_material_accessions,
+    )
     research, research_sources, research_calculations = _research_context(tickers)
     valuation_evidence, valuation_sources = load_valuation_input_bundle(
         path=valuation_bundle_path,

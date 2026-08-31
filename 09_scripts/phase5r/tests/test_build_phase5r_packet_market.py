@@ -168,6 +168,66 @@ class PacketMarketObservationTests(unittest.TestCase):
         )
         self.assertIn("real_trade_candidate", allowed["BUY"])
 
+    def test_effective_acceptance_map_includes_validated_extensions(self) -> None:
+        historical = {
+            "0000000001-26-000001": {
+                "accession_number": "0000000001-26-000001",
+                "ticker": "OLD",
+            }
+        }
+        extension = {
+            "accession_number": "0000000002-26-000002",
+            "ticker": "NEW",
+        }
+        with (
+            patch.object(packet_builder, "acceptance_map", return_value=historical),
+            patch.object(packet_builder, "sha256_file", return_value="a" * 64),
+            patch.object(
+                packet_builder,
+                "load_extension_artifacts",
+                return_value=[{"records": [extension]}],
+            ),
+            patch.object(
+                packet_builder,
+                "extension_acceptance_records",
+                return_value=[extension],
+            ),
+        ):
+            effective = packet_builder._effective_acceptance_map()
+        self.assertEqual(set(effective), set(historical) | {extension["accession_number"]})
+
+    def test_packet_filing_selection_excludes_historical_material_backfill(self) -> None:
+        rows = [
+            {
+                "accession_number": "newest",
+                "filing_date": "2026-08-27",
+                "material_event": "yes",
+            },
+            {
+                "accession_number": "second",
+                "filing_date": "2026-08-26",
+                "material_event": "yes",
+            },
+            {
+                "accession_number": "current-extra",
+                "filing_date": "2026-08-25",
+                "material_event": "yes",
+            },
+            {
+                "accession_number": "historical-backfill",
+                "filing_date": "2021-01-01",
+                "material_event": "yes",
+            },
+        ]
+        selected = packet_builder._selected_filing_rows(
+            rows,
+            {"current-extra"},
+        )
+        self.assertEqual(
+            [row["accession_number"] for row in selected],
+            ["newest", "second", "current-extra"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
