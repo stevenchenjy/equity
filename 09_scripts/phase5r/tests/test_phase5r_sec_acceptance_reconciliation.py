@@ -108,6 +108,17 @@ class SecAcceptanceReconciliationTests(unittest.TestCase):
             "eastern_wall_clock_representation_equivalent",
         )
 
+    def test_later_sec_correction_from_wall_clock_to_absolute_utc_is_audited(self) -> None:
+        historical = acceptance_record(accepted_at="2026-07-24T16:30:45.000Z")
+        current = acceptance_record(accepted_at="2026-07-24T20:30:45.000Z")
+        rows = self._reconcile(historical, current)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["detected_offset_seconds"], "14400")
+        self.assertEqual(
+            rows[0]["reconciliation_decision"],
+            "eastern_wall_clock_representation_equivalent",
+        )
+
     def test_same_utc_instant_with_different_timezone_notation_is_reconciled(self) -> None:
         historical = acceptance_record()
         current = acceptance_record(accepted_at="2026-07-24T16:30:45.000-04:00")

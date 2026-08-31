@@ -240,8 +240,8 @@
     "semantic_hash": "3a8ee86b8f827b2b524442a73e08020d"
   },
   "09_scripts/phase5r/verify_phase5r_c8_active_state_guard.py": {
-    "mtime": 1787710710.0164115,
-    "ast_hash": "c4a9a97bea32adac0aa9daef37fc9f36",
+    "mtime": 1788191715.2426097,
+    "ast_hash": "30b5aab21e1692388a594cf4418383dc",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_d1_scheduler_boundary.py": {
@@ -1450,8 +1450,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py": {
-    "mtime": 1788190677.3972318,
-    "ast_hash": "464198f5125053fc8227fd840eabebc2",
+    "mtime": 1788191844.1628392,
+    "ast_hash": "5bb2913f0795db7937e9d1fc968e145b",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_daily_common.py": {
@@ -1545,8 +1545,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_llm_model_registry.json": {
-    "mtime": 1784966857.8350496,
-    "ast_hash": "d73af7e03bdb9faeb3b97a1d58e3dc39",
+    "mtime": 1788191736.0303338,
+    "ast_hash": "3be38629d36b7f1d88d11790c234acd6",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/build_phase5r_decision_evidence_packet.py": {
@@ -1710,8 +1710,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_sec_acceptance.py": {
-    "mtime": 1786022233.6733894,
-    "ast_hash": "64293086d487476d064846c37149855d",
+    "mtime": 1788192513.487536,
+    "ast_hash": "a396742e7216e6ff74d069deda187d9a",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/prepare_phase5r_llm_replay_corpus.py": {
@@ -2455,8 +2455,8 @@
     "semantic_hash": ""
   },
   "04_research/realtime_stock_picker_phase5r/phase5r_production_shadow_v1.md": {
-    "mtime": 1785869006.460632,
-    "ast_hash": "a87c0b65e382a767bb1201044cbb48e5",
+    "mtime": 1788191755.0285475,
+    "ast_hash": "82856f79aa2c84c017971dba5d1fbf00",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/record_phase5r_production_shadow_human_assessment.py": {
@@ -2490,8 +2490,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_sec_acceptance_reconciliation.py": {
-    "mtime": 1786022267.760949,
-    "ast_hash": "17eab0861eccf5ef0edd70460464f782",
+    "mtime": 1788192513.4884796,
+    "ast_hash": "7ed988246c6898649e9d7722de22a8b8",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_b2_rate_limit_resilience.py": {

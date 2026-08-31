@@ -459,14 +459,26 @@ def _same_eastern_wall_clock_representation(
     """
 
     original_eastern = original.astimezone(EASTERN)
-    current_utc_wall_clock = current.astimezone(timezone.utc).replace(tzinfo=None)
-    eastern_wall_clock = original_eastern.replace(tzinfo=None)
-    eastern_offset = original_eastern.utcoffset()
-    if eastern_offset is None or eastern_wall_clock != current_utc_wall_clock:
-        return False
-    return int((current - original).total_seconds()) == int(
-        eastern_offset.total_seconds()
+    current_utc = current.astimezone(timezone.utc)
+    original_to_current = (
+        original_eastern.replace(tzinfo=None) == current_utc.replace(tzinfo=None)
+        and original_eastern.utcoffset() is not None
+        and int((current - original).total_seconds())
+        == int(original_eastern.utcoffset().total_seconds())
     )
+    # The SEC can later correct a previously served Eastern wall-clock value
+    # that had been labelled UTC. Accept the exact inverse transformation too:
+    # current absolute UTC -> its date-specific Eastern wall clock -> the
+    # historical UTC-labelled wall clock. Identity fields remain exact.
+    current_eastern = current.astimezone(EASTERN)
+    original_utc = original.astimezone(timezone.utc)
+    current_to_original = (
+        current_eastern.replace(tzinfo=None) == original_utc.replace(tzinfo=None)
+        and current_eastern.utcoffset() is not None
+        and int((current - original).total_seconds())
+        == -int(current_eastern.utcoffset().total_seconds())
+    )
+    return original_to_current or current_to_original
 
 
 def reconcile_current_acceptance_records(
