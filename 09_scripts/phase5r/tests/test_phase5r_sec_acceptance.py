@@ -10,6 +10,8 @@ from datetime import date
 from pathlib import Path
 from unittest import mock
 
+from _support import SCRIPT_DIR  # noqa: F401
+
 from phase5r_sec_acceptance import (
     AcceptanceIndexError,
     acceptance_map,
@@ -44,6 +46,78 @@ def record(
 
 
 class SecAcceptanceTests(unittest.TestCase):
+    def test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched(self) -> None:
+        def duration(
+            start: str,
+            end: str,
+            value: float,
+            *,
+            form: str,
+            filed: str,
+            frame: str | None = None,
+        ) -> dict[str, object]:
+            return {
+                "start": start,
+                "end": end,
+                "val": value,
+                "form": form,
+                "filed": filed,
+                "frame": frame,
+            }
+
+        revenue = [
+            duration("2023-02-01", "2024-01-31", 900.0, form="10-K", filed="2024-03-01"),
+            duration("2024-02-01", "2024-06-30", 450.0, form="10-Q", filed="2024-07-20"),
+            duration("2024-02-01", "2025-01-31", 1000.0, form="10-K", filed="2025-03-01"),
+            duration("2025-02-01", "2025-06-30", 520.0, form="10-Q", filed="2026-07-20"),
+            duration("2025-04-01", "2025-06-30", 270.0, form="10-Q", filed="2026-07-20", frame="CY2025Q2"),
+            duration("2025-02-01", "2026-01-31", 1200.0, form="10-K", filed="2026-03-01"),
+            duration("2026-02-01", "2026-06-30", 650.0, form="10-Q", filed="2026-07-20"),
+            duration("2026-04-01", "2026-06-30", 350.0, form="10-Q", filed="2026-07-20", frame="CY2026Q2"),
+        ]
+        shares = [
+            duration("2025-04-01", "2025-06-30", 250.0, form="10-Q", filed="2025-07-20", frame=None),
+            duration("2025-04-01", "2025-06-30", 1000.0, form="10-Q", filed="2026-07-20", frame="CY2025Q2"),
+            duration("2026-04-01", "2026-06-30", 1040.0, form="10-Q", filed="2026-07-20", frame="CY2026Q2"),
+        ]
+        payload = {
+            "facts": {
+                "us-gaap": {
+                    "RevenueFromContractWithCustomerIncludingAssessedTax": {
+                        "units": {"USD": revenue}
+                    },
+                    "CashAndCashEquivalentsAtCarryingValue": {
+                        "units": {
+                            "USD": [
+                                {
+                                    "end": "2026-06-30",
+                                    "val": 100.0,
+                                    "form": "10-Q",
+                                    "filed": "2026-07-20",
+                                }
+                            ]
+                        }
+                    },
+                    "WeightedAverageNumberOfDilutedSharesOutstanding": {
+                        "units": {"shares": shares}
+                    },
+                }
+            }
+        }
+
+        row = daily_evidence.fundamental_row(
+            "TST", 1, payload, "2026-07-20T12:00:00+00:00"
+        )
+
+        self.assertEqual(row["revenue_latest"], "350.00")
+        self.assertEqual(row["revenue_prior_year"], "270.00")
+        self.assertEqual(row["ttm_revenue"], "1330.00")
+        self.assertEqual(row["ttm_revenue_prior_year"], "1070.00")
+        self.assertEqual(row["diluted_shares_latest"], "1040.00")
+        self.assertEqual(row["diluted_shares_prior_year"], "1000.00")
+        self.assertEqual(row["share_dilution_pct"], "4.00")
+        self.assertEqual(row["data_quality"], "ok")
+
     def test_durable_ledger_repairs_stale_seen_accession_cache(self) -> None:
         merged = merge_seen_accessions(
             {"arm": ["0001973239-26-000113"]},

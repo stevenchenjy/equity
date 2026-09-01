@@ -164,6 +164,7 @@ FUNDAMENTAL_FIELDS = [
 ]
 REVENUE_TAGS = (
     "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "RevenueFromContractWithCustomerIncludingAssessedTax",
     "Revenues",
     "SalesRevenueNet",
 )
@@ -377,6 +378,36 @@ def quarterly_values(
     return sorted(selected.values(), key=lambda item: str(item.get("frame", "")))
 
 
+def duration_values(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+) -> list[dict[str, Any]]:
+    """Return one latest-filed consolidated fact for each duration period."""
+
+    selected: dict[tuple[str, str], dict[str, Any]] = {}
+    for item in fact_units(payload, tags, unit):
+        if item.get("form") not in {"10-Q", "10-K", "20-F", "40-F"}:
+            continue
+        try:
+            start = datetime.fromisoformat(str(item.get("start", ""))).date()
+            end = datetime.fromisoformat(str(item.get("end", ""))).date()
+        except ValueError:
+            continue
+        if start >= end:
+            continue
+        key = (start.isoformat(), end.isoformat())
+        current = selected.get(key)
+        if current is None or str(item.get("filed", "")) > str(current.get("filed", "")):
+            selected[key] = item
+    return sorted(
+        selected.values(),
+        key=lambda item: (
+            str(item.get("end", "")),
+            str(item.get("start", "")),
+            str(item.get("filed", "")),
+        ),
+    )
+
+
 def latest_instant(
     payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
 ) -> float | None:
@@ -392,18 +423,96 @@ def latest_instant(
     return float(latest["val"])
 
 
-def trailing_four(values: list[dict[str, Any]]) -> tuple[float | None, float | None]:
-    """Return current and prior four-quarter sums from normalized CY frames."""
+def _duration_days(item: dict[str, Any]) -> int:
+    start = date.fromisoformat(str(item["start"]))
+    end = date.fromisoformat(str(item["end"]))
+    return (end - start).days
 
-    if len(values) < 4:
-        return None, None
-    current = sum(float(item["val"]) for item in values[-4:])
-    prior = (
-        sum(float(item["val"]) for item in values[-8:-4])
-        if len(values) >= 8
-        else None
+
+def _ttm_at(
+    values: list[dict[str, Any]], target_end: date
+) -> float | None:
+    """Derive TTM from an annual fact or annual + YTD - prior YTD."""
+
+    annual = [
+        item for item in values
+        if date.fromisoformat(str(item["end"])) == target_end
+        and item.get("form") in {"10-K", "20-F", "40-F"}
+        and 300 <= _duration_days(item) <= 400
+    ]
+    if annual:
+        return float(max(annual, key=lambda item: str(item.get("filed", "")))["val"])
+
+    current_ytd = [
+        item for item in values
+        if date.fromisoformat(str(item["end"])) == target_end
+        and item.get("form") == "10-Q"
+        and 60 <= _duration_days(item) <= 300
+    ]
+    if not current_ytd:
+        return None
+    current = max(current_ytd, key=_duration_days)
+    current_start = date.fromisoformat(str(current["start"]))
+    prior_annual = [
+        item for item in values
+        if item.get("form") in {"10-K", "20-F", "40-F"}
+        and 300 <= _duration_days(item) <= 400
+        and 0 <= (current_start - date.fromisoformat(str(item["end"]))).days <= 14
+    ]
+    if not prior_annual:
+        return None
+    annual_item = max(
+        prior_annual,
+        key=lambda item: (
+            str(item.get("end", "")),
+            str(item.get("filed", "")),
+        ),
     )
-    return current, prior
+    comparable = [
+        item for item in values
+        if item.get("form") == "10-Q"
+        and 350 <= (
+            target_end - date.fromisoformat(str(item["end"]))
+        ).days <= 380
+        and abs(_duration_days(item) - _duration_days(current)) <= 14
+    ]
+    if not comparable:
+        return None
+    prior_ytd = min(
+        comparable,
+        key=lambda item: (
+            abs((target_end - date.fromisoformat(str(item["end"]))).days - 365),
+            abs(_duration_days(item) - _duration_days(current)),
+            -int(str(item.get("filed", "0000-00-00")).replace("-", "") or 0),
+        ),
+    )
+    return float(annual_item["val"]) + float(current["val"]) - float(prior_ytd["val"])
+
+
+def trailing_twelve_values(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+) -> tuple[float | None, float | None]:
+    """Return current and prior TTM values without summing gapped quarters."""
+
+    values = duration_values(payload, tags, unit)
+    if not values:
+        return None, None
+    target_end = max(date.fromisoformat(str(item["end"])) for item in values)
+    prior_ends = sorted(
+        {
+            date.fromisoformat(str(item["end"]))
+            for item in values
+            if 350 <= (
+                target_end - date.fromisoformat(str(item["end"]))
+            ).days <= 380
+        },
+        key=lambda candidate: abs((target_end - candidate).days - 365),
+    )
+    prior_end = prior_ends[0] if prior_ends else None
+    return (
+        _ttm_at(values, target_end),
+        _ttm_at(values, prior_end) if prior_end is not None else None,
+    )
 
 
 def money(value: float | None) -> str:
@@ -450,16 +559,18 @@ def fundamental_row(
     cash = latest_instant(payload, CASH_TAGS)
     assets = latest_instant(payload, ASSET_TAGS)
     liabilities = latest_instant(payload, LIABILITY_TAGS)
-    ttm_revenue, ttm_revenue_prior = trailing_four(revenue)
+    ttm_revenue, ttm_revenue_prior = trailing_twelve_values(
+        payload, REVENUE_TAGS
+    )
     ttm_revenue_yoy = (
         (ttm_revenue / ttm_revenue_prior - 1.0) * 100.0
         if ttm_revenue is not None and ttm_revenue_prior not in {None, 0.0}
         else None
     )
-    operating_cash_flow, _ = trailing_four(
-        quarterly_values(payload, OPERATING_CASH_FLOW_TAGS)
+    operating_cash_flow, _ = trailing_twelve_values(
+        payload, OPERATING_CASH_FLOW_TAGS
     )
-    capex, _ = trailing_four(quarterly_values(payload, CAPEX_TAGS))
+    capex, _ = trailing_twelve_values(payload, CAPEX_TAGS)
     free_cash_flow = (
         operating_cash_flow - capex
         if operating_cash_flow is not None and capex is not None
@@ -476,7 +587,27 @@ def fundamental_row(
         if share_values
         else latest_instant(payload, SHARES_OUTSTANDING_TAGS, "shares")
     )
-    diluted_prior = float(share_values[-5]["val"]) if len(share_values) >= 5 else None
+    diluted_prior_frame = ""
+    if share_values:
+        match = re.fullmatch(
+            r"CY(\d{4})Q([1-4])", str(share_values[-1].get("frame", ""))
+        )
+        if match:
+            diluted_prior_frame = (
+                f"CY{int(match.group(1)) - 1}Q{match.group(2)}"
+            )
+    diluted_prior_match = next(
+        (
+            item for item in share_values
+            if str(item.get("frame", "")) == diluted_prior_frame
+        ),
+        None,
+    )
+    diluted_prior = (
+        float(diluted_prior_match["val"])
+        if diluted_prior_match is not None
+        else None
+    )
     share_dilution = (
         (diluted_shares / diluted_prior - 1.0) * 100.0
         if diluted_shares is not None and diluted_prior not in {None, 0.0}
