@@ -29,6 +29,11 @@ from run_phase5r_runtime_scheduler import (  # noqa: E402
 )
 
 
+EVIDENCE_LEDGER_RELATIVE = Path(
+    "03_source_data/phase5r/phase5r_daily_evidence_ledger.csv"
+)
+
+
 def _git(root: Path, *arguments: str) -> str:
     process = subprocess.run(
         ["/usr/bin/git", *arguments],
@@ -60,7 +65,16 @@ class LocalRepositoryFixture:
             "runtime-state/\n", encoding="utf-8"
         )
         (self.author / "tracked.txt").write_text("one\n", encoding="utf-8")
-        _git(self.author, "add", ".gitignore", "tracked.txt")
+        evidence_ledger = self.author / EVIDENCE_LEDGER_RELATIVE
+        evidence_ledger.parent.mkdir(parents=True)
+        evidence_ledger.write_text("accession_number\n", encoding="utf-8")
+        _git(
+            self.author,
+            "add",
+            ".gitignore",
+            "tracked.txt",
+            EVIDENCE_LEDGER_RELATIVE.as_posix(),
+        )
         _git(self.author, "commit", "-m", "initial")
         _git(self.author, "remote", "add", "origin", str(self.remote))
         _git(self.author, "push", "-u", "origin", "main")
@@ -181,6 +195,140 @@ class RuntimeGitSyncTests(unittest.TestCase):
                 _git(fixture.runtime, "rev-parse", "refs/remotes/origin/main"),
                 remote_tracking_before,
             )
+
+    def test_append_only_runtime_evidence_can_continue_on_identical_commit(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sync-evidence-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            ledger = fixture.runtime / EVIDENCE_LEDGER_RELATIVE
+            with ledger.open("a", encoding="utf-8") as handle:
+                handle.write("0000000001-26-000001\n")
+
+            with patch.object(
+                runtime_wrapper, "_validate_runtime_evidence_chain"
+            ) as validate:
+                result = sync_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+                repository_state = inspect_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+
+            self.assertEqual(result.action, "identical")
+            self.assertEqual(
+                result.commit,
+                _git(fixture.runtime, "rev-parse", "HEAD"),
+            )
+            self.assertGreaterEqual(validate.call_count, 2)
+            self.assertIn(
+                EVIDENCE_LEDGER_RELATIVE.as_posix(),
+                repository_state.runtime_evidence_changes,
+            )
+
+    def test_runtime_evidence_replacement_is_not_treated_as_append_only(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sync-evidence-edit-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            before = fixture.initial_head
+            (fixture.runtime / EVIDENCE_LEDGER_RELATIVE).write_text(
+                "tampered_header\n", encoding="utf-8"
+            )
+
+            with self.assertRaises(RuntimeSyncError) as context:
+                sync_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+
+            self.assertEqual(
+                context.exception.code, "runtime_evidence_not_append_only"
+            )
+            self.assertEqual(_git(fixture.runtime, "rev-parse", "HEAD"), before)
+
+    def test_remote_advance_requires_runtime_evidence_reconciliation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sync-evidence-ahead-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            before = fixture.initial_head
+            ledger = fixture.runtime / EVIDENCE_LEDGER_RELATIVE
+            with ledger.open("a", encoding="utf-8") as handle:
+                handle.write("0000000001-26-000001\n")
+            remote_head = fixture.push_author_change("remote-two\n")
+
+            with (
+                patch.object(runtime_wrapper, "_validate_runtime_evidence_chain"),
+                self.assertRaises(RuntimeSyncError) as context,
+            ):
+                sync_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+
+            self.assertEqual(
+                context.exception.code,
+                "runtime_evidence_reconciliation_required",
+            )
+            self.assertEqual(_git(fixture.runtime, "rev-parse", "HEAD"), before)
+            self.assertEqual(
+                _git(fixture.runtime, "rev-parse", "refs/remotes/origin/main"),
+                remote_head,
+            )
+
+    def test_untracked_code_is_rejected_before_fetch(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sync-untracked-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            before = fixture.initial_head
+            remote_tracking_before = _git(
+                fixture.runtime, "rev-parse", "refs/remotes/origin/main"
+            )
+            fixture.push_author_change("remote-two\n")
+            (fixture.runtime / "unexpected.py").write_text(
+                "raise RuntimeError('must not load')\n", encoding="utf-8"
+            )
+
+            with self.assertRaises(RuntimeSyncError) as context:
+                sync_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+
+            self.assertEqual(context.exception.code, "untracked_worktree_unsafe")
+            self.assertEqual(_git(fixture.runtime, "rev-parse", "HEAD"), before)
+            self.assertEqual(
+                _git(fixture.runtime, "rev-parse", "refs/remotes/origin/main"),
+                remote_tracking_before,
+            )
+
+    def test_versioned_untracked_extension_requires_chain_validation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-sync-extension-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            relative = Path(
+                "03_source_data/phase5r/phase5r_sec_acceptance_extensions/"
+                "phase5r_sec_acceptance_extension_v6.json"
+            )
+            target = fixture.runtime / relative
+            target.parent.mkdir(parents=True)
+            target.write_text("{}\n", encoding="utf-8")
+            target.chmod(0o600)
+
+            with patch.object(
+                runtime_wrapper, "_validate_runtime_evidence_chain"
+            ) as validate:
+                result = sync_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+                state = inspect_runtime_repository(
+                    fixture.runtime,
+                    expected_remote_url=str(fixture.remote),
+                )
+
+            self.assertEqual(result.action, "identical")
+            self.assertIn(relative.as_posix(), state.runtime_evidence_changes)
+            self.assertGreaterEqual(validate.call_count, 2)
 
     def test_divergent_runtime_fetches_but_refuses_to_change_local_head(self) -> None:
         with tempfile.TemporaryDirectory(prefix="phase5r-sync-divergent-") as directory:

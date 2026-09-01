@@ -56,15 +56,22 @@ While holding the lock, the wrapper verifies all of the following:
 1. the runtime is a normal clone with a private `.git` directory;
 2. the top-level directory, `main` branch, `origin/main` upstream, and exact
    GitHub origin are correct;
-3. tracked index and working-tree content are clean;
+3. code, configuration, and every non-evidence path are clean; the only
+   permitted working-tree changes are append-only SEC ledger/audit/
+   reconciliation rows and strictly named versioned acceptance extensions
+   whose complete hash chain and audit bindings validate;
 4. `origin/main` can be fetched non-interactively;
 5. local and remote ancestry is safe.
 
-If HEADs are equal, execution continues. If local `main` is strictly behind,
-Git advances it with `git merge --ff-only`; this cannot create a merge commit
-or perform a content merge. Any local-ahead or divergent history is blocked.
-The implementation never invokes reset, clean, stash, rebase, checkout,
-force-push, or a non-fast-forward merge.
+If HEADs are equal, execution continues, including when the validated runtime
+SEC evidence allowlist contains a new append. If local `main` is strictly
+behind and no runtime evidence needs preservation, Git advances it with
+`git merge --ff-only`; this cannot create a merge commit or perform a content
+merge. A newer remote commit plus local runtime evidence fails with
+`runtime_evidence_reconciliation_required` so an operator can first preserve
+that evidence in authoring history. Any local-ahead or divergent history is
+blocked. The implementation never invokes reset, clean, stash, rebase,
+checkout, force-push, or a non-fast-forward merge.
 
 Before starting the scheduler, the wrapper durably records the job and exact
 commit in ignored local file
@@ -76,7 +83,9 @@ lock and this ledger are not committed.
 | Condition | Result |
 |---|---|
 | GitHub has a newer descendant commit | Fast-forward, revalidate clean state, record the new commit, run |
-| Runtime tracked files are dirty | Fail closed before fetch; do not run |
+| Valid append-only SEC evidence exists and HEAD equals `origin/main` | Validate file safety, extension hashes, chain continuity, and audit bindings; then run without altering HEAD |
+| GitHub advanced while validated runtime SEC evidence is pending | Fetch the remote-tracking ref, leave local HEAD/worktree unchanged, and require explicit evidence reconciliation |
+| Any other tracked file is dirty, a permitted evidence file rewrites prior bytes, or an unknown untracked file exists | Fail closed before fetch; do not run |
 | Runtime is ahead or histories diverge | Fetch the remote-tracking ref, leave local HEAD/worktree unchanged, do not run |
 | Another run holds the runtime lock | Wait for the active bounded run, acquire the same lock, then evaluate this job's due state; after one abnormal hour, exit 75 with `runtime_lock_wait_timeout` without changing due state |
 | Lock handoff or preflight crosses midnight ET | Fail closed with an explicit cycle-date error and do not reinterpret the prior check as current-day work |
@@ -87,11 +96,14 @@ Failures go to the existing per-agent launchd error logs and, when the local
 ledger can be opened safely, a fixed failure code is appended there. No
 credential value is logged.
 
-The wrapper intentionally ignores untracked ignored files during the tracked
-cleanliness check. That is what lets scheduler state, logs, market/evidence
-snapshots, decisions, email briefs, locks, and other mutable artifacts survive
-a fast-forward. If a future tracked path would overwrite a local ignored file,
-Git itself refuses the fast-forward and the wrapper fails closed.
+The wrapper intentionally excludes Git-ignored files from its status check.
+That is what lets scheduler state, logs, market/evidence snapshots, decisions,
+email briefs, locks, and other mutable artifacts survive a fast-forward.
+Non-ignored untracked files are rejected except for the exact versioned SEC
+acceptance-extension filename pattern, and those extensions are accepted only
+after full chain and audit validation. If a future tracked path would overwrite
+a local ignored file, Git itself refuses the fast-forward and the wrapper fails
+closed.
 
 ## Runtime operations
 

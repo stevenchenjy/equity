@@ -7,6 +7,7 @@
   "5": "score_phase5r_b_candidates.py",
   "6": "check_phase5r_b1_market_data_source.py",
   "7": "main",
+  "8": "iso_now",
   "13": "verify_phase5r_c6_weekly_email_boundary.py",
   "16": "phase5r_llm_contract.py",
   "18": "verify_phase5r_c5t_manual_action_boundary.py",
@@ -18,7 +19,6 @@
   "51": "phase5r_valuation_input_bundle.py",
   "52": "Scoring",
   "54": "Phase 0C Reframe Plan",
-  "57": "build_phase5r_decision_evidence_packet.py",
   "62": "Phase 0C Verification Report",
   "78": "Early Public Equity Research",
   "91": "AGENTS.md",
@@ -74,7 +74,6 @@
   "388": "main",
   "397": "test_phase5r_model_pilot_v7.py",
   "398": "Phase 5R v9 terminal diagnosis",
-  "407": "main",
   "410": "B2RefreshCadenceTests",
   "414": "_safe_failure_code"
 }

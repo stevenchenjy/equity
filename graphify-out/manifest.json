@@ -555,18 +555,18 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_runtime_scheduler.py": {
-    "mtime": 1788200602.9417336,
-    "ast_hash": "4a16e276b47206c629b88891f7b30512",
+    "mtime": 1788291706.3906133,
+    "ast_hash": "43168c25361e34acd2a493058568a816",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_runtime_git_sync.py": {
-    "mtime": 1787967817.0,
-    "ast_hash": "a179a0bc5a7f8b5111366048c7115447",
+    "mtime": 1788291761.6540377,
+    "ast_hash": "a7706e32eecd4e237616939a19ce8698",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_macbook_github_macmini_workflow.md": {
-    "mtime": 1788202410.9650936,
-    "ast_hash": "ee870d77081dfccde28496811fd3bc6f",
+    "mtime": 1788291824.0887516,
+    "ast_hash": "c9e87f3e64f31ad96035692a25906b3c",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_active_production_config.json": {
@@ -647,6 +647,11 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v5.json": {
     "mtime": 1788290313.8106673,
     "ast_hash": "7819ec9fdfb4091db9bc47df86cf58a5",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v6.json": {
+    "mtime": 1788291648.8822849,
+    "ast_hash": "133c491c82d3dad4d9c3460a7a1d595e",
     "semantic_hash": ""
   }
 }
