@@ -365,13 +365,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_sec_filing_artifacts.py": {
-    "mtime": 1784948996.6381288,
-    "ast_hash": "e060513813601a3cbd9e4fd68e7caffc",
+    "mtime": 1788292212.665862,
+    "ast_hash": "187d10d97e95c51be446e22a929aa2eb",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_refresh_phase5r_sec_filing_artifacts.py": {
-    "mtime": 1784948989.3326283,
-    "ast_hash": "4a28a24b88e2eb837ad823c3122fbe25",
+    "mtime": 1788292212.6666348,
+    "ast_hash": "f702fe16856b03a37edf38b8e12519d9",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/build_phase5r_decision_evidence_packet.py": {
@@ -652,6 +652,11 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v6.json": {
     "mtime": 1788291648.8822849,
     "ast_hash": "133c491c82d3dad4d9c3460a7a1d595e",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v7.json": {
+    "mtime": 1788292239.105095,
+    "ast_hash": "42501f9979215f6e2bff81079902e924",
     "semantic_hash": ""
   }
 }

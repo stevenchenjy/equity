@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-01)
 
 ## Corpus Check
-- 123 files · ~113,565 words
+- 124 files · ~117,388 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1280 nodes · 2829 edges · 78 communities (68 shown, 10 thin omitted)
+- 1281 nodes · 2835 edges · 78 communities (68 shown, 10 thin omitted)
 - Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 450 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3e875c13`
+- Built from commit: `1461342e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -108,14 +108,14 @@
 ## Surprising Connections (you probably didn't know these)
 - `main()` --calls--> `atomic_write_csv()`  [INFERRED]
   09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
-- `main()` --calls--> `cycle_date()`  [INFERRED]
-  09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
 - `main()` --calls--> `iso_now()`  [INFERRED]
   09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
 - `main()` --calls--> `last_completed_market_session()`  [INFERRED]
   09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
-- `main()` --calls--> `now_et()`  [INFERRED]
-  09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
+- `_evidence_freshness_receipts()` --calls--> `build_evidence_freshness_receipt()`  [INFERRED]
+  09_scripts/phase5r/build_phase5r_decision_evidence_packet.py → 09_scripts/phase5r/phase5r_evidence_freshness.py
+- `_artifact_map()` --calls--> `read_json()`  [INFERRED]
+  09_scripts/phase5r/build_phase5r_decision_evidence_packet.py → 09_scripts/phase5r/phase5r_daily_common.py
 
 ## Import Cycles
 - None detected.
@@ -123,7 +123,7 @@
 ## Communities (78 total, 10 thin omitted)
 
 ### Community 0 - "phase5r_market_data_adapter.py"
-Cohesion: 0.25
+Cohesion: 0.26
 Nodes (6): CacheTests, ledger_row(), NormalizationTests, Path, SelectionAndValidationTests, write_ledger()
 
 ### Community 1 - "run_phase5r_b2_full_universe_market_data.py"
@@ -139,8 +139,8 @@ Cohesion: 0.33
 Nodes (5): Active boundary, Outcome, Phase 5R workspace cleanup manifest, Preservation layers, Reproducible clutter removed
 
 ### Community 4 - "send_phase5r_c2_daily_email.py"
-Cohesion: 0.80
-Nodes (4): clamp(), main(), number(), selected_tickers()
+Cohesion: 0.25
+Nodes (12): clamp(), main(), number(), selected_tickers(), cycle_date(), now_et(), datetime, main() (+4 more)
 
 ### Community 5 - "score_phase5r_b_candidates.py"
 Cohesion: 0.07
@@ -179,7 +179,7 @@ Cohesion: 0.07
 Nodes (70): canonical_sha256(), admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path(), _extension_number() (+62 more)
 
 ### Community 27 - "verify_phase5r_b2_read_only_boundary.py"
-Cohesion: 0.19
+Cohesion: 0.21
 Nodes (10): jsonl_count(), main(), Path, ActiveConfigError, load_active_config(), main(), Any, Path (+2 more)
 
 ### Community 28 - "verify_phase5r_c2_email_delivery_boundary.py"
@@ -191,8 +191,8 @@ Cohesion: 0.17
 Nodes (24): build_evidence_freshness_receipt(), EvidenceFreshnessError, freshness_action_review_reasons(), _normalize_bool(), _normalize_date(), _normalize_digest(), _normalize_source_ids(), _normalize_ticker() (+16 more)
 
 ### Community 48 - "Phase 0B Migration Plan"
-Cohesion: 0.20
-Nodes (16): append_csv_durable(), atomic_write_csv(), atomic_write_json(), atomic_write_text(), easter_sunday(), last_weekday(), nth_weekday(), observed() (+8 more)
+Cohesion: 0.48
+Nodes (7): easter_sunday(), last_weekday(), nth_weekday(), observed(), date, Return the regular U.S. market holidays used by the daily gates., us_market_holidays()
 
 ### Community 51 - "phase5r_valuation_input_bundle.py"
 Cohesion: 0.08
@@ -295,8 +295,8 @@ Cohesion: 0.29
 Nodes (6): Admission requirements, Boundaries, Commit and recovery behavior, Immutable historical layer, Phase 5R SEC Acceptance-Index Extension Policy v1, Versioned artifacts and audit
 
 ### Community 195 - "main"
-Cohesion: 0.19
-Nodes (21): bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), iso_now(), load_active_state(), load_inhibit(), log_daily_run() (+13 more)
+Cohesion: 0.21
+Nodes (22): append_csv_durable(), atomic_write_csv(), atomic_write_json(), atomic_write_text(), bool_value(), clear_automation_alert(), delivery_guard(), iso_now() (+14 more)
 
 ### Community 220 - "latest_phase5r_b2_manual_trade_tickets.md"
 Cohesion: 0.33
@@ -398,8 +398,8 @@ Nodes (15): append_delivery(), build_message(), ConfigError, cycle_is_blocked(),
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `ExclusiveFileLock` connect `score_phase5r_b_candidates.py` to `AST`, `main`, `main`, `Phase 0B Migration Plan`, `create_phase5r_c5_company_research_packets.py`, `_safe_failure_code`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `ExclusiveFileLock` connect `score_phase5r_b_candidates.py` to `AST`, `main`, `send_phase5r_c2_daily_email.py`, `main`, `create_phase5r_c5_company_research_packets.py`, `_safe_failure_code`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Are the 19 inferred relationships involving `main()` (e.g. with `append_csv_durable()` and `atomic_write_csv()`) actually correct?**
   _`main()` has 19 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 14 inferred relationships involving `RuntimeSyncError` (e.g. with `ExclusiveFileLock` and `LocalRepositoryFixture`) actually correct?**

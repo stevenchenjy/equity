@@ -194,6 +194,76 @@ class SelectionAndValidationTests(unittest.TestCase):
 
 
 class CacheTests(unittest.TestCase):
+    def test_network_cache_misses_are_paced_below_sec_ceiling(self) -> None:
+        with tempfile.TemporaryDirectory() as directory_name:
+            project_root = Path(directory_name)
+            ledger_path = project_root / "ledger.csv"
+            artifact_root = project_root / "filings"
+            index_path = project_root / "index.json"
+            write_ledger(
+                ledger_path,
+                [
+                    ledger_row(
+                        ticker="AAA",
+                        cik="1234567",
+                        accession="0001234567-26-000001",
+                        document="aaa.htm",
+                    ),
+                    ledger_row(
+                        ticker="BBB",
+                        cik="2345678",
+                        accession="0002345678-26-000001",
+                        document="bbb.htm",
+                    ),
+                    ledger_row(
+                        ticker="CCC",
+                        cik="3456789",
+                        accession="0003456789-26-000001",
+                        document="ccc.htm",
+                    ),
+                ],
+            )
+            clock_value = 0.0
+            request_starts: list[float] = []
+            sleeps: list[float] = []
+
+            def clock() -> float:
+                return clock_value
+
+            def sleep(seconds: float) -> None:
+                nonlocal clock_value
+                sleeps.append(seconds)
+                clock_value += seconds
+
+            def fake_fetch(
+                _url: str, _user_agent: str, _max_bytes: int
+            ) -> artifacts.FetchResult:
+                request_starts.append(clock())
+                return artifacts.FetchResult(
+                    b"<html><body>Official filing</body></html>",
+                    "text/html",
+                    "utf-8",
+                )
+
+            result = artifacts.refresh_artifacts(
+                ledger_path=ledger_path,
+                artifact_root=artifact_root,
+                index_path=index_path,
+                project_root=project_root,
+                fetcher=fake_fetch,
+                user_agent="UnitTest/1.0 test@example.com",
+                monotonic_clock=clock,
+                sleeper=sleep,
+            )
+
+            self.assertEqual(result["network_fetch_count"], 3)
+            self.assertEqual(request_starts, [0.0, 0.2, 0.4])
+            self.assertEqual(sleeps, [0.2, 0.2])
+            self.assertGreaterEqual(
+                artifacts.SEC_MIN_REQUEST_INTERVAL_SECONDS,
+                0.2,
+            )
+
     def test_second_refresh_uses_verified_cache_without_fetch(self) -> None:
         with tempfile.TemporaryDirectory() as directory_name:
             project_root = Path(directory_name)

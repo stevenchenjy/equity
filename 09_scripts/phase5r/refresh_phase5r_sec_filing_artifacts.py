@@ -17,6 +17,7 @@ import json
 import os
 import re
 import tempfile
+import time
 import unicodedata
 import urllib.request
 from dataclasses import dataclass
@@ -56,6 +57,10 @@ ALLOWED_CONTENT_TYPES = frozenset(
 MAX_RAW_BYTES = 25 * 1024 * 1024
 DEFAULT_CHUNK_CHARS = 4_000
 DEFAULT_CHUNK_OVERLAP = 200
+# Stay conservatively below the SEC's published fair-access ceiling. This is
+# start-to-start pacing for network misses only; verified cache hits do not
+# sleep or make a request.
+SEC_MIN_REQUEST_INTERVAL_SECONDS = 0.2
 SAFE_PATH_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 ACCESSION_PATTERN = re.compile(r"\d{10}-\d{2}-\d{6}")
 CIK_PATTERN = re.compile(r"\d{1,10}")
@@ -677,7 +682,12 @@ def refresh_artifacts(
     project_root: Path = ROOT,
     fetcher: Fetcher = fetch_sec_document,
     user_agent: str,
+    request_interval_seconds: float = SEC_MIN_REQUEST_INTERVAL_SECONDS,
+    monotonic_clock: Callable[[], float] = time.monotonic,
+    sleeper: Callable[[float], None] = time.sleep,
 ) -> dict[str, Any]:
+    if request_interval_seconds < 0:
+        raise ArtifactError("SEC request interval is invalid")
     selected = select_filing_rows(read_evidence_ledger(ledger_path))
     prior = load_index(index_path)
     prior_by_id = {
@@ -689,6 +699,7 @@ def refresh_artifacts(
     cache_hits = 0
     reparsed = 0
     network_fetches = 0
+    last_network_request_started: float | None = None
 
     for row in selected:
         _, raw_path, text_path = artifact_paths(artifact_root, row)
@@ -725,6 +736,17 @@ def refresh_artifacts(
             reparsed += 1
             continue
 
+        request_started = monotonic_clock()
+        if last_network_request_started is not None:
+            wait_seconds = max(
+                0.0,
+                request_interval_seconds
+                - (request_started - last_network_request_started),
+            )
+            if wait_seconds:
+                sleeper(wait_seconds)
+                request_started = monotonic_clock()
+        last_network_request_started = request_started
         result = fetcher(row["url"], user_agent, MAX_RAW_BYTES)
         entry = materialize_entry(
             row,
