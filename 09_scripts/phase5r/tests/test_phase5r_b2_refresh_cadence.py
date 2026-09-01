@@ -543,6 +543,46 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
 
+    def test_full_reuse_runtime_marker_invokes_one_no_send_refresh(self) -> None:
+        """The repair marker reuses local market data and cannot send email."""
+
+        completed = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with (
+            patch.dict(
+                os.environ,
+                {refresh_scheduler.FULL_REFRESH_REUSE_ONLY_ENV: "1"},
+                clear=True,
+            ),
+            patch.object(
+                refresh_scheduler.subprocess,
+                "run",
+                return_value=completed,
+            ) as run,
+            redirect_stdout(stdout),
+            redirect_stderr(stderr),
+        ):
+            result = refresh_scheduler.main()
+
+        self.assertEqual(result, 0)
+        run.assert_called_once_with(
+            [
+                refresh_scheduler.sys.executable,
+                str(refresh_scheduler.REFRESH_PIPELINE),
+                "--run",
+                "--market-snapshot-mode",
+                refresh_scheduler.MARKET_SNAPSHOT_REUSE,
+            ],
+            cwd=refresh_scheduler.ROOT,
+            stdout=refresh_scheduler.subprocess.DEVNULL,
+            stderr=refresh_scheduler.subprocess.DEVNULL,
+            timeout=refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
+            check=False,
+        )
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(stderr.getvalue(), "")
+
     def test_b2_auth_probe_constructs_client_without_network_and_is_mute(self) -> None:
         stdout = io.StringIO()
         stderr = io.StringIO()

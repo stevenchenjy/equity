@@ -228,7 +228,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet",
-      "community": 16,
+      "community": 8,
       "norm_label": "build_phase5r_decision_evidence_packet.py"
     },
     {
@@ -238,7 +238,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_sanitize_local_text",
-      "community": 16,
+      "community": 8,
       "norm_label": "_sanitize_local_text()"
     },
     {
@@ -248,7 +248,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_py_any",
-      "community": 16,
+      "community": 8,
       "norm_label": "any"
     },
     {
@@ -258,7 +258,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_decimal",
-      "community": 16,
+      "community": 8,
       "norm_label": "_decimal()"
     },
     {
@@ -268,7 +268,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_round",
-      "community": 16,
+      "community": 8,
       "norm_label": "_round()"
     },
     {
@@ -278,7 +278,7 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_safe_time",
-      "community": 16,
+      "community": 8,
       "norm_label": "_safe_time()"
     },
     {
@@ -288,7 +288,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_py_datetime",
-      "community": 16,
+      "community": 8,
       "norm_label": "datetime"
     },
     {
@@ -298,7 +298,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_utc_text",
-      "community": 16,
+      "community": 8,
       "norm_label": "_utc_text()"
     },
     {
@@ -308,7 +308,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_date_from_period",
-      "community": 16,
+      "community": 8,
       "norm_label": "_date_from_period()"
     },
     {
@@ -318,7 +318,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_evidence_freshness_receipts",
-      "community": 16,
+      "community": 8,
       "norm_label": "_evidence_freshness_receipts()"
     },
     {
@@ -328,7 +328,7 @@
       "source_location": "L289",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_decision_tickers",
-      "community": 16,
+      "community": 8,
       "norm_label": "_decision_tickers()"
     },
     {
@@ -338,7 +338,7 @@
       "source_location": "L303",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_allowed_classifications_by_ticker",
-      "community": 16,
+      "community": 8,
       "norm_label": "_allowed_classifications_by_ticker()"
     },
     {
@@ -348,7 +348,7 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_source",
-      "community": 16,
+      "community": 8,
       "norm_label": "_source()"
     },
     {
@@ -358,7 +358,7 @@
       "source_location": "L407",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_source_file_manifest",
-      "community": 16,
+      "community": 8,
       "norm_label": "_source_file_manifest()"
     },
     {
@@ -368,7 +368,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_py_path",
-      "community": 16,
+      "community": 8,
       "norm_label": "path"
     },
     {
@@ -378,7 +378,7 @@
       "source_location": "L419",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_position_band",
-      "community": 16,
+      "community": 8,
       "norm_label": "_position_band()"
     },
     {
@@ -388,7 +388,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_artifact_map",
-      "community": 16,
+      "community": 8,
       "norm_label": "_artifact_map()"
     },
     {
@@ -398,7 +398,7 @@
       "source_location": "L446",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_effective_acceptance_map",
-      "community": 16,
+      "community": 8,
       "norm_label": "_effective_acceptance_map()"
     },
     {
@@ -408,7 +408,7 @@
       "source_location": "L462",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_selected_filing_rows",
-      "community": 16,
+      "community": 8,
       "norm_label": "_selected_filing_rows()"
     },
     {
@@ -418,7 +418,7 @@
       "source_location": "L487",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_verified_artifact_chunks",
-      "community": 16,
+      "community": 8,
       "norm_label": "_verified_artifact_chunks()"
     },
     {
@@ -428,7 +428,7 @@
       "source_location": "L575",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_entities",
-      "community": 16,
+      "community": 8,
       "norm_label": "_entities()"
     },
     {
@@ -438,7 +438,7 @@
       "source_location": "L641",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_market_observations",
-      "community": 16,
+      "community": 8,
       "norm_label": "_market_observations()"
     },
     {
@@ -448,7 +448,7 @@
       "source_location": "L716",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_fundamental_observations",
-      "community": 16,
+      "community": 8,
       "norm_label": "_fundamental_observations()"
     },
     {
@@ -458,7 +458,7 @@
       "source_location": "L802",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_filing_evidence",
-      "community": 16,
+      "community": 8,
       "norm_label": "_filing_evidence()"
     },
     {
@@ -468,7 +468,7 @@
       "source_location": "L922",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_research_context",
-      "community": 16,
+      "community": 8,
       "norm_label": "_research_context()"
     },
     {
@@ -478,7 +478,7 @@
       "source_location": "L1024",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_resolve_packet_as_of",
-      "community": 16,
+      "community": 8,
       "norm_label": "_resolve_packet_as_of()"
     },
     {
@@ -488,7 +488,7 @@
       "source_location": "L1028",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_build_packet",
-      "community": 16,
+      "community": 8,
       "norm_label": "build_packet()"
     },
     {
@@ -498,7 +498,7 @@
       "source_location": "L1219",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_write_packet",
-      "community": 16,
+      "community": 8,
       "norm_label": "write_packet()"
     },
     {
@@ -508,7 +508,7 @@
       "source_location": "L1224",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_main",
-      "community": 16,
+      "community": 8,
       "norm_label": "main()"
     },
     {
@@ -518,7 +518,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_rationale_168",
-      "community": 16,
+      "community": 8,
       "norm_label": "build ticker-local receipts without fetching or inferring evidence."
     },
     {
@@ -528,7 +528,7 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_rationale_290",
-      "community": 16,
+      "community": 8,
       "norm_label": "accept current string rows and the legacy ``{\"ticker\": ...}`` shape."
     },
     {
@@ -538,7 +538,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_rationale_307",
-      "community": 16,
+      "community": 8,
       "norm_label": "translate the deterministic c9 decision into a per-ticker policy cap.      the m"
     },
     {
@@ -548,7 +548,7 @@
       "source_location": "L447",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_rationale_447",
-      "community": 16,
+      "community": 8,
       "norm_label": "return the immutable index plus every validated append-only extension."
     },
     {
@@ -628,7 +628,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
-      "community": 6,
+      "community": 52,
       "norm_label": "create_phase5r_c9_exact_action_plan.py"
     },
     {
@@ -638,7 +638,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
-      "community": 6,
+      "community": 52,
       "norm_label": "valuation_trim_review_required()"
     },
     {
@@ -828,7 +828,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config",
-      "community": 52,
+      "community": 27,
       "norm_label": "phase5r_active_config.py"
     },
     {
@@ -838,7 +838,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_activeconfigerror",
-      "community": 52,
+      "community": 27,
       "norm_label": "activeconfigerror"
     },
     {
@@ -848,7 +848,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_valueerror",
-      "community": 52,
+      "community": 27,
       "norm_label": "valueerror"
     },
     {
@@ -858,7 +858,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_load_active_config",
-      "community": 52,
+      "community": 27,
       "norm_label": "load_active_config()"
     },
     {
@@ -868,7 +868,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_path",
-      "community": 52,
+      "community": 27,
       "norm_label": "path"
     },
     {
@@ -878,7 +878,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_any",
-      "community": 52,
+      "community": 27,
       "norm_label": "any"
     },
     {
@@ -888,7 +888,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_main",
-      "community": 52,
+      "community": 27,
       "norm_label": "main()"
     },
     {
@@ -898,7 +898,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_rationale_30",
-      "community": 52,
+      "community": 27,
       "norm_label": "raised when the active configuration is unsafe or incomplete."
     },
     {
@@ -1298,7 +1298,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_py_datetime",
-      "community": 48,
+      "community": 195,
       "norm_label": "datetime"
     },
     {
@@ -1308,7 +1308,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_iso_now",
-      "community": 8,
+      "community": 195,
       "norm_label": "iso_now()"
     },
     {
@@ -1318,7 +1318,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_cycle_date",
-      "community": 414,
+      "community": 195,
       "norm_label": "cycle_date()"
     },
     {
@@ -1388,7 +1388,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_is_us_market_session_date",
-      "community": 48,
+      "community": 78,
       "norm_label": "is_us_market_session_date()"
     },
     {
@@ -1398,7 +1398,7 @@
       "source_location": "L208",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_expected_market_session",
-      "community": 48,
+      "community": 78,
       "norm_label": "expected_market_session()"
     },
     {
@@ -1438,7 +1438,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_py_path",
-      "community": 27,
+      "community": 48,
       "norm_label": "path"
     },
     {
@@ -1468,7 +1468,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text",
-      "community": 27,
+      "community": 48,
       "norm_label": "atomic_write_text()"
     },
     {
@@ -1478,7 +1478,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_json",
-      "community": 27,
+      "community": 48,
       "norm_label": "atomic_write_json()"
     },
     {
@@ -1488,7 +1488,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_csv",
-      "community": 8,
+      "community": 48,
       "norm_label": "atomic_write_csv()"
     },
     {
@@ -1498,7 +1498,7 @@
       "source_location": "L308",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_append_csv_durable",
-      "community": 414,
+      "community": 48,
       "norm_label": "append_csv_durable()"
     },
     {
@@ -1508,7 +1508,7 @@
       "source_location": "L327",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_bytes",
-      "community": 48,
+      "community": 8,
       "norm_label": "sha256_bytes()"
     },
     {
@@ -1518,7 +1518,7 @@
       "source_location": "L331",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_file",
-      "community": 16,
+      "community": 8,
       "norm_label": "sha256_file()"
     },
     {
@@ -1618,7 +1618,7 @@
       "source_location": "L490",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_init",
-      "community": 27,
+      "community": 48,
       "norm_label": ".__init__()"
     },
     {
@@ -1628,7 +1628,7 @@
       "source_location": "L508",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_enter",
-      "community": 5,
+      "community": 195,
       "norm_label": ".__enter__()"
     },
     {
@@ -1648,7 +1648,7 @@
       "source_location": "L571",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_log_daily_run",
-      "community": 414,
+      "community": 195,
       "norm_label": "log_daily_run()"
     },
     {
@@ -1668,7 +1668,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_209",
-      "community": 48,
+      "community": 78,
       "norm_label": "return the trading session expected by existing daily decision gates."
     },
     {
@@ -2328,7 +2328,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective",
-      "community": 16,
+      "community": 8,
       "norm_label": "phase5r_return_objective.py"
     },
     {
@@ -2338,7 +2338,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_annualized_to_monthly_compound_pct",
-      "community": 16,
+      "community": 8,
       "norm_label": "annualized_to_monthly_compound_pct()"
     },
     {
@@ -2348,7 +2348,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_return_objective_payload",
-      "community": 16,
+      "community": 8,
       "norm_label": "return_objective_payload()"
     },
     {
@@ -2358,7 +2358,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_py_any",
-      "community": 16,
+      "community": 8,
       "norm_label": "any"
     },
     {
@@ -2368,7 +2368,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_validate_return_objective_payload",
-      "community": 16,
+      "community": 8,
       "norm_label": "validate_return_objective_payload()"
     },
     {
@@ -2378,7 +2378,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_rationale_20",
-      "community": 16,
+      "community": 8,
       "norm_label": "return the exact monthly compound equivalent, rounded to four decimals."
     },
     {
@@ -2388,7 +2388,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_rationale_31",
-      "community": 16,
+      "community": 8,
       "norm_label": "return the closed, non-guaranteed objective embedded in model packets."
     },
     {
@@ -2398,7 +2398,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_return_objective_rationale_52",
-      "community": 16,
+      "community": 8,
       "norm_label": "reject any drift that turns the objective into a quota or guarantee."
     },
     {
@@ -5278,17 +5278,17 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
-      "community": 52,
+      "community": 9,
       "norm_label": "run_phase5r_daily_refresh_scheduler.py"
     },
     {
       "label": "due_slots()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L84",
+      "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_due_slots",
-      "community": 52,
+      "community": 9,
       "norm_label": "due_slots()"
     },
     {
@@ -5298,128 +5298,148 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_py_datetime",
-      "community": 52,
+      "community": 9,
       "norm_label": "datetime"
     },
     {
       "label": "market_snapshot_mode()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L90",
+      "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
-      "community": 52,
+      "community": 9,
       "norm_label": "market_snapshot_mode()"
     },
     {
       "label": "_refresh_state_matches_attempt()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L107",
+      "source_location": "L113",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_refresh_state_matches_attempt",
-      "community": 52,
+      "community": 9,
       "norm_label": "_refresh_state_matches_attempt()"
     },
     {
       "label": "_market_step_passed()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L138",
+      "source_location": "L144",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_step_passed",
-      "community": 52,
+      "community": 9,
       "norm_label": "_market_step_passed()"
     },
     {
       "label": "_massive_auth_presence_probe_exit_code()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L164",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_massive_auth_presence_probe_exit_code",
-      "community": 52,
+      "community": 9,
       "norm_label": "_massive_auth_presence_probe_exit_code()"
     },
     {
       "label": "_run_sec_refresh_only()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L189",
+      "source_location": "L195",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_sec_refresh_only",
-      "community": 52,
+      "community": 9,
       "norm_label": "_run_sec_refresh_only()"
     },
     {
       "label": "_run_market_refresh_only()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L206",
+      "source_location": "L212",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_market_refresh_only",
-      "community": 52,
+      "community": 9,
       "norm_label": "_run_market_refresh_only()"
+    },
+    {
+      "label": "_run_full_refresh_reuse_only()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_location": "L229",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_full_refresh_reuse_only",
+      "community": 9,
+      "norm_label": "_run_full_refresh_reuse_only()"
     },
     {
       "label": "_safe_refresh_child_status()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L223",
+      "source_location": "L252",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_safe_refresh_child_status",
-      "community": 52,
+      "community": 9,
       "norm_label": "_safe_refresh_child_status()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L231",
+      "source_location": "L260",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
-      "community": 52,
+      "community": 9,
       "norm_label": "main()"
     },
     {
       "label": "Fetch at bounded post-close slots until the current close is ready.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L96",
+      "source_location": "L102",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_96",
-      "community": 52,
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_102",
+      "community": 9,
       "norm_label": "fetch at bounded post-close slots until the current close is ready."
     },
     {
       "label": "Prove the B2 child can construct its client, without provider I/O.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L165",
+      "source_location": "L171",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_165",
-      "community": 52,
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_171",
+      "community": 9,
       "norm_label": "prove the b2 child can construct its client, without provider i/o."
     },
     {
       "label": "Run the approved official-evidence refresh without other daily steps.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L190",
+      "source_location": "L196",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_190",
-      "community": 52,
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_196",
+      "community": 9,
       "norm_label": "run the approved official-evidence refresh without other daily steps."
     },
     {
       "label": "Run one bounded Massive completed-close import and nothing else.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L207",
+      "source_location": "L213",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_207",
-      "community": 52,
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_213",
+      "community": 9,
       "norm_label": "run one bounded massive completed-close import and nothing else."
+    },
+    {
+      "label": "Run one full no-send refresh against the validated local close.",
+      "file_type": "rationale",
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_location": "L230",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_230",
+      "community": 9,
+      "norm_label": "run one full no-send refresh against the validated local close."
     },
     {
       "label": "run_phase5r_daily_scheduler.py",
@@ -5428,7 +5448,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_scheduler",
-      "community": 410,
+      "community": 27,
       "norm_label": "run_phase5r_daily_scheduler.py"
     },
     {
@@ -6078,7 +6098,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_support",
-      "community": 52,
+      "community": 62,
       "norm_label": "_support.py"
     },
     {
@@ -6088,7 +6108,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market",
-      "community": 52,
+      "community": 62,
       "norm_label": "test_build_phase5r_packet_market.py"
     },
     {
@@ -6098,7 +6118,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_write_csv",
-      "community": 52,
+      "community": 62,
       "norm_label": "write_csv()"
     },
     {
@@ -6108,7 +6128,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_py_path",
-      "community": 52,
+      "community": 62,
       "norm_label": "path"
     },
     {
@@ -6118,7 +6138,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests",
-      "community": 52,
+      "community": 62,
       "norm_label": "packetmarketobservationtests"
     },
     {
@@ -6128,7 +6148,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_default_packet_as_of_is_current_not_stale_decision_time",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_default_packet_as_of_is_current_not_stale_decision_time()"
     },
     {
@@ -6138,7 +6158,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_observation",
-      "community": 52,
+      "community": 62,
       "norm_label": ".observation()"
     },
     {
@@ -6148,7 +6168,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_verified_friday_close_remains_complete_on_weekend",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_verified_friday_close_remains_complete_on_weekend()"
     },
     {
@@ -6158,7 +6178,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_unverified_or_pre_close_timestamp_cannot_be_complete",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_unverified_or_pre_close_timestamp_cannot_be_complete()"
     },
     {
@@ -6168,7 +6188,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_future_observation_is_not_point_in_time_safe",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_future_observation_is_not_point_in_time_safe()"
     },
     {
@@ -6178,7 +6198,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_decision_ticker_parser_accepts_current_and_legacy_shapes",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_decision_ticker_parser_accepts_current_and_legacy_shapes()"
     },
     {
@@ -6188,7 +6208,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_c9_decision_is_translated_to_hidden_ticker_policy_caps",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_c9_decision_is_translated_to_hidden_ticker_policy_caps()"
     },
     {
@@ -6198,7 +6218,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_effective_acceptance_map_includes_validated_extensions",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_effective_acceptance_map_includes_validated_extensions()"
     },
     {
@@ -6208,7 +6228,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_packet_filing_selection_excludes_historical_material_backfill",
-      "community": 52,
+      "community": 62,
       "norm_label": ".test_packet_filing_selection_excludes_historical_material_backfill()"
     },
     {
@@ -6258,7 +6278,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
-      "community": 52,
+      "community": 27,
       "norm_label": ".test_growth_band_selection_is_deterministic()"
     },
     {
@@ -7242,10 +7262,20 @@
       "norm_label": ".test_sec_only_runtime_marker_invokes_no_daily_or_model_path()"
     },
     {
-      "label": ".test_b2_auth_probe_constructs_client_without_network_and_is_mute()",
+      "label": ".test_full_reuse_runtime_marker_invokes_one_no_send_refresh()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
       "source_location": "L546",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_full_reuse_runtime_marker_invokes_one_no_send_refresh",
+      "community": 410,
+      "norm_label": ".test_full_reuse_runtime_marker_invokes_one_no_send_refresh()"
+    },
+    {
+      "label": ".test_b2_auth_probe_constructs_client_without_network_and_is_mute()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
+      "source_location": "L586",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_b2_auth_probe_constructs_client_without_network_and_is_mute",
       "community": 410,
@@ -7255,7 +7285,7 @@
       "label": ".test_b2_auth_probe_fails_closed_when_auth_is_absent()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L570",
+      "source_location": "L610",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_b2_auth_probe_fails_closed_when_auth_is_absent",
       "community": 410,
@@ -7265,7 +7295,7 @@
       "label": ".test_massive_runtime_auth_presence_probe_reaches_b2_child_and_is_mute()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L575",
+      "source_location": "L615",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_massive_runtime_auth_presence_probe_reaches_b2_child_and_is_mute",
       "community": 410,
@@ -7275,7 +7305,7 @@
       "label": ".test_refresh_pipeline_propagates_reuse_mode_only_to_b2()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L619",
+      "source_location": "L659",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_refresh_pipeline_propagates_reuse_mode_only_to_b2",
       "community": 410,
@@ -7285,7 +7315,7 @@
       "label": ".test_final_pipeline_rejects_degraded_reuse_before_sender()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L636",
+      "source_location": "L676",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_rejects_degraded_reuse_before_sender",
       "community": 410,
@@ -7295,7 +7325,7 @@
       "label": ".test_final_pipeline_sends_only_after_current_passed_handoff()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L695",
+      "source_location": "L735",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_sends_only_after_current_passed_handoff",
       "community": 410,
@@ -7305,7 +7335,7 @@
       "label": ".test_decision_scheduler_wait_does_not_consume_send_attempt()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L757",
+      "source_location": "L797",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_wait_does_not_consume_send_attempt",
       "community": 410,
@@ -7315,7 +7345,7 @@
       "label": ".test_decision_scheduler_publishes_terminal_alert_after_deadline()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L817",
+      "source_location": "L857",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_publishes_terminal_alert_after_deadline",
       "community": 410,
@@ -7342,12 +7372,22 @@
       "norm_label": "the existing launchd job can refresh sec evidence without b2 or email."
     },
     {
+      "label": "The repair marker reuses local market data and cannot send email.",
+      "file_type": "rationale",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
+      "source_location": "L547",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_547",
+      "community": 410,
+      "norm_label": "the repair marker reuses local market data and cannot send email."
+    },
+    {
       "label": "The launchd probe maps only fixed status from the no-network B2 child.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L576",
+      "source_location": "L616",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_576",
+      "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_616",
       "community": 410,
       "norm_label": "the launchd probe maps only fixed status from the no-network b2 child."
     },
@@ -7608,7 +7648,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_return_objective",
-      "community": 16,
+      "community": 8,
       "norm_label": "test_phase5r_return_objective.py"
     },
     {
@@ -7618,7 +7658,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_return_objective_returnobjectivetests",
-      "community": 16,
+      "community": 8,
       "norm_label": "returnobjectivetests"
     },
     {
@@ -7628,7 +7668,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_return_objective_returnobjectivetests_test_exact_monthly_compound_equivalents",
-      "community": 16,
+      "community": 8,
       "norm_label": ".test_exact_monthly_compound_equivalents()"
     },
     {
@@ -7638,7 +7678,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_return_objective_returnobjectivetests_test_objective_is_not_a_quota_guarantee_or_risk_override",
-      "community": 16,
+      "community": 8,
       "norm_label": ".test_objective_is_not_a_quota_guarantee_or_risk_override()"
     },
     {
@@ -8038,7 +8078,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_durable_ledger_repairs_stale_seen_accession_cache",
-      "community": 28,
+      "community": 24,
       "norm_label": ".test_durable_ledger_repairs_stale_seen_accession_cache()"
     },
     {
@@ -8968,7 +9008,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes",
-      "community": 8,
+      "community": 52,
       "norm_label": "track_phase5r_recommendation_outcomes.py"
     },
     {
@@ -8978,7 +9018,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_append_jsonl",
-      "community": 8,
+      "community": 52,
       "norm_label": "append_jsonl()"
     },
     {
@@ -8988,7 +9028,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_py_path",
-      "community": 8,
+      "community": 52,
       "norm_label": "path"
     },
     {
@@ -8998,7 +9038,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_py_any",
-      "community": 8,
+      "community": 52,
       "norm_label": "any"
     },
     {
@@ -9008,7 +9048,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_jsonl",
-      "community": 8,
+      "community": 52,
       "norm_label": "jsonl()"
     },
     {
@@ -9018,7 +9058,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_number",
-      "community": 8,
+      "community": 52,
       "norm_label": "number()"
     },
     {
@@ -9028,7 +9068,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_classification",
-      "community": 8,
+      "community": 52,
       "norm_label": "classification()"
     },
     {
@@ -9038,7 +9078,7 @@
       "source_location": "L102",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_update_history",
-      "community": 8,
+      "community": 52,
       "norm_label": "update_history()"
     },
     {
@@ -9048,7 +9088,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_recommendation_rows",
-      "community": 8,
+      "community": 52,
       "norm_label": "recommendation_rows()"
     },
     {
@@ -9058,7 +9098,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_persist_snapshots",
-      "community": 8,
+      "community": 52,
       "norm_label": "persist_snapshots()"
     },
     {
@@ -9068,7 +9108,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_evaluate",
-      "community": 8,
+      "community": 52,
       "norm_label": "evaluate()"
     },
     {
@@ -9078,7 +9118,7 @@
       "source_location": "L265",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_write_retrospective",
-      "community": 8,
+      "community": 52,
       "norm_label": "write_retrospective()"
     },
     {
@@ -9088,7 +9128,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_track_phase5r_recommendation_outcomes_main",
-      "community": 8,
+      "community": 52,
       "norm_label": "main()"
     },
     {
@@ -9098,7 +9138,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account",
-      "community": 8,
+      "community": 48,
       "norm_label": "update_phase5r_manual_account.py"
     },
     {
@@ -9108,7 +9148,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_parse_position",
-      "community": 8,
+      "community": 48,
       "norm_label": "parse_position()"
     },
     {
@@ -9118,7 +9158,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_main",
-      "community": 8,
+      "community": 48,
       "norm_label": "main()"
     },
     {
@@ -15629,7 +15669,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L255",
+      "source_location": "L286",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -17460,7 +17500,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L284",
+      "source_location": "L315",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_now_et"
@@ -17614,7 +17654,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L310",
+      "source_location": "L341",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_iso_now"
@@ -17801,7 +17841,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L242",
+      "source_location": "L273",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_cycle_date"
@@ -18086,7 +18126,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L101",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
       "target": "09_scripts_phase5r_phase5r_daily_common_is_us_market_session_date"
@@ -18227,7 +18267,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L299",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_last_completed_market_session"
@@ -18414,7 +18454,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L289",
+      "source_location": "L320",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_read_json"
@@ -19074,7 +19114,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L251",
+      "source_location": "L282",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_load_active_state"
@@ -19151,7 +19191,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L252",
+      "source_location": "L283",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_load_inhibit"
@@ -19205,7 +19245,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L413",
+      "source_location": "L444",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_publish_automation_alert"
@@ -30751,7 +30791,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L84",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_due_slots",
@@ -30761,7 +30801,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L231",
+      "source_location": "L260",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
@@ -30771,7 +30811,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L90",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
@@ -30781,7 +30821,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L138",
+      "source_location": "L144",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_step_passed",
@@ -30791,7 +30831,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L164",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_massive_auth_presence_probe_exit_code",
@@ -30812,7 +30852,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L107",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_refresh_state_matches_attempt",
@@ -30822,7 +30862,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L206",
+      "source_location": "L229",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
+      "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_full_refresh_reuse_only",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_market_refresh_only",
@@ -30832,7 +30882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L189",
+      "source_location": "L195",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_sec_refresh_only",
@@ -30842,7 +30892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L223",
+      "source_location": "L252",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_safe_refresh_child_status",
@@ -30886,7 +30936,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L84",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_due_slots",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_py_datetime",
@@ -30897,7 +30947,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L285",
+      "source_location": "L316",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_due_slots",
@@ -30908,7 +30958,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L90",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_py_datetime",
@@ -30919,7 +30969,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L305",
+      "source_location": "L336",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
@@ -30929,9 +30979,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L96",
+      "source_location": "L102",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_96",
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_102",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_snapshot_mode",
       "confidence_score": 1.0
     },
@@ -30940,7 +30990,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L392",
+      "source_location": "L423",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_refresh_state_matches_attempt",
@@ -30951,7 +31001,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L145",
+      "source_location": "L151",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_step_passed",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_refresh_state_matches_attempt",
@@ -30962,7 +31012,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L366",
+      "source_location": "L397",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_market_step_passed",
@@ -30973,7 +31023,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L236",
+      "source_location": "L265",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_massive_auth_presence_probe_exit_code",
@@ -30983,9 +31033,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L165",
+      "source_location": "L171",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_165",
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_171",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_massive_auth_presence_probe_exit_code",
       "confidence_score": 1.0
     },
@@ -30994,7 +31044,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L238",
+      "source_location": "L267",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_sec_refresh_only",
@@ -31004,9 +31054,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L190",
+      "source_location": "L196",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_190",
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_196",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_sec_refresh_only",
       "confidence_score": 1.0
     },
@@ -31015,7 +31065,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L240",
+      "source_location": "L269",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_market_refresh_only",
@@ -31025,9 +31075,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L207",
+      "source_location": "L213",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_207",
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_213",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_market_refresh_only",
       "confidence_score": 1.0
     },
@@ -31036,7 +31086,28 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
-      "source_location": "L423",
+      "source_location": "L271",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
+      "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_full_refresh_reuse_only",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_location": "L230",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_rationale_230",
+      "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_run_full_refresh_reuse_only",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_location": "L454",
       "weight": 1.0,
       "source": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_main",
       "target": "09_scripts_phase5r_run_phase5r_daily_refresh_scheduler_safe_refresh_child_status",
@@ -35352,7 +35423,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L546",
+      "source_location": "L586",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_b2_auth_probe_constructs_client_without_network_and_is_mute",
@@ -35362,7 +35433,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L570",
+      "source_location": "L610",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_b2_auth_probe_fails_closed_when_auth_is_absent",
@@ -35372,7 +35443,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L817",
+      "source_location": "L857",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_publishes_terminal_alert_after_deadline",
@@ -35382,7 +35453,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L757",
+      "source_location": "L797",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_wait_does_not_consume_send_attempt",
@@ -35402,7 +35473,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L636",
+      "source_location": "L676",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_rejects_degraded_reuse_before_sender",
@@ -35412,10 +35483,20 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L695",
+      "source_location": "L735",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_sends_only_after_current_passed_handoff",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
+      "source_location": "L546",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_full_reuse_runtime_marker_invokes_one_no_send_refresh",
       "confidence_score": 1.0
     },
     {
@@ -35432,7 +35513,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L575",
+      "source_location": "L615",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_massive_runtime_auth_presence_probe_reaches_b2_child_and_is_mute",
@@ -35462,7 +35543,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L619",
+      "source_location": "L659",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_refresh_pipeline_propagates_reuse_mode_only_to_b2",
@@ -35587,7 +35668,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L638",
+      "source_location": "L678",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_rejects_degraded_reuse_before_sender",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_path",
@@ -35598,7 +35679,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L697",
+      "source_location": "L737",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_sends_only_after_current_passed_handoff",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_path",
@@ -35697,7 +35778,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L827",
+      "source_location": "L867",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_publishes_terminal_alert_after_deadline",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_exitstack",
@@ -35708,7 +35789,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L767",
+      "source_location": "L807",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_decision_scheduler_wait_does_not_consume_send_attempt",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_exitstack",
@@ -35730,7 +35811,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L656",
+      "source_location": "L696",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_rejects_degraded_reuse_before_sender",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_exitstack",
@@ -35741,7 +35822,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L719",
+      "source_location": "L759",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_final_pipeline_sends_only_after_current_passed_handoff",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_py_exitstack",
@@ -35815,9 +35896,19 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
-      "source_location": "L576",
+      "source_location": "L547",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_576",
+      "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_547",
+      "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_full_reuse_runtime_marker_invokes_one_no_send_refresh",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
+      "source_location": "L616",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_rationale_616",
       "target": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_massive_runtime_auth_presence_probe_reaches_b2_child_and_is_mute",
       "confidence_score": 1.0
     },
@@ -42764,5 +42855,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4ec88e5650745974c91ae280e46c51f17d0565aa"
+  "built_at_commit": "3e875c130c81ca26f1df2e7ebff7a99577bd2fcb"
 }

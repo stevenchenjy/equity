@@ -74,6 +74,12 @@ SEC_REFRESH_TIMEOUT_SECONDS = 240
 # sender, broker, portfolio action, or order surface.
 MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
 MARKET_REFRESH_TIMEOUT_SECONDS = 480
+# One-shot complete deterministic refresh using the already validated local
+# close. This repair/verification entrypoint runs through the credentialed
+# dailyrefresh launcher but cannot invoke a model, sender, broker, or order.
+FULL_REFRESH_REUSE_ONLY_ENV = (
+    "PHASE5R_FULL_REFRESH_REUSE_ONLY_20260901_7C31"
+)
 # The post-close daily refresh can contain the bounded, paced 29-request market
 # import. Its parent timeout exceeds that child budget and leaves a finite
 # allowance for the existing local refresh steps. Retry slots are separate
@@ -220,6 +226,29 @@ def _run_market_refresh_only() -> int:
     return completed.returncode
 
 
+def _run_full_refresh_reuse_only() -> int:
+    """Run one full no-send refresh against the validated local close."""
+
+    try:
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(REFRESH_PIPELINE),
+                "--run",
+                "--market-snapshot-mode",
+                MARKET_SNAPSHOT_REUSE,
+            ],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124
+    return completed.returncode
+
+
 def _safe_refresh_child_status(returncode: int) -> str:
     if returncode == 0:
         return "completed"
@@ -238,6 +267,8 @@ def main() -> int:
         return _run_sec_refresh_only()
     if os.environ.get(MARKET_REFRESH_ONLY_ENV) == "1":
         return _run_market_refresh_only()
+    if os.environ.get(FULL_REFRESH_REUSE_ONLY_ENV) == "1":
+        return _run_full_refresh_reuse_only()
     expected_cycle_date = os.environ.get(RUNTIME_EXPECTED_CYCLE_DATE_ENV)
     if expected_cycle_date and cycle_date() != expected_cycle_date:
         print(
