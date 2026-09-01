@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 
@@ -147,6 +148,14 @@ class SelectionAndValidationTests(unittest.TestCase):
                 material_event="yes",
             ),
             ledger_row(
+                ticker="AAA",
+                filing_date="2026-06-27",
+                accession="0001234567-26-000005",
+                document="aaa-current-material.htm",
+                is_new="yes",
+                material_event="yes",
+            ),
+            ledger_row(
                 ticker="BBB",
                 cik="2345678",
                 filing_date="2026-06-15",
@@ -154,7 +163,11 @@ class SelectionAndValidationTests(unittest.TestCase):
                 document="bbb.htm",
             ),
         ]
-        selected = artifacts.select_filing_rows(rows)
+        selected = artifacts.select_filing_rows(
+            rows,
+            as_of=date(2026, 7, 2),
+            material_lookback_days=7,
+        )
         identities = {
             (row["ticker"], row["accession"]) for row in selected
         }
@@ -163,9 +176,38 @@ class SelectionAndValidationTests(unittest.TestCase):
             {
                 ("AAA", "0001234567-26-000002"),
                 ("AAA", "0001234567-26-000003"),
-                ("AAA", "0001234567-26-000004"),
+                ("AAA", "0001234567-26-000005"),
                 ("BBB", "0002345678-26-000001"),
             },
+        )
+
+    def test_historical_material_backfill_is_not_selected_as_current(self) -> None:
+        rows = [
+            ledger_row(
+                ticker="AAA",
+                filing_date="2026-07-01",
+                accession="0001234567-26-000001",
+                document="aaa-latest.htm",
+            ),
+            ledger_row(
+                ticker="AAA",
+                filing_date="2025-03-05",
+                accession="0001234567-25-000002",
+                document="aaa-backfill.htm",
+                is_new="yes",
+                material_event="yes",
+            ),
+        ]
+
+        selected = artifacts.select_filing_rows(
+            rows,
+            as_of=date(2026, 7, 2),
+            material_lookback_days=7,
+        )
+
+        self.assertEqual(
+            [row["accession"] for row in selected],
+            ["0001234567-26-000001"],
         )
 
     def test_sec_host_and_path_are_fail_closed(self) -> None:

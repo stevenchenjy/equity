@@ -27,6 +27,9 @@ from pathlib import Path
 from typing import Any, Callable, Iterable
 from urllib.parse import unquote, urlsplit
 
+from phase5r_active_config import load_active_config
+from phase5r_daily_common import cycle_date
+
 
 ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE_LEDGER_PATH = (
@@ -43,7 +46,7 @@ INDEX_PATH = (
 INDEX_SCHEMA_VERSION = "phase5r_sec_filing_artifact_index_v1"
 PARSER_ID = "phase5r_sec_text_normalizer"
 PARSER_VERSION = "1.0.0"
-SELECTION_POLICY = "latest_filing_date_per_ticker_plus_all_new_material_v1"
+SELECTION_POLICY = "latest_filing_date_per_ticker_plus_current_material_v2"
 ALLOWED_SEC_HOSTS = frozenset({"sec.gov", "www.sec.gov"})
 ALLOWED_CONTENT_TYPES = frozenset(
     {
@@ -66,6 +69,7 @@ ACCESSION_PATTERN = re.compile(r"\d{10}-\d{2}-\d{6}")
 CIK_PATTERN = re.compile(r"\d{1,10}")
 REQUIRED_LEDGER_FIELDS = {
     "detected_at",
+    "cycle_date",
     "ticker",
     "cik",
     "form",
@@ -333,9 +337,15 @@ def normalize_ledger_row(row: dict[str, str]) -> dict[str, str]:
     if not ACCESSION_PATTERN.fullmatch(accession):
         raise ArtifactError(f"invalid accession for {ticker}")
     try:
-        date.fromisoformat(row.get("filing_date", "").strip())
+        filing_day = date.fromisoformat(row.get("filing_date", "").strip())
     except ValueError as exc:
         raise ArtifactError(f"invalid filing date for {ticker}") from exc
+    try:
+        ledger_cycle_day = date.fromisoformat(
+            row.get("cycle_date", "").strip()
+        )
+    except ValueError as exc:
+        raise ArtifactError(f"invalid cycle date for {ticker}") from exc
     form = row.get("form", "").strip()
     if not form or len(form) > 32 or re.search(r"[^A-Za-z0-9 /-]", form):
         raise ArtifactError(f"invalid filing form for {ticker}")
@@ -349,11 +359,12 @@ def normalize_ledger_row(row: dict[str, str]) -> dict[str, str]:
         raise ArtifactError("primary document does not match source URL")
     normalized = {
         "detected_at": row.get("detected_at", "").strip(),
+        "cycle_date": ledger_cycle_day.isoformat(),
         "ticker": ticker,
         "cik": cik,
         "accession": accession,
         "form": form,
-        "filing_date": row.get("filing_date", "").strip(),
+        "filing_date": filing_day.isoformat(),
         "primary_document": primary_document,
         "url": url,
         "is_new": row.get("is_new", "").strip().lower(),
@@ -377,7 +388,14 @@ def read_evidence_ledger(path: Path) -> list[dict[str, str]]:
         return [dict(row) for row in reader]
 
 
-def select_filing_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
+def select_filing_rows(
+    rows: Iterable[dict[str, str]],
+    *,
+    as_of: date | None = None,
+    material_lookback_days: int = 7,
+) -> list[dict[str, str]]:
+    if material_lookback_days not in range(1, 31):
+        raise ArtifactError("material filing lookback is invalid")
     deduplicated: dict[str, dict[str, str]] = {}
     for raw_row in rows:
         row = normalize_ledger_row(raw_row)
@@ -392,12 +410,23 @@ def select_filing_rows(rows: Iterable[dict[str, str]]) -> list[dict[str, str]]:
         latest_dates[row["ticker"]] = max(
             row["filing_date"], latest_dates.get(row["ticker"], "")
         )
-    selected = [
-        row
-        for row in deduplicated.values()
-        if row["filing_date"] == latest_dates[row["ticker"]]
-        or (row["is_new"] == "yes" and row["material_event"] == "yes")
-    ]
+    selected: list[dict[str, str]] = []
+    for row in deduplicated.values():
+        current_material = bool(
+            row["is_new"] == "yes"
+            and row["material_event"] == "yes"
+        )
+        if as_of is not None and current_material:
+            filing_age = (as_of - date.fromisoformat(row["filing_date"])).days
+            current_material = bool(
+                row["cycle_date"] == as_of.isoformat()
+                and 0 <= filing_age <= material_lookback_days
+            )
+        if (
+            row["filing_date"] == latest_dates[row["ticker"]]
+            or current_material
+        ):
+            selected.append(row)
     return sorted(
         selected,
         key=lambda item: (
@@ -685,10 +714,16 @@ def refresh_artifacts(
     request_interval_seconds: float = SEC_MIN_REQUEST_INTERVAL_SECONDS,
     monotonic_clock: Callable[[], float] = time.monotonic,
     sleeper: Callable[[float], None] = time.sleep,
+    as_of: date | None = None,
+    material_lookback_days: int = 7,
 ) -> dict[str, Any]:
     if request_interval_seconds < 0:
         raise ArtifactError("SEC request interval is invalid")
-    selected = select_filing_rows(read_evidence_ledger(ledger_path))
+    selected = select_filing_rows(
+        read_evidence_ledger(ledger_path),
+        as_of=as_of,
+        material_lookback_days=material_lookback_days,
+    )
     prior = load_index(index_path)
     prior_by_id = {
         str(entry.get("source_id")): entry
@@ -779,8 +814,14 @@ def check_artifacts(
     artifact_root: Path = ARTIFACT_ROOT,
     index_path: Path = INDEX_PATH,
     project_root: Path = ROOT,
+    as_of: date | None = None,
+    material_lookback_days: int = 7,
 ) -> dict[str, int]:
-    selected = select_filing_rows(read_evidence_ledger(ledger_path))
+    selected = select_filing_rows(
+        read_evidence_ledger(ledger_path),
+        as_of=as_of,
+        material_lookback_days=material_lookback_days,
+    )
     prior = load_index(index_path)
     prior_by_id = {
         str(entry.get("source_id")): entry
@@ -827,8 +868,15 @@ def main() -> int:
     )
     args = parser.parse_args()
     try:
+        current_cycle = date.fromisoformat(cycle_date())
+        material_lookback_days = load_active_config()["notifications"][
+            "new_filing_lookback_calendar_days"
+        ]
         if args.check:
-            summary = check_artifacts()
+            summary = check_artifacts(
+                as_of=current_cycle,
+                material_lookback_days=material_lookback_days,
+            )
             print(
                 "sec_artifact_check=passed "
                 f"selected={summary['selected']} "
@@ -838,7 +886,11 @@ def main() -> int:
                 "network_used=false files_written=false"
             )
             return 0
-        payload = refresh_artifacts(user_agent=args.user_agent)
+        payload = refresh_artifacts(
+            user_agent=args.user_agent,
+            as_of=current_cycle,
+            material_lookback_days=material_lookback_days,
+        )
         print(
             "sec_artifact_refresh=passed "
             f"selected={payload['selected_count']} "
