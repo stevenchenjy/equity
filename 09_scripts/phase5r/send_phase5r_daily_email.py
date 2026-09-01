@@ -12,6 +12,7 @@ import stat
 from email.message import EmailMessage
 from typing import Any, Callable
 
+from phase5r_active_config import load_active_config
 from phase5r_daily_common import (
     DAILY_BRIEF_HTML_PATH,
     DAILY_BRIEF_TEXT_PATH,
@@ -25,6 +26,7 @@ from phase5r_daily_common import (
     delivery_guard,
     iso_now,
     log_daily_run,
+    notification_delivery_policy,
     now_et,
     read_csv,
     read_json,
@@ -135,13 +137,24 @@ def cycle_is_blocked(
 
 
 def delivery_policy(
-    *, is_weekend: bool, material_event: bool, decision_changed: bool, account_conflict: bool
+    *,
+    is_weekend: bool,
+    material_event: bool,
+    decision_changed: bool,
+    account_conflict: bool,
+    weekly_summary_due: bool = False,
+    fundamental_weakening: bool = False,
+    first_material_baseline: bool = False,
 ) -> tuple[bool, str]:
-    if not is_weekend:
-        return True, "weekday_daily_brief"
-    if material_event or decision_changed or account_conflict:
-        return True, "weekend_material_change"
-    return False, "weekend_no_material_change"
+    return notification_delivery_policy(
+        is_weekend=is_weekend,
+        weekly_summary_due=weekly_summary_due,
+        material_event=material_event,
+        decision_changed=decision_changed,
+        account_conflict=account_conflict,
+        fundamental_weakening=fundamental_weakening,
+        first_material_baseline=first_material_baseline,
+    )
 
 
 def validate_decision() -> dict[str, Any]:
@@ -150,11 +163,63 @@ def validate_decision() -> dict[str, Any]:
         raise ValueError("decision_cycle_mismatch")
     if decision.get("automatic_action_allowed") is not False:
         raise ValueError("automatic_action_boundary_invalid")
+    list_fields = (
+        "material_events",
+        "account_conflicts",
+        "eligible_action_review_candidates",
+        "eligible_new_position_review_candidates",
+    )
+    if any(not isinstance(decision.get(field), list) for field in list_fields):
+        raise ValueError("decision_notification_inputs_invalid")
+    fundamental_gate = decision.get("fundamental_gate")
+    evaluation = decision.get("notification_policy_evaluation")
+    if not isinstance(fundamental_gate, dict) or not isinstance(evaluation, dict):
+        raise ValueError("decision_notification_inputs_invalid")
+    weakening_tickers = fundamental_gate.get("weakening_tickers")
+    if not isinstance(weakening_tickers, list):
+        raise ValueError("decision_notification_inputs_invalid")
+    prior_decision_present = evaluation.get("prior_decision_present")
+    if type(prior_decision_present) is not bool:
+        raise ValueError("decision_notification_inputs_invalid")
+    base_trigger = bool(
+        decision["eligible_action_review_candidates"]
+        or decision["eligible_new_position_review_candidates"]
+        or decision["account_conflicts"]
+        or decision["material_events"]
+        or weakening_tickers
+    )
+    first_material_baseline = bool(not prior_decision_present and base_trigger)
+    current = now_et()
+    expected_evaluation = {
+        "is_weekend": current.weekday() >= 5,
+        "weekly_summary_due": current.weekday() == 4,
+        "prior_decision_present": prior_decision_present,
+        "first_material_baseline": first_material_baseline,
+        "long_term_fundamental_weakening": bool(weakening_tickers),
+        "scheduler_time_gate_applied": False,
+    }
+    if evaluation != expected_evaluation:
+        raise ValueError("decision_notification_evaluation_mismatch")
+    config = load_active_config()
+    expected_notification_policy = {
+        "event_driven": config["notifications"]["event_driven"],
+        "weekly_summary_weekday": config["notifications"][
+            "weekly_summary_weekday"
+        ],
+        "unchanged_daily_email": config["notifications"][
+            "unchanged_daily_email"
+        ],
+    }
+    if decision.get("notification_policy") != expected_notification_policy:
+        raise ValueError("decision_notification_policy_mismatch")
     policy_send, policy_reason = delivery_policy(
-        is_weekend=now_et().weekday() >= 5,
-        material_event=bool(decision.get("material_events")),
+        is_weekend=expected_evaluation["is_weekend"],
+        weekly_summary_due=expected_evaluation["weekly_summary_due"],
+        material_event=bool(decision["material_events"]),
         decision_changed=decision.get("decision_changed") is True,
-        account_conflict=bool(decision.get("account_conflicts")),
+        account_conflict=bool(decision["account_conflicts"]),
+        fundamental_weakening=bool(weakening_tickers),
+        first_material_baseline=first_material_baseline,
     )
     if decision.get("send_recommended") is not policy_send:
         raise ValueError("decision_delivery_policy_mismatch")

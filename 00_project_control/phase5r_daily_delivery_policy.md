@@ -13,8 +13,8 @@ The only authorized sender is `send_phase5r_daily_email.py`. It requires:
 
 ## Frequency
 
-- Weekdays: one decisive eligible email after a fully passed current-session
-  refresh and 18:30 ET.
+- Weekdays: send after 18:30 ET only for a material decision/evidence change;
+  also send the configured Friday summary. Suppress unchanged ordinary days.
 - Weekends: send only for a new material official filing, a decision fingerprint
   change, or an account-state conflict.
 - No late-night catch-up is allowed before the configured operational date.
@@ -26,6 +26,9 @@ The only authorized sender is `send_phase5r_daily_email.py`. It requires:
 - The `dailydecision` job never receives either credential. It consumes a
   persisted refresh handoff only when that handoff is for the current ET cycle,
   the currently completed market session, and has no hard or soft failures.
+- Refresh-time decision composition never applies the 18:30 send clock. The
+  scheduler owns that clock, so a fully passed 17:45 handoff remains eligible
+  when `dailydecision` evaluates it after 18:30.
 - Regular-session close import is attempted at bounded ET slots `17:45`,
   `18:15`, `18:45`, and `19:15`. A later attempt stops being necessary as soon
   as the current close and complete deterministic refresh pass.

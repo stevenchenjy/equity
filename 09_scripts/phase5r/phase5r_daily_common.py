@@ -395,6 +395,41 @@ def delivery_guard() -> tuple[bool, str, dict[str, Any], dict[str, Any]]:
     return True, "delivery_enabled", active_state, inhibit
 
 
+def notification_delivery_policy(
+    *,
+    is_weekend: bool,
+    weekly_summary_due: bool,
+    material_event: bool,
+    decision_changed: bool,
+    account_conflict: bool,
+    fundamental_weakening: bool,
+    first_material_baseline: bool,
+) -> tuple[bool, str]:
+    """Return event-driven eligibility independently of scheduler time."""
+
+    if is_weekend:
+        send = bool(material_event or decision_changed or account_conflict)
+        return (
+            send,
+            "weekend_material_change" if send else "weekend_no_material_change",
+        )
+    if weekly_summary_due:
+        return True, "friday_weekly_summary"
+    send = bool(
+        decision_changed
+        or material_event
+        or account_conflict
+        or fundamental_weakening
+        or first_material_baseline
+    )
+    return (
+        send,
+        "material_decision_change"
+        if send
+        else "unchanged_daily_email_suppressed",
+    )
+
+
 def publish_automation_alert(*, component: str, reason: str) -> None:
     """Persist one terminal blocker and notify the logged-in owner once.
 

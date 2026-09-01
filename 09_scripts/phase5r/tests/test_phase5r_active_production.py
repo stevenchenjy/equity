@@ -3,11 +3,13 @@ from __future__ import annotations
 import copy
 import unittest
 from datetime import datetime
+from pathlib import Path
 from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 
 from phase5r_active_config import load_active_config
+from phase5r_daily_common import notification_delivery_policy
 from track_phase5r_recommendation_outcomes import classification
 from refresh_phase5r_valuation_scenarios import selected_band, utc_now_text
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
@@ -18,6 +20,48 @@ from create_phase5r_c9_exact_action_plan import valuation_trim_review_required
 
 
 class ActiveProductionTests(unittest.TestCase):
+    def test_notification_policy_is_event_driven_and_clock_independent(self) -> None:
+        self.assertEqual(
+            notification_delivery_policy(
+                is_weekend=False,
+                weekly_summary_due=False,
+                material_event=False,
+                decision_changed=False,
+                account_conflict=False,
+                fundamental_weakening=False,
+                first_material_baseline=False,
+            ),
+            (False, "unchanged_daily_email_suppressed"),
+        )
+        self.assertEqual(
+            notification_delivery_policy(
+                is_weekend=False,
+                weekly_summary_due=False,
+                material_event=True,
+                decision_changed=False,
+                account_conflict=False,
+                fundamental_weakening=False,
+                first_material_baseline=False,
+            ),
+            (True, "material_decision_change"),
+        )
+        self.assertEqual(
+            notification_delivery_policy(
+                is_weekend=False,
+                weekly_summary_due=True,
+                material_event=False,
+                decision_changed=False,
+                account_conflict=False,
+                fundamental_weakening=False,
+                first_material_baseline=False,
+            ),
+            (True, "friday_weekly_summary"),
+        )
+        self.assertNotIn(
+            "before_daily_decision_time",
+            Path(decision_builder.__file__).read_text(encoding="utf-8"),
+        )
+
     def test_active_configuration_holds_cost_and_execution_boundaries(self) -> None:
         config = load_active_config()
         self.assertEqual(config["model_policy"]["status"], "removed_from_active_production")

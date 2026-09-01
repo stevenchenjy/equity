@@ -419,9 +419,22 @@ def pure_guard_tests(checks: list[dict[str, str]]) -> None:
         "claim, sent, and unknown all block same-date delivery",
     )
 
-    weekend_matrix = (
-        delivery_policy(
+    notification_matrix = (
+        not delivery_policy(
             is_weekend=False,
+            material_event=False,
+            decision_changed=False,
+            account_conflict=False,
+        )[0]
+        and delivery_policy(
+            is_weekend=False,
+            material_event=True,
+            decision_changed=False,
+            account_conflict=False,
+        )[0]
+        and delivery_policy(
+            is_weekend=False,
+            weekly_summary_due=True,
             material_event=False,
             decision_changed=False,
             account_conflict=False,
@@ -453,9 +466,9 @@ def pure_guard_tests(checks: list[dict[str, str]]) -> None:
     )
     add_check(
         checks,
-        "weekend.policy",
-        weekend_matrix,
-        "weekday daily; weekend only material/change/conflict",
+        "notification.policy",
+        notification_matrix,
+        "event-driven weekdays, Friday summary, and material weekends",
     )
 
     with tempfile.TemporaryDirectory() as directory:

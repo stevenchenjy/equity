@@ -39,6 +39,7 @@ from phase5r_daily_common import (
     iso_now,
     load_active_state,
     load_inhibit,
+    notification_delivery_policy,
     now_et,
     read_csv,
     read_json,
@@ -456,39 +457,29 @@ def main() -> int:
     prior_fingerprint = prior_state.get("decision_fingerprint", "")
     decision_changed = bool(prior_fingerprint) and decision_fingerprint != prior_fingerprint
     is_weekend = current.weekday() >= 5
+    weekly_summary_due = current.weekday() == 4
+    first_material_baseline = not prior_fingerprint and bool(
+        eligible_transitions
+        or eligible_new_candidates
+        or conflicts
+        or material_events
+        or weakening_tickers
+    )
     if bool(inhibit.get("active")):
         send_recommended = False
         send_reason = "maintenance_inhibit_active"
     elif cycle_date() < str(active_state.get("operational_from", "")):
         send_recommended = False
         send_reason = "before_operational_from"
-    elif current.strftime("%H:%M") < "18:30":
-        send_recommended = False
-        send_reason = "before_daily_decision_time"
-    elif is_weekend:
-        send_recommended = bool(material_events or decision_changed or conflicts)
-        send_reason = (
-            "weekend_material_change"
-            if send_recommended
-            else "weekend_no_material_change"
-        )
     else:
-        weekly_summary_due = current.weekday() == 4
-        first_material_baseline = not prior_fingerprint and bool(
-            eligible_transitions or eligible_new_candidates or conflicts or material_events or weakening_tickers
-        )
-        send_recommended = bool(
-            weekly_summary_due
-            or decision_changed
-            or material_events
-            or conflicts
-            or weakening_tickers
-            or first_material_baseline
-        )
-        send_reason = (
-            "friday_weekly_summary" if weekly_summary_due
-            else "material_decision_change" if send_recommended
-            else "unchanged_daily_email_suppressed"
+        send_recommended, send_reason = notification_delivery_policy(
+            is_weekend=is_weekend,
+            weekly_summary_due=weekly_summary_due,
+            material_event=bool(material_events),
+            decision_changed=decision_changed,
+            account_conflict=bool(conflicts),
+            fundamental_weakening=bool(weakening_tickers),
+            first_material_baseline=first_material_baseline,
         )
 
     review_reasons: list[str] = []
@@ -621,6 +612,14 @@ def main() -> int:
             "event_driven": active_config["notifications"]["event_driven"],
             "weekly_summary_weekday": active_config["notifications"]["weekly_summary_weekday"],
             "unchanged_daily_email": active_config["notifications"]["unchanged_daily_email"],
+        },
+        "notification_policy_evaluation": {
+            "is_weekend": is_weekend,
+            "weekly_summary_due": weekly_summary_due,
+            "prior_decision_present": bool(prior_fingerprint),
+            "first_material_baseline": first_material_baseline,
+            "long_term_fundamental_weakening": bool(weakening_tickers),
+            "scheduler_time_gate_applied": False,
         },
         "next_scheduled_review": next_review_date,
         "model_assistance": {

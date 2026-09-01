@@ -4,8 +4,10 @@ import json
 import os
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
+from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
 import phase5r_daily_common as common
@@ -105,6 +107,82 @@ class AutomationAlertTests(unittest.TestCase):
         self.assertTrue(payload["active"])
         self.assertEqual(payload["reason"], "scheduled_email_attempts_exhausted")
         self.assertEqual(notify.call_count, 1)
+
+
+class NotificationPolicySecurityTests(unittest.TestCase):
+    def test_pre_send_decision_remains_valid_at_scheduler_send_time(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-notification-") as directory:
+            root = Path(directory)
+            decision_path = root / "decision.json"
+            text_path = root / "brief.txt"
+            html_path = root / "brief.html"
+            text_path.write_text("Research brief\n", encoding="utf-8")
+            html_path.write_text("<p>Research brief</p>\n", encoding="utf-8")
+            decision = {
+                "cycle_date": "2026-09-01",
+                "automatic_action_allowed": False,
+                "decision_changed": False,
+                "material_events": [{"accession_number": "test"}],
+                "account_conflicts": [],
+                "eligible_action_review_candidates": [],
+                "eligible_new_position_review_candidates": [],
+                "fundamental_gate": {"weakening_tickers": []},
+                "notification_policy": {
+                    "event_driven": True,
+                    "weekly_summary_weekday": "friday",
+                    "unchanged_daily_email": False,
+                },
+                "notification_policy_evaluation": {
+                    "is_weekend": False,
+                    "weekly_summary_due": False,
+                    "prior_decision_present": True,
+                    "first_material_baseline": False,
+                    "long_term_fundamental_weakening": False,
+                    "scheduler_time_gate_applied": False,
+                },
+                "send_recommended": True,
+                "send_reason": "material_decision_change",
+                "boundaries": {
+                    "broker_connected": False,
+                    "broker_account_read": False,
+                    "order_code_created": False,
+                    "trade_placed": False,
+                },
+            }
+            decision_path.write_text(json.dumps(decision), encoding="utf-8")
+            config = {
+                "notifications": {
+                    "event_driven": True,
+                    "weekly_summary_weekday": "friday",
+                    "unchanged_daily_email": False,
+                }
+            }
+            with (
+                patch.object(sender, "DAILY_DECISION_JSON_PATH", decision_path),
+                patch.object(sender, "DAILY_BRIEF_TEXT_PATH", text_path),
+                patch.object(sender, "DAILY_BRIEF_HTML_PATH", html_path),
+                patch.object(sender, "cycle_date", return_value="2026-09-01"),
+                patch.object(
+                    sender,
+                    "now_et",
+                    return_value=datetime(
+                        2026,
+                        9,
+                        1,
+                        18,
+                        30,
+                        tzinfo=ZoneInfo("America/New_York"),
+                    ),
+                ),
+                patch.object(sender, "load_active_config", return_value=config),
+            ):
+                validated = sender.validate_decision()
+                self.assertTrue(validated["send_recommended"])
+                decision["send_recommended"] = False
+                decision["send_reason"] = "before_daily_decision_time"
+                decision_path.write_text(json.dumps(decision), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "delivery_policy"):
+                    sender.validate_decision()
 
 
 if __name__ == "__main__":
