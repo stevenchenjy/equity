@@ -14,7 +14,7 @@ import re
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from phase5r_daily_common import (
@@ -68,6 +68,10 @@ SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 SEC_COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 SEC_USER_AGENT_ENV = "PHASE5R_SEC_USER_AGENT"
 _SEC_USER_AGENT_MAX_CHARS = 512
+# The SEC submissions `recent` arrays can contain issuer-specific legacy rows
+# dating back decades. Daily evidence needs a bounded current window; ancient
+# malformed legacy metadata must not block current held-company coverage.
+SEC_DAILY_SUBMISSION_LOOKBACK_DAYS = 730
 RELEVANT_FORMS = {
     "10-K",
     "10-Q",
@@ -253,10 +257,19 @@ def load_ticker_map(user_agent: str, force: bool) -> dict[str, int]:
     return ticker_map
 
 
-def recent_filings(payload: dict[str, Any]) -> list[dict[str, str]]:
+def recent_filings(
+    payload: dict[str, Any],
+    *,
+    as_of: date | None = None,
+) -> list[dict[str, str]]:
     recent = payload.get("filings", {}).get("recent", {})
     accessions = recent.get("accessionNumber", [])
     rows: list[dict[str, str]] = []
+    oldest_in_scope = (
+        as_of - timedelta(days=SEC_DAILY_SUBMISSION_LOOKBACK_DAYS)
+        if as_of is not None
+        else None
+    )
     for index, accession in enumerate(accessions):
         def value(field: str) -> str:
             values = recent.get(field, [])
@@ -265,11 +278,21 @@ def recent_filings(payload: dict[str, Any]) -> list[dict[str, str]]:
         form = value("form")
         if form not in RELEVANT_FORMS:
             continue
+        filing_date = value("filingDate")
+        if oldest_in_scope is not None:
+            try:
+                filing_day = date.fromisoformat(filing_date)
+            except ValueError:
+                # Keep malformed in-scope-looking metadata so the acceptance
+                # validator fails closed instead of silently discarding it.
+                filing_day = None
+            if filing_day is not None and filing_day < oldest_in_scope:
+                continue
         rows.append(
             {
                 "accession_number": str(accession).strip(),
                 "form": form,
-                "filing_date": value("filingDate"),
+                "filing_date": filing_date,
                 "accepted_at": normalize_acceptance_timestamp(
                     value("acceptanceDateTime")
                 ),
@@ -806,7 +829,10 @@ def main() -> int:
             continue
 
         try:
-            filings = recent_filings(payload)
+            filings = recent_filings(
+                payload,
+                as_of=date.fromisoformat(cycle_date()),
+            )
             submission_url = SEC_SUBMISSIONS_URL.format(cik=cik)
             entity_by_ticker[ticker] = current_submission_entity_name(
                 payload,

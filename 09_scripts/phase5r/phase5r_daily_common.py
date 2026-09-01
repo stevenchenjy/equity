@@ -10,6 +10,7 @@ import hashlib
 import json
 import os
 import stat
+import subprocess
 import tempfile
 import time as time_module
 from contextlib import AbstractContextManager
@@ -110,6 +111,12 @@ DAILY_SCHEDULER_STATE_PATH = (
 )
 DAILY_RUN_LOG_PATH = (
     ROOT / "00_project_control" / "run_logs" / "phase5r_daily_run_log.csv"
+)
+AUTOMATION_ALERT_PATH = (
+    ROOT
+    / "00_project_control"
+    / "run_logs"
+    / "phase5r_automation_alert.local.json"
 )
 
 EMAIL_CONFIG_PATH = (
@@ -386,6 +393,80 @@ def delivery_guard() -> tuple[bool, str, dict[str, Any], dict[str, Any]]:
     if now_et().strftime("%H:%M") < "18:30":
         return False, "before_daily_decision_time", active_state, inhibit
     return True, "delivery_enabled", active_state, inhibit
+
+
+def publish_automation_alert(*, component: str, reason: str) -> None:
+    """Persist one terminal blocker and notify the logged-in owner once.
+
+    The Notification Center text is fixed so neither provider output nor a
+    secret can cross this boundary. The JSON artifact is the canonical alert;
+    a best-effort local notification failure never changes scheduler control
+    flow.
+    """
+
+    try:
+        prior = read_json(AUTOMATION_ALERT_PATH, {})
+    except (OSError, TypeError, ValueError):
+        prior = {}
+    already_notified = bool(
+        prior.get("active") is True
+        and prior.get("cycle_date") == cycle_date()
+    )
+    atomic_write_json(
+        AUTOMATION_ALERT_PATH,
+        {
+            "schema_version": "phase5r_automation_alert_v1",
+            "active": True,
+            "cycle_date": cycle_date(),
+            "created_at": prior.get("created_at", iso_now())
+            if already_notified
+            else iso_now(),
+            "updated_at": iso_now(),
+            "component": component,
+            "reason": reason,
+            "email_attempted": False,
+            "broker_connected": False,
+            "order_code_created": False,
+        },
+    )
+    if already_notified:
+        return
+    try:
+        subprocess.run(
+            [
+                "/usr/bin/osascript",
+                "-e",
+                'display notification "Today\'s scheduled research email is blocked. Check the Phase 5R current status." with title "Phase 5R needs attention"',
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+
+def clear_automation_alert(*, component: str) -> None:
+    """Clear any prior terminal alert after a completed daily decision."""
+
+    try:
+        prior = read_json(AUTOMATION_ALERT_PATH, {})
+    except (OSError, TypeError, ValueError):
+        prior = {}
+    if prior.get("active") is not True:
+        return
+    atomic_write_json(
+        AUTOMATION_ALERT_PATH,
+        {
+            **prior,
+            "active": False,
+            "cleared_at": iso_now(),
+            "updated_at": iso_now(),
+            "cleared_by": component,
+        },
+    )
 
 
 def unresolved_execution_conflicts() -> list[str]:

@@ -27,6 +27,14 @@ class ActiveProductionTests(unittest.TestCase):
         self.assertEqual(config["model_policy"]["actual_calls"], 0)
         self.assertFalse(config["boundaries"]["broker_connected"])
         self.assertFalse(config["boundaries"]["automatic_action_allowed"])
+        self.assertEqual(
+            tuple(config["notifications"]["post_close_refresh_retry_slots_et"]),
+            refresh_scheduler.POST_CLOSE_MARKET_SLOTS,
+        )
+        self.assertEqual(
+            config["notifications"]["send_after_et"],
+            "18:30",
+        )
 
     def test_recommendation_labels_are_explicit(self) -> None:
         self.assertEqual(classification("trim_specific_shares_review"), "TRIM")
@@ -91,6 +99,32 @@ class ActiveProductionTests(unittest.TestCase):
             writes[-1]["current_status_update"]["outcome"],
             "passed",
         )
+
+    def test_degraded_refresh_returns_nonzero_for_scheduler_recovery(self) -> None:
+        def fake_run_step(name: str, script: str, allowed: bool, **_: object) -> dict:
+            failed = name == "market_refresh"
+            return {
+                "name": name,
+                "script": script,
+                "exit_code": 1 if failed else 0,
+                "allowed_to_fail": allowed,
+                "outcome": "failed" if failed else "passed",
+                "result_code": "child_nonzero_exit" if failed else "child_completed",
+            }
+
+        with (
+            patch.object(daily_refresh, "load_active_state"),
+            patch.object(daily_refresh, "load_inhibit"),
+            patch.object(daily_refresh, "log_daily_run"),
+            patch.object(daily_refresh, "run_step", side_effect=fake_run_step),
+            patch.object(daily_refresh, "atomic_write_json"),
+        ):
+            result = daily_refresh.run_refresh(
+                no_lock=True,
+                market_snapshot_mode=daily_refresh.MARKET_SNAPSHOT_REUSE,
+            )
+
+        self.assertEqual(result, 1)
 
     def test_historical_backfill_is_not_a_current_material_event(self) -> None:
         rows = [

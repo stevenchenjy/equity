@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import smtplib
 import ssl
+import stat
 from email.message import EmailMessage
 from typing import Any, Callable
 
@@ -79,13 +81,34 @@ def safe_email(value: Any, field: str) -> str:
 
 def load_config() -> dict[str, Any]:
     """Open SMTP configuration only after eligibility and dedupe gates pass."""
-    if not EMAIL_CONFIG_PATH.exists():
-        raise ConfigError("smtp_config_missing")
+    if not hasattr(os, "O_NOFOLLOW"):
+        raise ConfigError("smtp_config_secure_open_unavailable")
+    descriptor = -1
     try:
-        with EMAIL_CONFIG_PATH.open("r", encoding="utf-8") as handle:
+        descriptor = os.open(
+            EMAIL_CONFIG_PATH,
+            os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0),
+        )
+        metadata = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(metadata.st_mode)
+            or metadata.st_nlink != 1
+            or metadata.st_uid != os.getuid()
+            or metadata.st_mode & 0o077
+        ):
+            raise ConfigError("smtp_config_permissions_invalid")
+        with os.fdopen(descriptor, "r", encoding="utf-8") as handle:
+            descriptor = -1
             config = json.load(handle)
+    except FileNotFoundError as exc:
+        raise ConfigError("smtp_config_missing") from exc
+    except ConfigError:
+        raise
     except (OSError, json.JSONDecodeError) as exc:
         raise ConfigError("smtp_config_unreadable") from exc
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
     if not isinstance(config, dict) or REQUIRED_CONFIG_KEYS - set(config):
         raise ConfigError("smtp_config_fields_missing")
     if config.get("smtp_host") != "smtp.gmail.com" or config.get("smtp_port") != 587:

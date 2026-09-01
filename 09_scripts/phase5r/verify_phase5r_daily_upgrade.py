@@ -14,6 +14,7 @@ import hashlib
 import os
 import plistlib
 import re
+import stat
 import subprocess
 import tempfile
 from pathlib import Path
@@ -125,6 +126,21 @@ def smtp_stat_only() -> tuple[int, int, int] | str:
     except FileNotFoundError:
         return "absent"
     return (metadata.st_size, metadata.st_mtime_ns, metadata.st_ctime_ns)
+
+
+def smtp_owner_private() -> bool:
+    """Validate metadata only; never open the SMTP configuration."""
+
+    try:
+        metadata = EMAIL_CONFIG_PATH.lstat()
+    except FileNotFoundError:
+        return False
+    return bool(
+        stat.S_ISREG(metadata.st_mode)
+        and metadata.st_nlink == 1
+        and metadata.st_uid == os.getuid()
+        and metadata.st_mode & 0o077 == 0
+    )
 
 
 def loaded(label: str) -> bool:
@@ -311,13 +327,24 @@ def source_checks(checks: list[dict[str, str]]) -> None:
         target = script_dir / name
         tree = ast.parse(target.read_text(encoding="utf-8"), filename=str(target))
         for node in ast.walk(tree):
-            if (
+            path_open = (
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Attribute)
                 and node.func.attr in {"open", "read_text", "read_bytes"}
                 and isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "EMAIL_CONFIG_PATH"
-            ):
+            )
+            secure_os_open = (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "os"
+                and node.func.attr == "open"
+                and bool(node.args)
+                and isinstance(node.args[0], ast.Name)
+                and node.args[0].id == "EMAIL_CONFIG_PATH"
+            )
+            if path_open or secure_os_open:
                 config_openers.append(name)
     add_check(
         checks,
@@ -514,6 +541,14 @@ def main() -> int:
         and active.get("manual_execution_only") == "yes"
     )
     add_check(checks, "active.state", active_ok, "daily workflow and safety boundaries")
+    smtp_permissions_ok = smtp_owner_private()
+    add_check(
+        checks,
+        "smtp.permissions",
+        smtp_permissions_ok
+        or (verification_mode == "protected" and smtp_before == "absent"),
+        "SMTP config absent in protected setup or owner-private regular file",
+    )
     if verification_mode == "protected":
         inhibit_ok = inhibit.get("active") is True and inhibit.get("allowed_pipeline") == "none"
     else:

@@ -6,6 +6,7 @@ import os
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -155,6 +156,31 @@ class SecAcceptanceTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(
             rows[0]["accepted_at"], "2026-07-24T20:30:45.000+00:00"
+        )
+
+    def test_daily_parser_excludes_out_of_window_legacy_metadata(self) -> None:
+        payload = {
+            "filings": {
+                "recent": {
+                    "accessionNumber": [
+                        "0000000001-26-000001",
+                        "9999999997-02-042499",
+                    ],
+                    "form": ["10-Q", "6-K"],
+                    "filingDate": ["2026-07-24", "2002-07-03"],
+                    "acceptanceDateTime": [
+                        "2026-07-24T20:30:45.000Z",
+                        "2002-07-23T12:35:43.000Z",
+                    ],
+                    "items": ["", ""],
+                    "primaryDocument": ["test.htm", "legacy.htm"],
+                }
+            }
+        }
+        rows = recent_filings(payload, as_of=date(2026, 9, 1))
+        self.assertEqual(
+            [row["accession_number"] for row in rows],
+            ["0000000001-26-000001"],
         )
 
 

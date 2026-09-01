@@ -9,7 +9,9 @@ import subprocess
 import sys
 from datetime import datetime
 
+from phase5r_active_config import load_active_config
 from phase5r_daily_common import (
+    DAILY_REFRESH_STATE_PATH,
     DAILY_SCHEDULER_STATE_PATH,
     ROOT,
     RUNTIME_EXPECTED_CYCLE_DATE_ENV,
@@ -17,9 +19,11 @@ from phase5r_daily_common import (
     cycle_date,
     iso_now,
     is_us_market_session_date,
+    last_completed_market_session,
     load_active_state,
     load_inhibit,
     now_et,
+    publish_automation_alert,
     read_json,
 )
 
@@ -29,9 +33,20 @@ SEC_EVIDENCE_REFRESH = ROOT / "09_scripts" / "phase5r" / "refresh_phase5r_daily_
 MASSIVE_B2_RUNNER = (
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_b2_full_universe_market_data.py"
 )
-WEEKDAY_SLOTS = ("08:15", "12:30", "16:15", "17:45")
+WEEKDAY_SLOTS = (
+    "08:15",
+    "12:30",
+    "16:15",
+    "17:45",
+    "18:15",
+    "18:45",
+    "19:15",
+)
 WEEKEND_SLOTS = ("12:00",)
-POST_CLOSE_MARKET_SLOT = "17:45"
+POST_CLOSE_MARKET_SLOTS = ("17:45", "18:15", "18:45", "19:15")
+# Retained as the first post-close slot for stable external/test references.
+POST_CLOSE_MARKET_SLOT = POST_CLOSE_MARKET_SLOTS[0]
+LAST_POST_CLOSE_MARKET_SLOT = POST_CLOSE_MARKET_SLOTS[-1]
 MARKET_SNAPSHOT_FETCH = "fetch"
 MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
 # Equivalent no-output presence probe for the externally configured Massive
@@ -61,7 +76,8 @@ MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
 MARKET_REFRESH_TIMEOUT_SECONDS = 480
 # The post-close daily refresh can contain the bounded, paced 29-request market
 # import. Its parent timeout exceeds that child budget and leaves a finite
-# allowance for the existing local refresh steps; cadence remains 17:45 ET.
+# allowance for the existing local refresh steps. Retry slots are separate
+# launchd cycles and stop as soon as a full current refresh passes.
 DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 900
 
 
@@ -71,15 +87,78 @@ def due_slots(current: datetime) -> list[str]:
     return [slot for slot in slots if slot <= current_clock]
 
 
-def market_snapshot_mode(current: datetime, due: list[str]) -> str:
-    """Fetch only once after a regular-session close; otherwise reuse locally."""
+def market_snapshot_mode(
+    current: datetime,
+    due: list[str],
+    *,
+    market_ready: bool = False,
+) -> str:
+    """Fetch at bounded post-close slots until the current close is ready."""
 
     if (
-        POST_CLOSE_MARKET_SLOT in due
+        not market_ready
+        and any(slot in due for slot in POST_CLOSE_MARKET_SLOTS)
         and is_us_market_session_date(current.date())
     ):
         return MARKET_SNAPSHOT_FETCH
     return MARKET_SNAPSHOT_REUSE
+
+
+def _refresh_state_matches_attempt(
+    refresh_state: object,
+    *,
+    expected_cycle_date: str,
+    expected_market_session: str,
+    not_before: str,
+) -> bool:
+    if not isinstance(refresh_state, dict):
+        return False
+    if (
+        refresh_state.get("cycle_date") != expected_cycle_date
+        or refresh_state.get("expected_market_session")
+        != expected_market_session
+    ):
+        return False
+    try:
+        state_started = datetime.fromisoformat(
+            str(refresh_state.get("started_at", "")).replace("Z", "+00:00")
+        )
+        attempt_started = datetime.fromisoformat(not_before.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if (
+        state_started.tzinfo is None
+        or attempt_started.tzinfo is None
+        or state_started < attempt_started
+    ):
+        return False
+    return True
+
+
+def _market_step_passed(
+    refresh_state: object,
+    *,
+    expected_cycle_date: str,
+    expected_market_session: str,
+    not_before: str,
+) -> bool:
+    if not _refresh_state_matches_attempt(
+        refresh_state,
+        expected_cycle_date=expected_cycle_date,
+        expected_market_session=expected_market_session,
+        not_before=not_before,
+    ):
+        return False
+    assert isinstance(refresh_state, dict)
+    steps = refresh_state.get("steps")
+    if not isinstance(steps, list):
+        return False
+    return any(
+        isinstance(row, dict)
+        and row.get("name") == "market_refresh"
+        and row.get("exit_code") == 0
+        for row in steps
+    )
 
 
 def _massive_auth_presence_probe_exit_code() -> int:
@@ -172,6 +251,13 @@ def main() -> int:
     active = load_active_state()
     inhibit = load_inhibit()
     if args.safe_check:
+        configured_slots = tuple(
+            load_active_config()["notifications"][
+                "post_close_refresh_retry_slots_et"
+            ]
+        )
+        if configured_slots != POST_CLOSE_MARKET_SLOTS:
+            raise RuntimeError("post-close refresh cadence configuration drift")
         required = (REFRESH_PIPELINE, SEC_EVIDENCE_REFRESH, MASSIVE_B2_RUNNER)
         missing = [path.name for path in required if not path.is_file()]
         if missing:
@@ -210,18 +296,43 @@ def main() -> int:
     if not pending:
         print("scheduler_action=none reason=refresh_slots_already_completed")
         return 0
-    snapshot_mode = market_snapshot_mode(current, pending)
+    required_market_session = last_completed_market_session(current).isoformat()
+    market_ready = bool(
+        date_state.get("post_close_market_ready")
+        and date_state.get("post_close_market_session")
+        == required_market_session
+    )
+    snapshot_mode = market_snapshot_mode(
+        current,
+        pending,
+        market_ready=market_ready,
+    )
     refresh_started_at = iso_now()
+    # Reserve every currently due slot before the child. A failed child waits
+    # for the next configured slot instead of running every 15 minutes, while
+    # the later post-close slots provide bounded recovery opportunities.
+    completed.update(pending)
+    date_state["refresh_slots_completed"] = sorted(completed)
+    market_attempt: dict[str, object] | None = None
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
-        # Reserve the one post-close source attempt before starting the child.
-        # If this process or a later deterministic step fails, a future 15-minute
-        # tick may still run local reuse work but cannot repeat the Massive call.
+        attempt_slots = [
+            slot for slot in pending if slot in POST_CLOSE_MARKET_SLOTS
+        ]
+        if not attempt_slots:
+            raise RuntimeError("post-close market fetch has no retry slot")
+        market_attempt = {
+            "slot": max(attempt_slots),
+            "reserved_at": refresh_started_at,
+            "status": "reserved_before_child",
+        }
+        attempts = date_state.setdefault("post_close_market_attempts", [])
+        if not isinstance(attempts, list):
+            raise RuntimeError("post-close market attempt state is invalid")
+        attempts.append(market_attempt)
         date_state["post_close_market_attempt_reserved_at"] = refresh_started_at
         date_state["post_close_market_attempt_status"] = "reserved_before_child"
-        completed.add(POST_CLOSE_MARKET_SLOT)
-        date_state["refresh_slots_completed"] = sorted(completed)
-        state["updated_at"] = refresh_started_at
-        atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
+    state["updated_at"] = refresh_started_at
+    atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
     try:
         completed_process = subprocess.run(
             [
@@ -251,13 +362,58 @@ def main() -> int:
     date_state["refresh_last_attempt_at"] = iso_now()
     date_state["refresh_last_exit_code"] = completed_process.returncode
     date_state["market_snapshot_mode"] = snapshot_mode
+    refresh_state = read_json(DAILY_REFRESH_STATE_PATH, {})
+    market_passed = _market_step_passed(
+        refresh_state,
+        expected_cycle_date=cycle_date(),
+        expected_market_session=required_market_session,
+        not_before=refresh_started_at,
+    )
+    if market_passed:
+        date_state["post_close_market_ready"] = True
+        date_state["post_close_market_session"] = refresh_state.get(
+            "expected_market_session", ""
+        )
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
         date_state["post_close_market_attempt_status"] = "child_returned"
         date_state["post_close_market_attempt_exit_code"] = (
             completed_process.returncode
         )
-    if completed_process.returncode == 0:
-        date_state["refresh_slots_completed"] = sorted(completed | set(due))
+        if market_attempt is not None:
+            market_attempt.update(
+                {
+                    "completed_at": iso_now(),
+                    "status": "market_ready" if market_passed else "market_not_ready",
+                    "pipeline_exit_code": completed_process.returncode,
+                }
+            )
+    refresh_fully_passed = bool(
+        completed_process.returncode == 0
+        and _refresh_state_matches_attempt(
+            refresh_state,
+            expected_cycle_date=cycle_date(),
+            expected_market_session=required_market_session,
+            not_before=refresh_started_at,
+        )
+        and isinstance(refresh_state, dict)
+        and refresh_state.get("outcome") == "passed"
+    )
+    date_state["refresh_fully_passed"] = refresh_fully_passed
+    if refresh_fully_passed:
+        date_state["refresh_last_passed_at"] = iso_now()
+        if any(slot in due for slot in POST_CLOSE_MARKET_SLOTS):
+            # No later retry is useful once the current completed close and all
+            # deterministic evidence gates have passed.
+            completed.update(POST_CLOSE_MARKET_SLOTS)
+    date_state["refresh_slots_completed"] = sorted(completed)
+    if (
+        not refresh_fully_passed
+        and LAST_POST_CLOSE_MARKET_SLOT in pending
+    ):
+        publish_automation_alert(
+            component="daily_refresh",
+            reason="daily_refresh_retry_window_exhausted",
+        )
     state["updated_at"] = iso_now()
     for old_date in sorted(state["dates"])[:-14]:
         del state["dates"][old_date]

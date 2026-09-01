@@ -19,10 +19,13 @@ from phase5r_daily_common import (
     ROOT,
     ExclusiveFileLock,
     atomic_write_json,
+    cycle_date,
     iso_now,
+    last_completed_market_session,
     load_active_state,
     load_inhibit,
     log_daily_run,
+    now_et,
 )
 
 
@@ -162,6 +165,8 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         raise ValueError("invalid market snapshot mode")
     lock_context = nullcontext() if no_lock else ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH)
     started_at = iso_now()
+    refresh_cycle_date = cycle_date()
+    expected_market_session = last_completed_market_session(now_et()).isoformat()
     with lock_context:
         steps = [
             run_step(*spec, market_snapshot_mode=market_snapshot_mode)
@@ -188,6 +193,8 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         outcome = "failed"
     state = {
         "schema_version": "phase5r_daily_refresh_state_v1",
+        "cycle_date": refresh_cycle_date,
+        "expected_market_session": expected_market_session,
         "started_at": started_at,
         "completed_at": iso_now(),
         "outcome": outcome,
@@ -230,7 +237,10 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         f"hard_failures={','.join(hard_failures) or 'none'} "
         f"soft_failures={','.join(soft_failures) or 'none'}"
     )
-    return 0 if decision_completed else 1
+    # A degraded decision remains a useful fail-closed research artifact, but
+    # it is not scheduler success and can never authorize email. Returning
+    # nonzero lets bounded later slots recover transient provider failures.
+    return 0 if outcome == "passed" else 1
 
 
 def main() -> int:

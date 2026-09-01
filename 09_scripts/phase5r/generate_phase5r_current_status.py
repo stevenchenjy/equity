@@ -10,6 +10,7 @@ from typing import Any
 from phase5r_active_config import ACTIVE_CONFIG_PATH, load_active_config
 from phase5r_daily_common import (
     ACCOUNT_STATE_PATH,
+    AUTOMATION_ALERT_PATH,
     DAILY_DECISION_JSON_PATH,
     DAILY_REFRESH_STATE_PATH,
     EVIDENCE_STATUS_PATH,
@@ -46,6 +47,14 @@ def main() -> int:
     evidence = read_json(EVIDENCE_STATUS_PATH, {})
     decision = read_json(DAILY_DECISION_JSON_PATH, {})
     account = read_json(ACCOUNT_STATE_PATH, {})
+    try:
+        automation_alert = read_json(AUTOMATION_ALERT_PATH, {})
+    except (OSError, TypeError, ValueError):
+        automation_alert = {
+            "active": True,
+            "component": "status_generator",
+            "reason": "automation_alert_state_invalid",
+        }
     valuation = read_json(VALUATION_PATH, {"records": []})
     market_rows = read_csv(MARKET_SNAPSHOT_PATH)
     valid_market = [row for row in market_rows if row.get("data_quality_label") in {"ok", "partial"}]
@@ -57,6 +66,10 @@ def main() -> int:
         blockers.append("current_market_snapshot_invalid")
     if evidence.get("scan_status") != "ok":
         blockers.append(str(evidence.get("reason") or "official_evidence_refresh_not_ok"))
+    if automation_alert.get("active") is True:
+        blockers.append(
+            str(automation_alert.get("reason") or "scheduled_automation_blocked")
+        )
     completed_valuations = sum(
         row.get("status") == "complete" for row in valuation.get("records", [])
         if isinstance(row, dict)
@@ -111,6 +124,12 @@ def main() -> int:
         "outcomes": {
             "recommendation_snapshots": jsonl_count(SNAPSHOT_PATH),
             "evaluated_horizon_rows": len(read_csv(OUTCOME_PATH)),
+        },
+        "automation_alert": {
+            "active": automation_alert.get("active", False),
+            "component": automation_alert.get("component", ""),
+            "reason": automation_alert.get("reason", ""),
+            "updated_at": automation_alert.get("updated_at", ""),
         },
         "model": {
             "status": config["model_policy"]["status"],
