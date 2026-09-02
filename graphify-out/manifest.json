@@ -75,8 +75,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_b2_full_universe_data_policy.md": {
-    "mtime": 1788309178.1590025,
-    "ast_hash": "317ec967c872b32c440191cc15022a97",
+    "mtime": 1788309323.2747164,
+    "ast_hash": "7f3def496d8d52f7623b041de6c9263e",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c8_active_state_policy.md": {
@@ -90,8 +90,8 @@
     "semantic_hash": ""
   },
   "00_project_control/project_skill/skills/early-public-equity-research/SKILL.md": {
-    "mtime": 1783133289.3826625,
-    "ast_hash": "0ae50e9e83c1eadd19cdf854270599fb",
+    "mtime": 1788311317.9799783,
+    "ast_hash": "764c5e45f77757b8f302492d000b94c1",
     "semantic_hash": ""
   },
   "00_project_control/project_skill/skills/early-public-equity-research/references/memo_rubric.md": {
@@ -115,8 +115,8 @@
     "semantic_hash": ""
   },
   "00_project_control/project_skill/skills/early-public-equity-research/references/workflow.md": {
-    "mtime": 1783133289.383246,
-    "ast_hash": "c6f3cdb6fcf70c2f5f899a294bdd3965",
+    "mtime": 1788311317.980244,
+    "ast_hash": "bcd4c6c73969d0bfa289074f7f3074b7",
     "semantic_hash": ""
   },
   "01_policies/brokerage_boundary.md": {
@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "01_policies/risk_policy.md": {
-    "mtime": 1783131483.973604,
-    "ast_hash": "c9b54de462ec042937c6ee7c19f518ca",
+    "mtime": 1788311317.9774802,
+    "ast_hash": "3a5772c28e45b3f561a0a5f6cbd9cae7",
     "semantic_hash": ""
   },
   "01_policies/source_policy.md": {
@@ -150,18 +150,18 @@
     "semantic_hash": ""
   },
   "AGENTS.md": {
-    "mtime": 1783652568.5979922,
-    "ast_hash": "bbe65ec2bf29ad8850876ad18ee7ca95",
+    "mtime": 1788311317.9768505,
+    "ast_hash": "6c4fd65e79c928ba169b53f9f224b297",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788309146.3746848,
-    "ast_hash": "056287d57655843f279803f07e861bb6",
+    "mtime": 1788311317.9759867,
+    "ast_hash": "f2ff1ab7ad243d089a0822824c0a304e",
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/SKILL.md": {
-    "mtime": 1783133289.3826625,
-    "ast_hash": "0ae50e9e83c1eadd19cdf854270599fb",
+    "mtime": 1788311317.97946,
+    "ast_hash": "764c5e45f77757b8f302492d000b94c1",
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/references/memo_rubric.md": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "skills/early-public-equity-research/references/workflow.md": {
-    "mtime": 1783133289.383246,
-    "ast_hash": "c6f3cdb6fcf70c2f5f899a294bdd3965",
+    "mtime": 1788311317.9797175,
+    "ast_hash": "bcd4c6c73969d0bfa289074f7f3074b7",
     "semantic_hash": ""
   },
   "07_automation/scheduler/clear_phase5r_c9_maintenance_inhibit.sh": {
@@ -205,43 +205,43 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_account_state.py": {
-    "mtime": 1784512667.2355466,
-    "ast_hash": "d0b9c89629b0927cea59b49ef19de017",
+    "mtime": 1788310961.0395246,
+    "ast_hash": "b4a0137320eef61b2b18bad0163c4619",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_cash_deployment_plan.py": {
-    "mtime": 1784865803.2164583,
-    "ast_hash": "a3d8aabf0e9b50fd4263fcda44894ed6",
+    "mtime": 1788311073.8655772,
+    "ast_hash": "aa0fd16fc909e254d768e2b519078932",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py": {
-    "mtime": 1788196018.9923244,
-    "ast_hash": "58b6dd5e07891de66d9f782a035d93d3",
+    "mtime": 1788311087.8892608,
+    "ast_hash": "8c57b1929c328f225db407f55ffb6784",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_c9_common.py": {
-    "mtime": 1788189947.8409739,
-    "ast_hash": "3b39b8c3af319cf28c0685578a9e867f",
+    "mtime": 1788310961.0388432,
+    "ast_hash": "0172699096601d878882c343c2a7acaf",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/regenerate_phase5r_c9_portfolio_outputs.py": {
-    "mtime": 1788190589.2622983,
-    "ast_hash": "27422e5831be4adf7ab29dbdb2999823",
+    "mtime": 1788311166.061594,
+    "ast_hash": "92d8e24738f5a7b7899800ffb7a1d98f",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_account_state_policy.md": {
-    "mtime": 1788203431.3863432,
-    "ast_hash": "785a05221e671b0ccc908c4ea9b17b16",
+    "mtime": 1788311317.9783306,
+    "ast_hash": "de1d2ddaeaa8c3a4514224c73810840a",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_action_threshold_policy.md": {
-    "mtime": 1788203431.3869324,
-    "ast_hash": "12386a5f9719fa51c957efc5fc50bfee",
+    "mtime": 1788311317.9790032,
+    "ast_hash": "77f38fd20b34d446cab2a91828cff15d",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_core_allocation_policy.md": {
-    "mtime": 1788203431.3874886,
-    "ast_hash": "00d3de26b82dc6492129e8de0aa22f73",
+    "mtime": 1788311317.9786868,
+    "ast_hash": "de31d216badf5f6bd4218ac9eb258b8f",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_dynamic_weight_policy.md": {
@@ -250,8 +250,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9b_price_aware_action_plan.py": {
-    "mtime": 1784865656.0328307,
-    "ast_hash": "aa3006cd62e9c3bd704409059f2faedd",
+    "mtime": 1788311092.18268,
+    "ast_hash": "631f4995ba9bbf323dbefdeb5b165ad5",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_c9b_common.py": {
@@ -305,13 +305,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py": {
-    "mtime": 1788308917.0494702,
-    "ast_hash": "f546ab29c82cbe386a854d6ff242f1e3",
+    "mtime": 1788311212.8956623,
+    "ast_hash": "6f9f18682d7861add04db2a2341a2480",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_daily_common.py": {
-    "mtime": 1788309259.192433,
-    "ast_hash": "505826034cc1db23555ec752c688b940",
+    "mtime": 1788311212.8950427,
+    "ast_hash": "a9fcd71b5c8b8fcca8cec6f3efb79a86",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_daily_evidence.py": {
@@ -325,8 +325,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_refresh.py": {
-    "mtime": 1788308793.9909353,
-    "ast_hash": "cfc0ccd964734ecb12c6084f82a74ef1",
+    "mtime": 1788311287.5659075,
+    "ast_hash": "526e3bf1576d922b904304216721f491",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py": {
@@ -570,8 +570,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_active_production_config.json": {
-    "mtime": 1788308864.146613,
-    "ast_hash": "25b9c241fe131a93b281ee4706c096eb",
+    "mtime": 1788310946.324215,
+    "ast_hash": "e9fcddb25c8e57cc87eca4da89a10f02",
     "semantic_hash": ""
   },
   "01_policies/phase5r_valuation_scenario_policy.json": {
@@ -605,13 +605,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_active_production.py": {
-    "mtime": 1788309065.9777675,
-    "ast_hash": "c17231dc652455e3b6ee2ab94518ceba",
+    "mtime": 1788311345.6242335,
+    "ast_hash": "9a385e13072002b1202a32b8f1479996",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/track_phase5r_recommendation_outcomes.py": {
-    "mtime": 1788190855.1143067,
-    "ast_hash": "2cad1332a7c0d28ca8c545200f43006a",
+    "mtime": 1788311194.0612211,
+    "ast_hash": "dd6a605c1609356384075c9bd8c85b0c",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/update_phase5r_manual_account.py": {
@@ -657,6 +657,21 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v7.json": {
     "mtime": 1788292239.105095,
     "ast_hash": "42501f9979215f6e2bff81079902e924",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v8.json": {
+    "mtime": 1788309407.3861868,
+    "ast_hash": "547e7fc912cd81a9c56525efbe8780c5",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/create_phase5r_capital_allocation_validation.py": {
+    "mtime": 1788311284.787394,
+    "ast_hash": "09e1b3a4bb8cb953410f60759407e872",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_portfolio_construction.py": {
+    "mtime": 1788310946.3231797,
+    "ast_hash": "3c08054e8323b42c8924eff9ece5b786",
     "semantic_hash": ""
   }
 }

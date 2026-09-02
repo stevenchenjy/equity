@@ -28,6 +28,8 @@ from phase5r_daily_common import (
     MARKET_SNAPSHOT_PATH,
     NEW_CANDIDATE_PATH,
     POSITION_RECOMMENDATION_PATH,
+    PORTFOLIO_SUMMARY_PATH,
+    POST_ACTION_PORTFOLIO_PATH,
     RECONCILIATION_PATH,
     ROOT,
     atomic_write_json,
@@ -265,6 +267,19 @@ def plain_action(action: str) -> str:
     return "继续观察"
 
 
+def valuation_display(row: dict[str, Any]) -> str:
+    if row.get("valuation_applicability") == "not_applicable_broad_market_etf":
+        return "不适用（宽基 ETF 使用核心配置口径）"
+    values = [
+        row.get("valuation_bear_price", ""),
+        row.get("valuation_base_price", ""),
+        row.get("valuation_bull_price", ""),
+    ]
+    if all(str(value).strip() for value in values):
+        return "$" + "/$".join(str(value) for value in values)
+    return "证据不足"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -353,7 +368,10 @@ def main() -> int:
     )
     proposed_new_candidates = [
         row for row in candidate_recommendations
-        if row.get("eligibility_label") == "eligible_buy_review"
+        if row.get("eligibility_label") in {
+            "eligible_buy_review",
+            "eligible_core_starter_review",
+        }
     ]
     new_candidate_fingerprint = canonical_sha256([
         {
@@ -522,12 +540,15 @@ def main() -> int:
                 "confidence": row.get("recommendation_confidence", ""),
                 "human_confirmation_required": "yes" if ticker in eligible_candidate_tickers else "no",
                 "current_price": row.get("current_price", ""),
+                "valuation_applicability": row.get("valuation_applicability", ""),
                 "valuation_bear_price": row.get("valuation_bear_price", ""),
                 "valuation_base_price": row.get("valuation_base_price", ""),
                 "valuation_bull_price": row.get("valuation_bull_price", ""),
                 "maximum_review_price": row.get("maximum_review_price", ""),
                 "suggested_whole_shares": row.get("suggested_whole_shares", ""),
                 "suggested_position_pct": row.get("suggested_position_pct", ""),
+                "sizing_tier": row.get("sizing_tier", ""),
+                "gate_blockers": row.get("gate_blockers", ""),
                 "holding_horizon": row.get("holding_horizon", ""),
                 "invalidation": row.get("invalidation_condition", ""),
                 "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),
@@ -541,6 +562,23 @@ def main() -> int:
         days_to_friday = 7
     next_review_date = (current.date() + timedelta(days=days_to_friday)).isoformat()
 
+    portfolio_summaries = read_csv(PORTFOLIO_SUMMARY_PATH)
+    if len(portfolio_summaries) != 1:
+        raise RuntimeError("dynamic portfolio summary must contain one row")
+    portfolio_summary = portfolio_summaries[0]
+    post_action_rows = read_csv(POST_ACTION_PORTFOLIO_PATH)
+    post_action = next(
+        (
+            row for row in post_action_rows
+            if row.get("scenario") == "after_position_and_core_reviews"
+        ),
+        {},
+    )
+    proposed_deployment = sum(
+        float(row.get("current_price", 0) or 0)
+        * float(row.get("suggested_whole_shares", 0) or 0)
+        for row in proposed_new_candidates
+    )
     decision = {
         "schema_version": "phase5r_daily_decision_v1",
         "generated_at": iso_now(),
@@ -600,12 +638,25 @@ def main() -> int:
             for row in material_events
         ],
         "account": {
-            "account_total_value": account.get("account_total_value"),
-            "cash_available": account.get("cash_available"),
-            "cash_reserved": account.get("cash_reserved"),
+            "account_total_value": portfolio_summary.get("account_total_value"),
+            "reported_account_total_reference": account.get("account_total_value"),
+            "invested_capital": portfolio_summary.get("current_holdings_value"),
+            "invested_pct": f"{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}",
+            "cash_available": portfolio_summary.get("cash_available"),
+            "cash_pct": portfolio_summary.get("current_cash_pct"),
+            "cash_reserved": portfolio_summary.get("cash_reserved"),
             "investment_horizon_years": account.get("investment_horizon_years"),
-            "valuation_basis": "canonical local state with public market-price estimate",
+            "valuation_basis": "manual cash plus current shares at canonical public close; reported total is reconciliation reference",
             "last_updated": account.get("last_updated"),
+        },
+        "capital_allocation": {
+            "proposed_deployment_value": round(proposed_deployment, 2),
+            "post_review_active_value": post_action.get("resulting_active_value", ""),
+            "post_review_core_value": post_action.get("resulting_core_value", ""),
+            "post_review_cash": post_action.get("resulting_cash", ""),
+            "post_review_cash_pct": post_action.get("cash_weight_pct", ""),
+            "cash_rationale": post_action.get("retained_cash_reason", ""),
+            "automatic_action_allowed": False,
         },
         "account_conflicts": conflicts,
         "human_review_required": human_review_required,
@@ -656,9 +707,10 @@ def main() -> int:
     )
     watch_lines = "\n".join(
         f"- {row['ticker']}: {row['action'] or row['label']}，"
-        f"现价 ${row['current_price'] or 'n/a'}，估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
+        f"现价 ${row['current_price'] or 'n/a'}，估值：{valuation_display(row)}；"
         f"最多复核 {row['suggested_whole_shares'] or '0'} 股（约 {row['suggested_position_pct'] or '0'}%），最高复核价 ${row['maximum_review_price'] or 'n/a'}；"
-        f"分数 {row['score'] or 'n/a'}；期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}。"
+        f"仓位层级 {row['sizing_tier'] or 'no_allocation'}；分数 {row['score'] or 'n/a'}；期限 {row['holding_horizon'] or 'n/a'}；"
+        f"阻断项：{row['gate_blockers'] or '无'}；反证：{row['invalidation'] or 'n/a'}。"
         for row in watch_rows
     ) or "- 当前没有进入展示阈值的新候选。"
     gate_lines = (
@@ -686,6 +738,15 @@ def main() -> int:
 {decisive_advice}
 
 这是研究建议，不是买卖指令；不会连接券商或自动下单。
+
+## 账户与新资本
+
+- 动态账户总值：${portfolio_summary.get('account_total_value', 'n/a')}。
+- 已投资：${portfolio_summary.get('current_holdings_value', 'n/a')}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）。
+- 现金：${portfolio_summary.get('cash_available', 'n/a')}（{portfolio_summary.get('current_cash_pct', 'n/a')}%）；其中战略储备 ${portfolio_summary.get('cash_reserved', 'n/a')}。
+- 当前证据支持的新增复核金额：${proposed_deployment:.2f}；任何真实操作仍需人工决定。
+- 全部当前复核后的假设现金：${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
+- 保留现金原因：{post_action.get('retained_cash_reason', 'n/a')}
 
 ## 当前持仓
 
@@ -733,6 +794,11 @@ def main() -> int:
 {headline}
 {decisive_advice}
 
+账户与新资本
+动态总值 ${portfolio_summary.get('account_total_value', 'n/a')}；已投资 ${portfolio_summary.get('current_holdings_value', 'n/a')}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）；现金 ${portfolio_summary.get('cash_available', 'n/a')}（{portfolio_summary.get('current_cash_pct', 'n/a')}%）。
+当前证据支持的新增复核金额 ${proposed_deployment:.2f}；全部当前复核后的假设现金 ${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
+保留现金原因：{post_action.get('retained_cash_reason', 'n/a')}
+
 当前持仓
 {held_lines}
 
@@ -756,11 +822,14 @@ def main() -> int:
 <h1 style="font-size:24px;color:#8b1e1e">{html.escape(headline)}</h1>
 <p style="font-size:17px"><strong>{html.escape(decisive_advice)}</strong></p>
 <p style="background:#f3f6f8;padding:10px">研究建议，不是买卖指令；不会连接券商或自动下单。</p>
+<h2>账户与新资本</h2>
+<p>动态总值 ${html.escape(str(portfolio_summary.get('account_total_value', 'n/a')))}；已投资 ${html.escape(str(portfolio_summary.get('current_holdings_value', 'n/a')))}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）；现金 ${html.escape(str(portfolio_summary.get('cash_available', 'n/a')))}（{html.escape(str(portfolio_summary.get('current_cash_pct', 'n/a')))}%）。</p>
+<p>当前证据支持的新增复核金额 ${proposed_deployment:.2f}；全部当前复核后的假设现金 ${html.escape(str(post_action.get('resulting_cash', 'n/a')))}（{html.escape(str(post_action.get('cash_weight_pct', 'n/a')))}%）。保留现金原因：{html.escape(str(post_action.get('retained_cash_reason', 'n/a')))}</p>
 <h2>当前持仓</h2><ul>
 {''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(plain_action(row['action']))}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，{html.escape(str(row['current_shares']))} 股，约占 {html.escape(str(row['current_weight_pct']))}%；估值 ${html.escape(str(row['valuation_bear_price'] or 'n/a'))}/${html.escape(str(row['valuation_base_price'] or 'n/a'))}/${html.escape(str(row['valuation_bull_price'] or 'n/a'))}。</li>" for row in held_rows)}
 </ul>
 <h2>观察候选</h2><ul>
-{''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，估值 ${html.escape(str(row['valuation_bear_price'] or 'n/a'))}/${html.escape(str(row['valuation_base_price'] or 'n/a'))}/${html.escape(str(row['valuation_bull_price'] or 'n/a'))}；最多复核 {html.escape(str(row['suggested_whole_shares'] or '0'))} 股。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
+{''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，估值：{html.escape(valuation_display(row))}；层级 {html.escape(str(row['sizing_tier'] or 'no_allocation'))}；最多复核 {html.escape(str(row['suggested_whole_shares'] or '0'))} 股。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
 </ul>
 <h2>可靠性</h2>
 <p>市场数据：{'通过' if market_gate['passed'] else '未通过'}；SEC 官方证据：{'通过' if evidence_gate_passed else '未通过'}；长期基本面：{'通过' if fundamental_gate_passed else '未通过'}；账户状态：{'需复核' if conflicts else '一致'}。</p>

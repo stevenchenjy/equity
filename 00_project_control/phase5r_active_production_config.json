@@ -19,6 +19,46 @@
     "single_stock_default_cap_pct": 6.0,
     "single_stock_hard_cap_pct": 8.0,
     "cash_reserved_usd": 500.0,
+    "underdeployment_review_invested_pct_below": 25.0,
+    "small_account_whole_share_exception_max_overshoot_pct": 2.0,
+    "candidate_sizing_tiers": [
+      {
+        "name": "high_conviction_allocation",
+        "target_position_pct": 6.0,
+        "minimum_score": 8.25,
+        "allowed_confidence": ["high"],
+        "minimum_expected_upside_pct": 25.0,
+        "minimum_reward_to_risk": 2.5,
+        "minimum_entry_score": 6.5,
+        "minimum_portfolio_fit_score": 6.0
+      },
+      {
+        "name": "normal_allocation",
+        "target_position_pct": 5.0,
+        "minimum_score": 7.5,
+        "allowed_confidence": ["medium_high", "high"],
+        "minimum_expected_upside_pct": 15.0,
+        "minimum_reward_to_risk": 2.0,
+        "minimum_entry_score": 6.0,
+        "minimum_portfolio_fit_score": 5.0
+      },
+      {
+        "name": "starter_allocation",
+        "target_position_pct": 3.0,
+        "minimum_score": 7.0,
+        "allowed_confidence": ["medium_high", "high"],
+        "minimum_expected_upside_pct": 10.0,
+        "minimum_reward_to_risk": 1.25,
+        "minimum_entry_score": 5.5,
+        "minimum_portfolio_fit_score": 5.0
+      }
+    ],
+    "core_starter_review": {
+      "minimum_score": 6.5,
+      "minimum_entry_score": 5.0,
+      "maximum_52_week_range_percentile": 95.0,
+      "maximum_whole_shares_per_review": 1
+    },
     "state_source": "05_risk_and_positions/current_account_state.local.json",
     "positions_source": "05_risk_and_positions/current_positions.local.csv"
   },

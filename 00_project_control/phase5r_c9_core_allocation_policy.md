@@ -11,14 +11,18 @@ currently defines the percentage targets and concentration caps.
 
 Targets are planning constraints, not automatic purchase instructions.
 
-## Cash-Deployment Approaches
+## Cash-Deployment Decision
 
-1. `no_deployment_until_next_review`
-2. `three_tranche_core_plan`: three independently confirmed reviews sized from
-   the current account state
-3. `partial_core_plus_cash_reserve`: a partial core review while retaining at
-   least the current configured cash reserve
+1. `retain_cash_fallback`: selected whenever refreshed core evidence fails.
+2. `core_starter_whole_share_review`: at most one whole share per review,
+   bounded by the current core gap, deployable cash, range-position gate, and
+   configured reserve.
 
-Each purchase tranche requires SPY market quality `ok`, maintenance inactive, current account state valid, post-allocation compliance, a refreshed maximum-entry condition, and independent human confirmation.
+The starter requires SPY market quality `ok`, account-aware score at least
+`6.5`, technical-entry score at least `5.0`, a 52-week-range percentile no
+higher than `95`, maintenance inactive, valid current account state,
+post-allocation compliance, and independent human confirmation. ETF valuation
+is labeled not applicable rather than missing because the individual-company
+EV/revenue model is not the relevant core-allocation test.
 
-While the C9 maintenance inhibit is active, all purchase tranches are `blocked_maintenance`. Availability of cash alone never selects an ETF purchase.
+While the C9 maintenance inhibit is active, the starter is `blocked_maintenance`. Availability of cash alone never selects an ETF review.

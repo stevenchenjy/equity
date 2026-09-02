@@ -3,7 +3,6 @@
   "1": "run_phase5r_b2_full_universe_market_data.py",
   "2": "AST",
   "3": "send_phase5r_c6_weekly_email.py",
-  "4": "send_phase5r_c2_daily_email.py",
   "5": "score_phase5r_b_candidates.py",
   "6": "check_phase5r_b1_market_data_source.py",
   "7": "main",

@@ -4,7 +4,7 @@ Guidance for AI assistants and scripts working inside this project.
 
 ## Purpose
 
-This repo is for education, research, risk calculation, and journaling only. It supports a $2,000 cash-account learning portfolio focused on publicly traded early-stage growth companies, recent IPOs, AI infrastructure, clean tech, and biotech.
+This repo is for education, research, risk calculation, and journaling only. It supports a small cash-account portfolio currently operating at approximately the $3,000 scale. Current account value must be derived from manually maintained cash and shares at current canonical prices, never from this descriptive scale.
 
 Codex may prepare research, calculate risk, screen a local watchlist, summarize filings, draft memos, and create trade plans for human review. Codex may not execute trades.
 

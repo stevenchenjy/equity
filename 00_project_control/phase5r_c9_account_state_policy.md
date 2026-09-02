@@ -3,16 +3,17 @@
 ## Canonical Inputs
 
 - Shares, entry date, entry price, thesis, horizon, and invalidation context: `05_risk_and_positions/current_positions.local.csv`.
-- Account total, prior value, external cash, available cash, reserve, horizon, and allocation limits: gitignored `05_risk_and_positions/current_account_state.local.json`.
+- Reported account-total reference, prior value, external cash, available cash, reserve, horizon, and allocation limits: gitignored `05_risk_and_positions/current_account_state.local.json`.
 - Current prices and provenance: `03_source_data/phase5r/phase5r_b2_market_data_snapshot.csv`.
 - Current public research evidence: controlled C5 packet fields; portfolio-fit fields from the old packet are not authoritative.
 
 ## Runtime State
 
 No dollar amount, share count, or position weight in this policy is current
-account truth. Runtime values come only from the validated local account and
-position inputs above. Contribution-history fields may be retained for
-provenance, but they can never become the current calculation denominator.
+account truth. Runtime effective total is `cash_available + current shares *
+canonical close`. The reported account-total field is a reconciliation
+reference. Contribution-history fields remain provenance and can never become
+the current calculation denominator.
 
 ## Validation
 
@@ -24,7 +25,9 @@ cash flows, or fees and are never silently rewritten to force equality.
 
 Current positions require positive shares. Each held ticker and SPY require exactly one canonical B2 row with a positive price, `data_quality_label=ok`, source, and timestamp.
 
-Reported cash plus current holdings may differ modestly from the confirmed total because holdings are repriced while cash is an estimate. C9 accepts and documents a difference no larger than the greater of `25 USD` or `1%` of account total. A larger difference stops the workflow for account-state refresh.
+Reported cash plus current holdings may differ from the last reported total because holdings are repriced while cash is manually maintained. C9 always exposes the difference and labels a material mismatch as a stale reported-total reference; sizing continues from cash plus current holdings. A missing or invalid cash/share input still fails closed.
+
+If the local account file is absent, production fails closed. It never creates a dated example balance or silently invents a current account total.
 
 ## Privacy and Execution Boundary
 

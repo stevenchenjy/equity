@@ -50,6 +50,8 @@ Before any paper-trade planning, write a red-team note covering business model, 
 
 Run the risk calculator only for approved paper-trade planning:
 
+The following `2000` input is an example fixture, not current account truth.
+
 ```bash
 python3 05_scripts/risk_calculator.py --account-value 2000 --risk-percent 1 --entry-price 20 --stop-price 18
 ```

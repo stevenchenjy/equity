@@ -31,6 +31,7 @@ PORTFOLIO_SUMMARY = POSITION_DIR / "phase5r_c9_current_portfolio_summary.csv"
 EXACT_ACTION_PLAN = POSITION_DIR / "phase5r_c9_exact_action_plan.csv"
 CASH_DEPLOYMENT_PLAN = POSITION_DIR / "phase5r_c9_cash_deployment_plan.csv"
 TARGET_ALLOCATION_REPORT = POSITION_DIR / "phase5r_c9_target_allocation_report.csv"
+POST_ACTION_PORTFOLIO = POSITION_DIR / "phase5r_c9_post_action_portfolio.csv"
 REVIEW_QUEUE = POSITION_DIR / "phase5r_c9_account_aware_review_queue.csv"
 WEEKLY_DECISION_SUMMARY = POSITION_DIR / "phase5r_c9_weekly_decision_summary.md"
 
@@ -179,6 +180,18 @@ def load_account_state() -> dict[str, object]:
     if parsed.tzinfo is None:
         raise ValueError("last_updated must include a timezone")
     return state
+
+
+def load_portfolio_summary() -> dict[str, str]:
+    """Load the one-row dynamic account summary used for current denominators."""
+
+    rows = read_csv(PORTFOLIO_SUMMARY)
+    if len(rows) != 1:
+        raise ValueError("C9 current portfolio summary must contain one row")
+    summary = rows[0]
+    if as_float(summary.get("account_total_value", ""), "account_total_value") <= 0:
+        raise ValueError("dynamic account total must be positive")
+    return summary
 
 
 def load_positions() -> list[dict[str, object]]:

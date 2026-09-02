@@ -62,6 +62,12 @@ NEW_CANDIDATE_PATH = (
     / "realtime_stock_picker_phase5r"
     / "phase5r_c9_new_candidate_recommendations.csv"
 )
+PORTFOLIO_SUMMARY_PATH = (
+    ROOT / "05_risk_and_positions" / "phase5r_c9_current_portfolio_summary.csv"
+)
+POST_ACTION_PORTFOLIO_PATH = (
+    ROOT / "05_risk_and_positions" / "phase5r_c9_post_action_portfolio.csv"
+)
 
 EVIDENCE_LEDGER_PATH = (
     ROOT / "03_source_data" / "phase5r" / "phase5r_daily_evidence_ledger.csv"

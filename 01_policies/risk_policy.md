@@ -16,7 +16,8 @@ This lab is for educational research on publicly traded early-stage growth compa
 
 ## Account Scope
 
-- Starting capital: $2,000.
+- Current operating scale: approximately $3,000; actual account value is derived dynamically from current cash, shares, and canonical market prices.
+- Historical starting-capital and contribution records remain provenance, not the current sizing denominator.
 - Account type assumption: cash account.
 - The portfolio is designed for research discipline, not fast compounding.
 - Position sizing must be based on defined risk, not conviction alone.

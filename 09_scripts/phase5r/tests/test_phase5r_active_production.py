@@ -20,6 +20,11 @@ import run_phase5r_daily_refresh as daily_refresh
 import run_phase5r_daily_refresh_scheduler as refresh_scheduler
 import create_phase5r_daily_decision_and_brief as decision_builder
 from create_phase5r_c9_exact_action_plan import valuation_trim_review_required
+from create_phase5r_daily_decision_and_brief import valuation_display
+from phase5r_portfolio_construction import (
+    core_starter_decision,
+    individual_sizing_decision,
+)
 
 
 class ActiveProductionTests(unittest.TestCase):
@@ -96,6 +101,94 @@ class ActiveProductionTests(unittest.TestCase):
         self.assertEqual(classification("hold"), "HOLD")
         self.assertEqual(classification("eligible_buy_review"), "ADD_REVIEW")
         self.assertEqual(classification("watch_only"), "WATCH")
+        self.assertEqual(
+            classification("core_allocation_tranche_review"), "ADD_REVIEW"
+        )
+
+    def test_etf_valuation_is_explicitly_not_applicable(self) -> None:
+        self.assertEqual(
+            valuation_display({
+                "valuation_applicability": "not_applicable_broad_market_etf"
+            }),
+            "不适用（宽基 ETF 使用核心配置口径）",
+        )
+
+    def test_uncertainty_maps_to_smaller_whole_share_sizing(self) -> None:
+        policy = load_active_config()["account"]
+        decision = individual_sizing_decision(
+            policy=policy,
+            valuation_complete=True,
+            score=7.1,
+            confidence="medium_high",
+            expected_upside_pct=12.0,
+            reward_to_risk=1.5,
+            entry_score=5.5,
+            portfolio_fit_score=6.0,
+            current_price=140.0,
+            account_total=3000.0,
+            deployable_cash=2000.0,
+            active_weight_pct=10.0,
+            active_hard_cap_pct=30.0,
+            single_stock_default_cap_pct=6.0,
+        )
+        self.assertEqual(decision["sizing_tier"], "starter_allocation")
+        self.assertEqual(decision["suggested_whole_shares"], 1)
+        self.assertTrue(decision["small_account_exception_used"])
+
+        adverse = individual_sizing_decision(
+            policy=policy,
+            valuation_complete=True,
+            score=8.5,
+            confidence="high",
+            expected_upside_pct=-5.0,
+            reward_to_risk=0.0,
+            entry_score=8.0,
+            portfolio_fit_score=8.0,
+            current_price=20.0,
+            account_total=3000.0,
+            deployable_cash=2000.0,
+            active_weight_pct=10.0,
+            active_hard_cap_pct=30.0,
+            single_stock_default_cap_pct=6.0,
+        )
+        self.assertEqual(adverse["sizing_tier"], "no_allocation")
+        self.assertIn("upside", adverse["failed_gates"])
+
+    def test_core_starter_is_whole_share_and_not_forced(self) -> None:
+        policy = load_active_config()["account"]
+        selected = core_starter_decision(
+            policy=policy,
+            market_quality="ok",
+            score=6.91,
+            technical_score=5.5,
+            current_price=767.05,
+            fifty_two_week_high=779.37,
+            fifty_two_week_low=629.28,
+            account_total=2433.82,
+            deployable_cash=1543.49,
+            current_core_value=0.0,
+            core_target_pct=60.0,
+            maintenance_active=False,
+        )
+        self.assertTrue(selected["selected"])
+        self.assertEqual(selected["suggested_whole_shares"], 1)
+        self.assertAlmostEqual(selected["suggested_position_pct"], 31.5163, places=3)
+        blocked = core_starter_decision(
+            policy=policy,
+            market_quality="ok",
+            score=6.91,
+            technical_score=5.5,
+            current_price=779.37,
+            fifty_two_week_high=779.37,
+            fifty_two_week_low=629.28,
+            account_total=2433.82,
+            deployable_cash=1543.49,
+            current_core_value=0.0,
+            core_target_pct=60.0,
+            maintenance_active=False,
+        )
+        self.assertFalse(blocked["selected"])
+        self.assertIn("price_range", blocked["failed_gates"])
 
     def test_growth_band_selection_is_deterministic(self) -> None:
         policy = load_active_config()  # prove the active config is independently valid

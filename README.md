@@ -1,6 +1,6 @@
 # Early Public Equity Lab
 
-Educational research workspace for a $2,000 cash-account learning portfolio focused on publicly traded early-stage growth companies, recent IPOs, AI infrastructure, clean tech, and biotech.
+Educational research workspace for a small cash-account portfolio currently operating at approximately the $3,000 scale. Current value is never hard-coded: production derives it from manually maintained cash and shares valued at the canonical public close.
 
 ## Repository Paths
 

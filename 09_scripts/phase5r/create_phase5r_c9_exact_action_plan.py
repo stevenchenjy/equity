@@ -10,6 +10,7 @@ from phase5r_c9_common import (
     CURRENT_POSITIONS,
     DYNAMIC_WEIGHTS,
     EXACT_ACTION_PLAN,
+    PORTFOLIO_SUMMARY,
     REVIEW_QUEUE,
     ROOT,
     append_run_log,
@@ -17,6 +18,7 @@ from phase5r_c9_common import (
     load_account_state,
     load_active_inhibit,
     load_packets,
+    load_portfolio_summary,
     load_positions,
     read_csv,
     write_csv,
@@ -134,7 +136,8 @@ def main() -> None:
     }
     valuation_policy = json.loads(VALUATION_POLICY_PATH.read_text(encoding="utf-8"))
     held_review_policy = valuation_policy["held_position_review"]
-    account_total = as_float(account["account_total_value"], "account_total_value")
+    summary = load_portfolio_summary()
+    account_total = as_float(summary["account_total_value"], "account_total_value")
     default_cap = as_float(
         account["single_stock_default_cap_pct"],
         "single_stock_default_cap_pct",
@@ -298,7 +301,7 @@ def main() -> None:
         Path(__file__).name,
         "create_exact_action_plan",
         "complete",
-        [ACCOUNT_STATE, CURRENT_POSITIONS, DYNAMIC_WEIGHTS, C5_PACKETS],
+        [ACCOUNT_STATE, CURRENT_POSITIONS, DYNAMIC_WEIGHTS, PORTFOLIO_SUMMARY, C5_PACKETS],
         [EXACT_ACTION_PLAN, REVIEW_QUEUE],
         position_count=len(actions),
         notes="whole_share_scenarios_dynamic=yes; adds_to_current_positions=no; manual_confirmation=action_transitions_only",

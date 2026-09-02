@@ -5,6 +5,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from phase5r_active_config import load_active_config
 from phase5r_c9_common import (
     ACCOUNT_STATE,
     CASH_DEPLOYMENT_PLAN,
@@ -19,6 +20,7 @@ from phase5r_c9_common import (
     EXACT_ACTION_PLAN,
     MARKET_SNAPSHOT,
     PORTFOLIO_SUMMARY,
+    POST_ACTION_PORTFOLIO,
     REVIEW_QUEUE,
     ROOT,
     TARGET_ALLOCATION_REPORT,
@@ -35,6 +37,7 @@ from phase5r_c9_common import (
     write_csv,
     write_text,
 )
+from phase5r_portfolio_construction import individual_sizing_decision
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -105,6 +108,7 @@ NEW_FIELDS = [
     "portfolio_fit_score",
     "recommendation_confidence",
     "controlled_research_packet_exists",
+    "valuation_applicability",
     "expected_upside_pct",
     "reward_to_risk_estimate",
     "weekly_score_pass",
@@ -126,6 +130,9 @@ NEW_FIELDS = [
     "maximum_review_price",
     "suggested_whole_shares",
     "suggested_position_pct",
+    "sizing_tier",
+    "small_account_exception_used",
+    "gate_blockers",
     "holding_horizon",
     "invalidation_condition",
     "strongest_positive_evidence",
@@ -156,6 +163,7 @@ def main() -> None:
     maintenance_active = inhibit.get("active") is True
     run_children()
     account = load_account_state()
+    construction_policy = load_active_config()["account"]
     valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
     valuation_by_ticker = {
         row["ticker"]: row for row in valuation_payload.get("records", [])
@@ -168,6 +176,19 @@ def main() -> None:
     if len(summary_rows) != 1:
         raise ValueError("C9 portfolio summary must contain one row")
     summary = summary_rows[0]
+    market_by_ticker = {
+        row["ticker"].strip().upper(): row
+        for row in read_csv(MARKET_SNAPSHOT)
+        if row.get("ticker", "").strip()
+    }
+    cash_plans = read_csv(CASH_DEPLOYMENT_PLAN)
+    core_plan = next(
+        (
+            row for row in cash_plans
+            if row.get("plan_id") == "core_starter_whole_share_review"
+        ),
+        {},
+    )
     active_weight = as_float(summary["current_active_stock_weight_pct"], "current_active_stock_weight_pct")
 
     scored: list[dict[str, str]] = []
@@ -286,76 +307,105 @@ def main() -> None:
         packet = packets[ticker]
         valuation = valuation_by_ticker.get(ticker, {})
         prices = valuation.get("scenario_prices", {}) if valuation.get("status") == "complete" else {}
-        current_price = as_float(str(valuation.get("current_price", 0) or 0), f"{ticker}.current_price")
+        market_row = market_by_ticker.get(ticker, {})
+        current_price = as_float(
+            str(valuation.get("current_price") or market_row.get("last_price") or 0),
+            f"{ticker}.current_price",
+        )
         expected_upside = as_float(str(valuation.get("expected_upside_pct", 0) or 0), f"{ticker}.expected_upside_pct")
         reward_to_risk = as_float(str(valuation.get("reward_to_risk", 0) or 0), f"{ticker}.reward_to_risk")
         base_price = as_float(str(prices.get("base", 0) or 0), f"{ticker}.base_price")
-        maximum_review_price = base_price / 1.15 if base_price > 0 else 0.0
-        maximum_position_value = min(
-            deployable_cash,
-            account_total * default_cap_pct / 100.0,
-            max(0.0, account_total * (active_hard_pct - active_weight) / 100.0),
-        )
-        suggested_whole_shares = (
-            int(maximum_position_value // current_price) if current_price > 0 else 0
-        )
-        suggested_position_pct = (
-            suggested_whole_shares * current_price / account_total * 100.0
-            if account_total > 0 else 0.0
-        )
         is_core = score["asset_role"] == "core_allocation_candidate"
-        weekly_pass = float(score["account_aware_conviction_score"]) >= 7.5
-        confidence_pass = score["recommendation_confidence"] in {"medium_high", "high"}
-        entry_pass = as_float(packet["technical_entry_discipline_score"], f"{ticker}.technical") >= 6.0
-        fit_pass = float(score["portfolio_fit_score"]) >= 5.0
-        expected_upside_pass = expected_upside >= 15.0 and current_price <= maximum_review_price
-        reward_to_risk_pass = reward_to_risk >= 1.5
-        caps_pass = suggested_whole_shares >= 1 and suggested_position_pct <= default_cap_pct + 1e-9
-        all_individual_pass = all((
-            weekly_pass,
-            confidence_pass,
-            expected_upside_pass,
-            reward_to_risk_pass,
-            entry_pass,
-            fit_pass,
-            caps_pass,
-        )) and valuation.get("status") == "complete"
+        entry_score = as_float(packet["technical_entry_discipline_score"], f"{ticker}.technical")
+        sizing = individual_sizing_decision(
+            policy=construction_policy,
+            valuation_complete=valuation.get("status") == "complete",
+            score=float(score["account_aware_conviction_score"]),
+            confidence=score["recommendation_confidence"],
+            expected_upside_pct=expected_upside,
+            reward_to_risk=reward_to_risk,
+            entry_score=entry_score,
+            portfolio_fit_score=float(score["portfolio_fit_score"]),
+            current_price=current_price,
+            account_total=account_total,
+            deployable_cash=deployable_cash,
+            active_weight_pct=active_weight,
+            active_hard_cap_pct=active_hard_pct,
+            single_stock_default_cap_pct=default_cap_pct,
+        )
+        gate_results = sizing["gate_results"]
+        weekly_pass = bool(gate_results["score"])
+        confidence_pass = bool(gate_results["confidence"])
+        entry_pass = bool(gate_results["entry"])
+        fit_pass = bool(gate_results["portfolio_fit"])
+        expected_upside_pass = bool(gate_results["upside"])
+        reward_to_risk_pass = bool(gate_results["reward_to_risk"])
+        suggested_whole_shares = int(sizing["suggested_whole_shares"])
+        suggested_position_pct = float(sizing["suggested_position_pct"])
+        caps_pass = suggested_whole_shares >= 1
+        sizing_tier = str(sizing["sizing_tier"])
+        maximum_review_price = (
+            base_price
+            / (1.0 + float(construction_policy["candidate_sizing_tiers"][-1]["minimum_expected_upside_pct"]) / 100.0)
+            if base_price > 0
+            else 0.0
+        )
         if is_core:
-            eligibility_label = "separate_core_review"
-            action = "core_allocation_tranche_review"
-            reason = (
-                "Broad-market core candidate is evaluated under the separate core policy; current cash plans are options only "
-                + (
-                    "and remain blocked by maintenance."
-                    if maintenance_active
-                    else "and none is selected by the current daily decision."
-                )
+            core_status = core_plan.get("status", "not_selected")
+            suggested_whole_shares = int(core_plan.get("planned_shares", "0") or 0)
+            suggested_position_pct = as_float(
+                core_plan.get("core_weight_after", "0") or "0",
+                "SPY.core_weight_after",
             )
-            resulting_caps_pass = "yes"
-        elif all_individual_pass and not individual_eligible_used:
+            sizing_tier = core_plan.get("sizing_tier", "no_allocation")
+            maximum_review_price = current_price
+            eligibility_label = (
+                "eligible_core_starter_review"
+                if core_status == "selected_review"
+                else "core_review_blocked_maintenance"
+                if core_status == "blocked_maintenance"
+                else "wait_for_core_entry"
+            )
+            action = (
+                "core_allocation_tranche_review"
+                if core_status in {"selected_review", "blocked_maintenance"}
+                else "watch_only"
+            )
+            reason = (
+                "Broad-market ETF valuation is not an individual-company EV/revenue exercise. "
+                f"The separate core policy produced status={core_status}, {suggested_whole_shares} whole share(s), "
+                f"and a resulting core weight of {suggested_position_pct:.4f}%. "
+                + core_plan.get("reason", "")
+            )
+            resulting_caps_pass = "yes" if suggested_whole_shares >= 1 else "no"
+            gate_blockers = ",".join(
+                part.strip()
+                for part in core_plan.get("reason", "").partition("Failed gates:")[2].rstrip(".").split(",")
+                if part.strip() and part.strip() != "none"
+            )
+            valuation_applicability = "not_applicable_broad_market_etf"
+        elif suggested_whole_shares >= 1 and not individual_eligible_used:
             individual_eligible_used = True
             eligibility_label = "eligible_buy_review"
             action = "eligible_buy_review"
             reason = (
-                f"All deterministic gates pass at the completed close: expected upside {expected_upside:.2f}%, "
-                f"reward/risk {reward_to_risk:.2f}, and a {suggested_whole_shares}-share scenario remains "
-                f"within the {default_cap_pct:.2f}% default cap. Independent human review is required."
+                f"The {sizing_tier} gates pass: expected upside {expected_upside:.2f}%, "
+                f"reward/risk {reward_to_risk:.2f}, and a {suggested_whole_shares}-share scenario is "
+                f"{suggested_position_pct:.4f}% of the account. Independent human review is required."
             )
             resulting_caps_pass = "yes"
+            gate_blockers = ""
+            valuation_applicability = "applicable_company_ev_to_revenue"
         else:
             eligibility_label = "wait_for_more_evidence"
             action = "watch_only"
-            failed = [
-                label for label, passed in (
-                    ("score", weekly_pass), ("confidence", confidence_pass),
-                    ("upside", expected_upside_pass), ("reward_to_risk", reward_to_risk_pass),
-                    ("entry", entry_pass), ("portfolio_fit", fit_pass), ("whole_share_caps", caps_pass),
-                ) if not passed
-            ]
-            if all_individual_pass and individual_eligible_used:
+            failed = list(sizing["failed_gates"])
+            if suggested_whole_shares >= 1 and individual_eligible_used:
                 failed.append("one_candidate_attention_limit")
             reason = "Deterministic purchase-review gates not all satisfied: " + ",".join(failed or ["valuation_incomplete"])
             resulting_caps_pass = "yes" if caps_pass else "no"
+            gate_blockers = ",".join(failed)
+            valuation_applicability = "applicable_company_ev_to_revenue"
         new_rows.append(
             {
                 "weekly_rank": score["weekly_rank"],
@@ -366,6 +416,7 @@ def main() -> None:
                 "portfolio_fit_score": score["portfolio_fit_score"],
                 "recommendation_confidence": score["recommendation_confidence"],
                 "controlled_research_packet_exists": "yes",
+                "valuation_applicability": valuation_applicability,
                 "expected_upside_pct": f"{expected_upside:.2f}" if valuation.get("status") == "complete" else "",
                 "reward_to_risk_estimate": f"{reward_to_risk:.2f}" if valuation.get("status") == "complete" else "",
                 "weekly_score_pass": "yes" if weekly_pass else "no",
@@ -379,7 +430,9 @@ def main() -> None:
                 "recommended_action": action,
                 "reason": reason,
                 "human_confirmation_required": (
-                    "yes" if action in {"eligible_buy_review", "add_specific_dollars_review"} else "no"
+                    "yes"
+                    if eligibility_label in {"eligible_buy_review", "eligible_core_starter_review"}
+                    else "no"
                 ),
                 "automatic_action_allowed": "no",
                 "current_price": f"{current_price:.2f}" if current_price > 0 else "",
@@ -389,6 +442,11 @@ def main() -> None:
                 "maximum_review_price": f"{maximum_review_price:.2f}" if maximum_review_price > 0 else "",
                 "suggested_whole_shares": str(suggested_whole_shares) if suggested_whole_shares else "0",
                 "suggested_position_pct": f"{suggested_position_pct:.4f}",
+                "sizing_tier": sizing_tier,
+                "small_account_exception_used": (
+                    "yes" if sizing.get("small_account_exception_used") else "no"
+                ),
+                "gate_blockers": gate_blockers,
                 "holding_horizon": packet["holding_horizon_candidate"],
                 "invalidation_condition": packet["exit_or_trim_conditions"],
                 "strongest_positive_evidence": valuation.get("strongest_positive_evidence", ""),
@@ -403,8 +461,20 @@ def main() -> None:
         for row in new_rows
         if row["asset_role"] == "individual_stock_candidate" and row["eligibility_label"] == "eligible_buy_review"
     ]
-    cash_plans = read_csv(CASH_DEPLOYMENT_PLAN)
     review_date = cash_plans[0]["planned_review_date"]
+    core_recommendation = next(
+        row for row in new_rows if row["asset_role"] == "core_allocation_candidate"
+    )
+    post_action_rows = read_csv(POST_ACTION_PORTFOLIO)
+    selected_post_action = next(
+        row for row in post_action_rows
+        if row["scenario"] == "after_position_and_core_reviews"
+    )
+    invested_pct = 100.0 - as_float(summary["current_cash_pct"], "current_cash_pct")
+    underdeployment_threshold = as_float(
+        construction_policy["underdeployment_review_invested_pct_below"],
+        "underdeployment_review_invested_pct_below",
+    )
     action_lines = [
         f"- {row['ticker']}: ${float(row['current_value']):.2f}, {float(row['current_weight_pct']):.4f}%, "
         f"{row['recommended_action']}; target {float(row['target_weight_pct']):.4f}% / ${float(row['target_value']):.2f}; "
@@ -422,30 +492,38 @@ def main() -> None:
         f"- Reported cash: `${float(summary['cash_available']):.2f}` (`{float(summary['current_cash_pct']):.4f}%`).",
         f"- Active-stock sleeve: `${float(summary['current_active_stock_value']):.2f}` (`{active_weight:.4f}%`), status `{summary['active_stock_status']}`.",
         f"- Core sleeve currently recorded: `${float(summary['current_core_value']):.2f}`.",
+        f"- Invested capital: `${float(summary['current_holdings_value']):.2f}` (`{invested_pct:.4f}%`); underdeployment review threshold `{underdeployment_threshold:.2f}%`.",
         f"- Cash/holding reconciliation difference: `${float(summary['reconciliation_difference']):.2f}` (`{summary['reconciliation_status']}`).",
         "",
         "## Current Position Actions",
         "",
         *action_lines,
         "",
-        "IOT and RBRK were recalculated independently. No add is recommended for either current position today.",
+        "Every held position was recalculated independently. A trim/exit scenario now flows into a complete post-action cash and allocation review.",
         "",
         "## Core and Cash",
         "",
         (
-            "SPY is separated from individual-stock momentum research and appears only as a broad-market core candidate. "
-            "Three cash-deployment approaches are documented; "
-            + (
-                "maintenance blocks every purchase tranche."
-                if maintenance_active
-                else "the current daily decision selects none of them."
-            )
-            + " The current cash decision is `no_deployment_until_next_review`."
+            f"Current core conclusion: `{core_recommendation['eligibility_label']}`; "
+            f"whole-share example `{core_recommendation['suggested_whole_shares']}` SPY at the "
+            f"quality-ok close `${core_recommendation['current_price']}` (about "
+            f"`{core_recommendation['suggested_position_pct']}%`). Individual-company EV/revenue "
+            "valuation is explicitly not applicable to this broad-market ETF; the separate core policy "
+            "uses allocation gap, market quality, entry discipline, range position, reserve, and whole-share feasibility."
         ),
+        f"Cash rationale: {core_plan.get('cash_rationale', '')}",
         "",
         "## New Individual Stocks",
         "",
         f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. At most one candidate is surfaced per refresh; every scenario remains research-only and requires independent human confirmation.",
+        "Uncertainty now maps to starter, normal, or high-conviction sizing. Negative/incomplete valuation, inadequate reward/risk, or infeasible whole-share concentration still produces zero allocation.",
+        "",
+        "## Portfolio After All Current Reviews",
+        "",
+        f"- Hypothetical active stocks: `${float(selected_post_action['resulting_active_value']):.2f}` (`{float(selected_post_action['active_weight_pct']):.4f}%`).",
+        f"- Hypothetical core: `${float(selected_post_action['resulting_core_value']):.2f}` (`{float(selected_post_action['core_weight_pct']):.4f}%`).",
+        f"- Hypothetical retained cash: `${float(selected_post_action['resulting_cash']):.2f}` (`{float(selected_post_action['cash_weight_pct']):.4f}%`).",
+        f"- Why cash remains: {selected_post_action['retained_cash_reason']}",
         "",
         "## Next Review",
         "",
@@ -473,12 +551,9 @@ def main() -> None:
         [
             "",
             (
-                "The 60% core target is a policy target, not an instruction to deploy immediately. "
-                + (
-                    "All core plans remain maintenance-blocked."
-                    if maintenance_active
-                    else "All core plans remain conditional and unselected by the current daily decision."
-                )
+                "The 60% core target is a planning target, not a forced deployment rule. "
+                f"Current whole-share core status is `{core_plan.get('status', 'not_selected')}`; "
+                "the reserve, freshness, entry, and human-confirmation gates remain binding."
             ),
         ]
     )
@@ -493,7 +568,8 @@ def main() -> None:
         f"- Account total: `${float(summary['account_total_value']):.2f}`.",
         f"- Current cash: `${float(summary['cash_available']):.2f}` (`{float(summary['current_cash_pct']):.4f}%`).",
         f"- Current active-stock sleeve: `${float(summary['current_active_stock_value']):.2f}` (`{active_weight:.4f}%`).",
-        f"- Cash-deployment decision: `no_deployment_until_next_review`.",
+        f"- Capital-deployment decision: `{core_recommendation['eligibility_label']}`; proposed whole shares `{core_recommendation['suggested_whole_shares']}`.",
+        f"- Post-review retained cash: `${float(selected_post_action['resulting_cash']):.2f}` (`{float(selected_post_action['cash_weight_pct']):.4f}%`).",
         f"- New eligible individual-stock count: `{len(eligible_individual)}`.",
         f"- Next review date: `{review_date}`.",
         "",

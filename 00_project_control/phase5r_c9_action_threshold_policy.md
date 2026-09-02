@@ -12,10 +12,13 @@
 
 `hold`, `trim_specific_shares_review`, `add_specific_dollars_review`, `core_allocation_tranche_review`, `wait_for_pullback`, `watch_only`, `reject`, and `exit_review`.
 
-Every exact action must set:
+Every portfolio-changing review must set:
 
 - `human_confirmation_required=yes`
 - `automatic_action_allowed=no`
+
+Routine HOLD/WATCH rows set `human_confirmation_required=no` and still set
+`automatic_action_allowed=no`.
 
 ## Maximum Entry and Trim Conditions
 
@@ -25,6 +28,17 @@ Trim conditions state the refreshed dynamic-weight threshold and current minimum
 
 ## New Individual-Stock Eligibility
 
-An individual stock requires all of: controlled packet; account-aware score at least `7.5`; confidence `medium_high` or `high`; expected upside at least `15%`; reward-to-risk at least `2.0`; passing entry discipline; passing portfolio fit; and resulting single-stock/theme weights within caps.
+An individual stock always requires a controlled packet, complete source-bound
+valuation, passing portfolio fit, feasible whole-share sizing, and resulting
+weights within caps. Evidence then maps to the highest supported tier:
+
+- starter: score `7.0`, expected upside `10%`, reward/risk `1.25`, entry `5.5`, target `3%`;
+- normal: score `7.5`, expected upside `15%`, reward/risk `2.0`, entry `6.0`, target `5%`;
+- high conviction: score `8.25`, expected upside `25%`, reward/risk `2.5`, entry `6.5`, target `6%`.
+
+All tiers require `medium_high` or `high` confidence except high conviction,
+which requires `high`. A small-account one-share exception may overshoot the
+tier target by at most two percentage points, but never the default
+single-stock cap or active-sleeve hard cap.
 
 Missing upside or reward-to-risk evidence is never invented. The candidate becomes `wait_for_more_evidence` or `watch_only`, not `eligible_buy_review`.

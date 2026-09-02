@@ -90,7 +90,12 @@ def classification(action: str) -> str:
         return "TRIM"
     if "exit" in normalized or "sell" in normalized:
         return "EXIT"
-    if "add" in normalized or "buy" in normalized or "eligible" in normalized:
+    if (
+        "add" in normalized
+        or "buy" in normalized
+        or "eligible" in normalized
+        or "core_allocation" in normalized
+    ):
         return "ADD_REVIEW"
     if normalized in {"hold", "hold_existing"}:
         return "HOLD"
@@ -146,10 +151,13 @@ def recommendation_rows(decision: dict[str, Any]) -> list[dict[str, Any]]:
                 "confidence": row.get("confidence", ""),
                 "reference_price": row.get("current_price", ""),
                 "valuation_bear_price": row.get("valuation_bear_price", ""),
+                "valuation_applicability": row.get("valuation_applicability", ""),
                 "valuation_base_price": row.get("valuation_base_price", ""),
                 "valuation_bull_price": row.get("valuation_bull_price", ""),
                 "maximum_review_price": row.get("maximum_review_price", ""),
                 "suggested_whole_shares": row.get("suggested_whole_shares", ""),
+                "sizing_tier": row.get("sizing_tier", ""),
+                "gate_blockers": row.get("gate_blockers", ""),
                 "holding_horizon": row.get("holding_horizon", ""),
                 "invalidation": row.get("invalidation", ""),
                 "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),

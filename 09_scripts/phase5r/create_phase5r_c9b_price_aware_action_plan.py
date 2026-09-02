@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from phase5r_c9_common import DYNAMIC_WEIGHTS, EXACT_ACTION_PLAN, load_positions
+from phase5r_c9_common import (
+    DYNAMIC_WEIGHTS,
+    EXACT_ACTION_PLAN,
+    PORTFOLIO_SUMMARY,
+    load_portfolio_summary,
+    load_positions,
+)
 from phase5r_c9b_common import (
     ACCOUNT_STATE,
     EXECUTION_FILE,
@@ -47,8 +53,9 @@ ALLOWED_SELL_STYLES = {"limit_review", "wait_for_market_open_review", "staged_li
 
 def main() -> None:
     load_active_inhibit()
-    account = load_account_state()
-    account_total = as_float(account["account_total_value"], "account_total_value")
+    load_account_state()
+    summary = load_portfolio_summary()
+    account_total = as_float(summary["account_total_value"], "account_total_value")
     actions = read_csv(EXACT_ACTION_PLAN)
     weights = {row["ticker"]: row for row in read_csv(DYNAMIC_WEIGHTS)}
     executions = load_execution_rows()
@@ -214,7 +221,7 @@ def main() -> None:
         Path(__file__).name,
         "create_price_aware_action_plan",
         "complete",
-        [ACCOUNT_STATE, EXACT_ACTION_PLAN, DYNAMIC_WEIGHTS, MARKET_SNAPSHOT, EXECUTION_FILE],
+        [ACCOUNT_STATE, PORTFOLIO_SUMMARY, EXACT_ACTION_PLAN, DYNAMIC_WEIGHTS, MARKET_SNAPSHOT, EXECUTION_FILE],
         [PRICE_AWARE_ACTION_PLAN, EXECUTION_RESEARCH_REPORT],
         execution_status=";".join(sorted({row["order_status"] for row in executions})),
         notes="market_at_open_default=no; limit_non_execution_risk=yes; fill_price_invented=no",

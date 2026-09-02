@@ -48,6 +48,7 @@ Stop and do not proceed when the request includes:
 ## Verification Commands
 
 Run commands from `/Users/messssi/Desktop/equity`.
+The `2000` value below is a calculator example fixture, not current account truth.
 
 ```bash
 python3 tests/smoke_tests.py

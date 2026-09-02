@@ -73,6 +73,11 @@ STEP_SPECS = [
         "track_phase5r_recommendation_outcomes.py",
         False,
     ),
+    (
+        "capital_allocation_validation",
+        "create_phase5r_capital_allocation_validation.py",
+        False,
+    ),
     # Persist the sanitized deterministic packet as an auditable research
     # artifact. No model or external inference path consumes it in production.
     ("evidence_packet", "build_phase5r_decision_evidence_packet.py", False),
