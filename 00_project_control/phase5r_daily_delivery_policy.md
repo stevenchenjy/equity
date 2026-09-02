@@ -70,6 +70,19 @@ The sender sequence is:
 Any failure after the claim disables automatic retry. A crash after delivery
 therefore favors a missed status confirmation over a duplicate email.
 
+### Explicit correction resend
+
+- The scheduler never invokes a correction resend; the automatic path remains
+  limited to one email per ET cycle date.
+- `--resend-correction` is a manual, user-authorized recovery path for a
+  materially corrected brief.
+- It requires a prior successful normal delivery for the same cycle date and
+  changed decision, text, or HTML content hashes.
+- At most one correction attempt is allowed per cycle date. A durable
+  `correction_send_claimed`, `correction_sent`, or
+  `correction_delivery_unknown` row blocks every later correction attempt.
+- Correction messages use the subject prefix `[Phase 5R 更正版]`.
+
 The local SMTP configuration must be a single-link regular file owned by the
 runtime user with no group or other permissions. The sender opens it with
 `O_NOFOLLOW` only after eligibility and deduplication pass.

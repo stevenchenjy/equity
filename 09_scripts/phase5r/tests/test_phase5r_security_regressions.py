@@ -69,6 +69,42 @@ class SmtpConfigurationSecurityTests(unittest.TestCase):
                 config = sender.load_config()
         self.assertEqual(config["smtp_host"], "smtp.gmail.com")
 
+    def test_explicit_correction_requires_changed_content_and_is_single_use(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="phase5r-correction-") as directory:
+            root = Path(directory)
+            decision = root / "decision.json"
+            text = root / "brief.txt"
+            html = root / "brief.html"
+            decision.write_text('{"version": 2}\n', encoding="utf-8")
+            text.write_text("corrected brief\n", encoding="utf-8")
+            html.write_text("<p>corrected brief</p>\n", encoding="utf-8")
+            rows = [{
+                "cycle_date": "2026-09-01",
+                "status": "sent",
+                "decision_sha256": "old",
+                "brief_text_sha256": "old",
+                "brief_html_sha256": "old",
+            }]
+            with (
+                patch.object(sender, "DAILY_DECISION_JSON_PATH", decision),
+                patch.object(sender, "DAILY_BRIEF_TEXT_PATH", text),
+                patch.object(sender, "DAILY_BRIEF_HTML_PATH", html),
+            ):
+                self.assertEqual(
+                    sender.correction_eligibility(rows, "2026-09-01"),
+                    (True, "explicit_changed_content_correction"),
+                )
+                self.assertEqual(
+                    sender.correction_eligibility(
+                        rows + [{
+                            "cycle_date": "2026-09-01",
+                            "status": "correction_send_claimed",
+                        }],
+                        "2026-09-01",
+                    ),
+                    (False, "existing_correction_delivery"),
+                )
+
     def test_group_or_world_readable_smtp_configuration_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="phase5r-smtp-config-") as directory:
             path = Path(directory) / "email.json"

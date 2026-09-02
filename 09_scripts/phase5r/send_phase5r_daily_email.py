@@ -37,6 +37,11 @@ from phase5r_daily_common import (
 
 
 BLOCKING_DELIVERY_STATUSES = {"send_claimed", "sent", "delivery_unknown"}
+CORRECTION_DELIVERY_STATUSES = {
+    "correction_send_claimed",
+    "correction_sent",
+    "correction_delivery_unknown",
+}
 REQUIRED_CONFIG_KEYS = {
     "smtp_host",
     "smtp_port",
@@ -261,9 +266,15 @@ def validate_decision() -> dict[str, Any]:
     return decision
 
 
-def build_message(config: dict[str, Any], decision: dict[str, Any]) -> EmailMessage:
+def build_message(
+    config: dict[str, Any],
+    decision: dict[str, Any],
+    *,
+    correction: bool = False,
+) -> EmailMessage:
     headline = safe_header(decision.get("headline"), "headline")
-    subject = f"[Phase 5R] {headline} — {cycle_date()}"
+    prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
+    subject = f"{prefix} {headline} — {cycle_date()}"
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = f"{config['sender_name']} <{config['smtp_username']}>"
@@ -311,14 +322,48 @@ def append_delivery(
     )
 
 
+def correction_eligibility(
+    rows: list[dict[str, str]],
+    target_cycle: str,
+) -> tuple[bool, str]:
+    cycle_rows = [
+        row for row in rows if row.get("cycle_date", "").strip() == target_cycle
+    ]
+    if any(
+        row.get("status", "").strip() in CORRECTION_DELIVERY_STATUSES
+        for row in cycle_rows
+    ):
+        return False, "existing_correction_delivery"
+    sent_rows = [row for row in cycle_rows if row.get("status", "").strip() == "sent"]
+    if not sent_rows:
+        return False, "no_prior_sent_delivery"
+    prior = sent_rows[-1]
+    current_hashes = (
+        sha256_file(DAILY_DECISION_JSON_PATH),
+        sha256_file(DAILY_BRIEF_TEXT_PATH),
+        sha256_file(DAILY_BRIEF_HTML_PATH),
+    )
+    prior_hashes = (
+        prior.get("decision_sha256", ""),
+        prior.get("brief_text_sha256", ""),
+        prior.get("brief_html_sha256", ""),
+    )
+    if current_hashes == prior_hashes:
+        return False, "correction_content_unchanged"
+    return True, "explicit_changed_content_correction"
+
+
 def send_once(
     smtp_factory: Callable[..., Any] = smtplib.SMTP,
+    *,
+    correction: bool = False,
 ) -> int:
+    run_mode = "explicit_correction_resend" if correction else "send"
     enabled, guard_reason, _, _ = delivery_guard()
     if not enabled:
         log_daily_run(
             component="daily_sender",
-            run_mode="send",
+            run_mode=run_mode,
             outcome="blocked",
             reason=guard_reason,
         )
@@ -331,7 +376,7 @@ def send_once(
         reason = str(exc) if str(exc) else "decision_validation_failed"
         log_daily_run(
             component="daily_sender",
-            run_mode="send",
+            run_mode=run_mode,
             outcome="blocked",
             reason=reason,
         )
@@ -340,7 +385,7 @@ def send_once(
     if decision.get("send_recommended") is not True:
         log_daily_run(
             component="daily_sender",
-            run_mode="send",
+            run_mode=run_mode,
             outcome="suppressed",
             reason=str(decision.get("send_reason", "decision_suppressed")),
         )
@@ -351,29 +396,35 @@ def send_once(
         return 0
 
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
-        blocked, prior_status = cycle_is_blocked(
-            read_csv(DAILY_DELIVERY_LEDGER_PATH), cycle_date()
-        )
+        delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
+        if correction:
+            correction_allowed, correction_reason = correction_eligibility(
+                delivery_rows, cycle_date()
+            )
+            blocked = not correction_allowed
+            prior_status = correction_reason
+        else:
+            blocked, prior_status = cycle_is_blocked(delivery_rows, cycle_date())
         if blocked:
             log_daily_run(
                 component="daily_sender",
-                run_mode="send",
+                run_mode=run_mode,
                 outcome="deduplicated",
-                reason=f"existing_{prior_status}",
+                reason=prior_status if correction else f"existing_{prior_status}",
             )
             print(
-                f"email_sent=false reason=existing_{prior_status} "
+                f"email_sent=false reason={prior_status if correction else f'existing_{prior_status}'} "
                 "smtp_config_read=false"
             )
             return 0
 
         try:
             config = load_config()
-            message = build_message(config, decision)
+            message = build_message(config, decision, correction=correction)
         except (ConfigError, OSError, ValueError, RuntimeError):
             log_daily_run(
                 component="daily_sender",
-                run_mode="send",
+                run_mode=run_mode,
                 outcome="blocked",
                 reason="pre_smtp_validation_failed",
                 smtp_config_read="yes",
@@ -386,8 +437,12 @@ def send_once(
 
         # This durable claim is intentionally written before any SMTP operation.
         append_delivery(
-            status="send_claimed",
-            reason="pre_smtp_durable_claim",
+            status="correction_send_claimed" if correction else "send_claimed",
+            reason=(
+                "explicit_correction_pre_smtp_durable_claim"
+                if correction
+                else "pre_smtp_durable_claim"
+            ),
             decision=decision,
             email_attempted="no",
             email_sent="no",
@@ -403,8 +458,14 @@ def send_once(
                 client.send_message(message)
         except Exception:
             append_delivery(
-                status="delivery_unknown",
-                reason="smtp_exception_after_claim",
+                status=(
+                    "correction_delivery_unknown" if correction else "delivery_unknown"
+                ),
+                reason=(
+                    "explicit_correction_smtp_exception_after_claim"
+                    if correction
+                    else "smtp_exception_after_claim"
+                ),
                 decision=decision,
                 email_attempted="yes",
                 email_sent="unknown",
@@ -413,7 +474,7 @@ def send_once(
             )
             log_daily_run(
                 component="daily_sender",
-                run_mode="send",
+                run_mode=run_mode,
                 outcome="delivery_unknown",
                 reason="smtp_exception_after_claim",
                 email_attempted="yes",
@@ -427,8 +488,12 @@ def send_once(
             return 1
 
         append_delivery(
-            status="sent",
-            reason="smtp_send_completed",
+            status="correction_sent" if correction else "sent",
+            reason=(
+                "explicit_correction_smtp_send_completed"
+                if correction
+                else "smtp_send_completed"
+            ),
             decision=decision,
             email_attempted="yes",
             email_sent="yes",
@@ -437,14 +502,17 @@ def send_once(
         )
         log_daily_run(
             component="daily_sender",
-            run_mode="send",
+            run_mode=run_mode,
             outcome="sent",
             reason="smtp_send_completed",
             email_attempted="yes",
             email_sent="yes",
             smtp_config_read="yes",
         )
-        print("email_sent=true message_count=1 automatic_retry=false")
+        print(
+            "email_sent=true message_count=1 automatic_retry=false "
+            f"correction={str(correction).lower()}"
+        )
         return 0
 
 
@@ -452,6 +520,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--send", action="store_true")
+    mode.add_argument("--resend-correction", action="store_true")
     mode.add_argument("--check", action="store_true")
     args = parser.parse_args()
     if args.check:
@@ -461,7 +530,7 @@ def main() -> int:
             f"reason={reason} smtp_config_read=false email_attempted=false"
         )
         return 0
-    return send_once()
+    return send_once(correction=args.resend_correction)
 
 
 if __name__ == "__main__":
