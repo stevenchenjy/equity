@@ -15928,7 +15928,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L710",
+      "source_location": "L721",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_valuation_display",
@@ -15962,7 +15962,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L788",
+      "source_location": "L799",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text"
@@ -15995,7 +15995,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L584",
+      "source_location": "L595",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_iso_now"
@@ -16028,7 +16028,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L864",
+      "source_location": "L875",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_log_daily_run"
@@ -16039,7 +16039,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L499",
+      "source_location": "L510",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy"
@@ -16072,7 +16072,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L481",
+      "source_location": "L492",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_weekly_summary_due_for_published_session"
@@ -44420,5 +44420,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "438dd83fea6ace7994330fd8856b6f8ffd579d7e"
+  "built_at_commit": "8f9456f36d88f8b5bd102102a672e9b0ec02574c"
 }

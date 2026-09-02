@@ -427,6 +427,13 @@ def main() -> int:
         headline = f"明确行动候选｜{transition_text}"
         decisive_advice = "这是需要人工判断的研究方案；仓位不会自动改变。"
         decision_code = "action_review_candidate"
+    elif pending_new_candidates:
+        pending_text = "、".join(
+            row.get("ticker", "") for row in pending_new_candidates
+        )
+        headline = f"新增研究方案等待稳定性确认｜{pending_text}"
+        decisive_advice = "方案已通过当前点时门槛，但仍需第二个不同有效收盘日确认；不会自动改变仓位。"
+        decision_code = "pending_new_position_stability"
     else:
         headline = "继续持有现有仓位｜今天不新增仓位"
         decisive_advice = "保持长期视角；今日信息没有达到改变仓位建议的证据阈值。"
@@ -442,8 +449,12 @@ def main() -> int:
     ]
     if conflicts:
         substantive_code = "account_conflict_hold"
+    elif not data_gate_passed:
+        substantive_code = "data_gate_hold"
     elif eligible_transitions or eligible_new_candidates:
         substantive_code = "action_review_candidate"
+    elif pending_new_candidates:
+        substantive_code = "pending_new_position_stability"
     elif weakening_tickers:
         substantive_code = "fundamental_weakening_review"
     else:
