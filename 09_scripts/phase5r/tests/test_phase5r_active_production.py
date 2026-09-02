@@ -159,7 +159,6 @@ class ActiveProductionTests(unittest.TestCase):
         selected = core_starter_decision(
             policy=policy,
             market_quality="ok",
-            score=6.91,
             technical_score=5.5,
             current_price=767.05,
             fifty_two_week_high=779.37,
@@ -176,7 +175,6 @@ class ActiveProductionTests(unittest.TestCase):
         blocked = core_starter_decision(
             policy=policy,
             market_quality="ok",
-            score=6.91,
             technical_score=5.5,
             current_price=779.37,
             fifty_two_week_high=779.37,

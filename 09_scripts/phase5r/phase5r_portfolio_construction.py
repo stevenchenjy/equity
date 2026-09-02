@@ -144,7 +144,6 @@ def core_starter_decision(
     *,
     policy: dict[str, Any],
     market_quality: str,
-    score: float,
     technical_score: float,
     current_price: float,
     fifty_two_week_high: float,
@@ -183,7 +182,6 @@ def core_starter_decision(
     )
     gate_results = {
         "market_quality": market_quality == "ok",
-        "score": score >= float(core_policy["minimum_score"]),
         "entry": technical_score >= float(core_policy["minimum_entry_score"]),
         "price_range": range_percentile
         <= float(core_policy["maximum_52_week_range_percentile"]),

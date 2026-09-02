@@ -54,7 +54,6 @@
       }
     ],
     "core_starter_review": {
-      "minimum_score": 6.5,
       "minimum_entry_score": 5.0,
       "maximum_52_week_range_percentile": 95.0,
       "maximum_whole_shares_per_review": 1

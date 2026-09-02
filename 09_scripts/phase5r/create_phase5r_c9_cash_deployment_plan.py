@@ -22,7 +22,6 @@ from phase5r_c9_common import (
     load_packets,
     load_portfolio_summary,
     read_csv,
-    score_from_packet,
     write_csv,
 )
 from phase5r_portfolio_construction import core_starter_decision
@@ -87,7 +86,6 @@ def main() -> None:
     spy_high = as_float(spy["fifty_two_week_high"], "SPY.fifty_two_week_high")
     spy_low = as_float(spy["fifty_two_week_low"], "SPY.fifty_two_week_low")
     spy_packet = load_packets()["SPY"]
-    spy_score = score_from_packet(spy_packet, 9.0)
     spy_technical = as_float(
         spy_packet["technical_entry_discipline_score"], "SPY.technical"
     )
@@ -112,7 +110,6 @@ def main() -> None:
     core = core_starter_decision(
         policy=construction_policy,
         market_quality=spy["data_quality_label"],
-        score=spy_score,
         technical_score=spy_technical,
         current_price=spy_price,
         fifty_two_week_high=spy_high,
@@ -138,8 +135,8 @@ def main() -> None:
     failed_text = ",".join(core["failed_gates"]) or "none"
     core_policy = construction_policy["core_starter_review"]
     entry_condition = (
-        f"SPY price <= ${spy_price:.2f}; data_quality=ok; account_aware_score >= "
-        f"{core_policy['minimum_score']}; technical_score >= {core_policy['minimum_entry_score']}; "
+        f"SPY price <= ${spy_price:.2f}; data_quality=ok; technical_score >= "
+        f"{core_policy['minimum_entry_score']}; "
         f"52-week range percentile <= {core_policy['maximum_52_week_range_percentile']}%; "
         "maintenance_inhibit=false; reserve_preserved=true; independent_human_confirmation=yes"
     )
@@ -184,7 +181,9 @@ def main() -> None:
                 "52-week range, so the proposal is staged rather than sized to the full "
                 f"{core_target:.0f}% policy target. Failed gates: {failed_text}."
             ),
-            "human_confirmation_required": "yes" if shares else "no",
+            "human_confirmation_required": (
+                "yes" if core_status == "selected_review" else "no"
+            ),
         },
     ]
 

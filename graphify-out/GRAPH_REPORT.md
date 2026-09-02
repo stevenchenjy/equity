@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-01)
 
 ## Corpus Check
-- 127 files · ~122,053 words
+- 127 files · ~122,099 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1319 nodes · 2940 edges · 79 communities (69 shown, 10 thin omitted)
-- Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 478 edges (avg confidence: 0.78)
+- 1319 nodes · 2939 edges · 79 communities (69 shown, 10 thin omitted)
+- Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 477 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `20a46161`
+- Built from commit: `438dd83f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
