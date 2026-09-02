@@ -136,6 +136,27 @@ class SmtpConfigurationSecurityTests(unittest.TestCase):
             ):
                 sender.load_config()
 
+    def test_explicit_correction_bypasses_only_the_ordinary_send_clock(self) -> None:
+        with (
+            patch.object(
+                sender,
+                "delivery_guard",
+                return_value=(False, "before_daily_decision_time", {}, {}),
+            ),
+            patch.object(
+                sender,
+                "validate_decision",
+                return_value={
+                    "send_recommended": False,
+                    "send_reason": "test_suppressed_after_validation",
+                },
+            ) as validate,
+            patch.object(sender, "log_daily_run"),
+        ):
+            result = sender.send_once(correction=True)
+        self.assertEqual(result, 0)
+        validate.assert_called_once_with(correction=True)
+
 
 class AutomationAlertTests(unittest.TestCase):
     def test_same_terminal_alert_notifies_only_once(self) -> None:

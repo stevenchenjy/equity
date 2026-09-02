@@ -382,6 +382,9 @@ def send_once(
 ) -> int:
     run_mode = "explicit_correction_resend" if correction else "send"
     enabled, guard_reason, _, _ = delivery_guard()
+    if correction and guard_reason == "before_daily_decision_time":
+        enabled = True
+        guard_reason = "explicit_correction_clock_override"
     if not enabled:
         log_daily_run(
             component="daily_sender",

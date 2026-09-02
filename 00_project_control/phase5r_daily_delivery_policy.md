@@ -81,6 +81,9 @@ therefore favors a missed status confirmation over a duplicate email.
 - A correction may cover the current or immediately preceding ET cycle date.
   This supports a next-morning repair without presenting prior-cycle evidence
   as a new daily decision.
+- An explicit correction may run before the ordinary 13:30 ET scheduler gate;
+  maintenance, operational-date, active-workflow, validation, deduplication,
+  and delivery-boundary gates remain enforced.
 - At most one correction attempt is allowed for each exact content-hash set. A
   durable `correction_send_claimed`, `correction_sent`, or
   `correction_delivery_unknown` row blocks that same correction content from
