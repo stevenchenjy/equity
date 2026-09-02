@@ -20,7 +20,11 @@ import run_phase5r_daily_refresh as daily_refresh
 import run_phase5r_daily_refresh_scheduler as refresh_scheduler
 import create_phase5r_daily_decision_and_brief as decision_builder
 from create_phase5r_c9_exact_action_plan import valuation_trim_review_required
-from create_phase5r_daily_decision_and_brief import valuation_display
+from create_phase5r_daily_decision_and_brief import (
+    action_review_display,
+    held_position_summary,
+    valuation_display,
+)
 from phase5r_portfolio_construction import (
     core_starter_decision,
     individual_sizing_decision,
@@ -112,6 +116,35 @@ class ActiveProductionTests(unittest.TestCase):
             }),
             "不适用（宽基 ETF 使用核心配置口径）",
         )
+
+    def test_trim_review_email_includes_exact_shares_target_and_reason(self) -> None:
+        row = {
+            "ticker": "IOT",
+            "action": "trim_specific_shares_review",
+            "current_price": "40.85",
+            "current_shares": "5.0000",
+            "current_weight_pct": "8.3922",
+            "target_shares": "4.0000",
+            "whole_shares_to_change": "1",
+            "reason": "Dynamic weight exceeds the 8.00% hard cap.",
+            "holding_horizon": "medium_conviction",
+            "invalidation": "Review if thesis weakens.",
+            "valuation_bear_price": "16.57",
+            "valuation_base_price": "25.4",
+            "valuation_bull_price": "34.24",
+            "strongest_positive_evidence": "revenue_growth_pct=29.60",
+            "strongest_negative_evidence": "current_ev_to_revenue=13.75",
+            "human_confirmation_required": "yes",
+        }
+        detail = action_review_display(row)
+        self.assertIn("减少 1 股", detail)
+        self.assertIn("复核后持有 4 股", detail)
+        self.assertIn("触发依据：Dynamic weight exceeds the 8.00% hard cap.", detail)
+        self.assertIn("不会自动执行", detail)
+        self.assertIn(detail, held_position_summary(row))
+
+    def test_hold_email_does_not_invent_an_action_scenario(self) -> None:
+        self.assertEqual(action_review_display({"action": "hold"}), "")
 
     def test_uncertainty_maps_to_smaller_whole_share_sizing(self) -> None:
         policy = load_active_config()["account"]

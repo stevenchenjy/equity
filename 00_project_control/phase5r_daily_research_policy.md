@@ -38,6 +38,10 @@ Social media and archived legacy project files are not active inputs.
   estimates, not broker account truth.
 - Scores and trend labels are deterministic research rules, not facts.
 - The email must state that it is research, not a buy/sell instruction.
+- Every held-position add, trim, or exit review displayed in the email must
+  include the exact whole-share review change, the post-review share count,
+  the triggering rationale, and an explicit statement that it is not
+  automatically executed.
 
 ## Long-Term Interpretation
 

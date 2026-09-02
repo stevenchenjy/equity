@@ -280,6 +280,45 @@ def valuation_display(row: dict[str, Any]) -> str:
     return "证据不足"
 
 
+def share_display(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return "证据不足"
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return text or "0"
+
+
+def action_review_display(row: dict[str, Any]) -> str:
+    action = str(row.get("action", "")).strip().lower()
+    if not is_action_transition(action):
+        return ""
+    if "trim" in action or "reduce" in action:
+        change_label = "减少"
+    elif "exit" in action or "sell" in action:
+        change_label = "退出复核涉及"
+    else:
+        change_label = "增加"
+    return (
+        f"人工复核情景：{change_label} {share_display(row.get('whole_shares_to_change'))} 股，"
+        f"复核后持有 {share_display(row.get('target_shares'))} 股；"
+        f"触发依据：{row.get('reason') or '证据不足'}；该情景不会自动执行。"
+    )
+
+
+def held_position_summary(row: dict[str, Any]) -> str:
+    review_detail = action_review_display(row)
+    return (
+        f"{plain_action(row['action'])}; "
+        f"现价 ${row['current_price'] or 'n/a'}，{row['current_shares']} 股，约占 {row['current_weight_pct']}%；"
+        f"估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
+        f"{review_detail + '；' if review_detail else ''}"
+        f"期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}；"
+        f"最强正面：{row['strongest_positive_evidence'] or 'n/a'}；最强负面：{row['strongest_negative_evidence'] or 'n/a'}；"
+        f"人工确认={row['human_confirmation_required']}。"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -708,13 +747,7 @@ def main() -> int:
     atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
 
     held_lines = "\n".join(
-        f"- {row['ticker']}: {plain_action(row['action'])}; "
-        f"现价 ${row['current_price'] or 'n/a'}，{row['current_shares']} 股，约占 {row['current_weight_pct']}%；"
-        f"估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
-        f"期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}；"
-        f"最强正面：{row['strongest_positive_evidence'] or 'n/a'}；最强负面：{row['strongest_negative_evidence'] or 'n/a'}；"
-        f"人工确认={row['human_confirmation_required']}。"
-        for row in held_rows
+        f"- {row['ticker']}: {held_position_summary(row)}" for row in held_rows
     )
     watch_lines = "\n".join(
         f"- {row['ticker']}: {row['action'] or row['label']}，"
@@ -837,7 +870,7 @@ def main() -> int:
 <p>动态总值 ${html.escape(str(portfolio_summary.get('account_total_value', 'n/a')))}；已投资 ${html.escape(str(portfolio_summary.get('current_holdings_value', 'n/a')))}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）；现金 ${html.escape(str(portfolio_summary.get('cash_available', 'n/a')))}（{html.escape(str(portfolio_summary.get('current_cash_pct', 'n/a')))}%）。</p>
 <p>当前证据支持的新增复核金额 ${proposed_deployment:.2f}；全部当前复核后的假设现金 ${html.escape(str(post_action.get('resulting_cash', 'n/a')))}（{html.escape(str(post_action.get('cash_weight_pct', 'n/a')))}%）。保留现金原因：{html.escape(str(post_action.get('retained_cash_reason', 'n/a')))}</p>
 <h2>当前持仓</h2><ul>
-{''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(plain_action(row['action']))}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，{html.escape(str(row['current_shares']))} 股，约占 {html.escape(str(row['current_weight_pct']))}%；估值 ${html.escape(str(row['valuation_bear_price'] or 'n/a'))}/${html.escape(str(row['valuation_base_price'] or 'n/a'))}/${html.escape(str(row['valuation_bull_price'] or 'n/a'))}。</li>" for row in held_rows)}
+{''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(held_position_summary(row))}</li>" for row in held_rows)}
 </ul>
 <h2>观察候选</h2><ul>
 {''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，估值：{html.escape(valuation_display(row))}；层级 {html.escape(str(row['sizing_tier'] or 'no_allocation'))}；最多复核 {html.escape(str(row['suggested_whole_shares'] or '0'))} 股。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
