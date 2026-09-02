@@ -25,14 +25,15 @@
   "notifications": {
     "event_driven": true,
     "weekly_summary_weekday": "friday",
-    "send_after_et": "18:30",
-    "post_close_refresh_retry_slots_et": [
-      "17:45",
-      "18:15",
-      "18:45",
-      "19:15"
+    "market_data_publication_after_et": "11:15",
+    "send_after_et": "13:30",
+    "eod_publication_retry_slots_et": [
+      "11:15",
+      "11:45",
+      "12:15",
+      "12:45"
     ],
-    "terminal_alert_after_et": "20:00",
+    "terminal_alert_after_et": "15:30",
     "new_filing_lookback_calendar_days": 7,
     "material_events": [
       "portfolio_action_transition",

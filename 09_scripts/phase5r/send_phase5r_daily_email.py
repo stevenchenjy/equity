@@ -9,6 +9,7 @@ import os
 import smtplib
 import ssl
 import stat
+from datetime import date
 from email.message import EmailMessage
 from typing import Any, Callable
 
@@ -31,6 +32,7 @@ from phase5r_daily_common import (
     read_csv,
     read_json,
     sha256_file,
+    weekly_summary_due_for_published_session,
 )
 
 
@@ -172,8 +174,13 @@ def validate_decision() -> dict[str, Any]:
     if any(not isinstance(decision.get(field), list) for field in list_fields):
         raise ValueError("decision_notification_inputs_invalid")
     fundamental_gate = decision.get("fundamental_gate")
+    market_gate = decision.get("market_gate")
     evaluation = decision.get("notification_policy_evaluation")
-    if not isinstance(fundamental_gate, dict) or not isinstance(evaluation, dict):
+    if (
+        not isinstance(fundamental_gate, dict)
+        or not isinstance(market_gate, dict)
+        or not isinstance(evaluation, dict)
+    ):
         raise ValueError("decision_notification_inputs_invalid")
     weakening_tickers = fundamental_gate.get("weakening_tickers")
     if not isinstance(weakening_tickers, list):
@@ -190,9 +197,18 @@ def validate_decision() -> dict[str, Any]:
     )
     first_material_baseline = bool(not prior_decision_present and base_trigger)
     current = now_et()
+    try:
+        published_session = date.fromisoformat(
+            str(market_gate["expected_market_session"])
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError("decision_notification_inputs_invalid") from exc
     expected_evaluation = {
         "is_weekend": current.weekday() >= 5,
-        "weekly_summary_due": current.weekday() == 4,
+        "weekly_summary_due": weekly_summary_due_for_published_session(
+            current,
+            published_session,
+        ),
         "prior_decision_present": prior_decision_present,
         "first_material_baseline": first_material_baseline,
         "long_term_fundamental_weakening": bool(weakening_tickers),

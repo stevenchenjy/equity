@@ -26,9 +26,10 @@ without reading their contents.
 - Workflow: `daily_decision`
 - Pipeline: `phase5r_daily`
 - Primary decision: `daily_account_aware_decision`
-- Analysis: multiple local refresh slots, with one final decision after
-  18:30 ET
-- Email: at most one weekday daily brief; weekend material-change only
+- Analysis: bounded Basic EOD publication retries at 11:15, 11:45, 12:15,
+  and 12:45 ET, with one final decision after 13:30 ET
+- Email: at most one brief per ET cycle; weekend material-change only except
+  the Friday-close weekly summary delivered on its Saturday publication day
 - Authorized sender: `send_phase5r_daily_email.py`
 - Execution: manual and outside the repository
 

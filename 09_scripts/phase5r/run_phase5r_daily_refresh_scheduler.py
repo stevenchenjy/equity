@@ -11,6 +11,7 @@ from datetime import datetime
 
 from phase5r_active_config import load_active_config
 from phase5r_daily_common import (
+    BASIC_EOD_PUBLICATION_TIME_ET,
     DAILY_REFRESH_STATE_PATH,
     DAILY_SCHEDULER_STATE_PATH,
     ROOT,
@@ -18,8 +19,7 @@ from phase5r_daily_common import (
     atomic_write_json,
     cycle_date,
     iso_now,
-    is_us_market_session_date,
-    last_completed_market_session,
+    latest_published_market_session,
     load_active_state,
     load_inhibit,
     now_et,
@@ -33,20 +33,11 @@ SEC_EVIDENCE_REFRESH = ROOT / "09_scripts" / "phase5r" / "refresh_phase5r_daily_
 MASSIVE_B2_RUNNER = (
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_b2_full_universe_market_data.py"
 )
-WEEKDAY_SLOTS = (
-    "08:15",
-    "12:30",
-    "16:15",
-    "17:45",
-    "18:15",
-    "18:45",
-    "19:15",
-)
-WEEKEND_SLOTS = ("12:00",)
-POST_CLOSE_MARKET_SLOTS = ("17:45", "18:15", "18:45", "19:15")
-# Retained as the first post-close slot for stable external/test references.
-POST_CLOSE_MARKET_SLOT = POST_CLOSE_MARKET_SLOTS[0]
-LAST_POST_CLOSE_MARKET_SLOT = POST_CLOSE_MARKET_SLOTS[-1]
+EOD_PUBLICATION_RETRY_SLOTS = ("11:15", "11:45", "12:15", "12:45")
+WEEKDAY_SLOTS = ("08:15", *EOD_PUBLICATION_RETRY_SLOTS)
+WEEKEND_SLOTS = EOD_PUBLICATION_RETRY_SLOTS
+FIRST_EOD_PUBLICATION_RETRY_SLOT = EOD_PUBLICATION_RETRY_SLOTS[0]
+LAST_EOD_PUBLICATION_RETRY_SLOT = EOD_PUBLICATION_RETRY_SLOTS[-1]
 MARKET_SNAPSHOT_FETCH = "fetch"
 MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
 # Equivalent no-output presence probe for the externally configured Massive
@@ -69,9 +60,9 @@ MASSIVE_B2_PROBE_TIMEOUT_SECONDS = 15
 # observing the child result; no credential value is read or emitted here.
 SEC_REFRESH_ONLY_ENV = "PHASE5R_SEC_REFRESH_ONLY_20260811_41C2"
 SEC_REFRESH_TIMEOUT_SECONDS = 240
-# One-shot completed-close import for repair/validation through the approved
-# Keychain-backed launcher. It runs only B2 and cannot invoke a model,
-# sender, broker, portfolio action, or order surface.
+# One-shot latest-published-close import for repair/validation through the
+# approved Keychain-backed launcher. It runs only B2 and cannot invoke a
+# model, sender, broker, portfolio action, or order surface.
 MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
 MARKET_REFRESH_TIMEOUT_SECONDS = 480
 # One-shot complete deterministic refresh using the already validated local
@@ -80,10 +71,10 @@ MARKET_REFRESH_TIMEOUT_SECONDS = 480
 FULL_REFRESH_REUSE_ONLY_ENV = (
     "PHASE5R_FULL_REFRESH_REUSE_ONLY_20260901_7C31"
 )
-# The post-close daily refresh can contain the bounded, paced 29-request market
-# import. Its parent timeout exceeds that child budget and leaves a finite
-# allowance for the existing local refresh steps. Retry slots are separate
-# launchd cycles and stop as soon as a full current refresh passes.
+# The publication-window refresh can contain the bounded, paced 29-request
+# market import. Its parent timeout exceeds that child budget and leaves a
+# finite allowance for the existing local refresh steps. Retry slots are
+# separate launchd cycles and stop as soon as a full current refresh passes.
 DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 900
 
 
@@ -99,12 +90,11 @@ def market_snapshot_mode(
     *,
     market_ready: bool = False,
 ) -> str:
-    """Fetch at bounded post-close slots until the current close is ready."""
+    """Fetch at bounded publication slots until the latest EOD close is ready."""
 
     if (
         not market_ready
-        and any(slot in due for slot in POST_CLOSE_MARKET_SLOTS)
-        and is_us_market_session_date(current.date())
+        and any(slot in due for slot in EOD_PUBLICATION_RETRY_SLOTS)
     ):
         return MARKET_SNAPSHOT_FETCH
     return MARKET_SNAPSHOT_REUSE
@@ -282,13 +272,16 @@ def main() -> int:
     active = load_active_state()
     inhibit = load_inhibit()
     if args.safe_check:
+        notifications = load_active_config()["notifications"]
         configured_slots = tuple(
-            load_active_config()["notifications"][
-                "post_close_refresh_retry_slots_et"
-            ]
+            notifications["eod_publication_retry_slots_et"]
         )
-        if configured_slots != POST_CLOSE_MARKET_SLOTS:
-            raise RuntimeError("post-close refresh cadence configuration drift")
+        if (
+            configured_slots != EOD_PUBLICATION_RETRY_SLOTS
+            or notifications["market_data_publication_after_et"]
+            != BASIC_EOD_PUBLICATION_TIME_ET
+        ):
+            raise RuntimeError("EOD publication refresh cadence configuration drift")
         required = (REFRESH_PIPELINE, SEC_EVIDENCE_REFRESH, MASSIVE_B2_RUNNER)
         missing = [path.name for path in required if not path.is_file()]
         if missing:
@@ -327,10 +320,10 @@ def main() -> int:
     if not pending:
         print("scheduler_action=none reason=refresh_slots_already_completed")
         return 0
-    required_market_session = last_completed_market_session(current).isoformat()
+    required_market_session = latest_published_market_session(current).isoformat()
     market_ready = bool(
-        date_state.get("post_close_market_ready")
-        and date_state.get("post_close_market_session")
+        date_state.get("eod_publication_market_ready")
+        and date_state.get("eod_publication_market_session")
         == required_market_session
     )
     snapshot_mode = market_snapshot_mode(
@@ -341,27 +334,27 @@ def main() -> int:
     refresh_started_at = iso_now()
     # Reserve every currently due slot before the child. A failed child waits
     # for the next configured slot instead of running every 15 minutes, while
-    # the later post-close slots provide bounded recovery opportunities.
+    # the later publication slots provide bounded recovery opportunities.
     completed.update(pending)
     date_state["refresh_slots_completed"] = sorted(completed)
     market_attempt: dict[str, object] | None = None
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
         attempt_slots = [
-            slot for slot in pending if slot in POST_CLOSE_MARKET_SLOTS
+            slot for slot in pending if slot in EOD_PUBLICATION_RETRY_SLOTS
         ]
         if not attempt_slots:
-            raise RuntimeError("post-close market fetch has no retry slot")
+            raise RuntimeError("EOD market fetch has no publication retry slot")
         market_attempt = {
             "slot": max(attempt_slots),
             "reserved_at": refresh_started_at,
             "status": "reserved_before_child",
         }
-        attempts = date_state.setdefault("post_close_market_attempts", [])
+        attempts = date_state.setdefault("eod_publication_market_attempts", [])
         if not isinstance(attempts, list):
-            raise RuntimeError("post-close market attempt state is invalid")
+            raise RuntimeError("EOD publication market attempt state is invalid")
         attempts.append(market_attempt)
-        date_state["post_close_market_attempt_reserved_at"] = refresh_started_at
-        date_state["post_close_market_attempt_status"] = "reserved_before_child"
+        date_state["eod_publication_market_attempt_reserved_at"] = refresh_started_at
+        date_state["eod_publication_market_attempt_status"] = "reserved_before_child"
     state["updated_at"] = refresh_started_at
     atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
     try:
@@ -401,13 +394,13 @@ def main() -> int:
         not_before=refresh_started_at,
     )
     if market_passed:
-        date_state["post_close_market_ready"] = True
-        date_state["post_close_market_session"] = refresh_state.get(
+        date_state["eod_publication_market_ready"] = True
+        date_state["eod_publication_market_session"] = refresh_state.get(
             "expected_market_session", ""
         )
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
-        date_state["post_close_market_attempt_status"] = "child_returned"
-        date_state["post_close_market_attempt_exit_code"] = (
+        date_state["eod_publication_market_attempt_status"] = "child_returned"
+        date_state["eod_publication_market_attempt_exit_code"] = (
             completed_process.returncode
         )
         if market_attempt is not None:
@@ -432,18 +425,18 @@ def main() -> int:
     date_state["refresh_fully_passed"] = refresh_fully_passed
     if refresh_fully_passed:
         date_state["refresh_last_passed_at"] = iso_now()
-        if any(slot in due for slot in POST_CLOSE_MARKET_SLOTS):
-            # No later retry is useful once the current completed close and all
+        if any(slot in due for slot in EOD_PUBLICATION_RETRY_SLOTS):
+            # No later retry is useful once the latest published close and all
             # deterministic evidence gates have passed.
-            completed.update(POST_CLOSE_MARKET_SLOTS)
+            completed.update(EOD_PUBLICATION_RETRY_SLOTS)
     date_state["refresh_slots_completed"] = sorted(completed)
     if (
         not refresh_fully_passed
-        and LAST_POST_CLOSE_MARKET_SLOT in pending
+        and LAST_EOD_PUBLICATION_RETRY_SLOT in pending
     ):
         publish_automation_alert(
             component="daily_refresh",
-            reason="daily_refresh_retry_window_exhausted",
+            reason="daily_refresh_publication_window_exhausted",
         )
     state["updated_at"] = iso_now()
     for old_date in sorted(state["dates"])[:-14]:

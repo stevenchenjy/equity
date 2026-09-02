@@ -13,8 +13,10 @@ import phase5r_massive_b2_adapter as massive
 import run_phase5r_b2_full_universe_market_data as b2
 
 
-_FIXED_NOW = "2026-08-05T17:45:00-04:00"
-POST_CLOSE = datetime(2026, 8, 5, 17, 45, tzinfo=ZoneInfo("America/New_York"))
+_FIXED_NOW = "2026-08-06T11:15:00-04:00"
+# Kept as the shared fixture name for this failure-boundary suite; the value is
+# now the next-day Basic EOD publication boundary, not same-day market close.
+POST_CLOSE = datetime(2026, 8, 6, 11, 15, tzinfo=ZoneInfo("America/New_York"))
 UNIVERSE_TICKERS = [
     *b2.SMOKE_TICKERS,
     *[f"T{index:02d}" for index in range(1, 25)],

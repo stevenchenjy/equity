@@ -22,7 +22,7 @@
   "d3_maintenance_inhibit": "inactive",
   "operational_from": "2026-07-24",
   "decision_timezone": "America/New_York",
-  "analysis_cadence": "weekday_08:15_12:30_16:15_17:45_plus_18:30_final;weekend_12:00_plus_18:30_decision",
+  "analysis_cadence": "weekday_08:15_plus_11:15_11:45_12:15_12:45_eod_publication_retries_plus_13:30_decision;weekend_11:15_11:45_12:15_12:45_plus_13:30_decision",
   "email_cadence": "material_change_only_plus_friday_weekly_summary",
   "weekend_email_policy": "material_change_only",
   "d2_scheduler_status": "retired_unloaded",

@@ -9,7 +9,10 @@ from unittest.mock import patch
 from _support import SCRIPT_DIR  # noqa: F401
 
 from phase5r_active_config import load_active_config
-from phase5r_daily_common import notification_delivery_policy
+from phase5r_daily_common import (
+    BASIC_EOD_PUBLICATION_TIME_ET,
+    notification_delivery_policy,
+)
 from track_phase5r_recommendation_outcomes import classification
 from refresh_phase5r_valuation_scenarios import selected_band, utc_now_text
 from phase5r_valuation_input_bundle import _SOURCE_POLICIES
@@ -72,12 +75,20 @@ class ActiveProductionTests(unittest.TestCase):
         self.assertFalse(config["boundaries"]["broker_connected"])
         self.assertFalse(config["boundaries"]["automatic_action_allowed"])
         self.assertEqual(
-            tuple(config["notifications"]["post_close_refresh_retry_slots_et"]),
-            refresh_scheduler.POST_CLOSE_MARKET_SLOTS,
+            tuple(config["notifications"]["eod_publication_retry_slots_et"]),
+            refresh_scheduler.EOD_PUBLICATION_RETRY_SLOTS,
+        )
+        self.assertEqual(
+            config["notifications"]["market_data_publication_after_et"],
+            BASIC_EOD_PUBLICATION_TIME_ET,
         )
         self.assertEqual(
             config["notifications"]["send_after_et"],
-            "18:30",
+            "13:30",
+        )
+        self.assertEqual(
+            config["notifications"]["terminal_alert_after_et"],
+            "15:30",
         )
 
     def test_recommendation_labels_are_explicit(self) -> None:

@@ -235,6 +235,35 @@ def last_completed_market_session(
     return expected_market_session(candidate)
 
 
+BASIC_EOD_PUBLICATION_TIME = time(11, 15)
+BASIC_EOD_PUBLICATION_TIME_ET = BASIC_EOD_PUBLICATION_TIME.strftime("%H:%M")
+
+
+def latest_published_market_session(
+    current: datetime,
+    *,
+    publication_time: time = BASIC_EOD_PUBLICATION_TIME,
+) -> date:
+    """Return the newest close available under the Basic EOD publication SLA.
+
+    Massive Basic is an end-of-day product whose finalized daily dataset is
+    published on the following calendar day.  Market close and provider
+    publication are therefore separate boundaries: after 16:15 ET the same
+    day's close is complete, but it is not yet a valid Basic snapshot.
+
+    Before the publication boundary, step back two calendar days; at or after
+    it, step back one.  Normalizing through ``expected_market_session`` keeps
+    weekends and regular U.S. market holidays fail-closed and deterministic.
+    """
+
+    current_et = current.astimezone(ET) if current.tzinfo is not None else current
+    current_clock = current_et.timetz().replace(tzinfo=None)
+    calendar_lag_days = 1 if current_clock >= publication_time else 2
+    return expected_market_session(
+        current_et - timedelta(days=calendar_lag_days)
+    )
+
+
 def read_json(path: Path, default: Any | None = None) -> Any:
     if not path.exists():
         if default is not None:
@@ -390,7 +419,12 @@ def delivery_guard() -> tuple[bool, str, dict[str, Any], dict[str, Any]]:
         return False, "operational_from_missing", active_state, inhibit
     if cycle_date() < operational_from:
         return False, "before_operational_from", active_state, inhibit
-    if now_et().strftime("%H:%M") < "18:30":
+    # Keep the sender's final clock gate aligned with the single active
+    # production configuration without creating a module-level import cycle.
+    from phase5r_active_config import load_active_config
+
+    send_after = str(load_active_config()["notifications"]["send_after_et"])
+    if now_et().strftime("%H:%M") < send_after:
         return False, "before_daily_decision_time", active_state, inhibit
     return True, "delivery_enabled", active_state, inhibit
 
@@ -407,14 +441,14 @@ def notification_delivery_policy(
 ) -> tuple[bool, str]:
     """Return event-driven eligibility independently of scheduler time."""
 
+    if weekly_summary_due:
+        return True, "friday_weekly_summary"
     if is_weekend:
         send = bool(material_event or decision_changed or account_conflict)
         return (
             send,
             "weekend_material_change" if send else "weekend_no_material_change",
         )
-    if weekly_summary_due:
-        return True, "friday_weekly_summary"
     send = bool(
         decision_changed
         or material_event
@@ -427,6 +461,18 @@ def notification_delivery_policy(
         "material_decision_change"
         if send
         else "unchanged_daily_email_suppressed",
+    )
+
+
+def weekly_summary_due_for_published_session(
+    current: datetime,
+    published_session: date,
+) -> bool:
+    """Schedule the Friday-close summary once, on its Saturday publication day."""
+
+    return bool(
+        published_session.weekday() == calendar.FRIDAY
+        and current.date() == published_session + timedelta(days=1)
     )
 
 

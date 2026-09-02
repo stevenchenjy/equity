@@ -26,14 +26,15 @@ from phase5r_daily_common import (
 from run_phase5r_daily_decision_pipeline import (
     REFRESH_NOT_READY_EXIT,
     delivery_status_is_unknown,
+    refresh_readiness,
 )
 
 
 DECISION_PIPELINE = (
     ROOT / "09_scripts" / "phase5r" / "run_phase5r_daily_decision_pipeline.py"
 )
-DECISION_TIME = "18:30"
-DECISION_TERMINAL_TIME = "20:00"
+DECISION_TIME = "13:30"
+DECISION_TERMINAL_TIME = "15:30"
 MAX_AUTOMATIC_ATTEMPTS = 2
 
 
@@ -84,12 +85,32 @@ def main() -> int:
         {"schema_version": "phase5r_daily_scheduler_state_v1", "dates": {}},
     )
     date_state = state.setdefault("dates", {}).setdefault(cycle_date(), {})
+    refresh_deadline_recovered = False
     if date_state.get("decision_completed") is True:
         print("scheduler_action=none reason=daily_decision_already_completed")
         return 0
     if date_state.get("decision_terminal_failure") is True:
-        print("scheduler_action=none reason=daily_decision_terminal_failure")
-        return 0
+        terminal_reason = str(date_state.get("decision_terminal_reason", ""))
+        if terminal_reason != "daily_decision_refresh_deadline_exhausted":
+            print("scheduler_action=none reason=daily_decision_terminal_failure")
+            return 0
+        ready, readiness_reason = refresh_readiness()
+        if not ready:
+            print(
+                "scheduler_action=none reason=daily_decision_terminal_failure "
+                f"refresh_readiness={readiness_reason}"
+            )
+            return 0
+        # A refresh-deadline terminal is recoverable only after a fully passed,
+        # same-cycle handoff appears. SMTP-ambiguous or exhausted-send
+        # terminals remain permanently fail-closed.
+        date_state.pop("decision_terminal_failure", None)
+        date_state.pop("decision_terminal_reason", None)
+        date_state["decision_refresh_deadline_recovered_at"] = iso_now()
+        state["updated_at"] = iso_now()
+        atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
+        clear_automation_alert(component="daily_decision")
+        refresh_deadline_recovered = True
     attempts = int(date_state.get("decision_attempts", 0) or 0)
     if attempts >= MAX_AUTOMATIC_ATTEMPTS:
         date_state["decision_terminal_failure"] = True
@@ -165,7 +186,8 @@ def main() -> int:
     elif completed_process.returncode == 0:
         date_state["decision_completed"] = True
         date_state["decision_completed_at"] = iso_now()
-        clear_automation_alert(component="daily_decision")
+        if not refresh_deadline_recovered:
+            clear_automation_alert(component="daily_decision")
     elif attempts >= MAX_AUTOMATIC_ATTEMPTS:
         date_state["decision_terminal_failure"] = True
         date_state["decision_terminal_reason"] = (

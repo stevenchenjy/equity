@@ -12,6 +12,7 @@ from unittest.mock import Mock, patch
 from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
+from phase5r_daily_common import latest_published_market_session
 import phase5r_massive_b2_adapter as massive
 import run_phase5r_b2_full_universe_market_data as b2
 import run_phase5r_daily_decision_pipeline as final_pipeline
@@ -22,10 +23,10 @@ import score_phase5r_b2_candidates as scoring
 
 
 ET = ZoneInfo("America/New_York")
-PRE_CLOSE = datetime(2026, 8, 5, 12, 30, tzinfo=ET)
-CLOSE_BOUNDARY = datetime(2026, 8, 5, 16, 15, tzinfo=ET)
-POST_CLOSE = datetime(2026, 8, 5, 17, 45, tzinfo=ET)
-POST_CLOSE_RETRY = datetime(2026, 8, 5, 18, 15, tzinfo=ET)
+PRE_PUBLICATION = datetime(2026, 8, 6, 8, 15, tzinfo=ET)
+PUBLICATION_BOUNDARY = datetime(2026, 8, 6, 11, 15, tzinfo=ET)
+PUBLICATION_FIRST = PUBLICATION_BOUNDARY
+PUBLICATION_RETRY = datetime(2026, 8, 6, 11, 45, tzinfo=ET)
 
 
 def _seed(ticker: str) -> dict[str, str]:
@@ -157,7 +158,37 @@ class B2RefreshCadenceTests(unittest.TestCase):
             }[name]
             stack.enter_context(patch.object(b2, name, value))
 
-    def test_preclose_reuse_keeps_current_local_snapshot_and_skips_massive_client(self) -> None:
+    def test_basic_eod_publication_boundary_is_distinct_from_market_close(self) -> None:
+        self.assertEqual(
+            latest_published_market_session(
+                datetime(2026, 8, 6, 11, 14, tzinfo=ET)
+            ),
+            date(2026, 8, 4),
+        )
+        self.assertEqual(
+            latest_published_market_session(PUBLICATION_BOUNDARY),
+            date(2026, 8, 5),
+        )
+        self.assertEqual(
+            latest_published_market_session(
+                datetime(2026, 8, 6, 15, 15, tzinfo=ZoneInfo("UTC"))
+            ),
+            date(2026, 8, 5),
+        )
+        self.assertEqual(
+            latest_published_market_session(
+                datetime(2026, 8, 8, 11, 15, tzinfo=ET)
+            ),
+            date(2026, 8, 7),
+        )
+        self.assertEqual(
+            latest_published_market_session(
+                datetime(2026, 9, 7, 12, 0, tzinfo=ET)
+            ),
+            date(2026, 9, 4),
+        )
+
+    def test_prepublication_reuse_keeps_latest_published_snapshot_and_skips_client(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_coherent_snapshot(paths, "2026-08-04")
@@ -167,7 +198,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             }
             with ExitStack() as stack:
                 self._patch_b2_paths(stack, paths)
-                stack.enter_context(patch.object(b2, "now_et", return_value=PRE_CLOSE))
+                stack.enter_context(patch.object(b2, "now_et", return_value=PRE_PUBLICATION))
                 factory = stack.enter_context(
                     patch.object(b2.MassiveBasicEODClient, "from_environment")
                 )
@@ -182,7 +213,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             self.assertEqual(audit[-1]["status"], "complete")
             self.assertIn("public_source_called=no", audit[-1]["safety_notes"])
 
-    def test_post_close_market_child_timeout_covers_bounded_import_budget(self) -> None:
+    def test_eod_market_child_timeout_covers_bounded_import_budget(self) -> None:
         completed = daily_refresh.subprocess.CompletedProcess(["child"], 0)
         with patch.object(
             daily_refresh.subprocess, "run", return_value=completed
@@ -195,15 +226,15 @@ class B2RefreshCadenceTests(unittest.TestCase):
             )
 
         self.assertEqual(result["outcome"], "passed")
-        self.assertEqual(daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS, 480)
+        self.assertEqual(daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS, 480)
         self.assertEqual(refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS, 900)
         self.assertGreaterEqual(
-            daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS,
+            daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS,
             29 * massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS,
         )
         self.assertEqual(
             run.call_args.kwargs["timeout"],
-            daily_refresh.POST_CLOSE_MARKET_REFRESH_TIMEOUT_SECONDS,
+            daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS,
         )
 
     def test_refresh_scheduler_rejects_stale_child_state(self) -> None:
@@ -236,7 +267,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             )
         )
 
-    def test_reuse_rejects_previous_close_at_current_close_boundary_without_massive_client(self) -> None:
+    def test_reuse_rejects_stale_close_at_publication_boundary_without_client(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_coherent_snapshot(paths, "2026-08-04")
@@ -244,7 +275,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             with ExitStack() as stack:
                 self._patch_b2_paths(stack, paths)
                 stack.enter_context(
-                    patch.object(b2, "now_et", return_value=CLOSE_BOUNDARY)
+                    patch.object(b2, "now_et", return_value=PUBLICATION_BOUNDARY)
                 )
                 factory = stack.enter_context(
                     patch.object(b2.MassiveBasicEODClient, "from_environment")
@@ -260,41 +291,41 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 audit[-1]["safety_notes"],
             )
 
-    def test_scheduler_fetches_only_post_close_regular_session(self) -> None:
+    def test_scheduler_fetches_only_in_eod_publication_window(self) -> None:
         self.assertEqual(
-            refresh_scheduler.market_snapshot_mode(PRE_CLOSE, ["08:15", "12:30"]),
+            refresh_scheduler.market_snapshot_mode(PRE_PUBLICATION, ["08:15"]),
             refresh_scheduler.MARKET_SNAPSHOT_REUSE,
         )
         self.assertEqual(
             refresh_scheduler.market_snapshot_mode(
-                POST_CLOSE, ["08:15", "12:30", "16:15", "17:45"]
+                PUBLICATION_FIRST, ["08:15", "11:15"]
             ),
             refresh_scheduler.MARKET_SNAPSHOT_FETCH,
         )
         self.assertEqual(
-            refresh_scheduler.market_snapshot_mode(POST_CLOSE, ["08:15"]),
+            refresh_scheduler.market_snapshot_mode(PUBLICATION_FIRST, ["08:15"]),
             refresh_scheduler.MARKET_SNAPSHOT_REUSE,
         )
         self.assertEqual(
             refresh_scheduler.market_snapshot_mode(
-                POST_CLOSE_RETRY,
-                ["18:15"],
+                PUBLICATION_RETRY,
+                ["11:45"],
                 market_ready=False,
             ),
             refresh_scheduler.MARKET_SNAPSHOT_FETCH,
         )
         self.assertEqual(
             refresh_scheduler.market_snapshot_mode(
-                POST_CLOSE_RETRY,
-                ["18:15"],
+                PUBLICATION_RETRY,
+                ["11:45"],
                 market_ready=True,
             ),
             refresh_scheduler.MARKET_SNAPSHOT_REUSE,
         )
-        labor_day = datetime(2026, 9, 7, 17, 45, tzinfo=ET)
+        saturday_publication = datetime(2026, 8, 8, 11, 15, tzinfo=ET)
         self.assertEqual(
-            refresh_scheduler.market_snapshot_mode(labor_day, ["17:45"]),
-            refresh_scheduler.MARKET_SNAPSHOT_REUSE,
+            refresh_scheduler.market_snapshot_mode(saturday_publication, ["11:15"]),
+            refresh_scheduler.MARKET_SNAPSHOT_FETCH,
         )
 
     def test_scheduler_reuse_starts_only_one_deterministic_child(self) -> None:
@@ -315,10 +346,10 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(
                 patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False})
             )
-            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-05"))
-            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=PRE_CLOSE))
+            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-06"))
+            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=PRE_PUBLICATION))
             stack.enter_context(
-                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T12:30:00-04:00")
+                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-06T08:15:00-04:00")
             )
             stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
@@ -340,7 +371,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
         )
 
-    def test_failed_post_close_refresh_never_starts_a_second_child(self) -> None:
+    def test_failed_publication_refresh_never_starts_a_second_child(self) -> None:
         """A failed child reserves its slot and waits for the next retry slot."""
 
         scheduler_state: dict[str, object] = {
@@ -359,10 +390,10 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(
                 patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False})
             )
-            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-05"))
-            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=POST_CLOSE))
+            stack.enter_context(patch.object(refresh_scheduler, "cycle_date", return_value="2026-08-06"))
+            stack.enter_context(patch.object(refresh_scheduler, "now_et", return_value=PUBLICATION_FIRST))
             stack.enter_context(
-                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-05T17:45:00-04:00")
+                patch.object(refresh_scheduler, "iso_now", return_value="2026-08-06T11:15:00-04:00")
             )
             stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
@@ -379,36 +410,34 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(run.call_count, 1)
         command = run.call_args.args[0]
         self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), command)
-        date_state = scheduler_state["dates"]["2026-08-05"]
+        date_state = scheduler_state["dates"]["2026-08-06"]
         self.assertIn(
-            refresh_scheduler.POST_CLOSE_MARKET_SLOT,
+            refresh_scheduler.FIRST_EOD_PUBLICATION_RETRY_SLOT,
             date_state["refresh_slots_completed"],
         )
         self.assertEqual(
-            date_state["post_close_market_attempt_status"], "child_returned"
+            date_state["eod_publication_market_attempt_status"], "child_returned"
         )
         remaining = [
             slot
-            for slot in refresh_scheduler.due_slots(POST_CLOSE)
+            for slot in refresh_scheduler.due_slots(PUBLICATION_FIRST)
             if slot not in set(date_state["refresh_slots_completed"])
         ]
         self.assertEqual(
-            refresh_scheduler.market_snapshot_mode(POST_CLOSE, remaining),
+            refresh_scheduler.market_snapshot_mode(PUBLICATION_FIRST, remaining),
             refresh_scheduler.MARKET_SNAPSHOT_REUSE,
         )
 
-    def test_later_post_close_slot_retries_market_after_not_published(self) -> None:
+    def test_later_publication_slot_retries_market_after_not_published(self) -> None:
         scheduler_state: dict[str, object] = {
             "schema_version": "phase5r_daily_scheduler_state_v1",
             "dates": {
-                "2026-08-05": {
+                "2026-08-06": {
                     "refresh_slots_completed": [
                         "08:15",
-                        "12:30",
-                        "16:15",
-                        "17:45",
+                        "11:15",
                     ],
-                    "post_close_market_ready": False,
+                    "eod_publication_market_ready": False,
                 }
             },
         }
@@ -438,21 +467,21 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 patch.object(
                     refresh_scheduler,
                     "cycle_date",
-                    return_value="2026-08-05",
+                    return_value="2026-08-06",
                 )
             )
             stack.enter_context(
                 patch.object(
                     refresh_scheduler,
                     "now_et",
-                    return_value=POST_CLOSE_RETRY,
+                    return_value=PUBLICATION_RETRY,
                 )
             )
             stack.enter_context(
                 patch.object(
                     refresh_scheduler,
                     "iso_now",
-                    return_value="2026-08-05T18:15:00-04:00",
+                    return_value="2026-08-06T11:45:00-04:00",
                 )
             )
             stack.enter_context(
@@ -485,10 +514,10 @@ class B2RefreshCadenceTests(unittest.TestCase):
             refresh_scheduler.MARKET_SNAPSHOT_FETCH,
             run.call_args.args[0],
         )
-        date_state = scheduler_state["dates"]["2026-08-05"]
-        self.assertIn("18:15", date_state["refresh_slots_completed"])
+        date_state = scheduler_state["dates"]["2026-08-06"]
+        self.assertIn("11:45", date_state["refresh_slots_completed"])
         self.assertEqual(
-            date_state["post_close_market_attempts"][-1]["status"],
+            date_state["eod_publication_market_attempts"][-1]["status"],
             "market_not_ready",
         )
 
@@ -714,7 +743,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 stack.enter_context(
                     patch.object(
                         final_pipeline,
-                        "last_completed_market_session",
+                        "latest_published_market_session",
                         return_value=date(2026, 8, 5),
                     )
                 )
@@ -769,7 +798,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 stack.enter_context(
                     patch.object(
                         final_pipeline,
-                        "last_completed_market_session",
+                        "latest_published_market_session",
                         return_value=date(2026, 8, 5),
                     )
                 )
@@ -822,14 +851,14 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 patch.object(
                     decision_scheduler,
                     "now_et",
-                    return_value=datetime(2026, 8, 5, 18, 45, tzinfo=ET),
+                    return_value=datetime(2026, 8, 5, 14, 0, tzinfo=ET),
                 )
             )
             stack.enter_context(
                 patch.object(
                     decision_scheduler,
                     "iso_now",
-                    return_value="2026-08-05T18:45:00-04:00",
+                    return_value="2026-08-05T14:00:00-04:00",
                 )
             )
             stack.enter_context(
@@ -882,14 +911,14 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 patch.object(
                     decision_scheduler,
                     "now_et",
-                    return_value=datetime(2026, 8, 5, 20, 0, tzinfo=ET),
+                    return_value=datetime(2026, 8, 5, 15, 30, tzinfo=ET),
                 )
             )
             stack.enter_context(
                 patch.object(
                     decision_scheduler,
                     "iso_now",
-                    return_value="2026-08-05T20:00:00-04:00",
+                    return_value="2026-08-05T15:30:00-04:00",
                 )
             )
             stack.enter_context(
@@ -916,6 +945,103 @@ class B2RefreshCadenceTests(unittest.TestCase):
             component="daily_decision",
             reason="daily_decision_refresh_deadline_exhausted",
         )
+
+    def test_decision_scheduler_recovers_refresh_deadline_after_passed_handoff(self) -> None:
+        scheduler_state: dict[str, object] = {
+            "schema_version": "phase5r_daily_scheduler_state_v1",
+            "dates": {
+                "2026-08-06": {
+                    "decision_terminal_failure": True,
+                    "decision_terminal_reason": (
+                        "daily_decision_refresh_deadline_exhausted"
+                    ),
+                }
+            },
+        }
+        completed = decision_scheduler.subprocess.CompletedProcess(
+            ["decision"],
+            0,
+            stdout="email_sent=false reason=unchanged_daily_email_suppressed",
+        )
+        with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "load_active_state",
+                    return_value={"operational_from": "2026-08-01"},
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "load_inhibit",
+                    return_value={"active": False},
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "cycle_date",
+                    return_value="2026-08-06",
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "now_et",
+                    return_value=datetime(2026, 8, 6, 16, 0, tzinfo=ET),
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "iso_now",
+                    return_value="2026-08-06T16:00:00-04:00",
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "read_json",
+                    return_value=scheduler_state,
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler,
+                    "refresh_readiness",
+                    return_value=(True, "daily_refresh_ready"),
+                )
+            )
+            stack.enter_context(patch.object(decision_scheduler, "atomic_write_json"))
+            clear = stack.enter_context(
+                patch.object(decision_scheduler, "clear_automation_alert")
+            )
+            run = stack.enter_context(
+                patch.object(
+                    decision_scheduler.subprocess,
+                    "run",
+                    return_value=completed,
+                )
+            )
+            stack.enter_context(
+                patch.object(
+                    decision_scheduler.sys,
+                    "argv",
+                    ["daily_scheduler.py"],
+                )
+            )
+            with redirect_stdout(io.StringIO()):
+                result = decision_scheduler.main()
+
+        self.assertEqual(result, 0)
+        date_state = scheduler_state["dates"]["2026-08-06"]
+        self.assertNotIn("decision_terminal_failure", date_state)
+        self.assertNotIn("decision_terminal_reason", date_state)
+        self.assertTrue(date_state["decision_completed"])
+        self.assertEqual(date_state["decision_attempts"], 1)
+        run.assert_called_once()
+        clear.assert_called_once_with(component="daily_decision")
 
 
 if __name__ == "__main__":

@@ -126,6 +126,7 @@ class NotificationPolicySecurityTests(unittest.TestCase):
                 "account_conflicts": [],
                 "eligible_action_review_candidates": [],
                 "eligible_new_position_review_candidates": [],
+                "market_gate": {"expected_market_session": "2026-08-31"},
                 "fundamental_gate": {"weakening_tickers": []},
                 "notification_policy": {
                     "event_driven": True,
@@ -169,7 +170,7 @@ class NotificationPolicySecurityTests(unittest.TestCase):
                         2026,
                         9,
                         1,
-                        18,
+                        13,
                         30,
                         tzinfo=ZoneInfo("America/New_York"),
                     ),

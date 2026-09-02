@@ -34,8 +34,7 @@ from phase5r_daily_common import (
     atomic_write_text,
     canonical_sha256,
     cycle_date,
-    expected_market_session,
-    last_completed_market_session,
+    latest_published_market_session,
     iso_now,
     load_active_state,
     load_inhibit,
@@ -45,6 +44,7 @@ from phase5r_daily_common import (
     read_json,
     sha256_file,
     log_daily_run,
+    weekly_summary_due_for_published_session,
 )
 from phase5r_c9_common import load_account_state
 from phase5r_active_config import load_active_config
@@ -74,7 +74,7 @@ def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, An
     }
     failures: list[str] = []
     session_dates: dict[str, str] = {}
-    expected = last_completed_market_session(current).isoformat()
+    expected = latest_published_market_session(current).isoformat()
     for ticker in held_tickers:
         row = rows.get(ticker)
         quality_row = quality.get(ticker)
@@ -457,7 +457,13 @@ def main() -> int:
     prior_fingerprint = prior_state.get("decision_fingerprint", "")
     decision_changed = bool(prior_fingerprint) and decision_fingerprint != prior_fingerprint
     is_weekend = current.weekday() >= 5
-    weekly_summary_due = current.weekday() == 4
+    published_session = date.fromisoformat(
+        market_gate["expected_market_session"]
+    )
+    weekly_summary_due = weekly_summary_due_for_published_session(
+        current,
+        published_session,
+    )
     first_material_baseline = not prior_fingerprint and bool(
         eligible_transitions
         or eligible_new_candidates

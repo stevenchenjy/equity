@@ -4,7 +4,7 @@ import csv
 from datetime import datetime, timezone
 from pathlib import Path
 
-from phase5r_daily_common import last_completed_market_session, now_et
+from phase5r_daily_common import latest_published_market_session, now_et
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -113,7 +113,7 @@ def score_row(
 
 
 def main() -> None:
-    expected_session = last_completed_market_session(now_et()).isoformat()
+    expected_session = latest_published_market_session(now_et()).isoformat()
     scores = [
         score_row(row, expected_market_session=expected_session)
         for row in read_csv(CANDIDATES_PATH)

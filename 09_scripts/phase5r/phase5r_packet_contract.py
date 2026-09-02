@@ -12,14 +12,14 @@ import copy
 import hashlib
 import json
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from phase5r_daily_common import (
     canonical_sha256,
     expected_market_session,
-    last_completed_market_session,
+    latest_published_market_session,
 )
 from phase5r_evidence_freshness import (
     EvidenceFreshnessError,
@@ -197,10 +197,10 @@ def _expected_verified_close_session(
     cycle_date: Any,
     as_of_et: Any | None = None,
 ) -> str:
-    """Return the canonical completed market session for a packet cycle date.
+    """Return the canonical provider-published session for a packet cycle date.
 
     A Saturday, Sunday, or US market holiday may legitimately use the most
-    recent completed session.  Keeping this calculation aligned with the
+    recent published session. Keeping this calculation aligned with the
     daily decision builder prevents a calendar-date mismatch from weakening
     the separate freshness or shadow-transition gates.
     """
@@ -215,14 +215,14 @@ def _expected_verified_close_session(
     except ValueError as exc:
         raise ContractError("packet: cycle_date is invalid") from exc
     if as_of_et is None:
-        return expected_market_session(cycle_day).isoformat()
+        return expected_market_session(cycle_day - timedelta(days=1)).isoformat()
     try:
         as_of = datetime.fromisoformat(str(as_of_et))
     except ValueError as exc:
         raise ContractError("packet: as_of_et must be an ISO timestamp") from exc
     if as_of.tzinfo is None:
         raise ContractError("packet: as_of_et must include a timezone")
-    return last_completed_market_session(as_of).isoformat()
+    return latest_published_market_session(as_of).isoformat()
 
 def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
     required = {

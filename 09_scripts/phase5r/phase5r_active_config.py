@@ -68,10 +68,17 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         raise ActiveConfigError("model path must remain removed with zero calls and cost")
     notifications = config.get("notifications", {})
     filing_lookback = notifications.get("new_filing_lookback_calendar_days")
-    retry_slots = notifications.get("post_close_refresh_retry_slots_et")
+    retry_slots = notifications.get("eod_publication_retry_slots_et")
+    publication_after = str(
+        notifications.get("market_data_publication_after_et", "")
+    )
+    send_after = str(notifications.get("send_after_et", ""))
+    terminal_after = str(notifications.get("terminal_alert_after_et", ""))
     time_pattern = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
     if (
         notifications.get("event_driven") is not True
+        or notifications.get("weekly_summary_weekday") != "friday"
+        or notifications.get("unchanged_daily_email") is not False
         or type(filing_lookback) is not int
         or filing_lookback not in range(1, 31)
         or not isinstance(retry_slots, list)
@@ -81,12 +88,12 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
             not isinstance(value, str) or time_pattern.fullmatch(value) is None
             for value in retry_slots
         )
-        or time_pattern.fullmatch(str(notifications.get("send_after_et", "")))
-        is None
-        or time_pattern.fullmatch(
-            str(notifications.get("terminal_alert_after_et", ""))
-        )
-        is None
+        or time_pattern.fullmatch(publication_after) is None
+        or time_pattern.fullmatch(send_after) is None
+        or time_pattern.fullmatch(terminal_after) is None
+        or retry_slots[0] < publication_after
+        or retry_slots[-1] >= send_after
+        or send_after >= terminal_after
     ):
         raise ActiveConfigError(
             "event-driven notification cadence is invalid"

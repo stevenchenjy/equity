@@ -12,7 +12,7 @@ from phase5r_daily_common import (
     atomic_write_csv,
     cycle_date,
     iso_now,
-    last_completed_market_session,
+    latest_published_market_session,
     now_et,
     read_csv,
 )
@@ -72,7 +72,7 @@ def selected_tickers() -> tuple[list[str], set[str]]:
 
 
 def main() -> int:
-    expected_session = last_completed_market_session(now_et()).isoformat()
+    expected_session = latest_published_market_session(now_et()).isoformat()
     tickers, held = selected_tickers()
     market = {row.get("ticker", "").strip().upper(): row for row in read_csv(MARKET_SNAPSHOT_PATH)}
     scores = {row.get("ticker", "").strip().upper(): row for row in read_csv(SIGNAL_SCORES_PATH)}

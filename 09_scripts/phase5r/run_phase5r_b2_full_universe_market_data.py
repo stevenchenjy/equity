@@ -12,7 +12,7 @@ from typing import Any
 from phase5r_daily_common import (
     atomic_write_csv,
     is_us_market_session_date,
-    last_completed_market_session,
+    latest_published_market_session,
     now_et,
 )
 from phase5r_massive_b2_adapter import (
@@ -164,7 +164,7 @@ def smoke_failure_code(rows: list[dict[str, str]]) -> str:
 
 
 def history_window(current: datetime) -> tuple[date, date]:
-    expected_session = last_completed_market_session(current)
+    expected_session = latest_published_market_session(current)
     return expected_session - timedelta(weeks=52), expected_session
 
 
@@ -292,7 +292,7 @@ def market_row_from_massive_bars(
         observed_sessions = [bar["session_date"] for bar in bars]
         if len(expected_sessions) < 20 or observed_sessions != expected_sessions:
             return row
-        expected_session = last_completed_market_session(current)
+        expected_session = latest_published_market_session(current)
         expected_previous = previous_market_session(expected_session)
         if (
             bars[-1]["session_date"] != expected_session
@@ -875,7 +875,7 @@ def full_universe_rows_are_committable(
     if market_by_ticker is None:
         return False, FULL_UNIVERSE_INCOMPLETE_CODE
 
-    expected_session = last_completed_market_session(current).isoformat()
+    expected_session = latest_published_market_session(current).isoformat()
     held_set = {ticker.strip().upper() for ticker in held_tickers}
     required_positive_fields = {"last_price", "previous_close"}
     required_nonnegative_fields = {
@@ -960,7 +960,7 @@ def validated_snapshot_reuse(
     )
     if not coherent:
         return False, REUSE_INVALID_SNAPSHOT_CODE, ""
-    expected_session = last_completed_market_session(current).isoformat()
+    expected_session = latest_published_market_session(current).isoformat()
     observed_sessions = {row.get("market_session_date", "") for row in rows}
     if observed_sessions != {expected_session}:
         return False, REUSE_STALE_SNAPSHOT_CODE, expected_session

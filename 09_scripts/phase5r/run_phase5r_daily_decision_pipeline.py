@@ -16,7 +16,7 @@ from phase5r_daily_common import (
     ExclusiveFileLock,
     clear_automation_alert,
     cycle_date,
-    last_completed_market_session,
+    latest_published_market_session,
     load_active_state,
     load_inhibit,
     log_daily_run,
@@ -51,7 +51,7 @@ def _parse_aware_timestamp(value: object) -> datetime | None:
 
 
 def refresh_readiness() -> tuple[bool, str]:
-    """Require today's complete, current-session handoff before delivery."""
+    """Require today's complete, latest-published-session handoff before delivery."""
 
     try:
         state = read_json(DAILY_REFRESH_STATE_PATH, {})
@@ -71,7 +71,7 @@ def refresh_readiness() -> tuple[bool, str]:
     if state.get("cycle_date") != required_cycle:
         return False, "daily_refresh_cycle_not_current"
     current = now_et()
-    required_market_session = last_completed_market_session(current).isoformat()
+    required_market_session = latest_published_market_session(current).isoformat()
     if state.get("expected_market_session") != required_market_session:
         return False, "daily_refresh_market_session_not_current"
     state_started = _parse_aware_timestamp(state.get("started_at"))

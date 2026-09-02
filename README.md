@@ -26,10 +26,11 @@ for the synchronization, lock, failure, and operator procedures.
 The active workflow is `daily_decision` and the only active email pipeline is
 `phase5r_daily`.
 
-- Public market and SEC evidence refreshes run several times on weekdays.
-- One decisive brief is eligible after 18:30 America/New_York only for a
-  material change, plus a Friday weekly summary. Unchanged weekday email is
-  suppressed.
+- Public market and SEC evidence refreshes run in the next-day Basic EOD
+  publication window, with bounded retries from 11:15 through 12:45 ET.
+- One decisive brief is eligible after 13:30 America/New_York only for a
+  material change. The Friday-close weekly summary is delivered on Saturday,
+  after that close is published. Unchanged ordinary email is suppressed.
 - Newly added research tickers retain their complete SEC backfill, but only
   newly discovered material filings dated within seven calendar days can
   trigger an event alert; historical backlog never creates an email burst.
@@ -41,8 +42,9 @@ The active workflow is `daily_decision` and the only active email pipeline is
   spend. Historical model code and evidence are archived; production performs
   no model credential lookup or provider call.
 - Daily analysis does not imply daily portfolio action.
-- Current research packets are regenerated from the latest completed close and
-  SEC evidence; the historical C5 narrative is not a production input.
+- Current research packets are regenerated from the latest close published by
+  the active Basic EOD provider and current SEC evidence; the historical C5
+  narrative is not a production input.
 - Source-bound bear/base/bull valuations and whole-share sizing are computed
   deterministically. Recommendation snapshots are evaluated after 1, 5, 20,
   and 60 market sessions against SPY and QQQ.

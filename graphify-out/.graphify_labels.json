@@ -10,6 +10,8 @@
   "8": "iso_now",
   "9": "main",
   "10": "PacketMarketObservationTests",
+  "11": "run_phase5r_daily_decision_pipeline.py",
+  "12": "iso_now",
   "13": "verify_phase5r_c6_weekly_email_boundary.py",
   "16": "phase5r_llm_contract.py",
   "18": "verify_phase5r_c5t_manual_action_boundary.py",
