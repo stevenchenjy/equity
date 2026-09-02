@@ -9,7 +9,7 @@ import os
 import smtplib
 import ssl
 import stat
-from datetime import date
+from datetime import date, datetime
 from email.message import EmailMessage
 from typing import Any, Callable
 
@@ -164,10 +164,28 @@ def delivery_policy(
     )
 
 
-def validate_decision() -> dict[str, Any]:
+def validate_decision(*, correction: bool = False) -> dict[str, Any]:
     decision = read_json(DAILY_DECISION_JSON_PATH)
-    if decision.get("cycle_date") != cycle_date():
-        raise ValueError("decision_cycle_mismatch")
+    decision_cycle_text = str(decision.get("cycle_date", ""))
+    try:
+        decision_cycle = date.fromisoformat(decision_cycle_text)
+    except ValueError as exc:
+        raise ValueError("decision_cycle_invalid") from exc
+    current = now_et()
+    if correction:
+        correction_age_days = (current.date() - decision_cycle).days
+        if correction_age_days not in {0, 1}:
+            raise ValueError("correction_cycle_out_of_range")
+        try:
+            validation_current = datetime.fromisoformat(str(decision["generated_at"]))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError("decision_generated_at_invalid") from exc
+        if validation_current.date() != decision_cycle:
+            raise ValueError("decision_generated_at_cycle_mismatch")
+    else:
+        if decision_cycle_text != cycle_date():
+            raise ValueError("decision_cycle_mismatch")
+        validation_current = current
     if decision.get("automatic_action_allowed") is not False:
         raise ValueError("automatic_action_boundary_invalid")
     list_fields = (
@@ -201,7 +219,6 @@ def validate_decision() -> dict[str, Any]:
         or weakening_tickers
     )
     first_material_baseline = bool(not prior_decision_present and base_trigger)
-    current = now_et()
     try:
         published_session = date.fromisoformat(
             str(market_gate["expected_market_session"])
@@ -209,9 +226,9 @@ def validate_decision() -> dict[str, Any]:
     except (KeyError, TypeError, ValueError) as exc:
         raise ValueError("decision_notification_inputs_invalid") from exc
     expected_evaluation = {
-        "is_weekend": current.weekday() >= 5,
+        "is_weekend": validation_current.weekday() >= 5,
         "weekly_summary_due": weekly_summary_due_for_published_session(
-            current,
+            validation_current,
             published_session,
         ),
         "prior_decision_present": prior_decision_present,
@@ -274,7 +291,7 @@ def build_message(
 ) -> EmailMessage:
     headline = safe_header(decision.get("headline"), "headline")
     prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
-    subject = f"{prefix} {headline} — {cycle_date()}"
+    subject = f"{prefix} {headline} — {decision['cycle_date']}"
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = f"{config['sender_name']} <{config['smtp_username']}>"
@@ -304,7 +321,7 @@ def append_delivery(
         LEDGER_FIELDS,
         {
             "timestamp": iso_now(),
-            "cycle_date": cycle_date(),
+            "cycle_date": decision["cycle_date"],
             "status": status,
             "reason": reason,
             "decision_fingerprint": decision.get("decision_fingerprint", ""),
@@ -329,11 +346,6 @@ def correction_eligibility(
     cycle_rows = [
         row for row in rows if row.get("cycle_date", "").strip() == target_cycle
     ]
-    if any(
-        row.get("status", "").strip() in CORRECTION_DELIVERY_STATUSES
-        for row in cycle_rows
-    ):
-        return False, "existing_correction_delivery"
     sent_rows = [row for row in cycle_rows if row.get("status", "").strip() == "sent"]
     if not sent_rows:
         return False, "no_prior_sent_delivery"
@@ -343,6 +355,16 @@ def correction_eligibility(
         sha256_file(DAILY_BRIEF_TEXT_PATH),
         sha256_file(DAILY_BRIEF_HTML_PATH),
     )
+    if any(
+        row.get("status", "").strip() in CORRECTION_DELIVERY_STATUSES
+        and (
+            row.get("decision_sha256", ""),
+            row.get("brief_text_sha256", ""),
+            row.get("brief_html_sha256", ""),
+        ) == current_hashes
+        for row in cycle_rows
+    ):
+        return False, "existing_identical_correction_delivery"
     prior_hashes = (
         prior.get("decision_sha256", ""),
         prior.get("brief_text_sha256", ""),
@@ -371,7 +393,7 @@ def send_once(
         return 2
 
     try:
-        decision = validate_decision()
+        decision = validate_decision(correction=correction)
     except (OSError, ValueError) as exc:
         reason = str(exc) if str(exc) else "decision_validation_failed"
         log_daily_run(
@@ -395,16 +417,17 @@ def send_once(
         )
         return 0
 
+    target_cycle = str(decision["cycle_date"])
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
         delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
         if correction:
             correction_allowed, correction_reason = correction_eligibility(
-                delivery_rows, cycle_date()
+                delivery_rows, target_cycle
             )
             blocked = not correction_allowed
             prior_status = correction_reason
         else:
-            blocked, prior_status = cycle_is_blocked(delivery_rows, cycle_date())
+            blocked, prior_status = cycle_is_blocked(delivery_rows, target_cycle)
         if blocked:
             log_daily_run(
                 component="daily_sender",

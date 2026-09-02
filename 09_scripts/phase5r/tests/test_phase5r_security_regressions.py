@@ -69,7 +69,7 @@ class SmtpConfigurationSecurityTests(unittest.TestCase):
                 config = sender.load_config()
         self.assertEqual(config["smtp_host"], "smtp.gmail.com")
 
-    def test_explicit_correction_requires_changed_content_and_is_single_use(self) -> None:
+    def test_explicit_correction_requires_changed_content_and_deduplicates_hashes(self) -> None:
         with tempfile.TemporaryDirectory(prefix="phase5r-correction-") as directory:
             root = Path(directory)
             decision = root / "decision.json"
@@ -78,6 +78,11 @@ class SmtpConfigurationSecurityTests(unittest.TestCase):
             decision.write_text('{"version": 2}\n', encoding="utf-8")
             text.write_text("corrected brief\n", encoding="utf-8")
             html.write_text("<p>corrected brief</p>\n", encoding="utf-8")
+            current_hashes = (
+                common.sha256_file(decision),
+                common.sha256_file(text),
+                common.sha256_file(html),
+            )
             rows = [{
                 "cycle_date": "2026-09-01",
                 "status": "sent",
@@ -99,10 +104,26 @@ class SmtpConfigurationSecurityTests(unittest.TestCase):
                         rows + [{
                             "cycle_date": "2026-09-01",
                             "status": "correction_send_claimed",
+                            "decision_sha256": current_hashes[0],
+                            "brief_text_sha256": current_hashes[1],
+                            "brief_html_sha256": current_hashes[2],
                         }],
                         "2026-09-01",
                     ),
-                    (False, "existing_correction_delivery"),
+                    (False, "existing_identical_correction_delivery"),
+                )
+                self.assertEqual(
+                    sender.correction_eligibility(
+                        rows + [{
+                            "cycle_date": "2026-09-01",
+                            "status": "correction_sent",
+                            "decision_sha256": "older-correction",
+                            "brief_text_sha256": "older-correction",
+                            "brief_html_sha256": "older-correction",
+                        }],
+                        "2026-09-01",
+                    ),
+                    (True, "explicit_changed_content_correction"),
                 )
 
     def test_group_or_world_readable_smtp_configuration_is_rejected(self) -> None:
@@ -215,6 +236,22 @@ class NotificationPolicySecurityTests(unittest.TestCase):
             ):
                 validated = sender.validate_decision()
                 self.assertTrue(validated["send_recommended"])
+                decision["generated_at"] = "2026-09-01T13:20:00-04:00"
+                decision_path.write_text(json.dumps(decision), encoding="utf-8")
+                with patch.object(
+                    sender,
+                    "now_et",
+                    return_value=datetime(
+                        2026,
+                        9,
+                        2,
+                        7,
+                        30,
+                        tzinfo=ZoneInfo("America/New_York"),
+                    ),
+                ):
+                    historical = sender.validate_decision(correction=True)
+                self.assertEqual(historical["cycle_date"], "2026-09-01")
                 decision["send_recommended"] = False
                 decision["send_reason"] = "before_daily_decision_time"
                 decision_path.write_text(json.dumps(decision), encoding="utf-8")

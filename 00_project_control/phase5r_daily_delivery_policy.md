@@ -78,9 +78,13 @@ therefore favors a missed status confirmation over a duplicate email.
   materially corrected brief.
 - It requires a prior successful normal delivery for the same cycle date and
   changed decision, text, or HTML content hashes.
-- At most one correction attempt is allowed per cycle date. A durable
-  `correction_send_claimed`, `correction_sent`, or
-  `correction_delivery_unknown` row blocks every later correction attempt.
+- A correction may cover the current or immediately preceding ET cycle date.
+  This supports a next-morning repair without presenting prior-cycle evidence
+  as a new daily decision.
+- At most one correction attempt is allowed for each exact content-hash set. A
+  durable `correction_send_claimed`, `correction_sent`, or
+  `correction_delivery_unknown` row blocks that same correction content from
+  ever being attempted again; a newly changed version remains eligible.
 - Correction messages use the subject prefix `[Phase 5R 更正版]`.
 
 The local SMTP configuration must be a single-link regular file owned by the
