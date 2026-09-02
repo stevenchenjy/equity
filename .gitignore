@@ -44,6 +44,7 @@ graphify-out/20??-??-??/
 00_project_control/phase5r_current_production_status.local.json
 00_project_control/phase5r_current_production_status.local.md
 08_reviews/current/phase5r_retrospective.local.md
+08_reviews/current/phase5r_capital_allocation_validation.local.md
 
 # Phase 5R active-runtime artifacts. These files remain on the authoritative
 # runtime machine, but scheduled refreshes must not dirty the source checkout.
