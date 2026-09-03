@@ -96,6 +96,9 @@ and total token counters plus latency for each completed new-stage call. The
 ChatGPT-managed Codex transport exposes no authoritative dollar charge, so
 dollar cost remains `unavailable` and is never estimated or recorded as zero.
 Physical calls and tokens are still exact observable cost measures.
+Per-run bundles and the call ledger are immutable evidence. The aggregate
+evaluation JSON and Markdown are derived current snapshots and may be replaced
+atomically as new immutable evidence arrives.
 
 ## Evidence stages
 

@@ -12,6 +12,7 @@ from unittest.mock import patch
 from _support import SCRIPT_DIR  # noqa: F401
 
 from evaluate_phase5r_shadow_llm_incremental_value import (
+    _atomic_private_snapshot_text,
     aggregate,
     load_automatic_bundle,
 )
@@ -458,6 +459,14 @@ class ShadowLlmTests(unittest.TestCase):
             result["decision"]["status"], "collecting_bounded_evaluation_evidence"
         )
         self.assertFalse(result["decision"]["promotion_authorized"])
+
+    def test_current_evaluation_snapshot_can_be_atomically_refreshed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "reviews.local" / "evaluation.json"
+            _atomic_private_snapshot_text(output, '{"events": 1}\n')
+            _atomic_private_snapshot_text(output, '{"events": 2}\n')
+            self.assertEqual(output.read_text(encoding="utf-8"), '{"events": 2}\n')
+            self.assertEqual(output.stat().st_mode & 0o777, 0o600)
 
     def test_failed_live_role_is_terminal_and_not_retried(self) -> None:
         packet = fake_packet()

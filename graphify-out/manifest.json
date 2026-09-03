@@ -680,8 +680,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py": {
-    "mtime": 1788399877.1824543,
-    "ast_hash": "4e71e7c493fb7f17421970b2433f1274",
+    "mtime": 1788476458.3969243,
+    "ast_hash": "090e945dcf799122b7a89da75804625c",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_shadow_llm_contract.py": {
@@ -700,8 +700,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_shadow_llm.py": {
-    "mtime": 1788475561.1535683,
-    "ast_hash": "d6cc676246ae483613da060dce1ea083",
+    "mtime": 1788476477.0723193,
+    "ast_hash": "a3dc96b8788afca30dd28ab770c25ebf",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_decision_analysis_summary_for_llm_review.md": {
@@ -710,13 +710,13 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_shadow_llm_evaluation_policy.md": {
-    "mtime": 1788475392.1897964,
-    "ast_hash": "b7a11a9ab6f28977a308be11fadc3858",
+    "mtime": 1788476477.0740166,
+    "ast_hash": "bec7a2cd7db680b618521288a354628e",
     "semantic_hash": ""
   },
   "08_reviews/phase5r_shadow_llm/README.md": {
-    "mtime": 1788475392.1889873,
-    "ast_hash": "d9db998a718f4e7cf07940423920736c",
+    "mtime": 1788476477.0733435,
+    "ast_hash": "1bde60e13fe7c7d80ded99b6496ce610",
     "semantic_hash": ""
   },
   "07_automation/scheduler/check_phase5r_shadow_llm_evaluation_scheduler.sh": {
@@ -752,6 +752,11 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v9.json": {
     "mtime": 1788364793.376086,
     "ast_hash": "52ca0cf5a7ce787cdeb823b1bd2f6a26",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v12.json": {
+    "mtime": 1788476070.0178645,
+    "ast_hash": "0769a5f44898adf27b24ac6c5dcaaeb1",
     "semantic_hash": ""
   }
 }

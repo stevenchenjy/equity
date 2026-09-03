@@ -50,7 +50,9 @@ churn. It is installed and checked independently of the production schedulers:
 ```
 
 The event wrapper updates the aggregate evaluation after every success, skip,
-or failed attempt. It cannot send email or change any canonical artifact.
+or failed attempt. The per-run bundles and call ledger remain immutable; the
+aggregate JSON/Markdown files are atomically replaced current snapshots. It
+cannot send email or change any canonical artifact.
 
 The manual diagnostic path remains available for an explicitly classified
 packet:

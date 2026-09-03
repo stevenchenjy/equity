@@ -884,6 +884,34 @@ def _atomic_private_text(path: Path, content: str) -> None:
     os.chmod(path, 0o600)
 
 
+def _atomic_private_snapshot_text(path: Path, content: str) -> None:
+    """Atomically replace a derived current snapshot; immutable runs stay separate."""
+
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(path.parent, 0o700)
+    if path.is_symlink():
+        raise ShadowEvaluationError(f"symlink output is prohibited: {path.name}")
+    if path.exists():
+        metadata = path.lstat()
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise ShadowEvaluationError(f"output metadata is invalid: {path.name}")
+        if path.read_text(encoding="utf-8") == content:
+            return
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    descriptor = os.open(
+        temporary,
+        os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0),
+        0o600,
+    )
+    try:
+        os.write(descriptor, content.encode("utf-8"))
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+    os.replace(temporary, path)
+    os.chmod(path, 0o600)
+
+
 def _report(payload: dict[str, Any]) -> str:
     metrics = payload["metrics"]
     return f"""# Phase 5R SHADOW_LLM Incremental Value Evaluation
@@ -939,8 +967,8 @@ def main(argv: list[str] | None = None) -> int:
         outcome_path=args.outcome_path,
     )
     content = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    _atomic_private_text(args.output, content)
-    _atomic_private_text(args.output.with_suffix(".md"), _report(payload))
+    _atomic_private_snapshot_text(args.output, content)
+    _atomic_private_snapshot_text(args.output.with_suffix(".md"), _report(payload))
     print(
         f"shadow_llm_evaluation={payload['decision']['status']} "
         "promotion_authorized=false production_influence=false canonical_effect=false"
