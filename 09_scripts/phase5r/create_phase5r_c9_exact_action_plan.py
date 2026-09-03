@@ -158,8 +158,25 @@ def main() -> None:
         weight = as_float(weight_row["current_weight_pct"], f"{ticker}.current_weight_pct")
         label = weight_row["current_recommendation_label"]
         valuation = valuation_by_ticker.get(ticker, {})
+        asset_role = weight_row.get("asset_role", "active_stock")
 
-        if label == "exit_review":
+        if asset_role == "core_allocation":
+            recommended_action = "hold"
+            change = 0
+            target_shares = shares
+            target_weight = weight
+            target_value = value
+            cash_change = 0.0
+            resulting_weight = weight
+            reason = (
+                "SPY is an existing broad-market core holding governed by the core-sleeve "
+                "allocation policy, not the individual-stock concentration cap."
+            )
+            trim_condition = (
+                "Review through the core-allocation policy if the broad-market thesis, "
+                "reserve constraint, or target allocation changes."
+            )
+        elif label == "exit_review":
             recommended_action = "exit_review"
             change = math.ceil(shares - 1e-9)
             target_shares = 0.0
@@ -247,7 +264,7 @@ def main() -> None:
             raise ValueError(f"unsupported C9 action {recommended_action}")
         action_row = {
             "ticker": ticker,
-            "asset_role": "active_stock",
+            "asset_role": asset_role,
             "current_shares": f"{shares:.4f}",
             "current_price": f"{price:.2f}",
             "current_value": f"{value:.2f}",
@@ -276,7 +293,7 @@ def main() -> None:
             {
                 "priority": "1" if recommended_action in {"exit_review", "trim_specific_shares_review"} else "2",
                 "ticker": ticker,
-                "asset_role": "active_stock",
+                "asset_role": asset_role,
                 "current_weight_pct": f"{weight:.4f}",
                 "concentration_status": weight_row["concentration_status"],
                 "current_research_score": weight_row["current_research_score"],

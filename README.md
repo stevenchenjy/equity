@@ -36,11 +36,13 @@ The active workflow is `daily_decision` and the only active email pipeline is
   trigger an event alert; historical backlog never creates an email burst.
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
-- The current AI operating decision is
+- The production AI operating decision remains
   [`00_project_control/phase5r_ai_operating_decision.md`](00_project_control/phase5r_ai_operating_decision.md):
   AI is removed from active production at `0/10` real observations and `$0`
-  spend. Historical model code and evidence are archived; production performs
-  no model credential lookup or provider call.
+  spend. A new event-driven, noncanonical
+  [`SHADOW_LLM evaluation`](08_reviews/phase5r_shadow_llm/README.md) is authorized
+  outside the production path. Its output cannot affect a decision, email,
+  account, position, scheduler result, or order.
 - Daily analysis does not imply daily portfolio action.
 - Current research packets are regenerated from the latest close published by
   the active Basic EOD provider and current SEC evidence; the historical C5
@@ -100,6 +102,20 @@ cd /Users/messssi/LocalRuntime/equity
 
 These checks do not read SMTP configuration, send email, invoke a model,
 connect to a broker, or create orders.
+
+The separate SHADOW_LLM preflight is also read-only and does not invoke a
+model:
+
+```bash
+python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --check
+```
+
+`--auto-live` evaluates only a previously unattempted research-semantic event;
+ordinary market-price, timestamp, and account churn is skipped without a model
+call. The separate evaluator aggregates blind-judge results without requiring
+the owner to label every run. See the SHADOW_LLM README for bounded replay,
+cost-accounting, threshold, and evaluation-only LaunchAgent commands. This
+surface remains absent from all production schedulers and entrypoints.
 
 The single active configuration is
 [`00_project_control/phase5r_active_production_config.json`](00_project_control/phase5r_active_production_config.json).

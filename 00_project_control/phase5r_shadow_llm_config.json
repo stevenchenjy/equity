@@ -1,0 +1,117 @@
+{
+  "schema_version": "phase5r_shadow_llm_config_v2",
+  "effective_from": "2026-09-02",
+  "status": "evaluation_authorized",
+  "mode": "shadow",
+  "evaluation_stage": "bounded_autonomous_v1",
+  "manual_invocation_only": false,
+  "event_driven_only": true,
+  "production_influence_allowed": false,
+  "canonical_influence_allowed": false,
+  "email_influence_allowed": false,
+  "dedicated_evaluation_scheduler_allowed": true,
+  "production_scheduler_integration_allowed": false,
+  "automatic_retry_allowed": false,
+  "provider": {
+    "transport": "codex_cli_external_auth",
+    "executable": "/opt/homebrew/lib/node_modules/@openai/codex/node_modules/@openai/codex-darwin-arm64/vendor/aarch64-apple-darwin/bin/codex",
+    "executable_sha256": "29915529b97697def1a957b0505e770aa6a45744435d62fc263e98d7619e167a",
+    "timeout_seconds": 420,
+    "maximum_output_bytes": 1000000,
+    "repository_reads_credentials": false,
+    "tools_enabled": false,
+    "authoritative_token_usage_available": true,
+    "authoritative_billing_cost_available": false
+  },
+  "roles": {
+    "analyst": {
+      "model": "gpt-5.6-terra",
+      "reasoning_effort": "medium",
+      "prompt_version": "phase5r_shadow_evidence_analyst_v1"
+    },
+    "critic": {
+      "model": "gpt-5.6-sol",
+      "reasoning_effort": "high",
+      "prompt_version": "phase5r_shadow_evidence_critic_v1"
+    },
+    "judge": {
+      "model": "gpt-5.5",
+      "reasoning_effort": "medium",
+      "prompt_version": "phase5r_shadow_blind_judge_v1"
+    }
+  },
+  "limits": {
+    "commissioning_physical_calls_preserved": 9,
+    "new_stage_physical_call_allowance": 24,
+    "maximum_physical_live_calls_total": 33,
+    "maximum_physical_live_calls_per_run": 3,
+    "maximum_claims_per_run": 24,
+    "maximum_critic_omissions_per_run": 12,
+    "maximum_judge_missed_issues_per_run": 12
+  },
+  "event_selection": {
+    "selection_version": "phase5r_shadow_semantic_event_v1",
+    "sample_seed": "phase5r-shadow-autonomous-v1",
+    "maximum_live_shadow_events_in_stage": 6,
+    "maximum_replay_events_in_stage": 2,
+    "archive_selected_packets": true
+  },
+  "critic_routing": {
+    "materialities": ["high"],
+    "novelties": ["new_contradiction"],
+    "semantic_states": ["weakened", "mixed"]
+  },
+  "evaluation": {
+    "continuation": {
+      "minimum_automatically_judged_events": 6,
+      "minimum_distinct_issuers": 3,
+      "minimum_material_reference_issues": 6,
+      "minimum_incremental_supported_material_items": 2,
+      "minimum_incremental_material_precision": 0.6,
+      "minimum_material_issue_recall": 0.6,
+      "minimum_completed_event_rate": 0.75,
+      "maximum_unsupported_claim_rate": 0.2,
+      "maximum_policy_boundary_violations": 0
+    },
+    "usefulness": {
+      "minimum_automatically_judged_events": 20,
+      "minimum_distinct_issuers": 8,
+      "minimum_material_reference_issues": 20,
+      "minimum_incremental_supported_material_items": 5,
+      "minimum_incremental_material_precision": 0.75,
+      "minimum_material_issue_recall": 0.8,
+      "minimum_completed_event_rate": 0.85,
+      "maximum_unsupported_claim_rate": 0.1,
+      "maximum_policy_boundary_violations": 0
+    },
+    "authority_review": {
+      "minimum_replay_packets": 250,
+      "minimum_distinct_issuers": 20,
+      "minimum_material_reference_issues": 50,
+      "minimum_live_shadow_events": 30,
+      "maximum_live_shadow_events_before_review": 60,
+      "minimum_incremental_material_precision": 0.85,
+      "minimum_material_issue_recall": 0.9,
+      "minimum_critic_catch_rate": 0.8,
+      "maximum_critic_false_veto_rate": 0.1,
+      "maximum_unsupported_claim_rate": 0.05,
+      "maximum_policy_boundary_violations": 0,
+      "promotion_is_automatic": false,
+      "separate_promotion_authorization_required": true
+    },
+    "human_spot_check": {
+      "selection": "sha256_modulo",
+      "numerator": 1,
+      "denominator": 10,
+      "required_for_routine_evaluation": false
+    }
+  },
+  "boundaries": {
+    "research_only": true,
+    "automatic_action_allowed": false,
+    "broker_connected": false,
+    "broker_account_read": false,
+    "order_code_allowed": false,
+    "trade_placed": false
+  }
+}

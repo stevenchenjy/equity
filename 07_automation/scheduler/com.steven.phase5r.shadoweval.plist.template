@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.steven.phase5r.shadoweval</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/messssi/LocalRuntime/equity/07_automation/scheduler/run_phase5r_shadow_llm_event.sh</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/messssi/LocalRuntime/equity</string>
+    <key>WatchPaths</key>
+    <array>
+        <string>/Users/messssi/LocalRuntime/equity/03_source_data/phase5r/phase5r_llm_evidence_packet.json</string>
+    </array>
+    <key>RunAtLoad</key>
+    <false/>
+    <key>KeepAlive</key>
+    <false/>
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>StandardOutPath</key>
+    <string>/Users/messssi/Library/Logs/phase5r_shadoweval.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/messssi/Library/Logs/phase5r_shadoweval.err.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+    </dict>
+</dict>
+</plist>

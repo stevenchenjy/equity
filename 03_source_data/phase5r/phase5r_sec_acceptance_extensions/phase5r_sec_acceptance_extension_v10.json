@@ -1,0 +1,66 @@
+{
+  "admitted_at": "2026-09-03T08:25:24.000-04:00",
+  "artifact_sha256": "ae906c11ccce171004471ad5c5caad207814c942e1835cad0f6c0a90166c5e22",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v10",
+  "prior_extension_set_sha256": "548e3175374cf61743aea3d45a8e63eefd6535a05ce71ec2afe607f03be31042",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-03T08:03:56.000+00:00",
+      "accession_number": "0001045810-26-000078",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-03T08:25:24.000-04:00",
+      "cik": "1045810",
+      "entity_name": "NVIDIA CORP",
+      "extension_record_sha256": "4f5c8ea7f8e3cd5feb14d601195533a65b6d17a1dd24444839fcf7f1891f0e47",
+      "extension_version": "v10",
+      "filing_date": "2026-09-03",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "f760630c507483ecab1c6de70539f2efe73e3b43dbf77160434db678047954e5",
+      "source_url": "https://data.sec.gov/submissions/CIK0001045810.json",
+      "ticker": "NVDA"
+    },
+    {
+      "accepted_at": "2026-09-02T20:30:24.000+00:00",
+      "accession_number": "0001193125-26-380280",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-03T08:25:24.000-04:00",
+      "cik": "789019",
+      "entity_name": "MICROSOFT CORP",
+      "extension_record_sha256": "082bc0ca60195b3b1fd50c4b8531ff41c96e26b43387649c5105b73bb9fa96b1",
+      "extension_version": "v10",
+      "filing_date": "2026-09-02",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "619cfb07a866ea0cf79586f743ca1d580ae9a072054cf104bd078c28e069305d",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "ticker": "MSFT"
+    },
+    {
+      "accepted_at": "2026-09-02T20:26:04.000+00:00",
+      "accession_number": "0001730168-26-000076",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-03T08:25:24.000-04:00",
+      "cik": "1730168",
+      "entity_name": "Broadcom Inc.",
+      "extension_record_sha256": "fb3a1873cd517a4dcdc519a6f92285f55fa55b19ab34785b6a2d7fce4a8f9888",
+      "extension_version": "v10",
+      "filing_date": "2026-09-02",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "1b60f15805edd365edf876acae4705960308d813896d29bed18fa5524979cabd",
+      "source_url": "https://data.sec.gov/submissions/CIK0001730168.json",
+      "ticker": "AVGO"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

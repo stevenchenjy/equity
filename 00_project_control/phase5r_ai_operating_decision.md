@@ -30,14 +30,26 @@ authority.
 
 ## Future evaluation boundary
 
-A future model evaluation is a new project decision, not a dormant production
-switch. It requires a separately reviewed restore from the archive or recovery
-tag, new cost and security limits, focused tests, and explicit authorization
-before any provider code may return to the active script tree.
+On `2026-09-02`, a new noncanonical `SHADOW_LLM` evaluation was explicitly
+authorized under
+[`phase5r_shadow_llm_evaluation_policy.md`](phase5r_shadow_llm_evaluation_policy.md).
+This is a separate evaluation surface, not a restoration of the archived model
+workflow or a dormant production switch. Production model status, budget, call
+allowance, scheduler path, canonical authority, and delivery path remain
+unchanged. Promotion is contingent on independently measured incremental
+semantic value and a later, separate explicit authorization.
+
+The evaluation is now event-driven: an analyst is scored by a different blind
+judge, with a critic routed only for material or risky result types. Routine
+semantic measurement requires no per-run owner labels. A dedicated evaluation-
+only scheduler is permitted, but production scheduler integration remains
+prohibited. The original commissioning failures and physical calls remain
+preserved and counted.
 
 ## Boundaries
 
 No broker or account connection, automatic action, order code, or trade
 placement is permitted. The normal event-driven email remains deterministic;
-No AI output exists in the active workflow and no AI output can make an email
-or portfolio review eligible.
+No AI output exists in the active production workflow and no AI output can
+make an email or portfolio review eligible. SHADOW_LLM artifacts are
+noncanonical evaluation evidence only.

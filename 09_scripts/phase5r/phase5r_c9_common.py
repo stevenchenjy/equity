@@ -15,6 +15,7 @@ POSITION_DIR = ROOT / "05_risk_and_positions"
 DATA_DIR = ROOT / "03_source_data" / "phase5r"
 RESEARCH_DIR = ROOT / "04_research" / "realtime_stock_picker_phase5r"
 SCHEDULER_DIR = ROOT / "07_automation" / "scheduler"
+UNIVERSE_SEED = DATA_DIR / "phase5r_universe_seed.csv"
 
 ACCOUNT_STATE = POSITION_DIR / "current_account_state.local.json"
 CURRENT_POSITIONS = POSITION_DIR / "current_positions.local.csv"
@@ -262,6 +263,19 @@ def load_packets() -> dict[str, dict[str, str]]:
             raise ValueError("C5 packet tickers must be non-empty and unique")
         packets[ticker] = row
     return packets
+
+
+def is_core_allocation_ticker(ticker: str) -> bool:
+    """Return whether a ticker is the policy-approved broad-market core."""
+
+    normalized = ticker.strip().upper()
+    if normalized != "SPY":
+        return False
+    return any(
+        row.get("ticker", "").strip().upper() == normalized
+        and row.get("is_benchmark", "").strip().lower() == "yes"
+        for row in read_csv(UNIVERSE_SEED)
+    )
 
 
 def load_active_inhibit() -> dict[str, object]:

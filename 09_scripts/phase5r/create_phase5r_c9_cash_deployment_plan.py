@@ -51,10 +51,12 @@ POST_ACTION_FIELDS = [
 def _post_action_row(
     *, scenario: str, account_total: float, current_cash: float,
     released_cash: float, core_ticker: str, core_shares: int, core_price: float,
-    active_value: float, status: str, retained_cash_reason: str,
+    current_core_value: float, active_value: float, status: str,
+    retained_cash_reason: str,
 ) -> dict[str, str]:
-    core_value = core_shares * core_price
-    resulting_cash = current_cash + released_cash - core_value
+    proposed_core_value = core_shares * core_price
+    resulting_core_value = current_core_value + proposed_core_value
+    resulting_cash = current_cash + released_cash - proposed_core_value
     if resulting_cash < -1e-9:
         raise ValueError("post-action scenario cannot use more cash than available")
     return {
@@ -63,12 +65,12 @@ def _post_action_row(
         "estimated_released_cash": f"{released_cash:.2f}",
         "proposed_core_ticker": core_ticker,
         "proposed_core_shares": str(core_shares),
-        "proposed_core_value": f"{core_value:.2f}",
+        "proposed_core_value": f"{proposed_core_value:.2f}",
         "resulting_active_value": f"{active_value:.2f}",
-        "resulting_core_value": f"{core_value:.2f}",
+        "resulting_core_value": f"{resulting_core_value:.2f}",
         "resulting_cash": f"{resulting_cash:.2f}",
         "active_weight_pct": f"{active_value / account_total * 100.0:.4f}",
-        "core_weight_pct": f"{core_value / account_total * 100.0:.4f}",
+        "core_weight_pct": f"{resulting_core_value / account_total * 100.0:.4f}",
         "cash_weight_pct": f"{resulting_cash / account_total * 100.0:.4f}",
         "retained_cash_reason": retained_cash_reason,
         "status": status,
@@ -197,19 +199,22 @@ def main() -> None:
         as_float(row["target_shares"], f"{row['ticker']}.target_shares")
         * as_float(row["current_price"], f"{row['ticker']}.current_price")
         for row in actions
+        if row.get("asset_role") == "active_stock"
     )
     selected_core_shares = shares if core["selected"] else 0
     post_rows = [
         _post_action_row(
             scenario="current_portfolio", account_total=account_total,
             current_cash=cash, released_cash=0.0, core_ticker="", core_shares=0,
-            core_price=spy_price, active_value=active_value, status="current",
+            core_price=spy_price, current_core_value=current_core,
+            active_value=active_value, status="current",
             retained_cash_reason="Current cash includes the strategic reserve and capital not yet assigned by evidence-supported reviews.",
         ),
         _post_action_row(
             scenario="after_current_position_reviews", account_total=account_total,
             current_cash=cash, released_cash=released_cash, core_ticker="",
-            core_shares=0, core_price=spy_price, active_value=active_after_reviews,
+            core_shares=0, core_price=spy_price, current_core_value=current_core,
+            active_value=active_after_reviews,
             status="hypothetical_human_reviews_only",
             retained_cash_reason="Released capital remains cash unless a separate opportunity passes its own current gates.",
         ),
@@ -218,7 +223,7 @@ def main() -> None:
             current_cash=cash, released_cash=released_cash,
             core_ticker="SPY" if selected_core_shares else "",
             core_shares=selected_core_shares, core_price=spy_price,
-            active_value=active_after_reviews,
+            current_core_value=current_core, active_value=active_after_reviews,
             status="hypothetical_selected_reviews" if selected_core_shares else "core_not_selected",
             retained_cash_reason=(
                 f"Retains the ${reserve:.2f} strategic reserve plus staged cash because no individual-stock "

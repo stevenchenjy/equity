@@ -13,6 +13,7 @@ from phase5r_c9_common import (
     as_float,
     concentration_status,
     dynamic_position_fit,
+    is_core_allocation_ticker,
     load_account_state,
     load_active_inhibit,
     load_market_rows,
@@ -25,6 +26,7 @@ from phase5r_c9_common import (
 
 DYNAMIC_FIELDS = [
     "ticker",
+    "asset_role",
     "current_shares",
     "latest_price",
     "current_value",
@@ -99,6 +101,7 @@ def main() -> None:
     dynamic_rows: list[dict[str, str]] = []
     for position in positions:
         ticker = str(position["ticker"])
+        is_core = is_core_allocation_ticker(ticker)
         packet = packets.get(ticker)
         if packet is None:
             raise ValueError(f"controlled C5 research packet is missing for held ticker {ticker}")
@@ -108,10 +111,12 @@ def main() -> None:
         current_value = shares * price
         current_weight = current_value / account_total * 100.0
         historical_weight = as_float(position["stored_historical_position_pct"], f"{ticker}.historical_weight")
-        status = concentration_status(current_weight, account)
-        fit = dynamic_position_fit(current_weight, account)
+        status = "core_sleeve" if is_core else concentration_status(current_weight, account)
+        fit = 9.0 if is_core else dynamic_position_fit(current_weight, account)
         score = score_from_packet(packet, fit)
-        if current_weight > hard_cap + 1e-9:
+        if is_core:
+            label = "hold_existing"
+        elif current_weight > hard_cap + 1e-9:
             label = "trim_review"
         elif score < 5.5:
             label = "exit_review"
@@ -120,6 +125,7 @@ def main() -> None:
         dynamic_rows.append(
             {
                 "ticker": ticker,
+                "asset_role": "core_allocation" if is_core else "active_stock",
                 "current_shares": f"{shares:.4f}",
                 "latest_price": f"{price:.2f}",
                 "current_value": f"{current_value:.2f}",
@@ -143,7 +149,14 @@ def main() -> None:
 
     dynamic_rows.sort(key=lambda row: -float(row["current_weight_pct"]))
     holdings_value = sum(float(row["current_value"]) for row in dynamic_rows)
-    active_weight = holdings_value / account_total * 100.0
+    core_value = sum(
+        float(row["current_value"])
+        for row in dynamic_rows
+        if row["asset_role"] == "core_allocation"
+    )
+    active_value = holdings_value - core_value
+    core_weight = core_value / account_total * 100.0
+    active_weight = active_value / account_total * 100.0
     cash_reserved = as_float(account["cash_reserved"], "cash_reserved")
     cash_plus_holdings = cash + holdings_value
     reconciliation_difference = reported_account_total - cash_plus_holdings
@@ -175,9 +188,9 @@ def main() -> None:
         "reconciliation_difference": f"{reconciliation_difference:.2f}",
         "reconciliation_status": reconciliation_status,
         "current_cash_pct": f"{cash_pct:.4f}",
-        "current_core_value": "0.00",
-        "current_core_weight_pct": "0.0000",
-        "current_active_stock_value": f"{holdings_value:.2f}",
+        "current_core_value": f"{core_value:.2f}",
+        "current_core_weight_pct": f"{core_weight:.4f}",
+        "current_active_stock_value": f"{active_value:.2f}",
         "current_active_stock_weight_pct": f"{active_weight:.4f}",
         "active_stock_target_pct": f"{active_target:.2f}",
         "active_stock_hard_cap_pct": f"{active_hard:.2f}",
@@ -187,7 +200,7 @@ def main() -> None:
         "position_count": str(len(dynamic_rows)),
         "account_state_updated": str(account["last_updated"]),
         "latest_price_timestamp": max(row["price_timestamp"] for row in dynamic_rows),
-        "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
+        "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; SPY_is_core_allocation; other_holdings_are_active_stock; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
     }
     write_csv(DYNAMIC_WEIGHTS, dynamic_rows, DYNAMIC_FIELDS)
     write_csv(PORTFOLIO_SUMMARY, [summary], SUMMARY_FIELDS)
@@ -199,13 +212,14 @@ def main() -> None:
         [DYNAMIC_WEIGHTS, PORTFOLIO_SUMMARY],
         position_count=len(dynamic_rows),
         notes=(
-            f"active_weight_pct={active_weight:.4f}; reconciliation_difference={reconciliation_difference:.2f}; "
+            f"core_weight_pct={core_weight:.4f}; active_weight_pct={active_weight:.4f}; reconciliation_difference={reconciliation_difference:.2f}; "
             "effective_total_basis=cash_plus_current_holdings; stored_position_pct_used_for_current_truth=no"
         ),
     )
     print(
         "Phase 5R-C9 dynamic weights complete; "
-        f"positions={len(dynamic_rows)}; active_weight={active_weight:.4f}%; cash={cash:.2f}"
+        f"positions={len(dynamic_rows)}; core_weight={core_weight:.4f}%; "
+        f"active_weight={active_weight:.4f}%; cash={cash:.2f}"
     )
 
 

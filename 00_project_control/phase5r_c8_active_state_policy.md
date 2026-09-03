@@ -38,10 +38,13 @@ The only standalone active launchd jobs are:
 - `com.steven.phase5r.dailyrefresh`
 - `com.steven.phase5r.dailydecision`
 
-`dailybrief`, `weeklyconviction`, `weeklycatchup`, and `llmshadow` remain
-unloaded and their installers are archived. The daily-refresh launcher reads
-only the market-data credential; no model credential or provider path exists
-in the active scheduler.
+`dailybrief`, `weeklyconviction`, `weeklycatchup`, and the retired production
+`llmshadow` job remain unloaded and their installers are archived. The
+daily-refresh launcher reads only the market-data credential; no model
+credential or provider path exists in the active production scheduler. The
+separately governed `com.steven.phase5r.shadoweval` LaunchAgent may watch the
+sealed evidence packet for evaluation only; it is not a canonical scheduler
+and cannot affect a decision, notification, account, or order.
 
 ## Stale-File Guard
 

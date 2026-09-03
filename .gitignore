@@ -16,6 +16,7 @@ gmail_tokens/
 # curated graph/report artifacts, but do not add new cache entries to history.
 graphify-out/cache/
 graphify-out/20??-??-??/
+graphify-out/graph.html
 
 07_automation/email_delivery/phase5r_email_config.local.json
 05_risk_and_positions/current_positions.local.csv
@@ -45,6 +46,14 @@ graphify-out/20??-??-??/
 00_project_control/phase5r_current_production_status.local.md
 08_reviews/current/phase5r_retrospective.local.md
 08_reviews/current/phase5r_capital_allocation_validation.local.md
+
+# Event-driven SHADOW_LLM evaluation artifacts. These never feed the
+# canonical refresh, decision, sender, account, or execution paths.
+08_reviews/phase5r_shadow_llm/runs.local/
+08_reviews/phase5r_shadow_llm/reviews.local/
+08_reviews/phase5r_shadow_llm/packets.local/
+00_project_control/run_logs/phase5r_shadow_llm_calls.local.jsonl
+00_project_control/run_logs/phase5r_shadow_llm.lock
 
 # Phase 5R active-runtime artifacts. These files remain on the authoritative
 # runtime machine, but scheduled refreshes must not dirty the source checkout.

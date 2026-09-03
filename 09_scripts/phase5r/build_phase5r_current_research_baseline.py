@@ -97,7 +97,15 @@ def main() -> int:
             raise ValueError(f"current research baseline lacks a valid completed close for {ticker}")
         score_row = scores.get(ticker, {})
         fundamental = fundamentals.get(ticker, {})
-        if ticker in held and fundamental.get("data_quality") not in {"ok", "partial"}:
+        is_benchmark = (
+            universe.get(ticker, {}).get("is_benchmark", "").strip().lower()
+            == "yes"
+        )
+        if (
+            ticker in held
+            and not is_benchmark
+            and fundamental.get("data_quality") not in {"ok", "partial"}
+        ):
             raise ValueError(f"current research baseline lacks SEC fundamentals for held ticker {ticker}")
         yoy = number(fundamental.get("revenue_yoy_pct"))
         margin = number(fundamental.get("net_margin_pct"))
@@ -148,7 +156,7 @@ def main() -> int:
             "entry_discipline": "no purchase without valuation, evidence, portfolio-fit, and whole-share cap checks",
             "exit_or_trim_conditions": position.get("invalidation_rule", "reassess on evidence break or valuation/risk conflict"),
             "recommendation_label": recommendation,
-            "recommendation_confidence": "medium_high" if fundamental.get("data_quality") == "ok" or ticker == "SPY" else "medium",
+            "recommendation_confidence": "medium_high" if fundamental.get("data_quality") == "ok" or is_benchmark else "medium",
             "human_action_required": "no",
             "notes": "Generated from the current completed close, current SEC evidence, and current local position truth; no stale C5 narrative used.",
             "business_quality_score": f"{business_score:.1f}",

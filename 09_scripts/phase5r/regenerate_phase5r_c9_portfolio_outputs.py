@@ -201,7 +201,11 @@ def main() -> None:
             score = as_float(weight_row["current_research_score"], f"{ticker}.current_research_score")
             label = weight_row["current_recommendation_label"]
             concentration = weight_row["concentration_status"]
-            rule = "dynamic_single_stock_weight_and_current_research"
+            rule = (
+                "core_allocation_policy"
+                if weight_row.get("asset_role") == "core_allocation"
+                else "dynamic_single_stock_weight_and_current_research"
+            )
         elif ticker == "SPY":
             role = "core_allocation_candidate"
             weight = "0.0000"
@@ -301,9 +305,10 @@ def main() -> None:
     default_cap_pct = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
     active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     for score in scored:
-        if score["asset_role"] == "current_position":
-            continue
         ticker = score["ticker"]
+        is_core = ticker == "SPY"
+        if score["asset_role"] == "current_position" and not is_core:
+            continue
         packet = packets[ticker]
         valuation = valuation_by_ticker.get(ticker, {})
         prices = valuation.get("scenario_prices", {}) if valuation.get("status") == "complete" else {}
@@ -315,7 +320,6 @@ def main() -> None:
         expected_upside = as_float(str(valuation.get("expected_upside_pct", 0) or 0), f"{ticker}.expected_upside_pct")
         reward_to_risk = as_float(str(valuation.get("reward_to_risk", 0) or 0), f"{ticker}.reward_to_risk")
         base_price = as_float(str(prices.get("base", 0) or 0), f"{ticker}.base_price")
-        is_core = score["asset_role"] == "core_allocation_candidate"
         entry_score = as_float(packet["technical_entry_discipline_score"], f"{ticker}.technical")
         sizing = individual_sizing_decision(
             policy=construction_policy,
@@ -410,7 +414,7 @@ def main() -> None:
             {
                 "weekly_rank": score["weekly_rank"],
                 "ticker": ticker,
-                "asset_role": score["asset_role"],
+                "asset_role": "core_allocation_candidate" if is_core else score["asset_role"],
                 "theme": packet["theme"],
                 "account_aware_conviction_score": score["account_aware_conviction_score"],
                 "portfolio_fit_score": score["portfolio_fit_score"],

@@ -312,7 +312,7 @@ def source_checks(checks: list[dict[str, str]]) -> None:
         < send_once_source.index("ExclusiveFileLock")
         < send_once_source.index("cycle_is_blocked")
         < send_once_source.index("load_config()")
-        < send_once_source.index('status="send_claimed"')
+        < send_once_source.index('"send_claimed"')
         < send_once_source.index("smtp_factory(")
     )
     add_check(
@@ -605,9 +605,14 @@ def main() -> int:
             row.get("human_confirmation_required") == "no" for row in hold_rows
         )
         fundamental_rows = decision.get("held_fundamentals", [])
+        held_company_rows = [
+            row for row in held_position_rows
+            if row.get("asset_role") != "core_allocation"
+            and row.get("ticker") != "SPY"
+        ]
         fundamental_ok = (
             decision.get("fundamental_gate", {}).get("passed") is True
-            and len(fundamental_rows) == len(held_position_rows)
+            and len(fundamental_rows) == len(held_company_rows)
             and all(
                 row.get("data_quality") == "ok"
                 and str(row.get("source_url", "")).startswith(

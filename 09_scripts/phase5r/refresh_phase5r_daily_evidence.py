@@ -240,6 +240,12 @@ def researched_tickers() -> tuple[list[str], list[str]]:
     return sorted(held), sorted(watched | held)
 
 
+def company_fundamentals_required(ticker: str) -> bool:
+    """SPY is the canonical ETF core; company XBRL is not applicable to it."""
+
+    return ticker.strip().upper() != "SPY"
+
+
 def load_ticker_map(user_agent: str, force: bool) -> dict[str, int]:
     cache_fresh = (
         SEC_TICKER_MAP_PATH.exists()
@@ -1045,7 +1051,7 @@ def main() -> int:
             if is_new and row["material_event"] == "yes":
                 new_material_events.append(row)
 
-        if ticker != "SPY":
+        if company_fundamentals_required(ticker):
             try:
                 companyfacts = request_json(
                     SEC_COMPANYFACTS_URL.format(cik=cik), user_agent
@@ -1066,7 +1072,8 @@ def main() -> int:
     held_fundamental_failures = sorted(
         ticker
         for ticker in held_tickers
-        if fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
+        if company_fundamentals_required(ticker)
+        and fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
     )
     # Validate current official records against the effective acceptance set
     # before mutating current fundamentals or the filing ledger. The effective

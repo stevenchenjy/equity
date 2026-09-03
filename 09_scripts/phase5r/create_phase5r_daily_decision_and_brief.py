@@ -48,7 +48,7 @@ from phase5r_daily_common import (
     log_daily_run,
     weekly_summary_due_for_published_session,
 )
-from phase5r_c9_common import load_account_state
+from phase5r_c9_common import is_core_allocation_ticker, load_account_state
 from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
 
@@ -200,6 +200,7 @@ def normalized_held_rows() -> list[dict[str, Any]]:
         rows.append(
             {
                 "ticker": row.get("ticker", "").strip().upper(),
+                "asset_role": row.get("asset_role", "active_stock"),
                 "action": action,
                 "current_shares": row.get("current_shares", ""),
                 "current_price": row.get("current_price", ""),
@@ -331,6 +332,10 @@ def main() -> int:
     if not held_rows:
         raise RuntimeError("C9 exact action plan contains no held positions")
     held_tickers = [row["ticker"] for row in held_rows]
+    held_company_tickers = [
+        ticker for ticker in held_tickers
+        if not is_core_allocation_ticker(ticker)
+    ]
     if args.check:
         print(
             "safe_check_passed=true "
@@ -360,7 +365,7 @@ def main() -> int:
                 "trend_label": "insufficient_trend",
             },
         )
-        for ticker in held_tickers
+        for ticker in held_company_tickers
     ]
     fundamental_gate_passed = (
         evidence_status.get("held_fundamental_coverage_complete") is True
