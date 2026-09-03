@@ -69,6 +69,24 @@ def is_action_transition(action: str) -> bool:
     ) and normalized not in {"watch_only", "hold"}
 
 
+def latest_applied_execution(
+    rows: list[dict[str, str]],
+) -> dict[str, str] | None:
+    eligible = [
+        (index, row)
+        for index, row in enumerate(rows)
+        if row.get("order_status", "").strip().lower()
+        in {"filled", "partial_fill"}
+        and row.get("canonical_state_applied", "").strip().lower() == "yes"
+    ]
+    if not eligible:
+        return None
+    return max(
+        eligible,
+        key=lambda item: (item[1].get("fill_date", "").strip(), item[0]),
+    )[1]
+
+
 def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, Any]:
     rows = {row.get("ticker", "").upper(): row for row in read_csv(MARKET_SNAPSHOT_PATH)}
     quality = {
@@ -135,7 +153,8 @@ def execution_conflicts() -> list[str]:
     )
     current_account_hash = sha256_file(ACCOUNT_STATE_PATH)
     current_account = load_account_state()
-    for row in read_csv(CONFIRMED_EXECUTION_PATH):
+    confirmed_rows = read_csv(CONFIRMED_EXECUTION_PATH)
+    for row in confirmed_rows:
         execution_id = row.get("execution_id", "").strip()
         status = row.get("order_status", "").strip().lower()
         if status not in {"filled", "partial_fill"}:
@@ -145,22 +164,33 @@ def execution_conflicts() -> list[str]:
             continue
         reconciliation = reconciliations.get(execution_id)
         if not reconciliation:
-            conflicts.append(f"reconciliation_missing:{execution_id}")
             continue
         if reconciliation.get("reconciliation_status", "").strip().lower() != "applied":
             conflicts.append(f"reconciliation_not_applied:{execution_id}")
-        if (
-            reconciliation.get("positions_sha256_after", "").strip()
-            != current_positions_hash
-        ):
-            conflicts.append(f"positions_hash_mismatch:{execution_id}")
-        if not applied_reconciliation_matches_current_state(
-            reconciliation,
-            current_positions_sha256=current_positions_hash,
-            current_account_sha256=current_account_hash,
-            current_account_last_updated=current_account["last_updated"],
-        ):
-            conflicts.append(f"account_hash_mismatch:{execution_id}")
+    # Reconciliation hashes are point-in-time evidence.  A later applied fill
+    # necessarily changes the whole positions/account files, so only the most
+    # recent applied transition can be required to match current canonical
+    # state.  Older confirmed rows remain historical evidence and are never
+    # rewritten merely because a later fill occurred.
+    latest = latest_applied_execution(confirmed_rows)
+    if latest:
+        latest_id = latest.get("execution_id", "").strip()
+        reconciliation = reconciliations.get(latest_id)
+        if not reconciliation:
+            conflicts.append(f"reconciliation_missing:{latest_id}")
+        else:
+            if (
+                reconciliation.get("positions_sha256_after", "").strip()
+                != current_positions_hash
+            ):
+                conflicts.append(f"positions_hash_mismatch:{latest_id}")
+            if not applied_reconciliation_matches_current_state(
+                reconciliation,
+                current_positions_sha256=current_positions_hash,
+                current_account_sha256=current_account_hash,
+                current_account_last_updated=current_account["last_updated"],
+            ):
+                conflicts.append(f"account_hash_mismatch:{latest_id}")
     return sorted(set(conflicts))
 
 

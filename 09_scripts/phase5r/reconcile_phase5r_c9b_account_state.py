@@ -111,6 +111,16 @@ def update_confirmed_applied(execution_id: str) -> None:
     write_csv(CONFIRMED_REPORT, rows, fields)
 
 
+def upsert_reconciliation_row(report_row: dict[str, str]) -> None:
+    """Preserve the audit trail while replacing this execution's latest view."""
+
+    rows = read_csv(RECONCILIATION_REPORT) if RECONCILIATION_REPORT.exists() else []
+    execution_id = report_row["execution_id"]
+    retained = [row for row in rows if row.get("execution_id") != execution_id]
+    retained.append(report_row)
+    write_csv(RECONCILIATION_REPORT, retained, RECONCILIATION_FIELDS)
+
+
 def write_pending_outputs(row: dict[str, str]) -> None:
     position_hash = sha256(CURRENT_POSITIONS)
     account_hash = sha256(ACCOUNT_STATE)
@@ -134,7 +144,7 @@ def write_pending_outputs(row: dict[str, str]) -> None:
             "notes": "No fill is confirmed; post-execution financial values and weights are intentionally unavailable.",
         }
     )
-    write_csv(RECONCILIATION_REPORT, [report_row], RECONCILIATION_FIELDS)
+    upsert_reconciliation_row(report_row)
     write_csv(POST_EXECUTION_WEIGHTS, [], POST_WEIGHT_FIELDS)
     status_label = "pending fill" if row["order_status"] == "pending_fill" else "cancelled"
     summary = "\n".join(
@@ -288,7 +298,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
         "reference_price_timestamp": reference_timestamp,
         "notes": f"cash_source={cash_source}; account total source={total_source}; no broker or email used",
     }
-    write_csv(RECONCILIATION_REPORT, [report_row], RECONCILIATION_FIELDS)
+    upsert_reconciliation_row(report_row)
     summary = "\n".join(
         [
             "# Phase 5R-C9B Post-Execution Account Summary",

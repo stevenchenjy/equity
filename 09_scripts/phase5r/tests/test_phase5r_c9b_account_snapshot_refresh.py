@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import unittest
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
+import reconcile_phase5r_c9b_account_state as reconciliation_runner
+from create_phase5r_daily_decision_and_brief import latest_applied_execution
 from phase5r_c9b_common import (
     applied_reconciliation_current_state_status,
     applied_reconciliation_matches_current_state,
@@ -68,6 +73,52 @@ class C9BAccountSnapshotRefreshTests(unittest.TestCase):
             ),
             "positions_hash_mismatch",
         )
+
+    def test_reconciliation_upsert_preserves_other_execution_history(self) -> None:
+        with TemporaryDirectory() as temporary_directory:
+            report = Path(temporary_directory) / "reconciliation.csv"
+            first = {
+                field: "" for field in reconciliation_runner.RECONCILIATION_FIELDS
+            }
+            first.update({"execution_id": "first", "reconciliation_status": "applied"})
+            replacement = dict(first)
+            replacement.update(
+                {
+                    "execution_id": "second",
+                    "reconciliation_status": "pending_no_mutation",
+                }
+            )
+            with patch.object(reconciliation_runner, "RECONCILIATION_REPORT", report):
+                reconciliation_runner.upsert_reconciliation_row(first)
+                reconciliation_runner.upsert_reconciliation_row(replacement)
+                replacement["reconciliation_status"] = "applied"
+                reconciliation_runner.upsert_reconciliation_row(replacement)
+                rows = reconciliation_runner.read_csv(report)
+        self.assertEqual([row["execution_id"] for row in rows], ["first", "second"])
+        self.assertEqual(rows[1]["reconciliation_status"], "applied")
+
+    def test_only_latest_applied_fill_is_current_state_anchor(self) -> None:
+        rows = [
+            {
+                "execution_id": "older",
+                "order_status": "filled",
+                "canonical_state_applied": "yes",
+                "fill_date": "2026-07-20",
+            },
+            {
+                "execution_id": "cancelled",
+                "order_status": "cancelled",
+                "canonical_state_applied": "no",
+                "fill_date": "",
+            },
+            {
+                "execution_id": "latest",
+                "order_status": "filled",
+                "canonical_state_applied": "yes",
+                "fill_date": "2026-09-03",
+            },
+        ]
+        self.assertEqual(latest_applied_execution(rows)["execution_id"], "latest")
 
 
 if __name__ == "__main__":

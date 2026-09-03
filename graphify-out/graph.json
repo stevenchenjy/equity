@@ -262,7 +262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline",
-      "community": 8,
+      "community": 7,
       "norm_label": "build_phase5r_current_research_baseline.py"
     },
     {
@@ -272,7 +272,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_number",
-      "community": 8,
+      "community": 7,
       "norm_label": "number()"
     },
     {
@@ -282,7 +282,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_clamp",
-      "community": 8,
+      "community": 7,
       "norm_label": "clamp()"
     },
     {
@@ -292,7 +292,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_selected_tickers",
-      "community": 8,
+      "community": 7,
       "norm_label": "selected_tickers()"
     },
     {
@@ -302,7 +302,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_main",
-      "community": 8,
+      "community": 7,
       "norm_label": "main()"
     },
     {
@@ -752,7 +752,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9b_price_aware_action_plan",
-      "community": 20,
+      "community": 6,
       "norm_label": "create_phase5r_c9b_price_aware_action_plan.py"
     },
     {
@@ -762,7 +762,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9b_price_aware_action_plan_main",
-      "community": 20,
+      "community": 6,
       "norm_label": "main()"
     },
     {
@@ -836,10 +836,20 @@
       "norm_label": "is_action_transition()"
     },
     {
-      "label": "load_market_gate()",
+      "label": "latest_applied_execution()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
       "source_location": "L72",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_latest_applied_execution",
+      "community": 1,
+      "norm_label": "latest_applied_execution()"
+    },
+    {
+      "label": "load_market_gate()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
+      "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
       "community": 1,
@@ -869,7 +879,7 @@
       "label": "execution_conflicts()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L120",
+      "source_location": "L138",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
       "community": 1,
@@ -879,7 +889,7 @@
       "label": "material_events_for_cycle()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L167",
+      "source_location": "L197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_material_events_for_cycle",
       "community": 1,
@@ -889,7 +899,7 @@
       "label": "normalized_held_rows()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L191",
+      "source_location": "L221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_normalized_held_rows",
       "community": 1,
@@ -899,7 +909,7 @@
       "label": "action_stability()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L231",
+      "source_location": "L261",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
       "community": 1,
@@ -909,7 +919,7 @@
       "label": "plain_action()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L258",
+      "source_location": "L288",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_plain_action",
       "community": 1,
@@ -919,7 +929,7 @@
       "label": "valuation_display()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L271",
+      "source_location": "L301",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_valuation_display",
       "community": 1,
@@ -929,7 +939,7 @@
       "label": "share_display()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L284",
+      "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_share_display",
       "community": 1,
@@ -939,7 +949,7 @@
       "label": "action_review_display()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L293",
+      "source_location": "L323",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
       "community": 1,
@@ -949,7 +959,7 @@
       "label": "held_position_summary()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L310",
+      "source_location": "L340",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
       "community": 1,
@@ -959,7 +969,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L323",
+      "source_location": "L353",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "community": 1,
@@ -1342,7 +1352,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_py_path",
-      "community": 20,
+      "community": 8,
       "norm_label": "path"
     },
     {
@@ -1352,7 +1362,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_csv_fields",
-      "community": 20,
+      "community": 8,
       "norm_label": "csv_fields()"
     },
     {
@@ -1362,7 +1372,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_write_csv",
-      "community": 20,
+      "community": 8,
       "norm_label": "write_csv()"
     },
     {
@@ -1372,7 +1382,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_write_text",
-      "community": 20,
+      "community": 8,
       "norm_label": "write_text()"
     },
     {
@@ -1412,7 +1422,7 @@
       "source_location": "L198",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_load_positions",
-      "community": 20,
+      "community": 8,
       "norm_label": "load_positions()"
     },
     {
@@ -1502,7 +1512,7 @@
       "source_location": "L342",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_next_thursday",
-      "community": 20,
+      "community": 27,
       "norm_label": "next_thursday()"
     },
     {
@@ -1512,7 +1522,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_py_date",
-      "community": 20,
+      "community": 27,
       "norm_label": "date"
     },
     {
@@ -1552,7 +1562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common",
-      "community": 20,
+      "community": 6,
       "norm_label": "phase5r_c9b_common.py"
     },
     {
@@ -1562,7 +1572,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_sha256",
-      "community": 20,
+      "community": 8,
       "norm_label": "sha256()"
     },
     {
@@ -1572,7 +1582,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_py_path",
-      "community": 20,
+      "community": 6,
       "norm_label": "path"
     },
     {
@@ -1582,7 +1592,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_current_state_status",
-      "community": 20,
+      "community": 19,
       "norm_label": "applied_reconciliation_current_state_status()"
     },
     {
@@ -1592,7 +1602,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_matches_current_state",
-      "community": 20,
+      "community": 19,
       "norm_label": "applied_reconciliation_matches_current_state()"
     },
     {
@@ -1602,7 +1612,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_optional_float",
-      "community": 20,
+      "community": 6,
       "norm_label": "optional_float()"
     },
     {
@@ -1612,7 +1622,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_parse_iso",
-      "community": 20,
+      "community": 6,
       "norm_label": "parse_iso()"
     },
     {
@@ -1622,7 +1632,7 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_write_private_execution_rows",
-      "community": 20,
+      "community": 6,
       "norm_label": "write_private_execution_rows()"
     },
     {
@@ -1632,7 +1642,7 @@
       "source_location": "L200",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_load_execution_rows",
-      "community": 20,
+      "community": 6,
       "norm_label": "load_execution_rows()"
     },
     {
@@ -1642,7 +1652,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_validate_execution_row",
-      "community": 20,
+      "community": 6,
       "norm_label": "validate_execution_row()"
     },
     {
@@ -1652,7 +1662,7 @@
       "source_location": "L280",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_select_execution",
-      "community": 20,
+      "community": 6,
       "norm_label": "select_execution()"
     },
     {
@@ -1662,7 +1672,7 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_execution_cash",
-      "community": 20,
+      "community": 6,
       "norm_label": "execution_cash()"
     },
     {
@@ -1672,7 +1682,7 @@
       "source_location": "L304",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_intraday_range_pct",
-      "community": 20,
+      "community": 6,
       "norm_label": "intraday_range_pct()"
     },
     {
@@ -1682,7 +1692,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_slippage_review_pct",
-      "community": 20,
+      "community": 6,
       "norm_label": "slippage_review_pct()"
     },
     {
@@ -1692,7 +1702,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_append_c9b_log",
-      "community": 20,
+      "community": 6,
       "norm_label": "append_c9b_log()"
     },
     {
@@ -1702,7 +1712,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_rationale_112",
-      "community": 20,
+      "community": 19,
       "norm_label": "classify whether a current c9 state remains consistent with one fill.      c9b r"
     },
     {
@@ -1712,7 +1722,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_rationale_161",
-      "community": 20,
+      "community": 19,
       "norm_label": "return the closed accepted subset of reconciliation-state statuses."
     },
     {
@@ -1722,7 +1732,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common",
-      "community": 7,
+      "community": 12,
       "norm_label": "phase5r_daily_common.py"
     },
     {
@@ -1732,7 +1742,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_now_et",
-      "community": 12,
+      "community": 7,
       "norm_label": "now_et()"
     },
     {
@@ -1752,7 +1762,7 @@
       "source_location": "L146",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_iso_now",
-      "community": 12,
+      "community": 52,
       "norm_label": "iso_now()"
     },
     {
@@ -1762,7 +1772,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_cycle_date",
-      "community": 12,
+      "community": 7,
       "norm_label": "cycle_date()"
     },
     {
@@ -1832,7 +1842,7 @@
       "source_location": "L209",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_is_us_market_session_date",
-      "community": 7,
+      "community": 78,
       "norm_label": "is_us_market_session_date()"
     },
     {
@@ -1892,7 +1902,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_py_path",
-      "community": 11,
+      "community": 12,
       "norm_label": "path"
     },
     {
@@ -1912,7 +1922,7 @@
       "source_location": "L282",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_read_csv",
-      "community": 7,
+      "community": 12,
       "norm_label": "read_csv()"
     },
     {
@@ -1922,7 +1932,7 @@
       "source_location": "L289",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text",
-      "community": 11,
+      "community": 12,
       "norm_label": "atomic_write_text()"
     },
     {
@@ -1932,7 +1942,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_json",
-      "community": 11,
+      "community": 12,
       "norm_label": "atomic_write_json()"
     },
     {
@@ -1942,7 +1952,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_csv",
-      "community": 52,
+      "community": 12,
       "norm_label": "atomic_write_csv()"
     },
     {
@@ -1952,7 +1962,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_append_csv_durable",
-      "community": 17,
+      "community": 12,
       "norm_label": "append_csv_durable()"
     },
     {
@@ -1962,7 +1972,7 @@
       "source_location": "L362",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_bytes",
-      "community": 16,
+      "community": 10,
       "norm_label": "sha256_bytes()"
     },
     {
@@ -1972,7 +1982,7 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_file",
-      "community": 16,
+      "community": 10,
       "norm_label": "sha256_file()"
     },
     {
@@ -2032,7 +2042,7 @@
       "source_location": "L438",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy",
-      "community": 4,
+      "community": 414,
       "norm_label": "notification_delivery_policy()"
     },
     {
@@ -2072,7 +2082,7 @@
       "source_location": "L559",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_unresolved_execution_conflicts",
-      "community": 7,
+      "community": 12,
       "norm_label": "unresolved_execution_conflicts()"
     },
     {
@@ -2092,7 +2102,7 @@
       "source_location": "L577",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_init",
-      "community": 11,
+      "community": 5,
       "norm_label": ".__init__()"
     },
     {
@@ -2112,7 +2122,7 @@
       "source_location": "L651",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_exit",
-      "community": 12,
+      "community": 5,
       "norm_label": ".__exit__()"
     },
     {
@@ -2122,7 +2132,7 @@
       "source_location": "L658",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_log_daily_run",
-      "community": 17,
+      "community": 22,
       "norm_label": "log_daily_run()"
     },
     {
@@ -2172,7 +2182,7 @@
       "source_location": "L448",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_448",
-      "community": 4,
+      "community": 414,
       "norm_label": "return event-driven eligibility independently of scheduler time."
     },
     {
@@ -2832,7 +2842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction",
-      "community": 20,
+      "community": 26,
       "norm_label": "phase5r_portfolio_construction.py"
     },
     {
@@ -2842,7 +2852,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_passed_confidence",
-      "community": 20,
+      "community": 26,
       "norm_label": "_passed_confidence()"
     },
     {
@@ -2852,7 +2862,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_individual_sizing_decision",
-      "community": 20,
+      "community": 26,
       "norm_label": "individual_sizing_decision()"
     },
     {
@@ -2862,7 +2872,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_py_any",
-      "community": 20,
+      "community": 26,
       "norm_label": "any"
     },
     {
@@ -2872,7 +2882,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_core_starter_decision",
-      "community": 20,
+      "community": 26,
       "norm_label": "core_starter_decision()"
     },
     {
@@ -2882,7 +2892,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_36",
-      "community": 20,
+      "community": 26,
       "norm_label": "return the highest supported sizing tier and a feasible share count."
     },
     {
@@ -2892,7 +2902,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_157",
-      "community": 20,
+      "community": 26,
       "norm_label": "size one staged broad-market core review without using stock valuation."
     },
     {
@@ -3732,7 +3742,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract",
-      "community": 15,
+      "community": 2,
       "norm_label": "phase5r_shadow_llm_contract.py"
     },
     {
@@ -3742,7 +3752,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_shadowcontracterror",
-      "community": 15,
+      "community": 2,
       "norm_label": "shadowcontracterror"
     },
     {
@@ -3752,7 +3762,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_valueerror",
-      "community": 15,
+      "community": 2,
       "norm_label": "valueerror"
     },
     {
@@ -3762,7 +3772,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_object",
-      "community": 15,
+      "community": 2,
       "norm_label": "_object()"
     },
     {
@@ -3772,7 +3782,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_any",
-      "community": 15,
+      "community": 2,
       "norm_label": "any"
     },
     {
@@ -3782,7 +3792,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text",
-      "community": 15,
+      "community": 2,
       "norm_label": "_text()"
     },
     {
@@ -3792,7 +3802,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier",
-      "community": 15,
+      "community": 2,
       "norm_label": "_identifier()"
     },
     {
@@ -3802,7 +3812,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text_list",
-      "community": 15,
+      "community": 2,
       "norm_label": "_text_list()"
     },
     {
@@ -3812,7 +3822,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier_list",
-      "community": 15,
+      "community": 2,
       "norm_label": "_identifier_list()"
     },
     {
@@ -3822,7 +3832,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_enum",
-      "community": 15,
+      "community": 2,
       "norm_label": "_enum()"
     },
     {
@@ -3832,7 +3842,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_assert_nonimperative",
-      "community": 15,
+      "community": 2,
       "norm_label": "_assert_nonimperative()"
     },
     {
@@ -3842,7 +3852,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_read_regular_json",
-      "community": 15,
+      "community": 2,
       "norm_label": "_read_regular_json()"
     },
     {
@@ -3852,7 +3862,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_path",
-      "community": 15,
+      "community": 2,
       "norm_label": "path"
     },
     {
@@ -3862,7 +3872,7 @@
       "source_location": "L173",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_load_packet",
-      "community": 15,
+      "community": 2,
       "norm_label": "load_packet()"
     },
     {
@@ -3872,7 +3882,7 @@
       "source_location": "L196",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_source_index",
-      "community": 15,
+      "community": 2,
       "norm_label": "_source_index()"
     },
     {
@@ -3882,7 +3892,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_calculation_index",
-      "community": 15,
+      "community": 2,
       "norm_label": "_calculation_index()"
     },
     {
@@ -3892,7 +3902,7 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_entity_tickers",
-      "community": 15,
+      "community": 2,
       "norm_label": "_entity_tickers()"
     },
     {
@@ -3902,7 +3912,7 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_primary_source_registry",
-      "community": 15,
+      "community": 2,
       "norm_label": "primary_source_registry()"
     },
     {
@@ -3952,7 +3962,7 @@
       "source_location": "L571",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_blind_judge_target",
-      "community": 19,
+      "community": 2,
       "norm_label": "build_blind_judge_target()"
     },
     {
@@ -3972,7 +3982,7 @@
       "source_location": "L727",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_claim",
-      "community": 15,
+      "community": 2,
       "norm_label": "_validate_claim()"
     },
     {
@@ -3982,7 +3992,7 @@
       "source_location": "L798",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_analyst",
-      "community": 15,
+      "community": 2,
       "norm_label": "validate_analyst()"
     },
     {
@@ -3992,7 +4002,7 @@
       "source_location": "L892",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_critic",
-      "community": 15,
+      "community": 2,
       "norm_label": "validate_critic()"
     },
     {
@@ -4002,7 +4012,7 @@
       "source_location": "L1001",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_judge",
-      "community": 15,
+      "community": 2,
       "norm_label": "validate_judge()"
     },
     {
@@ -4012,7 +4022,7 @@
       "source_location": "L1122",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_automatic_evaluation",
-      "community": 15,
+      "community": 2,
       "norm_label": "build_automatic_evaluation()"
     },
     {
@@ -4022,7 +4032,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_70",
-      "community": 15,
+      "community": 2,
       "norm_label": "a packet or model artifact violated the closed shadow contract."
     },
     {
@@ -4032,7 +4042,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_248",
-      "community": 15,
+      "community": 2,
       "norm_label": "expose only primary source identifiers needed to audit human omissions."
     },
     {
@@ -4062,7 +4072,7 @@
       "source_location": "L574",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_574",
-      "community": 19,
+      "community": 2,
       "norm_label": "create a deterministic candidate set without origin or model labels."
     },
     {
@@ -4072,7 +4082,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider",
-      "community": 10,
+      "community": 2,
       "norm_label": "phase5r_shadow_llm_provider.py"
     },
     {
@@ -4082,7 +4092,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_classify_nonzero_exit",
-      "community": 10,
+      "community": 2,
       "norm_label": "classify_nonzero_exit()"
     },
     {
@@ -4092,7 +4102,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror",
-      "community": 10,
+      "community": 2,
       "norm_label": "shadowprovidererror"
     },
     {
@@ -4102,7 +4112,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_runtimeerror",
-      "community": 10,
+      "community": 2,
       "norm_label": "runtimeerror"
     },
     {
@@ -4112,7 +4122,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror_init",
-      "community": 10,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -4122,7 +4132,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_providerresult",
-      "community": 10,
+      "community": 2,
       "norm_label": "providerresult"
     },
     {
@@ -4152,7 +4162,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_provider_generate",
-      "community": 10,
+      "community": 2,
       "norm_label": ".generate()"
     },
     {
@@ -4162,7 +4172,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_any",
-      "community": 10,
+      "community": 2,
       "norm_label": "any"
     },
     {
@@ -4172,7 +4182,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_cli_reported_token_usage",
-      "community": 10,
+      "community": 2,
       "norm_label": "cli_reported_token_usage()"
     },
     {
@@ -4182,7 +4192,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider",
-      "community": 10,
+      "community": 2,
       "norm_label": "fixtureprovider"
     },
     {
@@ -4192,7 +4202,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_init",
-      "community": 10,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -4202,7 +4212,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_generate",
-      "community": 10,
+      "community": 2,
       "norm_label": ".generate()"
     },
     {
@@ -4212,7 +4222,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_executable_sha256",
-      "community": 10,
+      "community": 2,
       "norm_label": "executable_sha256()"
     },
     {
@@ -4222,7 +4232,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_path",
-      "community": 10,
+      "community": 2,
       "norm_label": "path"
     },
     {
@@ -4232,7 +4242,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_minimal_codex_environment",
-      "community": 10,
+      "community": 2,
       "norm_label": "minimal_codex_environment()"
     },
     {
@@ -4242,7 +4252,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider",
-      "community": 10,
+      "community": 2,
       "norm_label": "codexcliprovider"
     },
     {
@@ -4252,7 +4262,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_init",
-      "community": 10,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -4262,7 +4272,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_revalidate",
-      "community": 10,
+      "community": 2,
       "norm_label": ".revalidate()"
     },
     {
@@ -4272,7 +4282,7 @@
       "source_location": "L364",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_generate",
-      "community": 10,
+      "community": 2,
       "norm_label": ".generate()"
     },
     {
@@ -4282,7 +4292,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_41",
-      "community": 10,
+      "community": 2,
       "norm_label": "map provider text to a closed code without retaining provider text."
     },
     {
@@ -4292,7 +4302,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_77",
-      "community": 10,
+      "community": 2,
       "norm_label": "one external inference attempt failed without canonical side effects."
     },
     {
@@ -4302,7 +4312,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_107",
-      "community": 10,
+      "community": 2,
       "norm_label": "extract the exact token counters emitted by ``codex exec --json``."
     },
     {
@@ -4312,7 +4322,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_154",
-      "community": 10,
+      "community": 2,
       "norm_label": "return exact fixture payloads without launching a process or using a network."
     },
     {
@@ -4322,7 +4332,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_232",
-      "community": 10,
+      "community": 2,
       "norm_label": "hash a pinned non-linked executable while rejecting path replacement."
     },
     {
@@ -4332,7 +4342,7 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_287",
-      "community": 10,
+      "community": 2,
       "norm_label": "pass only operating-system identity and locale needed by external auth."
     },
     {
@@ -4342,7 +4352,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_312",
-      "community": 10,
+      "community": 2,
       "norm_label": "run an externally authenticated cli in an empty, ephemeral directory."
     },
     {
@@ -4822,7 +4832,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
-      "community": 20,
+      "community": 8,
       "norm_label": "reconcile_phase5r_c9b_account_state.py"
     },
     {
@@ -4832,7 +4842,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_parse_args",
-      "community": 20,
+      "community": 8,
       "norm_label": "parse_args()"
     },
     {
@@ -4842,7 +4852,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_py_namespace",
-      "community": 20,
+      "community": 8,
       "norm_label": "namespace"
     },
     {
@@ -4852,7 +4862,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_select_default",
-      "community": 20,
+      "community": 8,
       "norm_label": "select_default()"
     },
     {
@@ -4862,38 +4872,58 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_update_confirmed_applied",
-      "community": 20,
+      "community": 8,
       "norm_label": "update_confirmed_applied()"
+    },
+    {
+      "label": "upsert_reconciliation_row()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L114",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
+      "community": 8,
+      "norm_label": "upsert_reconciliation_row()"
     },
     {
       "label": "write_pending_outputs()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L114",
+      "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
-      "community": 20,
+      "community": 8,
       "norm_label": "write_pending_outputs()"
     },
     {
       "label": "reconcile_fill()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L160",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
-      "community": 20,
+      "community": 8,
       "norm_label": "reconcile_fill()"
     },
     {
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L316",
+      "source_location": "L326",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
-      "community": 20,
+      "community": 8,
       "norm_label": "main()"
+    },
+    {
+      "label": "Preserve the audit trail while replacing this execution's latest view.",
+      "file_type": "rationale",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L115",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_rationale_115",
+      "community": 8,
+      "norm_label": "preserve the audit trail while replacing this execution's latest view."
     },
     {
       "label": "refresh_phase5r_daily_evidence.py",
@@ -5832,7 +5862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_regenerate_phase5r_c9_portfolio_outputs",
-      "community": 20,
+      "community": 26,
       "norm_label": "regenerate_phase5r_c9_portfolio_outputs.py"
     },
     {
@@ -5842,7 +5872,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_regenerate_phase5r_c9_portfolio_outputs_run_children",
-      "community": 20,
+      "community": 26,
       "norm_label": "run_children()"
     },
     {
@@ -6382,7 +6412,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline",
-      "community": 12,
+      "community": 24,
       "norm_label": "run_phase5r_daily_decision_pipeline.py"
     },
     {
@@ -6392,7 +6422,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_delivery_status_is_unknown",
-      "community": 12,
+      "community": 24,
       "norm_label": "delivery_status_is_unknown()"
     },
     {
@@ -6402,7 +6432,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_parse_aware_timestamp",
-      "community": 12,
+      "community": 24,
       "norm_label": "_parse_aware_timestamp()"
     },
     {
@@ -6412,7 +6442,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_py_datetime",
-      "community": 12,
+      "community": 24,
       "norm_label": "datetime"
     },
     {
@@ -6422,7 +6452,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_refresh_readiness",
-      "community": 12,
+      "community": 24,
       "norm_label": "refresh_readiness()"
     },
     {
@@ -6432,7 +6462,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_run_command",
-      "community": 12,
+      "community": 24,
       "norm_label": "run_command()"
     },
     {
@@ -6442,7 +6472,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_py_completedprocess",
-      "community": 12,
+      "community": 24,
       "norm_label": "completedprocess"
     },
     {
@@ -6452,7 +6482,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_safe_check",
-      "community": 12,
+      "community": 24,
       "norm_label": "safe_check()"
     },
     {
@@ -6462,7 +6492,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_execute",
-      "community": 12,
+      "community": 24,
       "norm_label": "execute()"
     },
     {
@@ -6472,7 +6502,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_main",
-      "community": 12,
+      "community": 24,
       "norm_label": "main()"
     },
     {
@@ -6482,7 +6512,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_rationale_54",
-      "community": 12,
+      "community": 24,
       "norm_label": "require today's complete, latest-published-session handoff before delivery."
     },
     {
@@ -6492,7 +6522,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh",
-      "community": 12,
+      "community": 22,
       "norm_label": "run_phase5r_daily_refresh.py"
     },
     {
@@ -6502,7 +6532,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_run_step",
-      "community": 12,
+      "community": 22,
       "norm_label": "run_step()"
     },
     {
@@ -6512,7 +6542,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_py_any",
-      "community": 12,
+      "community": 22,
       "norm_label": "any"
     },
     {
@@ -6522,7 +6552,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_safe_check",
-      "community": 12,
+      "community": 22,
       "norm_label": "safe_check()"
     },
     {
@@ -6532,7 +6562,7 @@
       "source_location": "L166",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_run_refresh",
-      "community": 12,
+      "community": 22,
       "norm_label": "run_refresh()"
     },
     {
@@ -6542,7 +6572,7 @@
       "source_location": "L251",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_refresh_main",
-      "community": 12,
+      "community": 22,
       "norm_label": "main()"
     },
     {
@@ -6722,7 +6752,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_scheduler",
-      "community": 4,
+      "community": 12,
       "norm_label": "run_phase5r_daily_scheduler.py"
     },
     {
@@ -6902,7 +6932,7 @@
       "source_location": "L244",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_runtime_scheduler_validate_runtime_evidence_chain",
-      "community": 5,
+      "community": 17,
       "norm_label": "_validate_runtime_evidence_chain()"
     },
     {
@@ -7052,7 +7082,7 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_runtime_scheduler_rationale_245",
-      "community": 5,
+      "community": 17,
       "norm_label": "validate extension hashes, chain continuity, and audit bindings."
     },
     {
@@ -7392,7 +7422,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates",
-      "community": 410,
+      "community": 25,
       "norm_label": "score_phase5r_b2_candidates.py"
     },
     {
@@ -7402,7 +7432,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_timestamp",
-      "community": 410,
+      "community": 25,
       "norm_label": "timestamp()"
     },
     {
@@ -7412,7 +7442,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_read_csv",
-      "community": 410,
+      "community": 25,
       "norm_label": "read_csv()"
     },
     {
@@ -7422,7 +7452,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_py_path",
-      "community": 410,
+      "community": 25,
       "norm_label": "path"
     },
     {
@@ -7432,7 +7462,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_write_csv",
-      "community": 410,
+      "community": 25,
       "norm_label": "write_csv()"
     },
     {
@@ -7442,7 +7472,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_append_audit",
-      "community": 410,
+      "community": 25,
       "norm_label": "append_audit()"
     },
     {
@@ -7452,7 +7482,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_as_float",
-      "community": 410,
+      "community": 25,
       "norm_label": "as_float()"
     },
     {
@@ -7462,7 +7492,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_clamp",
-      "community": 410,
+      "community": 25,
       "norm_label": "clamp()"
     },
     {
@@ -7472,7 +7502,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_score_row",
-      "community": 410,
+      "community": 25,
       "norm_label": "score_row()"
     },
     {
@@ -7482,7 +7512,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_main",
-      "community": 410,
+      "community": 25,
       "norm_label": "main()"
     },
     {
@@ -7492,7 +7522,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email",
-      "community": 414,
+      "community": 10,
       "norm_label": "send_phase5r_daily_email.py"
     },
     {
@@ -7502,7 +7532,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
-      "community": 414,
+      "community": 10,
       "norm_label": "configerror"
     },
     {
@@ -7512,7 +7542,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
-      "community": 414,
+      "community": 7,
       "norm_label": "valueerror"
     },
     {
@@ -7522,7 +7552,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
-      "community": 414,
+      "community": 10,
       "norm_label": "safe_header()"
     },
     {
@@ -7532,7 +7562,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
-      "community": 414,
+      "community": 10,
       "norm_label": "any"
     },
     {
@@ -7542,7 +7572,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
-      "community": 414,
+      "community": 10,
       "norm_label": "safe_email()"
     },
     {
@@ -7552,7 +7582,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
-      "community": 414,
+      "community": 10,
       "norm_label": "load_config()"
     },
     {
@@ -7562,7 +7592,7 @@
       "source_location": "L134",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_cycle_is_blocked",
-      "community": 414,
+      "community": 10,
       "norm_label": "cycle_is_blocked()"
     },
     {
@@ -7582,7 +7612,7 @@
       "source_location": "L167",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
-      "community": 414,
+      "community": 7,
       "norm_label": "validate_decision()"
     },
     {
@@ -7592,7 +7622,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
-      "community": 414,
+      "community": 10,
       "norm_label": "build_message()"
     },
     {
@@ -7602,7 +7632,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "emailmessage",
-      "community": 414,
+      "community": 10,
       "norm_label": "emailmessage"
     },
     {
@@ -7612,7 +7642,7 @@
       "source_location": "L309",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
-      "community": 414,
+      "community": 10,
       "norm_label": "append_delivery()"
     },
     {
@@ -7622,7 +7652,7 @@
       "source_location": "L342",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_correction_eligibility",
-      "community": 414,
+      "community": 10,
       "norm_label": "correction_eligibility()"
     },
     {
@@ -7632,7 +7662,7 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
-      "community": 414,
+      "community": 10,
       "norm_label": "send_once()"
     },
     {
@@ -7642,7 +7672,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_main",
-      "community": 414,
+      "community": 10,
       "norm_label": "main()"
     },
     {
@@ -7652,7 +7682,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_rationale_92",
-      "community": 414,
+      "community": 10,
       "norm_label": "open smtp configuration only after eligibility and dedupe gates pass."
     },
     {
@@ -7682,7 +7712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_support",
-      "community": 62,
+      "community": 22,
       "norm_label": "_support.py"
     },
     {
@@ -7692,7 +7722,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market",
-      "community": 62,
+      "community": 21,
       "norm_label": "test_build_phase5r_packet_market.py"
     },
     {
@@ -7702,7 +7732,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_write_csv",
-      "community": 62,
+      "community": 21,
       "norm_label": "write_csv()"
     },
     {
@@ -7712,7 +7742,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_py_path",
-      "community": 62,
+      "community": 21,
       "norm_label": "path"
     },
     {
@@ -7722,7 +7752,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests",
-      "community": 62,
+      "community": 21,
       "norm_label": "packetmarketobservationtests"
     },
     {
@@ -7732,7 +7762,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_default_packet_as_of_is_current_not_stale_decision_time",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_default_packet_as_of_is_current_not_stale_decision_time()"
     },
     {
@@ -7742,7 +7772,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_observation",
-      "community": 62,
+      "community": 21,
       "norm_label": ".observation()"
     },
     {
@@ -7752,7 +7782,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_verified_friday_close_remains_complete_on_weekend",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_verified_friday_close_remains_complete_on_weekend()"
     },
     {
@@ -7762,7 +7792,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_unverified_or_pre_close_timestamp_cannot_be_complete",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_unverified_or_pre_close_timestamp_cannot_be_complete()"
     },
     {
@@ -7772,7 +7802,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_future_observation_is_not_point_in_time_safe",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_future_observation_is_not_point_in_time_safe()"
     },
     {
@@ -7782,7 +7812,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_decision_ticker_parser_accepts_current_and_legacy_shapes",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_decision_ticker_parser_accepts_current_and_legacy_shapes()"
     },
     {
@@ -7792,7 +7822,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_c9_decision_is_translated_to_hidden_ticker_policy_caps",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_c9_decision_is_translated_to_hidden_ticker_policy_caps()"
     },
     {
@@ -7802,7 +7832,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_effective_acceptance_map_includes_validated_extensions",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_effective_acceptance_map_includes_validated_extensions()"
     },
     {
@@ -7812,7 +7842,7 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_build_phase5r_packet_market_packetmarketobservationtests_test_packet_filing_selection_excludes_historical_material_backfill",
-      "community": 62,
+      "community": 21,
       "norm_label": ".test_packet_filing_selection_excludes_historical_material_backfill()"
     },
     {
@@ -7822,7 +7852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production",
-      "community": 4,
+      "community": 22,
       "norm_label": "test_phase5r_active_production.py"
     },
     {
@@ -7842,7 +7872,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_notification_policy_is_event_driven_and_clock_independent",
-      "community": 4,
+      "community": 414,
       "norm_label": ".test_notification_policy_is_event_driven_and_clock_independent()"
     },
     {
@@ -7862,7 +7892,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
-      "community": 52,
+      "community": 4,
       "norm_label": ".test_recommendation_labels_are_explicit()"
     },
     {
@@ -7902,7 +7932,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_uncertainty_maps_to_smaller_whole_share_sizing",
-      "community": 20,
+      "community": 26,
       "norm_label": ".test_uncertainty_maps_to_smaller_whole_share_sizing()"
     },
     {
@@ -7912,7 +7942,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_core_starter_is_whole_share_and_not_forced",
-      "community": 20,
+      "community": 26,
       "norm_label": ".test_core_starter_is_whole_share_and_not_forced()"
     },
     {
@@ -7982,7 +8012,7 @@
       "source_location": "L338",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
-      "community": 4,
+      "community": 20,
       "norm_label": ".test_adverse_complete_valuation_opens_only_a_trim_review()"
     },
     {
@@ -8712,7 +8742,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence",
-      "community": 410,
+      "community": 22,
       "norm_label": "test_phase5r_b2_refresh_cadence.py"
     },
     {
@@ -9062,68 +9092,88 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
-      "community": 20,
+      "community": 19,
       "norm_label": "test_phase5r_c9b_account_snapshot_refresh.py"
     },
     {
       "label": "_reconciliation()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L12",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
-      "community": 20,
+      "community": 19,
       "norm_label": "_reconciliation()"
     },
     {
       "label": "C9BAccountSnapshotRefreshTests",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L20",
+      "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
-      "community": 20,
+      "community": 19,
       "norm_label": "c9baccountsnapshotrefreshtests"
     },
     {
       "label": ".test_later_valid_owner_snapshot_is_compatible_without_rewriting_history()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L21",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_later_valid_owner_snapshot_is_compatible_without_rewriting_history",
-      "community": 20,
+      "community": 19,
       "norm_label": ".test_later_valid_owner_snapshot_is_compatible_without_rewriting_history()"
     },
     {
       "label": ".test_original_historical_account_hash_remains_accepted()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L38",
+      "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_original_historical_account_hash_remains_accepted",
-      "community": 20,
+      "community": 19,
       "norm_label": ".test_original_historical_account_hash_remains_accepted()"
     },
     {
       "label": ".test_stale_or_malformed_snapshot_is_rejected()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L49",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_stale_or_malformed_snapshot_is_rejected",
-      "community": 20,
+      "community": 19,
       "norm_label": ".test_stale_or_malformed_snapshot_is_rejected()"
     },
     {
       "label": ".test_position_mutation_remains_a_hard_mismatch()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L61",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_position_mutation_remains_a_hard_mismatch",
-      "community": 20,
+      "community": 19,
       "norm_label": ".test_position_mutation_remains_a_hard_mismatch()"
+    },
+    {
+      "label": ".test_reconciliation_upsert_preserves_other_execution_history()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L77",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_reconciliation_upsert_preserves_other_execution_history",
+      "community": 19,
+      "norm_label": ".test_reconciliation_upsert_preserves_other_execution_history()"
+    },
+    {
+      "label": ".test_only_latest_applied_fill_is_current_state_anchor()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L100",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_only_latest_applied_fill_is_current_state_anchor",
+      "community": 19,
+      "norm_label": ".test_only_latest_applied_fill_is_current_state_anchor()"
     },
     {
       "label": "test_phase5r_canonical_workflow.py",
@@ -9322,7 +9372,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests",
-      "community": 20,
+      "community": 15,
       "norm_label": "heldcorepositiontests"
     },
     {
@@ -9332,7 +9382,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_policy_core_ticker_uses_benchmark_metadata",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_policy_core_ticker_uses_benchmark_metadata()"
     },
     {
@@ -9342,7 +9392,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_company_fundamentals_are_not_required_for_spy",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_company_fundamentals_are_not_required_for_spy()"
     },
     {
@@ -9352,7 +9402,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_held_benchmark_does_not_require_company_fundamentals",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_held_benchmark_does_not_require_company_fundamentals()"
     },
     {
@@ -9362,7 +9412,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_dynamic_summary_separates_spy_core_from_active_stock",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_dynamic_summary_separates_spy_core_from_active_stock()"
     },
     {
@@ -9372,7 +9422,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_exact_action_does_not_apply_single_stock_cap_to_spy",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_exact_action_does_not_apply_single_stock_cap_to_spy()"
     },
     {
@@ -9382,7 +9432,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_post_action_scenario_preserves_existing_core_value",
-      "community": 20,
+      "community": 15,
       "norm_label": ".test_post_action_scenario_preserves_existing_core_value()"
     },
     {
@@ -9922,7 +9972,7 @@
       "source_location": "L235",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_daily_parser_excludes_out_of_window_legacy_metadata",
-      "community": 28,
+      "community": 17,
       "norm_label": ".test_daily_parser_excludes_out_of_window_legacy_metadata()"
     },
     {
@@ -10262,7 +10312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_security_regressions",
-      "community": 5,
+      "community": 22,
       "norm_label": "test_phase5r_security_regressions.py"
     },
     {
@@ -10412,7 +10462,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm",
-      "community": 19,
+      "community": 2,
       "norm_label": "test_phase5r_shadow_llm.py"
     },
     {
@@ -10422,7 +10472,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_fake_packet",
-      "community": 19,
+      "community": 2,
       "norm_label": "fake_packet()"
     },
     {
@@ -10432,7 +10482,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_analyst",
-      "community": 19,
+      "community": 2,
       "norm_label": "valid_analyst()"
     },
     {
@@ -10442,7 +10492,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_critic",
-      "community": 19,
+      "community": 2,
       "norm_label": "valid_critic()"
     },
     {
@@ -10452,7 +10502,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_judge",
-      "community": 19,
+      "community": 2,
       "norm_label": "valid_judge()"
     },
     {
@@ -10462,7 +10512,7 @@
       "source_location": "L175",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider",
-      "community": 19,
+      "community": 2,
       "norm_label": "failingprovider"
     },
     {
@@ -10472,7 +10522,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_init",
-      "community": 19,
+      "community": 2,
       "norm_label": ".__init__()"
     },
     {
@@ -10482,7 +10532,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_generate",
-      "community": 19,
+      "community": 2,
       "norm_label": ".generate()"
     },
     {
@@ -10492,7 +10542,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests",
-      "community": 19,
+      "community": 2,
       "norm_label": "shadowllmtests"
     },
     {
@@ -10502,7 +10552,7 @@
       "source_location": "L186",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_evaluation_scheduler_is_event_driven_and_nonproduction",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_evaluation_scheduler_is_event_driven_and_nonproduction()"
     },
     {
@@ -10532,7 +10582,7 @@
       "source_location": "L253",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_provider_failure_text_is_reduced_to_closed_codes",
-      "community": 10,
+      "community": 2,
       "norm_label": ".test_provider_failure_text_is_reduced_to_closed_codes()"
     },
     {
@@ -10542,7 +10592,7 @@
       "source_location": "L266",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_usage_parser_requires_exact_completed_usage",
-      "community": 10,
+      "community": 2,
       "norm_label": ".test_cli_usage_parser_requires_exact_completed_usage()"
     },
     {
@@ -10552,7 +10602,7 @@
       "source_location": "L282",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_accepts_source_bound_outputs",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_contract_accepts_source_bound_outputs()"
     },
     {
@@ -10562,7 +10612,7 @@
       "source_location": "L292",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_blind_target_hides_self_grading_labels",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_blind_target_hides_self_grading_labels()"
     },
     {
@@ -10572,7 +10622,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_critic_routing_is_conditional",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_critic_routing_is_conditional()"
     },
     {
@@ -10582,7 +10632,7 @@
       "source_location": "L322",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_semantic_event_ignores_daily_market_and_account_churn",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_semantic_event_ignores_daily_market_and_account_churn()"
     },
     {
@@ -10592,7 +10642,7 @@
       "source_location": "L341",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_legacy_semantic_view_prevents_automatic_duplicate",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_legacy_semantic_view_prevents_automatic_duplicate()"
     },
     {
@@ -10602,7 +10652,7 @@
       "source_location": "L370",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_rejects_unknown_source_numeric_and_action_language",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_contract_rejects_unknown_source_numeric_and_action_language()"
     },
     {
@@ -10612,7 +10662,7 @@
       "source_location": "L385",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_packet_loader_rejects_symlinks",
-      "community": 15,
+      "community": 2,
       "norm_label": ".test_packet_loader_rejects_symlinks()"
     },
     {
@@ -10622,7 +10672,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_fixture_run_is_blind_judged_and_excluded_from_metrics",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_fixture_run_is_blind_judged_and_excluded_from_metrics()"
     },
     {
@@ -10632,7 +10682,7 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_low_risk_fixture_skips_critic_but_keeps_blind_judge",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_low_risk_fixture_skips_critic_but_keeps_blind_judge()"
     },
     {
@@ -10642,7 +10692,7 @@
       "source_location": "L455",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_no_human_review_is_required_to_aggregate",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_no_human_review_is_required_to_aggregate()"
     },
     {
@@ -10652,7 +10702,7 @@
       "source_location": "L462",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_failed_live_role_is_terminal_and_not_retried",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_failed_live_role_is_terminal_and_not_retried()"
     },
     {
@@ -10662,7 +10712,7 @@
       "source_location": "L494",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_full_run_capacity_fails_closed_before_provider_call",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_full_run_capacity_fails_closed_before_provider_call()"
     },
     {
@@ -10672,7 +10722,7 @@
       "source_location": "L519",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_new_stage_allowance_is_enforced_without_legacy_ledger",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_new_stage_allowance_is_enforced_without_legacy_ledger()"
     },
     {
@@ -10682,7 +10732,7 @@
       "source_location": "L544",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_production_entrypoints_do_not_reference_shadow_surface",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_production_entrypoints_do_not_reference_shadow_surface()"
     },
     {
@@ -10692,7 +10742,7 @@
       "source_location": "L562",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools",
-      "community": 19,
+      "community": 2,
       "norm_label": ".test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools()"
     },
     {
@@ -11242,7 +11292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account",
-      "community": 30,
+      "community": 12,
       "norm_label": "update_phase5r_manual_account.py"
     },
     {
@@ -11252,7 +11302,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_parse_position",
-      "community": 30,
+      "community": 12,
       "norm_label": "parse_position()"
     },
     {
@@ -11262,7 +11312,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_main",
-      "community": 30,
+      "community": 12,
       "norm_label": "main()"
     },
     {
@@ -11272,7 +11322,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill",
-      "community": 20,
+      "community": 6,
       "norm_label": "validate_phase5r_c9b_execution_fill.py"
     },
     {
@@ -11282,7 +11332,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill_parse_args",
-      "community": 20,
+      "community": 6,
       "norm_label": "parse_args()"
     },
     {
@@ -11292,7 +11342,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill_py_namespace",
-      "community": 20,
+      "community": 6,
       "norm_label": "namespace"
     },
     {
@@ -11302,7 +11352,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill_record_confirmation",
-      "community": 20,
+      "community": 6,
       "norm_label": "record_confirmation()"
     },
     {
@@ -11312,7 +11362,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill_write_reports",
-      "community": 20,
+      "community": 6,
       "norm_label": "write_reports()"
     },
     {
@@ -11322,7 +11372,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "09_scripts_phase5r_validate_phase5r_c9b_execution_fill_main",
-      "community": 20,
+      "community": 6,
       "norm_label": "main()"
     },
     {
@@ -17619,7 +17669,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L293",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
@@ -17629,7 +17679,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L231",
+      "source_location": "L261",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
@@ -17639,7 +17689,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L120",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
@@ -17649,7 +17699,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L310",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
@@ -17672,6 +17722,16 @@
       "source_location": "L72",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
+      "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_latest_applied_execution",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
       "confidence_score": 1.0
     },
@@ -17679,7 +17739,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L323",
+      "source_location": "L353",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
@@ -17689,7 +17749,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L167",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_material_events_for_cycle",
@@ -17699,7 +17759,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L191",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_normalized_held_rows",
@@ -17709,7 +17769,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L258",
+      "source_location": "L288",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_plain_action",
@@ -17730,7 +17790,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L284",
+      "source_location": "L314",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_share_display",
@@ -17740,7 +17800,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L271",
+      "source_location": "L301",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_valuation_display",
@@ -17802,11 +17862,22 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
+      "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L295",
+      "source_location": "L325",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_is_action_transition",
@@ -17817,7 +17888,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L241",
+      "source_location": "L271",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_is_action_transition",
@@ -17828,7 +17899,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L392",
+      "source_location": "L422",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_is_action_transition",
@@ -17839,18 +17910,40 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L223",
+      "source_location": "L253",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_normalized_held_rows",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_is_action_transition",
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
+      "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_latest_applied_execution",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L121",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_only_latest_applied_fill_is_current_state_anchor",
+      "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_latest_applied_execution"
+    },
+    {
       "relation": "references",
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L72",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17861,7 +17954,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L72",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_datetime",
@@ -17873,7 +17966,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L79",
+      "source_location": "L97",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
       "target": "09_scripts_phase5r_phase5r_daily_common_latest_published_market_session"
@@ -17883,7 +17976,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L349",
+      "source_location": "L379",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_load_market_gate",
@@ -17894,7 +17987,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L293",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17905,7 +17998,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L231",
+      "source_location": "L261",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17916,7 +18009,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L310",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17927,7 +18020,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L167",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_material_events_for_cycle",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17938,7 +18031,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L191",
+      "source_location": "L221",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_normalized_held_rows",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17949,7 +18042,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L284",
+      "source_location": "L314",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_share_display",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17960,7 +18053,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L271",
+      "source_location": "L301",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_valuation_display",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_py_any",
@@ -17972,7 +18065,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L137",
+      "source_location": "L155",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_account_state"
@@ -17983,7 +18076,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L157",
+      "source_location": "L187",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_matches_current_state"
@@ -17994,7 +18087,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L133",
+      "source_location": "L151",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
       "target": "09_scripts_phase5r_phase5r_daily_common_sha256_file"
@@ -18004,7 +18097,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L379",
+      "source_location": "L409",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_execution_conflicts",
@@ -18015,7 +18108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L380",
+      "source_location": "L410",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_material_events_for_cycle",
@@ -18027,7 +18120,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L170",
+      "source_location": "L200",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_material_events_for_cycle",
       "target": "09_scripts_phase5r_phase5r_daily_common_cycle_date"
@@ -18037,7 +18130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L331",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_normalized_held_rows",
@@ -18049,7 +18142,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L243",
+      "source_location": "L273",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -18059,7 +18152,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L388",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_stability",
@@ -18070,7 +18163,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L313",
+      "source_location": "L343",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_plain_action",
@@ -18081,7 +18174,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L462",
+      "source_location": "L492",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_plain_action",
@@ -18092,7 +18185,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L759",
+      "source_location": "L789",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_valuation_display",
@@ -18114,7 +18207,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L304",
+      "source_location": "L334",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_share_display",
@@ -18125,7 +18218,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L311",
+      "source_location": "L341",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_action_review_display",
@@ -18158,7 +18251,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L755",
+      "source_location": "L785",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_held_position_summary",
@@ -18181,7 +18274,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L329",
+      "source_location": "L359",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -18192,7 +18285,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L337",
+      "source_location": "L367",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_is_core_allocation_ticker"
@@ -18203,7 +18296,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L837",
+      "source_location": "L867",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text"
@@ -18214,7 +18307,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L420",
+      "source_location": "L450",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -18225,7 +18318,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L354",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_cycle_date"
@@ -18236,7 +18329,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L639",
+      "source_location": "L669",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_iso_now"
@@ -18247,7 +18340,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L328",
+      "source_location": "L358",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_load_active_state"
@@ -18258,7 +18351,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L330",
+      "source_location": "L360",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_load_inhibit"
@@ -18269,7 +18362,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L913",
+      "source_location": "L943",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_log_daily_run"
@@ -18280,7 +18373,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L554",
+      "source_location": "L584",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy"
@@ -18291,7 +18384,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L347",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_now_et"
@@ -18302,7 +18395,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L348",
+      "source_location": "L378",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_read_json"
@@ -18313,7 +18406,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py",
-      "source_location": "L536",
+      "source_location": "L566",
       "weight": 1.0,
       "source": "09_scripts_phase5r_create_phase5r_daily_decision_and_brief_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_weekly_summary_due_for_published_session"
@@ -19984,7 +20077,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L195",
+      "source_location": "L205",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9_common_csv_fields"
@@ -20006,7 +20099,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L207",
+      "source_location": "L217",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9_common_write_text"
@@ -20017,7 +20110,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L155",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
       "target": "09_scripts_phase5r_phase5r_c9_common_write_text"
@@ -20138,7 +20231,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L338",
+      "source_location": "L348",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_account_state"
@@ -20149,7 +20242,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L163",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_account_state"
@@ -20181,7 +20274,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L330",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_positions"
@@ -20192,7 +20285,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L164",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_positions"
@@ -20203,7 +20296,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L128",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_positions"
@@ -20214,7 +20307,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L181",
+      "source_location": "L191",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_market_rows"
@@ -20268,7 +20361,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L318",
+      "source_location": "L328",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9_common_load_active_inhibit"
@@ -20496,7 +20589,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L6",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
       "target": "09_scripts_phase5r_phase5r_c9b_common",
@@ -20530,7 +20623,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L344",
+      "source_location": "L354",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9b_common_sha256"
@@ -20541,7 +20634,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L190",
+      "source_location": "L200",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9b_common_sha256"
@@ -20552,7 +20645,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L115",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
       "target": "09_scripts_phase5r_phase5r_c9b_common_sha256"
@@ -20606,7 +20699,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L22",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_later_valid_owner_snapshot_is_compatible_without_rewriting_history",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_current_state_status"
@@ -20617,7 +20710,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L40",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_original_historical_account_hash_remains_accepted",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_current_state_status"
@@ -20628,7 +20721,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L63",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_position_mutation_remains_a_hard_mismatch",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_current_state_status"
@@ -20649,7 +20742,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L342",
+      "source_location": "L352",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_matches_current_state"
@@ -20660,7 +20753,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L30",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_later_valid_owner_snapshot_is_compatible_without_rewriting_history",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_matches_current_state"
@@ -20671,7 +20764,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L53",
+      "source_location": "L58",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_stale_or_malformed_snapshot_is_rejected",
       "target": "09_scripts_phase5r_phase5r_c9b_common_applied_reconciliation_matches_current_state"
@@ -20704,7 +20797,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L183",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9b_common_optional_float"
@@ -20759,7 +20852,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L319",
+      "source_location": "L329",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9b_common_load_execution_rows"
@@ -20814,7 +20907,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L175",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_phase5r_c9b_common_execution_cash"
@@ -20836,7 +20929,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L354",
+      "source_location": "L364",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_phase5r_c9b_common_append_c9b_log"
@@ -33554,7 +33647,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L316",
+      "source_location": "L326",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
@@ -33574,7 +33667,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L160",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
@@ -33607,7 +33700,28 @@
       "source_location": "L114",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
+      "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L124",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
+      "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
       "confidence_score": 1.0
     },
     {
@@ -33615,7 +33729,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L317",
+      "source_location": "L327",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_parse_args",
@@ -33637,7 +33751,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L320",
+      "source_location": "L330",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_select_default",
@@ -33648,10 +33762,20 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L217",
+      "source_location": "L227",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_update_confirmed_applied",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L115",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_rationale_115",
+      "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
       "confidence_score": 1.0
     },
     {
@@ -33659,7 +33783,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L326",
+      "source_location": "L301",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
+      "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
+      "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
+      "source_location": "L336",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
@@ -33670,7 +33816,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/reconcile_phase5r_c9b_account_state.py",
-      "source_location": "L353",
+      "source_location": "L363",
       "weight": 1.0,
       "source": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
       "target": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
@@ -41461,7 +41607,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L5",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
       "target": "09_scripts_phase5r_tests_support",
@@ -44305,7 +44451,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L20",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
@@ -44315,7 +44461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L12",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
@@ -44326,7 +44472,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L23",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_later_valid_owner_snapshot_is_compatible_without_rewriting_history",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
@@ -44337,7 +44483,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L41",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_original_historical_account_hash_remains_accepted",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
@@ -44348,7 +44494,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L64",
+      "source_location": "L69",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_position_mutation_remains_a_hard_mismatch",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
@@ -44359,7 +44505,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L54",
+      "source_location": "L59",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_stale_or_malformed_snapshot_is_rejected",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_reconciliation",
@@ -44369,7 +44515,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L21",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_later_valid_owner_snapshot_is_compatible_without_rewriting_history",
@@ -44379,7 +44525,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L38",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_only_latest_applied_fill_is_current_state_anchor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L43",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_original_historical_account_hash_remains_accepted",
@@ -44389,7 +44545,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L61",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_position_mutation_remains_a_hard_mismatch",
@@ -44399,7 +44555,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
-      "source_location": "L49",
+      "source_location": "L77",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_reconciliation_upsert_preserves_other_execution_history",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_c9b_account_snapshot_refresh.py",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_c9b_account_snapshot_refresh_c9baccountsnapshotrefreshtests_test_stale_or_malformed_snapshot_is_rejected",
@@ -52329,5 +52495,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "02102c6409cb290b937f3afb36b371d084936117"
+  "built_at_commit": "364c8df0d14b6b059a74d5ff79d458c85ef5e329"
 }
