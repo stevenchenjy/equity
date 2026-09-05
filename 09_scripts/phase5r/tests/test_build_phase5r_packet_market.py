@@ -18,6 +18,24 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 
 
 class PacketMarketObservationTests(unittest.TestCase):
+    def test_exhibit_chunk_cites_its_own_document_and_parent_acceptance(self) -> None:
+        accession = "0001234567-26-000001"
+        parent_url = "https://www.sec.gov/Archives/edgar/data/1234567/000123456726000001/cover.htm"
+        exhibit_url = parent_url.replace("cover.htm", "earnings.htm")
+        artifact = {"source_id": "exhibit", "url": exhibit_url, "primary_document": "earnings.htm", "artifact_kind": "exhibit"}
+        row = {"ticker": "TST", "cik": "1234567", "accession_number": accession, "form": "8-K", "source_url": parent_url}
+        accepted = {"cik": "1234567", "filing_date": "2026-07-01", "accepted_at": "2026-07-01T20:10:00Z", "source_url": parent_url, "record_sha256": "a" * 64}
+        with (patch.object(packet_builder, "_artifact_map", return_value={accession: [artifact]}),
+              patch.object(packet_builder, "_effective_acceptance_map", return_value={accession: accepted}),
+              patch.object(packet_builder, "read_csv", return_value=[row]),
+              patch.object(packet_builder, "_verified_artifact_chunks", return_value=[({"index": 0, "sha256": "b" * 64, "char_start": 0, "char_end": 8}, "Earnings")])):
+            _, sources, covered = packet_builder._filing_evidence({"TST"}, set())
+        chunk = next(source for source in sources if source["source_type"] == "sec_filing_text_chunk")
+        self.assertEqual(chunk["source_url"], exhibit_url)
+        self.assertEqual(chunk["accepted_at"], accepted["accepted_at"])
+        self.assertEqual(chunk["locator"]["document"], "earnings.htm")
+        self.assertEqual(covered, {"TST"})
+
     def test_default_packet_as_of_is_current_not_stale_decision_time(
         self,
     ) -> None:

@@ -118,6 +118,62 @@ class NormalizationTests(unittest.TestCase):
 
 
 class SelectionAndValidationTests(unittest.TestCase):
+    def test_exhibit_discovery_requires_explicit_number_and_same_accession(self) -> None:
+        row = artifacts.normalize_ledger_row(ledger_row(form="8-K"))
+        raw = b'''<html><a href="earnings.htm"><b>99.1</b></a>
+          <a href="earnings.htm">99.1</a><a href="deck.htm">99.2</a>
+          <a href="bad.htm">Investor relations</a><a href="../escape.htm">99.3</a>
+          <a href="https://example.org/ex99.htm">99.4</a>
+          <a href="https://www.sec.gov/Archives/edgar/data/1234567/000123456726000002/ex99.htm">99.5</a>
+          <a href="secret%2ehtm">99.6</a><a href="image.pdf">99.7</a></html>'''
+        children = artifacts.exhibit_rows(row, raw, "utf-8")
+        self.assertEqual([child["primary_document"] for child in children], ["earnings.htm", "deck.htm"])
+        for child in children:
+            self.assertEqual(child["parent_source_id"], row["source_id"])
+            self.assertEqual(child["parent_raw_sha256"], artifacts.sha256_bytes(raw))
+            self.assertEqual(artifacts.exhibit_rows(child, raw, "utf-8"), [])
+        self.assertEqual(artifacts.exhibit_rows({**row, "form": "10-Q"}, raw, "utf-8"), [])
+
+    def test_exhibits_have_separate_cache_and_bounded_nonrecursive_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ledger = root / "ledger.csv"
+            raw_row = ledger_row(form="8-K")
+            write_ledger(ledger, [raw_row])
+            args = dict(ledger_path=ledger, artifact_root=root / "filings", index_path=root / "index.json",
+                        project_root=root, user_agent="UnitTest/1.0 test@example.com", request_interval_seconds=0)
+            parent_raw = b'<p>Cover</p><a href="earnings.htm">99.1</a><a href="deck.htm">99.2</a><a href="extra.htm">99.3</a>'
+            def fetch(url, user_agent, max_bytes):
+                raw = parent_raw if url == raw_row["source_url"] else b'<p>Official earnings</p><a href="recursive.htm">99.1</a>'
+                return artifacts.FetchResult(raw, "text/html", "utf-8")
+            first = artifacts.refresh_artifacts(**args, fetcher=fetch)
+            self.assertEqual(first["network_fetch_count"], 3)
+            self.assertEqual(first["exhibit_selection"][0]["omitted_due_to_bound"], 1)
+            parent, *children = first["artifacts"]
+            self.assertEqual((root / parent["raw_path"]).read_bytes(), parent_raw)
+            self.assertEqual(len({x["source_id"] for x in first["artifacts"]}), 3)
+            self.assertTrue(all("/exhibits/" in x["raw_path"] for x in children))
+            def forbidden(*_args):
+                raise AssertionError("verified parent and exhibits must be cache-only")
+            second = artifacts.refresh_artifacts(**args, fetcher=forbidden)
+            self.assertEqual(second["network_fetch_count"], 0)
+            self.assertEqual(second["cache_hit_count"], 3)
+            check = artifacts.check_artifacts(**{key: args[key] for key in ("ledger_path", "artifact_root", "index_path", "project_root")})
+            self.assertEqual(check, {"selected": 3, "complete_cache": 3, "reparsable_cache": 0, "missing_cache": 0})
+
+    def test_global_exhibit_bound_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ledger = root / "ledger.csv"
+            write_ledger(ledger, [ledger_row(ticker=f"T{i}", form="8-K", accession=f"0001234567-26-00000{i}") for i in range(1, 6)])
+            def fetch(*_args):
+                return artifacts.FetchResult(b'<p>Cover</p><a href="earnings.htm">99.1</a><a href="deck.htm">99.2</a>', "text/html", "utf-8")
+            result = artifacts.refresh_artifacts(ledger_path=ledger, artifact_root=root / "filings", index_path=root / "index.json",
+                project_root=root, user_agent="UnitTest/1.0 test@example.com", fetcher=fetch, request_interval_seconds=0)
+            self.assertEqual(result["network_fetch_count"], 13)
+            self.assertEqual(sum(x["selected_exhibits"] for x in result["exhibit_selection"]), 8)
+            self.assertEqual(sum(x["omitted_due_to_bound"] for x in result["exhibit_selection"]), 2)
+
     def test_latest_date_ties_and_all_new_material_are_selected(self) -> None:
         rows = [
             ledger_row(

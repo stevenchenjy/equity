@@ -863,12 +863,14 @@ def _filing_evidence(
                             source_type="sec_filing_text_chunk",
                             ticker=ticker,
                             accepted_at=accepted_at,
-                            source_url=row.get("source_url", ""),
+                            source_url=artifact.get("url") or row.get("source_url", ""),
                             content_sha256=str(chunk.get("sha256", "")),
                             locator={
                                 "cik": row.get("cik", ""),
                                 "accession_number": accession,
                                 "form": row.get("form", ""),
+                                "document": artifact.get("primary_document", row.get("primary_document", "")),
+                                "artifact_kind": artifact.get("artifact_kind", "primary_document"),
                                 "char_start": chunk.get("char_start"),
                                 "char_end": chunk.get("char_end"),
                                 "parser": {

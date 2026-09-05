@@ -25,7 +25,7 @@ from datetime import date, datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable, Iterable
-from urllib.parse import unquote, urlsplit
+from urllib.parse import unquote, urljoin, urlsplit
 
 from phase5r_active_config import load_active_config
 from phase5r_daily_common import cycle_date
@@ -64,6 +64,8 @@ DEFAULT_CHUNK_OVERLAP = 200
 # start-to-start pacing for network misses only; verified cache hits do not
 # sleep or make a request.
 SEC_MIN_REQUEST_INTERVAL_SECONDS = 0.2
+MAX_EXHIBITS_PER_FILING = 2
+MAX_EXHIBITS_PER_REFRESH = 8
 SAFE_PATH_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 ACCESSION_PATTERN = re.compile(r"\d{10}-\d{2}-\d{6}")
 CIK_PATTERN = re.compile(r"\d{1,10}")
@@ -327,6 +329,60 @@ def source_id_for(row: dict[str, str]) -> str:
     return f"sec-{row['cik']}-{row['accession']}-{suffix}"
 
 
+class _ExhibitLinks(HTMLParser):
+    """Only explicit exhibit-number anchors; never crawl arbitrary links."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.href = ""
+        self.parts: list[str] = []
+        self.links: list[tuple[str, str]] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "a":
+            self.href = dict(attrs).get("href") or ""
+            self.parts = []
+
+    def handle_data(self, data: str) -> None:
+        if self.href:
+            self.parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "a" and self.href:
+            label = normalize_whitespace("".join(self.parts))
+            if re.fullmatch(r"99(?:\.\d{1,2})?", label):
+                self.links.append((label, self.href))
+            self.href = ""
+            self.parts = []
+
+
+def exhibit_rows(row: dict[str, str], raw: bytes, charset: str) -> list[dict[str, str]]:
+    if row["form"] not in {"8-K", "8-K/A", "6-K"} or row.get("artifact_kind") == "exhibit":
+        return []
+    parser = _ExhibitLinks()
+    parser.feed(decode_bytes(raw, charset))
+    parser.close()
+    selected: dict[str, dict[str, str]] = {}
+    for label, href in sorted(parser.links):
+        # A link may name a document only in this exact issuer/accession.
+        # Reject traversal even if URL resolution would normalize it away.
+        if any(token in href for token in ("..", "%", "\\")):
+            continue
+        try:
+            url = validate_source_url(urljoin(row["url"], href), cik=row["cik"], accession=row["accession"])
+        except ArtifactError:
+            continue
+        document = urlsplit(url).path.rsplit("/", 1)[-1]
+        if document == row["primary_document"] or not document.lower().endswith((".htm", ".html", ".txt")):
+            continue
+        child = {**row, "url": url, "primary_document": document, "artifact_kind": "exhibit",
+                 "exhibit_number": label, "parent_source_id": row["source_id"],
+                 "parent_raw_sha256": sha256_bytes(raw)}
+        child["source_id"] = source_id_for(child)
+        selected.setdefault(url, child)
+    return list(selected.values())
+
+
 def normalize_ledger_row(row: dict[str, str]) -> dict[str, str]:
     ticker = require_safe_token(row.get("ticker", "").strip().upper(), "ticker")
     cik = row.get("cik", "").strip()
@@ -445,6 +501,9 @@ def artifact_paths(
     accession = require_safe_token(row["accession"], "accession")
     root_resolved = artifact_root.resolve()
     directory = (artifact_root / ticker / accession).resolve()
+    if row.get("artifact_kind") == "exhibit":
+        document = require_safe_token(row["primary_document"], "exhibit document")
+        directory = (directory / "exhibits" / document).resolve()
     if root_resolved != directory and root_resolved not in directory.parents:
         raise ArtifactError("artifact path escaped SEC filing root")
     return (
@@ -553,6 +612,8 @@ def _entry_identity_matches(
         "raw_path": display_path(raw_path, project_root),
         "normalized_path": display_path(text_path, project_root),
     }
+    if row.get("artifact_kind") == "exhibit":
+        expected.update({key: row[key] for key in ("artifact_kind", "exhibit_number", "parent_source_id", "parent_raw_sha256")})
     return all(entry.get(key) == value for key, value in expected.items())
 
 
@@ -636,6 +697,8 @@ def build_entry(
         "fetched_at": fetched_at,
         "cache_status": cache_status,
     }
+    if row.get("artifact_kind") == "exhibit":
+        entry.update({key: row[key] for key in ("artifact_kind", "exhibit_number", "parent_source_id", "parent_raw_sha256")})
     return entry, normalized_text
 
 
@@ -735,6 +798,21 @@ def refresh_artifacts(
     reparsed = 0
     network_fetches = 0
     last_network_request_started: float | None = None
+    exhibit_selection: list[dict[str, Any]] = []
+    queued_exhibits = 0
+
+    def queue_exhibits(row: dict[str, str], entry: dict[str, Any], raw_path: Path) -> None:
+        nonlocal queued_exhibits
+        if row.get("artifact_kind") == "exhibit" or row["form"] not in {"8-K", "8-K/A", "6-K"}:
+            return
+        candidates = exhibit_rows(row, raw_path.read_bytes(), str(entry.get("charset", "utf-8")))
+        allowance = min(MAX_EXHIBITS_PER_FILING, MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
+        chosen = candidates[:allowance]
+        selected.extend(chosen)
+        queued_exhibits += len(chosen)
+        exhibit_selection.append({"parent_source_id": row["source_id"], "eligible_linked_exhibits": len(candidates),
+                                  "selected_exhibits": len(chosen), "omitted_due_to_bound": len(candidates) - len(chosen),
+                                  "coverage": "explicit_linked_ex99_only_not_all_exhibits"})
 
     for row in selected:
         _, raw_path, text_path = artifact_paths(artifact_root, row)
@@ -745,6 +823,7 @@ def refresh_artifacts(
         if cached is not None:
             artifacts.append(cached)
             cache_hits += 1
+            queue_exhibits(row, cached, raw_path)
             continue
 
         identity_matches = _entry_identity_matches(
@@ -769,6 +848,7 @@ def refresh_artifacts(
             )
             artifacts.append(entry)
             reparsed += 1
+            queue_exhibits(row, entry, raw_path)
             continue
 
         request_started = monotonic_clock()
@@ -795,6 +875,7 @@ def refresh_artifacts(
         )
         artifacts.append(entry)
         network_fetches += 1
+        queue_exhibits(row, entry, raw_path)
 
     payload = _index_payload(
         ledger_path=ledger_path,
@@ -804,6 +885,7 @@ def refresh_artifacts(
         reparsed=reparsed,
         network_fetches=network_fetches,
     )
+    payload["exhibit_selection"] = exhibit_selection
     atomic_write_json(index_path, payload)
     return payload
 
@@ -831,6 +913,7 @@ def check_artifacts(
     complete = 0
     reparsable = 0
     missing = 0
+    queued_exhibits = 0
     for row in selected:
         _, raw_path, text_path = artifact_paths(artifact_root, row)
         entry = prior_by_id.get(row["source_id"], {})
@@ -845,6 +928,12 @@ def check_artifacts(
             reparsable += 1
         else:
             missing += 1
+        if (_entry_identity_matches(entry, row, raw_path, text_path, project_root)
+                and raw_cache_is_valid(entry, raw_path) and row.get("artifact_kind") != "exhibit"):
+            candidates = exhibit_rows(row, raw_path.read_bytes(), str(entry.get("charset", "utf-8")))
+            allowance = min(MAX_EXHIBITS_PER_FILING, MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
+            selected.extend(candidates[:allowance])
+            queued_exhibits += len(candidates[:allowance])
     return {
         "selected": len(selected),
         "complete_cache": complete,
