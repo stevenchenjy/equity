@@ -19,6 +19,19 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 
 
 class PacketMarketObservationTests(unittest.TestCase):
+    def test_issuer_chunk_budget_balances_documents_without_multiplying_cost(self) -> None:
+        rows = [{"accession_number": "new"}, {"accession_number": "prior"}]
+        artifacts = {"new": [{"source_id": "quarter", "size": 8}],
+                     "prior": [{"source_id": "cover", "size": 1}, {"source_id": "earnings", "size": 8}]}
+        def verified(artifact, *, maximum_chunks):
+            return [({"index": i}, artifact["source_id"]) for i in range(min(artifact["size"], maximum_chunks))]
+        with patch.object(packet_builder, "_verified_artifact_chunks", side_effect=verified):
+            first = packet_builder._issuer_artifact_chunks(rows, artifacts)
+            second = packet_builder._issuer_artifact_chunks(rows, artifacts)
+        self.assertEqual(first, second)
+        self.assertEqual({key: len(value) for key, value in first.items()}, {"quarter": 4, "cover": 1, "earnings": 3})
+        self.assertEqual(sum(map(len, first.values())), 8)
+
     def test_contact_chunks_are_excluded_without_redacting_or_rehashing_sources(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

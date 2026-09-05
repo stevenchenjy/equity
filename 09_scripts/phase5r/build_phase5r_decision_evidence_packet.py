@@ -809,6 +809,44 @@ def _fundamental_observations(
     return observations, sources, calculations
 
 
+MAX_FILING_CHUNKS_PER_ISSUER = 8
+FILING_CHUNK_SELECTION = "safe_verbatim_max8_per_issuer_balanced_documents_v1"
+
+
+def _issuer_artifact_chunks(
+    rows: list[dict[str, str]], artifacts: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[tuple[dict[str, Any], str]]]:
+    """One issuer budget, balanced across its deterministically selected docs.
+
+    More attachments must not multiply one issuer's context/cost weight. Give
+    each eligible document a slot in filing order, then repeat to the fixed
+    cap. Within each quota reuse the existing semantic/coverage stratification.
+    The full documents remain cached; this is not a complete-document claim.
+    """
+    documents: dict[str, tuple[dict[str, Any], int]] = {}
+    for row in rows:
+        for artifact in artifacts.get(row.get("accession_number", ""), []):
+            source_id = str(artifact.get("source_id", ""))
+            if not source_id or source_id in documents:
+                continue
+            available = _verified_artifact_chunks(artifact, maximum_chunks=MAX_FILING_CHUNKS_PER_ISSUER)
+            if available:
+                documents[source_id] = (artifact, len(available))
+    quotas = dict.fromkeys(documents, 0)
+    remaining = MAX_FILING_CHUNKS_PER_ISSUER
+    while remaining:
+        progressed = False
+        for source_id, (_, available) in documents.items():
+            if remaining and quotas[source_id] < available:
+                quotas[source_id] += 1
+                remaining -= 1
+                progressed = True
+        if not progressed:
+            break
+    return {source_id: _verified_artifact_chunks(artifact, maximum_chunks=quotas[source_id])
+            for source_id, (artifact, _) in documents.items() if quotas[source_id]}
+
+
 def _filing_evidence(
     tickers: set[str],
     current_material_accessions: set[str],
@@ -828,6 +866,7 @@ def _filing_evidence(
             rows,
             current_material_accessions,
         )
+        selected_chunks = _issuer_artifact_chunks(selected, artifacts)
         for row in selected:
             accession = row.get("accession_number", "")
             acceptance_record = acceptance_records.get(accession, {})
@@ -858,7 +897,7 @@ def _filing_evidence(
             artifact_rows = artifacts.get(accession, [])
             chunk_ids: list[str] = []
             for artifact in artifact_rows:
-                for chunk, excerpt in _verified_artifact_chunks(artifact):
+                for chunk, excerpt in selected_chunks.get(str(artifact.get("source_id", "")), []):
                     chunk_id = str(
                         chunk.get("source_id")
                         or (
@@ -881,7 +920,7 @@ def _filing_evidence(
                                 "form": row.get("form", ""),
                                 "document": artifact.get("primary_document", row.get("primary_document", "")),
                                 "artifact_kind": artifact.get("artifact_kind", "primary_document"),
-                                "selection_scope": "bounded_safe_verbatim_chunks_not_full_document",
+                                "selection_scope": FILING_CHUNK_SELECTION,
                                 "char_start": chunk.get("char_start"),
                                 "char_end": chunk.get("char_end"),
                                 "parser": {
