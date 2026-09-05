@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +19,29 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 
 
 class PacketMarketObservationTests(unittest.TestCase):
+    def test_contact_chunks_are_excluded_without_redacting_or_rehashing_sources(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            relative = "02_filings/phase5r_daily/TST/normalized_text.txt"
+            path = root / relative
+            path.parent.mkdir(parents=True)
+            parts = ["Revenue grew; official quarter results.\n", "IR contact: ir@example.com\n", "Cash flow improved.\n"]
+            text = "".join(parts)
+            path.write_text(text)
+            chunks = []
+            offset = 0
+            for index, part in enumerate(parts):
+                chunks.append({"index": index, "char_start": offset, "char_end": offset + len(part), "sha256": hashlib.sha256(part.encode()).hexdigest()})
+                offset += len(part)
+            artifact = {"normalized_path": relative, "normalized_sha256": hashlib.sha256(text.encode()).hexdigest(), "chunks": chunks}
+            with patch.object(packet_builder, "ROOT", root):
+                selected = packet_builder._verified_artifact_chunks(artifact)
+            self.assertEqual([chunk["index"] for chunk, _ in selected], [0, 2])
+            self.assertEqual(path.read_text(), text)
+            for chunk, quote in selected:
+                self.assertEqual(quote, text[chunk["char_start"]:chunk["char_end"]])
+                self.assertEqual(hashlib.sha256(quote.encode()).hexdigest(), chunk["sha256"])
+
     def test_exhibit_chunk_cites_its_own_document_and_parent_acceptance(self) -> None:
         accession = "0001234567-26-000001"
         parent_url = "https://www.sec.gov/Archives/edgar/data/1234567/000123456726000001/cover.htm"

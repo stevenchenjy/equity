@@ -40,7 +40,9 @@ from phase5r_daily_common import (
     read_json,
     sha256_file,
 )
-from phase5r_packet_contract import PACKET_SCHEMA_VERSION, validate_packet
+from phase5r_packet_contract import (
+    PACKET_SCHEMA_VERSION, ContractError, _assert_no_sensitive_markers, validate_packet,
+)
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
 from phase5r_sec_acceptance import SEC_ACCEPTANCE_INDEX_PATH, acceptance_map
@@ -535,6 +537,14 @@ def _verified_artifact_chunks(
         digest = hashlib.sha256(excerpt.encode("utf-8")).hexdigest()
         if digest != chunk.get("sha256"):
             continue
+        # Public earnings releases can contain IR email contacts. Preserve the
+        # complete raw/normalized document locally, but never weaken the
+        # no-contact/secret/path rule or falsify the hash of a redacted quote.
+        # Select other verified verbatim chunks; coverage is explicitly partial.
+        try:
+            _assert_no_sensitive_markers(excerpt, "public excerpt")
+        except ContractError:
+            continue
         lowered = excerpt.lower()
         score = sum(lowered.count(term) * weight for term, weight in terms.items())
         if index == 0:
@@ -871,6 +881,7 @@ def _filing_evidence(
                                 "form": row.get("form", ""),
                                 "document": artifact.get("primary_document", row.get("primary_document", "")),
                                 "artifact_kind": artifact.get("artifact_kind", "primary_document"),
+                                "selection_scope": "bounded_safe_verbatim_chunks_not_full_document",
                                 "char_start": chunk.get("char_start"),
                                 "char_end": chunk.get("char_end"),
                                 "parser": {
