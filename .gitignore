@@ -58,6 +58,7 @@ graphify-out/graph.html
 08_reviews/phase5r_shadow_llm/packets.local/
 00_project_control/run_logs/phase5r_shadow_llm_calls.local.jsonl
 00_project_control/run_logs/phase5r_shadow_llm.lock
+00_project_control/run_logs/phase5r_shadow_llm.run.lock
 
 # Phase 5R active-runtime artifacts. These files remain on the authoritative
 # runtime machine, but scheduled refreshes must not dirty the source checkout.

@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-04)
 
 ## Corpus Check
-- 151 files · ~157,582 words
+- 152 files · ~157,692 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1650 nodes · 3920 edges · 93 communities (78 shown, 15 thin omitted)
+- 1650 nodes · 3919 edges · 94 communities (78 shown, 16 thin omitted)
 - Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 629 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3a5cda79`
+- Built from commit: `8067cdbf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -45,6 +45,7 @@
 - next_thursday
 - verify_phase5r_c2_email_delivery_boundary.py
 - PacketMarketObservationTests
+- HeldCorePositionTests
 - check_phase5r_shadow_llm_evaluation_scheduler.sh
 - install_phase5r_shadow_llm_evaluation_scheduler.sh
 - run_phase5r_shadow_llm_event.sh
@@ -135,7 +136,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (93 total, 15 thin omitted)
+## Communities (94 total, 16 thin omitted)
 
 ### Community 0 - "phase5r_market_data_adapter.py"
 Cohesion: 0.24
@@ -238,8 +239,8 @@ Cohesion: 0.22
 Nodes (11): clamp(), main(), number(), selected_tickers(), _jsonl(), main(), _number(), Path (+3 more)
 
 ### Community 26 - "phase5r_portfolio_construction.py"
-Cohesion: 0.09
-Nodes (9): _post_action_row(), valuation_trim_review_required(), core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count. (+1 more)
+Cohesion: 0.13
+Nodes (8): _post_action_row(), valuation_trim_review_required(), core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count.
 
 ### Community 28 - "verify_phase5r_c2_email_delivery_boundary.py"
 Cohesion: 0.07
@@ -448,7 +449,7 @@ Nodes (12): add_check(), append_verification_log(), file_digest_or_absent(), loa
 ## Knowledge Gaps
 - **269 isolated node(s):** `activate_phase5r_daily_after_verification.sh script`, `check_phase5r_daily_scheduler_status.sh script`, `check_phase5r_shadow_llm_evaluation_scheduler.sh script`, `clear_phase5r_c9_maintenance_inhibit.sh script`, `install_phase5r_daily_schedulers.sh script` (+264 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_

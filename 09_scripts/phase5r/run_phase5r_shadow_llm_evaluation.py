@@ -1281,6 +1281,9 @@ def _execute_unlocked(
     _private_directory(run_dir)
     if live and config["event_selection"]["archive_selected_packets"]:
         _archive_packet(packet_archive_root, packet)
+    elif not live:
+        # Fixture truth is sealed too, but never enters the paid replay pool.
+        _archive_packet(output_root / "packets.local", packet)
 
     analyst_input = {"semantic_view": semantic_view}
     analyst_call = _invoke_live_role if live else _invoke_fixture_role
@@ -1626,7 +1629,6 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(preflight(
             packet, config=config, output_root=args.output_root,
             packet_archive_root=args.packet_archive_root,
-            issuer_components=semantic_event_components(packet),
             evaluation_class=args.evaluation_class or "live_shadow",
         ), ensure_ascii=False, sort_keys=True, indent=2))
         return 0

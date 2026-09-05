@@ -29,6 +29,7 @@
   "27": "next_thursday",
   "28": "verify_phase5r_c2_email_delivery_boundary.py",
   "29": "PacketMarketObservationTests",
+  "30": "HeldCorePositionTests",
   "31": "check_phase5r_shadow_llm_evaluation_scheduler.sh",
   "32": "install_phase5r_shadow_llm_evaluation_scheduler.sh",
   "33": "run_phase5r_shadow_llm_event.sh",

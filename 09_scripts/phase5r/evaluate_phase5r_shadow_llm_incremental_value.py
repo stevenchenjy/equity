@@ -358,6 +358,8 @@ def load_automatic_bundle(
 ) -> dict[str, Any]:
     bundle = _read_regular_json(path)
     packet = _packet_for_bundle(bundle, packet_archive_root or path.parent.parent.parent / "packets.local")
+    if packet is None and bundle.get("evaluation_class") == "fixture_validation":
+        packet = _packet_for_bundle(bundle, path.parent.parent / "packets.local")
     _validate_bundle(bundle, packet=packet)
     if bundle["evaluation_class"] != "fixture_validation":
         _validate_live_ledger(
@@ -367,8 +369,9 @@ def load_automatic_bundle(
 
 
 def _packet_for_bundle(bundle: dict[str, Any], archive_root: Path) -> dict[str, Any] | None:
-    path = archive_root / f"{bundle['semantic_event_fingerprint']}.json"
-    if not path.exists():
+    paths = [archive_root / f"{bundle['packet_id']}.json", archive_root / f"{bundle['semantic_event_fingerprint']}.json"]
+    path = next((candidate for candidate in paths if candidate.exists()), None)
+    if path is None:
         return None
     packet = load_packet(path)
     if packet.get("packet_id") != bundle.get("packet_id"):
