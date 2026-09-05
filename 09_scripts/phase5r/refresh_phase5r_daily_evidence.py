@@ -208,6 +208,15 @@ DEBT_NONCURRENT_TAGS = (
 )
 SHORT_TERM_DEBT_TAGS = ("ShortTermBorrowings",)
 TOTAL_DEBT_TAGS = ("DebtAndCapitalLeaseObligations",)
+# DebtCurrent already includes short-term borrowings and the current portion
+# of long-term debt. Adding either again would double count that obligation.
+COMBINED_CURRENT_DEBT_TAGS = ("DebtCurrent",)
+# These are useful disclosures, not synonyms for ALL noncurrent debt. Keep
+# them visible when the complete debt scope cannot be established.
+PARTIAL_DEBT_TAGS = (
+    "ConvertibleLongTermNotesPayable", "ConvertibleDebtNoncurrent",
+    "OtherLongTermDebtNoncurrent", "LongTermDebt",
+)
 REPORT_FORMS = {"10-Q", "10-K", "20-F", "40-F", "10-Q/A", "10-K/A", "20-F/A", "40-F/A"}
 FINANCIAL_SELECTION_VERSION = "period_bound_companyfacts_v2"
 
@@ -678,16 +687,32 @@ def _debt_fact(payload: dict[str, Any], target_end: str, **selection: Any) -> tu
     total = instant_fact(payload, TOTAL_DEBT_TAGS, target_end=target_end, **selection)
     if total is not None:
         return total, [total]
+    combined_current = instant_fact(payload, COMBINED_CURRENT_DEBT_TAGS, target_end=target_end, **selection)
+    # Match the scope of DebtCurrent: interest-bearing debt excluding leases.
+    noncurrent_debt = instant_fact(payload, ("LongTermDebtNoncurrent",), target_end=target_end, **selection)
+    if combined_current is not None and noncurrent_debt is not None:
+        parts = [combined_current, noncurrent_debt]
+        # Do not combine separately restated presentations of one balance.
+        if len({part["accn"] for part in parts}) == 1 and all(float(part["val"]) >= 0 for part in parts):
+            return _derived_fact(
+                parts, start="", end=target_end,
+                value=sum(float(part["val"]) for part in parts),
+                derivation="reported_combined_current_debt_plus_noncurrent_debt",
+            ), parts
     parts = [instant_fact(payload, tags, target_end=target_end, **selection)
              for tags in (DEBT_CURRENT_TAGS, DEBT_NONCURRENT_TAGS, SHORT_TERM_DEBT_TAGS)]
     # An absent current portion or short-term borrowing line is not evidence
     # of zero. Do not call a partially disclosed long-term balance total debt.
     if any(item is None for item in parts):
-        return None, parts
+        partial = [instant_fact(payload, (tag,), target_end=target_end, **selection)
+                   for tag in PARTIAL_DEBT_TAGS]
+        return None, parts + [item for item in [combined_current, *partial] if item is not None]
     current, noncurrent, short_term = parts
     current_has_leases = "FinanceLease" in current["_tag"]
     noncurrent_has_leases = "FinanceLease" in noncurrent["_tag"]
-    if current_has_leases != noncurrent_has_leases:
+    if (current_has_leases != noncurrent_has_leases
+            or len({part["accn"] for part in parts}) != 1
+            or any(float(part["val"]) < 0 for part in parts)):
         return None, parts
     return _derived_fact(
         parts, start="", end=target_end,

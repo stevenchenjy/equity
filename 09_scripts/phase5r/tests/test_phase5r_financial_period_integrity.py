@@ -169,6 +169,45 @@ class FinancialPeriodIntegrityTests(unittest.TestCase):
         self.assertEqual(result["debt_latest"], "0.00")
         self.assertNotIn("missing_total_debt", valuation_input_issues(result, {"last_price": 10}, "2026-09-04T17:00:00Z"))
 
+    def test_combined_current_debt_plus_noncurrent_is_complete_without_double_counting(self):
+        payload = fixture()
+        gaap = payload["facts"]["us-gaap"]
+        del gaap["DebtAndCapitalLeaseObligations"]
+        for tag, value in (("DebtCurrent", 12), ("LongTermDebtCurrent", 10),
+                           ("ShortTermBorrowings", 2), ("LongTermDebtNoncurrent", 50)):
+            gaap[tag] = facts([instant("2026-06-30", value)])
+        result = row(payload)
+        self.assertEqual(result["debt_latest"], "62.00")
+        del gaap["ShortTermBorrowings"]
+        self.assertEqual(row(payload)["debt_latest"], "62.00")
+        provenance = json.loads(result["field_provenance_json"])["debt_latest"]
+        self.assertEqual(provenance["derivation"], "reported_combined_current_debt_plus_noncurrent_debt")
+        self.assertEqual([item["tag"] for item in provenance["components"]], ["DebtCurrent", "LongTermDebtNoncurrent"])
+
+    def test_debt_combination_rejects_mixed_period_accession_and_lease_scope(self):
+        for mismatch in ("period", "accession", "leases"):
+            with self.subTest(mismatch=mismatch):
+                payload = fixture()
+                gaap = payload["facts"]["us-gaap"]
+                del gaap["DebtAndCapitalLeaseObligations"]
+                gaap["DebtCurrent"] = facts([instant("2026-06-30", 10)])
+                part = instant("2026-03-31" if mismatch == "period" else "2026-06-30", 50)
+                if mismatch == "accession":
+                    part["accn"] = "0000000001-26-000002"
+                tag = "LongTermDebtAndFinanceLeaseObligationsNoncurrent" if mismatch == "leases" else "LongTermDebtNoncurrent"
+                gaap[tag] = facts([part])
+                self.assertEqual(row(payload)["debt_latest"], "")
+
+    def test_convertible_disclosure_is_visible_but_not_mislabeled_as_total_debt(self):
+        payload = fixture()
+        gaap = payload["facts"]["us-gaap"]
+        del gaap["DebtAndCapitalLeaseObligations"]
+        gaap["ConvertibleLongTermNotesPayable"] = facts([instant("2026-06-30", 50)])
+        result = row(payload)
+        self.assertEqual(result["debt_latest"], "")
+        parts = json.loads(result["field_provenance_json"])["debt_component_disclosures"]
+        self.assertTrue(any(part.get("tag") == "ConvertibleLongTermNotesPayable" and part["val"] == 50 for part in parts))
+
     def test_wrong_unit_nonfinite_and_duration_as_instant_are_rejected(self):
         payload = {"facts": {"us-gaap": {
             "Revenues": facts([duration("2026-04-01", "2026-06-30", 999)], "EUR"),

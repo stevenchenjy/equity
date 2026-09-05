@@ -315,8 +315,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_daily_evidence.py": {
-    "mtime": 1788577019.2806592,
-    "ast_hash": "79821e562aa754c6320f0ce4f3470718",
+    "mtime": 1788578978.0439782,
+    "ast_hash": "b82e5e8a8d2e46f25dd87708c64979f9",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py": {
@@ -770,8 +770,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_financial_period_integrity.py": {
-    "mtime": 1788576988.7547805,
-    "ast_hash": "603ad816b53776156eeb799097a68e5e",
+    "mtime": 1788578978.04501,
+    "ast_hash": "935e83bcf90ed0dafae4cdfa723f4c54",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_reassessment_reporting.py": {
@@ -797,6 +797,11 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v14.json": {
     "mtime": 1788577324.8716722,
     "ast_hash": "7ada448c70de7b4d7fc9ecfacc03ee17",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/audit_phase5r_financial_coverage.py": {
+    "mtime": 1788578978.0461545,
+    "ast_hash": "c9d4f90bb2147448147d3bc964484987",
     "semantic_hash": ""
   }
 }
