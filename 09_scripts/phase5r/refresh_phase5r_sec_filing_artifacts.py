@@ -46,7 +46,7 @@ INDEX_PATH = (
 INDEX_SCHEMA_VERSION = "phase5r_sec_filing_artifact_index_v1"
 PARSER_ID = "phase5r_sec_text_normalizer"
 PARSER_VERSION = "1.0.0"
-SELECTION_POLICY = "latest_filing_date_per_ticker_plus_current_material_v2"
+SELECTION_POLICY = "latest_filing_date_plus_event_anchored_material_v3"
 ALLOWED_SEC_HOSTS = frozenset({"sec.gov", "www.sec.gov"})
 ALLOWED_CONTENT_TYPES = frozenset(
     {
@@ -444,6 +444,20 @@ def read_evidence_ledger(path: Path) -> list[dict[str, str]]:
         return [dict(row) for row in reader]
 
 
+def event_window_material(
+    row: dict[str, str], latest_filing_date: str, material_lookback_days: int,
+) -> bool:
+    """Research context ages against the latest filing, not the wall clock.
+
+    Notification recency remains a separate calendar-based production rule.
+    Removing an unchanged release on midnight must not rebalance quotations
+    from the same quarterly report and spend another shadow evaluation.
+    """
+
+    filing_gap = (date.fromisoformat(latest_filing_date) - date.fromisoformat(row["filing_date"])).days
+    return row.get("material_event") == "yes" and 0 <= filing_gap <= material_lookback_days
+
+
 def select_filing_rows(
     rows: Iterable[dict[str, str]],
     *,
@@ -455,6 +469,8 @@ def select_filing_rows(
     deduplicated: dict[str, dict[str, str]] = {}
     for raw_row in rows:
         row = normalize_ledger_row(raw_row)
+        if as_of is not None and date.fromisoformat(row["filing_date"]) > as_of:
+            continue
         existing = deduplicated.get(row["source_id"])
         if existing is None or row["detected_at"] > existing["detected_at"]:
             deduplicated[row["source_id"]] = row
@@ -468,19 +484,9 @@ def select_filing_rows(
         )
     selected: list[dict[str, str]] = []
     for row in deduplicated.values():
-        current_material = bool(
-            row["is_new"] == "yes"
-            and row["material_event"] == "yes"
-        )
-        if as_of is not None and current_material:
-            filing_age = (as_of - date.fromisoformat(row["filing_date"])).days
-            current_material = bool(
-                row["cycle_date"] == as_of.isoformat()
-                and 0 <= filing_age <= material_lookback_days
-            )
         if (
             row["filing_date"] == latest_dates[row["ticker"]]
-            or current_material
+            or event_window_material(row, latest_dates[row["ticker"]], material_lookback_days)
         ):
             selected.append(row)
     return sorted(

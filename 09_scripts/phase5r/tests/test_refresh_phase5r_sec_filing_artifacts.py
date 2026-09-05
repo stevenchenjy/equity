@@ -118,6 +118,23 @@ class NormalizationTests(unittest.TestCase):
 
 
 class SelectionAndValidationTests(unittest.TestCase):
+    def test_research_selection_does_not_roll_with_notification_window(self) -> None:
+        rows = [
+            ledger_row(filing_date="2026-09-04", accession="0001234567-26-000003"),
+            ledger_row(form="8-K", filing_date="2026-09-02", accession="0001234567-26-000002", is_new="yes", material_event="yes"),
+        ]
+        first = artifacts.select_filing_rows(rows, as_of=date(2026, 9, 4), material_lookback_days=2)
+        for row in rows:
+            row.update({"is_new": "no", "cycle_date": "2026-10-04"})
+        later = artifacts.select_filing_rows(rows, as_of=date(2026, 10, 4), material_lookback_days=2)
+        self.assertEqual([r["source_id"] for r in first], [r["source_id"] for r in later])
+        self.assertEqual(len(later), 2)
+
+    def test_future_filing_cannot_advance_research_window(self) -> None:
+        rows = [ledger_row(filing_date="2026-09-04"), ledger_row(filing_date="2026-09-08", accession="0001234567-26-000002")]
+        selected = artifacts.select_filing_rows(rows, as_of=date(2026, 9, 5))
+        self.assertEqual([r["accession"] for r in selected], ["0001234567-26-000001"])
+
     def test_exhibit_discovery_requires_explicit_number_and_same_accession(self) -> None:
         row = artifacts.normalize_ledger_row(ledger_row(form="8-K"))
         raw = b'''<html><a href="earnings.htm"><b>99.1</b></a>

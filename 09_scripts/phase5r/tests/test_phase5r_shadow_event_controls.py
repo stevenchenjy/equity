@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import contextlib
+import io
 import json
 import tempfile
 import unittest
@@ -47,6 +49,30 @@ def economic_packet() -> dict:
 
 
 class ShadowEventControlTests(unittest.TestCase):
+    def test_document_resampling_is_not_a_new_event_but_new_evidence_is(self) -> None:
+        first = economic_packet()
+        first["source_catalog"][0].update({
+            "source_type": "sec_filing_text_chunk", "source_url": "https://www.sec.gov/Archives/test.htm",
+            "locator": {"accession_number": "first-filing", "document": "test.htm", "char_start": 0, "char_end": 4000},
+        })
+        second = copy.deepcopy(first)
+        extra = copy.deepcopy(first["source_catalog"][0])
+        extra["locator"].update({"char_start": 4000, "char_end": 8000})
+        extra["content_sha256"] = "5" * 64
+        second["source_catalog"].append(extra)
+        self.assertTrue(runner.source_selection_repeat(second, first))
+        self.assertNotEqual(runner.semantic_event_fingerprint(first), runner.semantic_event_fingerprint(second))
+        second["source_catalog"][0]["content_sha256"] = "7" * 64
+        self.assertFalse(runner.source_selection_repeat(second, first))
+        second = copy.deepcopy(first)
+        extra["source_url"] = "https://www.sec.gov/Archives/new-ex99.htm"
+        extra["locator"]["document"] = "new-ex99.htm"
+        second["source_catalog"].append(extra)
+        self.assertFalse(runner.source_selection_repeat(second, first))
+        second = copy.deepcopy(first)
+        second["fundamental_observations"][0]["net_margin_pct"] = "-12.0"
+        self.assertFalse(runner.source_selection_repeat(second, first))
+
     def test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event(self) -> None:
         first = economic_packet()
         second = copy.deepcopy(first)
@@ -232,6 +258,20 @@ class ShadowEventControlTests(unittest.TestCase):
             self.assertFalse(receipt["provider_invoked"])
             self.assertIsNone(receipt["cost_accounting"]["authoritative_billing_cost_usd"])
             self.assertFalse(ledger.exists())
+
+    def test_preflight_cli_dispatches_packet_once_and_never_calls_provider(self) -> None:
+        packet = economic_packet()
+        with patch.object(runner, "load_packet", return_value=packet), patch.object(runner, "preflight", return_value={"provider_invoked": False}) as preflight, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(runner.main(["--preflight"]), 0)
+        preflight.assert_called_once()
+        self.assertEqual(preflight.call_args.args, (packet,))
+        self.assertNotIn("packet", preflight.call_args.kwargs)
+
+    def test_auto_live_cli_passes_packet_to_resample_guard(self) -> None:
+        packet = economic_packet()
+        with patch.object(runner, "load_packet", return_value=packet), patch.object(runner, "_event_already_attempted", return_value=True) as guard, patch.object(runner, "_archive_packet"), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(runner.main(["--auto-live"]), 0)
+        self.assertEqual(guard.call_args.kwargs["packet"], packet)
 
 
 if __name__ == "__main__":

@@ -43,6 +43,8 @@ from phase5r_daily_common import (
 from phase5r_packet_contract import (
     PACKET_SCHEMA_VERSION, ContractError, _assert_no_sensitive_markers, validate_packet,
 )
+from phase5r_active_config import load_active_config
+from refresh_phase5r_sec_filing_artifacts import event_window_material
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
 from phase5r_sec_acceptance import SEC_ACCEPTANCE_INDEX_PATH, acceptance_map
@@ -465,6 +467,8 @@ def _selected_filing_rows(
     rows: list[dict[str, str]],
     current_material_accessions: set[str],
 ) -> list[dict[str, str]]:
+    # Keep the caller-compatible argument, but do not let today's notification
+    # window age unchanged source documents out of a research packet.
     ordered = sorted(
         rows,
         key=lambda row: (
@@ -474,13 +478,16 @@ def _selected_filing_rows(
         reverse=True,
     )
     selected = ordered[:2]
+    if not ordered:
+        return selected
+    lookback = load_active_config()["notifications"]["new_filing_lookback_calendar_days"]
     selected_accessions = {
         row.get("accession_number", "") for row in selected
     }
     selected.extend(
         row
         for row in ordered[2:]
-        if row.get("accession_number", "") in current_material_accessions
+        if event_window_material(row, ordered[0]["filing_date"], lookback)
         and row.get("accession_number", "") not in selected_accessions
     )
     return selected

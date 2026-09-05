@@ -503,6 +503,49 @@ def semantic_event_fingerprint(packet: dict[str, Any]) -> str:
     })
 
 
+def source_selection_repeat(packet: dict[str, Any], previous: dict[str, Any]) -> bool:
+    """Do not pay for, or count, a new projection of already sampled documents.
+
+    A new official document, economic fact, thesis, or changed overlapping
+    quotation remains eligible. New offsets alone are a resample, not an
+    independent research event. This does not assert identical unseen full text.
+    """
+
+    def projection(value: dict[str, Any]) -> tuple[dict[str, str], dict[tuple[str, ...], dict[tuple[Any, Any], str]]]:
+        nontext = []
+        documents: dict[tuple[str, ...], dict[tuple[Any, Any], str]] = {}
+        for row in value.get("source_catalog", []):
+            if row.get("source_type") != "sec_filing_text_chunk":
+                nontext.append(row)
+                continue
+            locator = row.get("locator", {})
+            if not isinstance(locator, dict):
+                raise ValueError("document locator is not structured")
+            if not all(isinstance(locator.get(key), int) for key in ("char_start", "char_end")):
+                raise ValueError("document offsets are incomplete")
+            identity = (str(row.get("ticker", "")), str(row.get("source_url", "")),
+                        str(locator.get("accession_number", "")), str(locator.get("document", "")))
+            if not all(identity):
+                raise ValueError("document identity is incomplete")
+            documents.setdefault(identity, {})[(locator.get("char_start"), locator.get("char_end"))] = str(row.get("content_sha256", ""))
+        return semantic_event_components({**value, "source_catalog": nontext}), documents
+
+    try:
+        current_core, current_docs = projection(packet)
+        prior_core, prior_docs = projection(previous)
+    except (TypeError, ValueError):
+        return False
+    if not current_core or not set(current_core.items()).issubset(prior_core.items()):
+        return False
+    if not set(current_docs).issubset(prior_docs):
+        return False
+    for identity, chunks in current_docs.items():
+        for offsets, digest in chunks.items():
+            if offsets in prior_docs[identity] and digest != prior_docs[identity][offsets]:
+                return False
+    return True
+
+
 def critic_route(
     analyst: dict[str, Any], config: dict[str, Any], packet: dict[str, Any] | None = None,
 ) -> tuple[bool, list[str]]:
@@ -542,6 +585,7 @@ def _event_already_attempted(
     semantic_view_sha256: str | None = None,
     packet_archive_root: Path | None = None,
     issuer_components: dict[str, str] | None = None,
+    packet: dict[str, Any] | None = None,
 ) -> bool:
     if not output_root.exists():
         return False
@@ -569,6 +613,10 @@ def _event_already_attempted(
             and identity.get("semantic_view_sha256") == semantic_view_sha256
         )
         archived = historical_packets.get(str(value.get("packet_id", "")))
+        if (packet is not None and archived is not None
+                and value.get("evaluation_class") == evaluation_class
+                and source_selection_repeat(packet, archived)):
+            return True
         if value.get("evaluation_class") == evaluation_class:
             previous_components = semantic_event_components(archived) if archived is not None else value.get("issuer_semantic_components", {})
             if isinstance(previous_components, dict):
@@ -666,6 +714,7 @@ def _select_replay_packet(
                 semantic_view_sha256=semantic_view_sha256,
                 packet_archive_root=packet_root,
                 issuer_components=semantic_event_components(packet),
+                packet=packet,
             )
             for evaluation_class in ("replay", "live_shadow")
         ):
@@ -1272,6 +1321,7 @@ def _execute_unlocked(
             semantic_view_sha256=identity["semantic_view_sha256"],
             packet_archive_root=packet_archive_root,
             issuer_components=identity["issuer_semantic_components"],
+            packet=packet,
         ) for kind in ("live_shadow", "replay")):
             raise ShadowRunError("semantic event already attempted; automatic retry is prohibited")
         stage_limit = "maximum_live_shadow_events_in_stage" if evaluation_class == "live_shadow" else "maximum_replay_events_in_stage"
@@ -1567,6 +1617,7 @@ def preflight(
         evaluation_stage=stage, packet_archive_root=packet_archive_root,
         semantic_view_sha256=canonical_sha256(semantic_view),
         issuer_components=semantic_event_components(packet),
+        packet=packet,
     ) for kind in ("replay", "live_shadow")):
         reasons.append("semantic_event_already_attempted")
     stage_limit = "maximum_live_shadow_events_in_stage" if evaluation_class == "live_shadow" else "maximum_replay_events_in_stage"
@@ -1684,6 +1735,7 @@ def main(argv: list[str] | None = None) -> int:
             evaluation_stage=config["evaluation_stage"],
             semantic_view_sha256=semantic_view_sha256,
             packet_archive_root=args.packet_archive_root,
+            packet=packet,
         ) for kind in ("replay", "live_shadow")):
             if args.auto_live and config["event_selection"]["archive_selected_packets"]:
                 _archive_packet(args.packet_archive_root, packet)

@@ -81,11 +81,19 @@ document coverage, not a complete independent reference corpus. Analyst,
 critic, and judge receive the same sealed selection. Historical packets are
 never rebuilt to add evidence discovered later.
 
+Research document retention is anchored to the latest filing event, not the
+wall clock or today's notification eligibility. A different set of offsets
+from already sampled official documents is a resample, not a new independent
+event; its historical calls and results remain in the ledger and aggregate.
+New documents, changed fundamental facts/theses, and changed overlapping
+quotations remain distinct. This does not claim to verify unseen full text.
+
 Aggregate all immutable runs without a per-run human review file:
 
 ```bash
 python3 09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py \
   --runs-root 08_reviews/phase5r_shadow_llm/runs.local \
+  --official-evidence-packet 03_source_data/phase5r/phase5r_llm_evidence_packet.json \
   --output 08_reviews/phase5r_shadow_llm/reviews.local/evaluation.json
 ```
 

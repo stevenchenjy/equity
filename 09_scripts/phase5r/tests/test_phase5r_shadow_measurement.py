@@ -154,6 +154,25 @@ class ShadowMeasurementTests(unittest.TestCase):
         self.assertEqual(result["metrics"]["replay_packets"] + result["metrics"]["live_shadow_events"], 1)
         self.assertEqual(result["metrics"]["raw_automatically_judged_runs"], 2)
 
+    def test_different_offsets_in_same_documents_do_not_inflate_event_count(self) -> None:
+        first = fake_packet()
+        first["source_catalog"][0]["locator"] = {"accession_number": "first", "document": "test.htm", "char_start": 0, "char_end": 4000}
+        first["source_catalog"][0]["source_url"] = "https://www.sec.gov/Archives/test.htm"
+        second = copy.deepcopy(first)
+        extra = copy.deepcopy(first["source_catalog"][0])
+        extra["source_id"] += ":extra"
+        extra["locator"].update({"char_start": 4000, "char_end": 8000})
+        extra["content_sha256"] = "6" * 64
+        second["source_catalog"].append(extra)
+        bundles = [evaluation_bundle("one"), evaluation_bundle("two")]
+        original = copy.deepcopy(bundles)
+        with patch("evaluate_phase5r_shadow_llm_incremental_value._packet_for_bundle", side_effect=[first, second]):
+            result = aggregate(bundles, load_config(), snapshot_path=Path("/missing/snapshots"), outcome_path=Path("/missing/outcomes"))
+        self.assertEqual(result["metrics"]["automatically_judged_events"], 1)
+        self.assertEqual(result["metrics"]["raw_automatically_judged_runs"], 2)
+        self.assertEqual(result["metrics"]["duplicate_semantic_event_runs"], 1)
+        self.assertEqual(bundles, original)
+
     def test_missing_sealed_packet_cannot_claim_baseline_incremental_value(self) -> None:
         with patch("evaluate_phase5r_shadow_llm_incremental_value._packet_for_bundle", return_value=None):
             result = aggregate([evaluation_bundle("one")], load_config(), snapshot_path=Path("/missing/snapshots"), outcome_path=Path("/missing/outcomes"))

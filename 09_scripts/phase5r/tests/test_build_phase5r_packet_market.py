@@ -295,6 +295,7 @@ class PacketMarketObservationTests(unittest.TestCase):
             [row["accession_number"] for row in selected],
             ["newest", "second", "current-extra"],
         )
+        self.assertEqual(selected, packet_builder._selected_filing_rows(rows, set()))
 
 
 if __name__ == "__main__":

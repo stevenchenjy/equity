@@ -30,6 +30,7 @@ from run_phase5r_shadow_llm_evaluation import (
     LEDGER_PATH,
     load_config,
     semantic_event_fingerprint,
+    source_selection_repeat,
 )
 
 
@@ -693,6 +694,11 @@ def aggregate(
     for bundle in sorted(evaluation_bundles, key=lambda row: (row["completed_at"], row["run_id"])):
         event_id = event_ids.get(bundle["run_id"])
         if event_id:
+            for prior_event_id, prior_bundle in event_registry.items():
+                if source_selection_repeat(packets[bundle["run_id"]], packets[prior_bundle["run_id"]]):
+                    event_id = prior_event_id
+                    event_ids[bundle["run_id"]] = event_id
+                    break
             # The same semantic event cannot satisfy both replay and live sample
             # requirements. Its first evaluation owns its class; calls remain raw.
             event_registry.setdefault(event_id, bundle)
@@ -1132,6 +1138,7 @@ def _report(payload: dict[str, Any]) -> str:
 
 - Status: `{payload['decision']['status']}`
 - Automatically judged events: `{metrics['automatically_judged_events']}`
+- Duplicate / existing-document resample runs (cost retained): `{metrics['duplicate_semantic_event_runs']}`
 - Current-stage failures: `{metrics['failed_current_stage_events']}`
 - Completion rate: `{metrics['completed_event_rate']}`
 - Unique supported material evidence families (conservative estimate): `{metrics['incremental_supported_material_items']}`
