@@ -56,6 +56,18 @@ def evaluation_bundle(run_id: str, *, partial: bool = False) -> dict:
 
 
 class ShadowMeasurementTests(unittest.TestCase):
+    def test_latest_official_packet_supplements_historical_proofs_and_is_wired(self) -> None:
+        archived = fake_packet()
+        current = copy.deepcopy(archived)
+        current["packet_id"] = "b" * 64
+        with (patch("evaluate_phase5r_shadow_llm_incremental_value._packet_for_bundle", return_value=archived),
+              patch("evaluate_phase5r_shadow_llm_incremental_value._official_follow_up", wraps=_official_follow_up) as follow):
+            aggregate([evaluation_bundle("one")], load_config(), snapshot_path=Path("/missing/snapshots"),
+                      outcome_path=Path("/missing/outcomes"), later_official_packets=[current])
+        self.assertEqual({packet["packet_id"] for packet in follow.call_args.args[1]}, {"a" * 64, "b" * 64})
+        wrapper = SCRIPT_DIR.parents[1] / "07_automation/scheduler/run_phase5r_shadow_llm_event.sh"
+        self.assertIn('--official-evidence-packet "${packet}"', wrapper.read_text())
+
     def test_baseline_includes_fact_sign_and_original_calculations(self) -> None:
         baseline = build_deterministic_baseline(fact_packet())
         self.assertTrue(any(row.get("baseline_kind") == "existing_deterministic_calculation" for row in baseline))

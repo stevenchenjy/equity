@@ -20,6 +20,7 @@ runner_status=0
 evaluator_status=0
 "${python_bin}" "${evaluator}" \
     --runs-root "${runs_root}" \
+    --official-evidence-packet "${packet}" \
     --output "${evaluation_output}" || evaluator_status=$?
 
 if (( runner_status != 0 )); then

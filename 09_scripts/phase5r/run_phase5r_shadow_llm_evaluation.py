@@ -403,6 +403,9 @@ def _economic_fields(value: Any) -> Any:
     ingestion_fields = {
         "fetched_at", "evidence_checked_at", "retrieved_at", "source_id",
         "metadata_source_id", "acceptance_source_id", "text_chunk_source_ids",
+        # Disclosure receipts support deterministic follow-up. Adding a receipt
+        # alone is not new semantic information and must not spend a model call.
+        "field_provenance_json",
     }
     if isinstance(value, dict):
         return {

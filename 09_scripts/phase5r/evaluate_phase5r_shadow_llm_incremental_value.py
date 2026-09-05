@@ -635,7 +635,7 @@ def _official_follow_up(rows: list[dict[str, Any]], later_packets: list[dict[str
                   "status": "unresolved_semantic_judgment_required", "reason": "No deterministic truth mapping; future official evidence may narrow uncertainty."}
         if check.get("checkable"):
             result.update(status="pending_later_official_same_period_evidence", reason="No later official same-period field provenance; fetch time is insufficient.")
-            for packet in sorted(later_packets, key=lambda packet: str(packet.get("as_of_et", ""))):
+            for packet in sorted(later_packets, key=lambda packet: str(packet.get("as_of_et", "")), reverse=True):
                 later = deterministic_claim_check(packet, row)
                 if not later.get("checkable"):
                     continue
@@ -840,7 +840,8 @@ def aggregate(
     }
     issuers = {row["ticker"] for row in incremental_supported}
     material_reference_issues = len(generated_material) + len(unique_missed)
-    follow_up = _official_follow_up(rows, later_official_packets or list(packets.values()))
+    # Current selection supplements, never replaces, retained official evidence.
+    follow_up = _official_follow_up(rows, [*(later_official_packets or []), *packets.values()])
     mechanical_checks = [row for row in rows if row["deterministic_check"]["checkable"]]
     metrics = {
         "automatically_judged_events": len(event_registry),

@@ -723,6 +723,16 @@ def _market_observations(
     return observations, sources, point_in_time_safe
 
 
+def _compact_fact_provenance(value: Any) -> dict[str, Any]:
+    """Public same-period proof used by zero-call later-official checks."""
+    if not isinstance(value, dict):
+        return {}
+    proof = {key: value[key] for key in ("accn", "filed", "start", "end", "val", "unit") if key in value}
+    if isinstance(value.get("components"), list):
+        proof["components"] = [_compact_fact_provenance(item) for item in value["components"]]
+    return proof
+
+
 def _fundamental_observations(
     tickers: set[str],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
@@ -752,6 +762,16 @@ def _fundamental_observations(
             "data_quality": row.get("data_quality", ""),
             "source_id": source_id,
         }
+        try:
+            provenance = json.loads(row.get("field_provenance_json") or "{}")
+        except (ValueError, TypeError):
+            provenance = {}
+        if isinstance(provenance, dict):
+            public_row["field_provenance_json"] = {
+                key: _compact_fact_provenance(provenance[key])
+                for key in ("net_income_latest", "net_margin_pct", "revenue_yoy_pct")
+                if key in provenance
+            }
         observations.append(public_row)
         sources.append(
             _source(

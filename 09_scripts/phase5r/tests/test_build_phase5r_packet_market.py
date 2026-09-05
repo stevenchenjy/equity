@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -19,6 +20,18 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
 
 
 class PacketMarketObservationTests(unittest.TestCase):
+    def test_packet_carries_compact_official_predicate_provenance(self) -> None:
+        proof = {"net_margin_pct": {"val": -10, "unit": "percent", "components": [
+            {"accn": "0000000001-26-000001", "filed": "2026-09-04", "end": "2026-06-30", "val": -100, "unit": "USD", "tag": "NetIncomeLoss"}]}}
+        row = {"ticker": "TST", "latest_frame": "CY2026Q2", "field_provenance_json": json.dumps(proof)}
+        with patch.object(packet_builder, "read_csv", return_value=[row]):
+            observations, _, _ = packet_builder._fundamental_observations({"TST"})
+        captured = observations[0]["field_provenance_json"]["net_margin_pct"]
+        self.assertEqual(captured["val"], -10)
+        self.assertEqual(captured["components"][0]["filed"], "2026-09-04")
+        self.assertEqual(captured["components"][0]["accn"], "0000000001-26-000001")
+        self.assertNotIn("tag", captured["components"][0])
+
     def test_issuer_chunk_budget_balances_documents_without_multiplying_cost(self) -> None:
         rows = [{"accession_number": "new"}, {"accession_number": "prior"}]
         artifacts = {"new": [{"source_id": "quarter", "size": 8}],

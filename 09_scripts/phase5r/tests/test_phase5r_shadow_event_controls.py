@@ -47,6 +47,12 @@ def economic_packet() -> dict:
 
 
 class ShadowEventControlTests(unittest.TestCase):
+    def test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event(self) -> None:
+        first = economic_packet()
+        second = copy.deepcopy(first)
+        second["fundamental_observations"][0]["field_provenance_json"] = {"net_margin_pct": {"filed": "2026-09-04", "accn": "0000000001-26-000001"}}
+        self.assertEqual(runner.semantic_event_fingerprint(first), runner.semantic_event_fingerprint(second))
+
     def test_all_refresh_wrappers_change_without_a_new_semantic_event(self) -> None:
         first = economic_packet()
         second = copy.deepcopy(first)
