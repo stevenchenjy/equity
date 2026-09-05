@@ -64,6 +64,23 @@ def row(payload=None, at="2026-09-04T16:00:00+00:00", **kwargs):
 
 
 class FinancialPeriodIntegrityTests(unittest.TestCase):
+    def test_rubrik_fcf_includes_separately_reported_capitalized_software(self):
+        payload = fixture()
+        gaap = payload["facts"]["us-gaap"]
+        gaap["PaymentsForSoftware"] = copy.deepcopy(gaap["PaymentsToAcquirePropertyPlantAndEquipment"])
+        result = evidence.fundamental_row("RBRK", 1, payload, "2026-09-04T16:00:00Z")
+        self.assertEqual(result["ttm_capex"], "27.00")
+        self.assertEqual(result["ttm_free_cash_flow"], "108.00")
+        self.assertEqual(result["valuation_input_quality"], "complete")
+        provenance = json.loads(result["field_provenance_json"])["ttm_capex"]
+        self.assertEqual(provenance["taxonomy"], "derived")
+        self.assertEqual(len(provenance["components"]), 2)
+        self.assertEqual(row(payload)["ttm_capex"], "13.50")  # No cross-issuer scope assumption.
+        del gaap["PaymentsForSoftware"]
+        missing = evidence.fundamental_row("RBRK", 1, payload, "2026-09-04T16:00:00Z")
+        self.assertEqual(missing["ttm_free_cash_flow"], "")
+        self.assertEqual(missing["valuation_input_quality"], "insufficient")
+
     def test_successor_tag_unframed_quarter_and_ttm_are_current(self):
         result = row()
         self.assertEqual(result["latest_period_end"], "2026-06-30")

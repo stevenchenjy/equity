@@ -16,6 +16,7 @@ model call:
 
 ```bash
 python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --check
+python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --preflight
 ```
 
 ## Automatic event modes
@@ -64,6 +65,21 @@ python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py \
 ```
 
 ## Evaluation
+
+Current results are generated in the runtime clone's
+`reviews.local/evaluation.json` and `reviews.local/evaluation.md`. Dated
+reassessment/repair documents are historical checkpoints, not live status;
+their original unresolved lists and failures are intentionally preserved.
+
+The deterministic packet collector now follows explicit same-accession SEC
+Exhibit 99 links (at most two per filing and eight per refresh). Original
+documents are preserved separately. The semantic packet samples at most eight
+verified safe text chunks per issuer, balanced across selected documents and
+using deterministic semantic/coverage stratification. Contact-bearing chunks
+are omitted without redacting or falsifying original hashes. This is partial
+document coverage, not a complete independent reference corpus. Analyst,
+critic, and judge receive the same sealed selection. Historical packets are
+never rebuilt to add evidence discovered later.
 
 Aggregate all immutable runs without a per-run human review file:
 

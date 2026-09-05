@@ -219,6 +219,11 @@ PARTIAL_DEBT_TAGS = (
 )
 REPORT_FORMS = {"10-Q", "10-K", "20-F", "40-F", "10-Q/A", "10-K/A", "20-F/A", "40-F/A"}
 FINANCIAL_SELECTION_VERSION = "period_bound_companyfacts_v2"
+# Rubrik's official FCF reconciliation separately deducts internal-use
+# software, tagged PaymentsForSoftware (Q2 FY2027 10-Q, pp. 9 and 27-28).
+# This is an issuer-specific reported definition, not a generic assumption
+# that every software payment is outside every issuer's PP&E subtotal.
+SEPARATE_SOFTWARE_CAPEX_ISSUERS = {"RBRK"}
 
 
 def request_json(url: str, user_agent: str) -> Any:
@@ -780,6 +785,24 @@ def fundamental_row(
     )
     ocf_fact = _ttm_fact_at(duration_values(payload, OPERATING_CASH_FLOW_TAGS, **selection), target_end) if target_end else None
     capex_fact = _ttm_fact_at(duration_values(payload, CAPEX_TAGS, **selection), target_end) if target_end else None
+    capex_components = [capex_fact]
+    if ticker in SEPARATE_SOFTWARE_CAPEX_ISSUERS:
+        software_fact = _ttm_fact_at(duration_values(payload, ("PaymentsForSoftware",), **selection), target_end) if target_end else None
+        capex_components.append(software_fact)
+        if (capex_fact is not None and software_fact is not None
+                and capex_fact["_tag"] == "PaymentsToAcquirePropertyPlantAndEquipment"
+                and capex_fact["start"] == software_fact["start"]
+                and capex_fact["end"] == software_fact["end"]):
+            capex_fact = _derived_fact(
+                capex_components, start=capex_fact["start"], end=capex_fact["end"],
+                value=sum(float(part["val"]) for part in capex_components),
+                derivation="reported_ppe_plus_separately_disclosed_internal_use_software",
+            )
+            capex_fact["_taxonomy"] = "derived"
+            capex_fact["_tag"] = "CapitalExpenditureIncludingSeparatelyReportedSoftware"
+        else:
+            # A known required expenditure may not be silently treated as 0.
+            capex_fact = None
     operating_cash_flow = float(ocf_fact["val"]) if ocf_fact else None
     capex = float(capex_fact["val"]) if capex_fact else None
     free_cash_flow = (
@@ -858,7 +881,8 @@ def fundamental_row(
         valuation_limitations.append("free_cash_flow_margin_missing_for_required_period")
     if share_dilution is None:
         valuation_limitations.append("share_dilution_missing_for_required_period")
-    if capex_fact and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment":
+    if (capex_fact and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment"
+            and capex_fact.get("_derivation") != "reported_ppe_plus_separately_disclosed_internal_use_software"):
         valuation_limitations.append("capex_alternative_scope_requires_validation")
     provenance = {
         "revenue_latest": fact_provenance(latest), "revenue_prior_year": fact_provenance(prior),
@@ -866,6 +890,7 @@ def fundamental_row(
         "assets_latest": fact_provenance(assets_fact), "liabilities_latest": fact_provenance(liabilities_fact),
         "ttm_revenue": fact_provenance(ttm_revenue_fact), "ttm_revenue_prior_year": fact_provenance(ttm_prior_fact),
         "ttm_operating_cash_flow": fact_provenance(ocf_fact), "ttm_capex": fact_provenance(capex_fact),
+        "capex_component_disclosures": [fact_provenance(part) for part in capex_components],
         "diluted_shares_latest": fact_provenance(diluted_fact), "diluted_shares_prior_year": fact_provenance(diluted_prior_match),
         "debt_latest": fact_provenance(debt_fact), "debt_component_disclosures": [fact_provenance(part) for part in debt_parts],
         "net_margin_pct": _derived_provenance([net_income_match, latest], net_margin,

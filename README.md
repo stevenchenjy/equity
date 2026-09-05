@@ -38,8 +38,9 @@ The active workflow is `daily_decision` and the only active email pipeline is
   change, or account-state conflict appears.
 - The production AI operating decision remains
   [`00_project_control/phase5r_ai_operating_decision.md`](00_project_control/phase5r_ai_operating_decision.md):
-  AI is removed from active production at `0/10` real observations and `$0`
-  spend. A new event-driven, noncanonical
+  AI is excluded from active production. The old `0/10` and `$0` figures refer
+  only to the retired August 31 commissioning record, not current evaluation
+  usage. A separate event-driven, noncanonical
   [`SHADOW_LLM evaluation`](08_reviews/phase5r_shadow_llm/README.md) is authorized
   outside the production path. Its output cannot affect a decision, email,
   account, position, scheduler result, or order.
@@ -48,8 +49,12 @@ The active workflow is `daily_decision` and the only active email pipeline is
   the active Basic EOD provider and current SEC evidence; the historical C5
   narrative is not a production input.
 - Source-bound bear/base/bull valuations and whole-share sizing are computed
-  deterministically. Recommendation snapshots are evaluated after 1, 5, 20,
-  and 60 market sessions against SPY and QQQ.
+  deterministically only when the required inputs and provenance are complete;
+  `insufficient` is not a completed valuation. Scenario gaps are conditional
+  arithmetic, not probability-weighted expected returns. Recommendation
+  snapshots are tracked from a subsequent observed close over 1, 5, 20, and
+  60 market sessions against SPY and QQQ; overlapping rows are not independent
+  samples and price returns are not dividend-adjusted total returns.
 - A held stock above the default single-stock cap can open a human trim review
   only when complete valuation is adverse on all three scenarios, expected
   upside is nonpositive, and reward/risk is below one. This never executes.
@@ -108,6 +113,7 @@ model:
 
 ```bash
 python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --check
+python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --preflight
 ```
 
 `--auto-live` evaluates only a previously unattempted research-semantic event;
@@ -119,18 +125,20 @@ surface remains absent from all production schedulers and entrypoints.
 
 The single active configuration is
 [`00_project_control/phase5r_active_production_config.json`](00_project_control/phase5r_active_production_config.json).
-The generated current status is
-`00_project_control/phase5r_current_production_status.local.md`. Retired
+The [current-document index](00_project_control/phase5r_current_documents.md)
+identifies authoritative configuration, live generated reports, and dated
+historical assessments. Runtime-generated status is authoritative for current
+operations; an old authoring-clone report is not a runtime status check. Retired
 material is isolated under `11_archive/phase5r_retired_20260831/`; the complete
 pre-cleanup workspace is recoverable from tag `phase5r-pre-cleanup-20260831`.
 
-After a manual trade or cash change, preview and then explicitly apply the
-entire current position set in one command:
+After a manual trade or cash change, preview the entire confirmed position set
+and cash balance. Do not copy historical account numbers from documentation.
+Inspect the command interface first:
 
 ```bash
-python3 09_scripts/phase5r/update_phase5r_manual_account.py \
-  --cash 1900 --position IOT=4@36.44 --position RBRK=2@84.40 --preview
+python3 09_scripts/phase5r/update_phase5r_manual_account.py --help
 ```
 
-Replace `--preview` with `--apply` only after checking the aggregates. This
-command reads no broker and creates no order.
+Use `--preview` with confirmed inputs and `--apply` only after checking the
+aggregates. This command reads no broker and creates no order.

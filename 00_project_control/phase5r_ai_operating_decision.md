@@ -15,7 +15,13 @@ This is the required evidence-backed remove decision in lieu of ten real
 shadow observations. The deterministic research system is the sole production
 authority.
 
-## Evidence
+## Historical decision evidence — August 31 only
+
+These figures describe the retired workflow at the date of that decision.
+They are not the call count, spend, reliability, or value of the subsequently
+authorized SHADOW_LLM stage. Use the runtime evaluation report and hash-chained
+call ledger for current stage measurements; unavailable dollar billing is not
+zero.
 
 - Real production shadow observations: `0/10`.
 - Metered model cost: `$0.000000`.
@@ -24,7 +30,7 @@ authority.
 - Deterministic production refresh: passed on the current completed market
   session with `29/29` valid market rows, complete held-position SEC coverage,
   deterministic valuation, portfolio review, and recommendation tracking.
-- Active model budget and call allowance: `$0` and `false`.
+- Production model budget and call allowance at that decision: `$0` and `false`.
 - Observed marginal decision benefit from AI: none can be established without
   real observations. Promotion would therefore be unsupported.
 

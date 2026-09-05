@@ -84,41 +84,6 @@
     "ast_hash": "cc18c4e3351c62f2394c42387e0ad6c4",
     "semantic_hash": ""
   },
-  "00_project_control/phase5r_c8_verification_report.md": {
-    "mtime": 1788202123.350764,
-    "ast_hash": "6245ea27433f67f8b02c312803b348bd",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/SKILL.md": {
-    "mtime": 1788311317.9799783,
-    "ast_hash": "764c5e45f77757b8f302492d000b94c1",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/references/memo_rubric.md": {
-    "mtime": 1783133289.3843281,
-    "ast_hash": "df6e1a0651aa819d4e93927d80b3c820",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/references/phase_status.md": {
-    "mtime": 1783133289.3845048,
-    "ast_hash": "284b2a103558e1e7eda65e72733743c1",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/references/red_team_checklist.md": {
-    "mtime": 1783133289.3839135,
-    "ast_hash": "dce5a4a893d9eab7ba706ca22090dc47",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/references/source_policy.md": {
-    "mtime": 1783133289.3833754,
-    "ast_hash": "f19a38a4ea64068e28a052c0c0f24919",
-    "semantic_hash": ""
-  },
-  "00_project_control/project_skill/skills/early-public-equity-research/references/workflow.md": {
-    "mtime": 1788311317.980244,
-    "ast_hash": "bcd4c6c73969d0bfa289074f7f3074b7",
-    "semantic_hash": ""
-  },
   "01_policies/brokerage_boundary.md": {
     "mtime": 1783131483.9781506,
     "ast_hash": "38d6c72858ff8ab8b1d23a20572f6e57",
@@ -135,8 +100,8 @@
     "semantic_hash": ""
   },
   "01_policies/risk_policy.md": {
-    "mtime": 1788311317.9774802,
-    "ast_hash": "3a5772c28e45b3f561a0a5f6cbd9cae7",
+    "mtime": 1788580307.1640763,
+    "ast_hash": "d846caef70ded2250eaada19b46749f7",
     "semantic_hash": ""
   },
   "01_policies/source_policy.md": {
@@ -145,8 +110,8 @@
     "semantic_hash": ""
   },
   "01_policies/trading_checklist.md": {
-    "mtime": 1783131483.975031,
-    "ast_hash": "f33404be400adb6aba86bc8d20d53b4d",
+    "mtime": 1788580307.164891,
+    "ast_hash": "1b0f1372cb400c32cf5874b3715a9eb4",
     "semantic_hash": ""
   },
   "AGENTS.md": {
@@ -155,38 +120,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1788475392.191208,
-    "ast_hash": "e91d4ec9ca7009b0017667d6f85bdc76",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/SKILL.md": {
-    "mtime": 1788311317.97946,
-    "ast_hash": "764c5e45f77757b8f302492d000b94c1",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/references/memo_rubric.md": {
-    "mtime": 1783133289.3843281,
-    "ast_hash": "df6e1a0651aa819d4e93927d80b3c820",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/references/phase_status.md": {
-    "mtime": 1783133289.3845048,
-    "ast_hash": "284b2a103558e1e7eda65e72733743c1",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/references/red_team_checklist.md": {
-    "mtime": 1783133289.3839135,
-    "ast_hash": "dce5a4a893d9eab7ba706ca22090dc47",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/references/source_policy.md": {
-    "mtime": 1783133289.3833754,
-    "ast_hash": "f19a38a4ea64068e28a052c0c0f24919",
-    "semantic_hash": ""
-  },
-  "skills/early-public-equity-research/references/workflow.md": {
-    "mtime": 1788311317.9797175,
-    "ast_hash": "bcd4c6c73969d0bfa289074f7f3074b7",
+    "mtime": 1788580307.160915,
+    "ast_hash": "dea5eeef2846ef198a1fff116e907afa",
     "semantic_hash": ""
   },
   "07_automation/scheduler/clear_phase5r_c9_maintenance_inhibit.sh": {
@@ -315,8 +250,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_daily_evidence.py": {
-    "mtime": 1788578978.0439782,
-    "ast_hash": "b82e5e8a8d2e46f25dd87708c64979f9",
+    "mtime": 1788580079.8879275,
+    "ast_hash": "97b5cd1d6785e1f3e777d154c43afc89",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/run_phase5r_daily_decision_pipeline.py": {
@@ -630,13 +565,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_ai_operating_decision.md": {
-    "mtime": 1788399143.0706975,
-    "ast_hash": "30bcf550865d1537d25e7ce8054a14df",
-    "semantic_hash": ""
-  },
-  "00_project_control/phase5r_workspace_cleanup_manifest.md": {
-    "mtime": 1788204722.9187458,
-    "ast_hash": "e87ab0cb2dfe542ec12b6a1e7d1e55eb",
+    "mtime": 1788580307.161917,
+    "ast_hash": "10cdb7df9c58971c11a8236ef03638a6",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_packet_contract.py": {
@@ -704,19 +634,14 @@
     "ast_hash": "a3dc96b8788afca30dd28ab770c25ebf",
     "semantic_hash": ""
   },
-  "00_project_control/phase5r_decision_analysis_summary_for_llm_review.md": {
-    "mtime": 1788399152.9444554,
-    "ast_hash": "e5e8c35fc4d3522a90f8eb089ed6a325",
-    "semantic_hash": ""
-  },
   "00_project_control/phase5r_shadow_llm_evaluation_policy.md": {
     "mtime": 1788577055.654608,
     "ast_hash": "b28f18ceab2c351aa23b6960562f59c0",
     "semantic_hash": ""
   },
   "08_reviews/phase5r_shadow_llm/README.md": {
-    "mtime": 1788476477.0733435,
-    "ast_hash": "1bde60e13fe7c7d80ded99b6496ce610",
+    "mtime": 1788580307.1658702,
+    "ast_hash": "ec7157c0aa6dfa8494e90d6b120c950e",
     "semantic_hash": ""
   },
   "07_automation/scheduler/check_phase5r_shadow_llm_evaluation_scheduler.sh": {
@@ -770,8 +695,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_financial_period_integrity.py": {
-    "mtime": 1788578978.04501,
-    "ast_hash": "935e83bcf90ed0dafae4cdfa723f4c54",
+    "mtime": 1788580079.889112,
+    "ast_hash": "3b6af42e44ae01448cb454848da9470e",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_reassessment_reporting.py": {
@@ -802,6 +727,11 @@
   "09_scripts/phase5r/audit_phase5r_financial_coverage.py": {
     "mtime": 1788578978.0461545,
     "ast_hash": "c9d4f90bb2147448147d3bc964484987",
+    "semantic_hash": ""
+  },
+  "00_project_control/phase5r_current_documents.md": {
+    "mtime": 1788580307.1666944,
+    "ast_hash": "3a980db9d5248f5c102b7c2fc5dfd4e9",
     "semantic_hash": ""
   }
 }

@@ -1,5 +1,10 @@
 # Trading Checklist
 
+Scope note (2026-09-04): this is a manual trade-planning reference. It is not a
+required per-run SHADOW_LLM review template and does not apply to routine
+HOLD/WATCH research. See [current documents](../00_project_control/phase5r_current_documents.md)
+for the active deterministic gates; this checklist does not authorize trades.
+
 Use this checklist before any paper trade plan or real trade plan. A real trade requires explicit human approval outside this repo.
 
 ## Research Completeness
