@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-04)
 
 ## Corpus Check
-- 152 files · ~157,692 words
+- 152 files · ~157,721 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1650 nodes · 3919 edges · 94 communities (78 shown, 16 thin omitted)
+- 1650 nodes · 3920 edges · 97 communities (80 shown, 17 thin omitted)
 - Extraction: 84% EXTRACTED · 16% INFERRED · 0% AMBIGUOUS · INFERRED: 629 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8067cdbf`
+- Built from commit: `1ce4b81e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -49,6 +49,9 @@
 - check_phase5r_shadow_llm_evaluation_scheduler.sh
 - install_phase5r_shadow_llm_evaluation_scheduler.sh
 - run_phase5r_shadow_llm_event.sh
+- ShadowLlmTests
+- deterministic_claim_check
+- economic_packet
 - create_phase5r_c5_weekly_conviction_memo.py
 - phase5r_valuation_input_bundle.py
 - Scoring
@@ -136,7 +139,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (94 total, 16 thin omitted)
+## Communities (97 total, 17 thin omitted)
 
 ### Community 0 - "phase5r_market_data_adapter.py"
 Cohesion: 0.24
@@ -148,7 +151,7 @@ Nodes (15): action_review_display(), action_stability(), execution_conflicts(), 
 
 ### Community 2 - "AST"
 Cohesion: 0.08
-Nodes (87): canonical_sha256(), analyst_schema(), _assert_nonimperative(), build_automatic_evaluation(), build_blind_judge_target(), build_deterministic_baseline(), build_semantic_view(), _calculation_index() (+79 more)
+Nodes (85): canonical_sha256(), analyst_schema(), _assert_nonimperative(), build_automatic_evaluation(), build_deterministic_baseline(), build_semantic_view(), _calculation_index(), critic_schema() (+77 more)
 
 ### Community 3 - "send_phase5r_c6_weekly_email.py"
 Cohesion: 0.33
@@ -231,8 +234,8 @@ Cohesion: 0.08
 Nodes (13): jsonl_count(), main(), Path, ActiveConfigError, load_active_config(), main(), Any, Path (+5 more)
 
 ### Community 23 - "evaluate_phase5r_shadow_llm_incremental_value.py"
-Cohesion: 0.06
-Nodes (46): aggregate(), _atomic_private_snapshot_text(), _atomic_private_text(), _authority_checks(), _deduplicate_evidence(), _discover(), _evidence_keys(), load_automatic_bundle() (+38 more)
+Cohesion: 0.19
+Nodes (32): aggregate(), _atomic_private_snapshot_text(), _atomic_private_text(), _authority_checks(), _deduplicate_evidence(), _discover(), _evidence_keys(), load_automatic_bundle() (+24 more)
 
 ### Community 24 - "run_phase5r_daily_decision_pipeline.py"
 Cohesion: 0.22
@@ -249,6 +252,14 @@ Nodes (46): acceptance_map(), AcceptanceIndexError, AcceptanceReconciliationErro
 ### Community 29 - "PacketMarketObservationTests"
 Cohesion: 0.22
 Nodes (3): PacketMarketObservationTests, Path, write_csv()
+
+### Community 34 - "ShadowLlmTests"
+Cohesion: 0.15
+Nodes (9): build_blind_judge_target(), Create a deterministic candidate set without origin or model labels., FailingProvider, fake_packet(), ShadowLlmTests, valid_analyst(), valid_critic(), valid_judge() (+1 more)
+
+### Community 35 - "deterministic_claim_check"
+Cohesion: 0.28
+Nodes (5): deterministic_claim_check(), Conservative one-fact sign check, never a generic semantic truth judge.      Com, fact_packet(), net_loss_claim(), ShadowMeasurementTests
 
 ### Community 40 - "create_phase5r_c5_weekly_conviction_memo.py"
 Cohesion: 0.17
@@ -449,12 +460,12 @@ Nodes (12): add_check(), append_verification_log(), file_digest_or_absent(), loa
 ## Knowledge Gaps
 - **269 isolated node(s):** `activate_phase5r_daily_after_verification.sh script`, `check_phase5r_daily_scheduler_status.sh script`, `check_phase5r_shadow_llm_evaluation_scheduler.sh script`, `clear_phase5r_c9_maintenance_inhibit.sh script`, `install_phase5r_daily_schedulers.sh script` (+264 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `canonical_sha256()` connect `AST` to `run_phase5r_b2_full_universe_market_data.py`, `test_phase5r_active_production.py`, `main`, `PacketMarketObservationTests`, `iso_now`, `main`, `phase5r_llm_contract.py`, `verify_phase5r_daily_upgrade.py`, `Scoring`, `evaluate_phase5r_shadow_llm_incremental_value.py`, `verify_phase5r_c2_email_delivery_boundary.py`?**
+- **Why does `canonical_sha256()` connect `AST` to `run_phase5r_b2_full_universe_market_data.py`, `ShadowLlmTests`, `test_phase5r_active_production.py`, `economic_packet`, `main`, `PacketMarketObservationTests`, `iso_now`, `main`, `phase5r_llm_contract.py`, `verify_phase5r_daily_upgrade.py`, `Scoring`, `evaluate_phase5r_shadow_llm_incremental_value.py`, `verify_phase5r_c2_email_delivery_boundary.py`?**
   _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Why does `ExclusiveFileLock` connect `score_phase5r_b_candidates.py` to `test_phase5r_active_production.py`, `main`, `PacketMarketObservationTests`, `iso_now`, `_safe_failure_code`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._

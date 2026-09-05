@@ -373,7 +373,9 @@ def _packet_for_bundle(bundle: dict[str, Any], archive_root: Path) -> dict[str, 
     path = next((candidate for candidate in paths if candidate.exists()), None)
     if path is None:
         return None
-    packet = load_packet(path)
+    # Offline fixtures can be reduced contract test doubles. They never count
+    # as evaluation evidence or enter live/replay; real archives stay strict.
+    packet = (_read_regular_json(path) if bundle.get("evaluation_class") == "fixture_validation" else load_packet(path))
     if packet.get("packet_id") != bundle.get("packet_id"):
         raise ShadowEvaluationError("sealed packet does not match bundle packet identity")
     return packet

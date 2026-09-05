@@ -1189,7 +1189,7 @@
       "label": "_discover()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L382",
+      "source_location": "L384",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "community": 23,
@@ -1199,7 +1199,7 @@
       "label": "_threshold_checks()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L422",
+      "source_location": "L424",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_threshold_checks",
       "community": 23,
@@ -1209,7 +1209,7 @@
       "label": "_authority_checks()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L447",
+      "source_location": "L449",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_authority_checks",
       "community": 23,
@@ -1219,7 +1219,7 @@
       "label": "_secondary_evidence_context()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L474",
+      "source_location": "L476",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
       "community": 23,
@@ -1229,7 +1229,7 @@
       "label": "_evidence_keys()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L535",
+      "source_location": "L537",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
       "community": 23,
@@ -1239,7 +1239,7 @@
       "label": "_topic_key()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L554",
+      "source_location": "L556",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_topic_key",
       "community": 23,
@@ -1249,7 +1249,7 @@
       "label": "_deduplicate_evidence()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L561",
+      "source_location": "L563",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
       "community": 23,
@@ -1259,7 +1259,7 @@
       "label": "_remeasure()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L587",
+      "source_location": "L589",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "community": 23,
@@ -1269,7 +1269,7 @@
       "label": "_official_follow_up()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L622",
+      "source_location": "L624",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
       "community": 23,
@@ -1279,7 +1279,7 @@
       "label": "aggregate()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L663",
+      "source_location": "L665",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "community": 23,
@@ -1289,7 +1289,7 @@
       "label": "_atomic_private_text()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1076",
+      "source_location": "L1078",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_text",
       "community": 23,
@@ -1299,7 +1299,7 @@
       "label": "_atomic_private_snapshot_text()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1098",
+      "source_location": "L1100",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
       "community": 23,
@@ -1309,7 +1309,7 @@
       "label": "_report()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1126",
+      "source_location": "L1128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_report",
       "community": 23,
@@ -1319,7 +1319,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1168",
+      "source_location": "L1170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "community": 23,
@@ -1339,9 +1339,9 @@
       "label": "Stable primary-text identity; observations use field/period, not fetch hash.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L536",
+      "source_location": "L538",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_536",
+      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_538",
       "community": 23,
       "norm_label": "stable primary-text identity; observations use field/period, not fetch hash."
     },
@@ -1349,9 +1349,9 @@
       "label": "One conservative credit per overlapping evidence family, not per prose item.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L562",
+      "source_location": "L564",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_562",
+      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_564",
       "community": 23,
       "norm_label": "one conservative credit per overlapping evidence family, not per prose item."
     },
@@ -1359,9 +1359,9 @@
       "label": "Resolve only mechanically scoped facts with NEW later official provenance.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L623",
+      "source_location": "L625",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_623",
+      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_625",
       "community": 23,
       "norm_label": "resolve only mechanically scoped facts with new later official provenance."
     },
@@ -1369,9 +1369,9 @@
       "label": "Atomically replace a derived current snapshot; immutable runs stay separate.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1099",
+      "source_location": "L1101",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_1099",
+      "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_1101",
       "community": 23,
       "norm_label": "atomically replace a derived current snapshot; immutable runs stay separate."
     },
@@ -4132,7 +4132,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_check",
-      "community": 23,
+      "community": 35,
       "norm_label": "deterministic_claim_check()"
     },
     {
@@ -4192,7 +4192,7 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_blind_judge_target",
-      "community": 2,
+      "community": 34,
       "norm_label": "build_blind_judge_target()"
     },
     {
@@ -4292,7 +4292,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_307",
-      "community": 23,
+      "community": 35,
       "norm_label": "conservative one-fact sign check, never a generic semantic truth judge.      com"
     },
     {
@@ -4322,7 +4322,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_695",
-      "community": 2,
+      "community": 34,
       "norm_label": "create a deterministic candidate set without origin or model labels."
     },
     {
@@ -11372,7 +11372,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls",
-      "community": 23,
+      "community": 36,
       "norm_label": "test_phase5r_shadow_event_controls.py"
     },
     {
@@ -11382,7 +11382,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_economic_packet",
-      "community": 23,
+      "community": 36,
       "norm_label": "economic_packet()"
     },
     {
@@ -11392,7 +11392,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests",
-      "community": 23,
+      "community": 36,
       "norm_label": "shadoweventcontroltests"
     },
     {
@@ -11402,7 +11402,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_all_refresh_wrappers_change_without_a_new_semantic_event",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_all_refresh_wrappers_change_without_a_new_semantic_event()"
     },
     {
@@ -11412,7 +11412,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_period_filing_text_and_thesis_changes_remain_events",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_period_filing_text_and_thesis_changes_remain_events()"
     },
     {
@@ -11422,7 +11422,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_semantic_digest_does_not_mutate_raw_provenance",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_semantic_digest_does_not_mutate_raw_provenance()"
     },
     {
@@ -11432,7 +11432,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_historical_archive_reindex_prevents_migration_duplicate",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_historical_archive_reindex_prevents_migration_duplicate()"
     },
     {
@@ -11442,7 +11442,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_same_event_captures_archive_without_overwrite_conflict",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_same_event_captures_archive_without_overwrite_conflict()"
     },
     {
@@ -11452,7 +11452,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_candidate_ranking_subset_of_seen_issuers_is_not_new_research",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_candidate_ranking_subset_of_seen_issuers_is_not_new_research()"
     },
     {
@@ -11462,7 +11462,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources()"
     },
     {
@@ -11472,7 +11472,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_critic_skips_mechanical_restatement_but_judge_remains_separate",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_critic_skips_mechanical_restatement_but_judge_remains_separate()"
     },
     {
@@ -11482,7 +11482,7 @@
       "source_location": "L183",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_input_budget_fails_before_any_provider_attempt",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_input_budget_fails_before_any_provider_attempt()"
     },
     {
@@ -11492,7 +11492,7 @@
       "source_location": "L189",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_downstream_judge_headroom_is_checked_before_analyst_invocation",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_downstream_judge_headroom_is_checked_before_analyst_invocation()"
     },
     {
@@ -11502,7 +11502,7 @@
       "source_location": "L200",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_observed_token_budget_preserves_unknown_cost_and_unreported_calls",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_observed_token_budget_preserves_unknown_cost_and_unreported_calls()"
     },
     {
@@ -11512,7 +11512,7 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_preflight_is_read_only_and_does_not_create_call_ledger",
-      "community": 23,
+      "community": 36,
       "norm_label": ".test_preflight_is_read_only_and_does_not_create_call_ledger()"
     },
     {
@@ -11522,7 +11522,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm",
-      "community": 23,
+      "community": 34,
       "norm_label": "test_phase5r_shadow_llm.py"
     },
     {
@@ -11532,7 +11532,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_fake_packet",
-      "community": 23,
+      "community": 34,
       "norm_label": "fake_packet()"
     },
     {
@@ -11542,7 +11542,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_analyst",
-      "community": 23,
+      "community": 34,
       "norm_label": "valid_analyst()"
     },
     {
@@ -11552,7 +11552,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_critic",
-      "community": 23,
+      "community": 34,
       "norm_label": "valid_critic()"
     },
     {
@@ -11562,7 +11562,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_judge",
-      "community": 23,
+      "community": 34,
       "norm_label": "valid_judge()"
     },
     {
@@ -11572,7 +11572,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider",
-      "community": 23,
+      "community": 34,
       "norm_label": "failingprovider"
     },
     {
@@ -11582,7 +11582,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_init",
-      "community": 23,
+      "community": 34,
       "norm_label": ".__init__()"
     },
     {
@@ -11592,7 +11592,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_generate",
-      "community": 23,
+      "community": 34,
       "norm_label": ".generate()"
     },
     {
@@ -11602,7 +11602,7 @@
       "source_location": "L186",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests",
-      "community": 23,
+      "community": 34,
       "norm_label": "shadowllmtests"
     },
     {
@@ -11612,7 +11612,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_evaluation_scheduler_is_event_driven_and_nonproduction",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_evaluation_scheduler_is_event_driven_and_nonproduction()"
     },
     {
@@ -11662,7 +11662,7 @@
       "source_location": "L283",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_accepts_source_bound_outputs",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_contract_accepts_source_bound_outputs()"
     },
     {
@@ -11672,7 +11672,7 @@
       "source_location": "L293",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_blind_target_hides_self_grading_labels",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_blind_target_hides_self_grading_labels()"
     },
     {
@@ -11682,7 +11682,7 @@
       "source_location": "L313",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_critic_routing_is_conditional",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_critic_routing_is_conditional()"
     },
     {
@@ -11692,7 +11692,7 @@
       "source_location": "L323",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_semantic_event_ignores_daily_market_and_account_churn",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_semantic_event_ignores_daily_market_and_account_churn()"
     },
     {
@@ -11702,7 +11702,7 @@
       "source_location": "L342",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_legacy_semantic_view_prevents_automatic_duplicate",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_legacy_semantic_view_prevents_automatic_duplicate()"
     },
     {
@@ -11712,7 +11712,7 @@
       "source_location": "L371",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_rejects_unknown_source_numeric_and_action_language",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_contract_rejects_unknown_source_numeric_and_action_language()"
     },
     {
@@ -11732,7 +11732,7 @@
       "source_location": "L396",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_fixture_run_is_blind_judged_and_excluded_from_metrics",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_fixture_run_is_blind_judged_and_excluded_from_metrics()"
     },
     {
@@ -11742,7 +11742,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_low_risk_fixture_skips_critic_but_keeps_blind_judge",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_low_risk_fixture_skips_critic_but_keeps_blind_judge()"
     },
     {
@@ -11752,7 +11752,7 @@
       "source_location": "L456",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_no_human_review_is_required_to_aggregate",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_no_human_review_is_required_to_aggregate()"
     },
     {
@@ -11762,7 +11762,7 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_current_evaluation_snapshot_can_be_atomically_refreshed",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_current_evaluation_snapshot_can_be_atomically_refreshed()"
     },
     {
@@ -11772,7 +11772,7 @@
       "source_location": "L471",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_failed_live_role_is_terminal_and_not_retried",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_failed_live_role_is_terminal_and_not_retried()"
     },
     {
@@ -11782,7 +11782,7 @@
       "source_location": "L503",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_full_run_capacity_fails_closed_before_provider_call",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_full_run_capacity_fails_closed_before_provider_call()"
     },
     {
@@ -11792,7 +11792,7 @@
       "source_location": "L528",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_new_stage_allowance_is_enforced_without_legacy_ledger",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_new_stage_allowance_is_enforced_without_legacy_ledger()"
     },
     {
@@ -11802,7 +11802,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_production_entrypoints_do_not_reference_shadow_surface",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_production_entrypoints_do_not_reference_shadow_surface()"
     },
     {
@@ -11812,7 +11812,7 @@
       "source_location": "L571",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools()"
     },
     {
@@ -11822,7 +11822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement",
-      "community": 23,
+      "community": 35,
       "norm_label": "test_phase5r_shadow_measurement.py"
     },
     {
@@ -11832,7 +11832,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_fact_packet",
-      "community": 23,
+      "community": 35,
       "norm_label": "fact_packet()"
     },
     {
@@ -11842,7 +11842,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_net_loss_claim",
-      "community": 23,
+      "community": 35,
       "norm_label": "net_loss_claim()"
     },
     {
@@ -11852,7 +11852,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_evaluation_bundle",
-      "community": 23,
+      "community": 34,
       "norm_label": "evaluation_bundle()"
     },
     {
@@ -11862,7 +11862,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests",
-      "community": 23,
+      "community": 35,
       "norm_label": "shadowmeasurementtests"
     },
     {
@@ -11872,7 +11872,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_baseline_includes_fact_sign_and_original_calculations",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_baseline_includes_fact_sign_and_original_calculations()"
     },
     {
@@ -11882,7 +11882,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_net_loss_restatement_is_baseline_not_incremental",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_net_loss_restatement_is_baseline_not_incremental()"
     },
     {
@@ -11892,7 +11892,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_scope_unknowns_and_forward_claims_are_not_filled_in",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_scope_unknowns_and_forward_claims_are_not_filled_in()"
     },
     {
@@ -11902,7 +11902,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_false_sign_is_mechanically_refuted",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_false_sign_is_mechanically_refuted()"
     },
     {
@@ -11912,7 +11912,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_cash_flow_sign_and_simple_income_contrast_are_already_baseline",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_cash_flow_sign_and_simple_income_contrast_are_already_baseline()"
     },
     {
@@ -11922,7 +11922,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_partial_period_qualification_excluded_v1_retained",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_partial_period_qualification_excluded_v1_retained()"
     },
     {
@@ -11932,7 +11932,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_blinded_sign_controls_are_not_incremental_candidates",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_blinded_sign_controls_are_not_incremental_candidates()"
     },
     {
@@ -11942,7 +11942,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_repeat_passage_is_one_family_despite_prose_id_changes",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_repeat_passage_is_one_family_despite_prose_id_changes()"
     },
     {
@@ -11952,7 +11952,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_aggregate_deduplicates_substantive_coverage_and_labels_recall",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_aggregate_deduplicates_substantive_coverage_and_labels_recall()"
     },
     {
@@ -11962,7 +11962,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_replay_and_live_same_event_cannot_double_count_promotion_samples",
-      "community": 23,
+      "community": 34,
       "norm_label": ".test_replay_and_live_same_event_cannot_double_count_promotion_samples()"
     },
     {
@@ -11972,7 +11972,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_missing_sealed_packet_cannot_claim_baseline_incremental_value",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_missing_sealed_packet_cannot_claim_baseline_incremental_value()"
     },
     {
@@ -11982,7 +11982,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_later_fetch_or_later_period_is_not_official_confirmation",
-      "community": 23,
+      "community": 35,
       "norm_label": ".test_later_fetch_or_later_period_is_not_official_confirmation()"
     },
     {
@@ -19898,7 +19898,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L663",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
@@ -19908,7 +19908,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1098",
+      "source_location": "L1100",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
@@ -19918,7 +19918,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1076",
+      "source_location": "L1078",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_text",
@@ -19928,7 +19928,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L447",
+      "source_location": "L449",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_authority_checks",
@@ -19938,7 +19938,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L561",
+      "source_location": "L563",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
@@ -19948,7 +19948,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L382",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
@@ -19958,7 +19958,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L535",
+      "source_location": "L537",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
@@ -19978,7 +19978,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1168",
+      "source_location": "L1170",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
@@ -19988,7 +19988,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L622",
+      "source_location": "L624",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
@@ -20038,7 +20038,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L587",
+      "source_location": "L589",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
@@ -20048,7 +20048,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1126",
+      "source_location": "L1128",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_report",
@@ -20058,7 +20058,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L474",
+      "source_location": "L476",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
@@ -20078,7 +20078,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L422",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_threshold_checks",
@@ -20088,7 +20088,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L554",
+      "source_location": "L556",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_topic_key",
@@ -20194,7 +20194,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L682",
+      "source_location": "L684",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20205,7 +20205,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1104",
+      "source_location": "L1106",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20216,7 +20216,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1081",
+      "source_location": "L1083",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_text",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20227,7 +20227,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L403",
+      "source_location": "L405",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20238,7 +20238,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1178",
+      "source_location": "L1180",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20249,7 +20249,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L378",
+      "source_location": "L380",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_packet_for_bundle",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20292,7 +20292,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L490",
+      "source_location": "L492",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_shadowevaluationerror",
@@ -20346,7 +20346,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L395",
+      "source_location": "L397",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_read_regular_json",
@@ -20368,9 +20368,20 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1198",
+      "source_location": "L1200",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
+      "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_read_regular_json",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
+      "source_location": "L378",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_packet_for_bundle",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_read_regular_json",
       "confidence_score": 1.0
     },
@@ -20401,7 +20412,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L663",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20412,7 +20423,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1098",
+      "source_location": "L1100",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20423,7 +20434,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1076",
+      "source_location": "L1078",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_text",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20434,7 +20445,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L382",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20478,7 +20489,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L587",
+      "source_location": "L589",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20489,7 +20500,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L474",
+      "source_location": "L476",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_path",
@@ -20500,7 +20511,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L663",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20511,7 +20522,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L447",
+      "source_location": "L449",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_authority_checks",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20522,7 +20533,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L561",
+      "source_location": "L563",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20533,7 +20544,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L382",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20544,7 +20555,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L535",
+      "source_location": "L537",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20566,7 +20577,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L622",
+      "source_location": "L624",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20599,7 +20610,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L587",
+      "source_location": "L589",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20610,7 +20621,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1126",
+      "source_location": "L1128",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_report",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20621,7 +20632,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L474",
+      "source_location": "L476",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20632,7 +20643,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L422",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_threshold_checks",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20643,7 +20654,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L554",
+      "source_location": "L556",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_topic_key",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_py_any",
@@ -20698,7 +20709,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L859",
+      "source_location": "L861",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_ratio",
@@ -20709,7 +20720,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L790",
+      "source_location": "L792",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_valid_usage",
@@ -20797,7 +20808,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1180",
+      "source_location": "L1182",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_read_ledger",
@@ -20841,7 +20852,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L397",
+      "source_location": "L399",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_load_automatic_bundle",
@@ -20886,7 +20897,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L376",
+      "source_location": "L378",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_packet_for_bundle",
       "target": "09_scripts_phase5r_phase5r_shadow_llm_contract_load_packet"
@@ -20896,7 +20907,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L591",
+      "source_location": "L593",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_packet_for_bundle",
@@ -20907,7 +20918,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1181",
+      "source_location": "L1183",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_discover",
@@ -20918,7 +20929,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L967",
+      "source_location": "L969",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_threshold_checks",
@@ -20929,7 +20940,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L973",
+      "source_location": "L975",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_authority_checks",
@@ -20940,7 +20951,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1024",
+      "source_location": "L1026",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_secondary_evidence_context",
@@ -20952,7 +20963,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L545",
+      "source_location": "L547",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -20961,9 +20972,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L536",
+      "source_location": "L538",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_536",
+      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_538",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
       "confidence_score": 1.0
     },
@@ -20972,7 +20983,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L601",
+      "source_location": "L603",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_evidence_keys",
@@ -20983,7 +20994,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L570",
+      "source_location": "L572",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_topic_key",
@@ -20995,7 +21006,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L579",
+      "source_location": "L581",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -21004,9 +21015,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L562",
+      "source_location": "L564",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_562",
+      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_564",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
       "confidence_score": 1.0
     },
@@ -21015,7 +21026,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L618",
+      "source_location": "L620",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_deduplicate_evidence",
@@ -21037,7 +21048,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L688",
+      "source_location": "L690",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
@@ -21049,7 +21060,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L594",
+      "source_location": "L596",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_automatic_evaluation"
@@ -21060,7 +21071,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L597",
+      "source_location": "L599",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_remeasure",
       "target": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_check"
@@ -21070,7 +21081,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L841",
+      "source_location": "L843",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
@@ -21082,7 +21093,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L637",
+      "source_location": "L639",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
       "target": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_check"
@@ -21091,9 +21102,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L623",
+      "source_location": "L625",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_623",
+      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_625",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
       "confidence_score": 1.0
     },
@@ -21114,7 +21125,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1003",
+      "source_location": "L1005",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -21125,7 +21136,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1002",
+      "source_location": "L1004",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_phase5r_daily_common_iso_now"
@@ -21136,7 +21147,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L689",
+      "source_location": "L691",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
       "target": "09_scripts_phase5r_run_phase5r_shadow_llm_evaluation_semantic_event_fingerprint"
@@ -21146,7 +21157,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1182",
+      "source_location": "L1184",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_aggregate",
@@ -21212,7 +21223,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1202",
+      "source_location": "L1204",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_text",
@@ -21223,7 +21234,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1205",
+      "source_location": "L1207",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
@@ -21233,9 +21244,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1099",
+      "source_location": "L1101",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_1099",
+      "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_1101",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_atomic_private_snapshot_text",
       "confidence_score": 1.0
     },
@@ -21255,7 +21266,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1206",
+      "source_location": "L1208",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_report",
@@ -21267,7 +21278,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1199",
+      "source_location": "L1201",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256"
@@ -21278,7 +21289,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/evaluate_phase5r_shadow_llm_incremental_value.py",
-      "source_location": "L1192",
+      "source_location": "L1194",
       "weight": 1.0,
       "source": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_main",
       "target": "09_scripts_phase5r_phase5r_shadow_llm_contract_load_packet"
@@ -58219,5 +58230,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "8067cdbfa909b1543096d10f7f804c19bd36db94"
+  "built_at_commit": "1ce4b81ea56a9e4b57f0dc59222f6a5e8294eb8d"
 }
