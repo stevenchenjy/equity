@@ -27,17 +27,17 @@
     "analyst": {
       "model": "gpt-5.6-terra",
       "reasoning_effort": "medium",
-      "prompt_version": "phase5r_shadow_evidence_analyst_v1"
+      "prompt_version": "phase5r_shadow_evidence_analyst_v2"
     },
     "critic": {
       "model": "gpt-5.6-sol",
       "reasoning_effort": "high",
-      "prompt_version": "phase5r_shadow_evidence_critic_v1"
+      "prompt_version": "phase5r_shadow_evidence_critic_v2"
     },
     "judge": {
       "model": "gpt-5.5",
       "reasoning_effort": "medium",
-      "prompt_version": "phase5r_shadow_blind_judge_v1"
+      "prompt_version": "phase5r_shadow_blind_judge_v2"
     }
   },
   "limits": {
@@ -47,10 +47,13 @@
     "maximum_physical_live_calls_per_run": 3,
     "maximum_claims_per_run": 24,
     "maximum_critic_omissions_per_run": 12,
-    "maximum_judge_missed_issues_per_run": 12
+    "maximum_judge_missed_issues_per_run": 12,
+    "maximum_input_bytes_per_call": 300000,
+    "maximum_reported_tokens_per_run": 300000,
+    "maximum_reported_tokens_in_stage": 1800000
   },
   "event_selection": {
-    "selection_version": "phase5r_shadow_semantic_event_v1",
+    "selection_version": "phase5r_shadow_semantic_event_v2",
     "sample_seed": "phase5r-shadow-autonomous-v1",
     "maximum_live_shadow_events_in_stage": 6,
     "maximum_replay_events_in_stage": 2,

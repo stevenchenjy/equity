@@ -6,9 +6,12 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from phase5r_daily_common import (
     DAILY_DECISION_JSON_PATH,
@@ -49,6 +52,8 @@ OUTCOME_FIELDS = [
     "qqq_relative_return_pct", "maximum_favorable_excursion_pct",
     "maximum_adverse_excursion_pct", "classification_changed_before_horizon",
     "price_basis", "corporate_action_review_required",
+    "evaluation_basis", "source_market_session", "forecast_origin_session",
+    "independent_observation_id", "primary_observation",
 ]
 FEEDBACK_LABELS = {"helpful", "noisy", "wrong", "missed_event"}
 
@@ -81,11 +86,15 @@ def number(value: object) -> float | None:
         result = float(value)
     except (TypeError, ValueError):
         return None
-    return result if result == result else None
+    return result if math.isfinite(result) else None
 
 
 def classification(action: str) -> str:
     normalized = action.lower()
+    if "no_new" in normalized:
+        return "NO_NEW_POSITION"
+    if "ineligible" in normalized or "not_eligible" in normalized:
+        return "WATCH"
     if "trim" in normalized or "reduce" in normalized:
         return "TRIM"
     if "exit" in normalized or "sell" in normalized:
@@ -99,9 +108,32 @@ def classification(action: str) -> str:
         return "ADD_REVIEW"
     if normalized in {"hold", "hold_existing"}:
         return "HOLD"
-    if "no_new" in normalized:
-        return "NO_NEW_POSITION"
     return "WATCH"
+
+
+def forecast_origin(snapshot: dict[str, Any], sessions: list[str]) -> str | None:
+    """Use the next observed close after creation, never backdate a forecast.
+
+    Date-only policy is intentionally conservative even for intraday creation:
+    it avoids assuming a regular 16:00 close on shortened sessions. Historical
+    snapshots without an aware creation timestamp cannot prove availability.
+    """
+    try:
+        created = datetime.fromisoformat(str(snapshot["created_at"]).replace("Z", "+00:00"))
+        if created.tzinfo is None:
+            return None
+        creation_date = created.astimezone(ZoneInfo("America/New_York")).date().isoformat()
+    except (KeyError, TypeError, ValueError):
+        return None
+    source_date = str(snapshot.get("market_session", ""))
+    return next((day for day in sessions if day > creation_date and day >= source_date), None)
+
+
+def observation_id(snapshot: dict[str, Any], origin: str) -> str:
+    return canonical_sha256({
+        "ticker": snapshot.get("ticker"),
+        "forecast_origin_session": origin,
+    })
 
 
 def update_history() -> tuple[list[dict[str, str]], str]:
@@ -113,7 +145,7 @@ def update_history() -> tuple[list[dict[str, str]], str]:
         session = row.get("market_session_date", "").strip()
         close = number(row.get("last_price"))
         if (
-            ticker and session and close is not None
+            ticker and session and close is not None and close > 0
             and row.get("data_quality_label") in {"ok", "partial"}
         ):
             current_session = max(current_session, session)
@@ -207,15 +239,23 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
     sessions: set[str] = set()
     for row in history_rows:
         price = number(row.get("close"))
-        if price is not None:
+        if price is not None and price > 0:
             by_ticker.setdefault(row["ticker"], {})[row["market_session"]] = price
             sessions.add(row["market_session"])
     ordered_sessions = sorted(sessions)
     snapshots = jsonl(SNAPSHOT_PATH)
+    # Retain all source snapshots, but fix the primary representative by time
+    # and ID, not by the eventual return. Roles share one future price path;
+    # candidate-to-held changes and same-origin reruns are not new trials.
+    primary: dict[str, str] = {}
+    for snapshot in sorted(snapshots, key=lambda row: (str(row.get("created_at", "")), str(row.get("snapshot_id", "")))):
+        origin = forecast_origin(snapshot, ordered_sessions)
+        if origin:
+            primary.setdefault(observation_id(snapshot, origin), str(snapshot.get("snapshot_id", "")))
     results: list[dict[str, str]] = []
     for snapshot in snapshots:
         ticker = str(snapshot.get("ticker", ""))
-        start = str(snapshot.get("market_session", ""))
+        start = forecast_origin(snapshot, ordered_sessions)
         if ticker not in by_ticker or start not in by_ticker[ticker] or start not in ordered_sessions:
             continue
         start_index = ordered_sessions.index(start)
@@ -229,7 +269,7 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 continue
             window_sessions = ordered_sessions[start_index + 1:start_index + horizon + 1]
             window_prices = [by_ticker[ticker][day] for day in window_sessions if day in by_ticker[ticker]]
-            if not window_prices:
+            if len(window_prices) != horizon:
                 continue
             absolute = (evaluation / entry - 1.0) * 100.0
             relative: dict[str, str] = {}
@@ -242,7 +282,7 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 )
             changed = any(
                 later.get("ticker") == ticker
-                and start < str(later.get("market_session", "")) <= target_session
+                and start < str(forecast_origin(later, ordered_sessions) or "") <= target_session
                 and later.get("classification") != snapshot.get("classification")
                 for later in snapshots
             )
@@ -259,13 +299,35 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 "absolute_return_pct": f"{absolute:.4f}",
                 "spy_relative_return_pct": relative["SPY"],
                 "qqq_relative_return_pct": relative["QQQ"],
-                "maximum_favorable_excursion_pct": f"{(max(window_prices) / entry - 1.0) * 100.0:.4f}",
-                "maximum_adverse_excursion_pct": f"{(min(window_prices) / entry - 1.0) * 100.0:.4f}",
+                "maximum_favorable_excursion_pct": f"{(max([entry, *window_prices]) / entry - 1.0) * 100.0:.4f}",
+                "maximum_adverse_excursion_pct": f"{(min([entry, *window_prices]) / entry - 1.0) * 100.0:.4f}",
                 "classification_changed_before_horizon": "yes" if changed else "no",
                 "price_basis": "completed_daily_close",
                 "corporate_action_review_required": "yes",
+                "evaluation_basis": "forward_next_session_close_v2; not_execution_or_total_return",
+                "source_market_session": str(snapshot.get("market_session", "")),
+                "forecast_origin_session": str(start),
+                "independent_observation_id": observation_id(snapshot, str(start)),
+                "primary_observation": "yes" if primary[observation_id(snapshot, str(start))] == snapshot["snapshot_id"] else "no",
             })
     results.sort(key=lambda row: (row["recommendation_session"], row["ticker"], int(row["horizon_sessions"])))
+    # The old derived returns used the source close as a forecast origin.
+    # Preserve them verbatim once; do not mutate the immutable input snapshots.
+    if OUTCOME_PATH.exists():
+        header = OUTCOME_PATH.read_text(encoding="utf-8").splitlines()[:1]
+        if header and "evaluation_basis" not in header[0]:
+            archive = OUTCOME_PATH.with_name(OUTCOME_PATH.stem + ".pre_forward_v2.csv")
+            payload = OUTCOME_PATH.read_bytes()
+            try:
+                descriptor = os.open(archive, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            except FileExistsError:
+                if archive.read_bytes() != payload:
+                    raise RuntimeError("legacy outcome archive conflict; refusing overwrite")
+            else:
+                with os.fdopen(descriptor, "wb") as handle:
+                    handle.write(payload)
+                    handle.flush()
+                    os.fsync(handle.fileno())
     atomic_write_csv(OUTCOME_PATH, OUTCOME_FIELDS, results)
     return results
 
@@ -275,16 +337,24 @@ def write_retrospective() -> None:
     material = [row for row in snapshots if row.get("human_confirmation_required") == "yes"]
     feedback = jsonl(FEEDBACK_PATH)
     completed_groups = len(material) // 10
+    sessions = {row.get("market_session") for row in snapshots if row.get("market_session")}
+    outcomes = read_csv(OUTCOME_PATH)
+    primary_outcomes = [row for row in outcomes if row.get("primary_observation") == "yes"]
     lines = [
         "# Phase 5R recommendation retrospective",
         "",
         f"Generated: `{iso_now()}`",
         "",
         f"- Point-in-time snapshots: `{len(snapshots)}`.",
+        f"- Distinct source market sessions: `{len(sessions)}`; snapshot rows are not independent trials.",
+        f"- Forward outcome rows: `{len(outcomes)}`; primary ticker/origin/horizon rows: `{len(primary_outcomes)}`.",
         f"- Material review snapshots: `{len(material)}`.",
         f"- Completed ten-review retrospective groups: `{completed_groups}`.",
         f"- Human feedback records: `{len(feedback)}`.",
         "- Evaluation remains close-based; every result is marked for corporate-action review.",
+        "- Origin is the next observed close after the aware creation date; missing timestamps or future closes remain pending.",
+        "- Same-origin observations across overlapping horizons or correlated issuers are not statistically independent.",
+        "- Human feedback is optional and does not block tracking or research measurement.",
     ]
     if completed_groups == 0:
         lines.extend(["", "No ten-material-review retrospective is due yet."])

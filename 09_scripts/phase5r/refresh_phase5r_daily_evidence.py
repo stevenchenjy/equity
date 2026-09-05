@@ -9,13 +9,16 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
+import math
 import os
 import re
 import time
 import urllib.error
 import urllib.request
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from phase5r_daily_common import (
     EVIDENCE_LEDGER_PATH,
@@ -161,6 +164,13 @@ FUNDAMENTAL_FIELDS = [
     "trend_label",
     "data_quality",
     "source_url",
+    "financial_period_type",
+    "ttm_period_end",
+    "selection_version",
+    "data_quality_reasons",
+    "valuation_input_quality",
+    "valuation_input_limitations",
+    "field_provenance_json",
 ]
 REVENUE_TAGS = (
     "RevenueFromContractWithCustomerExcludingAssessedTax",
@@ -196,6 +206,10 @@ DEBT_NONCURRENT_TAGS = (
     "LongTermDebtAndFinanceLeaseObligationsNoncurrent",
     "LongTermDebtNoncurrent",
 )
+SHORT_TERM_DEBT_TAGS = ("ShortTermBorrowings",)
+TOTAL_DEBT_TAGS = ("DebtAndCapitalLeaseObligations",)
+REPORT_FORMS = {"10-Q", "10-K", "20-F", "40-F", "10-Q/A", "10-K/A", "20-F/A", "40-F/A"}
+FINANCIAL_SELECTION_VERSION = "period_bound_companyfacts_v2"
 
 
 def request_json(url: str, user_agent: str) -> Any:
@@ -345,54 +359,123 @@ def current_submission_entity_name(
 
 
 def fact_units(
-    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD",
+    *, as_of: datetime | None = None,
+    acceptance_by_accession: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
+    """Collect all approved aliases, retaining exact units and availability.
+
+    Tag preference breaks ties for the *same* economic period; it must never
+    hide a later period under a successor tag. SEC ``filed`` has date precision,
+    not an acceptance time. Without an indexed acceptance timestamp, use the
+    following New York midnight as conservative availability, never fetched_at.
+    """
     facts = payload.get("facts", {})
-    for taxonomy in ("us-gaap", "ifrs-full"):
+    values_out = []
+    if as_of is not None and as_of.tzinfo is None:
+        raise ValueError("companyfacts as_of must be timezone aware")
+    for taxonomy in ("us-gaap", "ifrs-full", "dei"):
         taxonomy_facts = facts.get(taxonomy, {})
-        for tag in tags:
+        for priority, tag in enumerate(tags):
             record = taxonomy_facts.get(tag, {})
             units = record.get("units", {})
             values = units.get(unit, [])
-            if values:
-                return [item for item in values if isinstance(item.get("val"), (int, float))]
-    return []
+            for item in values:
+                value = item.get("val")
+                if (not isinstance(value, (int, float)) or isinstance(value, bool)
+                        or not math.isfinite(value) or item.get("form") not in REPORT_FORMS):
+                    continue
+                try:
+                    end = date.fromisoformat(str(item.get("end", "")))
+                    filed = date.fromisoformat(str(item.get("filed", "")))
+                    accepted = (acceptance_by_accession or {}).get(str(item.get("accn", "")))
+                    if accepted:
+                        available = datetime.fromisoformat(accepted.replace("Z", "+00:00"))
+                        if available.tzinfo is None:
+                            continue
+                        availability_basis = "official_acceptance_timestamp"
+                    else:
+                        available = datetime.combine(
+                            filed + timedelta(days=1), datetime.min.time(),
+                            tzinfo=ZoneInfo("America/New_York"),
+                        )
+                        availability_basis = "conservative_end_of_filed_day"
+                except (ValueError, TypeError):
+                    continue
+                if end > filed or (as_of is not None and available > as_of):
+                    continue
+                values_out.append({
+                    **item, "_taxonomy": taxonomy, "_tag": tag, "_unit": unit,
+                    "_priority": priority,
+                    "_available_at_utc": available.astimezone(timezone.utc).isoformat(),
+                    "_availability_basis": availability_basis,
+                })
+    return values_out
+
+
+def _selection_key(item: dict[str, Any]) -> tuple[str, int, str]:
+    return (str(item.get("filed", "")), -int(item.get("_priority", 0)), str(item.get("accn", "")))
+
+
+def _same_basis(*items: dict[str, Any]) -> bool:
+    return len({(item.get("_taxonomy"), item.get("_tag"), item.get("_unit")) for item in items}) == 1
+
+
+def _has_accession_provenance(item: dict[str, Any]) -> bool:
+    components = item.get("_components")
+    return (all(_has_accession_provenance(component) for component in components)
+            if components else bool(re.fullmatch(r"\d{10}-\d{2}-\d{6}", str(item.get("accn", "")))))
+
+
+def _derived_fact(
+    components: list[dict[str, Any]], *, start: str, end: str,
+    value: float, derivation: str,
+) -> dict[str, Any]:
+    latest_available = max(components, key=lambda item: str(item.get("_available_at_utc", "")))
+    return {
+        **latest_available, "start": start, "end": end, "val": value,
+        "frame": "", "_derivation": derivation, "_components": components,
+    }
 
 
 def quarterly_values(
-    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD", **selection: Any,
 ) -> list[dict[str, Any]]:
-    selected: dict[str, dict[str, Any]] = {}
-    for item in fact_units(payload, tags, unit):
-        frame = str(item.get("frame", ""))
-        if not re.fullmatch(r"CY\d{4}Q[1-4]", frame):
-            continue
-        if item.get("form") not in {"10-Q", "10-K", "20-F", "40-F"}:
-            continue
-        try:
-            duration_days = (
-                datetime.fromisoformat(str(item.get("end", ""))).date()
-                - datetime.fromisoformat(str(item.get("start", ""))).date()
-            ).days
-        except ValueError:
-            continue
-        if not 60 <= duration_days <= 130:
-            continue
-        current = selected.get(frame)
-        if current is None or str(item.get("filed", "")) > str(current.get("filed", "")):
-            selected[frame] = item
-    return sorted(selected.values(), key=lambda item: str(item.get("frame", "")))
+    """Use actual dates, including unframed facts and derivable fiscal Q4.
+
+    Weighted-average shares are not additive: annual shares minus nine-month
+    shares is invalid and is deliberately never used to manufacture a quarter.
+    """
+    values = duration_values(payload, tags, unit, **selection)
+    selected = {(item["start"], item["end"]): item for item in values if 60 <= _duration_days(item) <= 130}
+    if unit == "USD":
+        for current in values:
+            if not 140 <= _duration_days(current) <= 400:
+                continue
+            earlier = [item for item in values if item["start"] == current["start"]
+                       and 60 <= (date.fromisoformat(current["end"]) - date.fromisoformat(item["end"])).days <= 130
+                       and _same_basis(current, item)]
+            if not earlier:
+                continue
+            previous = max(earlier, key=lambda item: (item["end"], _selection_key(item)))
+            start = (date.fromisoformat(previous["end"]) + timedelta(days=1)).isoformat()
+            key = (start, current["end"])
+            if key not in selected:
+                selected[key] = _derived_fact(
+                    [current, previous], start=start, end=current["end"],
+                    value=float(current["val"]) - float(previous["val"]),
+                    derivation="same_fiscal_start_duration_less_prior_ytd",
+                )
+    return sorted(selected.values(), key=lambda item: (item["end"], item["start"], _selection_key(item)))
 
 
 def duration_values(
-    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD", **selection: Any,
 ) -> list[dict[str, Any]]:
     """Return one latest-filed consolidated fact for each duration period."""
 
     selected: dict[tuple[str, str], dict[str, Any]] = {}
-    for item in fact_units(payload, tags, unit):
-        if item.get("form") not in {"10-Q", "10-K", "20-F", "40-F"}:
-            continue
+    for item in fact_units(payload, tags, unit, **selection):
         try:
             start = datetime.fromisoformat(str(item.get("start", ""))).date()
             end = datetime.fromisoformat(str(item.get("end", ""))).date()
@@ -402,7 +485,7 @@ def duration_values(
             continue
         key = (start.isoformat(), end.isoformat())
         current = selected.get(key)
-        if current is None or str(item.get("filed", "")) > str(current.get("filed", "")):
+        if current is None or _selection_key(item) > _selection_key(current):
             selected[key] = item
     return sorted(
         selected.values(),
@@ -415,18 +498,21 @@ def duration_values(
 
 
 def latest_instant(
-    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD", **selection: Any,
 ) -> float | None:
-    values = [
-        item
-        for item in fact_units(payload, tags, unit)
-        if item.get("form") in {"10-Q", "10-K", "20-F", "40-F"}
-        and item.get("end")
-    ]
+    latest = instant_fact(payload, tags, unit, **selection)
+    return None if latest is None else float(latest["val"])
+
+
+def instant_fact(
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD",
+    *, target_end: str | None = None, **selection: Any,
+) -> dict[str, Any] | None:
+    values = [item for item in fact_units(payload, tags, unit, **selection)
+              if not item.get("start") and (target_end is None or item["end"] == target_end)]
     if not values:
         return None
-    latest = max(values, key=lambda item: (str(item.get("end", "")), str(item.get("filed", ""))))
-    return float(latest["val"])
+    return max(values, key=lambda item: (str(item["end"]), _selection_key(item)))
 
 
 def _duration_days(item: dict[str, Any]) -> int:
@@ -438,21 +524,26 @@ def _duration_days(item: dict[str, Any]) -> int:
 def _ttm_at(
     values: list[dict[str, Any]], target_end: date
 ) -> float | None:
+    fact = _ttm_fact_at(values, target_end)
+    return None if fact is None else float(fact["val"])
+
+
+def _ttm_fact_at(
+    values: list[dict[str, Any]], target_end: date,
+) -> dict[str, Any] | None:
     """Derive TTM from an annual fact or annual + YTD - prior YTD."""
 
     annual = [
         item for item in values
         if date.fromisoformat(str(item["end"])) == target_end
-        and item.get("form") in {"10-K", "20-F", "40-F"}
-        and 300 <= _duration_days(item) <= 400
+        and 350 <= _duration_days(item) <= 380
     ]
     if annual:
-        return float(max(annual, key=lambda item: str(item.get("filed", "")))["val"])
+        return max(annual, key=_selection_key)
 
     current_ytd = [
         item for item in values
         if date.fromisoformat(str(item["end"])) == target_end
-        and item.get("form") == "10-Q"
         and 60 <= _duration_days(item) <= 300
     ]
     if not current_ytd:
@@ -461,9 +552,9 @@ def _ttm_at(
     current_start = date.fromisoformat(str(current["start"]))
     prior_annual = [
         item for item in values
-        if item.get("form") in {"10-K", "20-F", "40-F"}
-        and 300 <= _duration_days(item) <= 400
-        and 0 <= (current_start - date.fromisoformat(str(item["end"]))).days <= 14
+        if 350 <= _duration_days(item) <= 380
+        and (current_start - date.fromisoformat(str(item["end"]))).days == 1
+        and _same_basis(current, item)
     ]
     if not prior_annual:
         return None
@@ -476,11 +567,12 @@ def _ttm_at(
     )
     comparable = [
         item for item in values
-        if item.get("form") == "10-Q"
+        if item["start"] == annual_item["start"]
         and 350 <= (
             target_end - date.fromisoformat(str(item["end"]))
         ).days <= 380
         and abs(_duration_days(item) - _duration_days(current)) <= 14
+        and _same_basis(current, annual_item, item)
     ]
     if not comparable:
         return None
@@ -492,18 +584,25 @@ def _ttm_at(
             -int(str(item.get("filed", "0000-00-00")).replace("-", "") or 0),
         ),
     )
-    return float(annual_item["val"]) + float(current["val"]) - float(prior_ytd["val"])
+    return _derived_fact(
+        [annual_item, current, prior_ytd],
+        start=(date.fromisoformat(str(prior_ytd["end"])) + timedelta(days=1)).isoformat(),
+        end=target_end.isoformat(),
+        value=float(annual_item["val"]) + float(current["val"]) - float(prior_ytd["val"]),
+        derivation="prior_annual_plus_current_ytd_less_comparable_prior_ytd",
+    )
 
 
 def trailing_twelve_values(
-    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD"
+    payload: dict[str, Any], tags: tuple[str, ...], unit: str = "USD",
+    *, target_end: date | None = None, **selection: Any,
 ) -> tuple[float | None, float | None]:
     """Return current and prior TTM values without summing gapped quarters."""
 
-    values = duration_values(payload, tags, unit)
+    values = duration_values(payload, tags, unit, **selection)
     if not values:
         return None, None
-    target_end = max(date.fromisoformat(str(item["end"])) for item in values)
+    target_end = target_end or max(date.fromisoformat(str(item["end"])) for item in values)
     prior_ends = sorted(
         {
             date.fromisoformat(str(item["end"]))
@@ -525,21 +624,103 @@ def money(value: float | None) -> str:
     return "" if value is None else f"{value:.2f}"
 
 
-def fundamental_row(
-    ticker: str, cik: int, payload: dict[str, Any], fetched_at: str
-) -> dict[str, str]:
-    revenue = quarterly_values(payload, REVENUE_TAGS)
-    latest = revenue[-1] if revenue else None
-    latest_frame = str(latest.get("frame", "")) if latest else ""
-    prior_frame = ""
-    if latest_frame:
-        match = re.fullmatch(r"CY(\d{4})Q([1-4])", latest_frame)
-        if match:
-            prior_frame = f"CY{int(match.group(1)) - 1}Q{match.group(2)}"
-    prior = next(
-        (item for item in revenue if str(item.get("frame", "")) == prior_frame),
-        None,
+def fact_provenance(item: dict[str, Any] | None) -> dict[str, Any]:
+    if item is None:
+        return {"status": "not_reported_for_required_period"}
+    result = {key: item.get(key, "") for key in ("start", "end", "filed", "accn", "form", "frame", "val")}
+    result.update({
+        "taxonomy": item.get("_taxonomy", ""), "tag": item.get("_tag", ""),
+        "unit": item.get("_unit", ""),
+        "available_at_utc": item.get("_available_at_utc", ""),
+        "availability_basis": item.get("_availability_basis", ""),
+        "derivation": item.get("_derivation", "reported_fact"),
+        "status": "available",
+    })
+    if item.get("_components"):
+        result["components"] = [fact_provenance(component) for component in item["_components"]]
+    return result
+
+
+def _derived_provenance(
+    components: list[dict[str, Any] | None], value: float | None,
+    *, derivation: str, unit: str,
+) -> dict[str, Any]:
+    if value is None or any(item is None for item in components):
+        return fact_provenance(None)
+    derived = _derived_fact(
+        components, start=components[0].get("start", ""), end=components[0]["end"],
+        value=value, derivation=derivation,
     )
+    derived["_unit"] = unit
+    return fact_provenance(derived)
+
+
+def _period_match(values: list[dict[str, Any]], anchor: dict[str, Any] | None) -> dict[str, Any] | None:
+    if anchor is None:
+        return None
+    matches = [item for item in values if item["start"] == anchor["start"] and item["end"] == anchor["end"]]
+    return max(matches, key=_selection_key) if matches else None
+
+
+def _prior_period(values: list[dict[str, Any]], anchor: dict[str, Any] | None) -> dict[str, Any] | None:
+    if anchor is None:
+        return None
+    end = date.fromisoformat(anchor["end"])
+    matches = [item for item in values
+               if 350 <= (end - date.fromisoformat(item["end"])).days <= 380
+               and abs(_duration_days(item) - _duration_days(anchor)) <= 14
+               and _same_basis(item, anchor)]
+    return min(matches, key=lambda item: (abs((end - date.fromisoformat(item["end"])).days - 365),
+                                          abs(_duration_days(item) - _duration_days(anchor)))) if matches else None
+
+
+def _debt_fact(payload: dict[str, Any], target_end: str, **selection: Any) -> tuple[dict[str, Any] | None, list[dict[str, Any] | None]]:
+    total = instant_fact(payload, TOTAL_DEBT_TAGS, target_end=target_end, **selection)
+    if total is not None:
+        return total, [total]
+    parts = [instant_fact(payload, tags, target_end=target_end, **selection)
+             for tags in (DEBT_CURRENT_TAGS, DEBT_NONCURRENT_TAGS, SHORT_TERM_DEBT_TAGS)]
+    # An absent current portion or short-term borrowing line is not evidence
+    # of zero. Do not call a partially disclosed long-term balance total debt.
+    if any(item is None for item in parts):
+        return None, parts
+    current, noncurrent, short_term = parts
+    current_has_leases = "FinanceLease" in current["_tag"]
+    noncurrent_has_leases = "FinanceLease" in noncurrent["_tag"]
+    if current_has_leases != noncurrent_has_leases:
+        return None, parts
+    return _derived_fact(
+        parts, start="", end=target_end,
+        value=sum(float(item["val"]) for item in parts),
+        derivation="reported_current_and_noncurrent_long_term_debt_plus_reported_short_term_borrowings",
+    ), parts
+
+
+def fundamental_row(
+    ticker: str, cik: int, payload: dict[str, Any], fetched_at: str,
+    *, acceptance_by_accession: dict[str, str] | None = None,
+) -> dict[str, str]:
+    as_of = datetime.fromisoformat(fetched_at.replace("Z", "+00:00"))
+    if as_of.tzinfo is None:
+        raise ValueError("fundamentals fetched_at must be timezone aware")
+    response_cik = payload.get("cik")
+    if response_cik is not None and int(response_cik) != cik:
+        raise ValueError("SEC companyfacts CIK identity conflict")
+    selection = {"as_of": as_of, "acceptance_by_accession": acceptance_by_accession}
+    revenue = quarterly_values(payload, REVENUE_TAGS, **selection)
+    revenue_durations = duration_values(payload, REVENUE_TAGS, **selection)
+    newest_end = max((item["end"] for item in revenue_durations), default="")
+    current_quarters = [item for item in revenue if item["end"] == newest_end]
+    annuals = [item for item in revenue_durations if item["end"] == newest_end and 350 <= _duration_days(item) <= 380]
+    latest = max(current_quarters, key=_selection_key) if current_quarters else (
+        max(annuals, key=_selection_key) if annuals else None
+    )
+    # Do not silently retain a stale quarter when the latest annual cannot be
+    # disaggregated. An annual-only issuer remains annual, explicitly labelled.
+    period_type = "quarter" if current_quarters else "annual" if latest else "unavailable"
+    comparable_revenues = revenue if period_type == "quarter" else revenue_durations
+    latest_frame = str(latest.get("frame") or f"{latest['start']}/{latest['end']}") if latest else ""
+    prior = _prior_period(comparable_revenues, latest)
     revenue_latest = float(latest["val"]) if latest else None
     revenue_prior = float(prior["val"]) if prior else None
     revenue_yoy = (
@@ -547,39 +728,40 @@ def fundamental_row(
         if revenue_latest is not None and revenue_prior not in {None, 0.0}
         else None
     )
-    net_income_values = quarterly_values(payload, NET_INCOME_TAGS)
-    net_income_match = next(
-        (
-            item
-            for item in reversed(net_income_values)
-            if str(item.get("frame", "")) == latest_frame
-        ),
-        None,
-    )
+    net_income_values = (quarterly_values if period_type == "quarter" else duration_values)(payload, NET_INCOME_TAGS, **selection)
+    net_income_match = _period_match(net_income_values, latest)
     net_income = float(net_income_match["val"]) if net_income_match else None
     net_margin = (
         net_income / revenue_latest * 100.0
         if net_income is not None and revenue_latest not in {None, 0.0}
         else None
     )
-    cash = latest_instant(payload, CASH_TAGS)
-    assets = latest_instant(payload, ASSET_TAGS)
-    liabilities = latest_instant(payload, LIABILITY_TAGS)
-    ttm_revenue, ttm_revenue_prior = trailing_twelve_values(
-        payload, REVENUE_TAGS
-    )
+    anchor_end = latest["end"] if latest else ""
+    cash_fact = instant_fact(payload, CASH_TAGS, target_end=anchor_end, **selection)
+    assets_fact = instant_fact(payload, ASSET_TAGS, target_end=anchor_end, **selection)
+    liabilities_fact = instant_fact(payload, LIABILITY_TAGS, target_end=anchor_end, **selection)
+    cash = float(cash_fact["val"]) if cash_fact else None
+    assets = float(assets_fact["val"]) if assets_fact else None
+    liabilities = float(liabilities_fact["val"]) if liabilities_fact else None
+    target_end = date.fromisoformat(anchor_end) if anchor_end else None
+    ttm_revenue_fact = _ttm_fact_at(revenue_durations, target_end) if target_end else None
+    ttm_prior_fact = _ttm_fact_at(revenue_durations, date.fromisoformat(prior["end"])) if prior else None
+    ttm_revenue = float(ttm_revenue_fact["val"]) if ttm_revenue_fact else None
+    ttm_revenue_prior = float(ttm_prior_fact["val"]) if ttm_prior_fact else None
     ttm_revenue_yoy = (
         (ttm_revenue / ttm_revenue_prior - 1.0) * 100.0
         if ttm_revenue is not None and ttm_revenue_prior not in {None, 0.0}
         else None
     )
-    operating_cash_flow, _ = trailing_twelve_values(
-        payload, OPERATING_CASH_FLOW_TAGS
-    )
-    capex, _ = trailing_twelve_values(payload, CAPEX_TAGS)
+    ocf_fact = _ttm_fact_at(duration_values(payload, OPERATING_CASH_FLOW_TAGS, **selection), target_end) if target_end else None
+    capex_fact = _ttm_fact_at(duration_values(payload, CAPEX_TAGS, **selection), target_end) if target_end else None
+    operating_cash_flow = float(ocf_fact["val"]) if ocf_fact else None
+    capex = float(capex_fact["val"]) if capex_fact else None
     free_cash_flow = (
         operating_cash_flow - capex
         if operating_cash_flow is not None and capex is not None
+        and ocf_fact["start"] == capex_fact["start"]
+        and (ttm_revenue_fact is None or ocf_fact["start"] == ttm_revenue_fact["start"])
         else None
     )
     free_cash_flow_margin = (
@@ -587,28 +769,10 @@ def fundamental_row(
         if free_cash_flow is not None and ttm_revenue not in {None, 0.0}
         else None
     )
-    share_values = quarterly_values(payload, DILUTED_SHARES_TAGS, "shares")
-    diluted_shares = (
-        float(share_values[-1]["val"])
-        if share_values
-        else latest_instant(payload, SHARES_OUTSTANDING_TAGS, "shares")
-    )
-    diluted_prior_frame = ""
-    if share_values:
-        match = re.fullmatch(
-            r"CY(\d{4})Q([1-4])", str(share_values[-1].get("frame", ""))
-        )
-        if match:
-            diluted_prior_frame = (
-                f"CY{int(match.group(1)) - 1}Q{match.group(2)}"
-            )
-    diluted_prior_match = next(
-        (
-            item for item in share_values
-            if str(item.get("frame", "")) == diluted_prior_frame
-        ),
-        None,
-    )
+    share_values = duration_values(payload, DILUTED_SHARES_TAGS, "shares", **selection)
+    diluted_fact = _period_match(share_values, latest)
+    diluted_shares = float(diluted_fact["val"]) if diluted_fact else None
+    diluted_prior_match = _prior_period(share_values, diluted_fact)
     diluted_prior = (
         float(diluted_prior_match["val"])
         if diluted_prior_match is not None
@@ -619,13 +783,8 @@ def fundamental_row(
         if diluted_shares is not None and diluted_prior not in {None, 0.0}
         else None
     )
-    debt_parts = [
-        latest_instant(payload, DEBT_CURRENT_TAGS),
-        latest_instant(payload, DEBT_NONCURRENT_TAGS),
-    ]
-    debt = sum(value for value in debt_parts if value is not None)
-    if all(value is None for value in debt_parts):
-        debt = None
+    debt_fact, debt_parts = _debt_fact(payload, anchor_end, **selection)
+    debt = float(debt_fact["val"]) if debt_fact else None
     if revenue_yoy is None:
         trend = "insufficient_trend"
     elif revenue_yoy >= 15.0:
@@ -636,12 +795,67 @@ def fundamental_row(
         trend = "stable"
     else:
         trend = "contracting"
-    if revenue_latest is not None and revenue_prior is not None and cash is not None:
+    quality_reasons = []
+    if latest:
+        max_age = 550 if period_type == "annual" else 200
+        if (as_of.date() - date.fromisoformat(anchor_end)).days > max_age:
+            quality_reasons.append("selected_revenue_period_stale")
+        # Other current statements reveal a stale or unreported revenue period
+        # even when an old revenue tag happens to contain plausible values.
+        other_ends = [item["end"] for tags in (ASSET_TAGS, LIABILITY_TAGS, CASH_TAGS, NET_INCOME_TAGS)
+                      for item in fact_units(payload, tags, **selection)]
+        if other_ends and max(other_ends) > anchor_end:
+            quality_reasons.append("newer_financial_period_without_comparable_revenue")
+    if cash is None:
+        quality_reasons.append("cash_missing_for_revenue_period")
+    if revenue_prior is None:
+        quality_reasons.append("comparable_prior_revenue_missing")
+    if revenue_latest is not None and not quality_reasons:
         quality = "ok"
     elif revenue_latest is not None:
         quality = "partial"
     else:
         quality = "unavailable"
+    valuation_limitations = list(quality_reasons)
+    for name, value in (("ttm_revenue", ttm_revenue), ("ttm_growth", ttm_revenue_yoy),
+                        ("diluted_shares", diluted_shares), ("total_debt", debt)):
+        if value is None:
+            valuation_limitations.append(f"{name}_missing_for_required_period")
+    if diluted_fact and diluted_fact["_tag"] != "WeightedAverageNumberOfDilutedSharesOutstanding":
+        valuation_limitations.append("basic_shares_not_diluted_shares")
+    if cash_fact and cash_fact["_tag"] != "CashAndCashEquivalentsAtCarryingValue":
+        valuation_limitations.append("cash_includes_restricted_balances")
+    required_facts = [latest, prior, ttm_revenue_fact, ttm_prior_fact, cash_fact, debt_fact,
+                      diluted_fact, diluted_prior_match, ocf_fact, capex_fact]
+    if any(item is not None and not _has_accession_provenance(item) for item in required_facts):
+        valuation_limitations.append("required_financial_fact_accession_missing")
+    if free_cash_flow_margin is None:
+        valuation_limitations.append("free_cash_flow_margin_missing_for_required_period")
+    if share_dilution is None:
+        valuation_limitations.append("share_dilution_missing_for_required_period")
+    if capex_fact and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment":
+        valuation_limitations.append("capex_alternative_scope_requires_validation")
+    provenance = {
+        "revenue_latest": fact_provenance(latest), "revenue_prior_year": fact_provenance(prior),
+        "net_income_latest": fact_provenance(net_income_match), "cash_latest": fact_provenance(cash_fact),
+        "assets_latest": fact_provenance(assets_fact), "liabilities_latest": fact_provenance(liabilities_fact),
+        "ttm_revenue": fact_provenance(ttm_revenue_fact), "ttm_revenue_prior_year": fact_provenance(ttm_prior_fact),
+        "ttm_operating_cash_flow": fact_provenance(ocf_fact), "ttm_capex": fact_provenance(capex_fact),
+        "diluted_shares_latest": fact_provenance(diluted_fact), "diluted_shares_prior_year": fact_provenance(diluted_prior_match),
+        "debt_latest": fact_provenance(debt_fact), "debt_component_disclosures": [fact_provenance(part) for part in debt_parts],
+        "net_margin_pct": _derived_provenance([net_income_match, latest], net_margin,
+                                               derivation="same_period_net_income_divided_by_revenue_times_100", unit="percent"),
+        "revenue_yoy_pct": _derived_provenance([latest, prior], revenue_yoy,
+                                              derivation="comparable_period_revenue_ratio_less_one_times_100", unit="percent"),
+        "ttm_revenue_yoy_pct": _derived_provenance([ttm_revenue_fact, ttm_prior_fact], ttm_revenue_yoy,
+                                                  derivation="comparable_ttm_revenue_ratio_less_one_times_100", unit="percent"),
+        "ttm_free_cash_flow": _derived_provenance([ocf_fact, capex_fact], free_cash_flow,
+                                                 derivation="same_ttm_operating_cash_flow_less_capex", unit="USD"),
+        "ttm_free_cash_flow_margin_pct": _derived_provenance([ocf_fact, capex_fact, ttm_revenue_fact], free_cash_flow_margin,
+                                                            derivation="same_ttm_operating_cash_flow_less_capex_divided_by_revenue_times_100", unit="percent"),
+        "share_dilution_pct": _derived_provenance([diluted_fact, diluted_prior_match], share_dilution,
+                                                 derivation="comparable_period_diluted_shares_ratio_less_one_times_100", unit="percent"),
+    }
     return {
         "ticker": ticker,
         "cik": str(cik),
@@ -670,6 +884,13 @@ def fundamental_row(
         "trend_label": trend,
         "data_quality": quality,
         "source_url": SEC_COMPANYFACTS_URL.format(cik=cik),
+        "financial_period_type": period_type,
+        "ttm_period_end": anchor_end if ttm_revenue is not None else "",
+        "selection_version": FINANCIAL_SELECTION_VERSION,
+        "data_quality_reasons": ";".join(quality_reasons),
+        "valuation_input_quality": "complete" if quality == "ok" and not valuation_limitations else "insufficient",
+        "valuation_input_limitations": ";".join(valuation_limitations),
+        "field_provenance_json": json.dumps(provenance, sort_keys=True, separators=(",", ":")),
     }
 
 
@@ -1058,7 +1279,13 @@ def main() -> int:
                 )
                 time.sleep(0.20)
                 fundamental_rows.append(
-                    fundamental_row(ticker, cik, companyfacts, attempt_at)
+                    fundamental_row(
+                        ticker, cik, companyfacts, attempt_at,
+                        acceptance_by_accession={
+                            filing["accession_number"]: filing["accepted_at"]
+                            for filing in filings
+                        },
+                    )
                 )
             except (OSError, ValueError, urllib.error.URLError) as exc:
                 fundamental_errors.append(f"{ticker}:{type(exc).__name__}")

@@ -7,6 +7,7 @@ import copy
 import json
 import re
 import stat
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -258,6 +259,125 @@ def primary_source_registry(packet: dict[str, Any]) -> list[dict[str, str]]:
     return sorted(rows, key=lambda row: (row["ticker"], row["source_id"]))
 
 
+def _finite_number(value: Any) -> Decimal | None:
+    try:
+        result = Decimal(str(value))
+        return result if result.is_finite() else None
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def build_deterministic_baseline(packet: dict[str, Any]) -> list[dict[str, Any]]:
+    """Give the judge the facts/calculations already available without an LLM.
+
+    These are observations, not new investment opinions. Keeping limitations is
+    essential: a number from an incomplete observation is not promoted to truth.
+    """
+    rows = copy.deepcopy(packet.get("research_context", []))
+    for observation in packet.get("fundamental_observations", []):
+        assertions = []
+        for field, positive, negative in (
+            ("net_income_latest", "positive GAAP net income", "GAAP net loss"),
+            ("net_margin_pct", "positive net margin", "negative net margin"),
+            ("revenue_yoy_pct", "revenue grew year over year", "revenue declined year over year"),
+            ("fcf_margin_pct", "positive free cash flow margin", "negative free cash flow margin"),
+        ):
+            value = _finite_number(observation.get(field))
+            if value is not None:
+                assertions.append({"field": field, "value": str(value),
+                                   "statement": positive if value > 0 else negative if value < 0 else "zero " + field})
+        rows.append({
+            "baseline_kind": "deterministic_fact_and_sign_checklist",
+            "ticker": observation.get("ticker"),
+            "period": observation.get("latest_frame"),
+            "period_end": observation.get("latest_period_end"),
+            "source_id": observation.get("source_id"),
+            "facts_reference": "All same-ticker fields in fundamental_observations are already deterministic baseline facts, subject to their recorded quality/period limitations.",
+            "data_quality": observation.get("data_quality"),
+            "mechanical_sign_assertions": assertions,
+            "interpretation": "Existing facts and simple signs are not incremental semantic discoveries; preserve input limitations.",
+        })
+    if packet.get("calculations"):
+        rows.append({"baseline_kind": "existing_deterministic_calculation",
+                     "reference": "All rows in semantic_view.calculations (including reconciled values, signs, changes and formulas) are baseline, not new semantic research."})
+    return rows
+
+
+def deterministic_claim_check(packet: dict[str, Any], claim: dict[str, Any]) -> dict[str, Any]:
+    """Conservative one-fact sign check, never a generic semantic truth judge.
+
+    Complex, causal, segment-level, forward-looking and ambiguous-period claims
+    are not mechanically resolved. Matching a sign never validates those extras.
+    """
+    statement = str(claim.get("statement", "")).lower()
+    base = {"checkable": False, "captured": False, "support": "not_assessable",
+            "reason": "not_a_supported_single_fact_sign_template"}
+    fcf = re.fullmatch(r"(?:trailing )?free cash flow margin (?:was|remained) (negative|positive)( despite positive quarterly net income)?\.?", statement)
+    if fcf:
+        for calculation in packet.get("calculations", []):
+            if calculation.get("ticker") != claim.get("ticker") or calculation.get("metric") not in {"valuation_free_cash_flow_margin_pct", "free_cash_flow_margin_pct", "fcf_margin_pct"}:
+                continue
+            value = _finite_number(calculation.get("value"))
+            if calculation.get("reconciled") is not True or value is None or value != _finite_number(calculation.get("recomputed_value")):
+                continue
+            input_periods = {item.get("period") for item in calculation.get("inputs", [])}
+            period_matches = claim.get("period") == calculation.get("period") or input_periods == {claim.get("period")}
+            if not period_matches:
+                continue
+            supported = value < 0 if fcf.group(1) == "negative" else value > 0
+            if fcf.group(2):
+                observation = next((row for row in packet.get("fundamental_observations", []) if row.get("ticker") == claim.get("ticker") and row.get("data_quality") == "ok" and claim.get("period") == "TTM through " + str(row.get("latest_period_end"))), None)
+                income = _finite_number(observation.get("net_income_latest")) if observation else None
+                if income is None:
+                    return {**base, "reason": "quarterly_net_income_period_or_quality_unverified"}
+                supported = supported and income > 0
+            return {"checkable": True, "captured": supported,
+                    "support": "supported" if supported else "unsupported",
+                    "reason": "existing_reconciled_cash_flow_sign_and_optional_same_end_net_income",
+                    "ticker": claim["ticker"], "period": claim["period"],
+                    "field": "fcf_margin_pct", "operator": "lt" if fcf.group(1) == "negative" else "gt",
+                    "threshold": "0", "observed_value": str(value),
+                    "calculation_id": calculation.get("calculation_id"),
+                    "source_ids": calculation.get("source_ids", [])}
+        return {**base, "reason": "reconciled_exact_period_cash_flow_calculation_required"}
+    if re.search(r"\b(?:expects?|outlook|future|may|could|will|because|despite|while|although|but|and|continued? operating|segment|reality labs|non-gaap)\b", statement):
+        return base
+    match = None
+    # Restrict net-income phrases so operating losses are never inferred from
+    # net income; reject embedded numeric/compound assertions as out of scope.
+    if re.search(r"\b(?:gaap net[- ]?(?:income )?loss|gaap net loss|loss-making on a gaap net-income basis|net income (?:was|remained) negative|negative net margin)\b", statement):
+        match = ("net_margin_pct", "lt", Decimal(0))
+    elif re.search(r"\b(?:positive (?:gaap )?net income|positive net margin)\b", statement):
+        match = ("net_margin_pct", "gt", Decimal(0))
+    elif re.search(r"\brevenue (?:grew|increased|declined|decreased) year.over.year\b", statement):
+        match = ("revenue_yoy_pct", "lt" if re.search(r"declined|decreased", statement) else "gt", Decimal(0))
+    if match is None or _NUMBER.search(statement):
+        return base
+    field, operator, threshold = match
+    for observation in packet.get("fundamental_observations", []):
+        if observation.get("ticker") != claim.get("ticker"):
+            continue
+        if claim.get("period") not in {observation.get("latest_frame"), observation.get("latest_period_end")}:
+            continue
+        if observation.get("data_quality") != "ok":
+            return {**base, "reason": "deterministic_observation_quality_not_ok"}
+        value = _finite_number(observation.get(field))
+        if value is None:
+            continue
+        supported = value < threshold if operator == "lt" else value > threshold
+        return {"checkable": True, "captured": supported,
+                "support": "supported" if supported else "unsupported",
+                "reason": "existing_deterministic_single_fact_sign",
+                "ticker": claim["ticker"], "period": claim["period"],
+                "field": field, "operator": operator, "threshold": str(threshold),
+                "observed_value": str(value), "source_id": observation.get("source_id", "")}
+    return {**base, "reason": "exact_period_and_valid_observation_required"}
+
+
+def deterministic_claim_capture(packet: dict[str, Any], claim: dict[str, Any]) -> bool:
+    return deterministic_claim_check(packet, claim)["captured"]
+
+
 def build_semantic_view(packet: dict[str, Any]) -> dict[str, Any]:
     """Return the only packet view eligible for external shadow inference."""
 
@@ -282,7 +402,7 @@ def build_semantic_view(packet: dict[str, Any]) -> dict[str, Any]:
             }
         )
     return {
-        "view_schema_version": "phase5r_shadow_semantic_view_v1",
+        "view_schema_version": "phase5r_shadow_semantic_view_v2",
         "packet_identity": {
             key: packet.get(key)
             for key in (
@@ -299,7 +419,7 @@ def build_semantic_view(packet: dict[str, Any]) -> dict[str, Any]:
             packet.get("fundamental_observations", [])
         ),
         "filing_evidence": copy.deepcopy(packet.get("filing_evidence", [])),
-        "deterministic_baseline": copy.deepcopy(packet.get("research_context", [])),
+        "deterministic_baseline": build_deterministic_baseline(packet),
         "evidence_freshness": copy.deepcopy(packet.get("evidence_freshness", [])),
         "calculations": copy.deepcopy(packet.get("calculations", [])),
         "sources": source_rows,
@@ -569,7 +689,8 @@ def critic_schema(
 
 
 def build_blind_judge_target(
-    analyst: dict[str, Any], critic: dict[str, Any] | None
+    analyst: dict[str, Any], critic: dict[str, Any] | None,
+    *, packet: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, dict[str, str]]]:
     """Create a deterministic candidate set without origin or model labels."""
 
@@ -610,6 +731,21 @@ def build_blind_judge_target(
                 item_id=omission["omission_id"],
                 origin="critic_omission",
             )
+    if packet is not None:
+        for observation in sorted(packet.get("fundamental_observations", []), key=lambda row: str(row.get("ticker", ""))):
+            value = _finite_number(observation.get("net_margin_pct"))
+            if value is None or observation.get("data_quality") != "ok" or not observation.get("latest_frame") or not observation.get("source_id"):
+                continue
+            for positive in (False, True):
+                item_id = "control_net_margin_" + ("positive" if positive else "negative")
+                control = {"ticker": observation["ticker"],
+                           "statement": "Positive net margin was reported." if positive else "Net income was negative.",
+                           "period": observation["latest_frame"],
+                           "source_ids": [observation["source_id"]], "calculation_ids": []}
+                add_item(control, item_id=item_id, origin="deterministic_control")
+                binding = next(row for row in mapping.values() if row["item_id"] == item_id)
+                binding["expected_support"] = "supported" if (value > 0 if positive else value < 0) else "unsupported"
+            break
     candidates.sort(key=lambda row: row["blind_item_id"])
     target = {
         "candidates": candidates,
@@ -1125,7 +1261,13 @@ def build_automatic_evaluation(
     target: dict[str, Any],
     mapping: dict[str, dict[str, str]],
     judge: dict[str, Any],
+    *, schema_version: str = "phase5r_shadow_automatic_evaluation_v2",
+    packet: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    del packet  # Baseline remeasurement is separately bound to the sealed packet.
+    if schema_version not in {"phase5r_shadow_automatic_evaluation_v1", "phase5r_shadow_automatic_evaluation_v2"}:
+        raise ShadowContractError("unknown automatic evaluation schema version")
+    legacy = schema_version.endswith("_v1")
     analyst_by_id = {row["claim_id"]: row for row in analyst["claims"]}
     critic_omissions = (
         {row["omission_id"]: row for row in critic["omissions"]}
@@ -1137,16 +1279,28 @@ def build_automatic_evaluation(
         if critic is not None
         else {}
     )
+    critic_reasons = ({row["claim_id"]: row["reason"] for row in critic["claim_reviews"]}
+                      if critic is not None else {})
     candidate_by_blind = {
         row["blind_item_id"]: row for row in target["candidates"]
     }
     items: list[dict[str, Any]] = []
+    controls: list[dict[str, Any]] = []
     disagreements = 0
     for review in judge["item_reviews"]:
         blind_id = review["blind_item_id"]
         binding = mapping[blind_id]
         item_id = binding["item_id"]
         origin = binding["origin"]
+        if origin == "deterministic_control":
+            support_passed = review["support"] == binding["expected_support"]
+            baseline_correct = review["baseline_captured"] == "yes" if binding["expected_support"] == "supported" else None
+            controls.append({"blind_item_id": blind_id, "expected_support": binding["expected_support"],
+                             "judge_support": review["support"],
+                             "support_passed": support_passed,
+                             "passed": support_passed and baseline_correct is not False,
+                             "baseline_correct": baseline_correct})
+            continue
         source = (
             analyst_by_id[item_id]
             if origin == "analyst"
@@ -1166,6 +1320,11 @@ def build_automatic_evaluation(
                 )
             )
         )
+        if not legacy and origin == "analyst" and critic_verdict != "not_routed":
+            disagreement = disagreement or (
+                critic_verdict != review["support"]
+                and "supported" in {critic_verdict, review["support"]}
+            )
         disagreements += int(disagreement)
         items.append(
             {
@@ -1188,6 +1347,8 @@ def build_automatic_evaluation(
                 "critic_judge_disagreement": disagreement,
             }
         )
+        if not legacy:
+            items[-1]["critic_reason"] = critic_reasons.get(item_id, "")
     incremental_material = [
         row
         for row in items
@@ -1196,8 +1357,8 @@ def build_automatic_evaluation(
         and row["judge_baseline_captured"] == "no"
         and not row["critic_judge_disagreement"]
     ]
-    return {
-        "schema_version": "phase5r_shadow_automatic_evaluation_v1",
+    result = {
+        "schema_version": schema_version,
         "candidate_set_sha256": target["candidate_set_sha256"],
         "blindness": {
             "candidate_origin_hidden_from_judge": True,
@@ -1220,6 +1381,10 @@ def build_automatic_evaluation(
         "email_eligible": False,
         "automatic_action_allowed": False,
     }
+    if not legacy:
+        result["deterministic_controls"] = controls
+        result["semantic_quality_interpretation"] = "model_estimated_not_independent_ground_truth"
+    return result
 
 
 __all__ = [
@@ -1232,7 +1397,10 @@ __all__ = [
     "analyst_schema",
     "build_automatic_evaluation",
     "build_blind_judge_target",
+    "build_deterministic_baseline",
     "build_semantic_view",
+    "deterministic_claim_capture",
+    "deterministic_claim_check",
     "critic_schema",
     "judge_schema",
     "load_packet",

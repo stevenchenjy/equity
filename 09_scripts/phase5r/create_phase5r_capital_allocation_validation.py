@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 from pathlib import Path
+from create_phase5r_research_questions import main as write_research_questions
 
 from phase5r_daily_common import (
     NEW_CANDIDATE_PATH,
@@ -131,6 +132,8 @@ def main() -> int:
 
     snapshots = _jsonl(SNAPSHOT_PATH)
     outcomes = read_csv(OUTCOME_PATH)
+    source_sessions = {row.get("market_session") for row in snapshots if row.get("market_session")}
+    primary_outcomes = [row for row in outcomes if row.get("primary_observation") == "yes"]
     outcome_sessions = sorted({
         row.get("evaluation_session", "") for row in outcomes
         if row.get("evaluation_session")
@@ -187,12 +190,15 @@ def main() -> int:
         "",
         f"- Complete company valuations: `{len(complete)}`; base scenario below market: `{len(below_market)}`.",
         "- The company method uses explicit EV/TTM-revenue bands plus balance-sheet, FCF, and dilution adjustments with visible scenarios.",
-        "- It does not project future revenue or margin expansion. That is conservative for high-growth companies, but the outcome history is too short to fit a forward-growth model without overfitting.",
+        "- It does not project company-specific future revenue or margins. The direction of its bias is unproven; a shared multiple is not a validated company forecast.",
+        "- expected_upside_pct is a base-scenario price gap, not probability-weighted expected return; reward_to_risk is a scenario-distance ratio, not calibrated expected payoff.",
         "- The valuation arithmetic therefore remains unchanged; sizing tiers cannot bypass an adverse valuation.",
         "",
         "## Walk-forward evidence",
         "",
         f"- Point-in-time snapshots: `{len(snapshots)}`.",
+        f"- Distinct source market sessions: `{len(source_sessions)}`; primary forward ticker/origin/horizon rows: `{len(primary_outcomes)}`.",
+        "- Forward outcomes start at the next observed close after snapshot creation; old backdated derived returns are archived, not used as new forward evidence.",
         f"- Completed outcome rows: `{len(outcomes)}` across `{len(outcome_sessions)}` evaluation session(s); horizons observed: `{horizons}`.",
         "- The ledger does not yet contain enough independent sessions or historical portfolio-cash snapshots to compare cash drag, drawdown, turnover, or opportunity cost robustly.",
         "- No future information or retrospective parameter optimization was used. Continue the configured 1/5/20/60-session tracking before changing valuation bands from performance results.",
@@ -200,6 +206,7 @@ def main() -> int:
         "All rows are research-only. Broker connectivity and automatic action remain disabled.",
     ]
     atomic_write_text(REPORT_PATH, "\n".join(lines) + "\n")
+    write_research_questions()
     print(
         f"capital_validation_complete=true snapshots={len(snapshots)} outcomes={len(outcomes)} "
         f"production_eligible={production_eligible} broker_connected=false"

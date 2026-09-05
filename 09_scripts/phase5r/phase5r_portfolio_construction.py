@@ -185,7 +185,9 @@ def core_starter_decision(
         "entry": technical_score >= float(core_policy["minimum_entry_score"]),
         "price_range": range_percentile
         <= float(core_policy["maximum_52_week_range_percentile"]),
-        "whole_share_affordability": shares >= 1,
+        "whole_share_affordability": affordable_shares >= 1,
+        "whole_share_target_gap": target_gap_shares >= 1,
+        "review_capacity": int(core_policy["maximum_whole_shares_per_review"]) >= 1,
         "maintenance": not maintenance_active,
     }
     failed = [name for name, passed in gate_results.items() if not passed]
@@ -204,6 +206,15 @@ def core_starter_decision(
         "cash_after": deployable_cash - shares * current_price,
         "fifty_two_week_range_percentile": range_percentile,
         "allocation_gap_value": allocation_gap,
+        "cash_affordable_shares": affordable_shares,
+        "target_gap_whole_shares": target_gap_shares,
+        "one_share_weight_pct": (
+            current_price / account_total * 100.0 if account_total > 0 else None
+        ),
+        "core_weight_after_one_share_pct": (
+            (current_core_value + current_price) / account_total * 100.0
+            if account_total > 0 else None
+        ),
         "failed_gates": failed,
         "gate_results": gate_results,
     }

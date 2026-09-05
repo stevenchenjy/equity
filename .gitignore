@@ -40,12 +40,16 @@ graphify-out/graph.html
 04_research/realtime_stock_picker_phase5r/phase5r_current_research_baseline.csv
 04_research/realtime_stock_picker_phase5r/phase5r_recommendation_snapshots.local.jsonl
 04_research/realtime_stock_picker_phase5r/phase5r_recommendation_outcomes.local.csv
+04_research/realtime_stock_picker_phase5r/phase5r_recommendation_outcomes.local.pre_forward_v2.csv
+04_research/realtime_stock_picker_phase5r/phase5r_research_questions.local.json
+04_research/realtime_stock_picker_phase5r/phase5r_research_question_events.local.jsonl
 04_research/realtime_stock_picker_phase5r/phase5r_recommendation_feedback.local.jsonl
 03_source_data/phase5r/phase5r_market_close_history.local.csv
 00_project_control/phase5r_current_production_status.local.json
 00_project_control/phase5r_current_production_status.local.md
 08_reviews/current/phase5r_retrospective.local.md
 08_reviews/current/phase5r_capital_allocation_validation.local.md
+08_reviews/current/phase5r_research_questions.local.md
 
 # Event-driven SHADOW_LLM evaluation artifacts. These never feed the
 # canonical refresh, decision, sender, account, or execution paths.

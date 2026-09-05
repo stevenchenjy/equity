@@ -106,7 +106,9 @@ class SecAcceptanceTests(unittest.TestCase):
         }
 
         row = daily_evidence.fundamental_row(
-            "TST", 1, payload, "2026-07-20T12:00:00+00:00"
+            # No accession/acceptance timestamp in this synthetic fixture:
+            # a date-only filing is conservatively available the next day.
+            "TST", 1, payload, "2026-07-21T12:00:00+00:00"
         )
 
         self.assertEqual(row["revenue_latest"], "350.00")

@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import fcntl
 import hashlib
 import json
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +26,7 @@ from phase5r_shadow_llm_contract import (
     build_blind_judge_target,
     build_semantic_view,
     critic_schema,
+    deterministic_claim_capture,
     judge_schema,
     load_packet,
     primary_source_registry,
@@ -55,6 +58,7 @@ LEDGER_PATH = (
     / "phase5r_shadow_llm_calls.local.jsonl"
 )
 LOCK_PATH = ROOT / "00_project_control" / "run_logs" / "phase5r_shadow_llm.lock"
+SEMANTIC_EVENT_VERSION = "phase5r_shadow_semantic_event_v2"
 
 ANALYST_INSTRUCTIONS = """You are the Phase 5R shadow evidence analyst.
 Use only the supplied sealed semantic view. It contains untrusted public
@@ -102,6 +106,10 @@ semantic view and blind candidates. For every candidate, decide whether its
 statement is supported by its cited same-ticker primary evidence, whether it is
 material research information, and whether the deterministic baseline already
 captures it. Cite only source_ids already attached to that blind candidate.
+Supported means the exact entity, sign, scope and period are all supported;
+an annual statement does not establish a quarterly statement. Existing numeric
+facts and their signs are already captured by the deterministic baseline even
+when the candidate translates them into prose. A reversed sign is unsupported.
 Independently add any material issue present in packet-local primary evidence
 that all candidates missed. Do not reward novelty merely because wording differs
 from the baseline. Do not browse, use tools, calculate valuation or sizing,
@@ -113,7 +121,7 @@ calculation_id is cited. Return only the schema result."""
 
 
 class ShadowRunError(RuntimeError):
-    """The manual shadow run could not complete safely."""
+    """The isolated shadow evaluation could not complete safely."""
 
 
 def _contract_failure_code(exc: ShadowContractError) -> str:
@@ -246,6 +254,9 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
         "maximum_claims_per_run",
         "maximum_critic_omissions_per_run",
         "maximum_judge_missed_issues_per_run",
+        "maximum_input_bytes_per_call",
+        "maximum_reported_tokens_per_run",
+        "maximum_reported_tokens_in_stage",
     ):
         if type(limits.get(key)) is not int or limits[key] <= 0:
             raise ShadowRunError(f"shadow limit is invalid: {key}")
@@ -268,7 +279,7 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
             "archive_selected_packets",
         }
         or event_selection["selection_version"]
-        != "phase5r_shadow_semantic_event_v1"
+        != SEMANTIC_EVENT_VERSION
         or not isinstance(event_selection["sample_seed"], str)
         or not event_selection["sample_seed"]
         or type(event_selection["maximum_live_shadow_events_in_stage"]) is not int
@@ -386,91 +397,129 @@ def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
     return config
 
 
-def semantic_event_fingerprint(packet: dict[str, Any]) -> str:
-    """Hash only research-semantic inputs, excluding daily price/account churn."""
+def _economic_fields(value: Any) -> Any:
+    """Discard ingestion identity, never economic periods or reported values."""
 
-    entities = [
-        {
-            key: row.get(key)
-            for key in ("ticker", "role", "thesis", "holding_horizon", "invalidation_rule")
-        }
-        for row in packet.get("entities", [])
-        if isinstance(row, dict)
-    ]
-    sources = []
-    for row in packet.get("source_catalog", []):
-        if not isinstance(row, dict):
-            continue
-        authority = str(row.get("authority", ""))
-        source_type = str(row.get("source_type", ""))
-        if authority != "primary_official" and not source_type.startswith(("sec_", "sec-")):
-            continue
-        sources.append(
-            {
-                key: row.get(key)
-                for key in (
-                    "source_id",
-                    "ticker",
-                    "source_type",
-                    "authority",
-                    "content_sha256",
-                    "locator",
-                )
-            }
-        )
-    fundamentals = [
-        {key: value for key, value in row.items() if key != "fetched_at"}
-        for row in packet.get("fundamental_observations", [])
-        if isinstance(row, dict)
-    ]
-    baseline = [
-        {
-            key: row.get(key)
-            for key in (
-                "ticker",
-                "theme",
-                "business_quality_score",
-                "earnings_revenue_trend_score",
-                "catalyst_news_quality_score",
-                "primary_source_url",
-                "filing_source_url",
-            )
-        }
-        for row in packet.get("research_context", [])
-        if isinstance(row, dict)
-    ]
-    payload = {
-        "selection_version": "phase5r_shadow_semantic_event_v1",
-        "entities": sorted(entities, key=lambda row: str(row.get("ticker", ""))),
-        "primary_sources": sorted(
-            sources, key=lambda row: (str(row.get("ticker", "")), str(row.get("source_id", "")))
-        ),
-        "fundamental_observations": sorted(
-            fundamentals, key=lambda row: (str(row.get("ticker", "")), str(row.get("source_id", "")))
-        ),
-        "filing_evidence": sorted(
-            [row for row in packet.get("filing_evidence", []) if isinstance(row, dict)],
-            key=lambda row: (str(row.get("ticker", "")), str(row.get("accession_number", ""))),
-        ),
-        "deterministic_semantic_baseline": sorted(
-            baseline, key=lambda row: str(row.get("ticker", ""))
-        ),
+    ingestion_fields = {
+        "fetched_at", "evidence_checked_at", "retrieved_at", "source_id",
+        "metadata_source_id", "acceptance_source_id", "text_chunk_source_ids",
     }
-    return canonical_sha256(payload)
+    if isinstance(value, dict):
+        return {
+            key: _economic_fields(item)
+            for key, item in value.items()
+            if key not in ingestion_fields
+        }
+    if isinstance(value, list):
+        return [_economic_fields(item) for item in value]
+    return value
+
+
+def semantic_event_components(packet: dict[str, Any]) -> dict[str, str]:
+    """Separate research change identity from immutable raw provenance hashes.
+
+    Refresh-generated companyfacts, filing-metadata and valuation-row hashes
+    include ingestion times and are not evidence of new economic information.
+    Filing text hashes remain authoritative change signals. Derived daily scores
+    and prices are deliberately not semantic triggers.
+    """
+
+    tickers = {
+        str(row.get("ticker", "")).upper()
+        for row in packet.get("entities", [])
+        if isinstance(row, dict) and row.get("ticker")
+    }
+    components: dict[str, str] = {}
+    for ticker in sorted(tickers):
+        fundamentals = [
+            _economic_fields(row)
+            for row in packet.get("fundamental_observations", [])
+            if isinstance(row, dict) and str(row.get("ticker", "")).upper() == ticker
+        ]
+        sources: list[dict[str, Any]] = []
+        for row in packet.get("source_catalog", []):
+            if not isinstance(row, dict) or str(row.get("ticker", "")).upper() != ticker:
+                continue
+            source_type = str(row.get("source_type", ""))
+            if row.get("authority") != "primary_official" and not source_type.startswith(("sec_", "sec-")):
+                continue
+            entry = {key: row.get(key) for key in ("ticker", "source_type", "authority", "source_url")}
+            if source_type in {"sec_companyfacts_xbrl", "sec_xbrl_observation"}:
+                # The observations above hold all public fields. Retain locator
+                # periods/accessions, not the hash of a freshly fetched wrapper.
+                entry["locator"] = _economic_fields(row.get("locator"))
+                if not fundamentals:
+                    entry["content_sha256"] = row.get("content_sha256")
+            elif source_type == "sec_valuation_fact":
+                # Historical sealed packets contain a CSV row whose third field
+                # is fetched_at. Normalize that known form only; unknown formats
+                # retain their complete content and therefore fail conservative.
+                excerpt = str(row.get("excerpt_text", ""))
+                values = next(csv.reader([excerpt]), [])
+                if len(values) >= 5 and values[0].upper() == ticker:
+                    try:
+                        datetime.fromisoformat(values[2].replace("Z", "+00:00"))
+                    except ValueError:
+                        entry["content_sha256"] = row.get("content_sha256")
+                    else:
+                        entry["economic_csv_values"] = values[:2] + values[3:]
+                else:
+                    entry["content_sha256"] = row.get("content_sha256")
+            elif source_type in {"sec_filing_metadata", "sec_submission_acceptance"}:
+                entry["locator"] = _economic_fields(row.get("locator"))
+                if source_type == "sec_submission_acceptance":
+                    entry["accepted_at"] = row.get("accepted_at")
+            else:
+                entry["locator"] = _economic_fields(row.get("locator"))
+                entry["content_sha256"] = row.get("content_sha256")
+            sources.append(entry)
+        payload = {
+            "selection_version": SEMANTIC_EVENT_VERSION,
+            "ticker": ticker,
+            "thesis": [
+                {key: row.get(key) for key in ("ticker", "thesis", "holding_horizon", "invalidation_rule")}
+                for row in packet.get("entities", [])
+                if isinstance(row, dict) and str(row.get("ticker", "")).upper() == ticker
+            ],
+            "primary_sources": sorted(sources, key=canonical_sha256),
+            "fundamental_observations": sorted(fundamentals, key=canonical_sha256),
+            "filing_evidence": sorted([
+                _economic_fields(row)
+                for row in packet.get("filing_evidence", [])
+                if isinstance(row, dict) and str(row.get("ticker", "")).upper() == ticker
+            ], key=canonical_sha256),
+        }
+        components[ticker] = canonical_sha256(payload)
+    return components
+
+
+def semantic_event_fingerprint(packet: dict[str, Any]) -> str:
+    return canonical_sha256({
+        "selection_version": SEMANTIC_EVENT_VERSION,
+        "issuer_components": semantic_event_components(packet),
+    })
 
 
 def critic_route(
-    analyst: dict[str, Any], config: dict[str, Any]
+    analyst: dict[str, Any], config: dict[str, Any], packet: dict[str, Any] | None = None,
 ) -> tuple[bool, list[str]]:
     routing = config["critic_routing"]
     reasons: set[str] = set()
+    material_claim_tickers: set[str] = set()
     for claim in analyst["claims"]:
+        if claim.get("novelty") == "baseline_already_captures" or (
+            packet is not None and deterministic_claim_capture(packet, claim)
+        ):
+            continue
+        if claim.get("materiality") not in {"medium", "high"}:
+            continue
+        material_claim_tickers.add(claim["ticker"])
         if claim["materiality"] in routing["materialities"]:
             reasons.add(f"materiality:{claim['materiality']}")
         if claim["novelty"] in routing["novelties"]:
             reasons.add(f"novelty:{claim['novelty']}")
     for review in analyst["ticker_reviews"]:
-        if review["semantic_state"] in routing["semantic_states"]:
+        if review["semantic_state"] in routing["semantic_states"] and review["ticker"] in material_claim_tickers:
             reasons.add(f"semantic_state:{review['semantic_state']}")
     return bool(reasons), sorted(reasons)
 
@@ -488,9 +537,14 @@ def _event_already_attempted(
     evaluation_class: str,
     evaluation_stage: str,
     semantic_view_sha256: str | None = None,
+    packet_archive_root: Path | None = None,
+    issuer_components: dict[str, str] | None = None,
 ) -> bool:
     if not output_root.exists():
         return False
+    archive_root = packet_archive_root or output_root.parent / "packets.local"
+    historical_packets = _archived_packet_index(archive_root)
+    seen_issuer_components: set[tuple[str, str]] = set()
     for path in sorted(output_root.glob("*/bundle.json")) + sorted(
         output_root.glob("*/failure.json")
     ):
@@ -511,9 +565,79 @@ def _event_already_attempted(
             and isinstance(identity, dict)
             and identity.get("semantic_view_sha256") == semantic_view_sha256
         )
-        if current_stage_match or legacy_semantic_match:
+        archived = historical_packets.get(str(value.get("packet_id", "")))
+        if value.get("evaluation_class") == evaluation_class:
+            previous_components = semantic_event_components(archived) if archived is not None else value.get("issuer_semantic_components", {})
+            if isinstance(previous_components, dict):
+                seen_issuer_components.update(previous_components.items())
+        migrated_match = (
+            value.get("evaluation_class") == evaluation_class
+            and archived is not None
+            and semantic_event_fingerprint(archived) == event_fingerprint
+        )
+        if current_stage_match or legacy_semantic_match or migrated_match:
             return True
-    return False
+    # Daily ranking can remove/recombine already-reviewed issuers. That is not
+    # new company research and must not consume another full-packet call.
+    return bool(issuer_components) and set(issuer_components.items()).issubset(seen_issuer_components)
+
+
+def _archived_packet_index(packet_root: Path) -> dict[str, dict[str, Any]]:
+    """Reindex sealed historical packets in memory; never rewrite old evidence."""
+
+    packets: dict[str, dict[str, Any]] = {}
+    for path in sorted(packet_root.glob("*.json")):
+        try:
+            packet = load_packet(path)
+        except (OSError, ShadowContractError):
+            continue
+        packets[str(packet["packet_id"])] = packet
+    return packets
+
+
+def _point_in_time_receipt(packet: dict[str, Any]) -> dict[str, Any]:
+    """Replay only the sealed as-of evidence, never regenerate from today's facts."""
+
+    try:
+        as_of = datetime.fromisoformat(str(packet["as_of_et"]).replace("Z", "+00:00"))
+        if as_of.tzinfo is None:
+            raise ValueError("naive cutoff")
+        checked = 0
+        for collection, time_field in (
+            ("source_catalog", "accepted_at"),
+            ("fundamental_observations", "fetched_at"),
+            ("filing_evidence", "accepted_at"),
+        ):
+            for row in packet.get(collection, []):
+                if not isinstance(row, dict):
+                    raise ValueError("invalid evidence row")
+                value = row.get(time_field)
+                if not value:
+                    # A primary item with an unknown availability time cannot
+                    # establish retrospective point-in-time eligibility.
+                    if collection != "source_catalog" or row.get("authority") == "primary_official":
+                        raise ValueError("unknown primary availability time")
+                    continue
+                available = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+                if available.tzinfo is None or available > as_of:
+                    raise ValueError("future or naive evidence time")
+                checked += 1
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ShadowRunError("sealed packet is not point-in-time replay eligible") from exc
+    return {
+        "status": "sealed_as_of_validated",
+        "as_of_et": packet["as_of_et"],
+        "availability_timestamps_checked": checked,
+        "reconstructed_from_current_data": False,
+        "future_outcome_data_in_model_input": False,
+        "scope": "packet-local availability, not a claim of complete historical coverage",
+    }
+
+
+def _archive_packet(packet_root: Path, packet: dict[str, Any]) -> None:
+    # Different captures may share one economic event; key by sealed packet id
+    # to preserve provenance without an immutable-filename conflict.
+    _atomic_private_json(packet_root / f"{packet['packet_id']}.json", packet)
 
 
 def _select_replay_packet(
@@ -521,11 +645,12 @@ def _select_replay_packet(
     output_root: Path,
     config: dict[str, Any],
 ) -> Path | None:
-    candidates: list[tuple[str, Path]] = []
+    candidates: dict[str, tuple[str, str, Path]] = {}
     for path in sorted(packet_root.glob("*.json")):
         try:
             packet = load_packet(path)
-        except (OSError, ShadowContractError):
+            _point_in_time_receipt(packet)
+        except (OSError, ShadowContractError, ShadowRunError):
             continue
         fingerprint = semantic_event_fingerprint(packet)
         semantic_view_sha256 = canonical_sha256(build_semantic_view(packet))
@@ -536,18 +661,24 @@ def _select_replay_packet(
                 evaluation_class=evaluation_class,
                 evaluation_stage=config["evaluation_stage"],
                 semantic_view_sha256=semantic_view_sha256,
+                packet_archive_root=packet_root,
+                issuer_components=semantic_event_components(packet),
             )
             for evaluation_class in ("replay", "live_shadow")
         ):
             continue
-        rank = canonical_sha256(
-            {
-                "sample_seed": config["event_selection"]["sample_seed"],
-                "packet_id": packet["packet_id"],
-            }
-        )
-        candidates.append((rank, path))
-    return min(candidates)[1] if candidates else None
+        # Earliest sealed capture represents a duplicate event; archive filename
+        # or refresh frequency cannot improve its chance of being sampled.
+        candidate = (str(packet["as_of_et"]), str(packet["packet_id"]), path)
+        if fingerprint not in candidates or candidate < candidates[fingerprint]:
+            candidates[fingerprint] = candidate
+    if not candidates:
+        return None
+    fingerprint = min(candidates, key=lambda value: canonical_sha256({
+        "sample_seed": config["event_selection"]["sample_seed"],
+        "semantic_event_fingerprint": value,
+    }))
+    return candidates[fingerprint][2]
 
 
 def _stage_event_attempt_count(
@@ -603,7 +734,9 @@ def _run_identity(
         "transport": transport,
         "evaluation_class": evaluation_class,
         "evaluation_stage": config["evaluation_stage"],
+        "semantic_event_version": SEMANTIC_EVENT_VERSION,
         "semantic_event_fingerprint": semantic_event_fingerprint(packet),
+        "issuer_semantic_components": semantic_event_components(packet),
         "config_sha256": canonical_sha256(config),
         "semantic_view_sha256": canonical_sha256(semantic_view),
         "analyst_prompt_sha256": canonical_sha256(ANALYST_INSTRUCTIONS),
@@ -730,6 +863,11 @@ def _append_ledger_event(event: dict[str, Any], *, limits: dict[str, Any]) -> No
                 rows = _load_ledger_rows(handle)
                 started = [row for row in rows if row.get("event") == "started"]
                 if event["event"] == "started":
+                    _require_token_capacity(
+                        rows, limits=limits,
+                        evaluation_stage=event["evaluation_stage"],
+                        run_id=event["run_id"], reserve_full_run=False,
+                    )
                     if len(started) >= limits["maximum_physical_live_calls_total"]:
                         raise ShadowRunError("global physical live-call ceiling reached")
                     same_stage = [
@@ -763,6 +901,103 @@ def _append_ledger_event(event: dict[str, Any], *, limits: dict[str, Any]) -> No
         os.close(lock_descriptor)
 
 
+def _token_budget_status(
+    rows: list[dict[str, Any]], *, evaluation_stage: str,
+) -> dict[str, Any]:
+    stage_starts = [
+        row for row in rows
+        if row.get("event") == "started" and row.get("evaluation_stage") == evaluation_stage
+    ]
+    completed = {
+        row.get("attempt_id"): row for row in rows
+        if row.get("event") == "completed" and row.get("evaluation_stage") == evaluation_stage
+    }
+    total = 0
+    by_run: dict[str, int] = {}
+    unreported = 0
+    for start in stage_starts:
+        usage = completed.get(start.get("attempt_id"), {}).get("authoritative_token_usage")
+        tokens = usage.get("total_tokens") if isinstance(usage, dict) else None
+        if type(tokens) is not int or tokens < 0:
+            unreported += 1
+            continue
+        total += tokens
+        run_id = str(start.get("run_id", ""))
+        by_run[run_id] = by_run.get(run_id, 0) + tokens
+    return {
+        "stage_reported_tokens": total,
+        "stage_calls_with_unreported_usage": unreported,
+        "reported_tokens_by_run": by_run,
+        "authoritative_billing_cost_usd": None,
+        "billing_cost_status": "unavailable_not_zero",
+    }
+
+
+def _require_token_capacity(
+    rows: list[dict[str, Any]], *, limits: dict[str, Any], evaluation_stage: str,
+    run_id: str = "", reserve_full_run: bool,
+) -> dict[str, Any]:
+    status = _token_budget_status(rows, evaluation_stage=evaluation_stage)
+    if status["stage_calls_with_unreported_usage"]:
+        raise ShadowRunError("stage has unresolved physical calls or unreported token usage")
+    stage_tokens = status["stage_reported_tokens"]
+    reserve = limits["maximum_reported_tokens_per_run"] if reserve_full_run else 0
+    if stage_tokens + reserve > limits["maximum_reported_tokens_in_stage"] or stage_tokens >= limits["maximum_reported_tokens_in_stage"]:
+        raise ShadowRunError("evaluation-stage reported-token stop reached")
+    if status["reported_tokens_by_run"].get(run_id, 0) >= limits["maximum_reported_tokens_per_run"]:
+        raise ShadowRunError("per-run reported-token stop reached")
+    return status
+
+
+def _input_preflight(
+    *, schema: dict[str, Any], instructions: str,
+    input_payload: dict[str, Any], limits: dict[str, Any],
+) -> dict[str, Any]:
+    input_bytes = len(json.dumps({
+        "schema": schema, "instructions": instructions, "input": input_payload,
+    }, ensure_ascii=False, sort_keys=True).encode("utf-8"))
+    if input_bytes > limits["maximum_input_bytes_per_call"]:
+        raise ShadowRunError("per-call input-byte ceiling exceeded before provider invocation")
+    return {
+        "serialized_input_bytes": input_bytes,
+        "maximum_input_bytes_per_call": limits["maximum_input_bytes_per_call"],
+        "exact_token_estimate_available": False,
+        "authoritative_billing_cost_usd": None,
+        "billing_cost_status": "unavailable_not_zero",
+        "token_limit_enforcement": "reported-usage stop between calls; in-flight overshoot possible",
+    }
+
+
+def _event_input_preflight(
+    packet: dict[str, Any], semantic_view: dict[str, Any], config: dict[str, Any],
+) -> dict[str, Any]:
+    """Reserve bounded downstream headroom before paying for an analyst."""
+
+    limits = config["limits"]
+    tickers = [row["ticker"] for row in semantic_view["entities"]]
+    candidates = limits["maximum_claims_per_run"] + limits["maximum_critic_omissions_per_run"] + 2
+    schemas = {
+        "analyst": analyst_schema(limits["maximum_claims_per_run"], packet_id=packet["packet_id"], entity_tickers=tickers),
+        "critic": critic_schema(limits["maximum_critic_omissions_per_run"], packet_id=packet["packet_id"], analyst_output_sha256="f" * 64, claim_ids=[str(index).zfill(64) for index in range(limits["maximum_claims_per_run"])], entity_tickers=tickers),
+        "judge": judge_schema(limits["maximum_judge_missed_issues_per_run"], packet_id=packet["packet_id"], candidate_set_sha256="f" * 64, blind_item_ids=["blind_" + str(index).zfill(64) for index in range(candidates)], entity_tickers=tickers),
+    }
+    instructions = {"analyst": ANALYST_INSTRUCTIONS, "critic": CRITIC_INSTRUCTIONS, "judge": JUDGE_INSTRUCTIONS}
+    result: dict[str, Any] = {}
+    for role in ("analyst", "critic", "judge"):
+        receipt = _input_preflight(schema=schemas[role], instructions=instructions[role], input_payload={"semantic_view": semantic_view}, limits=limits)
+        reserved = 0 if role == "analyst" else 40000
+        envelope = receipt["serialized_input_bytes"]
+        if envelope + reserved > limits["maximum_input_bytes_per_call"]:
+            raise ShadowRunError(f"{role} input-byte headroom insufficient before analyst invocation")
+        result[role] = {
+            "base_envelope_bytes": envelope,
+            "reserved_dynamic_payload_bytes": reserved,
+            "projected_input_bytes": envelope + reserved,
+            "headroom_is_exact_output_prediction": False,
+        }
+    return result
+
+
 def _require_full_live_run_capacity(
     *, limits: dict[str, Any], evaluation_stage: str
 ) -> None:
@@ -783,6 +1018,10 @@ def _require_full_live_run_capacity(
         )
         with os.fdopen(ledger_descriptor, "r+", encoding="utf-8") as handle:
             rows = _load_ledger_rows(handle)
+        _require_token_capacity(
+            rows, limits=limits, evaluation_stage=evaluation_stage,
+            reserve_full_run=True,
+        )
         started = sum(row.get("event") == "started" for row in rows)
         stage_started = sum(
             row.get("event") == "started"
@@ -813,6 +1052,10 @@ def _invoke_live_role(
     limits: dict[str, Any],
     evaluation_stage: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    input_preflight = _input_preflight(
+        schema=schema, instructions=instructions, input_payload=input_payload,
+        limits=limits,
+    )
     attempt_id = canonical_sha256(
         {
             "run_id": run_id,
@@ -836,6 +1079,7 @@ def _invoke_live_role(
             "output_sha256": "",
             "outcome": "started",
             "failure_code": "",
+            "input_preflight": input_preflight,
         },
         limits=limits,
     )
@@ -893,7 +1137,7 @@ def _invoke_live_role(
         },
         limits=limits,
     )
-    return result.payload, result.metadata
+    return result.payload, {**result.metadata, "input_preflight": input_preflight}
 
 
 def _invoke_fixture_role(
@@ -949,7 +1193,7 @@ thresholds would make the evidence reviewable, not automatically promoted.
 """
 
 
-def execute(
+def _execute_unlocked(
     *,
     packet_path: Path,
     output_root: Path,
@@ -985,7 +1229,11 @@ def execute(
         if existing["critic"] is not None:
             validate_critic(packet, existing["analyst"], existing["critic"])
         judge_target, mapping = build_blind_judge_target(
-            existing["analyst"], existing["critic"]
+            existing["analyst"], existing["critic"],
+            packet=packet if any(
+                row.get("origin") == "deterministic_control"
+                for row in existing["blind_candidate_mapping"].values()
+            ) else None,
         )
         if (
             existing["judge_target"] != judge_target
@@ -1006,21 +1254,33 @@ def execute(
             judge_target,
             mapping,
             existing["judge"],
+            schema_version=existing["automatic_evaluation"]["schema_version"],
+            packet=packet,
         ):
             raise ShadowRunError("cached automatic evaluation binding is invalid")
         return bundle_path
     if failure_path.exists():
         raise ShadowRunError("this exact shadow run has a terminal failure artifact")
     if live:
+        _event_input_preflight(packet, semantic_view, config)
+        if any(_event_already_attempted(
+            output_root, event_fingerprint=identity["semantic_event_fingerprint"],
+            evaluation_class=kind, evaluation_stage=config["evaluation_stage"],
+            semantic_view_sha256=identity["semantic_view_sha256"],
+            packet_archive_root=packet_archive_root,
+            issuer_components=identity["issuer_semantic_components"],
+        ) for kind in ("live_shadow", "replay")):
+            raise ShadowRunError("semantic event already attempted; automatic retry is prohibited")
+        stage_limit = "maximum_live_shadow_events_in_stage" if evaluation_class == "live_shadow" else "maximum_replay_events_in_stage"
+        if _stage_event_attempt_count(output_root, evaluation_class=evaluation_class, evaluation_stage=config["evaluation_stage"]) >= config["event_selection"][stage_limit]:
+            raise ShadowRunError("evaluation-stage event ceiling reached")
+        _point_in_time_receipt(packet)
         _require_full_live_run_capacity(
             limits=config["limits"], evaluation_stage=config["evaluation_stage"]
         )
     _private_directory(run_dir)
     if live and config["event_selection"]["archive_selected_packets"]:
-        _atomic_private_json(
-            packet_archive_root / f"{identity['semantic_event_fingerprint']}.json",
-            packet,
-        )
+        _archive_packet(packet_archive_root, packet)
 
     analyst_input = {"semantic_view": semantic_view}
     analyst_call = _invoke_live_role if live else _invoke_fixture_role
@@ -1059,7 +1319,7 @@ def execute(
             analyst,
             maximum_claims=config["limits"]["maximum_claims_per_run"],
         )
-        critic_is_routed, critic_reasons = critic_route(analyst, config)
+        critic_is_routed, critic_reasons = critic_route(analyst, config, packet)
         critic: dict[str, Any] | None = None
         critic_meta: dict[str, Any] | None = None
         if critic_is_routed:
@@ -1105,7 +1365,7 @@ def execute(
                 ],
             )
 
-        judge_target, blind_mapping = build_blind_judge_target(analyst, critic)
+        judge_target, blind_mapping = build_blind_judge_target(analyst, critic, packet=packet)
         judge_input = {
             "semantic_view": semantic_view,
             "blind_candidates": judge_target,
@@ -1154,7 +1414,9 @@ def execute(
         elif isinstance(exc, ShadowContractError):
             failure_code = _contract_failure_code(exc)
         else:
-            failure_code = "contract_error"
+            failure_code = "resource_preflight_stop" if any(
+                word in str(exc) for word in ("token", "input-byte", "unresolved physical")
+            ) else "contract_error"
         failure = {
             "schema_version": "phase5r_shadow_failure_v2",
             "run_id": identity["run_id"],
@@ -1164,6 +1426,7 @@ def execute(
             "evaluation_class": evaluation_class,
             "evaluation_stage": config["evaluation_stage"],
             "semantic_event_fingerprint": identity["semantic_event_fingerprint"],
+            "semantic_event_version": SEMANTIC_EVENT_VERSION,
             "config_sha256": identity["config_sha256"],
             "runtime_sha256": identity["runtime_sha256"],
             "failed_at": iso_now(),
@@ -1182,7 +1445,7 @@ def execute(
         provider_metadata.append(critic_meta)
     provider_metadata.append(judge_meta)
     automatic_evaluation = build_automatic_evaluation(
-        analyst, critic, judge_target, blind_mapping, judge
+        analyst, critic, judge_target, blind_mapping, judge, packet=packet,
     )
     bundle = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
@@ -1194,6 +1457,20 @@ def execute(
         "evaluation_class": evaluation_class,
         "evaluation_stage": config["evaluation_stage"],
         "semantic_event_fingerprint": identity["semantic_event_fingerprint"],
+        "semantic_event_version": SEMANTIC_EVENT_VERSION,
+        "issuer_semantic_components": identity["issuer_semantic_components"],
+        "point_in_time_receipt": _point_in_time_receipt(packet) if live else None,
+        "event_scope": "complete sealed packet; unchanged refreshes excluded before inference",
+        "sampling_receipt": {
+            "selection_version": SEMANTIC_EVENT_VERSION,
+            "sample_seed": config["event_selection"]["sample_seed"],
+            "replay_event_rank": canonical_sha256({
+                "sample_seed": config["event_selection"]["sample_seed"],
+                "semantic_event_fingerprint": identity["semantic_event_fingerprint"],
+            }) if evaluation_class == "replay" else None,
+            "manual_case_label_required": False,
+            "packet_id": packet["packet_id"],
+        },
         "entity_tickers": sorted(
             str(row["ticker"]).upper()
             for row in semantic_view["entities"]
@@ -1231,10 +1508,102 @@ def execute(
     return bundle_path
 
 
+def execute(**kwargs: Any) -> Path:
+    """Serialize an entire paid event, not just individual ledger appends."""
+
+    if not kwargs.get("live"):
+        return _execute_unlocked(**kwargs)
+    _private_directory(LOCK_PATH.parent)
+    descriptor = os.open(
+        LOCK_PATH.with_suffix(".run.lock"),
+        os.O_RDWR | os.O_CREAT | getattr(os, "O_CLOEXEC", 0), 0o600,
+    )
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise ShadowRunError("another shadow evaluation event is already running") from exc
+        return _execute_unlocked(**kwargs)
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
+def preflight(
+    packet: dict[str, Any], *, config: dict[str, Any], output_root: Path,
+    packet_archive_root: Path, evaluation_class: str,
+) -> dict[str, Any]:
+    """Read-only eligibility/cost report; never reserves a call or contacts a model."""
+
+    semantic_view = build_semantic_view(packet)
+    reasons: list[str] = []
+    fingerprint = semantic_event_fingerprint(packet)
+    rows: list[dict[str, Any]] = []
+    if LEDGER_PATH.exists():
+        with LEDGER_PATH.open(encoding="utf-8") as handle:
+            rows = _load_ledger_rows(handle)
+    limits = config["limits"]
+    stage = config["evaluation_stage"]
+    usage = _token_budget_status(rows, evaluation_stage=stage)
+    try:
+        _require_token_capacity(rows, limits=limits, evaluation_stage=stage, reserve_full_run=True)
+    except ShadowRunError as exc:
+        reasons.append(str(exc))
+    started = [row for row in rows if row.get("event") == "started"]
+    remaining_calls = min(
+        limits["maximum_physical_live_calls_total"] - len(started),
+        limits["new_stage_physical_call_allowance"] - sum(row.get("evaluation_stage") == stage for row in started),
+    )
+    if remaining_calls < limits["maximum_physical_live_calls_per_run"]:
+        reasons.append("insufficient physical call capacity for a full run")
+    if any(_event_already_attempted(
+        output_root, event_fingerprint=fingerprint, evaluation_class=kind,
+        evaluation_stage=stage, packet_archive_root=packet_archive_root,
+        semantic_view_sha256=canonical_sha256(semantic_view),
+        issuer_components=semantic_event_components(packet),
+    ) for kind in ("replay", "live_shadow")):
+        reasons.append("semantic_event_already_attempted")
+    stage_limit = "maximum_live_shadow_events_in_stage" if evaluation_class == "live_shadow" else "maximum_replay_events_in_stage"
+    if _stage_event_attempt_count(output_root, evaluation_class=evaluation_class, evaluation_stage=stage) >= config["event_selection"][stage_limit]:
+        reasons.append("evaluation_stage_event_limit_reached")
+    pit: dict[str, Any] | None = None
+    try:
+        pit = _point_in_time_receipt(packet)
+    except ShadowRunError as exc:
+        reasons.append(str(exc))
+    input_receipt: dict[str, Any] | None = None
+    role_envelopes: dict[str, Any] | None = None
+    try:
+        input_receipt = _input_preflight(
+            schema=analyst_schema(limits["maximum_claims_per_run"], packet_id=packet["packet_id"], entity_tickers=[row["ticker"] for row in semantic_view["entities"]]),
+            instructions=ANALYST_INSTRUCTIONS, input_payload={"semantic_view": semantic_view}, limits=limits,
+        )
+        role_envelopes = _event_input_preflight(packet, semantic_view, config)
+    except ShadowRunError as exc:
+        reasons.append(str(exc))
+    return {
+        "schema_version": "phase5r_shadow_preflight_v1",
+        "eligible": not reasons, "blocking_reasons": reasons,
+        "provider_invoked": False, "canonical_effect": False, "email_eligible": False,
+        "semantic_event_version": SEMANTIC_EVENT_VERSION,
+        "semantic_event_fingerprint": fingerprint,
+        "issuer_semantic_components": semantic_event_components(packet),
+        "point_in_time_receipt": pit,
+        "analyst_input_preflight": input_receipt,
+        "role_input_preflight": role_envelopes,
+        "remaining_physical_calls": max(0, remaining_calls),
+        "maximum_reported_tokens_per_run": limits["maximum_reported_tokens_per_run"],
+        "maximum_reported_tokens_in_stage": limits["maximum_reported_tokens_in_stage"],
+        "cost_accounting": usage,
+        "limitations": "CLI has no enforceable per-request token/dollar ceiling; reported usage stops subsequent calls, with possible one-call overshoot. Unknown billing is never zero.",
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
+    mode.add_argument("--preflight", action="store_true")
     mode.add_argument("--live", action="store_true")
     mode.add_argument("--auto-live", action="store_true")
     mode.add_argument("--auto-replay", action="store_true")
@@ -1252,6 +1621,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--acknowledge-external-inference", action="store_true")
     args = parser.parse_args(argv)
     config = load_config()
+    if args.preflight:
+        packet = load_packet(args.packet)
+        print(json.dumps(preflight(
+            packet, config=config, output_root=args.output_root,
+            packet_archive_root=args.packet_archive_root,
+            issuer_components=semantic_event_components(packet),
+            evaluation_class=args.evaluation_class or "live_shadow",
+        ), ensure_ascii=False, sort_keys=True, indent=2))
+        return 0
     if args.check:
         provider = config["provider"]
         digest = executable_sha256(Path(provider["executable"]))
@@ -1294,17 +1672,16 @@ def main(argv: list[str] | None = None) -> int:
         packet = load_packet(args.packet)
         event_fingerprint = semantic_event_fingerprint(packet)
         semantic_view_sha256 = canonical_sha256(build_semantic_view(packet))
-        if automatic and _event_already_attempted(
+        if any(_event_already_attempted(
             args.output_root,
             event_fingerprint=event_fingerprint,
-            evaluation_class=evaluation_class,
+            evaluation_class=kind,
             evaluation_stage=config["evaluation_stage"],
             semantic_view_sha256=semantic_view_sha256,
-        ):
+            packet_archive_root=args.packet_archive_root,
+        ) for kind in ("replay", "live_shadow")):
             if args.auto_live and config["event_selection"]["archive_selected_packets"]:
-                _atomic_private_json(
-                    args.packet_archive_root / f"{event_fingerprint}.json", packet
-                )
+                _archive_packet(args.packet_archive_root, packet)
             print("shadow_llm_run=skipped reason=semantic_event_already_attempted")
             return 0
         stage_limit_key = (
@@ -1312,7 +1689,7 @@ def main(argv: list[str] | None = None) -> int:
             if evaluation_class == "live_shadow"
             else "maximum_replay_events_in_stage"
         )
-        if automatic and _stage_event_attempt_count(
+        if _stage_event_attempt_count(
             args.output_root,
             evaluation_class=evaluation_class,
             evaluation_stage=config["evaluation_stage"],

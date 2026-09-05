@@ -178,7 +178,9 @@ def main() -> None:
             "fifty_two_week_range_percentile": f"{core['fifty_two_week_range_percentile']:.2f}",
             "status": core_status, "cash_rationale": cash_rationale,
             "reason": (
-                f"One feasible whole-share core starter is {core_pct:.2f}% of the dynamic account. "
+                f"Current policy permits {shares} whole-share(s), {core_pct:.2f}% of the dynamic account. "
+                f"Cash can fund {core['cash_affordable_shares']} share(s); the remaining target gap "
+                f"can contain {core['target_gap_whole_shares']} whole-share(s). "
                 f"SPY is at the {core['fifty_two_week_range_percentile']:.2f}th percentile of its "
                 "52-week range, so the proposal is staged rather than sized to the full "
                 f"{core_target:.0f}% policy target. Failed gates: {failed_text}."

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import csv
 import json
 import os
@@ -20,11 +21,15 @@ from phase5r_shadow_llm_contract import (
     LEGACY_BUNDLE_SCHEMA_VERSION,
     build_automatic_evaluation,
     build_blind_judge_target,
+    deterministic_claim_check,
+    load_packet,
 )
 from run_phase5r_shadow_llm_evaluation import (
     DEFAULT_OUTPUT_ROOT,
+    DEFAULT_PACKET_ARCHIVE_ROOT,
     LEDGER_PATH,
     load_config,
+    semantic_event_fingerprint,
 )
 
 
@@ -109,7 +114,7 @@ def _validate_boundaries(boundaries: Any) -> None:
         raise ShadowEvaluationError("bundle production boundary is invalid")
 
 
-def _validate_bundle(bundle: dict[str, Any]) -> None:
+def _validate_bundle(bundle: dict[str, Any], *, packet: dict[str, Any] | None = None) -> None:
     required = {
         "schema_version",
         "run_id",
@@ -134,7 +139,8 @@ def _validate_bundle(bundle: dict[str, Any]) -> None:
         "spot_check_recommended",
         "boundaries",
     }
-    if set(bundle) != required or bundle.get("schema_version") != BUNDLE_SCHEMA_VERSION:
+    event_v2_fields = {"semantic_event_version", "issuer_semantic_components", "point_in_time_receipt", "event_scope", "sampling_receipt"}
+    if set(bundle) not in (required, required | event_v2_fields) or bundle.get("schema_version") != BUNDLE_SCHEMA_VERSION:
         raise ShadowEvaluationError("bundle fields or schema version are invalid")
     run_id = bundle.get("run_id")
     identity = bundle.get("run_identity")
@@ -144,6 +150,10 @@ def _validate_bundle(bundle: dict[str, Any]) -> None:
         raise ShadowEvaluationError("bundle run identity is invalid")
     if canonical_sha256({k: v for k, v in identity.items() if k != "run_id"}) != run_id:
         raise ShadowEvaluationError("bundle run identity hash is invalid")
+    if event_v2_fields.issubset(bundle):
+        for field in ("semantic_event_version", "issuer_semantic_components"):
+            if bundle[field] != identity.get(field):
+                raise ShadowEvaluationError(f"bundle {field} identity is invalid")
     for field in (
         "packet_id",
         "cycle_date",
@@ -239,12 +249,14 @@ def _validate_bundle(bundle: dict[str, Any]) -> None:
     }:
         raise ShadowEvaluationError("bundle judge blindness record is invalid")
     expected_target, expected_mapping = build_blind_judge_target(
-        bundle["analyst"], bundle["critic"]
+        bundle["analyst"], bundle["critic"],
+        packet=packet if any(row.get("origin") == "deterministic_control" for row in mapping.values()) else None,
     )
     if target != expected_target or mapping != expected_mapping:
         raise ShadowEvaluationError("bundle blind target derivation is invalid")
     if automatic != build_automatic_evaluation(
-        bundle["analyst"], bundle["critic"], target, mapping, judge
+        bundle["analyst"], bundle["critic"], target, mapping, judge,
+        schema_version=automatic.get("schema_version", ""),
     ):
         raise ShadowEvaluationError("bundle automatic evaluation binding is invalid")
     for key in (
@@ -341,10 +353,12 @@ def _validate_live_ledger(bundle: dict[str, Any], rows: list[dict[str, Any]]) ->
 
 
 def load_automatic_bundle(
-    path: Path, *, ledger_rows: list[dict[str, Any]] | None = None
+    path: Path, *, ledger_rows: list[dict[str, Any]] | None = None,
+    packet_archive_root: Path | None = None,
 ) -> dict[str, Any]:
     bundle = _read_regular_json(path)
-    _validate_bundle(bundle)
+    packet = _packet_for_bundle(bundle, packet_archive_root or path.parent.parent.parent / "packets.local")
+    _validate_bundle(bundle, packet=packet)
     if bundle["evaluation_class"] != "fixture_validation":
         _validate_live_ledger(
             bundle, _read_ledger() if ledger_rows is None else ledger_rows
@@ -352,7 +366,17 @@ def load_automatic_bundle(
     return bundle
 
 
-def _discover(runs_root: Path, ledger_rows: list[dict[str, Any]]) -> dict[str, Any]:
+def _packet_for_bundle(bundle: dict[str, Any], archive_root: Path) -> dict[str, Any] | None:
+    path = archive_root / f"{bundle['semantic_event_fingerprint']}.json"
+    if not path.exists():
+        return None
+    packet = load_packet(path)
+    if packet.get("packet_id") != bundle.get("packet_id"):
+        raise ShadowEvaluationError("sealed packet does not match bundle packet identity")
+    return packet
+
+
+def _discover(runs_root: Path, ledger_rows: list[dict[str, Any]], *, packet_archive_root: Path | None = None) -> dict[str, Any]:
     automatic: list[dict[str, Any]] = []
     legacy_run_ids: list[str] = []
     current_failures: list[dict[str, Any]] = []
@@ -367,7 +391,7 @@ def _discover(runs_root: Path, ledger_rows: list[dict[str, Any]]) -> dict[str, A
     for path in sorted(runs_root.glob("*/bundle.json")):
         raw = _read_regular_json(path)
         if raw.get("schema_version") == BUNDLE_SCHEMA_VERSION:
-            automatic.append(load_automatic_bundle(path, ledger_rows=ledger_rows))
+            automatic.append(load_automatic_bundle(path, ledger_rows=ledger_rows, packet_archive_root=packet_archive_root))
         elif raw.get("schema_version") == LEGACY_BUNDLE_SCHEMA_VERSION:
             run_id = raw.get("run_id")
             if isinstance(run_id, str) and _SHA256.fullmatch(run_id):
@@ -399,7 +423,7 @@ def _threshold_checks(metrics: dict[str, Any], thresholds: dict[str, Any]) -> di
         "minimum_material_reference_issues": "material_reference_issues",
         "minimum_incremental_supported_material_items": "incremental_supported_material_items",
         "minimum_incremental_material_precision": "incremental_material_precision",
-        "minimum_material_issue_recall": "incremental_material_issue_recall",
+        "minimum_material_issue_recall": "estimated_incremental_model_reference_recall",
         "minimum_completed_event_rate": "completed_event_rate",
         "maximum_unsupported_claim_rate": "unsupported_claim_rate",
         "maximum_policy_boundary_violations": "policy_boundary_violations",
@@ -421,11 +445,11 @@ def _authority_checks(metrics: dict[str, Any], thresholds: dict[str, Any]) -> di
     mapping = {
         "minimum_replay_packets": "replay_packets",
         "minimum_distinct_issuers": "distinct_issuers",
-        "minimum_material_reference_issues": "material_reference_issues",
+        "minimum_material_reference_issues": "independent_material_reference_issues",
         "minimum_live_shadow_events": "live_shadow_events",
         "maximum_live_shadow_events_before_review": "live_shadow_events",
         "minimum_incremental_material_precision": "incremental_material_precision",
-        "minimum_material_issue_recall": "incremental_material_issue_recall",
+        "minimum_material_issue_recall": "independent_material_issue_recall",
         "minimum_critic_catch_rate": "critic_catch_rate",
         "maximum_critic_false_veto_rate": "critic_false_veto_rate",
         "maximum_unsupported_claim_rate": "unsupported_claim_rate",
@@ -480,6 +504,8 @@ def _secondary_evidence_context(
                     outcomes.append(row)
     return {
         "role": "secondary_delayed_context_not_semantic_ground_truth",
+        "available_distinct_market_sessions": len({row.get("market_session") for row in available_snapshots if row.get("market_session")}),
+        "linked_distinct_ticker_origin_horizon_cases": len({(row.get("ticker"), row.get("forecast_origin_session", row.get("recommendation_session")), row.get("horizon_sessions")) for row in outcomes}),
         "available_point_in_time_recommendation_snapshots": len(
             available_snapshots
         ),
@@ -503,6 +529,134 @@ def _secondary_evidence_context(
     }
 
 
+def _evidence_keys(row: dict[str, Any], packet: dict[str, Any] | None) -> set[str]:
+    """Stable primary-text identity; observations use field/period, not fetch hash."""
+    sources = {source.get("source_id"): source for source in (packet or {}).get("source_catalog", [])}
+    keys = set()
+    for source_id in row.get("source_ids", []):
+        source = sources.get(source_id, {})
+        if source.get("authority") not in {None, "primary_official"}:
+            continue
+        text = str(source.get("excerpt_text", "")).strip()
+        if text and "chunk" in str(source.get("source_type", "")):
+            keys.add("text:" + canonical_sha256(" ".join(text.split())))
+        elif ":chunk:" in source_id:
+            keys.add("source:" + source_id)
+        else:
+            # A companyfacts snapshot is too broad to merge unrelated issues.
+            keys.add("scoped:" + canonical_sha256([source_id, row.get("period"), " ".join(str(row.get("statement", "")).lower().split())]))
+    return keys
+
+
+def _topic_key(row: dict[str, Any]) -> str:
+    identifier = str(row.get("item_id", row.get("omission_id", "")))
+    words = re.sub(r"[^a-z0-9]+", " ", identifier.lower()).split()
+    ticker = str(row.get("ticker", "")).lower()
+    return " ".join(word for word in words if word != ticker)
+
+
+def _deduplicate_evidence(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """One conservative credit per overlapping evidence family, not per prose item.
+
+    Distinct issues sharing a passage can be undercounted. This is intentional:
+    deterministic evidence-family dedup is a lower bound, not semantic ontology.
+    """
+    groups: list[dict[str, Any]] = []
+    for row in rows:
+        keys = set(row.pop("_evidence_keys", []))
+        topic = _topic_key(row)
+        matches = [group for group in groups if group["ticker"] == row["ticker"] and (
+            bool(keys & group["keys"]) or bool(topic and topic in group["topics"]))]
+        if matches:
+            group = matches[0]
+            row["novelty_class"] = "repeated_evidence_family" if keys & group["keys"] else "evidence_update_existing_issue"
+            group["keys"].update(keys)
+            group["topics"].add(topic)
+        else:
+            identity = canonical_sha256({"ticker": row["ticker"], "evidence": sorted(keys), "fallback_topic": topic if not keys else ""})
+            group = {"ticker": row["ticker"], "keys": keys, "topics": {topic}, "issue_id": "issue_" + identity[:24]}
+            groups.append(group)
+            row["novelty_class"] = "first_observed_evidence_family"
+        row["stable_issue_id"] = group["issue_id"]
+    return rows
+
+
+def _remeasure(bundles: list[dict[str, Any]], archive_root: Path) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], dict[str, dict[str, Any]]]:
+    rows, missed, controls = [], [], []
+    packets: dict[str, dict[str, Any]] = {}
+    for bundle in sorted(bundles, key=lambda row: (row["completed_at"], row["run_id"])):
+        packet = _packet_for_bundle(bundle, archive_root)
+        if packet is not None:
+            packets[bundle["run_id"]] = packet
+        automatic = build_automatic_evaluation(bundle["analyst"], bundle["critic"], bundle["judge_target"], bundle["blind_candidate_mapping"], bundle["judge"])
+        for original in automatic["items"]:
+            row = copy.deepcopy(original)
+            check = deterministic_claim_check(packet, row) if packet else {"checkable": False, "captured": False, "support": "not_assessable", "reason": "sealed_packet_unavailable"}
+            row.update({"run_id": bundle["run_id"], "completed_at": bundle["completed_at"],
+                        "baseline_reassessment_available": packet is not None,
+                        "original_judge_baseline_captured": row["judge_baseline_captured"],
+                        "deterministic_check": check, "_evidence_keys": sorted(_evidence_keys(row, packet))})
+            if check["captured"]:
+                row["judge_baseline_captured"] = "yes"
+            elif check["checkable"] and check["support"] == "unsupported":
+                row["judge_support"] = "unsupported"
+            if packet is None:
+                row["judge_baseline_captured"] = "not_assessable"
+            rows.append(row)
+        for original in automatic["missed_material_issues"]:
+            row = copy.deepcopy(original)
+            row.update({"run_id": bundle["run_id"], "_evidence_keys": sorted(_evidence_keys(row, packet))})
+            if packet is not None and deterministic_claim_check(packet, row)["captured"]:
+                row["baseline_captured"] = "yes"
+            missed.append(row)
+        controls.extend({"run_id": bundle["run_id"], **row} for row in automatic.get("deterministic_controls", []))
+    # Assign shared families across found and missed; missed duplicates must not
+    # inflate a denominator already containing the same generated evidence.
+    _deduplicate_evidence(rows + missed)
+    return rows, missed, controls, packets
+
+
+def _official_follow_up(rows: list[dict[str, Any]], later_packets: list[dict[str, Any]]) -> dict[str, Any]:
+    """Resolve only mechanically scoped facts with NEW later official provenance.
+
+    A refreshed fetch, a different market price, or a later reporting period is
+    not independent confirmation of the original claim. Narrative claims remain
+    unresolved; this function never adds model calls or demands owner labels.
+    """
+    results = []
+    for row in rows:
+        check = row["deterministic_check"]
+        result = {"run_id": row["run_id"], "item_id": row["item_id"], "stable_issue_id": row["stable_issue_id"],
+                  "status": "unresolved_semantic_judgment_required", "reason": "No deterministic truth mapping; future official evidence may narrow uncertainty."}
+        if check.get("checkable"):
+            result.update(status="pending_later_official_same_period_evidence", reason="No later official same-period field provenance; fetch time is insufficient.")
+            for packet in sorted(later_packets, key=lambda packet: str(packet.get("as_of_et", ""))):
+                later = deterministic_claim_check(packet, row)
+                if not later.get("checkable"):
+                    continue
+                observation = next((obs for obs in packet.get("fundamental_observations", []) if obs.get("ticker") == row["ticker"] and obs.get("latest_frame") == row["period"]), {})
+                provenance = observation.get("field_provenance_json", {})
+                if isinstance(provenance, str):
+                    try:
+                        provenance = json.loads(provenance)
+                    except json.JSONDecodeError:
+                        continue
+                field_provenance = provenance.get(check["field"], {}) if isinstance(provenance, dict) else {}
+                components = field_provenance.get("components", [field_provenance]) if isinstance(field_provenance, dict) else []
+                official = [part for part in components if isinstance(part, dict) and (part.get("accession") or part.get("accn")) and str(part.get("filed", "")) > row["completed_at"][:10]]
+                if not official:
+                    continue
+                result.update(status="confirmed" if later["support"] == "supported" else "refuted",
+                              reason="Later official same-period field evidence resolves a single-fact predicate.",
+                              later_packet_id=packet.get("packet_id"), official_evidence=official, deterministic_check=later)
+                break
+        results.append(result)
+    return {"method": "same_period_predicate_and_strictly_later_official_provenance_v1",
+            "price_outcomes_are_truth": False, "routine_human_review_required": False,
+            "resolved_claims": sum(row["status"] in {"confirmed", "refuted"} for row in results),
+            "items": results}
+
+
 def aggregate(
     bundles: list[dict[str, Any]],
     config: dict[str, Any],
@@ -513,6 +667,8 @@ def aggregate(
     ledger_rows: list[dict[str, Any]] | None = None,
     snapshot_path: Path = DEFAULT_SNAPSHOT_PATH,
     outcome_path: Path = DEFAULT_OUTCOME_PATH,
+    packet_archive_root: Path = DEFAULT_PACKET_ARCHIVE_ROOT,
+    later_official_packets: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     current_failures = current_failures or []
     legacy_run_ids = legacy_run_ids or []
@@ -526,16 +682,15 @@ def aggregate(
         for bundle in bundles
         if bundle["evaluation_class"] != "fixture_validation"
     ]
-    rows = [
-        row
-        for bundle in evaluation_bundles
-        for row in bundle["automatic_evaluation"]["items"]
-    ]
-    missed = [
-        row
-        for bundle in evaluation_bundles
-        for row in bundle["automatic_evaluation"]["missed_material_issues"]
-    ]
+    rows, missed, controls, packets = _remeasure(evaluation_bundles, packet_archive_root)
+    event_ids = {run_id: semantic_event_fingerprint(packet) for run_id, packet in packets.items()}
+    event_registry: dict[str, dict[str, Any]] = {}
+    for bundle in sorted(evaluation_bundles, key=lambda row: (row["completed_at"], row["run_id"])):
+        event_id = event_ids.get(bundle["run_id"])
+        if event_id:
+            # The same semantic event cannot satisfy both replay and live sample
+            # requirements. Its first evaluation owns its class; calls remain raw.
+            event_registry.setdefault(event_id, bundle)
     candidates = [
         row
         for row in rows
@@ -549,6 +704,7 @@ def aggregate(
         and row["judge_materiality"] == "material"
         and row["judge_baseline_captured"] == "no"
         and not row["critic_judge_disagreement"]
+        and row["novelty_class"] == "first_observed_evidence_family"
     ]
     generated_material = [
         row
@@ -556,13 +712,16 @@ def aggregate(
         if row["judge_support"] == "supported"
         and row["judge_materiality"] == "material"
         and not row["critic_judge_disagreement"]
+        and row["novelty_class"] == "first_observed_evidence_family"
     ]
     incremental_generated_material = [
         row for row in generated_material if row["judge_baseline_captured"] == "no"
     ]
     incremental_missed = [
-        row for row in missed if row.get("baseline_captured") == "no"
+        row for row in missed if row.get("baseline_captured") == "no" and row["novelty_class"] == "first_observed_evidence_family"
     ]
+    unique_missed = [row for row in missed if row["novelty_class"] == "first_observed_evidence_family"]
+    unique_candidates = [row for row in candidates if row["novelty_class"] == "first_observed_evidence_family"]
     unsupported = [
         row
         for row in rows
@@ -671,32 +830,42 @@ def aggregate(
         for row in metadata
         if type(row.get("latency_ms")) is int and row["latency_ms"] >= 0
     ]
-    issuers = {
+    packet_issuers = {
         ticker for bundle in evaluation_bundles for ticker in bundle["entity_tickers"]
     }
-    material_reference_issues = len(generated_material) + len(missed)
+    issuers = {row["ticker"] for row in incremental_supported}
+    material_reference_issues = len(generated_material) + len(unique_missed)
+    follow_up = _official_follow_up(rows, later_official_packets or list(packets.values()))
+    mechanical_checks = [row for row in rows if row["deterministic_check"]["checkable"]]
     metrics = {
-        "automatically_judged_events": len(evaluation_bundles),
-        "automatically_judged_events_in_current_stage": len(
-            current_stage_bundles
-        ),
+        "automatically_judged_events": len(event_registry),
+        "automatically_judged_events_in_current_stage": len({event_ids[bundle["run_id"]] for bundle in current_stage_bundles if bundle["run_id"] in event_ids}),
+        "raw_automatically_judged_runs": len(evaluation_bundles),
+        "raw_current_stage_completed_runs": len(current_stage_bundles),
+        "duplicate_semantic_event_runs": len(packets) - len(event_registry),
+        "event_identity_version": "sealed_packet_semantic_event_v2",
         "fixture_validation_events_excluded": len(bundles) - len(evaluation_bundles),
-        "replay_packets": len(
-            {
-                bundle["packet_id"]
-                for bundle in evaluation_bundles
-                if bundle["evaluation_class"] == "replay"
-            }
-        ),
+        "replay_packets": sum(bundle["evaluation_class"] == "replay" for bundle in event_registry.values()),
         "live_shadow_events": sum(
             bundle["evaluation_class"] == "live_shadow"
-            for bundle in evaluation_bundles
+            for bundle in event_registry.values()
         ),
+        "raw_replay_runs": sum(bundle["evaluation_class"] == "replay" for bundle in evaluation_bundles),
+        "raw_live_shadow_runs": sum(bundle["evaluation_class"] == "live_shadow" for bundle in evaluation_bundles),
         "failed_current_stage_events": len(current_failures),
         "completed_event_rate": _ratio(len(current_stage_bundles), attempted_events),
         "distinct_issuers": len(issuers),
+        "packet_entity_issuers_not_substantive_coverage": len(packet_issuers),
+        "substantive_issuer_tickers": sorted(issuers),
+        "measurement_version": "conservative_evidence_family_v3",
+        "sealed_packet_baseline_reassessed_events": len(packets),
+        "baseline_reassessment_complete": len(packets) == len(evaluation_bundles),
         "model_items_judged": len(rows),
         "incremental_material_candidates": len(candidates),
+        "unique_evidence_family_candidates": len(unique_candidates),
+        "deterministic_baseline_restatements": sum(row["deterministic_check"]["captured"] for row in rows),
+        "repeated_evidence_family_items": sum(row["novelty_class"] == "repeated_evidence_family" for row in rows),
+        "evidence_updates_to_existing_issues": sum(row["novelty_class"] == "evidence_update_existing_issue" for row in rows),
         "incremental_supported_material_items": len(incremental_supported),
         "incremental_supported_material_items_by_origin": {
             "analyst": sum(row["origin"] == "analyst" for row in incremental_supported),
@@ -705,21 +874,34 @@ def aggregate(
             ),
         },
         "incremental_material_precision": _ratio(
-            len(incremental_supported), len(candidates)
+            len(incremental_supported), len(unique_candidates)
         ),
+        "incremental_material_precision_basis": "model_estimated_unique_evidence_families_not_independent_accuracy",
+        "incremental_unique_value_yield_per_candidate": _ratio(len(incremental_supported), len(candidates)),
         "material_reference_issues": material_reference_issues,
         "material_issues_found": len(generated_material),
-        "material_issues_missed": len(missed),
-        "material_issue_recall": _ratio(
+        "material_issues_missed": len(unique_missed),
+        "material_issue_recall": None,
+        "estimated_material_model_reference_recall": _ratio(
             len(generated_material), material_reference_issues
         ),
         "incremental_material_reference_issues": (
             len(incremental_generated_material) + len(incremental_missed)
         ),
-        "incremental_material_issue_recall": _ratio(
+        "incremental_material_issue_recall": None,
+        "estimated_incremental_model_reference_recall": _ratio(
             len(incremental_generated_material),
             len(incremental_generated_material) + len(incremental_missed),
         ),
+        "recall_status": "model_reference_estimate_only_common_omissions_unobservable",
+        "independent_material_reference_issues": 0,
+        "independent_material_issue_recall": None,
+        "deterministic_control_items": len(controls),
+        "deterministic_control_failures": sum(not row["passed"] for row in controls),
+        "deterministic_control_accuracy": _ratio(sum(row["passed"] for row in controls), len(controls)),
+        "offline_mechanically_checkable_claims": len(mechanical_checks),
+        "offline_judge_sign_contradictions": sum(row["deterministic_check"]["support"] != next(review["support"] for bundle in evaluation_bundles if bundle["run_id"] == row["run_id"] for review in bundle["judge"]["item_reviews"] if review["blind_item_id"] == row["blind_item_id"]) for row in mechanical_checks),
+        "later_official_resolved_claims": follow_up["resolved_claims"],
         "unsupported_or_not_assessable_items": len(unsupported),
         "unsupported_claim_rate": _ratio(len(unsupported), len(rows)),
         "critic_routed_events": sum(
@@ -733,10 +915,7 @@ def aggregate(
         "critic_false_veto_rate": _ratio(
             len(false_vetoes), len(supported_analyst)
         ),
-        "critic_judge_disagreements": sum(
-            bundle["automatic_evaluation"]["critic_judge_disagreements"]
-            for bundle in evaluation_bundles
-        ),
+        "critic_judge_disagreements": sum(row["critic_judge_disagreement"] for row in rows),
         "policy_boundary_violations": 0,
         "optional_human_spot_checks_selected": sum(
             bundle["spot_check_recommended"] for bundle in evaluation_bundles
@@ -791,6 +970,12 @@ def aggregate(
     authority_checks = _authority_checks(
         metrics, config["evaluation"]["authority_review"]
     )
+    for checks in (continuation_checks, usefulness_checks, authority_checks):
+        checks["sealed_baseline_reassessment_complete"] = metrics["baseline_reassessment_complete"]
+        checks["no_deterministic_control_failures"] = metrics["deterministic_control_failures"] == 0
+        checks["no_offline_judge_sign_contradictions"] = metrics["offline_judge_sign_contradictions"] == 0
+    usefulness_checks["deterministic_controls_measured"] = metrics["deterministic_control_items"] > 0
+    authority_checks["independent_reference_denominator_measured"] = metrics["independent_material_reference_issues"] > 0
     continuation_ready = bool(continuation_checks) and all(continuation_checks.values())
     usefulness_ready = bool(usefulness_checks) and all(usefulness_checks.values())
     authority_ready = bool(authority_checks) and all(authority_checks.values())
@@ -810,7 +995,7 @@ def aggregate(
     else:
         status = "collecting_bounded_evaluation_evidence"
     return {
-        "schema_version": "phase5r_shadow_incremental_value_evaluation_v2",
+        "schema_version": "phase5r_shadow_incremental_value_evaluation_v3",
         "generated_at": iso_now(),
         "config_sha256": canonical_sha256(config),
         "evaluation_stage": current_stage,
@@ -834,11 +1019,34 @@ def aggregate(
             "commissioning_failures_preserved": True,
         },
         "secondary_evidence": _secondary_evidence_context(
-            issuers,
+            packet_issuers,
             [bundle["cycle_date"] for bundle in evaluation_bundles],
             snapshot_path,
             outcome_path,
         ),
+        "measurement": {
+            "source_bundles_rewritten": False,
+            "historical_metric_version_retained_in_bundles": True,
+            "semantic_truth_is_model_estimated": True,
+            "dedup_basis": "conservative_shared_primary_evidence_family_lower_bound_not_exact_semantic_ontology",
+            "limitations": ["Distinct issues sharing passages can be undercounted; different passages paraphrasing one issue can remain separate.",
+                            "Same-provider model separation and blinded origin do not imply independent errors.",
+                            "Simple sign controls calibrate a narrow mechanical task, not all semantic judgment.",
+                            "Historical judges saw the earlier baseline; offline conservative checks do not retroactively rerun blinded comparison."],
+            "items": rows, "missed_reference_items": missed,
+            "semantic_event_ids_by_run": event_ids,
+            "deterministic_controls": controls,
+        },
+        "official_claim_follow_up": follow_up,
+        "critic_marginal_contribution": {
+            "design": "offline_descriptive_attribution_not_randomized_ablation",
+            "analyst_only_unique_supported_items": sum(row["origin"] == "analyst" for row in incremental_supported),
+            "additional_critic_unique_supported_items": sum(row["origin"] == "critic_omission" for row in incremental_supported),
+            "qualifications_preventing_supported_credit": sum(row["critic_verdict"] == "partial" and row["judge_support"] == "supported" for row in rows),
+            "critic_tokens": role_token_usage.get("critic") if role_token_usage else None,
+            "paired_randomized_economic_benefit_proven": False,
+            "interpretation": "Counts marginal sourced candidates and vetoes, not causal improvement or critic truth; routing audit still needs event-matched samples.",
+        },
         "metrics": metrics,
         "thresholds": config["evaluation"],
         "threshold_checks": {
@@ -920,9 +1128,15 @@ def _report(payload: dict[str, Any]) -> str:
 - Automatically judged events: `{metrics['automatically_judged_events']}`
 - Current-stage failures: `{metrics['failed_current_stage_events']}`
 - Completion rate: `{metrics['completed_event_rate']}`
-- Incremental supported material items: `{metrics['incremental_supported_material_items']}`
-- Incremental material precision: `{metrics['incremental_material_precision']}`
-- Incremental material issue recall: `{metrics['incremental_material_issue_recall']}`
+- Unique supported material evidence families (conservative estimate): `{metrics['incremental_supported_material_items']}`
+- Model-estimated unique-family precision, not independent accuracy: `{metrics['incremental_material_precision']}`
+- Estimated incremental model-reference recall: `{metrics['estimated_incremental_model_reference_recall']}`
+- Independently measured semantic recall: `unavailable; common model omissions unobservable`
+- Deterministic baseline restatements excluded: `{metrics['deterministic_baseline_restatements']}`
+- Repeated evidence-family items: `{metrics['repeated_evidence_family_items']}`
+- Substantive issuer coverage: `{metrics['substantive_issuer_tickers']}`
+- Deterministic same-call controls / failures: `{metrics['deterministic_control_items']}` / `{metrics['deterministic_control_failures']}`
+- Claims resolved by later official same-period evidence: `{metrics['later_official_resolved_claims']}`
 - Unsupported claim rate: `{metrics['unsupported_claim_rate']}`
 - Critic routed events: `{metrics['critic_routed_events']}`
 - Critic/judge disagreements: `{metrics['critic_judge_disagreements']}`
@@ -935,12 +1149,16 @@ def _report(payload: dict[str, Any]) -> str:
 - Production influence: `false`
 - Promotion authorized: `false`
 
-The blind judge is independent of the analyst and does not see item origin,
+The blind judge is a separate model, not statistically independent of the analyst, and does not see item origin,
 analyst materiality/novelty labels, or critic verdicts. Deterministic validators
 enforce packet binding, source binding, complete coverage, and authority
 boundaries. Critic/judge disagreements are excluded from incremental supported
 value. Point-in-time recommendation and outcome records are secondary delayed
-context, not semantic ground truth.
+context, not semantic ground truth. A partial critic finding versus a supported
+judge finding is a real qualification and receives no unqualified incremental
+credit. Narrative follow-ups remain unresolved until suitable evidence and
+judgment exist; no owner review template is required. Historical source bundles
+remain unchanged and each evaluation revision is archived separately.
 """
 
 
@@ -950,12 +1168,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--snapshot-path", type=Path, default=DEFAULT_SNAPSHOT_PATH)
     parser.add_argument("--outcome-path", type=Path, default=DEFAULT_OUTCOME_PATH)
+    parser.add_argument("--packet-archive-root", type=Path, default=DEFAULT_PACKET_ARCHIVE_ROOT)
+    parser.add_argument("--official-evidence-packet", type=Path, action="append", default=[])
     args = parser.parse_args(argv)
     if args.output.suffix.lower() != ".json":
         raise ShadowEvaluationError("evaluation output must use a .json suffix")
     config = load_config()
     ledger_rows = _read_ledger()
-    discovered = _discover(args.runs_root, ledger_rows)
+    discovered = _discover(args.runs_root, ledger_rows, packet_archive_root=args.packet_archive_root)
     payload = aggregate(
         discovered["automatic"],
         config,
@@ -965,8 +1185,20 @@ def main(argv: list[str] | None = None) -> int:
         ledger_rows=ledger_rows,
         snapshot_path=args.snapshot_path,
         outcome_path=args.outcome_path,
+        packet_archive_root=args.packet_archive_root,
+        later_official_packets=[load_packet(path) for path in args.official_evidence_packet] or None,
     )
     content = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    # Preserve both previous headline metrics and each v3 reassessment. The
+    # latest pointer is replaceable; inputs and versioned history are not.
+    if args.output.exists():
+        previous = _read_regular_json(args.output)
+        previous_hash = canonical_sha256(previous)
+        previous_path = args.output.parent / "evaluation_history.local" / f"{previous_hash}.json"
+        if not previous_path.exists():
+            _atomic_private_text(previous_path, json.dumps(previous, ensure_ascii=False, indent=2, sort_keys=True) + "\n")
+    revision_path = args.output.parent / "evaluation_history.local" / f"{canonical_sha256(payload)}.json"
+    _atomic_private_text(revision_path, content)
     _atomic_private_snapshot_text(args.output, content)
     _atomic_private_snapshot_text(args.output.with_suffix(".md"), _report(payload))
     print(

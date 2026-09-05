@@ -6,6 +6,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -40,7 +41,7 @@ def number(value: object) -> float | None:
         result = float(value)
     except (TypeError, ValueError):
         return None
-    return result if result == result else None
+    return result if math.isfinite(result) else None
 
 
 def utc_text(value: str) -> str:
@@ -115,6 +116,53 @@ def selected_band(policy: dict[str, Any], growth: float) -> dict[str, Any]:
     raise ValueError("valuation policy has no matching growth band")
 
 
+def valuation_input_issues(fact: dict[str, Any], quote: dict[str, Any], as_of: str) -> list[str]:
+    """Fail closed before producing a range, not merely before order routing."""
+    issues = []
+    required = {
+        "share_price": quote.get("last_price"),
+        "diluted_shares": fact.get("diluted_shares_latest"),
+        "cash": fact.get("cash_latest"), "total_debt": fact.get("debt_latest"),
+        "ttm_revenue": fact.get("ttm_revenue"), "ttm_growth": fact.get("ttm_revenue_yoy_pct"),
+        "free_cash_flow_margin": fact.get("ttm_free_cash_flow_margin_pct"),
+        "share_dilution": fact.get("share_dilution_pct"),
+    }
+    for name, raw in required.items():
+        value = number(raw)
+        if value is None:
+            issues.append(f"missing_{name}")
+        elif name in {"share_price", "diluted_shares", "ttm_revenue"} and value <= 0:
+            issues.append(f"nonpositive_{name}")
+        elif name in {"cash", "total_debt"} and value < 0:
+            issues.append(f"negative_{name}")
+    if fact.get("selection_version") != "period_bound_companyfacts_v2":
+        issues.append("period_bound_financial_selection_required")
+    if fact.get("data_quality") != "ok" or fact.get("valuation_input_quality") != "complete":
+        issues.append("financial_input_quality_not_complete")
+    anchor = fact.get("latest_period_end")
+    if not anchor or fact.get("ttm_period_end") != anchor:
+        issues.append("ttm_period_not_aligned")
+    try:
+        provenance = json.loads(fact.get("field_provenance_json", "{}"))
+        cutoff = datetime.fromisoformat(as_of.replace("Z", "+00:00"))
+        for name, unit in (("cash_latest", "USD"), ("debt_latest", "USD"),
+                           ("ttm_revenue", "USD"), ("diluted_shares_latest", "shares")):
+            item = provenance.get(name, {})
+            if (item.get("status") != "available" or item.get("end") != anchor
+                    or item.get("unit") != unit):
+                issues.append(f"unbound_or_misaligned_{name}")
+                continue
+            available = datetime.fromisoformat(item.get("available_at_utc", "").replace("Z", "+00:00"))
+            if available.tzinfo is None or available > cutoff:
+                issues.append(f"unavailable_at_cutoff_{name}")
+            # A provenance block cannot silently diverge from its CSV value.
+            if number(item.get("val")) != number(fact.get(name)):
+                issues.append(f"provenance_value_mismatch_{name}")
+    except (ValueError, TypeError, AttributeError):
+        issues.append("invalid_field_provenance")
+    return sorted(set(issues))
+
+
 def main() -> int:
     policy = read_json(POLICY_PATH)
     baseline = read_csv(BASELINE_PATH)
@@ -142,36 +190,27 @@ def main() -> int:
         cash = number(fact.get("cash_latest"))
         debt = number(fact.get("debt_latest"))
         ttm_revenue = number(fact.get("ttm_revenue"))
-        revenue_basis = "reported_trailing_four_quarters"
-        if ttm_revenue is None:
-            latest_revenue = number(fact.get("revenue_latest"))
-            ttm_revenue = latest_revenue * 4.0 if latest_revenue is not None else None
-            revenue_basis = "latest_quarter_annualized_due_to_missing_trailing_four_quarters"
+        revenue_basis = "period_bound_reported_or_derived_ttm"
         growth = number(fact.get("ttm_revenue_yoy_pct"))
-        if growth is None:
-            growth = number(fact.get("revenue_yoy_pct"))
-        growth = growth if growth is not None else 0.0
         fcf = number(fact.get("ttm_free_cash_flow"))
         fcf_margin = number(fact.get("ttm_free_cash_flow_margin_pct"))
         dilution = number(fact.get("share_dilution_pct"))
-        if None in {price, shares, cash, ttm_revenue} or not price or not shares or not ttm_revenue:
+        input_issues = valuation_input_issues(fact, quote, prepared_at)
+        if input_issues:
             row["valuation_check"] = "insufficient_current_SEC_inputs_for_per_share_valuation"
             row["valuation_reasonableness_score"] = "2.0"
             updated_rows.append(row)
             scenario_records.append({
                 "ticker": ticker,
                 "status": "insufficient",
-                "missing_inputs": [
-                    name for name, value in {
-                        "share_price": price, "diluted_shares": shares,
-                        "cash": cash, "revenue": ttm_revenue,
-                    }.items() if value is None
-                ],
+                "missing_inputs": [issue.removeprefix("missing_") for issue in input_issues if issue.startswith("missing_")],
+                "input_limitations": input_issues,
+                "financial_input_limitations": fact.get("valuation_input_limitations", ""),
+                "automatic_action_allowed": False,
                 "market_source_url": "",
                 "fundamental_source_url": fact.get("source_url", ""),
             })
             continue
-        debt = debt or 0.0
         band = selected_band(policy, growth)
         adjustment = 0.0
         adjustments: list[str] = []
@@ -181,9 +220,9 @@ def main() -> int:
         elif fcf_margin is not None and fcf_margin < 0.0:
             adjustment += float(policy["adjustments"]["negative_fcf_margin_pct"])
             adjustments.append("negative_fcf_margin")
-        if cash / ttm_revenue * 100.0 >= 20.0:
+        if (cash - debt) / ttm_revenue * 100.0 >= 20.0:
             adjustment += float(policy["adjustments"]["net_cash_to_revenue_pct_at_least_20"])
-            adjustments.append("cash_to_revenue")
+            adjustments.append("net_cash_to_revenue")
         if dilution is not None and dilution > 5.0:
             adjustment += float(policy["adjustments"]["share_dilution_pct_above_5"])
             adjustments.append("share_dilution")
@@ -228,6 +267,13 @@ def main() -> int:
             "scenario_multiples": {key: round(value, 2) for key, value in multiples.items()},
             "scenario_prices": {key: round(value, 2) for key, value in prices.items()},
             "expected_upside_pct": round(expected_upside, 2),
+            "base_scenario_gap_pct": round(expected_upside, 2),
+            "metric_interpretation": {
+                "expected_upside_pct": "legacy_alias_of_base_scenario_gap_not_probability_weighted_expected_return",
+                "reward_to_risk": "scenario_distance_ratio_not_calibrated_expected_payoff",
+                "horizon": "not_estimated", "scenario_probabilities": "not_estimated",
+                "method_status": "transparent_policy_comparator_not_company_specific_cash_flow_valuation",
+            },
             "bear_downside_pct": round(downside_pct, 2),
             "reward_to_risk": round(reward_to_risk, 2),
             "valuation_score_0_to_10": valuation_score,
@@ -256,7 +302,11 @@ def main() -> int:
         sec_id = f"valuation-sec:{ticker}:{fact.get('latest_period_end', '')}"
         policy_id = f"valuation-policy:{ticker}:{policy['effective_from']}"
         accepted_market = utc_text(quote.get("data_timestamp") or prepared_at)
-        accepted_sec = utc_text(fact.get("fetched_at") or prepared_at)
+        field_provenance = json.loads(fact["field_provenance_json"])
+        accepted_sec = utc_text(max(
+            item["available_at_utc"] for item in field_provenance.values()
+            if isinstance(item, dict) and item.get("status") == "available"
+        ))
         policy_source = {
             "source_id": policy_id,
             "ticker": ticker,
@@ -295,8 +345,7 @@ def main() -> int:
             "target_price_assumption": valuation_input(prices["base"], "USD_per_share", policy["effective_from"], f"{policy['effective_from']}T00:00:00Z", [policy_id], "scenario_assumption"),
             "downside_price_assumption": valuation_input(prices["bear"], "USD_per_share", policy["effective_from"], f"{policy['effective_from']}T00:00:00Z", [policy_id], "scenario_assumption"),
         }
-        if revenue_basis == "reported_trailing_four_quarters":
-            inputs["revenue_ttm"] = valuation_input(ttm_revenue, "USD", f"TTM through {fact.get('latest_period_end', '')}", accepted_sec, [sec_id])
+        inputs["revenue_ttm"] = valuation_input(ttm_revenue, "USD", f"TTM through {fact.get('latest_period_end', '')}", accepted_sec, [sec_id])
         if fcf is not None:
             inputs["free_cash_flow_ttm"] = valuation_input(fcf, "USD", f"TTM through {fact.get('latest_period_end', '')}", accepted_sec, [sec_id])
         prior_shares = number(fact.get("diluted_shares_prior_year"))
