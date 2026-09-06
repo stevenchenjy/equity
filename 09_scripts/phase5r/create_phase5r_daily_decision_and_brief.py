@@ -9,8 +9,8 @@ material evidence ambiguity, or account conflicts are escalated.
 from __future__ import annotations
 
 import argparse
-import html
 from datetime import date, datetime, timedelta
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from phase5r_daily_common import (
@@ -51,6 +51,7 @@ from phase5r_daily_common import (
 from phase5r_c9_common import is_core_allocation_ticker, load_account_state
 from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
+from phase5r_email_brief import EMAIL_BRIEF_VERSION, render_email
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -85,6 +86,37 @@ def latest_applied_execution(
         eligible,
         key=lambda item: (item[1].get("fill_date", "").strip(), item[0]),
     )[1]
+
+
+def recent_applied_execution(current: datetime) -> dict[str, str]:
+    """Presentation-only receipt from structured, already reconciled records."""
+    row = latest_applied_execution(read_csv(CONFIRMED_EXECUTION_PATH))
+    if not row:
+        return {}
+    try:
+        age = (current.date() - date.fromisoformat(row.get("fill_date", ""))).days
+    except ValueError:
+        return {}
+    if not 0 <= age <= 7:
+        return {}
+    reconciliation = next((item for item in read_csv(RECONCILIATION_PATH)
+                           if item.get("execution_id") == row.get("execution_id")), {})
+    if (reconciliation.get("reconciliation_status") != "applied"
+            or reconciliation.get("canonical_state_applied") != "yes"):
+        return {}
+    result = {key: row.get(key, "") for key in (
+        "execution_id", "ticker", "side", "shares", "fill_date", "fill_price",
+    )}
+    # Unknown or mismatched cash reconciliation must never imply zero fees.
+    try:
+        before = Decimal(reconciliation.get("cash_before", ""))
+        after = Decimal(reconciliation.get("selected_cash_after", ""))
+        difference = Decimal(reconciliation.get("cash_reconciliation_difference", ""))
+        if before.is_finite() and after.is_finite() and difference == 0:
+            result["net_cash_change"] = str(after - before)
+    except InvalidOperation:
+        pass
+    return result
 
 
 def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, Any]:
@@ -744,6 +776,13 @@ def main() -> int:
             "automatic_action_allowed": False,
         },
         "account_conflicts": conflicts,
+        "email_brief_version": EMAIL_BRIEF_VERSION,
+        "pending_execution_summaries": [
+            {key: row.get(key, "") for key in ("ticker", "execution_id", "order_status")}
+            for row in read_csv(PENDING_EXECUTION_PATH)
+            if row.get("execution_id", "").strip()
+        ],
+        "recent_applied_execution": recent_applied_execution(current) if not conflicts else {},
         "human_review_required": human_review_required,
         "human_review_reasons": review_reasons,
         "automatic_action_allowed": False,
@@ -866,59 +905,8 @@ def main() -> int:
 """
     atomic_write_text(DAILY_DECISION_REPORT_PATH, report)
 
-    subject = f"[Phase 5R] {headline} — {cycle_date()}"
-    plain = f"""{subject}
-
-决定性结论
-{headline}
-{decisive_advice}
-
-账户与新资本
-动态总值 ${portfolio_summary.get('account_total_value', 'n/a')}；已投资 ${portfolio_summary.get('current_holdings_value', 'n/a')}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）；现金 ${portfolio_summary.get('cash_available', 'n/a')}（{portfolio_summary.get('current_cash_pct', 'n/a')}%）。
-当前证据支持的新增复核金额 ${proposed_deployment:.2f}；全部当前复核后的假设现金 ${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
-保留现金原因：{post_action.get('retained_cash_reason', 'n/a')}
-
-当前持仓
-{held_lines}
-
-新候选
-{watch_lines}
-
-可靠性门槛
-{gate_lines}
-
-长期基本面
-{fundamental_lines}
-
-说明：这是研究建议，不是买卖指令。不会连接券商或自动下单。
-人工复核：{'需要（' + '、'.join(review_reasons) + '）' if human_review_required else '不需要'}
-下次计划复核：{next_review_date}
-本次确定性决策模型成本：$0；月度模型硬上限：${active_config['model_policy']['monthly_hard_cap_usd']}
-"""
+    subject, plain, html_body = render_email(decision)
     atomic_write_text(DAILY_BRIEF_TEXT_PATH, plain)
-    html_body = f"""<!doctype html>
-<html lang="zh-CN"><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.55;color:#17202a">
-<h1 style="font-size:24px;color:#8b1e1e">{html.escape(headline)}</h1>
-<p style="font-size:17px"><strong>{html.escape(decisive_advice)}</strong></p>
-<p style="background:#f3f6f8;padding:10px">研究建议，不是买卖指令；不会连接券商或自动下单。</p>
-<h2>账户与新资本</h2>
-<p>动态总值 ${html.escape(str(portfolio_summary.get('account_total_value', 'n/a')))}；已投资 ${html.escape(str(portfolio_summary.get('current_holdings_value', 'n/a')))}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）；现金 ${html.escape(str(portfolio_summary.get('cash_available', 'n/a')))}（{html.escape(str(portfolio_summary.get('current_cash_pct', 'n/a')))}%）。</p>
-<p>当前证据支持的新增复核金额 ${proposed_deployment:.2f}；全部当前复核后的假设现金 ${html.escape(str(post_action.get('resulting_cash', 'n/a')))}（{html.escape(str(post_action.get('cash_weight_pct', 'n/a')))}%）。保留现金原因：{html.escape(str(post_action.get('retained_cash_reason', 'n/a')))}</p>
-<h2>当前持仓</h2><ul>
-{''.join(f"<li><strong>{html.escape(row['ticker'])}</strong>：{html.escape(held_position_summary(row))}</li>" for row in held_rows)}
-</ul>
-<h2>观察候选</h2><ul>
-{''.join(f"<li>{html.escape(row['ticker'])}：{html.escape(row['action'] or row['label'])}；现价 ${html.escape(str(row['current_price'] or 'n/a'))}，估值：{html.escape(valuation_display(row))}；层级 {html.escape(str(row['sizing_tier'] or 'no_allocation'))}；最多复核 {html.escape(str(row['suggested_whole_shares'] or '0'))} 股。</li>" for row in watch_rows) or '<li>当前没有进入展示阈值的新候选。</li>'}
-</ul>
-<h2>可靠性</h2>
-<p>市场数据：{'通过' if market_gate['passed'] else '未通过'}；SEC 官方证据：{'通过' if evidence_gate_passed else '未通过'}；长期基本面：{'通过' if fundamental_gate_passed else '未通过'}；账户状态：{'需复核' if conflicts else '一致'}。</p>
-<h2>长期基本面</h2><ul>
-{''.join(f"<li>{html.escape(row.get('ticker', ''))}：{html.escape(row.get('trend_label', 'insufficient_trend'))}；收入同比 {html.escape(row.get('revenue_yoy_pct') or 'n/a')}%；净利率 {html.escape(row.get('net_margin_pct') or 'n/a')}%。</li>" for row in held_fundamentals)}
-</ul>
-<p>每日更新信息不等于每日操作；新增方案至少需要两个不同有效收盘日保持一致。</p>
-<p>下次计划复核：{html.escape(next_review_date)}。本次确定性决策模型成本：$0；月度模型硬上限：${html.escape(str(active_config['model_policy']['monthly_hard_cap_usd']))}。</p>
-</body></html>
-"""
     atomic_write_text(DAILY_BRIEF_HTML_PATH, html_body)
 
     state = {

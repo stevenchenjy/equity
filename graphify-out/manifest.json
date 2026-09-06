@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py": {
-    "mtime": 1788476030.6610057,
-    "ast_hash": "990e0b466bdbbb143133cd38b44b7915",
+    "mtime": 1788655426.0388176,
+    "ast_hash": "281902a6cb5e91c1cff5dbbaea7cfe9c",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_daily_common.py": {
@@ -275,13 +275,13 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/send_phase5r_daily_email.py": {
-    "mtime": 1788348933.1286125,
-    "ast_hash": "80aae218b5aaa7932e10076b30f5cebe",
+    "mtime": 1788655426.0397217,
+    "ast_hash": "e5b9510524ad083445d7061df574094e",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/verify_phase5r_daily_upgrade.py": {
-    "mtime": 1788475533.7604206,
-    "ast_hash": "197722f8458fca9897e6ae1f8c44c5e5",
+    "mtime": 1788655426.0404186,
+    "ast_hash": "71fd4fde716714635850fdb7c467cf45",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_decision_policy.md": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_delivery_policy.md": {
-    "mtime": 1788348933.1299787,
-    "ast_hash": "272a63a88c3cd67e30d3e03c7664dded",
+    "mtime": 1788655732.158395,
+    "ast_hash": "65a365fb513f08b008d653a31fc5f4b1",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_research_policy.md": {
@@ -732,6 +732,21 @@
   "00_project_control/phase5r_current_documents.md": {
     "mtime": 1788580307.1666944,
     "ast_hash": "3a980db9d5248f5c102b7c2fc5dfd4e9",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_email_brief.py": {
+    "mtime": 1788655818.7403638,
+    "ast_hash": "270704da866b1d2004b21e30417129a4",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_email_brief.py": {
+    "mtime": 1788655818.7412007,
+    "ast_hash": "5d116ac4f17c496444bc1ecb398a4e73",
+    "semantic_hash": ""
+  },
+  "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v15.json": {
+    "mtime": 1788656004.7979193,
+    "ast_hash": "802b4e44116bcda9081b713d0844ea7c",
     "semantic_hash": ""
   }
 }

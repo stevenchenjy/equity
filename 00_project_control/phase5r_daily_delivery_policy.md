@@ -22,6 +22,48 @@ The only authorized sender is `send_phase5r_daily_email.py`. It requires:
   decision fingerprint change, or an account-state conflict.
 - No catch-up is allowed before the configured operational date.
 
+## Action-email presentation (v2, 2026-09-05)
+
+`phase5r_email_brief.py` renders the subject, plain text and HTML from one
+deterministic decision snapshot. This changes presentation, not portfolio
+decisions, eligibility, thresholds, stability, scheduling or recipients.
+
+- Lead with a short status subject, one conclusion, the verified reference
+  close and the generation time in ET. Then show what needs attention,
+  recorded positions/cash, evidence and limitations, and the next research step.
+- Account conflicts and failed data gates override all lower-level proposals.
+  Do not display trade-like quantities or hypothetical post-action cash while
+  blocked. A pending order is not a fill. Recent applied fills are a separate
+  receipt, based on structured reconciliation rather than historical notes.
+- Only already eligible proposals may show quantities, trigger reasons and
+  adjacent limitations. Adds still need two different valid closes. HOLD and
+  pending stability do not request transaction approval. Missing valuation
+  remains missing; passing basic financial checks does not certify valuation.
+- Use readable Chinese, ordinary currency/share formatting, a small semantic
+  holdings table, inline styles, no scripts/assets/trackers and no attachments.
+  Detailed screening, calculations and raw reasons stay in the local daily
+  decision report. Official filing links are HTTPS SEC links; ingestion date
+  is not presented as disclosure date.
+- AI experiments do not supply the conclusion or notification eligibility.
+  Do not imply that a deterministic $0 model route describes total SHADOW
+  spending. No new LLM calls or costs are introduced by rendering.
+- Before SMTP configuration access or a delivery claim, v2 text and HTML must
+  exactly match a fresh render of the decision; unsupported versions fail
+  closed. Legacy unversioned artifacts retain their existing validation path.
+  A format change does not authorize a correction or test send.
+
+Design sources, consulted 2026-09-05: the
+[SEC Plain English Handbook](https://www.sec.gov/pdf/handbook.pdf) supports
+clear hierarchy and removal of jargon;
+[GOV.UK email guidance](https://www.gov.uk/service-manual/design/sending-emails-and-text-messages)
+supports short subjects, important information first and a clear next step;
+[FINRA Rule 2210](https://www.finra.org/rules-guidance/rulebooks/finra-rules/2210)
+supports balanced information and prominent material qualifications; and
+[FINRA Notice 24-09](https://www.finra.org/rules-guidance/notices/24-09)
+explains that AI use does not remove communication-content responsibilities.
+These inform conservative design for personal research; they are not a claim
+that this system is a regulated adviser or has obtained regulatory approval.
+
 ## Refresh handoff and recovery
 
 - Only the Keychain-backed `dailyrefresh` launcher may supply the Massive

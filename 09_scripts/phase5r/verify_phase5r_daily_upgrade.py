@@ -89,6 +89,7 @@ NEW_PYTHON_FILES = (
     "regenerate_phase5r_c9_portfolio_outputs.py",
     "create_phase5r_c9b_price_aware_action_plan.py",
     "create_phase5r_daily_decision_and_brief.py",
+    "phase5r_email_brief.py",
     "build_phase5r_decision_evidence_packet.py",
     "track_phase5r_recommendation_outcomes.py",
     "generate_phase5r_current_status.py",

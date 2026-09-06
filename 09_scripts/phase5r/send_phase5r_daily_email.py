@@ -14,6 +14,7 @@ from email.message import EmailMessage
 from typing import Any, Callable
 
 from phase5r_active_config import load_active_config
+from phase5r_email_brief import EMAIL_BRIEF_VERSION, email_subject, render_email
 from phase5r_daily_common import (
     DAILY_BRIEF_HTML_PATH,
     DAILY_BRIEF_TEXT_PATH,
@@ -280,6 +281,14 @@ def validate_decision(*, correction: bool = False) -> dict[str, Any]:
         raise ValueError("daily_text_brief_empty")
     if not DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8").strip():
         raise ValueError("daily_html_brief_empty")
+    version = decision.get("email_brief_version")
+    if version is not None:
+        if version != EMAIL_BRIEF_VERSION:
+            raise ValueError("daily_brief_version_unsupported")
+        _, expected_text, expected_html = render_email(decision)
+        if (DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8") != expected_text
+                or DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8") != expected_html):
+            raise ValueError("daily_brief_decision_mismatch")
     return decision
 
 
@@ -289,9 +298,12 @@ def build_message(
     *,
     correction: bool = False,
 ) -> EmailMessage:
-    headline = safe_header(decision.get("headline"), "headline")
-    prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
-    subject = f"{prefix} {headline} — {decision['cycle_date']}"
+    if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
+        subject = safe_header(email_subject(decision, correction=correction), "subject")
+    else:
+        headline = safe_header(decision.get("headline"), "headline")
+        prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
+        subject = safe_header(f"{prefix} {headline} — {decision['cycle_date']}", "subject")
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = f"{config['sender_name']} <{config['smtp_username']}>"
