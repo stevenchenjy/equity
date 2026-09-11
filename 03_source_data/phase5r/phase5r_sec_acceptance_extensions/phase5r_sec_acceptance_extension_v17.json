@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-09-10T08:18:16.000-04:00",
+  "artifact_sha256": "e7b26f19cedc08800909edb83fd0f5f17e7e3097bdc82d4e69a692dc0d1fe754",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v17",
+  "prior_extension_set_sha256": "c286bfe0d88a7c72de1ef95d759103c58fdd59a1d9f401b6c5862459563244bc",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-10T06:15:36.000+00:00",
+      "accession_number": "0001046179-26-000658",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-10T08:18:16.000-04:00",
+      "cik": "1046179",
+      "entity_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "extension_record_sha256": "70d56b497ecbbf5d2c365164f27bf386ea4dab4647b971c774c75494746fe538",
+      "extension_version": "v17",
+      "filing_date": "2026-09-10",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "e42abbf09527cef06f7f460a34ac117b51118804714b37598de389c8cfbeaaca",
+      "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+      "ticker": "TSM"
+    },
+    {
+      "accepted_at": "2026-09-09T17:56:42.000+00:00",
+      "accession_number": "0001730168-26-000080",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-10T08:18:16.000-04:00",
+      "cik": "1730168",
+      "entity_name": "Broadcom Inc.",
+      "extension_record_sha256": "ce05aef0df55749314b18811340a4f59c54a891ad37e8da8ad2e745e7dfeaec2",
+      "extension_version": "v17",
+      "filing_date": "2026-09-10",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "270e686740121fcffeca9053944fbff846d56751a11076ee944e74e697ca5c19",
+      "source_url": "https://data.sec.gov/submissions/CIK0001730168.json",
+      "ticker": "AVGO"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
