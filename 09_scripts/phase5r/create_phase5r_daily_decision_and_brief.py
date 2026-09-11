@@ -52,6 +52,7 @@ from phase5r_c9_common import is_core_allocation_ticker, load_account_state
 from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
 from phase5r_email_brief import EMAIL_BRIEF_VERSION, render_email
+from update_phase5r_manual_account import current_manual_snapshot_matches
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -205,7 +206,7 @@ def execution_conflicts() -> list[str]:
     # state.  Older confirmed rows remain historical evidence and are never
     # rewritten merely because a later fill occurred.
     latest = latest_applied_execution(confirmed_rows)
-    if latest:
+    if latest and not current_manual_snapshot_matches(current_positions_hash, current_account_hash):
         latest_id = latest.get("execution_id", "").strip()
         reconciliation = reconciliations.get(latest_id)
         if not reconciliation:
@@ -765,6 +766,9 @@ def main() -> int:
             "investment_horizon_years": account.get("investment_horizon_years"),
             "valuation_basis": "manual cash plus current shares at canonical public close; reported total is reconciliation reference",
             "last_updated": account.get("last_updated"),
+            "cash_basis": account.get("cash_basis", "owner_recorded"),
+            "planning_capital_min": account.get("planning_capital_min"),
+            "planning_capital_max": account.get("planning_capital_max"),
         },
         "capital_allocation": {
             "proposed_deployment_value": round(proposed_deployment, 2),
@@ -782,7 +786,13 @@ def main() -> int:
             for row in read_csv(PENDING_EXECUTION_PATH)
             if row.get("execution_id", "").strip()
         ],
-        "recent_applied_execution": recent_applied_execution(current) if not conflicts else {},
+        "recent_applied_execution": (
+            recent_applied_execution(current)
+            if not conflicts and not current_manual_snapshot_matches(
+                sha256_file(ROOT / "05_risk_and_positions" / "current_positions.local.csv"),
+                sha256_file(ACCOUNT_STATE_PATH),
+            ) else {}
+        ),
         "human_review_required": human_review_required,
         "human_review_reasons": review_reasons,
         "automatic_action_allowed": False,

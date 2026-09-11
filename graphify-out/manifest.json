@@ -155,8 +155,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_c9_common.py": {
-    "mtime": 1788475144.508567,
-    "ast_hash": "46d138bcf6f24b513bd023e0a9a30af3",
+    "mtime": 1789153993.0591156,
+    "ast_hash": "a2e6be3f379602a8b7c755dfc641e348",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/regenerate_phase5r_c9_portfolio_outputs.py": {
@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_daily_decision_and_brief.py": {
-    "mtime": 1788655426.0388176,
-    "ast_hash": "281902a6cb5e91c1cff5dbbaea7cfe9c",
+    "mtime": 1789154182.6184926,
+    "ast_hash": "58c85e04981fdacbb79af595e9f125df",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_daily_common.py": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_delivery_policy.md": {
-    "mtime": 1788655732.158395,
-    "ast_hash": "65a365fb513f08b008d653a31fc5f4b1",
+    "mtime": 1789154247.1130095,
+    "ast_hash": "47f5e1e4699dcdd44bab35100284e9b3",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_daily_research_policy.md": {
@@ -550,8 +550,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/update_phase5r_manual_account.py": {
-    "mtime": 1788191167.2905793,
-    "ast_hash": "aaa4d244fe5c75e813a4913cccc72a8d",
+    "mtime": 1789154054.3393312,
+    "ast_hash": "be9646191876c08ed0799613da4113ec",
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v3.json": {
@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_email_brief.py": {
-    "mtime": 1788655818.7403638,
-    "ast_hash": "270704da866b1d2004b21e30417129a4",
+    "mtime": 1789154103.431627,
+    "ast_hash": "8e618e2d9fd8fe2ad39f0dcfdfd87d5a",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_email_brief.py": {
@@ -747,6 +747,11 @@
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v15.json": {
     "mtime": 1788656004.7979193,
     "ast_hash": "802b4e44116bcda9081b713d0844ea7c",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_owner_snapshot.py": {
+    "mtime": 1789154247.1123257,
+    "ast_hash": "45bfc90c84bde4d4dbbaad47b5bc8f6e",
     "semantic_hash": ""
   }
 }

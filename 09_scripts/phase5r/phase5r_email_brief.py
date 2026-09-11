@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 EMAIL_BRIEF_VERSION = "phase5r_action_email_v2"
 _NUMBER = r"-?\d+(?:\.\d+)?"
 _SOURCE_HOSTS = {"sec.gov", "www.sec.gov", "data.sec.gov"}
+_RESEARCH_HOSTS = _SOURCE_HOSTS | {"ir.rubrik.com", "nvidianews.nvidia.com", "investor.nvidia.com"}
 _BLOCKED_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 _LABELS = {
     "account_conflict_hold": ("需核对账户", "先核对账户，暂停仓位方案"),
@@ -118,17 +119,49 @@ def _reason(row: dict[str, Any]) -> str:
     return "确定性规则形成复核候选；简要触发依据尚未完整，需查阅本地决策报告后再判断。"
 
 
-def _safe_source(value: Any) -> str:
+def _safe_source(value: Any, allowed_hosts: set[str] | None = None) -> str:
     text = str(value or "")
     try:
         url = urlsplit(text)
-        if (url.scheme != "https" or url.hostname not in _SOURCE_HOSTS
+        if (url.scheme != "https" or url.hostname not in (allowed_hosts or _SOURCE_HOSTS)
                 or url.username or url.password or url.port is not None
                 or any(ord(char) < 33 for char in text)):
             return ""
     except ValueError:
         return ""
     return text
+
+
+def _owner_research(decision: dict[str, Any]) -> list[dict[str, Any]]:
+    """Optional explicit-request appendix, never read by the decision composer.
+
+    A new daily composition drops this appendix. It supplies no action,
+    eligibility, arithmetic, or SHADOW evaluation evidence.
+    """
+    review = decision.get("owner_requested_research")
+    if review is None:
+        return []
+    if (not isinstance(review, dict) or review.get("mode") != "explicit_one_off_research"
+            or not decision.get("decision_fingerprint")
+            or review.get("decision_fingerprint") != decision["decision_fingerprint"]):
+        raise ValueError("owner_research_snapshot_mismatch")
+    sections = review.get("sections")
+    if not isinstance(sections, list) or not 1 <= len(sections) <= 6:
+        raise ValueError("owner_research_sections_invalid")
+    result = []
+    for section in sections:
+        if (not isinstance(section, dict)
+                or any(not isinstance(section.get(key), str) or not section[key].strip()
+                       for key in ("title", "body"))
+                or len(section["title"]) > 100 or len(section["body"]) > 2400):
+            raise ValueError("owner_research_content_invalid")
+        sources = section.get("sources", [])
+        if not isinstance(sources, list) or len(sources) > 4:
+            raise ValueError("owner_research_sources_invalid")
+        if any(not _safe_source(url, _RESEARCH_HOSTS) for url in sources):
+            raise ValueError("owner_research_source_not_allowed")
+        result.append({"title": section["title"], "body": section["body"], "sources": sources})
+    return result
 
 
 def _conflict_tasks(decision: dict[str, Any]) -> list[str]:
@@ -149,9 +182,11 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     held = decision.get("held_positions", [])
     watch = decision.get("watch_candidates", [])
     events = decision.get("material_events", [])
+    account = decision.get("account", {})
+    estimated_cash = account.get("cash_basis") == "ledger_estimate"
     global_block = bool(decision.get("account_conflicts")) or code in _BLOCKED_CODES
     gates_passed = all(decision.get(key, {}).get("passed") is True for key in ("market_gate", "evidence_gate", "fundamental_gate"))
-    global_block = global_block or not gates_passed
+    global_block = global_block or not gates_passed or estimated_cash
     action_allowed = code == "action_review_candidate" and not global_block
     pending = set(decision.get("pending_stability_candidates", []))
     eligible = set(decision.get("eligible_action_review_candidates", [])) if action_allowed else set()
@@ -170,6 +205,10 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         names = "、".join(decision.get("fundamental_gate", {}).get("weakening_tickers", [])) or "相关持仓"
         tasks = [f"复核 {names} 的最新官方收入变化，以及它是否削弱原有持有理由。"]
         summary = "这是经营假设复核，不是自动减仓信号。"
+    elif estimated_cash:
+        label, title = "资金区间研究", "持仓已更新，按资金范围评估"
+        summary = "现金沿用账本估算；研究继续，暂不展示依赖精确现金的交易股数。"
+        tasks = ["本次无需补交精确现金即可阅读研究；实际交易前核对券商可用资金和最终仓位比例。"]
     elif code not in _LABELS:
         tasks = ["报告状态未识别，需先核对系统输出；不展示仓位方案。"]
         summary = "当前结论不能作为交易依据。"
@@ -235,7 +274,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     for row in held:
         ticker = str(row.get("ticker", ""))
         if global_block:
-            state = "仅供核对" if decision.get("account_conflicts") or code == "account_conflict_hold" else "方案暂停"
+            state = ("仅供核对" if decision.get("account_conflicts") or code == "account_conflict_hold"
+                     else "区间研究" if estimated_cash else "方案暂停")
         elif ticker in plan_tickers:
             state = _action_kind(row)
         elif ticker in pending:
@@ -244,15 +284,28 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
             state = "持仓不变" if row.get("action") == "hold" else "仅观察"
         positions.append({"ticker": ticker, "quantity": shares(row.get("current_shares")) + " 股", "weight": percent(row.get("current_weight_pct")), "price": money(row.get("current_price")), "state": state})
 
-    account = decision.get("account", {})
     account_lines = [
-        f"本地账户估值 {money(account.get('account_total_value'))} · 持仓市值 {money(account.get('invested_capital'))}",
-        f"现金 {money(account.get('cash_available'))}（{percent(account.get('cash_pct'))}），其中预留 {money(account.get('cash_reserved'))}。预留金额不是全部现金。",
+        f"{'账本情景总值' if estimated_cash else '本地账户估值'} {money(account.get('account_total_value'))} · 持仓市值 {money(account.get('invested_capital'))}",
+        f"{'账本现金估算' if estimated_cash else '现金'} {money(account.get('cash_available'))}（{percent(account.get('cash_pct'))}），其中预留 {money(account.get('cash_reserved'))}。预留金额不是全部现金。",
     ]
     if decision.get("account_conflicts") or code == "account_conflict_hold":
         account_lines.append("以上是待核对的本地账面记录，不是已确认券商余额；未成交订单不计作持仓变化。")
     else:
         account_lines.append("账户估值 = 本地现金 + 已记录股数按参考收盘计值；不是实时券商余额。")
+    if estimated_cash:
+        account_lines.append("现金及上表权重基于原账本扣除已报告支出，未核对未录入的出入金；银行备用资金未计入账户。")
+    funding_lines = []
+    low, high = _decimal(account.get("planning_capital_min")), _decimal(account.get("planning_capital_max"))
+    if low is not None and high is not None and 0 < low <= high:
+        funding_lines.append(f"可支持的研究资金规模：{money(low)}–{money(high)}。这是配置情景分母，不是已到账现金，也不是对当前净资产的确认。")
+        for row in held:
+            if _is_core(row):
+                continue
+            quantity, price = _decimal(row.get("current_shares")), _decimal(row.get("current_price"))
+            if quantity is not None and price is not None:
+                value = quantity * price
+                funding_lines.append(f"{row.get('ticker', '')}：按 {money(low)} 分母约 {percent(value / low * 100)}；按 {money(high)} 分母约 {percent(value / high * 100)}。")
+        funding_lines.append("情景比较不改变现有集中度门槛；新增资金只有实际转入并记录后，才进入生产现金与仓位计算。")
 
     incomplete = [str(row.get("ticker", "")) for row in held if not _is_core(row) and _valuation(row).startswith("估值证据不足")]
     quality = " · ".join(f"{name}：{'通过' if decision.get(key, {}).get('passed') is True else '未通过'}" for key, name in (("market_gate", "行情"), ("evidence_gate", "官方资料"), ("fundamental_gate", "基础财务")))
@@ -285,6 +338,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         next_step = "等待下一次合格数据刷新；数据不足期间不升级交易方案。"
     elif plans:
         next_step = "复核前再次核对最新价格、股数、现金及费用；邮件不是实时行情或限时交易通知。"
+    if estimated_cash and gates_passed and not decision.get("account_conflicts"):
+        next_step = "继续按官方证据研究；资金实际转入或准备交易时再校准现金，不因本次余额未精确核对而要求立即增减仓。"
     next_date = str(decision.get("next_scheduled_review", ""))
     if next_date:
         next_step += f" 例行研究复核：{next_date}；这是研究日期，不是交易期限。"
@@ -292,6 +347,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "version": EMAIL_BRIEF_VERSION, "cycle": str(decision.get("cycle_date", "")),
         "label": label, "title": title, "summary": summary, "tasks": tasks, "plans": plans,
         "positions": positions, "account_lines": account_lines, "quality": quality,
+        "funding_lines": funding_lines,
         "limitations": limitations, "documents": documents, "receipt": receipt,
         "as_of": (f"{'已核验参考收盘' if decision.get('market_gate', {}).get('passed') is True else '待核验目标收盘'}："
                   f"{decision.get('market_gate', {}).get('expected_market_session') or '待确认'}（非实时） · 生成：{_time(decision.get('generated_at'))} 美东"),
@@ -308,6 +364,7 @@ def email_subject(decision: dict[str, Any], *, correction: bool = False) -> str:
 
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
+    owner_research = _owner_research(decision)
     subject = email_subject(decision)
     lines = [subject, "", view["title"], view["summary"], view["as_of"], "", "需要你处理"]
     lines.extend("- " + item for item in view["tasks"])
@@ -318,6 +375,12 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     lines.extend(view["account_lines"])
     if view["receipt"]:
         lines.append(view["receipt"])
+    if view["funding_lines"]:
+        lines.extend(["", "资金范围情景", *view["funding_lines"]])
+    if owner_research:
+        lines.extend(["", "本次请求的个股研究", "以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。"])
+        for section in owner_research:
+            lines.extend([section["title"], section["body"], *section["sources"]])
     lines.extend(["", "证据与限制", view["quality"], *view["limitations"]])
     if view["documents"]:
         lines.append("本次新纳入的官方文件（披露日不一定是今天）：")
@@ -351,6 +414,15 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     content.extend(paragraph(item) for item in view["account_lines"])
     if view["receipt"]:
         content.append(paragraph(view["receipt"]))
+    if view["funding_lines"]:
+        content.append(heading("资金范围情景"))
+        content.extend(paragraph(item) for item in view["funding_lines"])
+    if owner_research:
+        content.extend([heading("本次请求的个股研究"), paragraph("以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。")])
+        for section in owner_research:
+            content.extend([heading(section["title"]), paragraph(section["body"])])
+            for url in section["sources"]:
+                content.append(f'<p><a style="color:#245d76" href="{esc(url)}">{esc(section["title"])} · 官方财报来源</a></p>')
     content.extend([heading("证据与限制"), paragraph(view["quality"])])
     content.extend(paragraph(item) for item in view["limitations"])
     if view["documents"]:

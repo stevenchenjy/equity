@@ -4,7 +4,8 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime
+import math
+from datetime import date
 
 from phase5r_daily_common import (
     ACCOUNT_STATE_PATH,
@@ -15,7 +16,30 @@ from phase5r_daily_common import (
     iso_now,
     read_csv,
     read_json,
+    ROOT,
+    sha256_file,
+    now_et,
 )
+
+MANUAL_SNAPSHOT_PATH = ROOT / "05_risk_and_positions" / "manual_account_snapshot.local.json"
+CONFIRMED_PATH = ROOT / "06_execution_records" / "phase5r_c9b_confirmed_execution_report.csv"
+
+
+def current_manual_snapshot_matches(positions_hash: str, account_hash: str) -> bool:
+    """A later owner snapshot may supersede history, but cannot waive new fills."""
+    if MANUAL_SNAPSHOT_PATH.is_symlink():
+        return False
+    try:
+        receipt = read_json(MANUAL_SNAPSHOT_PATH, {})
+        return (receipt.get("schema_version") == "phase5r_owner_snapshot_v1"
+                and len(positions_hash) == 64 and len(account_hash) == 64
+                and receipt.get("positions_sha256_after") == positions_hash
+                and receipt.get("account_sha256_after") == account_hash
+                and receipt.get("confirmed_execution_sha256") == sha256_file(CONFIRMED_PATH)
+                and receipt.get("owner_snapshot") is True
+                and bool(receipt.get("source_note")))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return False
 
 
 def parse_position(value: str) -> tuple[str, float, float | None]:
@@ -30,7 +54,8 @@ def parse_position(value: str) -> tuple[str, float, float | None]:
         shares = float(shares_text)
     except (ValueError, TypeError) as exc:
         raise argparse.ArgumentTypeError("position must be TICKER=SHARES or TICKER=SHARES@ENTRY_PRICE") from exc
-    if not ticker or shares < 0 or (entry is not None and entry <= 0):
+    if (not ticker or not math.isfinite(shares) or shares < 0
+            or (entry is not None and (not math.isfinite(entry) or entry <= 0))):
         raise argparse.ArgumentTypeError("ticker, non-negative shares, and positive entry price are required")
     return ticker, shares, entry
 
@@ -43,13 +68,18 @@ def main() -> int:
         )
     )
     parser.add_argument("--cash", type=float, required=True)
+    parser.add_argument("--cash-basis", choices=["owner_recorded", "ledger_estimate"], default="owner_recorded")
+    parser.add_argument("--planning-capital-min", type=float)
+    parser.add_argument("--planning-capital-max", type=float)
+    parser.add_argument("--new-position-date", type=date.fromisoformat)
+    parser.add_argument("--source-note", default="Explicit owner-provided manual account snapshot")
     parser.add_argument("--cash-reserved", type=float)
     parser.add_argument("--position", action="append", type=parse_position, default=[])
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--preview", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    if args.cash < 0:
+    if not math.isfinite(args.cash) or args.cash < 0:
         raise ValueError("cash cannot be negative")
     if not args.position:
         raise ValueError("at least one --position is required; include every current position")
@@ -57,6 +87,16 @@ def main() -> int:
         raise ValueError("position tickers must be unique")
 
     account = read_json(ACCOUNT_STATE_PATH)
+    for value in (args.planning_capital_min, args.planning_capital_max):
+        if value is not None and (not math.isfinite(value) or value <= 0):
+            raise ValueError("planning capital must be finite and positive")
+    if (args.planning_capital_min is None) != (args.planning_capital_max is None):
+        raise ValueError("both planning capital endpoints are required")
+    if args.planning_capital_min is not None and args.planning_capital_min > args.planning_capital_max:
+        raise ValueError("planning capital range is reversed")
+    if not args.source_note.strip():
+        raise ValueError("source note is required")
+    before_positions = read_csv(POSITIONS_PATH)
     existing = {row["ticker"].upper(): row for row in read_csv(POSITIONS_PATH)}
     fields = list(read_csv(POSITIONS_PATH)[0].keys())
     market = {row["ticker"].upper(): row for row in read_csv(MARKET_SNAPSHOT_PATH)}
@@ -76,13 +116,13 @@ def main() -> int:
         if prior is None:
             prior = {
                 "ticker": ticker,
-                "entry_date": datetime.now().date().isoformat(),
-                "entry_price": f"{entry:.2f}",
+                "entry_date": (args.new_position_date or now_et().date()).isoformat(),
+                "entry_price": f"{entry:.8f}",
                 "position_pct": "0",
                 "shares_optional": f"{shares:g}",
                 "thesis": "Manual position recorded; full research thesis review required.",
                 "horizon_class": "long_term_research",
-                "planned_review_date": datetime.now().date().isoformat(),
+                "planned_review_date": now_et().date().isoformat(),
                 "max_loss_pct_of_account": "0.50",
                 "invalidation_rule": "Review immediately because a complete thesis and invalidation rule are pending.",
                 "current_action": "review_required",
@@ -91,7 +131,9 @@ def main() -> int:
         row = dict(prior)
         row["shares_optional"] = f"{shares:g}"
         if entry is not None:
-            row["entry_price"] = f"{entry:.2f}"
+            row["entry_price"] = f"{entry:.8f}"
+        if entry is not None or prior is None or row["shares_optional"] != prior.get("shares_optional"):
+            row["notes"] = args.source_note
         new_rows.append(row)
 
     effective_total = args.cash + holdings_value
@@ -101,7 +143,7 @@ def main() -> int:
         close = float(market[ticker]["last_price"])
         row["position_pct"] = f"{shares * close / effective_total * 100.0:.4f}"
     reserved = account["cash_reserved"] if args.cash_reserved is None else args.cash_reserved
-    if float(reserved) < 0 or float(reserved) > args.cash:
+    if not math.isfinite(float(reserved)) or float(reserved) < 0 or float(reserved) > args.cash:
         raise ValueError("cash reserved must be between zero and available cash")
     updated_account = dict(account)
     updated_account.update({
@@ -109,7 +151,11 @@ def main() -> int:
         "cash_available": round(args.cash, 2),
         "cash_reserved": round(float(reserved), 2),
         "last_updated": iso_now(),
+        "cash_basis": args.cash_basis,
     })
+    if args.planning_capital_min is not None:
+        updated_account.update(planning_capital_min=args.planning_capital_min,
+                               planning_capital_max=args.planning_capital_max)
     if args.preview:
         print(
             f"preview=true positions={len(new_rows)} cash={args.cash:.2f} "
@@ -117,8 +163,22 @@ def main() -> int:
             "files_changed=false broker_read=false"
         )
         return 0
+    receipt = {
+        "schema_version": "phase5r_owner_snapshot_v1", "owner_snapshot": True,
+        "recorded_at": iso_now(), "source_note": args.source_note,
+        "positions_sha256_before": sha256_file(POSITIONS_PATH),
+        "account_sha256_before": sha256_file(ACCOUNT_STATE_PATH),
+        "confirmed_execution_sha256": sha256_file(CONFIRMED_PATH),
+        "positions_before": before_positions, "account_before": account,
+    }
     atomic_write_csv(POSITIONS_PATH, fields, new_rows)
     atomic_write_json(ACCOUNT_STATE_PATH, updated_account)
+    receipt.update(positions_sha256_after=sha256_file(POSITIONS_PATH),
+                   account_sha256_after=sha256_file(ACCOUNT_STATE_PATH),
+                   positions_after=new_rows, account_after=updated_account)
+    archive = MANUAL_SNAPSHOT_PATH.parent / "manual_snapshots.local" / (receipt["account_sha256_after"] + ".json")
+    atomic_write_json(archive, receipt)
+    atomic_write_json(MANUAL_SNAPSHOT_PATH, receipt)
     print(
         f"applied=true positions={len(new_rows)} effective_total={effective_total:.2f} "
         "manual_truth_updated=true broker_read=false automatic_order=false"

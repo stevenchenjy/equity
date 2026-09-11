@@ -52,6 +52,27 @@ decisions, eligibility, thresholds, stability, scheduling or recipients.
   closed. Legacy unversioned artifacts retain their existing validation path.
   A format change does not authorize a correction or test send.
 
+### Owner snapshots and flexible research funding (2026-09-11)
+
+An explicit owner snapshot can update shares and fee-inclusive cost basis
+without inventing separate fill prices/fees or replaying past sales. The manual
+updater retains before/after snapshots and hashes privately. Only an exact
+match to the current account, positions and confirmed-execution ledger may
+supersede the old fill's state anchor; new pending/unapplied fills still block.
+
+`cash_basis=ledger_estimate` identifies arithmetic from the last recorded cash,
+not a verified broker balance. Optional planning-capital endpoints describe
+research scenarios only and never increase cash or replace the production
+denominator. Email may continue research with those scenarios, while omitting
+precise trade quantities that depend on the unverified balance. Real trading
+still requires the owner to verify available funds outside this system.
+
+A user-requested one-off research appendix may be bound to the current
+decision fingerprint and rendered with explicit separation from deterministic
+decisions. The composer never reads or carries it forward; it cannot change
+eligibility, thresholds, sizing or SHADOW evidence. Only the existing sender
+and its normal/correction deduplication rules may deliver that email.
+
 Design sources, consulted 2026-09-05: the
 [SEC Plain English Handbook](https://www.sec.gov/pdf/handbook.pdf) supports
 clear hierarchy and removal of jargon;

@@ -59,6 +59,7 @@ ACCOUNT_FIELDS = {
     "last_updated",
 }
 NUMERIC_ACCOUNT_FIELDS = ACCOUNT_FIELDS - {"cash_needed_within_three_years", "last_updated"}
+OPTIONAL_ACCOUNT_FIELDS = {"cash_basis", "planning_capital_min", "planning_capital_max"}
 POSITION_REQUIRED_FIELDS = {
     "ticker",
     "entry_date",
@@ -139,8 +140,16 @@ def load_account_state() -> dict[str, object]:
         state = json.loads(ACCOUNT_STATE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("current account state is invalid JSON") from exc
-    if not isinstance(state, dict) or set(state) != ACCOUNT_FIELDS:
+    if (not isinstance(state, dict) or not ACCOUNT_FIELDS <= set(state)
+            or set(state) - ACCOUNT_FIELDS - OPTIONAL_ACCOUNT_FIELDS):
         raise ValueError("current account state fields do not match the C9 contract")
+    if state.get("cash_basis", "owner_recorded") not in {"owner_recorded", "ledger_estimate"}:
+        raise ValueError("cash_basis is invalid")
+    if "planning_capital_min" in state or "planning_capital_max" in state:
+        low = as_float(state.get("planning_capital_min"), "planning_capital_min")
+        high = as_float(state.get("planning_capital_max"), "planning_capital_max")
+        if not 0 < low <= high:
+            raise ValueError("planning capital range is invalid")
     for field in NUMERIC_ACCOUNT_FIELDS:
         value = as_float(state[field], field)
         if value < 0:
