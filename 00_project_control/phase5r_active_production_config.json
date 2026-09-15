@@ -63,6 +63,7 @@
   },
   "notifications": {
     "event_driven": true,
+    "regular_delivery_mode": "watch_or_action_change",
     "weekly_summary_weekday": "friday",
     "market_data_publication_after_et": "11:15",
     "send_after_et": "13:30",

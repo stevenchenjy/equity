@@ -7,6 +7,11 @@ change to portfolio risk limits.
 
 ## Delivery expectation
 
+- Frequency preference confirmed on 2026-09-14: regular research emails only
+  when the watchlist or actionable recommendation changes, not a mandatory
+  daily message. An unchanged weekly digest is not an exception to this
+  preference. Operational failure alerts remain separate. Explicitly
+  requested rechecks still receive one email under the rule below.
 - “Redo the check”, “重新复核”, and equivalent requests mean complete a new
   review and email it once to the existing configured recipient. Do not ask
   again whether to email that review.
@@ -24,6 +29,20 @@ change to portfolio risk limits.
 
 ## Required review content
 
+- Every daily report must explicitly distinguish: tonight/next-session orders,
+  nonheld watchlist, and eligible buy/sell review plans. State zero new shares
+  and no new order when appropriate; a watch candidate must not disappear
+  simply because it is not yet eligible to buy. This content requirement is
+  separate from email frequency, which remains governed by the delivery policy.
+- Order a short interactive watchlist by a stated research priority. Explain
+  what to observe and when to recheck. If quoting a price observation level,
+  identify its dated source or analyst-selected basis and say whether it is
+  only a review trigger, not a submitted order or automatic buy signal.
+- Positive proposed share counts require complete evidence and portfolio
+  checks, including tier-specific whole-share exceptions, single-stock caps,
+  total active-stock allocation, confirmed cash and reserves. A hypothetical
+  later quantity must be labelled separately from today's recommendation.
+  Do not force a daily buy recommendation merely to provide a nonzero count.
 - Lead with a clear analyst preference and its tradeoffs, not only “range
   research” or “pending human review”. Distinguish evidence, judgment and
   conditional order drafts. The owner makes all actual trades outside this

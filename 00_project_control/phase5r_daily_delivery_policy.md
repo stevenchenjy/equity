@@ -15,13 +15,33 @@ The only authorized sender is `send_phase5r_daily_email.py`. It requires:
 
 ## Frequency
 
-- Send after 13:30 ET only for a material decision/evidence change. Suppress
-  unchanged ordinary cycles.
-- Massive Basic publishes a finalized close on the following calendar day.
-  The configured Friday-close weekly summary is therefore sent on Saturday,
-  after that close is published.
-- Other weekend cycles send only for a new material official filing, a
-  decision fingerprint change, or an account-state conflict.
+- The owner selected `regular_delivery_mode=watch_or_action_change` on
+  2026-09-14: regular research emails send after 13:30 ET only when the
+  watchlist or action recommendations change. Unchanged Saturday/weekly
+  reports do not send. Weekdays and weekends use the same change test.
+- Meaningful changes include nonheld candidate membership, eligibility,
+  blockers or review conditions; eligible proposed quantities/limits; held
+  action quantities/targets; and recommendation changes caused by account
+  conflicts, data gates or fundamental weakening. Sorted semantic snapshots
+  and normalized numbers prevent ordering or formatting from creating alerts.
+- Quote/date changes, research scores, raw filing arrivals and a new research
+  fingerprint do not trigger email by themselves. The separate notification
+  fingerprint leaves the canonical research identity unchanged.
+- On migration, compare to the prior valid decision artifact when no prior
+  notification fingerprint exists. With no valid baseline, seed quietly.
+  Within one ET cycle, preserve the original comparison anchor so repeated
+  pre-send composition does not consume an undelivered change. Normal daily
+  durable deduplication still limits ordinary delivery to one message.
+- Massive Basic publication and refresh timing stay unchanged. The legacy
+  `weekly_summary_weekday=friday` remains available for historical policy
+  validation but does not authorize an unchanged digest in the active mode.
+- A missing mode means historical `legacy_material_or_weekly`: raw material
+  events and the Saturday-published Friday-close summary retain their former
+  policy truth only for legacy validation. An ordinary send must match the
+  active mode; an explicit owner/correction review can validate its original
+  historical policy without rewriting the decision's send fields.
+- Explicit owner-requested reviews and operational failure alerts are
+  independent of this regular research cadence.
 - No catch-up is allowed before the configured operational date.
 
 ## Action-email presentation (v2, 2026-09-05)
@@ -53,6 +73,24 @@ decisions, eligibility, thresholds, stability, scheduling or recipients.
   exactly match a fresh render of the decision; unsupported versions fail
   closed. Legacy unversioned artifacts retain their existing validation path.
   A format change does not authorize a correction or test send.
+
+### Visible watch candidates (2026-09-14)
+
+Every rendered report includes the actual canonical nonheld `watch_candidates`
+under a watch/new-position section, even when none are eligible. Already held
+names (including SPY) stay in holdings, rather than being duplicated as new
+positions. Display the reference price and its exact canonical session date;
+missing prices stay unknown and failed market gates remain labelled unverified.
+
+Blocked or incomplete names explicitly show zero suggested new shares and no
+buy order, with readable evidence, valuation, portfolio, cash or stability
+blockers and conditions for another review. Do not expose stale positive
+quantities or invent entry prices. Only a plan already accepted by the shared
+view's eligibility and global guards can display positive quantities and its
+existing review-price limit. Account conflicts, failed data, estimated cash and
+stability holds retain priority. Unknown blockers remain unresolved, rather than
+being treated as a pass. The section describes only the actual shortlist and
+does not claim full-market coverage or alter notification cadence.
 
 ### Owner snapshots and flexible research funding (2026-09-11)
 

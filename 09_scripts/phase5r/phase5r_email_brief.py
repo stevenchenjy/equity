@@ -25,6 +25,7 @@ _RESEARCH_HOSTS = _SOURCE_HOSTS | {
     "www.investor.gov", "www.finra.org", "www.federalreserve.gov",
     "www.samsara.com", "investors.samsara.com",
     "www.chase.com", "chase.com", "www.jpmorgan.com",
+    "newsroom.servicenow.com", "abc.xyz", "investor.tsmc.com", "pr.tsmc.com", "newsroom.arm.com",
 }
 _BLOCKED_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 _LABELS = {
@@ -180,6 +181,91 @@ def _conflict_tasks(decision: dict[str, Any]) -> list[str]:
     if any(not str(item).startswith("pending_execution:") for item in conflicts):
         tasks.append("本地成交与持仓/现金记录尚未完全对齐，需先完成账户核对；已报告的成交不用重复记账。")
     return tasks or ["本地账户记录存在冲突，需核对已确认的持仓、现金与成交状态。"]
+
+
+def _watch_view(
+    decision: dict[str, Any], plans: list[dict[str, str]], *, gates_passed: bool
+) -> list[dict[str, str]]:
+    """Expose the actual nonheld shortlist without creating new eligibility."""
+    held = {str(row.get("ticker", "")) for row in decision.get("held_positions", [])}
+    eligible_plans = {row["ticker"]: row for row in plans if row["ticker"] not in held}
+    pending = set(decision.get("pending_stability_candidates", []))
+    session = str(decision.get("market_gate", {}).get("expected_market_session") or "待确认")
+    translations = {
+        "valuation": ("估值证据未齐，合理买入上限尚无法确认", "补齐来源可核验的估值情景"),
+        "score": ("研究评分未达准入线", "在新证据下重新评估研究评分"),
+        "confidence": ("证据置信度未达准入线", "补齐能提高结论可信度的官方证据"),
+        "upside": ("上行情景尚未通过准入校验", "重算估值对应的上行空间"),
+        "reward_to_risk": ("情景收益与风险比尚未通过准入校验", "重算下行情景与收益风险比"),
+        "entry": ("入场条件未满足", "等待入场条件通过复核"),
+        "portfolio_fit": ("与现有组合的匹配度未达要求", "重新评估行业重叠和组合集中度"),
+        "whole_share_affordability": ("现金或整股仓位约束尚不支持新增", "核对可用资金、现金储备和整股仓位上限"),
+        "whole_share_target_gap": ("目标配置缺口不足一整股", "等待实际配置缺口足以容纳一整股"),
+        "one_candidate_attention_limit": ("本轮新增个股复核名额已占用", "等待下一轮候选排序与复核名额"),
+        "market_quality": ("行情质量未通过校验", "等待合格行情刷新"),
+        "price_range": ("参考价未通过核心配置的价格区间条件", "等待价格区间条件通过复核"),
+        "review_capacity": ("本轮配置复核容量不足", "等待配置复核容量恢复"),
+        "maintenance": ("维护状态阻断新增方案", "等待维护状态解除"),
+    }
+    result = []
+    seen = set()
+    for row in decision.get("watch_candidates", []):
+        ticker = str(row.get("ticker", ""))
+        if not ticker or ticker in held or ticker in seen:
+            continue
+        seen.add(ticker)
+        reference = (f"参考收盘 {money(row.get('current_price'))}（{session}；非实时）"
+                     if decision.get("market_gate", {}).get("passed") is True
+                     else f"待核验参考价 {money(row.get('current_price'))}（目标收盘日期 {session}；非实时）")
+        plan = eligible_plans.get(ticker)
+        if plan:
+            result.append({"ticker": ticker, "title": ticker + " · 新增复核候选", "reference": reference,
+                           "instruction": plan["scenario"], "reason": plan["reason"],
+                           "next_step": plan["limit"] + "；提交前核对最新价格、可用现金及未成交委托。"})
+            continue
+        reasons, conditions = [], []
+        if decision.get("account_conflicts") or decision.get("decision_code") == "account_conflict_hold":
+            reasons.append("账户记录存在待核对项")
+            conditions.append("先核对账户与未成交委托")
+        elif not gates_passed or decision.get("decision_code") == "data_gate_hold":
+            reasons.append("本次全局数据校验未通过")
+            conditions.append("先恢复合格行情与官方数据")
+        elif decision.get("decision_code") == "fundamental_weakening_review":
+            reasons.append("当前优先复核持仓基本面变化，新增方案暂停")
+            conditions.append("先完成持仓基本面复核")
+        elif decision.get("account", {}).get("cash_basis") == "ledger_estimate":
+            reasons.append("现金仍为账本估算，精确新增股数尚未获准展示")
+            conditions.append("实际交易前校准可用现金与仓位分母")
+        blockers = {item.strip() for item in str(row.get("gate_blockers", "")).split(",") if item.strip()}
+        if not _is_core(row) and _valuation(row).startswith("估值证据不足"):
+            blockers.add("valuation")
+        for key, (reason, condition) in translations.items():
+            if key in blockers:
+                reasons.append(reason)
+                conditions.append(condition)
+        if blockers - translations.keys():
+            reasons.append("另有准入阻断项待核对")
+            conditions.append("核对本地决策中的其余准入条件")
+        if ticker in pending or row.get("action") == "pending_second_distinct_close":
+            count = int(decision.get("new_candidate_stability_distinct_closes", 0) or 0)
+            reasons.append(f"尚未完成两个不同有效收盘日确认（当前 {count} 个）")
+            conditions.append("等待下一个不同的有效收盘；重复刷新不算新确认")
+        if not reasons:
+            reasons.append("当前没有通过完整校验的新增方案")
+            conditions.append("补齐准入依据、股数和价格方案后重新评估")
+        if not _is_core(row) and not any("有效收盘" in item for item in conditions):
+            conditions.append("准入条件通过后仍须满足两个不同有效收盘日的稳定性要求")
+        invalidation = str(row.get("invalidation", "")).strip()
+        if invalidation == "reassess on evidence break or valuation/risk conflict":
+            conditions.append("证据失效或估值与风险出现冲突时提前复核")
+        elif invalidation == "Review immediately because a complete thesis and invalidation rule are pending.":
+            conditions.append("先补齐持有逻辑与失效条件")
+        elif invalidation:
+            conditions.append("原记录的失效条件：" + invalidation)
+        result.append({"ticker": ticker, "title": ticker + " · 观察名单（watchlist）", "reference": reference,
+                       "instruction": "本次建议新增 0 股；暂不设买入委托。",
+                       "reason": "；".join(reasons) + "。", "next_step": "；".join(conditions) + "。"})
+    return result
 
 
 def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
@@ -353,6 +439,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "version": EMAIL_BRIEF_VERSION, "cycle": str(decision.get("cycle_date", "")),
         "label": label, "title": title, "summary": summary, "tasks": tasks, "plans": plans,
         "positions": positions, "account_lines": account_lines, "quality": quality,
+        "watchlist": _watch_view(decision, plans, gates_passed=gates_passed),
         "funding_lines": funding_lines,
         "limitations": limitations, "documents": documents, "receipt": receipt,
         "as_of": (f"{'已核验参考收盘' if decision.get('market_gate', {}).get('passed') is True else '待核验目标收盘'}："
@@ -403,6 +490,12 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
         lines.append(view["receipt"])
     if view["funding_lines"]:
         lines.extend(["", "资金范围情景", *view["funding_lines"]])
+    lines.extend(["", "未持仓观察与新增计划", "仅列本次确定性候选清单；不是全市场机会排名。"])
+    if not view["watchlist"]:
+        lines.append("本次候选清单没有未持仓标的。")
+    for row in view["watchlist"]:
+        lines.extend(["", row["title"], row["reference"], row["instruction"],
+                      "依据：" + row["reason"], "再次复核条件：" + row["next_step"]])
     lines.extend(["", "证据与限制", view["quality"], *view["limitations"]])
     if view["documents"]:
         lines.append("本次新纳入的官方文件（披露日不一定是今天）：")
@@ -454,6 +547,12 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     if view["funding_lines"]:
         content.append(heading("资金范围情景"))
         content.extend(paragraph(item) for item in view["funding_lines"])
+    content.extend([heading("未持仓观察与新增计划"), paragraph("仅列本次确定性候选清单；不是全市场机会排名。")])
+    if not view["watchlist"]:
+        content.append(paragraph("本次候选清单没有未持仓标的。"))
+    for row in view["watchlist"]:
+        content.extend([heading(row["title"]), paragraph(row["reference"]), paragraph(row["instruction"]),
+                        paragraph("依据：" + row["reason"]), paragraph("再次复核条件：" + row["next_step"])])
     content.extend([heading("证据与限制"), paragraph(view["quality"])])
     content.extend(paragraph(item) for item in view["limitations"])
     if view["documents"]:

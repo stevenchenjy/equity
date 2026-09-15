@@ -34,6 +34,9 @@ from phase5r_daily_common import (
     latest_published_market_session,
     log_daily_run,
     notification_delivery_policy,
+    recommendation_notification_fingerprint,
+    LEGACY_NOTIFICATION_MODE,
+    WATCH_ACTION_NOTIFICATION_MODE,
     now_et,
     read_csv,
     read_json,
@@ -163,6 +166,8 @@ def delivery_policy(
     weekly_summary_due: bool = False,
     fundamental_weakening: bool = False,
     first_material_baseline: bool = False,
+    regular_delivery_mode: str = LEGACY_NOTIFICATION_MODE,
+    notification_changed: bool = False,
 ) -> tuple[bool, str]:
     return notification_delivery_policy(
         is_weekend=is_weekend,
@@ -172,6 +177,8 @@ def delivery_policy(
         account_conflict=account_conflict,
         fundamental_weakening=fundamental_weakening,
         first_material_baseline=first_material_baseline,
+        regular_delivery_mode=regular_delivery_mode,
+        notification_changed=notification_changed,
     )
 
 
@@ -301,8 +308,34 @@ def validate_decision(
             "unchanged_daily_email"
         ],
     }
-    if decision.get("notification_policy") != expected_notification_policy:
+    stored_policy = decision.get("notification_policy")
+    if not isinstance(stored_policy, dict):
         raise ValueError("decision_notification_policy_mismatch")
+    stored_mode = stored_policy.get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
+    active_mode = config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
+    if "regular_delivery_mode" in stored_policy:
+        expected_notification_policy["regular_delivery_mode"] = stored_mode
+    if stored_policy != expected_notification_policy or stored_mode not in {LEGACY_NOTIFICATION_MODE, WATCH_ACTION_NOTIFICATION_MODE}:
+        raise ValueError("decision_notification_policy_mismatch")
+    # Explicit historical research retains the policy truth of its original
+    # artifact. Ordinary delivery must follow the active configured cadence.
+    if not correction and owner_review_request_id is None and stored_mode != active_mode:
+        raise ValueError("decision_notification_mode_requires_refresh")
+    notification_changed = False
+    if stored_mode == WATCH_ACTION_NOTIFICATION_MODE:
+        comparison = decision.get("notification_change")
+        if not isinstance(comparison, dict):
+            raise ValueError("decision_notification_change_missing")
+        prior = comparison.get("prior_fingerprint")
+        if (not isinstance(prior, str)
+                or (prior and re.fullmatch(r"[0-9a-f]{64}", prior) is None)
+                or comparison.get("comparison_source") not in {"prior_state", "same_cycle_anchor", "prior_decision_migration", "initial_baseline"}
+                or type(comparison.get("changed")) is not bool):
+            raise ValueError("decision_notification_change_invalid")
+        fingerprint = recommendation_notification_fingerprint(decision)
+        notification_changed = bool(prior) and fingerprint != prior
+        if comparison.get("fingerprint") != fingerprint or comparison["changed"] is not notification_changed:
+            raise ValueError("decision_notification_change_mismatch")
     policy_send, policy_reason = delivery_policy(
         is_weekend=expected_evaluation["is_weekend"],
         weekly_summary_due=expected_evaluation["weekly_summary_due"],
@@ -311,6 +344,8 @@ def validate_decision(
         account_conflict=bool(decision["account_conflicts"]),
         fundamental_weakening=bool(weakening_tickers),
         first_material_baseline=first_material_baseline,
+        regular_delivery_mode=stored_mode,
+        notification_changed=notification_changed,
     )
     if decision.get("send_recommended") is not policy_send:
         raise ValueError("decision_delivery_policy_mismatch")

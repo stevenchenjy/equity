@@ -41,6 +41,9 @@ from phase5r_daily_common import (
     load_active_state,
     load_inhibit,
     notification_delivery_policy,
+    notification_change_comparison,
+    LEGACY_NOTIFICATION_MODE,
+    WATCH_ACTION_NOTIFICATION_MODE,
     now_et,
     read_csv,
     read_json,
@@ -443,6 +446,7 @@ def main() -> int:
     material_events = material_events_for_cycle(active_config["notifications"])
     candidate_recommendations = read_csv(NEW_CANDIDATE_PATH)
     prior_state = read_json(DAILY_DECISION_STATE_PATH, {})
+    prior_decision = read_json(DAILY_DECISION_JSON_PATH, {})
     market_session = (
         market_gate["expected_market_session"]
         if market_gate["complete_close_verified"]
@@ -828,6 +832,22 @@ def main() -> int:
             "trade_placed": False,
         },
     }
+    notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
+    if "regular_delivery_mode" in active_config["notifications"]:
+        decision["notification_policy"]["regular_delivery_mode"] = notification_mode
+    notification_change = notification_change_comparison(decision, prior_state, prior_decision)
+    decision["notification_change"] = notification_change
+    if notification_mode == WATCH_ACTION_NOTIFICATION_MODE:
+        if not bool(inhibit.get("active")) and cycle_date() >= str(active_state.get("operational_from", "")):
+            send_recommended, send_reason = notification_delivery_policy(
+                is_weekend=is_weekend, weekly_summary_due=weekly_summary_due,
+                material_event=bool(material_events), decision_changed=decision_changed,
+                account_conflict=bool(conflicts), fundamental_weakening=bool(weakening_tickers),
+                first_material_baseline=first_material_baseline,
+                regular_delivery_mode=notification_mode, notification_changed=notification_change["changed"],
+            )
+            decision["send_recommended"] = send_recommended
+            decision["send_reason"] = send_reason
     atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
 
     held_lines = "\n".join(
@@ -898,7 +918,7 @@ def main() -> int:
 - 每日更新信息不等于每日改变仓位；新增方案至少需要两个不同有效收盘日保持一致。
 - HOLD / WATCH / NO NEW POSITION 不要求人工确认。
 - 只有增减仓等状态变化、账户冲突或新的重大官方文件才升级复核。
-- 发送策略：只在重大变化时发送，另加周五周报；无变化的普通工作日不发送。
+- 发送策略：{'仅在观察名单或操作建议发生实质变化时发送；无变化的周报也不发送。' if notification_mode == WATCH_ACTION_NOTIFICATION_MODE else '只在重大变化时发送，另加周五周报；无变化的普通工作日不发送。'}
 - 下次计划复核：{next_review_date}。
 - 本次确定性决策模型成本：$0；月度模型硬上限：${active_config['model_policy']['monthly_hard_cap_usd']}。
 
@@ -924,6 +944,8 @@ def main() -> int:
         "updated_at": iso_now(),
         "cycle_date": cycle_date(),
         "decision_fingerprint": decision_fingerprint,
+        "notification_change_fingerprint": notification_change["fingerprint"],
+        "notification_change_anchor": notification_change["prior_fingerprint"] or notification_change["fingerprint"],
         "decision_code": decision_code,
         "action_proposal_fingerprint": proposal_fingerprint,
         "action_proposal_session": (

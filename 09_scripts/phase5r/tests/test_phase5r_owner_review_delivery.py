@@ -109,7 +109,10 @@ class OwnerReviewDeliveryTests(unittest.TestCase):
         with delivery_fixture() as (config, smtp):
             save_decision(decision)
             before = sender.DAILY_DECISION_JSON_PATH.read_bytes()
-            self.assertEqual(sender.send_once(smtp), 0)
+            legacy_config = copy.deepcopy(sender.load_active_config())
+            legacy_config["notifications"].pop("regular_delivery_mode", None)
+            with patch.object(sender, "load_active_config", return_value=legacy_config):
+                self.assertEqual(sender.send_once(smtp), 0)
             config.assert_not_called()
             self.assertEqual(sender.send_once(smtp, owner_review_request_id=request_id), 0)
             self.assertEqual(sender.DAILY_DECISION_JSON_PATH.read_bytes(), before)
@@ -231,7 +234,8 @@ class OwnerReviewDeliveryTests(unittest.TestCase):
     def test_extended_sources_use_exact_https_hosts(self):
         decision = owner_review_fixture()
         sources = decision["owner_requested_research"]["sections"][0]["sources"]
-        for host in ("www.rubrik.com", "www.chase.com", "chase.com", "www.jpmorgan.com"):
+        for host in ("www.rubrik.com", "www.chase.com", "chase.com", "www.jpmorgan.com",
+                     "newsroom.servicenow.com", "abc.xyz", "investor.tsmc.com", "pr.tsmc.com", "newsroom.arm.com"):
             sources[:] = [f"https://{host}/official-source"]
             self.assertIn(f'href="https://{host}/official-source"', render_email(decision)[2])
         for url in ("http://stockanalysis.com/stocks/panw/", "https://stockanalysis.com.evil.example/",

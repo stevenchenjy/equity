@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from phase5r_daily_common import ROOT, read_json
+from phase5r_daily_common import ROOT, read_json, LEGACY_NOTIFICATION_MODE, WATCH_ACTION_NOTIFICATION_MODE
 
 
 ACTIVE_CONFIG_PATH = ROOT / "00_project_control" / "phase5r_active_production_config.json"
@@ -77,6 +77,8 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     time_pattern = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
     if (
         notifications.get("event_driven") is not True
+        or notifications.get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
+        not in {LEGACY_NOTIFICATION_MODE, WATCH_ACTION_NOTIFICATION_MODE}
         or notifications.get("weekly_summary_weekday") != "friday"
         or notifications.get("unchanged_daily_email") is not False
         or type(filing_lookback) is not int

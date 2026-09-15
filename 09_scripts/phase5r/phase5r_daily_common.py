@@ -15,6 +15,7 @@ import tempfile
 import time as time_module
 from contextlib import AbstractContextManager
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
@@ -435,6 +436,90 @@ def delivery_guard() -> tuple[bool, str, dict[str, Any], dict[str, Any]]:
     return True, "delivery_enabled", active_state, inhibit
 
 
+LEGACY_NOTIFICATION_MODE = "legacy_material_or_weekly"
+WATCH_ACTION_NOTIFICATION_MODE = "watch_or_action_change"
+
+
+def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
+    """Hash recommendation meaning, excluding quotes, dates and raw filings."""
+    def numeric(value: Any) -> str | None:
+        try:
+            parsed = Decimal(str(value))
+            return format(parsed.normalize(), "f") if parsed.is_finite() else None
+        except (InvalidOperation, ValueError, TypeError):
+            return None
+
+    def ordered(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return sorted(rows, key=lambda row: (str(row.get("ticker", "")), canonical_sha256(row)))
+
+    gates = {key: decision.get(key, {}).get("passed") is True
+             for key in ("market_gate", "evidence_gate", "fundamental_gate")}
+    conflicts = sorted(set(str(item) for item in decision.get("account_conflicts", [])))
+    code = str(decision.get("decision_code", ""))
+    cash_estimated = decision.get("account", {}).get("cash_basis") == "ledger_estimate"
+    can_propose = (code == "action_review_candidate" and all(gates.values())
+                   and not conflicts and not cash_estimated)
+    held_eligible = set(decision.get("eligible_action_review_candidates", [])) if can_propose else set()
+    new_eligible = set(decision.get("eligible_new_position_review_candidates", [])) if can_propose else set()
+    pending = set(decision.get("pending_stability_candidates", []))
+    held_rows = decision.get("held_positions", [])
+    held_tickers = {str(row.get("ticker", "")) for row in held_rows}
+    actions = []
+    for row in held_rows:
+        ticker = str(row.get("ticker", ""))
+        eligible = ticker in held_eligible and ticker not in pending
+        actions.append({"ticker": ticker, "action": row.get("action", ""), "eligible": eligible,
+                        "whole_shares_to_change": numeric(row.get("whole_shares_to_change")) if eligible else None,
+                        "target_shares": numeric(row.get("target_shares")) if eligible else None})
+    candidates = []
+    for row in decision.get("watch_candidates", []):
+        ticker = str(row.get("ticker", ""))
+        if ticker in held_tickers:
+            continue
+        eligible = (ticker in new_eligible and ticker not in pending
+                    and int(decision.get("new_candidate_stability_distinct_closes", 0) or 0) >= 2)
+        candidates.append({
+            "ticker": ticker, "label": row.get("label", ""), "action": row.get("action", ""),
+            "eligible": eligible, "pending": ticker in pending,
+            "blockers": sorted(set(item.strip() for item in str(row.get("gate_blockers", "")).split(",") if item.strip())),
+            "invalidation": " ".join(str(row.get("invalidation", "")).split()),
+            "suggested_whole_shares": numeric(row.get("suggested_whole_shares")) if eligible else None,
+            "maximum_review_price": numeric(row.get("maximum_review_price")) if eligible else None,
+        })
+    return canonical_sha256({
+        "version": "phase5r_recommendation_notification_v1", "decision_code": code,
+        "gates": gates, "account_conflicts": conflicts, "cash_estimated": cash_estimated,
+        "weakening_tickers": sorted(set(decision.get("fundamental_gate", {}).get("weakening_tickers", []))),
+        "actions": ordered(actions), "watch_candidates": ordered(candidates),
+    })
+
+
+def notification_change_comparison(
+    decision: dict[str, Any], prior_state: dict[str, Any], prior_decision: dict[str, Any]
+) -> dict[str, Any]:
+    current = recommendation_notification_fingerprint(decision)
+    prior = prior_state.get("notification_change_fingerprint", "")
+    source = "prior_state"
+    anchor = prior_state.get("notification_change_anchor", "")
+    if (prior_state.get("cycle_date") == decision.get("cycle_date")
+            and isinstance(anchor, str) and len(anchor) == 64
+            and all(char in "0123456789abcdef" for char in anchor)):
+        prior = anchor
+        source = "same_cycle_anchor"
+    if not isinstance(prior, str) or len(prior) != 64 or any(char not in "0123456789abcdef" for char in prior):
+        prior = ""
+        source = "initial_baseline"
+        if (isinstance(prior_decision, dict) and prior_decision.get("decision_code")
+                and isinstance(prior_decision.get("held_positions"), list)
+                and isinstance(prior_decision.get("watch_candidates"), list)
+                and all(isinstance(prior_decision.get(key), dict)
+                        for key in ("market_gate", "evidence_gate", "fundamental_gate", "account"))):
+            prior = recommendation_notification_fingerprint(prior_decision)
+            source = "prior_decision_migration"
+    return {"fingerprint": current, "prior_fingerprint": prior,
+            "changed": bool(prior) and current != prior, "comparison_source": source}
+
+
 def notification_delivery_policy(
     *,
     is_weekend: bool,
@@ -444,9 +529,16 @@ def notification_delivery_policy(
     account_conflict: bool,
     fundamental_weakening: bool,
     first_material_baseline: bool,
+    regular_delivery_mode: str = LEGACY_NOTIFICATION_MODE,
+    notification_changed: bool = False,
 ) -> tuple[bool, str]:
     """Return event-driven eligibility independently of scheduler time."""
 
+    if regular_delivery_mode == WATCH_ACTION_NOTIFICATION_MODE:
+        return (notification_changed,
+                "watch_or_action_changed" if notification_changed else "unchanged_watch_and_actions_suppressed")
+    if regular_delivery_mode != LEGACY_NOTIFICATION_MODE:
+        raise ValueError("notification_mode_invalid")
     if weekly_summary_due:
         return True, "friday_weekly_summary"
     if is_weekend:

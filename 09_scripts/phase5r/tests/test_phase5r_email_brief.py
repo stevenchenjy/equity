@@ -55,6 +55,94 @@ def action_fixture() -> dict:
 
 
 class EmailPresentationTests(unittest.TestCase):
+    def test_all_nonheld_watch_candidates_show_zero_adds_and_dated_evidence_blocks(self) -> None:
+        decision = decision_fixture()
+        decision["held_positions"].append({"ticker": "SPY", "current_shares": "1"})
+        decision["watch_candidates"] = [
+            {"ticker": "SPY", "current_price": "765.11", "gate_blockers": "whole_share_target_gap"},
+            {"ticker": "PANW", "current_price": "190.25", "suggested_whole_shares": "3", "maximum_review_price": "250.99",
+             "gate_blockers": "valuation,upside,reward_to_risk,portfolio_fit", "action": "watch_only",
+             "invalidation": "reassess on evidence break or valuation/risk conflict"},
+            {"ticker": "ARM", "current_price": "264.79", "gate_blockers": "score,confidence"},
+        ]
+        view = build_email_view(decision)
+        self.assertEqual([row["ticker"] for row in view["watchlist"]], ["PANW", "ARM"])
+        for body in render_email(decision)[1:]:
+            self.assertIn("PANW · 观察名单（watchlist）", body)
+            self.assertIn("ARM · 观察名单（watchlist）", body)
+            self.assertIn("参考收盘 $190.25（2026-08-31；非实时）", body)
+            self.assertIn("本次建议新增 0 股；暂不设买入委托", body)
+            self.assertIn("估值证据未齐", body)
+            self.assertIn("与现有组合的匹配度未达要求", body)
+            self.assertIn("补齐来源可核验的估值情景", body)
+            self.assertIn("证据失效或估值与风险出现冲突时提前复核", body)
+            self.assertNotIn("250.99", body)
+            self.assertNotIn("待判断上限：3 股", body)
+            self.assertNotIn("SPY · 观察名单", body)
+
+    def test_watch_stability_and_eligible_quantities_reuse_validated_plan(self) -> None:
+        decision = action_fixture()
+        decision["eligible_new_position_review_candidates"] = ["PANW"]
+        decision["pending_stability_candidates"] = ["PANW"]
+        decision["new_candidate_stability_distinct_closes"] = 1
+        decision["watch_candidates"] = [{"ticker": "PANW", "current_price": "190.25", "suggested_whole_shares": "1",
+                                          "maximum_review_price": "195.33", "action": "pending_second_distinct_close",
+                                          "valuation_bear_price": "175", "valuation_base_price": "220", "valuation_bull_price": "250"}]
+        view = build_email_view(decision)
+        self.assertIn("新增 0 股", view["watchlist"][0]["instruction"])
+        self.assertIn("当前 1 个", view["watchlist"][0]["reason"])
+        self.assertIn("重复刷新不算新确认", view["watchlist"][0]["next_step"])
+        self.assertNotIn("195.33", render_email(decision)[1])
+        decision["pending_stability_candidates"] = []
+        decision["new_candidate_stability_distinct_closes"] = 2
+        decision["watch_candidates"][0]["action"] = "eligible_buy_review"
+        view = build_email_view(decision)
+        plan = next(row for row in view["plans"] if row["ticker"] == "PANW")
+        self.assertEqual(view["watchlist"][0]["instruction"], plan["scenario"])
+        self.assertIn("待判断上限：1 股", view["watchlist"][0]["instruction"])
+        self.assertNotIn("新增 0 股", view["watchlist"][0]["instruction"])
+        self.assertIn("195.33", view["watchlist"][0]["instruction"])
+
+    def test_global_holds_mask_watch_quantities_even_when_lower_level_row_is_eligible(self) -> None:
+        for block in ("account", "data", "estimated_cash"):
+            decision = action_fixture()
+            decision["eligible_new_position_review_candidates"] = ["PANW"]
+            decision["new_candidate_stability_distinct_closes"] = 2
+            decision["watch_candidates"] = [{"ticker": "PANW", "current_price": "190.25", "suggested_whole_shares": "2", "maximum_review_price": "199.99"}]
+            if block == "account":
+                decision["account_conflicts"] = ["pending_execution:PANW"]
+            elif block == "data":
+                decision["market_gate"]["passed"] = False
+            else:
+                decision["account"]["cash_basis"] = "ledger_estimate"
+            with self.subTest(block=block):
+                view = build_email_view(decision)
+                self.assertFalse(view["plans"])
+                self.assertIn("新增 0 股", view["watchlist"][0]["instruction"])
+                self.assertNotIn("199.99", render_email(decision)[1])
+                if block == "data":
+                    self.assertIn("待核验参考价", view["watchlist"][0]["reference"])
+
+    def test_missing_watch_price_and_unknown_blocker_remain_explicit_unknowns(self) -> None:
+        decision = decision_fixture()
+        decision["watch_candidates"] = [{"ticker": "PANW", "gate_blockers": "future_new_gate"}]
+        row = build_email_view(decision)["watchlist"][0]
+        self.assertIn("参考收盘 待确认", row["reference"])
+        self.assertIn("另有准入阻断项待核对", row["reason"])
+        self.assertNotIn("future_new_gate", render_email(decision)[1])
+        self.assertNotIn("$0", row["reference"])
+
+    def test_nonheld_core_watch_does_not_invent_individual_stock_stability_gate(self) -> None:
+        decision = decision_fixture()
+        decision["watch_candidates"] = [{"ticker": "SPY", "current_price": "765.11",
+                                          "valuation_applicability": "not_applicable_broad_market_etf",
+                                          "gate_blockers": "whole_share_target_gap", "suggested_whole_shares": "0"}]
+        row = build_email_view(decision)["watchlist"][0]
+        self.assertIn("新增 0 股", row["instruction"])
+        self.assertIn("目标配置缺口不足一整股", row["reason"])
+        self.assertNotIn("两个不同有效收盘", row["next_step"])
+        self.assertNotIn("估值证据未齐", row["reason"])
+
     def test_account_conflict_overrides_even_stale_eligible_trim(self) -> None:
         decision = action_fixture()
         decision["account_conflicts"] = ["pending_execution:TEST"]
@@ -249,6 +337,8 @@ class EmailArtifactBindingTests(unittest.TestCase):
 
     def test_sender_rejects_stale_body_before_any_config_or_smtp_access(self) -> None:
         decision = decision_fixture()
+        legacy_config = copy.deepcopy(sender.load_active_config())
+        legacy_config["notifications"].pop("regular_delivery_mode", None)
         _, text, html = render_email(decision)
         with tempfile.TemporaryDirectory(prefix="phase5r-email-binding-") as directory, ExitStack() as stack:
             root = Path(directory)
@@ -260,6 +350,7 @@ class EmailArtifactBindingTests(unittest.TestCase):
                 stack.enter_context(patch.object(sender, key, value))
             stack.enter_context(patch.object(sender, "now_et", return_value=datetime(2026, 9, 1, 13, 30, tzinfo=ZoneInfo("America/New_York"))))
             stack.enter_context(patch.object(sender, "cycle_date", return_value="2026-09-01"))
+            stack.enter_context(patch.object(sender, "load_active_config", return_value=legacy_config))
             stack.enter_context(patch.object(sender, "load_config", side_effect=AssertionError("no credentials")))
             stack.enter_context(patch.object(sender.smtplib, "SMTP", side_effect=AssertionError("no SMTP")))
             self.assertEqual(sender.validate_decision(), decision)
