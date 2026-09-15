@@ -45,6 +45,8 @@
   "43": "Owner-requested research reviews",
   "44": "economic_packet",
   "45": "phase5r_portfolio_construction.py",
+  "46": "write_extension_admission_audit",
+  "47": "test_phase5r_b2_refresh_cadence.py",
   "51": "phase5r_valuation_input_bundle.py",
   "52": "Scoring",
   "54": "Phase 0C Reframe Plan",

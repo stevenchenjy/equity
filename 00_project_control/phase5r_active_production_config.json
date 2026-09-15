@@ -16,8 +16,13 @@
     "core_target_pct": 60.0,
     "active_target_pct": 20.0,
     "cash_target_pct": 20.0,
-    "single_stock_default_cap_pct": 6.0,
-    "single_stock_hard_cap_pct": 8.0,
+    "single_stock_default_cap_pct": 15.0,
+    "single_stock_hard_cap_pct": 15.0,
+    "research_risk_limits": {
+      "active_stock_hard_cap_pct": 50.0,
+      "single_stock_default_cap_pct": 15.0,
+      "single_stock_hard_cap_pct": 15.0
+    },
     "cash_reserved_usd": 500.0,
     "underdeployment_review_invested_pct_below": 25.0,
     "small_account_whole_share_exception_max_overshoot_pct": 2.0,

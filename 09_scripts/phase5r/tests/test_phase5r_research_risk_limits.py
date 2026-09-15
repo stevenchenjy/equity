@@ -10,6 +10,7 @@ from unittest.mock import patch
 from _support import SCRIPT_DIR  # noqa: F401
 import phase5r_active_config as config
 import phase5r_c9_common as account
+from phase5r_portfolio_construction import individual_sizing_decision
 
 
 class ResearchRiskLimitsTests(unittest.TestCase):
@@ -93,6 +94,26 @@ class ResearchRiskLimitsTests(unittest.TestCase):
             with self.assertRaises(config.ActiveConfigError):
                 config.load_active_config(path)
         self.assertEqual(config.ACTIVE_CONFIG_PATH.read_bytes(), before)
+
+    def test_selected_profile_removes_old_size_blocks_not_evidence_or_cash_checks(self):
+        policy = config.load_active_config()["account"]
+        limits = config.validate_research_risk_limits(policy["research_risk_limits"])
+        self.assertEqual(limits, self.limits())
+        state = {**self.state(), **limits}
+        self.assertEqual(account.concentration_status(12.3, state), "within_default_cap")
+        self.assertEqual(account.concentration_status(8.6, state), "within_default_cap")
+        self.assertEqual(account.concentration_status(15.01, state), "above_hard_cap")
+        args = dict(policy=policy, valuation_complete=True, score=7.8,
+                    confidence="medium_high", expected_upside_pct=20,
+                    reward_to_risk=2.1, entry_score=6.2, portfolio_fit_score=5,
+                    current_price=145, account_total=2500, deployable_cash=500,
+                    active_weight_pct=30.1, active_hard_cap_pct=50,
+                    single_stock_default_cap_pct=15)
+        self.assertEqual(individual_sizing_decision(**args)["suggested_whole_shares"], 1)
+        for changes in ({"active_hard_cap_pct": 30}, {"deployable_cash": 100},
+                        {"valuation_complete": False}, {"active_weight_pct": 50}):
+            with self.subTest(changes=changes):
+                self.assertEqual(individual_sizing_decision(**{**args, **changes})["suggested_whole_shares"], 0)
 
 
 if __name__ == "__main__":

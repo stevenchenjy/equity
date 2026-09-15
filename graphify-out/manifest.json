@@ -165,13 +165,13 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_account_state_policy.md": {
-    "mtime": 1788311317.9783306,
-    "ast_hash": "de1d2ddaeaa8c3a4514224c73810840a",
+    "mtime": 1789437193.2718832,
+    "ast_hash": "50e74573110f2337d01cd0850a06abb6",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_action_threshold_policy.md": {
-    "mtime": 1788311317.9790032,
-    "ast_hash": "77f38fd20b34d446cab2a91828cff15d",
+    "mtime": 1789437575.1113834,
+    "ast_hash": "93f6651f05ec0811fd4c7ae9c50d1c65",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_core_allocation_policy.md": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_dynamic_weight_policy.md": {
-    "mtime": 1788203431.3884692,
-    "ast_hash": "07e4dc25fadb8976c736dbd5e704fdb2",
+    "mtime": 1789437575.1107204,
+    "ast_hash": "0ca74b55fcbbf271312004a5e356f0fd",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9b_price_aware_action_plan.py": {
@@ -505,8 +505,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_active_production_config.json": {
-    "mtime": 1789435589.7383535,
-    "ast_hash": "423e82ff58722d9f48b8cd6e7caadda0",
+    "mtime": 1789437575.108676,
+    "ast_hash": "69f157639ed0f6bcbb091957ec223332",
     "semantic_hash": ""
   },
   "01_policies/phase5r_valuation_scenario_policy.json": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_owner_review_preferences.md": {
-    "mtime": 1789436494.9767747,
-    "ast_hash": "4125b9d23c78ec13ca45c4117bc66810",
+    "mtime": 1789437575.1096096,
+    "ast_hash": "3942c6d5a8b57fa3f601ba93607a1f56",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_notification_changes.py": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_research_risk_limits.py": {
-    "mtime": 1789437167.5745506,
-    "ast_hash": "8c592488de6ce96a1a8b1990b3cf6e98",
+    "mtime": 1789437575.1164267,
+    "ast_hash": "f2431e123119e97d36859e4a2e12caa6",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_risk_policy_diagnostic.py": {

@@ -17,20 +17,21 @@ for the current local state.
 
 ## Concentration and Sleeve Rules
 
-The percentages below describe the inherited, currently active profile.
-If the optional research-only risk overlay is explicitly activated, use its
-effective default/hard caps throughout these comparisons; do not hard-code
-the inherited numbers in labels. See the account-state policy. No new profile
-is activated by adding the overlay support.
+The active research overlay was set on 2026-09-14 to a 50% active-stock
+hard cap and 15% default/hard single-stock caps. Use effective configured
+values throughout these comparisons; the local financial record's inherited
+30%/6%/8% fields are not the current research limits.
 
-- Above `8%`: `above_hard_cap`.
-- Above `6%` through `8%`: `above_default_cap`.
-- At or below `6%`: `within_default_cap`.
+- Above `15%`: `above_hard_cap`.
+- Above default through hard: `above_default_cap` (empty band while both are 15%).
+- At or below `15%`: `within_default_cap`.
 - Combined active-stock sleeve at or below `20%`: `within_target`.
-- Above `20%` through `30%`: `above_target_within_hard_cap`.
-- Above `30%`: `above_hard_cap`.
+- Above `20%` through `50%`: `above_target_within_hard_cap`.
+- Above `50%`: `above_hard_cap`.
 
-Current positions are recalculated independently. A position at or below 8% cannot receive a concentration-only trim label. A combined sleeve at or below 30% cannot be described as above the hard cap.
+Current positions are recalculated independently. A position at or below the
+effective single-stock hard cap cannot receive a concentration-only trim label.
+A combined sleeve within its effective cap cannot be described as above it.
 
 ## Price Quality
 

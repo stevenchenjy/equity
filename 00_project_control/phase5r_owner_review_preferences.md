@@ -18,9 +18,14 @@ delivery authorization itself never changes risk limits.
   missing evidence and from a negative investment thesis.
 - Do not optimize thresholds to admit a ticker merely because it just rallied.
   Preserve verified evidence, cash/reserve checks and manual-only execution.
-- Exact replacement exposure limits are being selected separately. Until
-  activated and verified through every consuming stage, do not claim the
-  runtime limits changed, or present a proposed profile as already active.
+- On 2026-09-14 the owner directed the caps to the reasonably least restrictive
+  setting in the context of asking for less defensiveness. The selected starting
+  profile is the previously proposed moderate relaxation: active-stock hard cap
+  50%, new/held individual-stock caps 15%. This interprets the request as lowering
+  restriction strength, not lowering numerical caps. It is a preference choice,
+  not an empirically optimized portfolio. The explicit research overlay is the
+  authority; archived account-state caps remain historical financial-record
+  bytes. Evidence-tier targets, cash reserve and manual-only boundaries remain.
 - Review duplicate and indirect constraints, including theme-label-only fit
   deductions, integer-share rounding, and concentration-derived scores that
   can create an apparent thesis exit. Any change must have regression tests
@@ -30,6 +35,10 @@ delivery authorization itself never changes risk limits.
   returns and do not run inside the unattended deterministic scheduler.
 
 ## Delivery expectation
+
+- Prefer email and concise text for research results. Do not proactively open
+  HTML/web preview panels unless the owner asks to inspect one. A local email
+  preview is not a hosted site and is not needed for email delivery.
 
 - Frequency preference confirmed on 2026-09-14: regular research emails only
   when the watchlist or actionable recommendation changes, not a mandatory
