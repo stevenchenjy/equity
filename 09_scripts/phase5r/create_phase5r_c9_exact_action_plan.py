@@ -15,7 +15,7 @@ from phase5r_c9_common import (
     ROOT,
     append_run_log,
     as_float,
-    load_account_state,
+    load_research_account_state,
     load_active_inhibit,
     load_packets,
     load_portfolio_summary,
@@ -124,7 +124,7 @@ def valuation_trim_review_required(
 
 def main() -> None:
     load_active_inhibit()
-    account = load_account_state()
+    account = load_research_account_state()
     positions = {str(row["ticker"]): row for row in load_positions()}
     packets = load_packets()
     weights = read_csv(DYNAMIC_WEIGHTS)

@@ -29,6 +29,26 @@ Reported cash plus current holdings may differ from the last reported total beca
 
 If the local account file is absent, production fails closed. It never creates a dated example balance or silently invents a current account total.
 
+## Optional research-only risk limits
+
+`account.research_risk_limits` in the active production configuration may
+override exactly `active_stock_hard_cap_pct`, `single_stock_default_cap_pct`
+and `single_stock_hard_cap_pct` for research consumers. It is optional and is
+not activated merely by installing its supporting code. The three values must
+be finite numeric percentages with `0 < default <= single hard <= active hard
+<= 100`; the active hard cap cannot be below the recorded active target.
+
+Research weights, exact-action plans, cash plans, candidate sizing, research
+questions and evidence packets use `load_research_account_state()`. Raw
+financial validation, snapshots, confirmed-execution reconciliation and writers
+continue to use `load_account_state()`. The overlay never changes cash, shares,
+account timestamps, the NAV denominator, or account/snapshot hashes. Generated
+weight/summary rows and the evidence packet expose the effective caps.
+
+After a separately selected overlay is activated, rebuild all downstream
+portfolio and decision artifacts together from the same dated cached inputs.
+An old report does not become current simply because configuration changed.
+
 ## Privacy and Execution Boundary
 
 The account file is gitignored and local-user-readable only. C9 does not read SMTP credentials, archived position files, broker accounts, or transaction systems. Every output is research planning for manual confirmation.

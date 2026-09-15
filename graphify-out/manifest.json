@@ -135,8 +135,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/calculate_phase5r_c9_dynamic_weights.py": {
-    "mtime": 1788475144.5104432,
-    "ast_hash": "13a905f5db49c675b9017fc0cdb0ab0d",
+    "mtime": 1789436597.3799622,
+    "ast_hash": "3bf22fab3617704501d556bd9a520ece",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_account_state.py": {
@@ -145,23 +145,23 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_cash_deployment_plan.py": {
-    "mtime": 1788576675.3420558,
-    "ast_hash": "532fc16fd7449758bd588f577338cef4",
+    "mtime": 1789436597.3815064,
+    "ast_hash": "4167779ade379ab4a3518de3205b80ad",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_c9_exact_action_plan.py": {
-    "mtime": 1788475144.511339,
-    "ast_hash": "ea684ddbc7326f1167ff3b85c43b3ce1",
+    "mtime": 1789436597.3805733,
+    "ast_hash": "9cf014d888ea8da8878137fd0a6099de",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_c9_common.py": {
-    "mtime": 1789153993.0591156,
-    "ast_hash": "a2e6be3f379602a8b7c755dfc641e348",
+    "mtime": 1789436597.3792882,
+    "ast_hash": "5945a38e913429480771a0d7ea7bc224",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/regenerate_phase5r_c9_portfolio_outputs.py": {
-    "mtime": 1788475144.5129943,
-    "ast_hash": "b9844f8b3576ec3ac6a9e9f1e54bd562",
+    "mtime": 1789436597.3822753,
+    "ast_hash": "8e28501c050fe91d70183117d7d10e1c",
     "semantic_hash": ""
   },
   "00_project_control/phase5r_c9_account_state_policy.md": {
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/build_phase5r_decision_evidence_packet.py": {
-    "mtime": 1788581461.1465795,
-    "ast_hash": "3f75606b036aaf2919c7bda5b409dec9",
+    "mtime": 1789436597.3831937,
+    "ast_hash": "b5e60a592cca8df500458189fa9c4d9f",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/__init__.py": {
@@ -525,8 +525,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_active_config.py": {
-    "mtime": 1789435589.7379014,
-    "ast_hash": "fb48437160b4d9afadcf39197e05f096",
+    "mtime": 1789436597.3783784,
+    "ast_hash": "753957f4f7a814a3e4263b7148bf5ca4",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/refresh_phase5r_valuation_scenarios.py": {
@@ -660,8 +660,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_held_core_position.py": {
-    "mtime": 1788475533.761168,
-    "ast_hash": "4bfa7955c2e29540ffdef6fb161b5c4d",
+    "mtime": 1789436597.3842328,
+    "ast_hash": "bf7a07fb4df2302999da32b5d39c1840",
     "semantic_hash": ""
   },
   "03_source_data/phase5r/phase5r_sec_acceptance_extensions/phase5r_sec_acceptance_extension_v10.json": {
@@ -690,8 +690,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/create_phase5r_research_questions.py": {
-    "mtime": 1788576962.7662854,
-    "ast_hash": "8b957cf2246ee7f5124b48e915324b61",
+    "mtime": 1789436597.3836925,
+    "ast_hash": "b9351d8fb6b424a05682eb48c0397f48",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_financial_period_integrity.py": {
@@ -780,13 +780,38 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_owner_review_preferences.md": {
-    "mtime": 1789435439.0617967,
-    "ast_hash": "fe588a1dd29989b91348cfc83ab5e7e7",
+    "mtime": 1789436494.9767747,
+    "ast_hash": "4125b9d23c78ec13ca45c4117bc66810",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_notification_changes.py": {
     "mtime": 1789435827.850147,
     "ast_hash": "4e1d5096974ec23af7c4866e76e21015",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/phase5r_risk_policy_diagnostic.py": {
+    "mtime": 1789436755.490244,
+    "ast_hash": "f6b4a4d2737e9d50dc523906f1ed8677",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_research_risk_limits.py": {
+    "mtime": 1789437167.5745506,
+    "ast_hash": "8c592488de6ce96a1a8b1990b3cf6e98",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_risk_policy_diagnostic.py": {
+    "mtime": 1789436755.4907138,
+    "ast_hash": "7b875c42f983fd80f29e1192fad7c4af",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_risk_policy_audit_20260914.md": {
+    "mtime": 1789437167.575308,
+    "ast_hash": "78be2ed7d7bd05a7926d3ea477b2cf04",
+    "semantic_hash": ""
+  },
+  "08_reviews/phase5r_risk_skill_installation_20260914.md": {
+    "mtime": 1789436494.986859,
+    "ast_hash": "fa981958e393abb81cdcf11279a46c86",
     "semantic_hash": ""
   }
 }

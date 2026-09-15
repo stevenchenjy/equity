@@ -16,7 +16,7 @@ from phase5r_c9_common import (
     TARGET_ALLOCATION_REPORT,
     append_run_log,
     as_float,
-    load_account_state,
+    load_research_account_state,
     load_active_inhibit,
     load_market_rows,
     load_packets,
@@ -80,7 +80,7 @@ def _post_action_row(
 
 def main() -> None:
     inhibit = load_active_inhibit()
-    account = load_account_state()
+    account = load_research_account_state()
     summary = load_portfolio_summary()
     construction_policy = load_active_config()["account"]
     spy = load_market_rows(["SPY"])["SPY"]

@@ -17,6 +17,12 @@ for the current local state.
 
 ## Concentration and Sleeve Rules
 
+The percentages below describe the inherited, currently active profile.
+If the optional research-only risk overlay is explicitly activated, use its
+effective default/hard caps throughout these comparisons; do not hard-code
+the inherited numbers in labels. See the account-state policy. No new profile
+is activated by adding the overlay support.
+
 - Above `8%`: `above_hard_cap`.
 - Above `6%` through `8%`: `above_default_cap`.
 - At or below `6%`: `within_default_cap`.

@@ -44,6 +44,7 @@ from phase5r_packet_contract import (
     PACKET_SCHEMA_VERSION, ContractError, _assert_no_sensitive_markers, validate_packet,
 )
 from phase5r_active_config import load_active_config
+from phase5r_c9_common import load_research_account_state
 from refresh_phase5r_sec_filing_artifacts import event_window_material
 from phase5r_evidence_freshness import build_evidence_freshness_receipt
 from phase5r_return_objective import return_objective_payload
@@ -1111,7 +1112,7 @@ def build_packet(
     valuation_source_root: Path = ROOT,
 ) -> dict[str, Any]:
     decision = read_json(DAILY_DECISION_JSON_PATH)
-    account = read_json(ACCOUNT_STATE_PATH)
+    account = load_research_account_state()
     evidence_status = read_json(EVIDENCE_STATUS_PATH, {})
     positions = read_csv(POSITIONS_PATH)
     position_recommendations = read_csv(POSITION_RECOMMENDATION_PATH)

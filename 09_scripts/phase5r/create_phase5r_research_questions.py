@@ -15,6 +15,7 @@ from phase5r_daily_common import (
     canonical_sha256, iso_now, read_csv, read_json,
 )
 from track_phase5r_recommendation_outcomes import append_jsonl, jsonl
+from phase5r_c9_common import load_research_account_state
 
 REPORT = ROOT / "08_reviews/current/phase5r_research_questions.local.md"
 STATE = ROOT / "04_research/realtime_stock_picker_phase5r/phase5r_research_questions.local.json"
@@ -122,7 +123,7 @@ def main() -> int:
     valuations = {row["ticker"]: row for row in read_json(ROOT / "04_data/phase5r/phase5r_valuation_scenarios.local.json", {}).get("records", [])}
     summary_rows = read_csv(ROOT / "05_risk_and_positions/phase5r_c9_current_portfolio_summary.csv")
     weights = read_csv(ROOT / "05_risk_and_positions/phase5r_c9_dynamic_position_weights.csv")
-    account = read_json(ROOT / "05_risk_and_positions/current_account_state.local.json", {})
+    account = load_research_account_state()
     prior = read_json(STATE, {}).get("companies", {})
     seen = {row.get("event_id") for row in jsonl(HISTORY)}
     companies = {}

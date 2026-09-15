@@ -14,7 +14,7 @@ from phase5r_c9_common import (
     concentration_status,
     dynamic_position_fit,
     is_core_allocation_ticker,
-    load_account_state,
+    load_research_account_state,
     load_active_inhibit,
     load_market_rows,
     load_packets,
@@ -76,7 +76,7 @@ SUMMARY_FIELDS = [
 
 def main() -> None:
     load_active_inhibit()
-    account = load_account_state()
+    account = load_research_account_state()
     positions = load_positions()
     market = load_market_rows([str(row["ticker"]) for row in positions])
     packets = load_packets()

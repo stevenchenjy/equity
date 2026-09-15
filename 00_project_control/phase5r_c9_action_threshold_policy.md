@@ -2,6 +2,11 @@
 
 ## Current Positions
 
+The 8% references below describe the inherited profile. When an explicit
+research-risk overlay is activated, substitute its effective single-stock hard
+cap consistently in labels, score inputs, share arithmetic and report wording.
+This supporting change does not itself activate a replacement cap.
+
 - If dynamic weight is above 8%, generate a whole-share `trim_specific_shares_review` scenario unless an independent thesis break requires `exit_review`.
 - The trim count is the minimum whole-share reduction whose resulting current-price weight is at or below 8%; it is recalculated every run.
 - If dynamic weight is at or below 8% and research remains adequate, use `hold`; do not produce a concentration-only trim.

@@ -1,9 +1,33 @@
 # Owner-requested research reviews
 
 Recorded from the owner's explicit requests on 2026-09-14. These preferences
-apply to interactive rechecks and their email delivery; they do not authorize
-broker access, automatic trading, new recipients, extra scheduled sends, or a
-change to portfolio risk limits.
+apply to interactive rechecks and their email delivery. They do not authorize
+broker access, automatic trading, new recipients, or extra scheduled sends.
+The owner's later risk-policy direction is recorded separately below; email
+delivery authorization itself never changes risk limits.
+
+## Risk-policy direction (2026-09-14 evening)
+
+- The owner explicitly requested less defensive research and permitted
+  relaxing configurable risk thresholds. Interpret this as reducing
+  unnecessary restrictions, not lowering percentage caps and thereby making
+  the system more restrictive.
+- The inherited 30% active-stock cap and 6%/8% individual-stock caps are
+  configurable planning choices, not Chase requirements or empirically
+  demonstrated optimal allocations. Distinguish a policy blocker from
+  missing evidence and from a negative investment thesis.
+- Do not optimize thresholds to admit a ticker merely because it just rallied.
+  Preserve verified evidence, cash/reserve checks and manual-only execution.
+- Exact replacement exposure limits are being selected separately. Until
+  activated and verified through every consuming stage, do not claim the
+  runtime limits changed, or present a proposed profile as already active.
+- Review duplicate and indirect constraints, including theme-label-only fit
+  deductions, integer-share rounding, and concentration-derived scores that
+  can create an apparent thesis exit. Any change must have regression tests
+  and distinguish concentration concerns from business evidence.
+- The owner authorized installing suitable analytical skills. Installed
+  methods can help audit assumptions; they are not evidence of superior
+  returns and do not run inside the unattended deterministic scheduler.
 
 ## Delivery expectation
 

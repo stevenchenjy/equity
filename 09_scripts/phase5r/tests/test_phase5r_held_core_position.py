@@ -104,7 +104,7 @@ class HeldCorePositionTests(unittest.TestCase):
 
         with (
             patch.object(weights, "load_active_inhibit", return_value={"active": False}),
-            patch.object(weights, "load_account_state", return_value=account),
+            patch.object(weights, "load_research_account_state", return_value=account),
             patch.object(weights, "load_positions", return_value=positions),
             patch.object(weights, "load_market_rows", return_value=market),
             patch.object(weights, "load_packets", return_value=packets),
@@ -157,7 +157,7 @@ class HeldCorePositionTests(unittest.TestCase):
                 patch.object(action_plan, "VALUATION_SCENARIO_PATH", valuation_path),
                 patch.object(action_plan, "VALUATION_POLICY_PATH", policy_path),
                 patch.object(action_plan, "load_active_inhibit", return_value={"active": False}),
-                patch.object(action_plan, "load_account_state", return_value=account),
+                patch.object(action_plan, "load_research_account_state", return_value=account),
                 patch.object(action_plan, "load_positions", return_value=list(positions.values())),
                 patch.object(action_plan, "load_packets", return_value={"SPY": {"recommendation_confidence": "medium_high"}}),
                 patch.object(action_plan, "read_csv", return_value=weight_rows),

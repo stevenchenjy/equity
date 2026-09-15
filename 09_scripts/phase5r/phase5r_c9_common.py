@@ -192,6 +192,25 @@ def load_account_state() -> dict[str, object]:
     return state
 
 
+def load_research_account_state() -> dict[str, object]:
+    """Overlay explicit research caps while preserving raw financial truth.
+
+    Financial validators, snapshot writers and fill reconciliation must keep
+    using load_account_state(), because some persist the returned dictionary.
+    This function never modifies the account file, timestamps, cash or shares.
+    """
+    from phase5r_active_config import load_active_config, validate_research_risk_limits
+
+    state = load_account_state()
+    policy = load_active_config()["account"]
+    if "research_risk_limits" not in policy:
+        return dict(state)
+    limits = validate_research_risk_limits(policy["research_risk_limits"])
+    if limits["active_stock_hard_cap_pct"] < as_float(state["active_stock_target_pct"], "active_stock_target_pct"):
+        raise ValueError("research active-stock hard cap cannot be below the recorded active-stock target")
+    return {**state, **limits}
+
+
 def load_portfolio_summary() -> dict[str, str]:
     """Load the one-row dynamic account summary used for current denominators."""
 

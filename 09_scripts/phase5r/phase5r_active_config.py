@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import math
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,23 @@ class ActiveConfigError(ValueError):
     """Raised when the active configuration is unsafe or incomplete."""
 
 
+RESEARCH_RISK_LIMIT_KEYS = {
+    "active_stock_hard_cap_pct", "single_stock_default_cap_pct", "single_stock_hard_cap_pct",
+}
+
+
+def validate_research_risk_limits(value: Any) -> dict[str, float]:
+    """Validate an optional research overlay without accepting financial data."""
+    if not isinstance(value, dict) or set(value) != RESEARCH_RISK_LIMIT_KEYS:
+        raise ActiveConfigError("research risk limits must contain exactly the three allowed cap fields")
+    if any(type(item) not in {int, float} or not math.isfinite(item) for item in value.values()):
+        raise ActiveConfigError("research risk limits must be finite numbers")
+    limits = {key: float(item) for key, item in value.items()}
+    if not 0 < limits["single_stock_default_cap_pct"] <= limits["single_stock_hard_cap_pct"] <= limits["active_stock_hard_cap_pct"] <= 100:
+        raise ActiveConfigError("research risk limits require 0 < default <= single hard <= active hard <= 100")
+    return limits
+
+
 def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     config = read_json(path)
     if not isinstance(config, dict) or set(config) != _REQUIRED_TOP_LEVEL:
@@ -43,6 +61,9 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         raise ActiveConfigError("configuration dates must be ISO dates") from exc
     if review_by < effective:
         raise ActiveConfigError("review_by cannot precede effective_from")
+    account = config.get("account", {})
+    if "research_risk_limits" in account:
+        validate_research_risk_limits(account["research_risk_limits"])
     boundaries = config.get("boundaries", {})
     if boundaries.get("research_only") is not True:
         raise ActiveConfigError("research_only must remain true")

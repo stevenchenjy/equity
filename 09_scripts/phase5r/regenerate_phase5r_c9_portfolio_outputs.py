@@ -28,7 +28,7 @@ from phase5r_c9_common import (
     append_run_log,
     as_float,
     dynamic_candidate_fit,
-    load_account_state,
+    load_research_account_state,
     load_active_inhibit,
     load_packets,
     read_csv,
@@ -162,7 +162,7 @@ def main() -> None:
     inhibit = load_active_inhibit()
     maintenance_active = inhibit.get("active") is True
     run_children()
-    account = load_account_state()
+    account = load_research_account_state()
     construction_policy = load_active_config()["account"]
     valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
     valuation_by_ticker = {
