@@ -7,7 +7,9 @@ The only authorized sender is `send_phase5r_daily_email.py`. It requires:
 - `daily_decision / phase5r_daily / phase5r_daily_only`;
 - maintenance inhibit cleared only for `phase5r_daily`;
 - the ET date on or after `operational_from`;
-- a current decision artifact with `send_recommended=true`;
+- a current decision artifact with truthful notification-policy fields
+  (`send_recommended=true` for ordinary/correction delivery; the explicit
+  owner-review path below also accepts a truthfully suppressed decision);
 - all broker/order boundaries set to false;
 - no existing blocking delivery state for the ET cycle.
 
@@ -71,7 +73,8 @@ A user-requested one-off research appendix may be bound to the current
 decision fingerprint and rendered with explicit separation from deterministic
 decisions. The composer never reads or carries it forward; it cannot change
 eligibility, thresholds, sizing or SHADOW evidence. Only the existing sender
-and its normal/correction deduplication rules may deliver that email.
+and its normal/correction or explicit owner-review deduplication rules may
+deliver that email.
 
 Design sources, consulted 2026-09-05: the
 [SEC Plain English Handbook](https://www.sec.gov/pdf/handbook.pdf) supports
@@ -152,6 +155,54 @@ therefore favors a missed status confirmation over a duplicate email.
   `correction_delivery_unknown` row blocks that same correction content from
   ever being attempted again; a newly changed version remains eligible.
 - Correction messages use the subject prefix `[Phase 5R 更正版]`.
+
+### Explicit owner-requested review (2026-09-14)
+
+The owner requests an updated email whenever they ask to redo/recheck the
+review (including `重新复核`). After completing that review, invoke the existing
+sender with `--send-owner-review REQUEST_ID`. This is an explicit-request
+delivery mode, never a scheduler command. A distinct ID must correspond to a
+distinct real user request; retries keep the same ID.
+
+- Bind `owner_requested_research` to the canonical `decision_fingerprint`,
+  `mode=explicit_one_off_research`, and the same `request_id` supplied to the
+  CLI. IDs use 8–128 ASCII letters/digits/`_.:-`, beginning with a letter/digit.
+- `reviewed_at` must include a timezone, be on the current ET date, and be no
+  more than six hours old or in the future. `market_as_of` is an ISO trading
+  session date between the latest provider-published close and the latest
+  completed close, inclusive, using existing holiday and publication helpers.
+  A holiday weekend does not make the most recent valid close stale.
+- The canonical decision may be for the current or immediately prior ET
+  cycle. Its existing notification policy, `send_recommended` and
+  `send_reason` are revalidated as generated and are never changed to make an
+  explicit review eligible. No prior scheduled delivery or changed-content
+  hash is required: a user can request another review of unchanged conditions.
+- Preserve maintenance, operational-date, active-workflow and broker/order
+  boundaries. Only the ordinary 13:30 clock is waived. Require the versioned
+  shared renderer and exact decision/text/HTML correspondence before opening
+  SMTP configuration; revalidate after obtaining the delivery lock. Explicit
+  review MIME bodies are rendered from that validated in-memory decision;
+  ledger hashes retain its original parsed JSON bytes and rendered text/HTML.
+  Later replacement of shared artifacts cannot change the content sent or
+  the delivery evidence recorded.
+- Before SMTP, write `owner_review_send_claimed`; then record
+  `owner_review_sent` or `owner_review_delivery_unknown`. Each reason includes
+  `owner_request_sha256=<SHA-256 of request_id>` using the existing ledger
+  schema. Any of those states blocks reuse of that request ID across cycles
+  and content changes, before credentials are read. Uncertain delivery is
+  never retried automatically.
+- Use subject prefix `[Phase 5R 应请求复核]`. Lead with the dated requested
+  review and source links, preserving its line breaks. Display the original
+  deterministic holdings table later with its actual reference-close date;
+  when the research date is newer, label that table as an old-close baseline.
+- Public research source links use exact HTTPS host allowlists, including
+  permitted company IR, SEC, Federal Reserve, Investor.gov/FINRA and
+  Stock Analysis price-history sources, plus Chase/JPMorgan order guidance.
+  A secondary price source is labelled
+  as market reference, not as an official financial filing.
+
+This mode supplies the requested email without manufacturing a scheduled
+material event, changing the daily decision state or registering a trade.
 
 The local SMTP configuration must be a single-link regular file owned by the
 runtime user with no group or other permissions. The sender opens it with

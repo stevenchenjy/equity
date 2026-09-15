@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
+import re
 import smtplib
 import ssl
 import stat
@@ -27,6 +29,9 @@ from phase5r_daily_common import (
     cycle_date,
     delivery_guard,
     iso_now,
+    is_us_market_session_date,
+    last_completed_market_session,
+    latest_published_market_session,
     log_daily_run,
     notification_delivery_policy,
     now_et,
@@ -42,6 +47,11 @@ CORRECTION_DELIVERY_STATUSES = {
     "correction_send_claimed",
     "correction_sent",
     "correction_delivery_unknown",
+}
+OWNER_REVIEW_DELIVERY_STATUSES = {
+    "owner_review_send_claimed",
+    "owner_review_sent",
+    "owner_review_delivery_unknown",
 }
 REQUIRED_CONFIG_KEYS = {
     "smtp_host",
@@ -165,15 +175,53 @@ def delivery_policy(
     )
 
 
-def validate_decision(*, correction: bool = False) -> dict[str, Any]:
-    decision = read_json(DAILY_DECISION_JSON_PATH)
+def validate_owner_review(decision: dict[str, Any], request_id: str) -> None:
+    """Bind one real owner request to a recent, explicitly dated review."""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{7,127}", request_id):
+        raise ValueError("owner_review_request_id_invalid")
+    review = decision.get("owner_requested_research")
+    if (not isinstance(review, dict)
+            or review.get("mode") != "explicit_one_off_research"
+            or review.get("request_id") != request_id
+            or not decision.get("decision_fingerprint")
+            or review.get("decision_fingerprint") != decision["decision_fingerprint"]):
+        raise ValueError("owner_review_request_mismatch")
+    try:
+        reviewed_at = datetime.fromisoformat(str(review["reviewed_at"]).replace("Z", "+00:00"))
+        market_as_of = date.fromisoformat(str(review["market_as_of"]))
+    except (KeyError, ValueError, TypeError) as exc:
+        raise ValueError("owner_review_timestamp_invalid") from exc
+    current = now_et()
+    if reviewed_at.tzinfo is None:
+        raise ValueError("owner_review_timestamp_invalid")
+    age_seconds = (current - reviewed_at).total_seconds()
+    if (reviewed_at.astimezone(current.tzinfo).date() != current.date()
+            or not 0 <= age_seconds <= 6 * 60 * 60):
+        raise ValueError("owner_review_not_recent")
+    if (not is_us_market_session_date(market_as_of)
+            or not latest_published_market_session(current) <= market_as_of <= last_completed_market_session(current)):
+        raise ValueError("owner_review_market_date_out_of_range")
+    # Owner delivery cannot fall back to unbound legacy text/HTML artifacts.
+    if decision.get("email_brief_version") != EMAIL_BRIEF_VERSION:
+        raise ValueError("owner_review_requires_bound_brief")
+
+
+def validate_decision(
+    *, correction: bool = False, owner_review_request_id: str | None = None,
+    snapshot_hashes: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    # Retain exactly the bytes parsed for an explicit review. A concurrent
+    # producer may replace the canonical files after this validation returns.
+    decision_bytes = (DAILY_DECISION_JSON_PATH.read_bytes()
+                      if owner_review_request_id is not None else None)
+    decision = json.loads(decision_bytes) if decision_bytes is not None else read_json(DAILY_DECISION_JSON_PATH)
     decision_cycle_text = str(decision.get("cycle_date", ""))
     try:
         decision_cycle = date.fromisoformat(decision_cycle_text)
     except ValueError as exc:
         raise ValueError("decision_cycle_invalid") from exc
     current = now_et()
-    if correction:
+    if correction or owner_review_request_id is not None:
         correction_age_days = (current.date() - decision_cycle).days
         if correction_age_days not in {0, 1}:
             raise ValueError("correction_cycle_out_of_range")
@@ -183,6 +231,10 @@ def validate_decision(*, correction: bool = False) -> dict[str, Any]:
             raise ValueError("decision_generated_at_invalid") from exc
         if validation_current.date() != decision_cycle:
             raise ValueError("decision_generated_at_cycle_mismatch")
+        if owner_review_request_id is not None:
+            if validation_current.tzinfo is None or validation_current > current:
+                raise ValueError("decision_generated_at_invalid")
+            validate_owner_review(decision, owner_review_request_id)
     else:
         if decision_cycle_text != cycle_date():
             raise ValueError("decision_cycle_mismatch")
@@ -289,6 +341,12 @@ def validate_decision(*, correction: bool = False) -> dict[str, Any]:
         if (DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8") != expected_text
                 or DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8") != expected_html):
             raise ValueError("daily_brief_decision_mismatch")
+        if decision_bytes is not None and snapshot_hashes is not None:
+            snapshot_hashes.update({
+                "decision_sha256": hashlib.sha256(decision_bytes).hexdigest(),
+                "brief_text_sha256": hashlib.sha256(expected_text.encode("utf-8")).hexdigest(),
+                "brief_html_sha256": hashlib.sha256(expected_html.encode("utf-8")).hexdigest(),
+            })
     return decision
 
 
@@ -297,9 +355,12 @@ def build_message(
     decision: dict[str, Any],
     *,
     correction: bool = False,
+    owner_review: bool = False,
 ) -> EmailMessage:
     if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
-        subject = safe_header(email_subject(decision, correction=correction), "subject")
+        subject = safe_header(
+            email_subject(decision, correction=correction, owner_review=owner_review), "subject"
+        )
     else:
         headline = safe_header(decision.get("headline"), "headline")
         prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
@@ -308,10 +369,15 @@ def build_message(
     message["Subject"] = subject
     message["From"] = f"{config['sender_name']} <{config['smtp_username']}>"
     message["To"] = config["recipient_email"]
-    message.set_content(DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8"))
-    message.add_alternative(
-        DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8"), subtype="html"
-    )
+    if owner_review:
+        # Only this validated in-memory decision supplies explicit-review
+        # content; reading the shared briefs here would race the producer.
+        _, body_text, body_html = render_email(decision)
+    else:
+        body_text = DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8")
+        body_html = DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8")
+    message.set_content(body_text)
+    message.add_alternative(body_html, subtype="html")
     secret = str(config["smtp_app_password"])
     if secret and secret.encode("utf-8") in message.as_bytes():
         raise RuntimeError("secret_in_message_blocked")
@@ -327,7 +393,13 @@ def append_delivery(
     email_sent: str,
     smtp_config_read: str,
     message_count: str,
+    content_hashes: dict[str, str] | None = None,
 ) -> None:
+    hashes = content_hashes if content_hashes is not None else {
+        "decision_sha256": sha256_file(DAILY_DECISION_JSON_PATH),
+        "brief_text_sha256": sha256_file(DAILY_BRIEF_TEXT_PATH),
+        "brief_html_sha256": sha256_file(DAILY_BRIEF_HTML_PATH),
+    }
     append_csv_durable(
         DAILY_DELIVERY_LEDGER_PATH,
         LEDGER_FIELDS,
@@ -337,9 +409,9 @@ def append_delivery(
             "status": status,
             "reason": reason,
             "decision_fingerprint": decision.get("decision_fingerprint", ""),
-            "decision_sha256": sha256_file(DAILY_DECISION_JSON_PATH),
-            "brief_text_sha256": sha256_file(DAILY_BRIEF_TEXT_PATH),
-            "brief_html_sha256": sha256_file(DAILY_BRIEF_HTML_PATH),
+            "decision_sha256": hashes["decision_sha256"],
+            "brief_text_sha256": hashes["brief_text_sha256"],
+            "brief_html_sha256": hashes["brief_html_sha256"],
             "message_count": message_count,
             "email_attempted": email_attempted,
             "email_sent": email_sent,
@@ -387,16 +459,39 @@ def correction_eligibility(
     return True, "explicit_changed_content_correction"
 
 
+def owner_review_request_key(request_id: str) -> str:
+    # Keep the append-only ledger's existing CSV schema intact.
+    return "owner_request_sha256=" + hashlib.sha256(request_id.encode("utf-8")).hexdigest()
+
+
+def owner_review_eligibility(
+    rows: list[dict[str, str]], request_id: str
+) -> tuple[bool, str]:
+    key = owner_review_request_key(request_id)
+    if any(
+        row.get("status", "").strip() in OWNER_REVIEW_DELIVERY_STATUSES
+        and key in row.get("reason", "").split(";")
+        for row in rows
+    ):
+        return False, "existing_owner_review_request"
+    return True, "explicit_owner_review_request"
+
+
 def send_once(
     smtp_factory: Callable[..., Any] = smtplib.SMTP,
     *,
     correction: bool = False,
+    owner_review_request_id: str | None = None,
 ) -> int:
-    run_mode = "explicit_correction_resend" if correction else "send"
+    owner_review = owner_review_request_id is not None
+    if correction and owner_review:
+        raise ValueError("delivery_modes_mutually_exclusive")
+    run_mode = ("explicit_owner_review" if owner_review
+                else "explicit_correction_resend" if correction else "send")
     enabled, guard_reason, _, _ = delivery_guard()
-    if correction and guard_reason == "before_daily_decision_time":
+    if (correction or owner_review) and guard_reason == "before_daily_decision_time":
         enabled = True
-        guard_reason = "explicit_correction_clock_override"
+        guard_reason = "explicit_request_clock_override"
     if not enabled:
         log_daily_run(
             component="daily_sender",
@@ -408,7 +503,8 @@ def send_once(
         return 2
 
     try:
-        decision = validate_decision(correction=correction)
+        decision = (validate_decision(owner_review_request_id=owner_review_request_id)
+                    if owner_review else validate_decision(correction=correction))
     except (OSError, ValueError) as exc:
         reason = str(exc) if str(exc) else "decision_validation_failed"
         log_daily_run(
@@ -419,7 +515,7 @@ def send_once(
         )
         print(f"email_sent=false reason={reason} smtp_config_read=false")
         return 2
-    if decision.get("send_recommended") is not True:
+    if not owner_review and decision.get("send_recommended") is not True:
         log_daily_run(
             component="daily_sender",
             run_mode=run_mode,
@@ -433,9 +529,15 @@ def send_once(
         return 0
 
     target_cycle = str(decision["cycle_date"])
+    owner_content_hashes: dict[str, str] | None = {} if owner_review else None
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
         delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
-        if correction:
+        if owner_review:
+            allowed, prior_status = owner_review_eligibility(
+                delivery_rows, owner_review_request_id
+            )
+            blocked = not allowed
+        elif correction:
             correction_allowed, correction_reason = correction_eligibility(
                 delivery_rows, target_cycle
             )
@@ -448,17 +550,28 @@ def send_once(
                 component="daily_sender",
                 run_mode=run_mode,
                 outcome="deduplicated",
-                reason=prior_status if correction else f"existing_{prior_status}",
+                reason=prior_status if correction or owner_review else f"existing_{prior_status}",
             )
             print(
-                f"email_sent=false reason={prior_status if correction else f'existing_{prior_status}'} "
+                f"email_sent=false reason={prior_status if correction or owner_review else f'existing_{prior_status}'} "
                 "smtp_config_read=false"
             )
             return 0
 
+        if owner_review:
+            try:
+                if validate_decision(owner_review_request_id=owner_review_request_id,
+                                     snapshot_hashes=owner_content_hashes) != decision:
+                    raise ValueError("owner_review_changed_before_claim")
+            except (OSError, ValueError) as exc:
+                log_daily_run(component="daily_sender", run_mode=run_mode,
+                              outcome="blocked", reason=str(exc))
+                print(f"email_sent=false reason={exc} smtp_config_read=false")
+                return 2
+
         try:
             config = load_config()
-            message = build_message(config, decision, correction=correction)
+            message = build_message(config, decision, correction=correction, owner_review=owner_review)
         except (ConfigError, OSError, ValueError, RuntimeError):
             log_daily_run(
                 component="daily_sender",
@@ -473,19 +586,19 @@ def send_once(
             )
             return 2
 
+        status_prefix = "owner_review_" if owner_review else "correction_" if correction else ""
+        reason_prefix = "explicit_owner_review_" if owner_review else "explicit_correction_" if correction else ""
+        request_suffix = (";" + owner_review_request_key(owner_review_request_id)) if owner_review else ""
         # This durable claim is intentionally written before any SMTP operation.
         append_delivery(
-            status="correction_send_claimed" if correction else "send_claimed",
-            reason=(
-                "explicit_correction_pre_smtp_durable_claim"
-                if correction
-                else "pre_smtp_durable_claim"
-            ),
+            status=status_prefix + "send_claimed",
+            reason=reason_prefix + "pre_smtp_durable_claim" + request_suffix,
             decision=decision,
             email_attempted="no",
             email_sent="no",
             smtp_config_read="yes",
             message_count="0",
+            content_hashes=owner_content_hashes,
         )
         try:
             with smtp_factory("smtp.gmail.com", 587, timeout=30) as client:
@@ -496,19 +609,14 @@ def send_once(
                 client.send_message(message)
         except Exception:
             append_delivery(
-                status=(
-                    "correction_delivery_unknown" if correction else "delivery_unknown"
-                ),
-                reason=(
-                    "explicit_correction_smtp_exception_after_claim"
-                    if correction
-                    else "smtp_exception_after_claim"
-                ),
+                status=status_prefix + "delivery_unknown",
+                reason=reason_prefix + "smtp_exception_after_claim" + request_suffix,
                 decision=decision,
                 email_attempted="yes",
                 email_sent="unknown",
                 smtp_config_read="yes",
                 message_count="0_or_1",
+                content_hashes=owner_content_hashes,
             )
             log_daily_run(
                 component="daily_sender",
@@ -526,17 +634,14 @@ def send_once(
             return 1
 
         append_delivery(
-            status="correction_sent" if correction else "sent",
-            reason=(
-                "explicit_correction_smtp_send_completed"
-                if correction
-                else "smtp_send_completed"
-            ),
+            status=status_prefix + "sent",
+            reason=reason_prefix + "smtp_send_completed" + request_suffix,
             decision=decision,
             email_attempted="yes",
             email_sent="yes",
             smtp_config_read="yes",
             message_count="1",
+            content_hashes=owner_content_hashes,
         )
         log_daily_run(
             component="daily_sender",
@@ -549,7 +654,7 @@ def send_once(
         )
         print(
             "email_sent=true message_count=1 automatic_retry=false "
-            f"correction={str(correction).lower()}"
+            f"correction={str(correction).lower()} owner_review={str(owner_review).lower()}"
         )
         return 0
 
@@ -559,6 +664,8 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--send", action="store_true")
     mode.add_argument("--resend-correction", action="store_true")
+    mode.add_argument("--send-owner-review", metavar="REQUEST_ID",
+                      help="Send one explicitly requested, dated owner review; never scheduled")
     mode.add_argument("--check", action="store_true")
     args = parser.parse_args()
     if args.check:
@@ -568,7 +675,7 @@ def main() -> int:
             f"reason={reason} smtp_config_read=false email_attempted=false"
         )
         return 0
-    return send_once(correction=args.resend_correction)
+    return send_once(correction=args.resend_correction, owner_review_request_id=args.send_owner_review)
 
 
 if __name__ == "__main__":

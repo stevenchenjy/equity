@@ -312,7 +312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline",
-      "community": 8,
+      "community": 15,
       "norm_label": "build_phase5r_current_research_baseline.py"
     },
     {
@@ -322,7 +322,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_number",
-      "community": 8,
+      "community": 15,
       "norm_label": "number()"
     },
     {
@@ -332,7 +332,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_clamp",
-      "community": 8,
+      "community": 15,
       "norm_label": "clamp()"
     },
     {
@@ -342,7 +342,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_selected_tickers",
-      "community": 8,
+      "community": 15,
       "norm_label": "selected_tickers()"
     },
     {
@@ -352,7 +352,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_current_research_baseline_main",
-      "community": 8,
+      "community": 15,
       "norm_label": "main()"
     },
     {
@@ -532,7 +532,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_effective_acceptance_map",
-      "community": 16,
+      "community": 4,
       "norm_label": "_effective_acceptance_map()"
     },
     {
@@ -702,7 +702,7 @@
       "source_location": "L451",
       "_origin": "ast",
       "id": "09_scripts_phase5r_build_phase5r_decision_evidence_packet_rationale_451",
-      "community": 16,
+      "community": 4,
       "norm_label": "return the immutable index plus every validated append-only extension."
     },
     {
@@ -812,7 +812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan",
-      "community": 20,
+      "community": 12,
       "norm_label": "create_phase5r_c9_exact_action_plan.py"
     },
     {
@@ -822,7 +822,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
-      "community": 20,
+      "community": 12,
       "norm_label": "valuation_trim_review_required()"
     },
     {
@@ -862,7 +862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation",
-      "community": 15,
+      "community": 52,
       "norm_label": "create_phase5r_capital_allocation_validation.py"
     },
     {
@@ -872,7 +872,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_number",
-      "community": 15,
+      "community": 52,
       "norm_label": "_number()"
     },
     {
@@ -882,7 +882,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_jsonl",
-      "community": 15,
+      "community": 52,
       "norm_label": "_jsonl()"
     },
     {
@@ -892,7 +892,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_py_path",
-      "community": 15,
+      "community": 52,
       "norm_label": "path"
     },
     {
@@ -902,7 +902,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_main",
-      "community": 15,
+      "community": 52,
       "norm_label": "main()"
     },
     {
@@ -1492,7 +1492,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status",
-      "community": 12,
+      "community": 22,
       "norm_label": "generate_phase5r_current_status.py"
     },
     {
@@ -1502,7 +1502,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_jsonl_count",
-      "community": 12,
+      "community": 22,
       "norm_label": "jsonl_count()"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_py_path",
-      "community": 12,
+      "community": 22,
       "norm_label": "path"
     },
     {
@@ -1522,7 +1522,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_main",
-      "community": 12,
+      "community": 22,
       "norm_label": "main()"
     },
     {
@@ -1532,7 +1532,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config",
-      "community": 12,
+      "community": 22,
       "norm_label": "phase5r_active_config.py"
     },
     {
@@ -1542,7 +1542,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_activeconfigerror",
-      "community": 12,
+      "community": 22,
       "norm_label": "activeconfigerror"
     },
     {
@@ -1552,7 +1552,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_valueerror",
-      "community": 12,
+      "community": 22,
       "norm_label": "valueerror"
     },
     {
@@ -1562,7 +1562,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_load_active_config",
-      "community": 12,
+      "community": 22,
       "norm_label": "load_active_config()"
     },
     {
@@ -1572,7 +1572,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_path",
-      "community": 12,
+      "community": 22,
       "norm_label": "path"
     },
     {
@@ -1582,7 +1582,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_py_any",
-      "community": 12,
+      "community": 22,
       "norm_label": "any"
     },
     {
@@ -1592,7 +1592,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_main",
-      "community": 12,
+      "community": 22,
       "norm_label": "main()"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_active_config_rationale_30",
-      "community": 12,
+      "community": 22,
       "norm_label": "raised when the active configuration is unsafe or incomplete."
     },
     {
@@ -2192,7 +2192,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_py_path",
-      "community": 7,
+      "community": 8,
       "norm_label": "path"
     },
     {
@@ -2222,7 +2222,7 @@
       "source_location": "L289",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text",
-      "community": 7,
+      "community": 8,
       "norm_label": "atomic_write_text()"
     },
     {
@@ -2232,7 +2232,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_json",
-      "community": 7,
+      "community": 8,
       "norm_label": "atomic_write_json()"
     },
     {
@@ -2242,7 +2242,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_csv",
-      "community": 15,
+      "community": 52,
       "norm_label": "atomic_write_csv()"
     },
     {
@@ -2252,7 +2252,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_append_csv_durable",
-      "community": 7,
+      "community": 8,
       "norm_label": "append_csv_durable()"
     },
     {
@@ -2262,7 +2262,7 @@
       "source_location": "L362",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_bytes",
-      "community": 10,
+      "community": 7,
       "norm_label": "sha256_bytes()"
     },
     {
@@ -2272,7 +2272,7 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_file",
-      "community": 10,
+      "community": 1,
       "norm_label": "sha256_file()"
     },
     {
@@ -2332,7 +2332,7 @@
       "source_location": "L438",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy",
-      "community": 414,
+      "community": 10,
       "norm_label": "notification_delivery_policy()"
     },
     {
@@ -2412,7 +2412,7 @@
       "source_location": "L651",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock_exit",
-      "community": 5,
+      "community": 8,
       "norm_label": ".__exit__()"
     },
     {
@@ -2422,7 +2422,7 @@
       "source_location": "L658",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_log_daily_run",
-      "community": 7,
+      "community": 8,
       "norm_label": "log_daily_run()"
     },
     {
@@ -2472,7 +2472,7 @@
       "source_location": "L448",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_448",
-      "community": 414,
+      "community": 10,
       "norm_label": "return event-driven eligibility independently of scheduler time."
     },
     {
@@ -2529,7 +2529,7 @@
       "label": "_decimal()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L34",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_decimal",
       "community": 26,
@@ -2549,7 +2549,7 @@
       "label": "number()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L42",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_number",
       "community": 26,
@@ -2559,7 +2559,7 @@
       "label": "money()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L53",
+      "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_money",
       "community": 26,
@@ -2569,7 +2569,7 @@
       "label": "percent()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L57",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_percent",
       "community": 26,
@@ -2579,7 +2579,7 @@
       "label": "shares()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L61",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_shares",
       "community": 26,
@@ -2589,7 +2589,7 @@
       "label": "_comparison_weight()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L65",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_comparison_weight",
       "community": 26,
@@ -2599,7 +2599,7 @@
       "label": "_time()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L71",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_time",
       "community": 26,
@@ -2609,7 +2609,7 @@
       "label": "_is_core()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L81",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_is_core",
       "community": 26,
@@ -2619,7 +2619,7 @@
       "label": "_valuation()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L85",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_valuation",
       "community": 26,
@@ -2629,7 +2629,7 @@
       "label": "_action_kind()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L94",
+      "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_action_kind",
       "community": 26,
@@ -2639,7 +2639,7 @@
       "label": "_reason()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L105",
+      "source_location": "L111",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_reason",
       "community": 26,
@@ -2649,7 +2649,7 @@
       "label": "_safe_source()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L122",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_safe_source",
       "community": 26,
@@ -2659,7 +2659,7 @@
       "label": "_owner_research()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L135",
+      "source_location": "L141",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_owner_research",
       "community": 26,
@@ -2669,7 +2669,7 @@
       "label": "_conflict_tasks()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L167",
+      "source_location": "L173",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_conflict_tasks",
       "community": 26,
@@ -2679,7 +2679,7 @@
       "label": "build_email_view()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L179",
+      "source_location": "L185",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "community": 26,
@@ -2689,7 +2689,7 @@
       "label": "email_subject()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L359",
+      "source_location": "L365",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_email_subject",
       "community": 26,
@@ -2699,7 +2699,7 @@
       "label": "render_email()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L365",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_email_brief_render_email",
       "community": 26,
@@ -2719,9 +2719,9 @@
       "label": "Translate known deterministic templates, never invent a company thesis.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L106",
+      "source_location": "L112",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_phase5r_email_brief_rationale_106",
+      "id": "09_scripts_phase5r_phase5r_email_brief_rationale_112",
       "community": 26,
       "norm_label": "translate known deterministic templates, never invent a company thesis."
     },
@@ -2729,9 +2729,9 @@
       "label": "Optional explicit-request appendix, never read by the decision composer.      A",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L136",
+      "source_location": "L142",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_phase5r_email_brief_rationale_136",
+      "id": "09_scripts_phase5r_phase5r_email_brief_rationale_142",
       "community": 26,
       "norm_label": "optional explicit-request appendix, never read by the decision composer.      a"
     },
@@ -3352,7 +3352,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction",
-      "community": 22,
+      "community": 12,
       "norm_label": "phase5r_portfolio_construction.py"
     },
     {
@@ -3362,7 +3362,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_passed_confidence",
-      "community": 22,
+      "community": 12,
       "norm_label": "_passed_confidence()"
     },
     {
@@ -3372,7 +3372,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_individual_sizing_decision",
-      "community": 22,
+      "community": 12,
       "norm_label": "individual_sizing_decision()"
     },
     {
@@ -3382,7 +3382,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_py_any",
-      "community": 22,
+      "community": 12,
       "norm_label": "any"
     },
     {
@@ -3392,7 +3392,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_core_starter_decision",
-      "community": 22,
+      "community": 12,
       "norm_label": "core_starter_decision()"
     },
     {
@@ -3402,7 +3402,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_36",
-      "community": 22,
+      "community": 12,
       "norm_label": "return the highest supported sizing tier and a feasible share count."
     },
     {
@@ -3412,7 +3412,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_157",
-      "community": 22,
+      "community": 12,
       "norm_label": "size one staged broad-market core review without using stock valuation."
     },
     {
@@ -4252,7 +4252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract",
-      "community": 23,
+      "community": 2,
       "norm_label": "phase5r_shadow_llm_contract.py"
     },
     {
@@ -4262,7 +4262,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_shadowcontracterror",
-      "community": 23,
+      "community": 2,
       "norm_label": "shadowcontracterror"
     },
     {
@@ -4272,7 +4272,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_valueerror",
-      "community": 23,
+      "community": 2,
       "norm_label": "valueerror"
     },
     {
@@ -4282,7 +4282,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_object",
-      "community": 23,
+      "community": 2,
       "norm_label": "_object()"
     },
     {
@@ -4292,7 +4292,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_any",
-      "community": 23,
+      "community": 2,
       "norm_label": "any"
     },
     {
@@ -4302,7 +4302,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text",
-      "community": 23,
+      "community": 2,
       "norm_label": "_text()"
     },
     {
@@ -4312,7 +4312,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier",
-      "community": 23,
+      "community": 2,
       "norm_label": "_identifier()"
     },
     {
@@ -4322,7 +4322,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text_list",
-      "community": 23,
+      "community": 2,
       "norm_label": "_text_list()"
     },
     {
@@ -4332,7 +4332,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier_list",
-      "community": 23,
+      "community": 2,
       "norm_label": "_identifier_list()"
     },
     {
@@ -4342,7 +4342,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_enum",
-      "community": 23,
+      "community": 2,
       "norm_label": "_enum()"
     },
     {
@@ -4352,7 +4352,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_assert_nonimperative",
-      "community": 23,
+      "community": 2,
       "norm_label": "_assert_nonimperative()"
     },
     {
@@ -4362,7 +4362,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_read_regular_json",
-      "community": 23,
+      "community": 2,
       "norm_label": "_read_regular_json()"
     },
     {
@@ -4372,7 +4372,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_path",
-      "community": 23,
+      "community": 2,
       "norm_label": "path"
     },
     {
@@ -4382,7 +4382,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_load_packet",
-      "community": 23,
+      "community": 2,
       "norm_label": "load_packet()"
     },
     {
@@ -4392,7 +4392,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_source_index",
-      "community": 23,
+      "community": 2,
       "norm_label": "_source_index()"
     },
     {
@@ -4402,7 +4402,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_calculation_index",
-      "community": 23,
+      "community": 2,
       "norm_label": "_calculation_index()"
     },
     {
@@ -4412,7 +4412,7 @@
       "source_location": "L240",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_entity_tickers",
-      "community": 23,
+      "community": 2,
       "norm_label": "_entity_tickers()"
     },
     {
@@ -4422,7 +4422,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_primary_source_registry",
-      "community": 23,
+      "community": 2,
       "norm_label": "primary_source_registry()"
     },
     {
@@ -4432,7 +4432,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_finite_number",
-      "community": 23,
+      "community": 2,
       "norm_label": "_finite_number()"
     },
     {
@@ -4442,7 +4442,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_decimal",
-      "community": 23,
+      "community": 2,
       "norm_label": "decimal"
     },
     {
@@ -4452,7 +4452,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_deterministic_baseline",
-      "community": 23,
+      "community": 2,
       "norm_label": "build_deterministic_baseline()"
     },
     {
@@ -4462,7 +4462,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_check",
-      "community": 23,
+      "community": 2,
       "norm_label": "deterministic_claim_check()"
     },
     {
@@ -4472,7 +4472,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_capture",
-      "community": 23,
+      "community": 2,
       "norm_label": "deterministic_claim_capture()"
     },
     {
@@ -4542,7 +4542,7 @@
       "source_location": "L863",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_claim",
-      "community": 23,
+      "community": 2,
       "norm_label": "_validate_claim()"
     },
     {
@@ -4552,7 +4552,7 @@
       "source_location": "L934",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_analyst",
-      "community": 23,
+      "community": 2,
       "norm_label": "validate_analyst()"
     },
     {
@@ -4562,7 +4562,7 @@
       "source_location": "L1028",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_critic",
-      "community": 23,
+      "community": 2,
       "norm_label": "validate_critic()"
     },
     {
@@ -4572,7 +4572,7 @@
       "source_location": "L1137",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_judge",
-      "community": 23,
+      "community": 2,
       "norm_label": "validate_judge()"
     },
     {
@@ -4582,7 +4582,7 @@
       "source_location": "L1258",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_automatic_evaluation",
-      "community": 23,
+      "community": 2,
       "norm_label": "build_automatic_evaluation()"
     },
     {
@@ -4592,7 +4592,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_71",
-      "community": 23,
+      "community": 2,
       "norm_label": "a packet or model artifact violated the closed shadow contract."
     },
     {
@@ -4602,7 +4602,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_249",
-      "community": 23,
+      "community": 2,
       "norm_label": "expose only primary source identifiers needed to audit human omissions."
     },
     {
@@ -4612,7 +4612,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_271",
-      "community": 23,
+      "community": 2,
       "norm_label": "give the judge the facts/calculations already available without an llm.      the"
     },
     {
@@ -4622,7 +4622,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_307",
-      "community": 23,
+      "community": 2,
       "norm_label": "conservative one-fact sign check, never a generic semantic truth judge.      com"
     },
     {
@@ -4662,7 +4662,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider",
-      "community": 2,
+      "community": 14,
       "norm_label": "phase5r_shadow_llm_provider.py"
     },
     {
@@ -4672,7 +4672,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_classify_nonzero_exit",
-      "community": 2,
+      "community": 14,
       "norm_label": "classify_nonzero_exit()"
     },
     {
@@ -4682,7 +4682,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror",
-      "community": 2,
+      "community": 14,
       "norm_label": "shadowprovidererror"
     },
     {
@@ -4692,7 +4692,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_runtimeerror",
-      "community": 2,
+      "community": 14,
       "norm_label": "runtimeerror"
     },
     {
@@ -4702,7 +4702,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror_init",
-      "community": 2,
+      "community": 14,
       "norm_label": ".__init__()"
     },
     {
@@ -4712,7 +4712,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_providerresult",
-      "community": 2,
+      "community": 14,
       "norm_label": "providerresult"
     },
     {
@@ -4742,7 +4742,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_provider_generate",
-      "community": 2,
+      "community": 14,
       "norm_label": ".generate()"
     },
     {
@@ -4752,7 +4752,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_any",
-      "community": 2,
+      "community": 14,
       "norm_label": "any"
     },
     {
@@ -4762,7 +4762,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_cli_reported_token_usage",
-      "community": 2,
+      "community": 14,
       "norm_label": "cli_reported_token_usage()"
     },
     {
@@ -4772,7 +4772,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider",
-      "community": 2,
+      "community": 14,
       "norm_label": "fixtureprovider"
     },
     {
@@ -4782,7 +4782,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_init",
-      "community": 2,
+      "community": 14,
       "norm_label": ".__init__()"
     },
     {
@@ -4792,7 +4792,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_generate",
-      "community": 2,
+      "community": 14,
       "norm_label": ".generate()"
     },
     {
@@ -4802,7 +4802,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_executable_sha256",
-      "community": 2,
+      "community": 14,
       "norm_label": "executable_sha256()"
     },
     {
@@ -4812,7 +4812,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_path",
-      "community": 2,
+      "community": 14,
       "norm_label": "path"
     },
     {
@@ -4822,7 +4822,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_minimal_codex_environment",
-      "community": 2,
+      "community": 14,
       "norm_label": "minimal_codex_environment()"
     },
     {
@@ -4832,7 +4832,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider",
-      "community": 2,
+      "community": 14,
       "norm_label": "codexcliprovider"
     },
     {
@@ -4842,7 +4842,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_init",
-      "community": 2,
+      "community": 14,
       "norm_label": ".__init__()"
     },
     {
@@ -4852,7 +4852,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_revalidate",
-      "community": 2,
+      "community": 14,
       "norm_label": ".revalidate()"
     },
     {
@@ -4862,7 +4862,7 @@
       "source_location": "L364",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_generate",
-      "community": 2,
+      "community": 14,
       "norm_label": ".generate()"
     },
     {
@@ -4872,7 +4872,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_41",
-      "community": 2,
+      "community": 14,
       "norm_label": "map provider text to a closed code without retaining provider text."
     },
     {
@@ -4882,7 +4882,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_77",
-      "community": 2,
+      "community": 14,
       "norm_label": "one external inference attempt failed without canonical side effects."
     },
     {
@@ -4892,7 +4892,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_107",
-      "community": 2,
+      "community": 14,
       "norm_label": "extract the exact token counters emitted by ``codex exec --json``."
     },
     {
@@ -4902,7 +4902,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_154",
-      "community": 2,
+      "community": 14,
       "norm_label": "return exact fixture payloads without launching a process or using a network."
     },
     {
@@ -4912,7 +4912,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_232",
-      "community": 2,
+      "community": 14,
       "norm_label": "hash a pinned non-linked executable while rejecting path replacement."
     },
     {
@@ -4922,7 +4922,7 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_287",
-      "community": 2,
+      "community": 14,
       "norm_label": "pass only operating-system identity and locale needed by external auth."
     },
     {
@@ -4932,7 +4932,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_312",
-      "community": 2,
+      "community": 14,
       "norm_label": "run an externally authenticated cli in an empty, ephemeral directory."
     },
     {
@@ -6692,7 +6692,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_regenerate_phase5r_c9_portfolio_outputs",
-      "community": 22,
+      "community": 20,
       "norm_label": "regenerate_phase5r_c9_portfolio_outputs.py"
     },
     {
@@ -6702,7 +6702,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_regenerate_phase5r_c9_portfolio_outputs_run_children",
-      "community": 22,
+      "community": 20,
       "norm_label": "run_children()"
     },
     {
@@ -7242,7 +7242,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline",
-      "community": 14,
+      "community": 41,
       "norm_label": "run_phase5r_daily_decision_pipeline.py"
     },
     {
@@ -7252,7 +7252,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_delivery_status_is_unknown",
-      "community": 14,
+      "community": 41,
       "norm_label": "delivery_status_is_unknown()"
     },
     {
@@ -7262,7 +7262,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_parse_aware_timestamp",
-      "community": 14,
+      "community": 41,
       "norm_label": "_parse_aware_timestamp()"
     },
     {
@@ -7272,7 +7272,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_py_datetime",
-      "community": 14,
+      "community": 41,
       "norm_label": "datetime"
     },
     {
@@ -7282,7 +7282,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_refresh_readiness",
-      "community": 14,
+      "community": 41,
       "norm_label": "refresh_readiness()"
     },
     {
@@ -7292,7 +7292,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_run_command",
-      "community": 14,
+      "community": 41,
       "norm_label": "run_command()"
     },
     {
@@ -7302,7 +7302,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_py_completedprocess",
-      "community": 14,
+      "community": 41,
       "norm_label": "completedprocess"
     },
     {
@@ -7312,7 +7312,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_safe_check",
-      "community": 14,
+      "community": 41,
       "norm_label": "safe_check()"
     },
     {
@@ -7322,7 +7322,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_execute",
-      "community": 14,
+      "community": 41,
       "norm_label": "execute()"
     },
     {
@@ -7332,7 +7332,7 @@
       "source_location": "L203",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_main",
-      "community": 14,
+      "community": 41,
       "norm_label": "main()"
     },
     {
@@ -7342,7 +7342,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_decision_pipeline_rationale_54",
-      "community": 14,
+      "community": 41,
       "norm_label": "require today's complete, latest-published-session handoff before delivery."
     },
     {
@@ -7582,7 +7582,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_daily_scheduler",
-      "community": 14,
+      "community": 22,
       "norm_label": "run_phase5r_daily_scheduler.py"
     },
     {
@@ -8549,7 +8549,7 @@
       "label": "ConfigError",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L73",
+      "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
       "community": 10,
@@ -8562,14 +8562,14 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
-      "community": 8,
+      "community": 10,
       "norm_label": "valueerror"
     },
     {
       "label": "safe_header()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L77",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
       "community": 10,
@@ -8589,7 +8589,7 @@
       "label": "safe_email()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L85",
+      "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
       "community": 10,
@@ -8599,7 +8599,7 @@
       "label": "load_config()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L92",
+      "source_location": "L102",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "community": 10,
@@ -8609,7 +8609,7 @@
       "label": "cycle_is_blocked()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L135",
+      "source_location": "L145",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_cycle_is_blocked",
       "community": 10,
@@ -8619,27 +8619,37 @@
       "label": "delivery_policy()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L147",
+      "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_delivery_policy",
-      "community": 414,
+      "community": 10,
       "norm_label": "delivery_policy()"
+    },
+    {
+      "label": "validate_owner_review()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L178",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "community": 10,
+      "norm_label": "validate_owner_review()"
     },
     {
       "label": "validate_decision()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L168",
+      "source_location": "L209",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
-      "community": 8,
+      "community": 10,
       "norm_label": "validate_decision()"
     },
     {
       "label": "build_message()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L295",
+      "source_location": "L353",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
       "community": 10,
@@ -8659,7 +8669,7 @@
       "label": "append_delivery()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L321",
+      "source_location": "L387",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
       "community": 10,
@@ -8669,17 +8679,37 @@
       "label": "correction_eligibility()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L354",
+      "source_location": "L426",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_correction_eligibility",
       "community": 10,
       "norm_label": "correction_eligibility()"
     },
     {
+      "label": "owner_review_request_key()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L462",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_request_key",
+      "community": 10,
+      "norm_label": "owner_review_request_key()"
+    },
+    {
+      "label": "owner_review_eligibility()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L467",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_eligibility",
+      "community": 10,
+      "norm_label": "owner_review_eligibility()"
+    },
+    {
       "label": "send_once()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L390",
+      "source_location": "L480",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "community": 10,
@@ -8689,7 +8719,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L557",
+      "source_location": "L662",
       "_origin": "ast",
       "id": "09_scripts_phase5r_send_phase5r_daily_email_main",
       "community": 10,
@@ -8699,11 +8729,21 @@
       "label": "Open SMTP configuration only after eligibility and dedupe gates pass.",
       "file_type": "rationale",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L93",
+      "source_location": "L103",
       "_origin": "ast",
-      "id": "09_scripts_phase5r_send_phase5r_daily_email_rationale_93",
+      "id": "09_scripts_phase5r_send_phase5r_daily_email_rationale_103",
       "community": 10,
       "norm_label": "open smtp configuration only after eligibility and dedupe gates pass."
+    },
+    {
+      "label": "Bind one real owner request to a recent, explicitly dated review.",
+      "file_type": "rationale",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L179",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_send_phase5r_daily_email_rationale_179",
+      "community": 10,
+      "norm_label": "bind one real owner request to a recent, explicitly dated review."
     },
     {
       "label": "__init__.py",
@@ -8932,7 +8972,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_notification_policy_is_event_driven_and_clock_independent",
-      "community": 414,
+      "community": 10,
       "norm_label": ".test_notification_policy_is_event_driven_and_clock_independent()"
     },
     {
@@ -8952,7 +8992,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
-      "community": 52,
+      "community": 12,
       "norm_label": ".test_recommendation_labels_are_explicit()"
     },
     {
@@ -8992,7 +9032,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_uncertainty_maps_to_smaller_whole_share_sizing",
-      "community": 22,
+      "community": 12,
       "norm_label": ".test_uncertainty_maps_to_smaller_whole_share_sizing()"
     },
     {
@@ -9002,7 +9042,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_core_starter_is_whole_share_and_not_forced",
-      "community": 22,
+      "community": 12,
       "norm_label": ".test_core_starter_is_whole_share_and_not_forced()"
     },
     {
@@ -9802,7 +9842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence",
-      "community": 14,
+      "community": 22,
       "norm_label": "test_phase5r_b2_refresh_cadence.py"
     },
     {
@@ -9812,7 +9852,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_seed",
-      "community": 410,
+      "community": 22,
       "norm_label": "_seed()"
     },
     {
@@ -9822,7 +9862,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_market_row",
-      "community": 410,
+      "community": 22,
       "norm_label": "_market_row()"
     },
     {
@@ -9992,7 +10032,7 @@
       "source_location": "L524",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence_b2refreshcadencetests_test_stale_preserved_candidate_is_never_scored_as_actionable",
-      "community": 410,
+      "community": 22,
       "norm_label": ".test_stale_preserved_candidate_is_never_scored_as_actionable()"
     },
     {
@@ -11046,6 +11086,156 @@
       "norm_label": ".test_post_action_scenario_preserves_existing_core_value()"
     },
     {
+      "label": "test_phase5r_owner_review_delivery.py",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "community": 26,
+      "norm_label": "test_phase5r_owner_review_delivery.py"
+    },
+    {
+      "label": "owner_review_fixture()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "community": 26,
+      "norm_label": "owner_review_fixture()"
+    },
+    {
+      "label": "delivery_fixture()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L35",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "community": 26,
+      "norm_label": "delivery_fixture()"
+    },
+    {
+      "label": "save_decision()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L56",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "community": 26,
+      "norm_label": "save_decision()"
+    },
+    {
+      "label": "OwnerReviewDeliveryTests",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L63",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "community": 26,
+      "norm_label": "ownerreviewdeliverytests"
+    },
+    {
+      "label": ".test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L64",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "community": 26,
+      "norm_label": ".test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes()"
+    },
+    {
+      "label": ".test_holiday_weekend_uses_valid_market_sessions_not_calendar_age()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L90",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_holiday_weekend_uses_valid_market_sessions_not_calendar_age",
+      "community": 26,
+      "norm_label": ".test_holiday_weekend_uses_valid_market_sessions_not_calendar_age()"
+    },
+    {
+      "label": ".test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L106",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy",
+      "community": 26,
+      "norm_label": ".test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy()"
+    },
+    {
+      "label": ".test_claim_precedes_smtp_and_unknown_blocks_replay_before_config()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L135",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_claim_precedes_smtp_and_unknown_blocks_replay_before_config",
+      "community": 26,
+      "norm_label": ".test_claim_precedes_smtp_and_unknown_blocks_replay_before_config()"
+    },
+    {
+      "label": ".test_owner_clock_override_preserves_maintenance_and_operational_guards()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L152",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_clock_override_preserves_maintenance_and_operational_guards",
+      "community": 26,
+      "norm_label": ".test_owner_clock_override_preserves_maintenance_and_operational_guards()"
+    },
+    {
+      "label": ".test_owner_binding_dates_and_policy_fail_before_credentials()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L164",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_binding_dates_and_policy_fail_before_credentials",
+      "community": 26,
+      "norm_label": ".test_owner_binding_dates_and_policy_fail_before_credentials()"
+    },
+    {
+      "label": ".test_current_review_may_bind_prior_cycle_but_not_older_or_legacy()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L193",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_current_review_may_bind_prior_cycle_but_not_older_or_legacy",
+      "community": 26,
+      "norm_label": ".test_current_review_may_bind_prior_cycle_but_not_older_or_legacy()"
+    },
+    {
+      "label": ".test_request_key_dedupe_is_global_and_ignores_normal_delivery_states()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L211",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_request_key_dedupe_is_global_and_ignores_normal_delivery_states",
+      "community": 26,
+      "norm_label": ".test_request_key_dedupe_is_global_and_ignores_normal_delivery_states()"
+    },
+    {
+      "label": ".test_dated_research_precedes_old_table_and_newlines_remain_visible()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L219",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_dated_research_precedes_old_table_and_newlines_remain_visible",
+      "community": 26,
+      "norm_label": ".test_dated_research_precedes_old_table_and_newlines_remain_visible()"
+    },
+    {
+      "label": ".test_extended_sources_use_exact_https_hosts()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L231",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_extended_sources_use_exact_https_hosts",
+      "community": 26,
+      "norm_label": ".test_extended_sources_use_exact_https_hosts()"
+    },
+    {
       "label": "test_phase5r_owner_snapshot.py",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_snapshot.py",
@@ -11202,7 +11392,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_cash_affordability_and_target_gap_are_separate",
-      "community": 22,
+      "community": 12,
       "norm_label": ".test_cash_affordability_and_target_gap_are_separate()"
     },
     {
@@ -11692,7 +11882,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched",
-      "community": 11,
+      "community": 28,
       "norm_label": ".test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched()"
     },
     {
@@ -11702,7 +11892,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_durable_ledger_repairs_stale_seen_accession_cache",
-      "community": 34,
+      "community": 28,
       "norm_label": ".test_durable_ledger_repairs_stale_seen_accession_cache()"
     },
     {
@@ -11782,7 +11972,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_submissions_parser_captures_exact_acceptance_time",
-      "community": 34,
+      "community": 28,
       "norm_label": ".test_submissions_parser_captures_exact_acceptance_time()"
     },
     {
@@ -11792,7 +11982,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_daily_parser_excludes_out_of_window_legacy_metadata",
-      "community": 34,
+      "community": 28,
       "norm_label": ".test_daily_parser_excludes_out_of_window_legacy_metadata()"
     },
     {
@@ -12282,7 +12472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls",
-      "community": 62,
+      "community": 23,
       "norm_label": "test_phase5r_shadow_event_controls.py"
     },
     {
@@ -12292,7 +12482,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_economic_packet",
-      "community": 62,
+      "community": 23,
       "norm_label": "economic_packet()"
     },
     {
@@ -12302,7 +12492,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests",
-      "community": 62,
+      "community": 23,
       "norm_label": "shadoweventcontroltests"
     },
     {
@@ -12312,7 +12502,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_document_resampling_is_not_a_new_event_but_new_evidence_is",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_document_resampling_is_not_a_new_event_but_new_evidence_is()"
     },
     {
@@ -12322,7 +12512,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event()"
     },
     {
@@ -12332,7 +12522,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_all_refresh_wrappers_change_without_a_new_semantic_event",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_all_refresh_wrappers_change_without_a_new_semantic_event()"
     },
     {
@@ -12342,7 +12532,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_period_filing_text_and_thesis_changes_remain_events",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_period_filing_text_and_thesis_changes_remain_events()"
     },
     {
@@ -12352,7 +12542,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_semantic_digest_does_not_mutate_raw_provenance",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_semantic_digest_does_not_mutate_raw_provenance()"
     },
     {
@@ -12362,7 +12552,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_historical_archive_reindex_prevents_migration_duplicate",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_historical_archive_reindex_prevents_migration_duplicate()"
     },
     {
@@ -12372,7 +12562,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_same_event_captures_archive_without_overwrite_conflict",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_same_event_captures_archive_without_overwrite_conflict()"
     },
     {
@@ -12382,7 +12572,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_candidate_ranking_subset_of_seen_issuers_is_not_new_research",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_candidate_ranking_subset_of_seen_issuers_is_not_new_research()"
     },
     {
@@ -12392,7 +12582,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources()"
     },
     {
@@ -12402,7 +12592,7 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_critic_skips_mechanical_restatement_but_judge_remains_separate",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_critic_skips_mechanical_restatement_but_judge_remains_separate()"
     },
     {
@@ -12412,7 +12602,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_input_budget_fails_before_any_provider_attempt",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_input_budget_fails_before_any_provider_attempt()"
     },
     {
@@ -12422,7 +12612,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_downstream_judge_headroom_is_checked_before_analyst_invocation",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_downstream_judge_headroom_is_checked_before_analyst_invocation()"
     },
     {
@@ -12432,7 +12622,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_observed_token_budget_preserves_unknown_cost_and_unreported_calls",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_observed_token_budget_preserves_unknown_cost_and_unreported_calls()"
     },
     {
@@ -12442,7 +12632,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_preflight_is_read_only_and_does_not_create_call_ledger",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_preflight_is_read_only_and_does_not_create_call_ledger()"
     },
     {
@@ -12452,7 +12642,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_preflight_cli_dispatches_packet_once_and_never_calls_provider",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_preflight_cli_dispatches_packet_once_and_never_calls_provider()"
     },
     {
@@ -12462,7 +12652,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_auto_live_cli_passes_packet_to_resample_guard",
-      "community": 62,
+      "community": 23,
       "norm_label": ".test_auto_live_cli_passes_packet_to_resample_guard()"
     },
     {
@@ -12592,7 +12782,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_provider_failure_text_is_reduced_to_closed_codes",
-      "community": 2,
+      "community": 14,
       "norm_label": ".test_provider_failure_text_is_reduced_to_closed_codes()"
     },
     {
@@ -12602,7 +12792,7 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_usage_parser_requires_exact_completed_usage",
-      "community": 2,
+      "community": 14,
       "norm_label": ".test_cli_usage_parser_requires_exact_completed_usage()"
     },
     {
@@ -12672,7 +12862,7 @@
       "source_location": "L386",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_packet_loader_rejects_symlinks",
-      "community": 23,
+      "community": 2,
       "norm_label": ".test_packet_loader_rejects_symlinks()"
     },
     {
@@ -13582,7 +13772,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account",
-      "community": 15,
+      "community": 8,
       "norm_label": "update_phase5r_manual_account.py"
     },
     {
@@ -13602,7 +13792,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_parse_position",
-      "community": 15,
+      "community": 8,
       "norm_label": "parse_position()"
     },
     {
@@ -13612,7 +13802,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_main",
-      "community": 15,
+      "community": 8,
       "norm_label": "main()"
     },
     {
@@ -15309,7 +15499,7 @@
       "label": "Frequency",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L14",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_frequency",
       "community": 234,
@@ -15319,7 +15509,7 @@
       "label": "Action-email presentation (v2, 2026-09-05)",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L25",
+      "source_location": "L27",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_action_email_presentation_v2_2026_09_05",
       "community": 234,
@@ -15329,7 +15519,7 @@
       "label": "Owner snapshots and flexible research funding (2026-09-11)",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L55",
+      "source_location": "L57",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_owner_snapshots_and_flexible_research_funding_2026_09_11",
       "community": 234,
@@ -15339,7 +15529,7 @@
       "label": "Refresh handoff and recovery",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L88",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_refresh_handoff_and_recovery",
       "community": 234,
@@ -15349,7 +15539,7 @@
       "label": "Duplicate Protection",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L112",
+      "source_location": "L115",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_duplicate_protection",
       "community": 234,
@@ -15359,17 +15549,27 @@
       "label": "Explicit correction resend",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L136",
+      "source_location": "L139",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_explicit_correction_resend",
       "community": 234,
       "norm_label": "explicit correction resend"
     },
     {
+      "label": "Explicit owner-requested review (2026-09-14)",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
+      "source_location": "L159",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_daily_delivery_policy_explicit_owner_requested_review_2026_09_14",
+      "community": 234,
+      "norm_label": "explicit owner-requested review (2026-09-14)"
+    },
+    {
       "label": "Boundaries",
       "file_type": "document",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L160",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "00_project_control_phase5r_daily_delivery_policy_boundaries",
       "community": 234,
@@ -15524,6 +15724,66 @@
       "id": "00_project_control_phase5r_macbook_github_macmini_workflow_absolute_path_audit",
       "community": 35,
       "norm_label": "absolute-path audit"
+    },
+    {
+      "label": "phase5r_owner_review_preferences.md",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences",
+      "community": 43,
+      "norm_label": "phase5r_owner_review_preferences.md"
+    },
+    {
+      "label": "Owner-requested research reviews",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "community": 43,
+      "norm_label": "owner-requested research reviews"
+    },
+    {
+      "label": "Delivery expectation",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences_delivery_expectation",
+      "community": 43,
+      "norm_label": "delivery expectation"
+    },
+    {
+      "label": "Required review content",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L25",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences_required_review_content",
+      "community": 43,
+      "norm_label": "required review content"
+    },
+    {
+      "label": "Broker and order mechanics",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences_broker_and_order_mechanics",
+      "community": 43,
+      "norm_label": "broker and order mechanics"
+    },
+    {
+      "label": "Boundaries",
+      "file_type": "document",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L72",
+      "_origin": "ast",
+      "id": "00_project_control_phase5r_owner_review_preferences_boundaries",
+      "community": 43,
+      "norm_label": "boundaries"
     },
     {
       "label": "phase5r_research_working_agreement.md",
@@ -16226,10 +16486,20 @@
       "norm_label": "research standards"
     },
     {
-      "label": "File Conventions",
+      "label": "Owner-Requested Reviews and Email",
       "file_type": "document",
       "source_file": "AGENTS.md",
       "source_location": "L36",
+      "_origin": "ast",
+      "id": "agents_owner_requested_reviews_and_email",
+      "community": 163,
+      "norm_label": "owner-requested reviews and email"
+    },
+    {
+      "label": "File Conventions",
+      "file_type": "document",
+      "source_file": "AGENTS.md",
+      "source_location": "L42",
       "_origin": "ast",
       "id": "agents_file_conventions",
       "community": 163,
@@ -16239,7 +16509,7 @@
       "label": "Script Safety",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L44",
+      "source_location": "L50",
       "_origin": "ast",
       "id": "agents_script_safety",
       "community": 163,
@@ -16249,7 +16519,7 @@
       "label": "graphify",
       "file_type": "document",
       "source_file": "AGENTS.md",
-      "source_location": "L52",
+      "source_location": "L58",
       "_origin": "ast",
       "id": "agents_graphify",
       "community": 163,
@@ -21738,7 +22008,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_phase5r_active_config",
@@ -21891,7 +22161,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L242",
+      "source_location": "L294",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_phase5r_active_config_load_active_config"
@@ -23736,7 +24006,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_phase5r_daily_common",
@@ -23979,9 +24249,20 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L175",
+      "source_location": "L223",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
+      "target": "09_scripts_phase5r_phase5r_daily_common_now_et"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
       "target": "09_scripts_phase5r_phase5r_daily_common_now_et"
     },
     {
@@ -24177,7 +24458,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L335",
+      "source_location": "L407",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
       "target": "09_scripts_phase5r_phase5r_daily_common_iso_now"
@@ -24375,7 +24656,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L187",
+      "source_location": "L239",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_phase5r_daily_common_cycle_date"
@@ -24624,6 +24905,17 @@
     {
       "relation": "calls",
       "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L201",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "target": "09_scripts_phase5r_phase5r_daily_common_is_us_market_session_date"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_daily_common.py",
       "source_location": "L241",
@@ -24684,6 +24976,17 @@
       "source": "09_scripts_phase5r_phase5r_daily_common_rationale_228",
       "target": "09_scripts_phase5r_phase5r_daily_common_last_completed_market_session",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "target": "09_scripts_phase5r_phase5r_daily_common_last_completed_market_session"
     },
     {
       "relation": "references",
@@ -24865,6 +25168,17 @@
       "context": "call",
       "confidence": "INFERRED",
       "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "target": "09_scripts_phase5r_phase5r_daily_common_latest_published_market_session"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_b2_refresh_cadence.py",
       "source_location": "L163",
       "weight": 1.0,
@@ -25031,7 +25345,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L169",
+      "source_location": "L217",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_phase5r_daily_common_read_json"
@@ -25427,7 +25741,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L331",
+      "source_location": "L403",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
       "target": "09_scripts_phase5r_phase5r_daily_common_append_csv_durable"
@@ -25460,7 +25774,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L340",
+      "source_location": "L399",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
       "target": "09_scripts_phase5r_phase5r_daily_common_sha256_file"
@@ -25471,7 +25785,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L366",
+      "source_location": "L438",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_correction_eligibility",
       "target": "09_scripts_phase5r_phase5r_daily_common_sha256_file"
@@ -26032,7 +26346,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L565",
+      "source_location": "L672",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_main",
       "target": "09_scripts_phase5r_phase5r_daily_common_delivery_guard"
@@ -26043,7 +26357,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L396",
+      "source_location": "L491",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_phase5r_daily_common_delivery_guard"
@@ -26064,7 +26378,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L157",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_delivery_policy",
       "target": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy"
@@ -26096,7 +26410,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L231",
+      "source_location": "L283",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_phase5r_daily_common_weekly_summary_due_for_published_session"
@@ -26294,7 +26608,7 @@
       "relation": "uses",
       "confidence": "INFERRED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 0.8,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
       "target": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock",
@@ -26306,7 +26620,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L436",
+      "source_location": "L533",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_phase5r_daily_common_exclusivefilelock"
@@ -26519,7 +26833,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L401",
+      "source_location": "L496",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_phase5r_daily_common_log_daily_run"
@@ -26528,7 +26842,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L94",
+      "source_location": "L100",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_action_kind",
@@ -26538,7 +26852,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L179",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
@@ -26548,7 +26862,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L65",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_comparison_weight",
@@ -26558,7 +26872,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L167",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_conflict_tasks",
@@ -26568,7 +26882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L34",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26578,7 +26892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L359",
+      "source_location": "L365",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_email_subject",
@@ -26588,7 +26902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L81",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_is_core",
@@ -26598,7 +26912,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L53",
+      "source_location": "L59",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_money",
@@ -26608,7 +26922,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L42",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -26618,7 +26932,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L135",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_owner_research",
@@ -26628,7 +26942,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L57",
+      "source_location": "L63",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_percent",
@@ -26638,7 +26952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L105",
+      "source_location": "L111",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_reason",
@@ -26648,7 +26962,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L365",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_render_email",
@@ -26658,7 +26972,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L122",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_safe_source",
@@ -26668,7 +26982,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L61",
+      "source_location": "L67",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_shares",
@@ -26678,7 +26992,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L71",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_time",
@@ -26688,7 +27002,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L85",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief",
       "target": "09_scripts_phase5r_phase5r_email_brief_valuation",
@@ -26709,7 +27023,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L17",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_phase5r_email_brief",
@@ -26730,6 +27044,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_phase5r_email_brief",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_snapshot.py",
       "source_location": "L14",
       "weight": 1.0,
@@ -26742,7 +27067,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L226",
+      "source_location": "L232",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26753,7 +27078,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L34",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_decimal",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26764,7 +27089,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L54",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_money",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26775,7 +27100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L43",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_number",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26786,7 +27111,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L58",
+      "source_location": "L64",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_percent",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26797,7 +27122,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L89",
+      "source_location": "L95",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_valuation",
       "target": "09_scripts_phase5r_phase5r_email_brief_decimal",
@@ -26808,7 +27133,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L94",
+      "source_location": "L100",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_action_kind",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26819,7 +27144,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L179",
+      "source_location": "L185",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26830,7 +27155,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L167",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_conflict_tasks",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26841,7 +27166,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L359",
+      "source_location": "L365",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_email_subject",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26852,7 +27177,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L81",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_is_core",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26863,7 +27188,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L53",
+      "source_location": "L59",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_money",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26874,7 +27199,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L42",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_number",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26885,7 +27210,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L135",
+      "source_location": "L141",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_owner_research",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26896,7 +27221,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L57",
+      "source_location": "L63",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_percent",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26907,7 +27232,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L105",
+      "source_location": "L111",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_reason",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26918,7 +27243,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L365",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_render_email",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26929,7 +27254,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L122",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_safe_source",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26940,7 +27265,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L61",
+      "source_location": "L67",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_shares",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26951,7 +27276,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L71",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_time",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26962,7 +27287,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L85",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_valuation",
       "target": "09_scripts_phase5r_phase5r_email_brief_py_any",
@@ -26973,7 +27298,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L68",
+      "source_location": "L74",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_comparison_weight",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -26984,7 +27309,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L54",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_money",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -26995,7 +27320,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L58",
+      "source_location": "L64",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_percent",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -27006,7 +27331,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L114",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_reason",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -27017,7 +27342,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L62",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_shares",
       "target": "09_scripts_phase5r_phase5r_email_brief_number",
@@ -27028,7 +27353,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L249",
+      "source_location": "L255",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_money",
@@ -27039,7 +27364,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L113",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_reason",
       "target": "09_scripts_phase5r_phase5r_email_brief_money",
@@ -27050,7 +27375,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L90",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_valuation",
       "target": "09_scripts_phase5r_phase5r_email_brief_money",
@@ -27061,7 +27386,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L285",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_percent",
@@ -27072,7 +27397,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L68",
+      "source_location": "L74",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_comparison_weight",
       "target": "09_scripts_phase5r_phase5r_email_brief_percent",
@@ -27083,7 +27408,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L110",
+      "source_location": "L116",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_reason",
       "target": "09_scripts_phase5r_phase5r_email_brief_percent",
@@ -27094,7 +27419,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L234",
+      "source_location": "L240",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_shares",
@@ -27105,7 +27430,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L110",
+      "source_location": "L116",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_reason",
       "target": "09_scripts_phase5r_phase5r_email_brief_comparison_weight",
@@ -27116,7 +27441,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L353",
+      "source_location": "L359",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_time",
@@ -27127,7 +27452,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L236",
+      "source_location": "L371",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_phase5r_email_brief_email_subject",
+      "target": "09_scripts_phase5r_phase5r_email_brief_time",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
+      "source_location": "L384",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_phase5r_email_brief_render_email",
+      "target": "09_scripts_phase5r_phase5r_email_brief_time",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
+      "source_location": "L242",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_is_core",
@@ -27138,7 +27485,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L86",
+      "source_location": "L92",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_valuation",
       "target": "09_scripts_phase5r_phase5r_email_brief_is_core",
@@ -27149,7 +27496,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L236",
+      "source_location": "L242",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_valuation",
@@ -27160,7 +27507,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L220",
+      "source_location": "L226",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_action_kind",
@@ -27171,7 +27518,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L235",
+      "source_location": "L241",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_reason",
@@ -27181,9 +27528,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L106",
+      "source_location": "L112",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_phase5r_email_brief_rationale_106",
+      "source": "09_scripts_phase5r_phase5r_email_brief_rationale_112",
       "target": "09_scripts_phase5r_phase5r_email_brief_reason",
       "confidence_score": 1.0
     },
@@ -27192,7 +27539,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L323",
+      "source_location": "L329",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_safe_source",
@@ -27203,7 +27550,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L161",
+      "source_location": "L167",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_owner_research",
       "target": "09_scripts_phase5r_phase5r_email_brief_safe_source",
@@ -27213,9 +27560,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L136",
+      "source_location": "L142",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_phase5r_email_brief_rationale_136",
+      "source": "09_scripts_phase5r_phase5r_email_brief_rationale_142",
       "target": "09_scripts_phase5r_phase5r_email_brief_owner_research",
       "confidence_score": 1.0
     },
@@ -27224,7 +27571,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L367",
+      "source_location": "L379",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_render_email",
       "target": "09_scripts_phase5r_phase5r_email_brief_owner_research",
@@ -27235,7 +27582,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L198",
+      "source_location": "L204",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
       "target": "09_scripts_phase5r_phase5r_email_brief_conflict_tasks",
@@ -27246,7 +27593,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L360",
+      "source_location": "L368",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_email_subject",
       "target": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
@@ -27257,7 +27604,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L366",
+      "source_location": "L378",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_render_email",
       "target": "09_scripts_phase5r_phase5r_email_brief_build_email_view",
@@ -27323,7 +27670,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_email_brief.py",
-      "source_location": "L368",
+      "source_location": "L382",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_email_brief_render_email",
       "target": "09_scripts_phase5r_phase5r_email_brief_email_subject",
@@ -27335,7 +27682,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L302",
+      "source_location": "L362",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
       "target": "09_scripts_phase5r_phase5r_email_brief_email_subject"
@@ -27357,7 +27704,18 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L288",
+      "source_location": "L375",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
+      "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L340",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
@@ -27558,6 +27916,50 @@
       "source_location": "L84",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_email_brief_emailpresentationtests_test_weakening_is_research_review_not_automatic_trim",
+      "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L67",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L221",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_dated_research_precedes_old_table_and_newlines_remain_visible",
+      "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L236",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_extended_sources_use_exact_https_hosts",
+      "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
       "target": "09_scripts_phase5r_phase5r_email_brief_render_email"
     },
     {
@@ -46712,7 +47114,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L321",
+      "source_location": "L387",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
@@ -46722,7 +47124,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L295",
+      "source_location": "L353",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
@@ -46732,7 +47134,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L73",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
@@ -46742,7 +47144,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L354",
+      "source_location": "L426",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_correction_eligibility",
@@ -46752,7 +47154,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L135",
+      "source_location": "L145",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_cycle_is_blocked",
@@ -46762,7 +47164,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L147",
+      "source_location": "L157",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_delivery_policy",
@@ -46772,7 +47174,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L92",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
@@ -46782,7 +47184,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L557",
+      "source_location": "L662",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_main",
@@ -46792,7 +47194,27 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L85",
+      "source_location": "L467",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_eligibility",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L462",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_request_key",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L95",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
@@ -46802,7 +47224,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L77",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
@@ -46812,7 +47234,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L390",
+      "source_location": "L480",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
@@ -46822,10 +47244,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L168",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L178",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
       "confidence_score": 1.0
     },
     {
@@ -46836,6 +47268,17 @@
       "source_location": "L15",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_email_brief",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
       "target": "09_scripts_phase5r_send_phase5r_daily_email",
       "confidence_score": 1.0
     },
@@ -46865,7 +47308,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L73",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
@@ -46876,7 +47319,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L95",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
@@ -46887,7 +47330,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L88",
+      "source_location": "L98",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
@@ -46898,7 +47341,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L79",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
@@ -46909,7 +47352,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L462",
+      "source_location": "L575",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_configerror",
@@ -46920,7 +47363,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L174",
+      "source_location": "L488",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L222",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
@@ -46931,7 +47385,18 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L302",
+      "source_location": "L181",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_py_valueerror",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
@@ -46942,7 +47407,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L128",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
@@ -46953,7 +47418,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L86",
+      "source_location": "L96",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
@@ -46964,7 +47429,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L77",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_safe_header",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -46975,7 +47440,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L321",
+      "source_location": "L387",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -46986,7 +47451,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L295",
+      "source_location": "L353",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -46997,7 +47462,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L92",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -47008,7 +47473,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L85",
+      "source_location": "L95",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -47019,7 +47484,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L390",
+      "source_location": "L480",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
@@ -47030,9 +47495,20 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L168",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "context": "generic_arg",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L178",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_py_any",
       "confidence_score": 1.0
     },
@@ -47041,7 +47517,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L126",
+      "source_location": "L136",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_safe_email",
@@ -47051,9 +47527,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L93",
+      "source_location": "L103",
       "weight": 1.0,
-      "source": "09_scripts_phase5r_send_phase5r_daily_email_rationale_93",
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_rationale_103",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
       "confidence_score": 1.0
     },
@@ -47062,7 +47538,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L460",
+      "source_location": "L573",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_load_config",
@@ -47073,7 +47549,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L445",
+      "source_location": "L547",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_cycle_is_blocked",
@@ -47095,7 +47571,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L254",
+      "source_location": "L306",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_delivery_policy",
@@ -47113,11 +47589,32 @@
       "target": "09_scripts_phase5r_send_phase5r_daily_email_delivery_policy"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_rationale_179",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L411",
+      "source_location": "L237",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_validate_owner_review",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L506",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_validate_decision",
@@ -47128,7 +47625,7 @@
       "context": "return_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L295",
+      "source_location": "L353",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
       "target": "emailmessage",
@@ -47139,7 +47636,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L461",
+      "source_location": "L574",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_build_message",
@@ -47150,7 +47647,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L477",
+      "source_location": "L593",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_append_delivery",
@@ -47161,7 +47658,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L439",
+      "source_location": "L541",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_correction_eligibility",
@@ -47172,7 +47669,40 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
-      "source_location": "L571",
+      "source_location": "L470",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_eligibility",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_request_key",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L591",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_request_key",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L536",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
+      "target": "09_scripts_phase5r_send_phase5r_daily_email_owner_review_eligibility",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/send_phase5r_daily_email.py",
+      "source_location": "L678",
       "weight": 1.0,
       "source": "09_scripts_phase5r_send_phase5r_daily_email_main",
       "target": "09_scripts_phase5r_send_phase5r_daily_email_send_once",
@@ -47306,6 +47836,17 @@
       "source_location": "L10",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_held_core_position",
+      "target": "09_scripts_phase5r_tests_support",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
       "target": "09_scripts_phase5r_tests_support",
       "confidence_score": 1.0
     },
@@ -50434,6 +50975,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_tests_test_phase5r_email_brief",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_snapshot.py",
       "source_location": "L15",
       "weight": 1.0,
@@ -50561,6 +51113,17 @@
       "source": "09_scripts_phase5r_tests_test_phase5r_email_brief_emailpresentationtests_test_unknown_numbers_do_not_become_zero_and_utc_is_converted_to_et",
       "target": "09_scripts_phase5r_tests_test_phase5r_email_brief_decision_fixture",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "target": "09_scripts_phase5r_tests_test_phase5r_email_brief_decision_fixture"
     },
     {
       "relation": "calls",
@@ -52198,6 +52761,377 @@
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests",
       "target": "09_scripts_phase5r_tests_test_phase5r_held_core_position_heldcorepositiontests_test_post_action_scenario_preserves_existing_core_value",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L63",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L136",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_claim_precedes_smtp_and_unknown_blocks_replay_before_config",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L194",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_current_review_may_bind_prior_cycle_but_not_older_or_legacy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_dated_research_precedes_old_table_and_newlines_remain_visible",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_extended_sources_use_exact_https_hosts",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_holiday_weekend_uses_valid_market_sessions_not_calendar_age",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L165",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_binding_dates_and_policy_fail_before_credentials",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L153",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_clock_override_preserves_maintenance_and_operational_guards",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_owner_review_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_claim_precedes_smtp_and_unknown_blocks_replay_before_config",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L196",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_current_review_may_bind_prior_cycle_but_not_older_or_legacy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L176",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_binding_dates_and_policy_fail_before_credentials",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L155",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_clock_override_preserves_maintenance_and_operational_guards",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L109",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_delivery_fixture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L139",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_claim_precedes_smtp_and_unknown_blocks_replay_before_config",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L69",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L199",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_current_review_may_bind_prior_cycle_but_not_older_or_legacy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L180",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_binding_dates_and_policy_fail_before_credentials",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L156",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_clock_override_preserves_maintenance_and_operational_guards",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L110",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_save_decision",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_claim_precedes_smtp_and_unknown_blocks_replay_before_config",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L193",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_current_review_may_bind_prior_cycle_but_not_older_or_legacy",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L219",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_dated_research_precedes_old_table_and_newlines_remain_visible",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L231",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_extended_sources_use_exact_https_hosts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_holiday_weekend_uses_valid_market_sessions_not_calendar_age",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L164",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_binding_dates_and_policy_fail_before_credentials",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L152",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_owner_clock_override_preserves_maintenance_and_operational_guards",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L211",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_request_key_dedupe_is_global_and_ignores_normal_delivery_states",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_owner_review_delivery.py",
+      "source_location": "L106",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_owner_review_delivery_ownerreviewdeliverytests_test_suppressed_schedule_can_send_one_explicit_review_without_changing_policy",
       "confidence_score": 1.0
     },
     {
@@ -59168,7 +60102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L25",
+      "source_location": "L27",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_phase_5r_daily_delivery_policy",
       "target": "00_project_control_phase5r_daily_delivery_policy_action_email_presentation_v2_2026_09_05",
@@ -59178,7 +60112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L160",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_phase_5r_daily_delivery_policy",
       "target": "00_project_control_phase5r_daily_delivery_policy_boundaries",
@@ -59188,7 +60122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L112",
+      "source_location": "L115",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_phase_5r_daily_delivery_policy",
       "target": "00_project_control_phase5r_daily_delivery_policy_duplicate_protection",
@@ -59208,7 +60142,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L14",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_phase_5r_daily_delivery_policy",
       "target": "00_project_control_phase5r_daily_delivery_policy_frequency",
@@ -59218,7 +60152,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L88",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_phase_5r_daily_delivery_policy",
       "target": "00_project_control_phase5r_daily_delivery_policy_refresh_handoff_and_recovery",
@@ -59228,7 +60162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L55",
+      "source_location": "L57",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_action_email_presentation_v2_2026_09_05",
       "target": "00_project_control_phase5r_daily_delivery_policy_owner_snapshots_and_flexible_research_funding_2026_09_11",
@@ -59238,10 +60172,20 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
-      "source_location": "L136",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "00_project_control_phase5r_daily_delivery_policy_duplicate_protection",
       "target": "00_project_control_phase5r_daily_delivery_policy_explicit_correction_resend",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_daily_delivery_policy.md",
+      "source_location": "L159",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_daily_delivery_policy_duplicate_protection",
+      "target": "00_project_control_phase5r_daily_delivery_policy_explicit_owner_requested_review_2026_09_14",
       "confidence_score": 1.0
     },
     {
@@ -59382,6 +60326,56 @@
       "weight": 1.0,
       "source": "00_project_control_phase5r_macbook_github_macmini_workflow_phase5r_macbook_github_mac_mini_workflow",
       "target": "00_project_control_phase5r_macbook_github_macmini_workflow_runtime_operations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_owner_review_preferences",
+      "target": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "target": "00_project_control_phase5r_owner_review_preferences_boundaries",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "target": "00_project_control_phase5r_owner_review_preferences_broker_and_order_mechanics",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "target": "00_project_control_phase5r_owner_review_preferences_delivery_expectation",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "00_project_control/phase5r_owner_review_preferences.md",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "00_project_control_phase5r_owner_review_preferences_owner_requested_research_reviews",
+      "target": "00_project_control_phase5r_owner_review_preferences_required_review_content",
       "confidence_score": 1.0
     },
     {
@@ -59958,7 +60952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L36",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "agents_agents_md",
       "target": "agents_file_conventions",
@@ -59968,7 +60962,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L52",
+      "source_location": "L58",
       "weight": 1.0,
       "source": "agents_agents_md",
       "target": "agents_graphify",
@@ -59982,6 +60976,16 @@
       "weight": 1.0,
       "source": "agents_agents_md",
       "target": "agents_non_negotiable_constraints",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "AGENTS.md",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "agents_agents_md",
+      "target": "agents_owner_requested_reviews_and_email",
       "confidence_score": 1.0
     },
     {
@@ -60008,7 +61012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "AGENTS.md",
-      "source_location": "L44",
+      "source_location": "L50",
       "weight": 1.0,
       "source": "agents_agents_md",
       "target": "agents_script_safety",
@@ -60086,5 +61090,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2610f961600139b9b6d887d7cabf01567b8ad943"
+  "built_at_commit": "bfd1bebd32f27bb1507367981191156eea41ac93"
 }

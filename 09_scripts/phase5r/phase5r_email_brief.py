@@ -19,7 +19,13 @@ from zoneinfo import ZoneInfo
 EMAIL_BRIEF_VERSION = "phase5r_action_email_v2"
 _NUMBER = r"-?\d+(?:\.\d+)?"
 _SOURCE_HOSTS = {"sec.gov", "www.sec.gov", "data.sec.gov"}
-_RESEARCH_HOSTS = _SOURCE_HOSTS | {"ir.rubrik.com", "nvidianews.nvidia.com", "investor.nvidia.com"}
+_RESEARCH_HOSTS = _SOURCE_HOSTS | {
+    "ir.rubrik.com", "www.rubrik.com", "nvidianews.nvidia.com", "investor.nvidia.com",
+    "stockanalysis.com", "www.paloaltonetworks.com", "investors.paloaltonetworks.com",
+    "www.investor.gov", "www.finra.org", "www.federalreserve.gov",
+    "www.samsara.com", "investors.samsara.com",
+    "www.chase.com", "chase.com", "www.jpmorgan.com",
+}
 _BLOCKED_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 _LABELS = {
     "account_conflict_hold": ("需核对账户", "先核对账户，暂停仓位方案"),
@@ -356,8 +362,14 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def email_subject(decision: dict[str, Any], *, correction: bool = False) -> str:
+def email_subject(
+    decision: dict[str, Any], *, correction: bool = False, owner_review: bool = False
+) -> str:
     view = build_email_view(decision)
+    if owner_review:
+        review = decision.get("owner_requested_research", {})
+        review_date = _time(review.get("reviewed_at"))[:10]
+        return f"[Phase 5R 应请求复核] 持仓计划与观察机会｜{review_date}"
     prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
@@ -365,22 +377,32 @@ def email_subject(decision: dict[str, Any], *, correction: bool = False) -> str:
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
     owner_research = _owner_research(decision)
-    subject = email_subject(decision)
-    lines = [subject, "", view["title"], view["summary"], view["as_of"], "", "需要你处理"]
+    review = decision.get("owner_requested_research", {})
+    dated_review = bool(owner_research and review.get("request_id"))
+    subject = email_subject(decision, owner_review=dated_review)
+    research_note = "以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。"
+    research_as_of = (f"本次复核：{_time(review.get('reviewed_at'))} 美东 · 研究行情日期：{review.get('market_as_of', '待确认')}（非实时）"
+                      if dated_review else "本次人工请求研究；各项价格以正文标注日期为准。")
+    baseline_title = ("原定时报告参考持仓（旧收盘）"
+                      if dated_review and review.get("market_as_of") != decision.get("market_gate", {}).get("expected_market_session")
+                      else "原定时报告参考持仓" if dated_review else "持仓与现金")
+    lines = [subject]
+    if owner_research:
+        lines.extend(["", "本次请求的个股研究", research_as_of, research_note])
+        for section in owner_research:
+            lines.extend(["", section["title"], section["body"], *section["sources"]])
+        lines.extend(["", "原定时报告背景（保留原生成日期与规则结论）"])
+    lines.extend(["", view["title"], view["summary"], view["as_of"], "", "需要你处理"])
     lines.extend("- " + item for item in view["tasks"])
     for plan in view["plans"]:
         lines.extend(["", plan["title"], plan["scenario"], "依据：" + plan["reason"], "限制：" + plan["limit"]])
-    lines.extend(["", "持仓与现金"])
+    lines.extend(["", baseline_title])
     lines.extend(f"- {row['ticker']}：{row['quantity']} · {row['weight']} · 参考收盘 {row['price']} · {row['state']}" for row in view["positions"])
     lines.extend(view["account_lines"])
     if view["receipt"]:
         lines.append(view["receipt"])
     if view["funding_lines"]:
         lines.extend(["", "资金范围情景", *view["funding_lines"]])
-    if owner_research:
-        lines.extend(["", "本次请求的个股研究", "以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。"])
-        for section in owner_research:
-            lines.extend([section["title"], section["body"], *section["sources"]])
     lines.extend(["", "证据与限制", view["quality"], *view["limitations"]])
     if view["documents"]:
         lines.append("本次新纳入的官方文件（披露日不一定是今天）：")
@@ -392,6 +414,21 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     heading = lambda value: f'<h2 style="font-size:17px;line-height:1.4;margin:24px 0 10px;color:#172b3a">{esc(value)}</h2>'
     content = [
         '<p style="margin:0 0 12px;font-size:12px;letter-spacing:1px;color:#526170">PHASE 5R · 研究提醒</p>',
+    ]
+    if owner_research:
+        content.extend([heading("本次请求的个股研究"), paragraph(research_as_of), paragraph(research_note)])
+        for section in owner_research:
+            content.extend([heading(section["title"]),
+                            '<p style="margin:8px 0;line-height:1.65;white-space:pre-line">' + esc(section["body"]) + '</p>'])
+            for url in section["sources"]:
+                host = urlsplit(url).hostname
+                source_label = ("行情参考来源" if host == "stockanalysis.com"
+                                else "券商订单说明来源" if host in {"www.chase.com", "chase.com", "www.jpmorgan.com"}
+                                else "官方研究来源" if host in {"www.investor.gov", "www.finra.org", "www.federalreserve.gov"}
+                                else "官方财报来源")
+                content.append(f'<p><a style="color:#245d76" href="{esc(url)}">{esc(section["title"])} · {source_label}</a></p>')
+        content.append(heading("原定时报告背景（保留原生成日期与规则结论）"))
+    content.extend([
         f'<p style="margin:0 0 8px;color:#365366;font-size:13px;font-weight:700">{esc(view["label"])}</p>',
         f'<h1 style="margin:0 0 12px;font-size:24px;line-height:1.4;color:#172b3a">{esc(view["title"])}</h1>',
         paragraph(view["summary"]),
@@ -399,10 +436,10 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
         '<div style="background:#eef4f6;border-left:3px solid #365366;padding:12px 16px">',
         '<h2 style="margin:0 0 8px;font-size:16px">需要你处理</h2>',
         *[paragraph(item) for item in view["tasks"]], '</div>',
-    ]
+    ])
     for plan in view["plans"]:
         content.extend([heading(plan["title"]), paragraph(plan["scenario"]), paragraph("依据：" + plan["reason"]), paragraph("限制：" + plan["limit"])])
-    content.append(heading("持仓与现金"))
+    content.append(heading(baseline_title))
     content.append('<table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.55"><caption style="text-align:left;font-size:12px;color:#526170;padding-bottom:8px">已记录持仓 · 权重按参考收盘计算</caption><thead><tr>')
     for header in ("标的", "持仓 / 权重", "参考收盘", "本次状态"):
         content.append(f'<th scope="col" style="text-align:left;padding:9px 4px;border-bottom:1px solid #ced8de;font-size:12px;color:#526170">{header}</th>')
@@ -417,12 +454,6 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     if view["funding_lines"]:
         content.append(heading("资金范围情景"))
         content.extend(paragraph(item) for item in view["funding_lines"])
-    if owner_research:
-        content.extend([heading("本次请求的个股研究"), paragraph("以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。")])
-        for section in owner_research:
-            content.extend([heading(section["title"]), paragraph(section["body"])])
-            for url in section["sources"]:
-                content.append(f'<p><a style="color:#245d76" href="{esc(url)}">{esc(section["title"])} · 官方财报来源</a></p>')
     content.extend([heading("证据与限制"), paragraph(view["quality"])])
     content.extend(paragraph(item) for item in view["limitations"])
     if view["documents"]:
