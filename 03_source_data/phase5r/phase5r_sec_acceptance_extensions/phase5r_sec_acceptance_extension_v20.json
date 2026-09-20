@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-09-12T11:34:41.000-04:00",
+  "artifact_sha256": "fb494101205911361b4708c20624a0e84f4925371736243f2ab942668dccb9aa",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v20",
+  "prior_extension_set_sha256": "bd7db3ae2047b475ea2df7560e2dd708623532e85732b0aa9f2b7f23964a8560",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-11T21:14:29.000+00:00",
+      "accession_number": "0001104659-26-107122",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-12T11:34:41.000-04:00",
+      "cik": "1018724",
+      "entity_name": "AMAZON COM INC",
+      "extension_record_sha256": "a0fcb99069fa1aa9e036d4edf39cb6b86fde5ec2b6a965d34ec10eda82e0f10e",
+      "extension_version": "v20",
+      "filing_date": "2026-09-11",
+      "form": "424B5",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "7ec3a928727ab286ac721e690eb285ca5728a4b0013cbf091e73df4afeaf6870",
+      "source_url": "https://data.sec.gov/submissions/CIK0001018724.json",
+      "ticker": "AMZN"
+    },
+    {
+      "accepted_at": "2026-09-10T20:09:45.000+00:00",
+      "accession_number": "0001973239-26-000128",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-12T11:34:41.000-04:00",
+      "cik": "1973239",
+      "entity_name": "ARM HOLDINGS PLC /UK",
+      "extension_record_sha256": "833546fd41dd321fd6813d00348d4d27a4b66bae9d9eeeb799f8378f1c9a6727",
+      "extension_version": "v20",
+      "filing_date": "2026-09-10",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a52d7462162b9be39853ccaaacd9d964eedc8fe28050719c64feeeca26c5f427",
+      "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
+      "ticker": "ARM"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

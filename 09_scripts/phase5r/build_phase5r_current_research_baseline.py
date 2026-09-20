@@ -15,7 +15,10 @@ from phase5r_daily_common import (
     latest_published_market_session,
     now_et,
     read_csv,
+    read_json,
 )
+
+from phase5r_long_horizon_research import fundamentals_candidate_queue
 
 
 SIGNAL_SCORES_PATH = ROOT / "03_source_data" / "phase5r" / "phase5r_b2_signal_scores.csv"
@@ -68,7 +71,10 @@ def selected_tickers() -> tuple[list[str], set[str]]:
         row["ticker"].strip().upper() for row in ranked
         if row["ticker"].strip().upper() != "SPY"
     ][:3]
-    return sorted(held | {"SPY", *candidates}), held
+    policy = read_json(ROOT / "01_policies/phase5r_long_horizon_research_policy.json")
+    fundamental_queue = fundamentals_candidate_queue(read_csv(FUNDAMENTALS_PATH), held, policy)
+    fundamental_candidates = [row["ticker"] for row in fundamental_queue[:policy["candidate_limit"]]]
+    return sorted(held | {"SPY", *candidates, *fundamental_candidates}), held
 
 
 def main() -> int:
@@ -125,7 +131,10 @@ def main() -> int:
             6.0 + (1.0 if margin is not None and margin >= 0 else 0.0)
             + (0.5 if yoy is not None and yoy >= 15 else 0.0)
         )
-        catalyst_score = 8.0 if ticker in material_today else 5.0
+        # A filing's existence/materiality says nothing about its direction.
+        # Until source-bound interpretation exists, both good and adverse news
+        # remain neutral in conviction and trigger the separate event review.
+        catalyst_score = 5.0
         theme = universe.get(ticker, {}).get("theme", "Current holding") or "Current holding"
         position = position_rows.get(ticker, {})
         role = (

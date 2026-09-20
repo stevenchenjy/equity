@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-09-17T12:06:45.000-04:00",
+  "artifact_sha256": "864f08e91188551e1ebd39d2db1439da04178b19f5d111e79c7661d8d4c73eed",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v24",
+  "prior_extension_set_sha256": "352fa9921245b2c99bff2faa1cfcac092db58cc38aa44704cd05ef8cda636eb4",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-16T21:02:48.000+00:00",
+      "accession_number": "0001108524-26-000210",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-17T12:06:45.000-04:00",
+      "cik": "1108524",
+      "entity_name": "Salesforce, Inc.",
+      "extension_record_sha256": "3cd2c25532704285770a781befee28e141a0729ff28ad18898d99f8bbf802d46",
+      "extension_version": "v24",
+      "filing_date": "2026-09-17",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "e69c75cceb47d98946338d8a0ea69e715c643082227a27478b9bd75f94da04e7",
+      "source_url": "https://data.sec.gov/submissions/CIK0001108524.json",
+      "ticker": "CRM"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-09-19T11:30:21.000-04:00",
+  "artifact_sha256": "ce44dc6f4af21535d0e01f00a900f1f6b7783cbf34aeae48d6ca7a129e982d79",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v26",
+  "prior_extension_set_sha256": "c6148606826c5919eb6f2dfd6fd9ddb8bd2934887396d7191524ad0bd6f56993",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-18T20:17:30.000+00:00",
+      "accession_number": "0001193125-26-395593",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-19T11:30:21.000-04:00",
+      "cik": "1730168",
+      "entity_name": "Broadcom Inc.",
+      "extension_record_sha256": "a4d674ebe182e41091dda6121557b28aeb67d9c0431b1f9cff869740781c4b53",
+      "extension_version": "v26",
+      "filing_date": "2026-09-18",
+      "form": "424B3",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "c870c84d619b809e983ea0e82cd377a51c3e9d949ac9495f01648c31c8babc32",
+      "source_url": "https://data.sec.gov/submissions/CIK0001730168.json",
+      "ticker": "AVGO"
+    },
+    {
+      "accepted_at": "2026-09-18T20:04:03.000+00:00",
+      "accession_number": "0001973239-26-000135",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-19T11:30:21.000-04:00",
+      "cik": "1973239",
+      "entity_name": "ARM HOLDINGS PLC /UK",
+      "extension_record_sha256": "a2cf252f520168e835b246bcccd344fc187455db8297d8719b13a7e3e8f8c609",
+      "extension_version": "v26",
+      "filing_date": "2026-09-18",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "d2d9629600fbca84c79f0ee236ceb895f8651fc3c163b4ee4be2b9d4fd333bf9",
+      "source_url": "https://data.sec.gov/submissions/CIK0001973239.json",
+      "ticker": "ARM"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

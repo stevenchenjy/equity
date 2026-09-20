@@ -58,6 +58,8 @@ STEP_SPECS = [
         "refresh_phase5r_valuation_scenarios.py",
         False,
     ),
+    ("long_horizon_research", "create_phase5r_long_horizon_research.py", False),
+    ("market_regime", "create_phase5r_market_regime.py", False),
     # portfolio_outputs owns the account/weight/action/cash child sequence.
     # Running those children here as well duplicated C9 work and widened the
     # refresh race window without changing the result.

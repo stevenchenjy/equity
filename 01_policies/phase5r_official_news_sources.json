@@ -1,0 +1,39 @@
+{
+  "schema_version": "phase5r_official_news_sources_v1",
+  "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
+  "verified_on": "2026-09-20",
+  "max_age_hours": 36,
+  "event_lookback_days": 7,
+  "retention_days": 180,
+  "request_timeout_seconds": 15,
+  "maximum_attempts": 2,
+  "sources": [
+    {
+      "source_id": "samsara_ir",
+      "ticker": "IOT",
+      "url": "https://investors.samsara.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": ["investors.samsara.com"],
+      "required": true,
+      "verification_page": "https://investors.samsara.com/news/default.aspx"
+    },
+    {
+      "source_id": "rubrik_ir",
+      "ticker": "RBRK",
+      "url": "https://ir.rubrik.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": ["ir.rubrik.com"],
+      "required": true,
+      "verification_page": "https://ir.rubrik.com/news-events/press-releases/default.aspx"
+    },
+    {
+      "source_id": "nvidia_newsroom",
+      "ticker": "NVDA",
+      "url": "https://nvidianews.nvidia.com/releases.xml",
+      "format": "rss_atom",
+      "allowed_hosts": ["nvidianews.nvidia.com", "blogs.nvidia.com"],
+      "required": true,
+      "verification_page": "https://nvidianews.nvidia.com/rss"
+    }
+  ]
+}

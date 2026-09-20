@@ -62,6 +62,23 @@ The active workflow is `daily_decision` and the only active email pipeline is
   portfolio change remains research for independent human review and can never
   execute automatically.
 
+## Long-horizon workflow upgrade (2026-09-20)
+
+The implementation plan is [the four-standard improvement plan](00_project_control/phase5r_workflow_improvement_plan_20260920.md).
+Low technical scores request research instead of independently proposing a full exit. A sourced, reviewed thesis break or the existing concentration rules governs action review. An unassessed material filing receives neutral catalyst credit. Candidate stability is tracked per ticker and counts distinct valid closes; ordinary quote updates do not reset it.
+
+The daily pipeline builds a fundamentals-led research queue alongside the existing price-based queue, source-bound company research, explicit 3-/5-year equity cash-flow sensitivities and 2x/3x hurdle arithmetic. Conditional sensitivities are not forecasts or canonical price targets. Unresolved business evidence is labeled pending research.
+
+Market context changes the confirmation pace for new-capital research: two confirmed broad stress closes require three distinct confirmation closes; three normal closes restore the usual two. It never changes approved caps, reserves or strategic targets, and does not independently generate exits.
+
+Official issuer news for IOT, RBRK and NVDA is checked at 08:15, 11:15, 16:45 and 20:15 ET through the existing serialized refresh scheduler. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
+
+Current additional reports in the runtime clone:
+
+- `08_reviews/current/phase5r_long_horizon_research.local.md`
+- `08_reviews/current/phase5r_market_regime.local.md`
+- `03_source_data/phase5r/phase5r_official_news_status.local.json`
+
 ## Safety Boundaries
 
 - No live trading.

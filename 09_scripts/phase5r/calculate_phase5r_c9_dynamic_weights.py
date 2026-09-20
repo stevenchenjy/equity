@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import json
+from datetime import date, datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 from phase5r_c9_common import (
     ACCOUNT_STATE,
@@ -9,6 +12,7 @@ from phase5r_c9_common import (
     DYNAMIC_WEIGHTS,
     MARKET_SNAPSHOT,
     PORTFOLIO_SUMMARY,
+    ROOT,
     append_run_log,
     as_float,
     concentration_status,
@@ -22,6 +26,99 @@ from phase5r_c9_common import (
     score_from_packet,
     write_csv,
 )
+
+
+THESIS_REVIEW_PATH = ROOT / "05_risk_and_positions" / "phase5r_thesis_reviews.local.json"
+OFFICIAL_NEWS_MANIFEST_PATH = ROOT / "01_policies" / "phase5r_official_news_sources.json"
+REGULATOR_HOSTS = {
+    "sec.gov", "www.sec.gov", "www.fda.gov", "www.ftc.gov",
+    "www.justice.gov", "www.federalreserve.gov",
+}
+
+
+def load_thesis_reviews() -> dict[str, dict[str, object]]:
+    """Optional analyst assessments; absence never turns a score into a sale."""
+    if not THESIS_REVIEW_PATH.exists():
+        return {}
+    payload = json.loads(THESIS_REVIEW_PATH.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != "phase5r_thesis_reviews_v1":
+        raise ValueError("unsupported thesis review schema")
+    result: dict[str, dict[str, object]] = {}
+    for row in payload.get("records", []):
+        ticker = str(row.get("ticker", "")).strip().upper()
+        if not ticker or ticker in result:
+            raise ValueError("thesis review tickers must be non-empty and unique")
+        result[ticker] = row
+    return result
+
+
+def confirmed_thesis_break(
+    assessment: dict[str, object], position: dict[str, object], *, today: date | None = None
+) -> bool:
+    """Require a reviewed, dated primary source and the actual invalidated rule.
+
+    The review is an analyst research assessment, never trade authorization.
+    Free-form position notes, a low score, and an unconfirmed warning cannot
+    satisfy this contract. Refresh the assessment after thirty calendar days.
+    """
+    current = today or date.today()
+    try:
+        evidence_day = date.fromisoformat(str(assessment.get("evidence_date", "")))
+        reviewed = datetime.fromisoformat(str(assessment.get("reviewed_at", "")).replace("Z", "+00:00"))
+        source = urlparse(str(assessment.get("source_url", "")))
+        valid_url = (
+            source.scheme == "https" and bool(source.hostname)
+            and source.username is None and source.password is None
+            and source.port in {None, 443}
+            and not any(ord(char) < 33 for char in str(assessment.get("source_url", "")))
+        )
+    except (TypeError, ValueError):
+        return False
+    source_type = assessment.get("source_type")
+    official_source = False
+    if source_type == "sec_filing":
+        official_source = source.hostname in {"sec.gov", "www.sec.gov"} and source.path.startswith("/Archives/edgar/data/")
+    elif source_type == "regulator":
+        official_source = source.hostname in REGULATOR_HOSTS
+    elif source_type == "company_ir":
+        try:
+            manifest = json.loads(OFFICIAL_NEWS_MANIFEST_PATH.read_text(encoding="utf-8"))
+            hosts = {
+                host for row in manifest.get("sources", [])
+                if row.get("ticker") == position.get("ticker")
+                for host in row.get("allowed_hosts", [])
+            }
+            official_source = source.hostname in hosts
+        except (OSError, ValueError, TypeError, AttributeError):
+            official_source = False
+    invalidation = str(position.get("invalidation_rule", "")).strip()
+    return (
+        assessment.get("status") == "confirmed_thesis_break"
+        and str(assessment.get("ticker", "")).strip().upper() == position.get("ticker")
+        and valid_url and official_source
+        and bool(str(assessment.get("reviewer", "")).strip())
+        and bool(str(assessment.get("reason", "")).strip())
+        and bool(invalidation)
+        and str(assessment.get("invalidation_rule", "")).strip() == invalidation
+        and reviewed.tzinfo is not None
+        and evidence_day <= reviewed.date() <= current
+        and 0 <= (current - reviewed.date()).days <= 30
+    )
+
+
+def held_recommendation_label(
+    *, is_core: bool, current_weight: float, hard_cap: float,
+    score: float, thesis_break_confirmed: bool,
+) -> str:
+    if is_core:
+        return "hold_existing"
+    if current_weight > hard_cap + 1e-9:
+        return "trim_review"
+    if thesis_break_confirmed:
+        return "exit_review"
+    if score < 5.5:
+        return "hold_pending_research"
+    return "hold_existing"
 
 
 DYNAMIC_FIELDS = [
@@ -80,6 +177,7 @@ def main() -> None:
     positions = load_positions()
     market = load_market_rows([str(row["ticker"]) for row in positions])
     packets = load_packets()
+    thesis_reviews = load_thesis_reviews()
     reported_account_total = as_float(
         account["account_total_value"], "account_total_value"
     )
@@ -114,14 +212,11 @@ def main() -> None:
         status = "core_sleeve" if is_core else concentration_status(current_weight, account)
         fit = 9.0 if is_core else dynamic_position_fit(current_weight, account)
         score = score_from_packet(packet, fit)
-        if is_core:
-            label = "hold_existing"
-        elif current_weight > hard_cap + 1e-9:
-            label = "trim_review"
-        elif score < 5.5:
-            label = "exit_review"
-        else:
-            label = "hold_existing"
+        label = held_recommendation_label(
+            is_core=is_core, current_weight=current_weight, hard_cap=hard_cap,
+            score=score,
+            thesis_break_confirmed=confirmed_thesis_break(thesis_reviews.get(ticker, {}), position),
+        )
         dynamic_rows.append(
             {
                 "ticker": ticker,

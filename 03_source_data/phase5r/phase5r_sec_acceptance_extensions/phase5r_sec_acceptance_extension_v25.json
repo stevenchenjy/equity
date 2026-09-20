@@ -1,0 +1,66 @@
+{
+  "admitted_at": "2026-09-17T12:39:51.000-04:00",
+  "artifact_sha256": "2a8a49a65c23212e7204455015a8a6ec42bac5741fc8e6d286f7171d6b275762",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v25",
+  "prior_extension_set_sha256": "50be256f5681e1bffdddfd4c8554bc076d452fe661bbcf3ad30d04df57c76ca5",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-10T20:16:50.000+00:00",
+      "accession_number": "0001193125-26-387905",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-17T12:39:51.000-04:00",
+      "cik": "1341439",
+      "entity_name": "ORACLE CORP",
+      "extension_record_sha256": "4dfc2e6dee46b25d8a345156565cbed265743e549279ee360c55621d34ffd413",
+      "extension_version": "v25",
+      "filing_date": "2026-09-10",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "b04094f92719123009586c0550686d8a9fb534080350e9967082fc32cff992c4",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "ticker": "ORCL"
+    },
+    {
+      "accepted_at": "2026-09-11T20:10:12.000+00:00",
+      "accession_number": "0001193125-26-389274",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-17T12:39:51.000-04:00",
+      "cik": "1341439",
+      "entity_name": "ORACLE CORP",
+      "extension_record_sha256": "fac105f2377097f3a7b7ac6ccdb636770ca4bac1a5751dfdc536a54bb5a7c7bd",
+      "extension_version": "v25",
+      "filing_date": "2026-09-11",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "b5f140529033f851f3b0eb56449165bcea687a1e1bcd52e144741e25ab03c687",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "ticker": "ORCL"
+    },
+    {
+      "accepted_at": "2026-09-14T10:01:59.000+00:00",
+      "accession_number": "0001193125-26-389753",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-17T12:39:51.000-04:00",
+      "cik": "1341439",
+      "entity_name": "ORACLE CORP",
+      "extension_record_sha256": "7f6c9cccf2e9f521a955fd3135c034d726505f56bd01c9496328bb4e2793b866",
+      "extension_version": "v25",
+      "filing_date": "2026-09-14",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "626f4a4bfa100c5cb751ac5f4643b91943b49774a1c2747f8180e58d76fa87ec",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "ticker": "ORCL"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

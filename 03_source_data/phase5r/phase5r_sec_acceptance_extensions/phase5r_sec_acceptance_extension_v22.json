@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-09-15T11:34:53.000-04:00",
+  "artifact_sha256": "e52299732e65d499162aae783012adbcc93f583875f4cafa825af76d64f48f40",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v22",
+  "prior_extension_set_sha256": "264ab008c6ffdae40e92f1ebd80dd765f75bb0b28b2c63022a6732d3c464c29d",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-11T21:14:51.000+00:00",
+      "accession_number": "0001104659-26-107123",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-15T11:34:53.000-04:00",
+      "cik": "1535527",
+      "entity_name": "CrowdStrike Holdings, Inc.",
+      "extension_record_sha256": "8f0871ae4d2743b518611624d6e063fa34c61dd2af8404476c2a15bd461eb272",
+      "extension_version": "v22",
+      "filing_date": "2026-09-11",
+      "form": "S-3ASR",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a7d8f794a19959b4521b668e22e774e1e55ac8a6e5e2533c15fe0fd21a02c11c",
+      "source_url": "https://data.sec.gov/submissions/CIK0001535527.json",
+      "ticker": "CRWD"
+    },
+    {
+      "accepted_at": "2026-09-04T20:05:24.000+00:00",
+      "accession_number": "0001108524-26-000197",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-15T11:34:53.000-04:00",
+      "cik": "1108524",
+      "entity_name": "Salesforce, Inc.",
+      "extension_record_sha256": "7a6ded2f9b977382e0914289091e2c5b7c5b85f074228dd145833c8a44571c5d",
+      "extension_version": "v22",
+      "filing_date": "2026-09-04",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "3f7fb6cbc5dec2b522b044fce4c979f5dd340433b446f7363056c1d442dee93b",
+      "source_url": "https://data.sec.gov/submissions/CIK0001108524.json",
+      "ticker": "CRM"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

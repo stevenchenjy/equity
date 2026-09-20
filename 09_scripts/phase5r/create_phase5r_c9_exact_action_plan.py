@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 
+from calculate_phase5r_c9_dynamic_weights import confirmed_thesis_break, load_thesis_reviews
 from phase5r_c9_common import (
     ACCOUNT_STATE,
     C5_PACKETS,
@@ -73,6 +74,7 @@ REVIEW_FIELDS = [
 ]
 ALLOWED_ACTIONS = {
     "hold",
+    "hold_pending_research",
     "trim_specific_shares_review",
     "add_specific_dollars_review",
     "core_allocation_tranche_review",
@@ -127,6 +129,7 @@ def main() -> None:
     account = load_research_account_state()
     positions = {str(row["ticker"]): row for row in load_positions()}
     packets = load_packets()
+    thesis_reviews = load_thesis_reviews()
     weights = read_csv(DYNAMIC_WEIGHTS)
     valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
     valuation_by_ticker = {
@@ -176,7 +179,7 @@ def main() -> None:
                 "Review through the core-allocation policy if the broad-market thesis, "
                 "reserve constraint, or target allocation changes."
             )
-        elif label == "exit_review":
+        elif label == "exit_review" and confirmed_thesis_break(thesis_reviews.get(ticker, {}), position):
             recommended_action = "exit_review"
             change = math.ceil(shares - 1e-9)
             target_shares = 0.0
@@ -184,7 +187,12 @@ def main() -> None:
             target_value = 0.0
             cash_change = value
             resulting_weight = 0.0
-            reason = "Current research score requires an independent exit review; no automatic transaction is allowed."
+            assessment = thesis_reviews[ticker]
+            reason = (
+                f"Reviewed thesis invalidation: {assessment['reason']}; "
+                f"primary source {assessment['source_url']} dated {assessment['evidence_date']}. "
+                "This is an exit research proposal; no automatic transaction is allowed."
+            )
             trim_condition = "Exit review only if the documented thesis or evidence is materially impaired and a human confirms."
         elif weight > hard_cap + 1e-9:
             maximum_whole_shares = max(0, math.floor(cap_value / price + 1e-12))
@@ -245,7 +253,8 @@ def main() -> None:
                 f"weight remains above {default_cap:.2f}%; this is not an automatic sell rule."
             )
         else:
-            recommended_action = "hold"
+            pending_research = label in {"hold_pending_research", "exit_review"}
+            recommended_action = "hold_pending_research" if pending_research else "hold"
             change = 0
             target_shares = shares
             target_weight = weight
@@ -253,10 +262,16 @@ def main() -> None:
             cash_change = 0.0
             resulting_weight = weight
             reason = (
+                "Research score or an unverified prior exit label requires further evidence review; "
+                "no source-bound thesis invalidation is confirmed. Keep shares unchanged."
+            ) if pending_research else (
                 f"Dynamic weight {weight:.4f}% is at or below the {hard_cap:.2f}% hard cap; "
                 "no concentration-only trim is recommended, and no add is recommended today."
             )
             trim_condition = (
+                "Review the documented thesis against dated primary evidence before proposing an exit; "
+                "a daily price or technical-score change alone is insufficient."
+            ) if pending_research else (
                 f"Reopen trim review only if refreshed weight rises above {hard_cap:.2f}% or independent research evidence weakens."
             )
 

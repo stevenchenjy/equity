@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,8 @@ from phase5r_daily_common import (
     atomic_write_json,
     atomic_write_text,
     iso_now,
+    latest_published_market_session,
+    now_et,
     read_csv,
     read_json,
 )
@@ -74,6 +77,51 @@ def main() -> int:
         row.get("status") == "complete" for row in valuation.get("records", [])
         if isinstance(row, dict)
     )
+    current = now_et()
+    expected_session = latest_published_market_session(current).isoformat()
+    if any(row.get("market_session_date") != expected_session for row in market_rows) or not market_rows:
+        blockers.append("market_snapshot_not_expected_published_session")
+    try:
+        completed = datetime.fromisoformat(refresh.get("completed_at", ""))
+        if completed.tzinfo is None or not 0 <= (current - completed).total_seconds() <= 30 * 3600:
+            blockers.append("refresh_completion_stale_or_future")
+    except (TypeError, ValueError):
+        blockers.append("refresh_completion_missing")
+    from phase5r_official_news import read_official_news_status
+    from phase5r_market_regime import load_regime_controls
+    try:
+        news = read_official_news_status(now=current)
+    except (OSError, ValueError, TypeError, KeyError):
+        news = {"status": "degraded", "required_coverage_complete": False,
+                "reason": "official_news_receipt_invalid"}
+    regime = load_regime_controls(expected_session)
+    long_report = read_json(ROOT / "04_research/realtime_stock_picker_phase5r/phase5r_long_horizon_research.local.json", {})
+    positions = read_csv(ROOT / "05_risk_and_positions/current_positions.local.csv")
+    universe = read_csv(ROOT / "03_source_data/phase5r/phase5r_universe_seed.csv")
+    benchmarks = {row.get("ticker") for row in universe if row.get("is_benchmark") == "yes"}
+    held_companies = {row.get("ticker") for row in positions if row.get("ticker") not in benchmarks}
+    news_covered = {row.get("ticker") for row in news.get("sources", []) if isinstance(row, dict)}
+    news["unconfigured_held_tickers"] = sorted(held_companies - news_covered)
+    if news["unconfigured_held_tickers"]:
+        news.update(status="degraded", required_coverage_complete=False)
+    valued = {row.get("ticker") for row in valuation.get("records", []) if row.get("status") == "complete"}
+    research_gaps = [f"{ticker}:valuation_incomplete" for ticker in sorted(held_companies - valued)]
+    if not long_report:
+        research_gaps.append("long_horizon_research_missing")
+    elif long_report.get("market_session_date") != expected_session:
+        research_gaps.append("long_horizon_research_market_session_stale")
+    for ticker in sorted(held_companies):
+        company = long_report.get("companies", {}).get(ticker, {})
+        if company.get("readiness") != "research_complete":
+            research_gaps.append(f"{ticker}:thesis_research_pending")
+    scheduler = read_json(ROOT / "00_project_control/run_logs/phase5r_daily_scheduler_state.local.json", {}).get("dates", {})
+    retained = sorted(scheduler)[-60:]
+    reliability = {
+        "retained_calendar_days": len(retained),
+        "fully_refreshed_days": sum(scheduler[day].get("refresh_fully_passed") is True for day in retained),
+        "delivery_unknown_days": [day for day in retained if scheduler[day].get("decision_terminal_reason") == "delivery_status_unknown"],
+        "interpretation": "daily final states, not per-request uptime; retention does not establish long-term SLA",
+    }
     try:
         commit = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True,
@@ -126,6 +174,15 @@ def main() -> int:
             "recommendation_snapshots": jsonl_count(SNAPSHOT_PATH),
             "evaluated_horizon_rows": len(read_csv(OUTCOME_PATH)),
         },
+        "research_readiness": {
+            "held_company_count": len(held_companies),
+            "held_complete_valuations": len(held_companies & valued),
+            "gaps": research_gaps,
+            "interpretation": "Operational success is separate from an evidenced long-term investment thesis",
+        },
+        "official_news": news,
+        "market_regime": regime,
+        "reliability": reliability,
         "automation_alert": {
             "active": automation_alert.get("active", False),
             "component": automation_alert.get("component", ""),
@@ -158,6 +215,10 @@ def main() -> int:
         f"- Outcome evidence: `{status['outcomes']['recommendation_snapshots']}` snapshots, `{status['outcomes']['evaluated_horizon_rows']}` evaluated horizon rows.",
         f"- Production model: retired; calls allowed `{status['model']['calls_allowed']}`; retired-pilot metered cost `${status['model']['metered_cost_usd']}`. These are not current SHADOW usage or costs; see `08_reviews/phase5r_shadow_llm/reviews.local/evaluation.md`.",
         f"- Current blockers: `{', '.join(status['blockers']) or 'none'}`.",
+        f"- Research coverage: `{len(held_companies & valued)}/{len(held_companies)}` held-company valuations complete; gaps `{', '.join(research_gaps) or 'see company thesis review status'}`.",
+        f"- Official news: `{news.get('status', 'missing')}`; this is independent of the SEC filing check.",
+        f"- Market context: `{regime['regime']}`; new-capital confirmation `{regime['required_distinct_closes']}` distinct closes.",
+        f"- Retained daily refresh completions: `{reliability['fully_refreshed_days']}/{len(retained)}` calendar days; delivery-unknown dates `{', '.join(reliability['delivery_unknown_days']) or 'none'}`.",
         "- Boundaries: research only; no broker read, automatic order, or trade placement.",
         "",
         "This generated file and `phase5r_active_production_config.json` are the current authority. Older pilot registries and dated reports are historical evidence only.",

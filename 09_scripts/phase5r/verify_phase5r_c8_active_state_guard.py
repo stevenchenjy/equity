@@ -49,6 +49,16 @@ STALE_REPORT_PATH = (
 )
 POLICY_PATH = CONTROL_DIR / "phase5r_c8_active_state_policy.md"
 ACTIVE_CONFIG_PATH = CONTROL_DIR / "phase5r_active_production_config.json"
+# These newly introduced readers explicitly report pending/degraded when no
+# first receipt or analyst review exists. Optionality is a closed path/type
+# contract, never a registry-controlled exemption for other required inputs.
+OPTIONAL_ACTIVE_INPUTS = {
+    "05_risk_and_positions/phase5r_thesis_reviews.local.json": "optional_current_review",
+    "04_research/realtime_stock_picker_phase5r/phase5r_long_horizon_research.local.json": "optional_generated_research",
+    "04_research/realtime_stock_picker_phase5r/phase5r_market_regime.local.json": "optional_generated_research",
+    "03_source_data/phase5r/phase5r_official_news_events.local.json": "optional_generated_research",
+    "03_source_data/phase5r/phase5r_official_news_status.local.json": "optional_generated_research",
+}
 SMTP_CONFIG_PATH = (
     ROOT
     / "07_automation"
@@ -173,6 +183,13 @@ def _registry_paths(
     for row in rows:
         path_spec = row.get("path_spec", "")
         path_kind = row.get("path_kind", "")
+        freshness = row.get("decision_freshness", "")
+        optional = (
+            path_kind == "exact"
+            and OPTIONAL_ACTIVE_INPUTS.get(path_spec) == freshness
+        )
+        if freshness.startswith("optional_") and not optional:
+            forbidden.append(f"{row.get('registry_id', '')}:unsupported_optional_input")
         if row.get("allowed_as_active_input") != "yes":
             forbidden.append(
                 f"{row.get('registry_id', '')}:not_explicitly_allowed"
@@ -194,7 +211,9 @@ def _registry_paths(
                 f"{row.get('registry_id', '')}:{path_spec}"
             )
         if path_kind == "exact":
-            if not (ROOT / path_spec).is_file():
+            target = ROOT / path_spec
+            absent_optional = optional and not target.exists() and not target.is_symlink()
+            if not target.is_file() and not absent_optional:
                 missing.append(path_spec)
         elif path_kind == "pattern":
             if not any(path.is_file() for path in ROOT.glob(path_spec)):

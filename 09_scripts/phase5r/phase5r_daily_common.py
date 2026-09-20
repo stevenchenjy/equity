@@ -477,7 +477,8 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
         if ticker in held_tickers:
             continue
         eligible = (ticker in new_eligible and ticker not in pending
-                    and int(decision.get("new_candidate_stability_distinct_closes", 0) or 0) >= 2)
+                    and int(row.get("stability_distinct_closes", decision.get("new_candidate_stability_distinct_closes", 0)) or 0)
+                    >= int(row.get("required_distinct_closes", 2) or 2))
         candidates.append({
             "ticker": ticker, "label": row.get("label", ""), "action": row.get("action", ""),
             "eligible": eligible, "pending": ticker in pending,
@@ -486,11 +487,17 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
             "suggested_whole_shares": numeric(row.get("suggested_whole_shares")) if eligible else None,
             "maximum_review_price": numeric(row.get("maximum_review_price")) if eligible else None,
         })
+    research_warnings = []
+    for row in decision.get("held_research_warnings", []):
+        signals = [{key: item.get(key) for key in ("code", "observations", "evidence_date")}
+                   for item in row.get("review_signals", []) if isinstance(item, dict)]
+        research_warnings.append({"ticker": row.get("ticker"), "signals": sorted(signals, key=lambda item: str(item.get("code")))})
     return canonical_sha256({
         "version": "phase5r_recommendation_notification_v1", "decision_code": code,
         "gates": gates, "account_conflicts": conflicts, "cash_estimated": cash_estimated,
         "weakening_tickers": sorted(set(decision.get("fundamental_gate", {}).get("weakening_tickers", []))),
         "actions": ordered(actions), "watch_candidates": ordered(candidates),
+        "held_research_warnings": ordered(research_warnings),
     })
 
 

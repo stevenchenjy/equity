@@ -112,3 +112,14 @@ graphify-out/graph.html
 
 # Private, dated owner-requested review and delivery evidence snapshots.
 08_reviews/owner_requested.local/
+
+# Long-horizon research, bounded market adaptation and official news runtime.
+04_research/realtime_stock_picker_phase5r/phase5r_long_horizon_research.local.json
+04_research/realtime_stock_picker_phase5r/phase5r_market_regime.local.json
+08_reviews/current/phase5r_long_horizon_research.local.md
+08_reviews/current/phase5r_market_regime.local.md
+03_source_data/phase5r/phase5r_official_news_events.local.json
+03_source_data/phase5r/phase5r_official_news_status.local.json
+00_project_control/run_logs/phase5r_news_scheduler.local.json
+00_project_control/run_logs/phase5r_official_news.lock
+05_risk_and_positions/phase5r_thesis_reviews.local.json

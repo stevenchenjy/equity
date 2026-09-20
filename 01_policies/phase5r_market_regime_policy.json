@@ -1,0 +1,21 @@
+{
+  "schema_version": "phase5r_market_regime_policy_v1",
+  "policy_version": "2026-09-20.1",
+  "purpose": "Bounded research pacing; heuristic thresholds are not return-optimized or validated forecasts",
+  "benchmarks": ["SPY", "QQQ"],
+  "stress_benchmark_drawdown_pct": -15.0,
+  "stress_breadth_drawdown_pct": -20.0,
+  "stress_breadth_fraction_pct": 60.0,
+  "shock_daily_return_pct": -3.0,
+  "shock_decliners_fraction_pct": 80.0,
+  "caution_benchmark_drawdown_pct": -8.0,
+  "caution_breadth_fraction_pct": 50.0,
+  "minimum_breadth_names": 10,
+  "minimum_snapshot_coverage_pct": 90.0,
+  "stress_confirmation_closes": 2,
+  "recovery_confirmation_closes": 3,
+  "normal_required_distinct_closes": 2,
+  "stress_required_distinct_closes": 3,
+  "changes_allowed": ["new_capital_research_confirmation", "research_priority"],
+  "changes_forbidden": ["hard_risk_caps", "cash_reserve", "strategic_allocation_targets", "price_only_exit", "automatic_execution"]
+}

@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-09-15T08:26:53.000-04:00",
+  "artifact_sha256": "1a8278df8fd2505fa4ccb315812a2870180b5bb032caad95854c1e8b09da91f9",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v21",
+  "prior_extension_set_sha256": "e33f6690144bae6a2588adf4205a734e8c21781551744a965f3681d5eefc2f6a",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-14T20:45:41.000+00:00",
+      "accession_number": "0001104659-26-107526",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-15T08:26:53.000-04:00",
+      "cik": "1018724",
+      "entity_name": "AMAZON COM INC",
+      "extension_record_sha256": "14eb196a63c81c5178ee00e1c65f4470441b6d0c681ce93393470c368a872459",
+      "extension_version": "v21",
+      "filing_date": "2026-09-14",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "efd755d677538eef2fd10ae7e1793a59143555140430cba8f20932bdaec84d80",
+      "source_url": "https://data.sec.gov/submissions/CIK0001018724.json",
+      "ticker": "AMZN"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

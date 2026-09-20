@@ -106,7 +106,7 @@ def classification(action: str) -> str:
         or "core_allocation" in normalized
     ):
         return "ADD_REVIEW"
-    if normalized in {"hold", "hold_existing"}:
+    if normalized in {"hold", "hold_existing", "hold_pending_research"}:
         return "HOLD"
     return "WATCH"
 

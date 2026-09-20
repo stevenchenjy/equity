@@ -26,8 +26,14 @@ The language may be firm, but it remains research rather than a trading command.
 Daily analysis does not imply daily action.
 
 - HOLD and WATCH never require confirmation.
-- An ADD proposal must remain identical across two different valid closing
-  sessions.
+- An ADD proposal must retain the same semantic investment plan across two
+  distinct valid closes, or three during confirmed broad market stress. Each
+  ticker is tracked independently; routine quote updates do not reset it.
+- A low composite/technical score alone produces research follow-up, never a
+  full-exit proposal. A reviewed official-source thesis assessment can support
+  an exit review. This is analyst research, not a mandatory owner form.
+- Missing long-horizon thesis evidence is labeled `hold_pending_research`;
+  unchanged shares do not establish that the long-term thesis is complete.
 - TRIM and EXIT research proposals may escalate immediately when C9 identifies
   a concentration or invalidation condition.
 - Every action proposal has `automatic_action_allowed=no`.

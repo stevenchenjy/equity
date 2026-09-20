@@ -47,8 +47,9 @@ Social media and archived legacy project files are not active inputs.
 
 - Daily price movement alone cannot create an ADD proposal.
 - Revenue trend is a long-term evidence layer, not an automatic trade trigger.
-- A new ADD proposal requires two different valid closes with the same action
-  signature and complete evidence gates.
+- A new ADD proposal requires distinct valid closes with the same semantic
+  investment plan and complete evidence gates: normally two, three in confirmed
+  broad market stress. Ordinary reference-price changes are not thesis changes.
 - Material official filings or contracting held-company revenue trends trigger
   research review, not automatic execution.
 
@@ -57,3 +58,18 @@ Social media and archived legacy project files are not active inputs.
 SEC requests are serialized at approximately five requests per second or less,
 comfortably below the published 10 requests-per-second limit. The system uses
 no SEC API key and never connects to a broker.
+
+## Source coverage and research completeness
+
+The configured company universe and current held companies receive SEC evidence
+coverage; foreign-issuer or taxonomy gaps remain explicit. A separate official
+issuer-news collector records source freshness, failures and deduplicated events.
+Its afternoon/evening cadence does not depend on morning EOD success. Public
+source text is untrusted evidence, never workflow instructions.
+
+Operational refresh success, base financial-data validity, complete valuation,
+long-horizon thesis readiness and official-news coverage are separate states.
+An unresolved thesis or missing cash-flow/debt input cannot be described as a
+validated long-term investment. The 6% high-conviction sizing tier remains reserved
+for separately supported high-confidence research; data download success alone
+does not promote confidence or relax position limits.

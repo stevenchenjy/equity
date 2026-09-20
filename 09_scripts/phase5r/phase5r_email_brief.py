@@ -33,8 +33,9 @@ _LABELS = {
     "data_gate_hold": ("等待数据恢复", "数据未齐，暂停仓位方案"),
     "fundamental_weakening_review": ("需复核基本面", "先复核经营变化，暂停新增方案"),
     "action_review_candidate": ("有方案待复核", "有仓位方案需要你判断"),
-    "pending_new_position_stability": ("等待第二次确认", "新增方案尚未完成稳定性确认"),
+    "pending_new_position_stability": ("等待稳定性确认", "新增方案尚未完成稳定性确认"),
     "hold_no_new_position": ("无交易待办", "本次没有新增仓位方案"),
+    "hold_pending_research": ("持仓研究待补齐", "暂维持仓位，补齐长期研究依据"),
 }
 
 
@@ -247,8 +248,9 @@ def _watch_view(
             reasons.append("另有准入阻断项待核对")
             conditions.append("核对本地决策中的其余准入条件")
         if ticker in pending or row.get("action") == "pending_second_distinct_close":
-            count = int(decision.get("new_candidate_stability_distinct_closes", 0) or 0)
-            reasons.append(f"尚未完成两个不同有效收盘日确认（当前 {count} 个）")
+            count = int(row.get("stability_distinct_closes", decision.get("new_candidate_stability_distinct_closes", 0)) or 0)
+            required = int(row.get("required_distinct_closes", 2) or 2)
+            reasons.append(f"尚未完成 {required} 个不同有效收盘日确认（当前 {count} 个）")
             conditions.append("等待下一个不同的有效收盘；重复刷新不算新确认")
         if not reasons:
             reasons.append("当前没有通过完整校验的新增方案")
@@ -312,8 +314,9 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
             kind = _action_kind(row)
             if kind == "持仓不变":
                 continue
-            if kind == "新增复核" and int(decision.get("action_stability_distinct_closes", 0) or 0) < 2:
-                tasks.append(f"{ticker} 尚未满足两个不同有效收盘日的稳定性条件；当前不需要交易确认。")
+            required = int(decision.get("market_regime", {}).get("required_distinct_closes", 2) or 2)
+            if kind == "新增复核" and int(decision.get("action_stability_distinct_closes", 0) or 0) < required:
+                tasks.append(f"{ticker} 尚未满足 {required} 个不同有效收盘日的稳定性条件；当前不需要交易确认。")
                 continue
             change = _decimal(row.get("whole_shares_to_change"))
             target = _decimal(row.get("target_shares"))
@@ -331,9 +334,10 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
             ticker = str(row.get("ticker", ""))
             if ticker not in eligible_new or ticker in pending:
                 continue
-            count = int(decision.get("new_candidate_stability_distinct_closes", 0) or 0)
+            count = int(row.get("stability_distinct_closes", decision.get("new_candidate_stability_distinct_closes", 0)) or 0)
+            required = int(row.get("required_distinct_closes", 2) or 2)
             quantity, price = _decimal(row.get("suggested_whole_shares")), _decimal(row.get("maximum_review_price"))
-            if count < 2 or quantity is None or quantity <= 0 or price is None or price <= 0:
+            if count < required or quantity is None or quantity <= 0 or price is None or price <= 0:
                 tasks.append(f"{ticker} 的新增方案条件尚未完整；继续等待，不展示可执行式数量。")
                 continue
             plans.append({
@@ -360,6 +364,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         else:
             tasks.append("没有需要你确认的交易方案；继续按既有条件观察。")
             summary = "确定性规则本次没有形成新的仓位调整建议。"
+    if code == "hold_pending_research" and not plans:
+        summary = "当前维持仓位；长期持有逻辑或估值仍待研究补齐，不能把暂未调整理解为已完成投资论证。"
 
     plan_tickers = {row["ticker"] for row in plans}
     positions = []
@@ -373,7 +379,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         elif ticker in pending:
             state = "等待确认"
         else:
-            state = "持仓不变" if row.get("action") == "hold" else "仅观察"
+            state = "持仓不变，研究待补齐" if row.get("action") == "hold_pending_research" else "持仓不变" if row.get("action") == "hold" else "仅观察"
         positions.append({"ticker": ticker, "quantity": shares(row.get("current_shares")) + " 股", "weight": percent(row.get("current_weight_pct")), "price": money(row.get("current_price")), "state": state})
 
     account_lines = [
@@ -402,6 +408,12 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     incomplete = [str(row.get("ticker", "")) for row in held if not _is_core(row) and _valuation(row).startswith("估值证据不足")]
     quality = " · ".join(f"{name}：{'通过' if decision.get(key, {}).get('passed') is True else '未通过'}" for key, name in (("market_gate", "行情"), ("evidence_gate", "官方资料"), ("fundamental_gate", "基础财务")))
     limitations = []
+    regime = decision.get("market_regime", {})
+    if regime:
+        limitations.append(f"市场环境：{regime.get('regime', 'unknown')}；新增方案需 {regime.get('required_distinct_closes', 2)} 个不同有效收盘确认；不因市场价格状态独立退出长期持仓。")
+    news = decision.get("evidence_coverage", {}).get("official_news", {})
+    if news:
+        limitations.append(f"官方新闻覆盖：{news.get('status', 'missing')}；公告出现不代表利好，抓取失败也不代表没有事件。")
     if incomplete:
         limitations.append("、".join(incomplete) + " 估值证据不足；基础财务校验通过不代表估值完整。")
     core_gap = [str(row.get("ticker", "")) for row in watch if "whole_share_target_gap" in str(row.get("gate_blockers", ""))]

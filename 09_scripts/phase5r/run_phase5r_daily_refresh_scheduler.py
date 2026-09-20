@@ -306,6 +306,16 @@ def main() -> int:
         )
         return 0
     current = now_et()
+    # Independent news cadence survives successful morning EOD completion.
+    # The parent runtime lock serializes these checks; maintenance/safe-check
+    # returns above never invoke the network.
+    from phase5r_news_schedule import run_due_news_checks
+    try:
+        news_check = run_due_news_checks(current)
+        if news_check.get("outcome") == "degraded":
+            print("official_news_check=degraded research_refresh_continues=true")
+    except (OSError, ValueError, TypeError, AttributeError):
+        print("official_news_check=degraded reason=news_state_error research_refresh_continues=true")
     due = due_slots(current)
     if not due:
         print("scheduler_action=none reason=no_refresh_slot_due")
@@ -439,7 +449,7 @@ def main() -> int:
             reason="daily_refresh_publication_window_exhausted",
         )
     state["updated_at"] = iso_now()
-    for old_date in sorted(state["dates"])[:-14]:
+    for old_date in sorted(state["dates"])[:-60]:
         del state["dates"][old_date]
     atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
     print(

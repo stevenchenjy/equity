@@ -64,6 +64,7 @@ from phase5r_sec_acceptance_extensions import (
     write_extension_admission_audit,
     write_extension_artifact,
 )
+from phase5r_sec_supplemental_facts import NVDA_PRINCIPAL_TAG, supplement_companyfacts
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -145,6 +146,9 @@ FUNDAMENTAL_FIELDS = [
     "revenue_latest",
     "revenue_prior_year",
     "revenue_yoy_pct",
+    "revenue_yoy_prior_quarter_pct",
+    "net_margin_prior_quarter_pct",
+    "prior_quarter_period_end",
     "net_income_latest",
     "net_margin_pct",
     "cash_latest",
@@ -224,6 +228,12 @@ FINANCIAL_SELECTION_VERSION = "period_bound_companyfacts_v2"
 # This is an issuer-specific reported definition, not a generic assumption
 # that every software payment is outside every issuer's PP&E subtotal.
 SEPARATE_SOFTWARE_CAPEX_ISSUERS = {"RBRK"}
+# NVIDIA's cash-flow statement labels this broader productive-asset line
+# "purchases related to property and equipment and intangible assets". Its
+# reported FCF also deducts financed-asset principal; absence is not zero.
+# Official definition: SEC 0001045810-25-000207/q2fy26cfocommentary.htm.
+PRODUCTIVE_ASSET_CAPEX_ISSUERS = {"NVDA"}
+NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "XLK"})
 
 
 def request_json(url: str, user_agent: str) -> Any:
@@ -235,8 +245,24 @@ def request_json(url: str, user_agent: str) -> Any:
             "Accept-Encoding": "identity",
         },
     )
-    with urllib.request.urlopen(request, timeout=20) as response:
-        return __import__("json").loads(response.read().decode("utf-8"))
+    # One transient retry handles a short public-endpoint outage without a
+    # request storm. The enclosing scheduler still bounds the complete run.
+    maximum_bytes = 30 * 1024 * 1024
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                payload = response.read(maximum_bytes + 1)
+                if len(payload) > maximum_bytes:
+                    raise ValueError("SEC JSON response exceeds size cap")
+                return json.loads(payload.decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            if attempt or (exc.code != 429 and not 500 <= exc.code <= 599):
+                raise
+        except (urllib.error.URLError, TimeoutError):
+            if attempt:
+                raise
+        time.sleep(1.0)
+    raise RuntimeError("SEC JSON retry budget exhausted")
 
 
 def researched_tickers() -> tuple[list[str], list[str]]:
@@ -246,6 +272,15 @@ def researched_tickers() -> tuple[list[str], list[str]]:
         if row.get("ticker", "").strip()
     }
     watched: set[str] = set()
+    # Every active company receives fundamental coverage before ranking.
+    # Yesterday's price/volume winners cannot define today's research queue.
+    universe_path = ROOT / "03_source_data" / "phase5r" / "phase5r_universe_seed.csv"
+    watched.update(
+        row["ticker"].strip().upper()
+        for row in read_csv(universe_path)
+        if row.get("ticker", "").strip()
+        and row.get("is_benchmark", "").strip().lower() != "yes"
+    )
     for source in (POSITION_RECOMMENDATION_PATH, NEW_CANDIDATE_PATH):
         for row in read_csv(source):
             ticker = row.get("ticker", "").strip().upper()
@@ -271,7 +306,7 @@ def researched_tickers() -> tuple[list[str], list[str]]:
 def company_fundamentals_required(ticker: str) -> bool:
     """SPY is the canonical ETF core; company XBRL is not applicable to it."""
 
-    return ticker.strip().upper() != "SPY"
+    return ticker.strip().upper() not in NONCOMPANY_BENCHMARKS
 
 
 def load_ticker_map(user_agent: str, force: bool) -> dict[str, int]:
@@ -388,7 +423,7 @@ def fact_units(
     values_out = []
     if as_of is not None and as_of.tzinfo is None:
         raise ValueError("companyfacts as_of must be timezone aware")
-    for taxonomy in ("us-gaap", "ifrs-full", "dei"):
+    for taxonomy in ("us-gaap", "ifrs-full", "dei", "nvda"):
         taxonomy_facts = facts.get(taxonomy, {})
         for priority, tag in enumerate(tags):
             record = taxonomy_facts.get(tag, {})
@@ -650,6 +685,9 @@ def fact_provenance(item: dict[str, Any] | None) -> dict[str, Any]:
         "derivation": item.get("_derivation", "reported_fact"),
         "status": "available",
     })
+    for key in ("source_url", "raw_sha256", "raw_path", "context_id", "fact_id"):
+        if item.get("_" + key):
+            result[key] = item["_" + key]
     if item.get("_components"):
         result["components"] = [fact_provenance(component) for component in item["_components"]]
     return result
@@ -766,6 +804,20 @@ def fundamental_row(
         if net_income is not None and revenue_latest not in {None, 0.0}
         else None
     )
+    preceding = [item for item in revenue
+                 if latest and period_type == "quarter"
+                 and (date.fromisoformat(latest["start"]) - date.fromisoformat(item["end"])).days == 1]
+    prior_quarter = max(preceding, key=_selection_key) if preceding else None
+    prior_quarter_year = _prior_period(revenue, prior_quarter)
+    prior_quarter_yoy = (
+        (float(prior_quarter["val"]) / float(prior_quarter_year["val"]) - 1.0) * 100.0
+        if prior_quarter and prior_quarter_year and float(prior_quarter_year["val"]) != 0 else None
+    )
+    prior_quarter_income = _period_match(net_income_values, prior_quarter)
+    prior_quarter_margin = (
+        float(prior_quarter_income["val"]) / float(prior_quarter["val"]) * 100.0
+        if prior_quarter_income and prior_quarter and float(prior_quarter["val"]) != 0 else None
+    )
     anchor_end = latest["end"] if latest else ""
     cash_fact = instant_fact(payload, CASH_TAGS, target_end=anchor_end, **selection)
     assets_fact = instant_fact(payload, ASSET_TAGS, target_end=anchor_end, **selection)
@@ -785,7 +837,28 @@ def fundamental_row(
     )
     ocf_fact = _ttm_fact_at(duration_values(payload, OPERATING_CASH_FLOW_TAGS, **selection), target_end) if target_end else None
     capex_fact = _ttm_fact_at(duration_values(payload, CAPEX_TAGS, **selection), target_end) if target_end else None
+    if ticker in PRODUCTIVE_ASSET_CAPEX_ISSUERS:
+        capex_fact = _ttm_fact_at(
+            duration_values(payload, ("PaymentsToAcquireProductiveAssets",), **selection), target_end
+        ) if target_end else None
     capex_components = [capex_fact]
+    if ticker in PRODUCTIVE_ASSET_CAPEX_ISSUERS:
+        principal_fact = _ttm_fact_at(
+            duration_values(payload, (NVDA_PRINCIPAL_TAG,), **selection), target_end
+        ) if target_end else None
+        capex_components.append(principal_fact)
+        if (capex_fact is not None and principal_fact is not None
+                and capex_fact["start"] == principal_fact["start"]
+                and capex_fact["end"] == principal_fact["end"]):
+            capex_fact = _derived_fact(
+                capex_components, start=capex_fact["start"], end=capex_fact["end"],
+                value=sum(float(part["val"]) for part in capex_components),
+                derivation="reported_productive_asset_purchases_plus_financed_asset_principal",
+            )
+            capex_fact["_taxonomy"] = "derived"
+            capex_fact["_tag"] = "CapitalExpenditureIncludingFinancedAssetPrincipal"
+        else:
+            capex_fact = None
     if ticker in SEPARATE_SOFTWARE_CAPEX_ISSUERS:
         software_fact = _ttm_fact_at(duration_values(payload, ("PaymentsForSoftware",), **selection), target_end) if target_end else None
         capex_components.append(software_fact)
@@ -879,10 +952,14 @@ def fundamental_row(
         valuation_limitations.append("required_financial_fact_accession_missing")
     if free_cash_flow_margin is None:
         valuation_limitations.append("free_cash_flow_margin_missing_for_required_period")
+    if ticker in PRODUCTIVE_ASSET_CAPEX_ISSUERS and capex_fact is None:
+        valuation_limitations.append("issuer_fcf_financed_asset_principal_not_available")
     if share_dilution is None:
         valuation_limitations.append("share_dilution_missing_for_required_period")
     if (capex_fact and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment"
-            and capex_fact.get("_derivation") != "reported_ppe_plus_separately_disclosed_internal_use_software"):
+            and capex_fact.get("_derivation") not in {
+                "reported_ppe_plus_separately_disclosed_internal_use_software",
+                "reported_productive_asset_purchases_plus_financed_asset_principal"}):
         valuation_limitations.append("capex_alternative_scope_requires_validation")
     provenance = {
         "revenue_latest": fact_provenance(latest), "revenue_prior_year": fact_provenance(prior),
@@ -895,6 +972,12 @@ def fundamental_row(
         "debt_latest": fact_provenance(debt_fact), "debt_component_disclosures": [fact_provenance(part) for part in debt_parts],
         "net_margin_pct": _derived_provenance([net_income_match, latest], net_margin,
                                                derivation="same_period_net_income_divided_by_revenue_times_100", unit="percent"),
+        "revenue_yoy_prior_quarter_pct": _derived_provenance(
+            [prior_quarter, prior_quarter_year], prior_quarter_yoy,
+            derivation="preceding_quarter_comparable_prior_year_revenue_ratio_less_one_times_100", unit="percent"),
+        "net_margin_prior_quarter_pct": _derived_provenance(
+            [prior_quarter_income, prior_quarter], prior_quarter_margin,
+            derivation="preceding_quarter_net_income_divided_by_revenue_times_100", unit="percent"),
         "revenue_yoy_pct": _derived_provenance([latest, prior], revenue_yoy,
                                               derivation="comparable_period_revenue_ratio_less_one_times_100", unit="percent"),
         "ttm_revenue_yoy_pct": _derived_provenance([ttm_revenue_fact, ttm_prior_fact], ttm_revenue_yoy,
@@ -915,6 +998,9 @@ def fundamental_row(
         "revenue_latest": money(revenue_latest),
         "revenue_prior_year": money(revenue_prior),
         "revenue_yoy_pct": "" if revenue_yoy is None else f"{revenue_yoy:.2f}",
+        "revenue_yoy_prior_quarter_pct": "" if prior_quarter_yoy is None else f"{prior_quarter_yoy:.2f}",
+        "net_margin_prior_quarter_pct": "" if prior_quarter_margin is None else f"{prior_quarter_margin:.2f}",
+        "prior_quarter_period_end": prior_quarter["end"] if prior_quarter else "",
         "net_income_latest": money(net_income),
         "net_margin_pct": "" if net_margin is None else f"{net_margin:.2f}",
         "cash_latest": money(cash),
@@ -1328,6 +1414,15 @@ def main() -> int:
                     SEC_COMPANYFACTS_URL.format(cik=cik), user_agent
                 )
                 time.sleep(0.20)
+                try:
+                    companyfacts = supplement_companyfacts(
+                        ticker, cik, companyfacts, filings, user_agent,
+                        as_of=datetime.fromisoformat(attempt_at.replace("Z", "+00:00")),
+                    )
+                except (OSError, ValueError, urllib.error.URLError):
+                    # Keep valid standard facts; unresolved custom scope stays
+                    # explicitly insufficient and cannot authorize valuation.
+                    fundamental_errors.append(f"{ticker}:supplemental_cash_flow_unavailable")
                 fundamental_rows.append(
                     fundamental_row(
                         ticker, cik, companyfacts, attempt_at,
