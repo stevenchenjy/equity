@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 import json
 import math
@@ -149,7 +151,7 @@ def write_pending_outputs(row: dict[str, str]) -> None:
     status_label = "pending fill" if row["order_status"] == "pending_fill" else "cancelled"
     summary = "\n".join(
         [
-            "# Phase 5R-C9B Post-Execution Account Summary",
+            report_heading("post_execution_summary"),
             "",
             f"Generated: `{timestamp()}`",
             "",
@@ -163,7 +165,7 @@ def write_pending_outputs(row: dict[str, str]) -> None:
         ]
     ) + "\n"
     write_text(POST_EXECUTION_SUMMARY, summary)
-    research = summary.replace("# Phase 5R-C9B Post-Execution Account Summary", "# Phase 5R-C9B Execution Report")
+    research = summary.replace(report_heading("post_execution_summary"), report_heading("execution_report"))
     write_text(EXECUTION_RESEARCH_REPORT, research)
 
 
@@ -301,7 +303,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
     upsert_reconciliation_row(report_row)
     summary = "\n".join(
         [
-            "# Phase 5R-C9B Post-Execution Account Summary",
+            report_heading("post_execution_summary"),
             "",
             f"Generated: `{timestamp()}`",
             "",
@@ -319,7 +321,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
         ]
     ) + "\n"
     write_text(POST_EXECUTION_SUMMARY, summary)
-    write_text(EXECUTION_RESEARCH_REPORT, summary.replace("# Phase 5R-C9B Post-Execution Account Summary", "# Phase 5R-C9B Execution Report"))
+    write_text(EXECUTION_RESEARCH_REPORT, summary.replace(report_heading("post_execution_summary"), report_heading("execution_report")))
     return reconciliation_state, positions_modified
 
 

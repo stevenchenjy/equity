@@ -8,6 +8,8 @@ material evidence ambiguity, or account conflicts are escalated.
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -1092,7 +1094,7 @@ def main() -> int:
         f"期间 {row.get('latest_frame') or 'n/a'}。"
         for row in held_fundamentals
     )
-    report = f"""# Phase 5R 每日决策 — {cycle_date()}
+    report = f"""{report_heading("daily_decision")} — {cycle_date()}
 
 ## 决定性结论
 

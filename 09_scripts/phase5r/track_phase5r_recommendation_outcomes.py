@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 import csv
 import json
@@ -341,7 +343,7 @@ def write_retrospective() -> None:
     outcomes = read_csv(OUTCOME_PATH)
     primary_outcomes = [row for row in outcomes if row.get("primary_observation") == "yes"]
     lines = [
-        "# Phase 5R recommendation retrospective",
+        report_heading("recommendation_outcomes"),
         "",
         f"Generated: `{iso_now()}`",
         "",

@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -203,7 +205,7 @@ def main() -> int:
     }
     atomic_write_json(STATUS_JSON_PATH, status)
     lines = [
-        "# Phase 5R current production status",
+        report_heading("production_status"),
         "",
         f"Generated: `{status['generated_at']}`",
         "",

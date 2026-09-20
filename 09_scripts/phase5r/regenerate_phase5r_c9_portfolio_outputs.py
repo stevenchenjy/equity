@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import json
 import subprocess
 import sys
@@ -486,7 +488,7 @@ def main() -> None:
         for row in position_rows
     ]
     memo_lines = [
-        "# Phase 5R-C9 Account-Aware Memo",
+        report_heading("account_memo"),
         "",
         f"Generated: `{timestamp()}`",
         "",
@@ -539,7 +541,7 @@ def main() -> None:
 
     allocation_rows = read_csv(TARGET_ALLOCATION_REPORT)
     allocation_lines = [
-        "# Phase 5R-C9 Allocation Report",
+        report_heading("allocation_report"),
         "",
         f"Generated: `{timestamp()}`",
         "",
@@ -564,7 +566,7 @@ def main() -> None:
     write_text(C9_ALLOCATION_REPORT, "\n".join(allocation_lines) + "\n")
 
     weekly_lines = [
-        "# Phase 5R-C9 Supporting Decision Summary (Daily Refresh)",
+        report_heading("decision_summary"),
         "",
         f"Generated: `{timestamp()}`",
         "",

@@ -7,6 +7,8 @@ launchctl kickstart. It never opens the local SMTP configuration.
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 import ast
 import csv
@@ -697,7 +699,7 @@ def main() -> int:
     passed = all(row["result"] == "PASS" for row in checks)
     overall = "PASS" if passed else "FAIL"
     lines = [
-        "# Phase 5R Daily Upgrade Verification Report",
+        report_heading("workflow_verification"),
         "",
         f"Generated: `{iso_now()}`",
         "",

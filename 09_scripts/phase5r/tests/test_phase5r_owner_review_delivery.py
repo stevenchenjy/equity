@@ -119,7 +119,7 @@ class OwnerReviewDeliveryTests(unittest.TestCase):
             rows = sender.read_csv(sender.DAILY_DELIVERY_LEDGER_PATH)
             self.assertEqual([row["status"] for row in rows], ["owner_review_send_claimed", "owner_review_sent"])
             message = smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
-            self.assertIn("[Phase 5R 应请求复核]", str(message["Subject"]))
+            self.assertIn("[Equity 应请求复核]", str(message["Subject"]))
             self.assertIn("2026-09-01", str(message["Subject"]))
             config.reset_mock()
             # Changed research cannot turn the same user request into a new send.

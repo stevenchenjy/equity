@@ -1,6 +1,9 @@
-# Early Public Equity Lab
+# Equity Research
 
 Educational research workspace for a small cash-account portfolio currently operating at approximately the $3,000 scale. Current value is never hard-coded: production derives it from manually maintained cash and shares valued at the canonical public close.
+
+Display names and report branding come from [the shared display configuration](01_policies/equity_display_names.json).
+[The naming policy](00_project_control/equity_naming_policy.md) uses stable functional names; existing `phase5r` paths and schemas remain compatibility identifiers.
 
 ## Repository Paths
 

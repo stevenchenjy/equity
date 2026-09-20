@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Build current market context from already validated public snapshots."""
+
+from equity_naming import report_heading
 from phase5r_daily_common import ROOT, MARKET_SNAPSHOT_PATH, atomic_write_json, atomic_write_text, iso_now, latest_published_market_session, now_et, read_csv, read_json
 from phase5r_market_regime import POLICY_PATH, STATE_PATH, REPORT_PATH, build_regime
 
@@ -11,7 +13,7 @@ def main() -> int:
                           latest_published_market_session(now_et()).isoformat(), iso_now())
     atomic_write_json(STATE_PATH, report)
     atomic_write_text(REPORT_PATH, "\n".join([
-        "# 市场状态与研究节奏", "", f"生成：{report['generated_at']}；收盘日：{report['market_session_date']}。",
+        report_heading("market_regime"), "", f"生成：{report['generated_at']}；收盘日：{report['market_session_date']}。",
         f"状态：{report['status']}；市场环境：{report['regime']}；原始观察：{report['raw_regime']}。",
         f"新增资金方案需要 {report['required_distinct_closes']} 个不同有效收盘确认。",
         f"研究优先级：{report['research_priority']}。", f"指标：{report['metrics']}", "",

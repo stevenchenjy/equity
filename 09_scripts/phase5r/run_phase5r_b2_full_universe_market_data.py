@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 from collections import Counter
 import csv
@@ -564,7 +566,7 @@ def write_decision(
     full_diagnostic: dict[str, str] | None = None,
 ) -> None:
     lines = [
-        "# Phase 5R-B2 Data Source Decision", "", f"Generated: `{timestamp()}`", "",
+        report_heading("market_source"), "", f"Generated: `{timestamp()}`", "",
         "## Decision", "", f"- Selected source: `{MASSIVE_DATA_SOURCE}`.",
         "- Source use: `Massive Stocks Basic end-of-day read-only market data`.",
         "- Price basis: `unadjusted`; this preserves the former B2 `auto_adjust=False` semantics.",
@@ -632,7 +634,7 @@ def write_data_report(
     for row in rows:
         counts[row["data_quality_label"]] = counts.get(row["data_quality_label"], 0) + 1
     lines = [
-        "# Phase 5R-B2 Data Report", "", f"Generated: `{timestamp()}`", "",
+        report_heading("market_data"), "", f"Generated: `{timestamp()}`", "",
         "## Summary", "", f"- Public snapshot rows: `{len(rows)}`.",
         f"- Canonical candidate rows: `{candidate_count}`.",
         f"- Current-position price-monitoring rows: `{held_count}`.",

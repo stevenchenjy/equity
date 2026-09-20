@@ -2,6 +2,8 @@
 """Create offline research sensitivities; reads public snapshots, never refreshes them."""
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 from pathlib import Path
 
@@ -43,7 +45,7 @@ def display(value: object, digits: int = 2) -> str:
 
 def render_report(report: dict) -> str:
     companies = sorted(report["companies"].items(), key=lambda item: (not item[1].get("held"), item[0]))
-    lines = ["# 长期公司研究与 2×/3× 条件情景", "", f"生成：{report['generated_at']}；市场日期：{report.get('market_session_date') or '缺失/不一致'}。", "",
+    lines = [report_heading("long_horizon"), "", f"生成：{report['generated_at']}；市场日期：{report.get('market_session_date') or '缺失/不一致'}。", "",
         "此报告区分已披露事实、未验证商业假设与明确的敏感性参数。数值变化触发研究复核，不自动证明投资逻辑失效，也不授权交易。",
         "3/5 年情景采用假设的收入增长、期末现金流率、年度稀释与期末现金流倍数；不是公司预测、概率加权回报或目标价。",
         "现金流为经营现金流减资本开支的杠杆后代理指标，采用股权 P/FCF 倍数，不另加现金或减债务；不含分红/中途分配，不等于可分配股东现金。", "",

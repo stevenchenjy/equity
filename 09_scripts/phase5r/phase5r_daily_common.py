@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import desktop_alert_script
+
 import csv
 import calendar
 import fcntl
@@ -622,7 +624,7 @@ def publish_automation_alert(*, component: str, reason: str) -> None:
             [
                 "/usr/bin/osascript",
                 "-e",
-                'display notification "Today\'s scheduled research email is blocked. Check the Phase 5R current status." with title "Phase 5R needs attention"',
+                desktop_alert_script(),
             ],
             stdin=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,

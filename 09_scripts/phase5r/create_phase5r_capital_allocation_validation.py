@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import json
 from collections import Counter
 from pathlib import Path
@@ -167,7 +169,7 @@ def main() -> int:
     )
     invested_pct = 100.0 - _number(summary.get("current_cash_pct"))
     lines = [
-        "# Phase 5R capital-allocation validation",
+        report_heading("capital_validation"),
         "",
         f"Generated: `{iso_now()}`",
         "",

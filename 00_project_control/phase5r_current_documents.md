@@ -1,10 +1,11 @@
-# Phase 5R — current document entrypoints
+# Equity Research — current document entrypoints
 
 Updated 2026-09-20 ET. This index identifies where to read current state; it
 does not freeze balances, test counts, call counts, or open-item counts.
 
 ## Authoritative policy and boundaries
 
+- [Equity Research naming decision and migration plan](equity_naming_policy.md): fixed user-facing name and functional naming rules; display names are centralized; legacy technical identifiers remain compatible.
 - [Active production configuration](phase5r_active_production_config.json): active paths and deterministic production controls.
 - [SHADOW evaluation configuration](phase5r_shadow_llm_config.json) and [policy](phase5r_shadow_llm_evaluation_policy.md): evaluation allowance, routing, measurements, and future authority-review thresholds.
 - [Research working agreement](phase5r_research_working_agreement.md): routine autonomous work versus authority-changing choices.

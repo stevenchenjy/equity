@@ -1,0 +1,26 @@
+{
+  "schema_version": "equity_display_names_v1",
+  "brand": "Equity Research",
+  "subject_label": "Equity",
+  "email_tagline": "研究提醒",
+  "alert_title": "需要关注",
+  "alert_message": "今日研究邮件受阻，请查看运行状态。",
+  "reports": {
+    "daily_decision": "每日研究决策",
+    "production_status": "运行状态",
+    "account_memo": "持仓研究",
+    "allocation_report": "组合配置",
+    "decision_summary": "研究决策摘要",
+    "execution_report": "人工执行复核",
+    "post_execution_summary": "成交后账户摘要",
+    "capital_validation": "资金配置验证",
+    "recommendation_outcomes": "研究结果回顾",
+    "market_source": "行情来源说明",
+    "market_data": "行情数据报告",
+    "long_horizon": "长期公司研究与 2×/3× 条件情景",
+    "market_regime": "市场状态与研究节奏",
+    "workflow_verification": "日常流程验证",
+    "shadow_run": "研究评估运行",
+    "shadow_evaluation": "研究评估结果"
+  }
+}

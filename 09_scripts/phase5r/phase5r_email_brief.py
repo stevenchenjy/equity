@@ -1,4 +1,4 @@
-"""Deterministic, action-first email presentation; no I/O or model authority.
+"""Deterministic, action-first email presentation; public display configuration only, no model authority.
 
 The decision artifact owns eligibility, arithmetic and stability. This module
 only projects that artifact into one shared text/HTML view. Global holds take
@@ -6,6 +6,8 @@ precedence over lower-level proposals, which remain in the full local report.
 """
 
 from __future__ import annotations
+
+from equity_naming import DISPLAY_NAMES, brand_name, subject_prefix
 
 import html
 import re
@@ -468,8 +470,8 @@ def email_subject(
     if owner_review:
         review = decision.get("owner_requested_research", {})
         review_date = _time(review.get("reviewed_at"))[:10]
-        return f"[Phase 5R 应请求复核] 持仓计划与观察机会｜{review_date}"
-    prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
+        return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
+    prefix = subject_prefix(correction=correction)
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
 
@@ -518,7 +520,7 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     paragraph = lambda value: f'<p style="margin:8px 0;line-height:1.65">{esc(value)}</p>'
     heading = lambda value: f'<h2 style="font-size:17px;line-height:1.4;margin:24px 0 10px;color:#172b3a">{esc(value)}</h2>'
     content = [
-        '<p style="margin:0 0 12px;font-size:12px;letter-spacing:1px;color:#526170">PHASE 5R · 研究提醒</p>',
+        f'<p style="margin:0 0 12px;font-size:12px;letter-spacing:1px;color:#526170">{esc(brand_name())} · {esc(DISPLAY_NAMES["email_tagline"])}</p>',
     ]
     if owner_research:
         content.extend([heading("本次请求的个股研究"), paragraph(research_as_of), paragraph(research_note)])

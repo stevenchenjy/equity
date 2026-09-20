@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 import copy
 import csv
@@ -1134,7 +1136,7 @@ def _atomic_private_snapshot_text(path: Path, content: str) -> None:
 
 def _report(payload: dict[str, Any]) -> str:
     metrics = payload["metrics"]
-    return f"""# Phase 5R SHADOW_LLM Incremental Value Evaluation
+    return f"""{report_heading("shadow_evaluation")}
 
 - Status: `{payload['decision']['status']}`
 - Automatically judged events: `{metrics['automatically_judged_events']}`

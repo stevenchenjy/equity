@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 from pathlib import Path
 
 from phase5r_c9_common import (
@@ -189,7 +191,7 @@ def main() -> None:
         f"{row['execution_id']}={row['order_status']}" for row in executions
     )
     lines = [
-        "# Phase 5R-C9B Execution Report",
+        report_heading("execution_report"),
         "",
         f"Generated: `{timestamp()}`",
         "",

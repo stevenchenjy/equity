@@ -192,7 +192,7 @@ therefore favors a missed status confirmation over a duplicate email.
   durable `correction_send_claimed`, `correction_sent`, or
   `correction_delivery_unknown` row blocks that same correction content from
   ever being attempted again; a newly changed version remains eligible.
-- Correction messages use the subject prefix `[Phase 5R 更正版]`.
+- Correction messages use the subject prefix `[Equity 更正版]`.
 
 ### Explicit owner-requested review (2026-09-14)
 
@@ -229,7 +229,7 @@ distinct real user request; retries keep the same ID.
   schema. Any of those states blocks reuse of that request ID across cycles
   and content changes, before credentials are read. Uncertain delivery is
   never retried automatically.
-- Use subject prefix `[Phase 5R 应请求复核]`. Lead with the dated requested
+- Use subject prefix `[Equity 应请求复核]`. Lead with the dated requested
   review and source links, preserving its line breaks. Display the original
   deterministic holdings table later with its actual reference-close date;
   when the research date is newer, label that table as an old-close baseline.
@@ -255,3 +255,7 @@ runtime user with no group or other permissions. The sender opens it with
 - Verification does not open SMTP configuration or invoke a sender.
 - No email attachment, broker connection, account read, order code, or trade
   execution is permitted.
+
+## Display naming
+
+The public `01_policies/equity_display_names.json` controls the sender display name and ordinary/correction/owner-review subject prefixes. The legacy private `sender_name` remains a compatibility field. Naming does not affect delivery eligibility, recipient identity or ledger deduplication. See `equity_naming_policy.md`.

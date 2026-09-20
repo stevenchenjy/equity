@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import brand_name, subject_prefix
+
 import argparse
 import hashlib
 import json
@@ -13,6 +15,7 @@ import ssl
 import stat
 from datetime import date, datetime
 from email.message import EmailMessage
+from email.utils import formataddr
 from typing import Any, Callable
 
 from phase5r_active_config import load_active_config
@@ -398,11 +401,13 @@ def build_message(
         )
     else:
         headline = safe_header(decision.get("headline"), "headline")
-        prefix = "[Phase 5R 更正版]" if correction else "[Phase 5R]"
+        prefix = subject_prefix(correction=correction, owner_review=owner_review)
         subject = safe_header(f"{prefix} {headline} — {decision['cycle_date']}", "subject")
     message = EmailMessage()
     message["Subject"] = subject
-    message["From"] = f"{config['sender_name']} <{config['smtp_username']}>"
+    # The public naming policy owns presentation; legacy SMTP sender_name is
+    # retained for config compatibility, never used as the display authority.
+    message["From"] = formataddr((safe_header(brand_name(), "display_brand"), config["smtp_username"]))
     message["To"] = config["recipient_email"]
     if owner_review:
         # Only this validated in-memory decision supplies explicit-review

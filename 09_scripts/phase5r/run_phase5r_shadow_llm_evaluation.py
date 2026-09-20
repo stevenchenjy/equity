@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+from equity_naming import report_heading
+
 import argparse
 import csv
 import fcntl
@@ -1221,7 +1223,7 @@ def _report(bundle: dict[str, Any]) -> str:
         if isinstance(row.get("authoritative_token_usage"), dict)
     ]
     token_total = sum(row["total_tokens"] for row in token_rows)
-    return f"""# Phase 5R SHADOW_LLM Run
+    return f"""{report_heading("shadow_run")}
 
 - Run ID: `{bundle['run_id']}`
 - Cycle: `{bundle['cycle_date']}`
