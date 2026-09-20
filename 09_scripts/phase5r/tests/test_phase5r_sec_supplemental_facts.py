@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import tempfile
 import unittest
@@ -13,9 +14,14 @@ from unittest.mock import Mock, patch
 from _support import SCRIPT_DIR  # noqa: F401
 from phase5r_sec_supplemental_facts import (
     NVDA_PRINCIPAL_TAG, SupplementalFactError, parse_principal_facts, supplement_companyfacts,
+    project_relative_locator,
 )
 import refresh_phase5r_daily_evidence as evidence
 from test_phase5r_financial_period_integrity import fixture, facts, duration
+from test_phase5r_valuation_input_bundle import _bundle
+from phase5r_valuation_input_bundle import (
+    ValuationInputBundleError, seal_bundle, validate_and_materialize_bundle,
+)
 
 
 FILING = {"form": "10-Q", "filing_date": "2026-08-26", "accepted_at": "2026-08-26T20:36:00Z",
@@ -39,6 +45,54 @@ class SupplementalFactsTests(unittest.TestCase):
         self.assertEqual(value["_source_url"], URL)
         self.assertEqual(value["_context_id"], "c-1")
         self.assertEqual(len(value["_raw_sha256"]), 64)
+
+    def test_macos_runtime_locator_is_relative_and_external_cache_is_omitted(self):
+        root = Path("/Users/private-owner/LocalRuntime/equity")
+        relative = "02_filings/phase5r_daily/financial_supplements.local/NVDA/0001045810-26-000075/primary_document.raw"
+        self.assertEqual(project_relative_locator(root / relative, project_root=root), relative)
+        value = parse_principal_facts(raw_fact(), filing=FILING, cik=1045810,
+            source_url=URL, raw_path=str(root / relative), project_root=root)[0]
+        self.assertEqual(value["_raw_path"], relative)
+        self.assertNotIn("/Users/", json.dumps(value))
+        for external in ["/Users/private-owner/Downloads/primary_document.raw",
+                         "/tmp/validation/primary_document.raw", r"C:\Users\private-owner\cache\primary_document.raw"]:
+            with self.subTest(external=external):
+                value = parse_principal_facts(raw_fact(), filing=FILING, cik=1045810,
+                    source_url=URL, raw_path=external, project_root=root)[0]
+                self.assertNotIn("_raw_path", value)
+                self.assertEqual(value["_source_url"], URL)
+                self.assertEqual(len(value["_raw_sha256"]), 64)
+
+    def test_supplemental_provenance_passes_bundle_privacy_without_weakening_guard(self):
+        runtime_root = Path("/Users/private-owner/LocalRuntime/equity")
+        raw = parse_principal_facts(raw_fact(), filing=FILING, cik=1045810,
+            source_url=URL, raw_path=str(runtime_root / "02_filings/phase5r_daily/NVDA/primary_document.raw"),
+            project_root=runtime_root)[0]
+        payload = {"facts": {"nvda": {NVDA_PRINCIPAL_TAG: facts([raw])}}}
+        selected = evidence.fact_units(payload, (NVDA_PRINCIPAL_TAG,),
+            as_of=datetime(2026,9,20,tzinfo=timezone.utc),
+            acceptance_by_accession={FILING["accession_number"]: FILING["accepted_at"]})[0]
+        provenance = evidence.fact_provenance(selected)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            bundle = _bundle(root, "NVDA")
+            source = next(s for s in bundle["records"][0]["sources"] if s["source_type"] == "sec_valuation_fact")
+            text_path = root / source["relative_path"]
+            def materialize(prov):
+                # Production embeds the entire fundamentals CSV row, including
+                # nested custom-fact provenance, as the verified SEC excerpt.
+                text = 'ticker,field_provenance_json\nNVDA,' + json.dumps({"ttm_capex": {"components": [prov]}})
+                text_path.write_text(text)
+                source["char_end"] = len(text)
+                source["content_sha256"] = hashlib.sha256(text.encode()).hexdigest()
+                return validate_and_materialize_bundle(seal_bundle(bundle),
+                    packet_as_of="2026-09-20T20:00:00Z", active_tickers={"NVDA"}, project_root=root)
+            receipts, sources = materialize(provenance)
+            self.assertEqual(receipts[0]["ticker"], "NVDA")
+            self.assertNotIn("/Users/", json.dumps(sources))
+            poisoned = {**provenance, "raw_path": str(runtime_root / "primary_document.raw")}
+            with self.assertRaisesRegex(ValuationInputBundleError, "sensitive or local-identity"):
+                materialize(poisoned)
 
     def test_dimensions_cik_unit_invalid_numbers_and_missing_are_rejected(self):
         for raw in [raw_fact(cik="999"), raw_fact(unit="iso4217:EUR"), raw_fact(text="NaN"),

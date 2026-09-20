@@ -13,7 +13,7 @@ import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from html.parser import HTMLParser
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
 
 from phase5r_daily_common import ROOT, atomic_write_json, read_json
@@ -26,6 +26,28 @@ MAX_RAW_BYTES = 15 * 1024 * 1024
 
 class SupplementalFactError(ValueError):
     pass
+
+
+def project_relative_locator(raw_path: str | Path, *, project_root: Path = ROOT) -> str:
+    """Keep a portable audit locator, never a user's absolute cache location.
+
+    External validation caches have no project-relative identity. Their
+    source URL, document hash, accession and context still identify the fact.
+    Resolve symlinks before the containment check so an escaped cache cannot
+    acquire a misleading in-project locator.
+    """
+    if not str(raw_path) or PureWindowsPath(str(raw_path)).is_absolute():
+        return ""
+    path = Path(raw_path)
+    if ".." in path.parts:
+        return ""
+    root = project_root.resolve()
+    candidate = path if path.is_absolute() else root / path
+    try:
+        relative = candidate.resolve().relative_to(root)
+    except (ValueError, OSError):
+        return ""
+    return relative.as_posix() if relative.parts else ""
 
 
 class InlineFacts(HTMLParser):
@@ -83,13 +105,15 @@ class InlineFacts(HTMLParser):
 
 
 def parse_principal_facts(raw: bytes, *, filing: dict[str, str], cik: int,
-                          source_url: str, raw_path: str) -> list[dict[str, Any]]:
+                          source_url: str, raw_path: str,
+                          project_root: Path = ROOT) -> list[dict[str, Any]]:
     if len(raw) > MAX_RAW_BYTES:
         raise SupplementalFactError("supplemental_document_too_large")
     parser = InlineFacts()
     parser.feed(raw.decode("utf-8"))
     result: dict[tuple[str, str], dict[str, Any]] = {}
     digest = hashlib.sha256(raw).hexdigest()
+    raw_locator = project_relative_locator(raw_path, project_root=project_root)
     for fact in parser.facts:
         context = parser.contexts.get(fact.get("contextref", ""), {})
         if context.get("dimensional"):
@@ -121,8 +145,10 @@ def parse_principal_facts(raw: bytes, *, filing: dict[str, str], cik: int,
         row = {"start": start, "end": end, "val": float(number),
             "filed": filing["filing_date"], "accn": filing["accession_number"],
             "form": filing["form"], "_source_url": source_url,
-            "_raw_sha256": digest, "_raw_path": raw_path, "_context_id": context["id"],
+            "_raw_sha256": digest, "_context_id": context["id"],
             "_fact_id": fact.get("id", "")}
+        if raw_locator:
+            row["_raw_path"] = raw_locator
         key = (start, end)
         if key in result and result[key]["val"] != row["val"]:
             raise SupplementalFactError("conflicting_supplemental_facts")
@@ -160,7 +186,10 @@ def supplement_companyfacts(ticker: str, cik: int, payload: dict[str, Any],
         if not cache_valid:
             result = fetcher(url, user_agent, max_bytes=MAX_RAW_BYTES)
             raw = result.raw_bytes
-        parsed = parse_principal_facts(raw, filing=filing, cik=cik, source_url=url, raw_path=str(raw_path))
+        parsed = parse_principal_facts(
+            raw, filing=filing, cik=cik, source_url=url,
+            raw_path=project_relative_locator(raw_path),
+        )
         if not cache_valid:
             atomic_write_bytes(raw_path, raw)
             atomic_write_json(receipt_path, {"schema_version": "phase5r_sec_supplemental_fact_v1",
