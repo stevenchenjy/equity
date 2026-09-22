@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-22)
 
 ## Corpus Check
-- 195 files · ~195,465 words
+- 196 files · ~196,006 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2042 nodes · 5131 edges · 110 communities (89 shown, 21 thin omitted)
-- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 890 edges (avg confidence: 0.78)
+- 2050 nodes · 5151 edges · 114 communities (89 shown, 25 thin omitted)
+- Extraction: 83% EXTRACTED · 17% INFERRED · 0% AMBIGUOUS · INFERRED: 897 edges (avg confidence: 0.78)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `647626d6`
+- Built from commit: `f112be72`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -85,6 +85,10 @@
 - test_phase5r_owner_snapshot.py
 - Equity Research 命名迁移验收
 - Phase 5R-C9 Core Allocation Policy
+- ResearchRiskLimitsTests
+- build_phase5r_current_research_baseline.py
+- HeldCorePositionTests
+- test_equity_naming.py
 - Early Public Equity Research
 - Phase 5R-C3 Daily Email Pipeline Policy
 - ._write_coherent_prior_outputs
@@ -127,7 +131,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `canonical_sha256()` - 53 edges
-2. `render_email()` - 46 edges
+2. `render_email()` - 50 edges
 3. `_execute_unlocked()` - 38 edges
 4. `read_json()` - 37 edges
 5. `main()` - 35 edges
@@ -144,15 +148,15 @@
   09_scripts/phase5r/audit_phase5r_financial_coverage.py → 09_scripts/phase5r/phase5r_daily_common.py
 - `main()` --calls--> `read_json()`  [INFERRED]
   09_scripts/phase5r/audit_phase5r_financial_coverage.py → 09_scripts/phase5r/phase5r_daily_common.py
-- `selected_tickers()` --calls--> `fundamentals_candidate_queue()`  [INFERRED]
-  09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_long_horizon_research.py
-- `main()` --calls--> `cycle_date()`  [INFERRED]
+- `requested_coverage_tickers()` --calls--> `read_json()`  [INFERRED]
+  09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
+- `selected_tickers()` --calls--> `read_json()`  [INFERRED]
   09_scripts/phase5r/build_phase5r_current_research_baseline.py → 09_scripts/phase5r/phase5r_daily_common.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (110 total, 21 thin omitted)
+## Communities (114 total, 25 thin omitted)
 
 ### Community 0 - "phase5r_market_data_adapter.py"
 Cohesion: 0.20
@@ -171,8 +175,8 @@ Cohesion: 0.11
 Nodes (16): CanonicalWorkflowTests, OptionalActiveInputTests, registry_row(), _canonical_source_issues(), Check, collect_checks(), _deprecated_registry_issues(), _loaded() (+8 more)
 
 ### Community 4 - "test_phase5r_active_production.py"
-Cohesion: 0.16
-Nodes (36): admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path(), _extension_number(), extension_set_sha256() (+28 more)
+Cohesion: 0.15
+Nodes (38): _effective_acceptance_map(), Return the immutable index plus every validated append-only extension., admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path() (+30 more)
 
 ### Community 5 - "score_phase5r_b_candidates.py"
 Cohesion: 0.06
@@ -183,28 +187,28 @@ Cohesion: 0.16
 Nodes (3): PacketMarketObservationTests, Path, write_csv()
 
 ### Community 7 - "main"
-Cohesion: 0.15
-Nodes (23): easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session(), last_weekday(), latest_published_market_session(), notification_change_comparison(), nth_weekday() (+15 more)
+Cohesion: 0.16
+Nodes (22): easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session(), last_weekday(), latest_published_market_session(), notification_change_comparison(), nth_weekday() (+14 more)
 
 ### Community 8 - "ShadowLlmTests"
 Cohesion: 0.14
-Nodes (31): main(), append_csv_durable(), bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), iso_now(), load_active_state() (+23 more)
+Nodes (33): main(), main(), bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), iso_now(), load_active_state() (+25 more)
 
 ### Community 9 - "main"
-Cohesion: 0.27
-Nodes (24): _action_kind(), build_email_view(), _comparison_weight(), _conflict_tasks(), _decimal(), email_subject(), _is_core(), money() (+16 more)
+Cohesion: 0.24
+Nodes (26): _action_kind(), build_email_view(), _comparison_weight(), _conflict_tasks(), _decimal(), email_subject(), _is_core(), money() (+18 more)
 
 ### Community 10 - "PacketMarketObservationTests"
-Cohesion: 0.19
-Nodes (22): notification_delivery_policy(), Return event-driven eligibility independently of scheduler time., append_delivery(), build_message(), ConfigError, correction_eligibility(), cycle_is_blocked(), delivery_policy() (+14 more)
+Cohesion: 0.14
+Nodes (28): brand_name(), desktop_alert_script(), load_display_names(), Path, Shared presentation names; no strategy, delivery or protocol authority., subject_prefix(), notification_delivery_policy(), Return event-driven eligibility independently of scheduler time. (+20 more)
 
 ### Community 11 - "verify_phase5r_daily_upgrade.py"
-Cohesion: 0.12
+Cohesion: 0.14
 Nodes (19): line_excerpt(), main(), number(), Any, Path, Fail closed before producing a range, not merely before order routing., Match the packet clock's whole-second point-in-time precision., selected_band() (+11 more)
 
 ### Community 12 - "iso_now"
-Cohesion: 0.21
-Nodes (12): jsonl_count(), main(), Path, ActiveConfigError, load_active_config(), main(), Any, Path (+4 more)
+Cohesion: 0.19
+Nodes (11): jsonl_count(), Path, ActiveConfigError, load_active_config(), main(), Any, Path, ValueError (+3 more)
 
 ### Community 13 - "verify_phase5r_c6_weekly_email_boundary.py"
 Cohesion: 0.07
@@ -219,28 +223,28 @@ Cohesion: 0.12
 Nodes (23): canonical_url(), clean_title(), fetch_feed(), load_manifest(), NewsError, OfficialRedirect, parse_feed(), _PlainText (+15 more)
 
 ### Community 16 - "phase5r_llm_contract.py"
-Cohesion: 0.08
-Nodes (57): _allowed_classifications_by_ticker(), _artifact_map(), build_packet(), _compact_fact_provenance(), _date_from_period(), _decimal(), _decision_tickers(), _effective_acceptance_map() (+49 more)
+Cohesion: 0.05
+Nodes (81): _allowed_classifications_by_ticker(), _artifact_map(), build_packet(), _compact_fact_provenance(), _date_from_period(), _decimal(), _decision_tickers(), _entities() (+73 more)
 
 ### Community 17 - "phase5r_c9b_common.py"
 Cohesion: 0.20
 Nodes (17): main(), append_c9b_log(), execution_cash(), intraday_range_pct(), load_execution_rows(), optional_float(), parse_iso(), Path (+9 more)
 
 ### Community 18 - "verify_phase5r_c5t_manual_action_boundary.py"
-Cohesion: 0.11
-Nodes (43): artifact_paths(), ArtifactError, atomic_write_bytes(), atomic_write_json(), build_chunks(), build_entry(), check_artifacts(), complete_cache_entry() (+35 more)
+Cohesion: 0.12
+Nodes (41): artifact_paths(), ArtifactError, atomic_write_bytes(), atomic_write_json(), build_chunks(), build_entry(), check_artifacts(), complete_cache_entry() (+33 more)
 
 ### Community 19 - "main"
 Cohesion: 0.22
 Nodes (10): AcceptanceReconciliationError, load_acceptance_reconciliation_log(), Fields that must remain fixed across an idempotent log retry., Load the append-only reconciliation log or fail closed on corruption., Append only newly observed, validated timestamp reconciliations.      The histor, A current SEC record cannot be reconciled to the immutable index., _reconciliation_identity(), write_acceptance_reconciliation_log() (+2 more)
 
 ### Community 20 - "phase5r_c9_common.py"
-Cohesion: 0.16
-Nodes (27): main(), create_if_missing(), main(), main(), _post_action_row(), append_run_log(), as_float(), concentration_status() (+19 more)
+Cohesion: 0.17
+Nodes (27): main(), create_if_missing(), main(), main(), main(), append_run_log(), as_float(), concentration_status() (+19 more)
 
 ### Community 21 - "PacketMarketObservationTests"
-Cohesion: 0.16
-Nodes (24): build_valuation_evidence_v1(), _calculation_receipt(), _InputSpec, _normalize_input(), _parse_decimal(), _parse_utc(), _payload_digest(), _plain_decimal() (+16 more)
+Cohesion: 0.10
+Nodes (7): core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count., ActiveProductionTests
 
 ### Community 22 - "compare_policies"
 Cohesion: 0.12
@@ -256,7 +260,7 @@ Nodes (6): applied_reconciliation_current_state_status(), applied_reconciliation
 
 ### Community 25 - "ResearchRiskLimitsTests"
 Cohesion: 0.18
-Nodes (19): acceptance_map(), load_acceptance_index(), load_immutable_acceptance_index(), _make_reconciliation_row(), normalize_acceptance_timestamp(), _normalize_generated_at(), Any, datetime (+11 more)
+Nodes (20): acceptance_map(), load_acceptance_index(), load_immutable_acceptance_index(), _make_reconciliation_row(), normalize_acceptance_timestamp(), _normalize_generated_at(), Any, datetime (+12 more)
 
 ### Community 26 - "phase5r_portfolio_construction.py"
 Cohesion: 0.12
@@ -268,7 +272,7 @@ Nodes (20): build_long_horizon_report(), fundamentals_candidate_queue(), hurdle_
 
 ### Community 28 - "verify_phase5r_c2_email_delivery_boundary.py"
 Cohesion: 0.12
-Nodes (14): AcceptanceIndexError, build_acceptance_index(), make_acceptance_record(), ValueError, The SEC acceptance index failed its closed validation contract., validate_acceptance_index(), validate_acceptance_record(), Regression coverage for the SEC acceptance precommit boundary. (+6 more)
+Nodes (13): AcceptanceIndexError, build_acceptance_index(), make_acceptance_record(), ValueError, The SEC acceptance index failed its closed validation contract., validate_acceptance_index(), Regression coverage for the SEC acceptance precommit boundary., Run an offline refresh that must fail before any evidence commit. (+5 more)
 
 ### Community 30 - "main"
 Cohesion: 0.17
@@ -311,8 +315,8 @@ Cohesion: 0.33
 Nodes (5): Minimal coherent follow-up, after a policy choice, New offline diagnostic, Origins and current code path, Phase 5R risk-policy audit — 2026-09-14, Scope and conclusion
 
 ### Community 43 - "Owner-requested research reviews"
-Cohesion: 0.25
-Nodes (7): Boundaries, Broker and order mechanics, Delivery expectation, One-year evaluation and tactical orders (2026-09-22), Owner-requested research reviews, Required review content, Risk-policy direction (2026-09-14 evening)
+Cohesion: 0.22
+Nodes (8): Boundaries, Broker and order mechanics, Delivery expectation, Email readability (2026-09-22 follow-up), One-year evaluation and tactical orders (2026-09-22), Owner-requested research reviews, Required review content, Risk-policy direction (2026-09-14 evening)
 
 ### Community 45 - "phase5r_portfolio_construction.py"
 Cohesion: 0.15
@@ -321,10 +325,6 @@ Nodes (20): build_tactical_review(), _day(), _integer(), _last_sessions(), load_
 ### Community 46 - "write_extension_admission_audit"
 Cohesion: 0.42
 Nodes (5): Bind an extension to exact immutable historical-index bytes., raw_file_sha256(), write_acceptance_index(), acceptance_record(), SecAcceptanceExtensionTests
-
-### Community 47 - "test_phase5r_b2_refresh_cadence.py"
-Cohesion: 0.16
-Nodes (4): NamingCompatibilityTests, Display migration must preserve research meaning and delivery identity., notification_fixture(), RecommendationNotificationTests
 
 ### Community 48 - "ShadowProviderError"
 Cohesion: 0.13
@@ -335,12 +335,12 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 52 - "Scoring"
-Cohesion: 0.06
-Nodes (30): main(), number(), Any, Solve required revenue for explicit terminal-multiple/return sensitivities., reverse_expectations(), whole_share_diagnostics(), core_starter_decision(), individual_sizing_decision() (+22 more)
+Cohesion: 0.15
+Nodes (22): main(), number(), Any, Solve required revenue for explicit terminal-multiple/return sensitivities., reverse_expectations(), whole_share_diagnostics(), ReassessmentReportingTests, append_jsonl() (+14 more)
 
 ### Community 53 - "main"
-Cohesion: 0.11
-Nodes (10): confirmed_thesis_break(), held_recommendation_label(), load_thesis_reviews(), date, Optional analyst assessments; absence never turns a score into a sale., Require a reviewed, dated primary source and the actual invalidated rule.      T, main(), valuation_trim_review_required() (+2 more)
+Cohesion: 0.14
+Nodes (9): confirmed_thesis_break(), held_recommendation_label(), load_thesis_reviews(), date, Optional analyst assessments; absence never turns a score into a sale., Require a reviewed, dated primary source and the actual invalidated rule.      T, _post_action_row(), valuation_trim_review_required() (+1 more)
 
 ### Community 54 - "Phase 0C Reframe Plan"
 Cohesion: 0.16
@@ -359,16 +359,16 @@ Cohesion: 0.16
 Nodes (19): datetime, Independent official-news checks using the existing serialized scheduler.  No se, run_due_news_checks(), due_slots(), main(), market_snapshot_mode(), _market_step_passed(), _massive_auth_presence_probe_exit_code() (+11 more)
 
 ### Community 58 - "load_inhibit"
-Cohesion: 0.16
-Nodes (14): _jsonl(), main(), _number(), Path, display(), main(), missing_label(), render_report() (+6 more)
+Cohesion: 0.70
+Nodes (4): display(), main(), missing_label(), render_report()
 
 ### Community 59 - "四项标准：工作流升级实施与验收"
 Cohesion: 0.33
 Nodes (5): 交付与标准对应, 后续验收标准, 四项标准：工作流升级实施与验收, 数据与研究实测, 验证与上线记录
 
 ### Community 60 - "main"
-Cohesion: 0.16
-Nodes (19): clamp(), main(), number(), Keep owner-requested research visible without granting trade eligibility., requested_coverage_tickers(), selected_tickers(), atomic_write_csv(), atomic_write_json() (+11 more)
+Cohesion: 0.15
+Nodes (17): _jsonl(), main(), _number(), Path, append_csv_durable(), atomic_write_csv(), atomic_write_json(), atomic_write_text() (+9 more)
 
 ### Community 61 - "create_phase5r_long_horizon_research.py"
 Cohesion: 0.50
@@ -379,8 +379,8 @@ Cohesion: 0.50
 Nodes (4): Automatic event modes, Evaluation, Phase 5R SHADOW_LLM, Safe preflight
 
 ### Community 65 - "score_phase5r_b2_candidates.py"
-Cohesion: 0.32
-Nodes (4): delivery_fixture(), owner_review_fixture(), OwnerReviewDeliveryTests, save_decision()
+Cohesion: 0.22
+Nodes (5): CompactReviewTests, delivery_fixture(), owner_review_fixture(), OwnerReviewDeliveryTests, save_decision()
 
 ### Community 68 - "Equity Research 命名迁移验收"
 Cohesion: 0.40
@@ -389,6 +389,10 @@ Nodes (4): Equity Research 命名迁移验收, 已上线, 部署, 验证
 ### Community 69 - "Phase 5R-C9 Core Allocation Policy"
 Cohesion: 0.50
 Nodes (3): Cash-Deployment Decision, Phase 5R-C9 Core Allocation Policy, Separation
+
+### Community 71 - "build_phase5r_current_research_baseline.py"
+Cohesion: 0.52
+Nodes (6): clamp(), main(), number(), Keep owner-requested research visible without granting trade eligibility., requested_coverage_tickers(), selected_tickers()
 
 ### Community 78 - "Early Public Equity Research"
 Cohesion: 0.06
@@ -507,24 +511,24 @@ Cohesion: 0.08
 Nodes (18): append_audit(), as_float(), clamp(), main(), Path, read_csv(), score_row(), timestamp() (+10 more)
 
 ## Knowledge Gaps
-- **211 isolated node(s):** `activate_phase5r_daily_after_verification.sh script`, `check_phase5r_daily_scheduler_status.sh script`, `check_phase5r_shadow_llm_evaluation_scheduler.sh script`, `clear_phase5r_c9_maintenance_inhibit.sh script`, `install_phase5r_daily_schedulers.sh script` (+206 more)
+- **212 isolated node(s):** `activate_phase5r_daily_after_verification.sh script`, `check_phase5r_daily_scheduler_status.sh script`, `check_phase5r_shadow_llm_evaluation_scheduler.sh script`, `clear_phase5r_c9_maintenance_inhibit.sh script`, `install_phase5r_daily_schedulers.sh script` (+207 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **21 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **25 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `canonical_sha256()` connect `AST` to `run_phase5r_b2_full_universe_market_data.py`, `ShadowLlmTests`, `test_phase5r_active_production.py`, `main`, `main`, `ShadowLlmTests`, `verify_phase5r_c2_email_delivery_boundary.py`, `ShadowMeasurementTests`, `phase5r_llm_contract.py`, `ShadowProviderError`, `economic_packet`, `Scoring`, `evaluate_phase5r_shadow_llm_incremental_value.py`, `ResearchRiskLimitsTests`, `main`, `main`?**
-  _High betweenness centrality (0.055) - this node is a cross-community bridge._
+  _High betweenness centrality (0.060) - this node is a cross-community bridge._
 - **Why does `ExclusiveFileLock` connect `score_phase5r_b_candidates.py` to `ShadowLlmTests`, `main`, `ShadowLlmTests`, `PacketMarketObservationTests`, `score_phase5r_b2_candidates.py`, `ShadowMeasurementTests`?**
-  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+  _High betweenness centrality (0.044) - this node is a cross-community bridge._
+- **Why does `read_json()` connect `ShadowLlmTests` to `run_phase5r_b2_full_universe_market_data.py`, `ShadowLlmTests`, `test_phase5r_active_production.py`, `build_phase5r_current_research_baseline.py`, `main`, `PacketMarketObservationTests`, `verify_phase5r_daily_upgrade.py`, `iso_now`, `verify_phase5r_c6_weekly_email_boundary.py`, `score_phase5r_b2_candidates.py`, `ShadowMeasurementTests`, `phase5r_llm_contract.py`, `Scoring`, `MarketRegimeTests`, `OfficialNewsScheduleTests`, `load_inhibit`, `main`, `ResearchRiskLimitsTests`?**
+  _High betweenness centrality (0.037) - this node is a cross-community bridge._
 - **Are the 49 inferred relationships involving `canonical_sha256()` (e.g. with `build_packet()` and `_fundamental_observations()`) actually correct?**
   _`canonical_sha256()` has 49 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 40 inferred relationships involving `render_email()` (e.g. with `main()` and `brand_name()`) actually correct?**
-  _`render_email()` has 40 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 43 inferred relationships involving `render_email()` (e.g. with `main()` and `brand_name()`) actually correct?**
+  _`render_email()` has 43 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 15 inferred relationships involving `_execute_unlocked()` (e.g. with `canonical_sha256()` and `iso_now()`) actually correct?**
   _`_execute_unlocked()` has 15 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 30 inferred relationships involving `read_json()` (e.g. with `main()` and `requested_coverage_tickers()`) actually correct?**
   _`read_json()` has 30 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 20 inferred relationships involving `main()` (e.g. with `report_heading()` and `load_active_config()`) actually correct?**
-  _`main()` has 20 INFERRED edges - model-reasoned connections that need verification._

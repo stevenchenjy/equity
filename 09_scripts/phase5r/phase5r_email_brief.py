@@ -644,15 +644,72 @@ def email_subject(
     if owner_review:
         review = decision.get("owner_requested_research", {})
         review_date = _time(review.get("reviewed_at"))[:10]
+        if review.get("presentation") == "compact":
+            return f"[Equity] Your trading plan | {review_date}"
         return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
     prefix = subject_prefix(correction=correction)
     return f"{prefix} {view['label']}｜{view['cycle']}"
+
+
+def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any]]) -> tuple[str, str, str]:
+    """One readable owner brief; never append a second, older decision report."""
+    review = decision['owner_requested_research']
+    subject = email_subject(decision, owner_review=True)
+    esc = lambda value: html.escape(str(value), quote=True)
+    stamp = f"Prices: {review.get('market_as_of', 'unconfirmed')} close · Not live"
+    note = "Formatting update only. Research conclusions and price levels are unchanged; verify current quotes and order status before acting."
+    lines = [subject, stamp, note]
+    content = [f'<p style="color:#526170;font-size:12px;margin:0 0 10px">{esc(brand_name())}</p>',
+               '<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">Your trading plan</h1>',
+               f'<p style="font-size:13px;color:#526170;margin:0 0 12px">{esc(stamp)}</p>']
+    # This note is specific to a formatting-only correction, not a claim that
+    # every future owner review repeats an earlier research conclusion.
+    if review.get('formatting_only') is True:
+        content.append(f'<p style="font-size:13px;line-height:1.5;color:#526170">{esc(note)}</p>')
+    else:
+        lines.remove(note)
+    for index, section in enumerate(sections):
+        lines.extend(['', section['title']])
+        background = '#eef5f8' if index == 0 else '#ffffff'
+        content.append(f'<div style="background:{background};border:1px solid #dbe4e9;border-radius:10px;padding:18px;margin:18px 0">')
+        content.append(f'<h2 style="font-size:19px;line-height:1.35;margin:0 0 12px">{esc(section["title"])}</h2>')
+        for raw in section['body'].splitlines():
+            text = raw.strip()
+            if not text:
+                continue
+            lines.append(text)
+            label, separator, value = text.partition(': ')
+            if separator and len(label) <= 35:
+                rendered = f'<strong>{esc(label)}:</strong> {esc(value)}'
+            else:
+                rendered = esc(text)
+            content.append(f'<p style="font-size:15px;line-height:1.65;margin:9px 0">{rendered}</p>')
+        if section['sources']:
+            links = []
+            for i, url in enumerate(section['sources'], 1):
+                host = urlsplit(url).hostname or 'Source'
+                links.append(f'<a style="color:#365f78" href="{esc(url)}">{esc(host)} [{i}]</a>')
+                lines.append(f'Source [{i}]: {url}')
+            content.append('<p style="font-size:12px;line-height:1.5;margin:14px 0 0;color:#526170">' + ' · '.join(links) + '</p>')
+        content.append('</div>')
+    baseline = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
+    footer = f"Research only. No orders have been placed or changed. The automated baseline uses {baseline} data; this dated owner review is separate and does not override its eligibility checks."
+    lines.extend(['', footer])
+    content.append(f'<p style="font-size:12px;line-height:1.6;color:#526170;margin-top:24px">{esc(footer)}</p>')
+    document = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                f'<title>{esc(subject)}</title></head><body style="margin:0;background:#f3f5f7;color:#172b3a;font-family:Arial,Helvetica,sans-serif">'
+                '<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;overflow-wrap:break-word">'
+                + ''.join(content) + '</div></body></html>\n')
+    return subject, '\n'.join(lines)+'\n', document
 
 
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
     owner_research = _owner_research(decision)
     review = decision.get("owner_requested_research", {})
+    if owner_research and review.get("presentation") == "compact":
+        return _render_compact_owner(decision, owner_research)
     dated_review = bool(owner_research and review.get("request_id"))
     subject = email_subject(decision, owner_review=dated_review)
     research_note = "以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。"
@@ -671,7 +728,6 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     lines.extend("- " + item for item in view["tasks"])
     for plan in view["plans"]:
         lines.extend(["", plan["title"], plan["scenario"], "依据：" + plan["reason"], "限制：" + plan["limit"]])
-    lines.extend(["", "短线与长期仓的四条规则", *view["trading_rules"]])
     for section in view["tactical_sections"]:
         lines.extend(["", section["title"], *section["lines"]])
     lines.extend(["", baseline_title])
@@ -687,6 +743,7 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     for row in view["watchlist"]:
         lines.extend(["", row["title"], row["reference"], row["instruction"],
                       "依据：" + row["reason"], "再次复核条件：" + row["next_step"]])
+    lines.extend(["", "短线与长期仓的四条规则", *view["trading_rules"]])
     lines.extend(["", "证据与限制", view["quality"], *view["limitations"]])
     if view["documents"]:
         lines.append("本次新纳入的官方文件（披露日不一定是今天）：")
@@ -726,11 +783,11 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     ])
     for plan in view["plans"]:
         content.extend([heading(plan["title"]), paragraph(plan["scenario"]), paragraph("依据：" + plan["reason"]), paragraph("限制：" + plan["limit"])])
-    content.append(heading("短线与长期仓的四条规则"))
-    content.extend(paragraph(item) for item in view["trading_rules"])
     for section in view["tactical_sections"]:
+        content.append('<div style="border:1px solid #dbe4e9;border-radius:8px;padding:0 16px 12px;margin:18px 0">')
         content.append(heading(section["title"]))
         content.extend(paragraph(item) for item in section["lines"])
+        content.append("</div>")
     content.append(heading(baseline_title))
     content.append('<table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.55"><caption style="text-align:left;font-size:12px;color:#526170;padding-bottom:8px">已记录持仓 · 权重按参考收盘计算</caption><thead><tr>')
     for header in ("标的", "持仓 / 权重", "参考收盘", "本次状态"):
@@ -752,6 +809,8 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     for row in view["watchlist"]:
         content.extend([heading(row["title"]), paragraph(row["reference"]), paragraph(row["instruction"]),
                         paragraph("依据：" + row["reason"]), paragraph("再次复核条件：" + row["next_step"])])
+    content.append(heading("短线与长期仓的四条规则"))
+    content.extend(paragraph(item) for item in view["trading_rules"])
     content.extend([heading("证据与限制"), paragraph(view["quality"])])
     content.extend(paragraph(item) for item in view["limitations"])
     if view["documents"]:

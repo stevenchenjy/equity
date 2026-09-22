@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "09_scripts/phase5r/phase5r_email_brief.py": {
-    "mtime": 1790115627.6962817,
-    "ast_hash": "22f54553e076ca1cdd7a4095cdf1a3b9",
+    "mtime": 1790116632.9423442,
+    "ast_hash": "e3fb735f5faa002a73e53c5010bb264a",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_email_brief.py": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "00_project_control/phase5r_owner_review_preferences.md": {
-    "mtime": 1790115428.8979404,
-    "ast_hash": "c1de4daa08b91f745d9091a0278f690a",
+    "mtime": 1790116632.942605,
+    "ast_hash": "8515abdf3727746b0bb2ec1d3e6d24c5",
     "semantic_hash": ""
   },
   "09_scripts/phase5r/tests/test_phase5r_notification_changes.py": {
@@ -1012,6 +1012,11 @@
   "08_reviews/equity_naming_implementation_20260920.md": {
     "mtime": 1789948819.920008,
     "ast_hash": "c9d96d59c0b0864a3acf2d0ce8124c7c",
+    "semantic_hash": ""
+  },
+  "09_scripts/phase5r/tests/test_phase5r_compact_email.py": {
+    "mtime": 1790116661.255101,
+    "ast_hash": "093656cf9eb085099365d6d831e0bcdf",
     "semantic_hash": ""
   }
 }

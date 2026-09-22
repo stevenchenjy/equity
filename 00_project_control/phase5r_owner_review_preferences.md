@@ -178,3 +178,16 @@ Every positive hypothetical draft must list unresolved assumptions separately;
 it is not today's cleared order quantity. Preserve full named coverage even
 when a candidate is not in the ranking shortlist. No duplicate scheduler, new
 recipient, live broker link or automated execution is authorized by this change.
+
+
+## Email readability (2026-09-22 follow-up)
+
+Use one language and one primary narrative per message. For interactive reviews,
+set presentation=compact and provide at most six short sections, with a summary
+first and one card per trade. Use short labelled lines for shares, entry trigger,
+limit, stop, target, risk and expiry. Put sources in a small link row. Do not append
+the full older automated report to an owner review; retain its date and eligibility
+distinction in a short footer. Formatting-only corrections must explicitly retain
+the original price date and conclusions. Scheduled reports keep the four rules
+below the decisions rather than ahead of every trade. Preserve all material
+conditions and unknowns; brevity must never turn a scenario into a cleared order.
