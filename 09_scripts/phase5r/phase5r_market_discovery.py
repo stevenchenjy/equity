@@ -428,10 +428,15 @@ def refresh_discovery(root: Path = ROOT, current: datetime | None = None, *, cli
                 history[day.isoformat()] = client.fetch_grouped(day)
                 _cache_write(path, history[day.isoformat()])
         legacy = set()
-        seed = root / "03_source_data/phase5r/phase5r_universe_seed.csv"
-        if seed.exists():
-            with seed.open(newline="", encoding="utf-8") as handle:
-                legacy = {row["ticker"] for row in csv.DictReader(handle)}
+        # Compare with both the old candidate universe and held-only coverage.
+        # Read only the ticker column: no shares, cash, values or position data
+        # enters screening, scoring, eligibility or the independent rank.
+        for source in (root / "03_source_data/phase5r/phase5r_universe_seed.csv",
+                       root / "05_risk_and_positions/current_positions.local.csv"):
+            if source.exists():
+                with source.open(newline="", encoding="utf-8") as handle:
+                    legacy.update(str(row.get("ticker", "")).strip().upper()
+                                  for row in csv.DictReader(handle) if row.get("ticker", "").strip())
         report = build_report(metadata, history, session, legacy)
         report["fetched_at"] = current.isoformat(timespec="seconds")
         report["provider_requests_this_run"] = client.calls if client else 0

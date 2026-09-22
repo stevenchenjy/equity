@@ -802,7 +802,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_calculate_phase5r_c9_dynamic_weights_main",
-      "community": 20,
+      "community": 53,
       "norm_label": "main()"
     },
     {
@@ -832,7 +832,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_account_state",
-      "community": 20,
+      "community": 76,
       "norm_label": "create_phase5r_c9_account_state.py"
     },
     {
@@ -842,7 +842,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_account_state_create_if_missing",
-      "community": 20,
+      "community": 76,
       "norm_label": "create_if_missing()"
     },
     {
@@ -852,7 +852,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_account_state_main",
-      "community": 20,
+      "community": 76,
       "norm_label": "main()"
     },
     {
@@ -862,7 +862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_cash_deployment_plan",
-      "community": 21,
+      "community": 20,
       "norm_label": "create_phase5r_c9_cash_deployment_plan.py"
     },
     {
@@ -872,7 +872,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_cash_deployment_plan_post_action_row",
-      "community": 21,
+      "community": 20,
       "norm_label": "_post_action_row()"
     },
     {
@@ -902,7 +902,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_valuation_trim_review_required",
-      "community": 21,
+      "community": 53,
       "norm_label": "valuation_trim_review_required()"
     },
     {
@@ -912,7 +912,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_c9_exact_action_plan_main",
-      "community": 20,
+      "community": 53,
       "norm_label": "main()"
     },
     {
@@ -942,7 +942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation",
-      "community": 60,
+      "community": 58,
       "norm_label": "create_phase5r_capital_allocation_validation.py"
     },
     {
@@ -952,7 +952,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_number",
-      "community": 60,
+      "community": 58,
       "norm_label": "_number()"
     },
     {
@@ -962,7 +962,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_jsonl",
-      "community": 60,
+      "community": 58,
       "norm_label": "_jsonl()"
     },
     {
@@ -972,7 +972,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_py_path",
-      "community": 60,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -982,7 +982,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_capital_allocation_validation_main",
-      "community": 60,
+      "community": 58,
       "norm_label": "main()"
     },
     {
@@ -1302,7 +1302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_market_regime",
-      "community": 7,
+      "community": 12,
       "norm_label": "create_phase5r_market_regime.py"
     },
     {
@@ -1322,7 +1322,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions",
-      "community": 60,
+      "community": 52,
       "norm_label": "create_phase5r_research_questions.py"
     },
     {
@@ -1332,7 +1332,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_number",
-      "community": 60,
+      "community": 52,
       "norm_label": "number()"
     },
     {
@@ -1342,7 +1342,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_py_any",
-      "community": 60,
+      "community": 52,
       "norm_label": "any"
     },
     {
@@ -1352,7 +1352,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_reverse_expectations",
-      "community": 60,
+      "community": 52,
       "norm_label": "reverse_expectations()"
     },
     {
@@ -1362,7 +1362,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_whole_share_diagnostics",
-      "community": 60,
+      "community": 52,
       "norm_label": "whole_share_diagnostics()"
     },
     {
@@ -1372,7 +1372,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_main",
-      "community": 60,
+      "community": 52,
       "norm_label": "main()"
     },
     {
@@ -1382,7 +1382,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "09_scripts_phase5r_create_phase5r_research_questions_rationale_57",
-      "community": 60,
+      "community": 52,
       "norm_label": "solve required revenue for explicit terminal-multiple/return sensitivities."
     },
     {
@@ -1392,7 +1392,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming",
-      "community": 10,
+      "community": 12,
       "norm_label": "equity_naming.py"
     },
     {
@@ -1402,7 +1402,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_load_display_names",
-      "community": 10,
+      "community": 12,
       "norm_label": "load_display_names()"
     },
     {
@@ -1412,7 +1412,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_py_path",
-      "community": 10,
+      "community": 12,
       "norm_label": "path"
     },
     {
@@ -1422,7 +1422,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_brand_name",
-      "community": 10,
+      "community": 12,
       "norm_label": "brand_name()"
     },
     {
@@ -1432,7 +1432,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_subject_prefix",
-      "community": 10,
+      "community": 12,
       "norm_label": "subject_prefix()"
     },
     {
@@ -1442,7 +1442,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_report_heading",
-      "community": 17,
+      "community": 72,
       "norm_label": "report_heading()"
     },
     {
@@ -1452,7 +1452,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_desktop_alert_script",
-      "community": 10,
+      "community": 12,
       "norm_label": "desktop_alert_script()"
     },
     {
@@ -1462,7 +1462,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_equity_naming_rationale_1",
-      "community": 10,
+      "community": 12,
       "norm_label": "shared presentation names; no strategy, delivery or protocol authority."
     },
     {
@@ -1692,7 +1692,7 @@
       "source_location": "L627",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_official_follow_up",
-      "community": 36,
+      "community": 50,
       "norm_label": "_official_follow_up()"
     },
     {
@@ -1782,7 +1782,7 @@
       "source_location": "L628",
       "_origin": "ast",
       "id": "09_scripts_phase5r_evaluate_phase5r_shadow_llm_incremental_value_rationale_628",
-      "community": 36,
+      "community": 50,
       "norm_label": "resolve only mechanically scoped facts with new later official provenance."
     },
     {
@@ -1832,7 +1832,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_generate_phase5r_current_status_main",
-      "community": 8,
+      "community": 12,
       "norm_label": "main()"
     },
     {
@@ -1972,7 +1972,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_py_path",
-      "community": 17,
+      "community": 72,
       "norm_label": "path"
     },
     {
@@ -1982,7 +1982,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_csv_fields",
-      "community": 17,
+      "community": 72,
       "norm_label": "csv_fields()"
     },
     {
@@ -1992,7 +1992,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_write_csv",
-      "community": 17,
+      "community": 72,
       "norm_label": "write_csv()"
     },
     {
@@ -2002,7 +2002,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_write_text",
-      "community": 17,
+      "community": 72,
       "norm_label": "write_text()"
     },
     {
@@ -2052,7 +2052,7 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_load_positions",
-      "community": 20,
+      "community": 72,
       "norm_label": "load_positions()"
     },
     {
@@ -2092,7 +2092,7 @@
       "source_location": "L309",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9_common_load_active_inhibit",
-      "community": 20,
+      "community": 17,
       "norm_label": "load_active_inhibit()"
     },
     {
@@ -2212,7 +2212,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_c9b_common_sha256",
-      "community": 17,
+      "community": 72,
       "norm_label": "sha256()"
     },
     {
@@ -2542,7 +2542,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_py_path",
-      "community": 8,
+      "community": 58,
       "norm_label": "path"
     },
     {
@@ -2562,7 +2562,7 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_read_csv",
-      "community": 7,
+      "community": 58,
       "norm_label": "read_csv()"
     },
     {
@@ -2572,7 +2572,7 @@
       "source_location": "L292",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_text",
-      "community": 8,
+      "community": 58,
       "norm_label": "atomic_write_text()"
     },
     {
@@ -2592,7 +2592,7 @@
       "source_location": "L317",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_atomic_write_csv",
-      "community": 52,
+      "community": 58,
       "norm_label": "atomic_write_csv()"
     },
     {
@@ -2612,7 +2612,7 @@
       "source_location": "L365",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_bytes",
-      "community": 16,
+      "community": 7,
       "norm_label": "sha256_bytes()"
     },
     {
@@ -2622,7 +2622,7 @@
       "source_location": "L369",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_sha256_file",
-      "community": 16,
+      "community": 1,
       "norm_label": "sha256_file()"
     },
     {
@@ -2632,7 +2632,7 @@
       "source_location": "L374",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_canonical_sha256",
-      "community": 4,
+      "community": 36,
       "norm_label": "canonical_sha256()"
     },
     {
@@ -2682,7 +2682,7 @@
       "source_location": "L445",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_recommendation_notification_fingerprint",
-      "community": 28,
+      "community": 7,
       "norm_label": "recommendation_notification_fingerprint()"
     },
     {
@@ -2692,7 +2692,7 @@
       "source_location": "L567",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_notification_change_comparison",
-      "community": 28,
+      "community": 7,
       "norm_label": "notification_change_comparison()"
     },
     {
@@ -2702,7 +2702,7 @@
       "source_location": "L593",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_notification_delivery_policy",
-      "community": 10,
+      "community": 21,
       "norm_label": "notification_delivery_policy()"
     },
     {
@@ -2742,7 +2742,7 @@
       "source_location": "L721",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_unresolved_execution_conflicts",
-      "community": 7,
+      "community": 58,
       "norm_label": "unresolved_execution_conflicts()"
     },
     {
@@ -2842,7 +2842,7 @@
       "source_location": "L446",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_446",
-      "community": 28,
+      "community": 7,
       "norm_label": "hash recommendation meaning, excluding quotes, dates and raw filings."
     },
     {
@@ -2852,7 +2852,7 @@
       "source_location": "L605",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_daily_common_rationale_605",
-      "community": 10,
+      "community": 21,
       "norm_label": "return event-driven eligibility independently of scheduler time."
     },
     {
@@ -3909,7 +3909,7 @@
       "label": "load_discovery()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L448",
+      "source_location": "L453",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "community": 19,
@@ -3919,7 +3919,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L476",
+      "source_location": "L481",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_market_discovery_main",
       "community": 19,
@@ -3942,7 +3942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_market_regime",
-      "community": 7,
+      "community": 12,
       "norm_label": "phase5r_market_regime.py"
     },
     {
@@ -3982,7 +3982,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_market_regime_load_regime_controls",
-      "community": 8,
+      "community": 12,
       "norm_label": "load_regime_controls()"
     },
     {
@@ -3992,7 +3992,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_market_regime_rationale_1",
-      "community": 7,
+      "community": 12,
       "norm_label": "point-in-time, bounded market context for research pacing, never execution."
     },
     {
@@ -4712,7 +4712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction",
-      "community": 21,
+      "community": 52,
       "norm_label": "phase5r_portfolio_construction.py"
     },
     {
@@ -4722,7 +4722,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_passed_confidence",
-      "community": 21,
+      "community": 52,
       "norm_label": "_passed_confidence()"
     },
     {
@@ -4732,7 +4732,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_individual_sizing_decision",
-      "community": 21,
+      "community": 52,
       "norm_label": "individual_sizing_decision()"
     },
     {
@@ -4742,7 +4742,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_py_any",
-      "community": 21,
+      "community": 52,
       "norm_label": "any"
     },
     {
@@ -4752,7 +4752,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_core_starter_decision",
-      "community": 21,
+      "community": 52,
       "norm_label": "core_starter_decision()"
     },
     {
@@ -4762,7 +4762,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_36",
-      "community": 21,
+      "community": 52,
       "norm_label": "return the highest supported sizing tier and a feasible share count."
     },
     {
@@ -4772,7 +4772,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_portfolio_construction_rationale_157",
-      "community": 21,
+      "community": 52,
       "norm_label": "size one staged broad-market core review without using stock valuation."
     },
     {
@@ -5062,7 +5062,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_acceptancereconciliationerror",
-      "community": 4,
+      "community": 55,
       "norm_label": "acceptancereconciliationerror"
     },
     {
@@ -5142,7 +5142,7 @@
       "source_location": "L246",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_load_acceptance_index",
-      "community": 4,
+      "community": 70,
       "norm_label": "load_acceptance_index()"
     },
     {
@@ -5152,7 +5152,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_py_path",
-      "community": 4,
+      "community": 70,
       "norm_label": "path"
     },
     {
@@ -5162,7 +5162,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_load_immutable_acceptance_index",
-      "community": 4,
+      "community": 70,
       "norm_label": "load_immutable_acceptance_index()"
     },
     {
@@ -5172,7 +5172,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_acceptance_map",
-      "community": 4,
+      "community": 70,
       "norm_label": "acceptance_map()"
     },
     {
@@ -5182,7 +5182,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_write_acceptance_index",
-      "community": 4,
+      "community": 73,
       "norm_label": "write_acceptance_index()"
     },
     {
@@ -5222,7 +5222,7 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_reconciliation_identity",
-      "community": 4,
+      "community": 55,
       "norm_label": "_reconciliation_identity()"
     },
     {
@@ -5232,7 +5232,7 @@
       "source_location": "L396",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_load_acceptance_reconciliation_log",
-      "community": 4,
+      "community": 55,
       "norm_label": "load_acceptance_reconciliation_log()"
     },
     {
@@ -5242,7 +5242,7 @@
       "source_location": "L417",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_write_acceptance_reconciliation_log",
-      "community": 4,
+      "community": 55,
       "norm_label": "write_acceptance_reconciliation_log()"
     },
     {
@@ -5292,7 +5292,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_rationale_96",
-      "community": 4,
+      "community": 55,
       "norm_label": "a current sec record cannot be reconciled to the immutable index."
     },
     {
@@ -5312,7 +5312,7 @@
       "source_location": "L257",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_rationale_257",
-      "community": 4,
+      "community": 70,
       "norm_label": "load the historical index only when the retained artifact exists.      the times"
     },
     {
@@ -5342,7 +5342,7 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_rationale_381",
-      "community": 4,
+      "community": 55,
       "norm_label": "fields that must remain fixed across an idempotent log retry."
     },
     {
@@ -5352,7 +5352,7 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_rationale_399",
-      "community": 4,
+      "community": 55,
       "norm_label": "load the append-only reconciliation log or fail closed on corruption."
     },
     {
@@ -5362,7 +5362,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_rationale_421",
-      "community": 4,
+      "community": 55,
       "norm_label": "append only newly observed, validated timestamp reconciliations.      the histor"
     },
     {
@@ -5392,7 +5392,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions",
-      "community": 4,
+      "community": 28,
       "norm_label": "phase5r_sec_acceptance_extensions.py"
     },
     {
@@ -5402,7 +5402,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_extensionvalidationerror",
-      "community": 4,
+      "community": 28,
       "norm_label": "extensionvalidationerror"
     },
     {
@@ -5412,7 +5412,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_raw_file_sha256",
-      "community": 4,
+      "community": 73,
       "norm_label": "raw_file_sha256()"
     },
     {
@@ -5422,7 +5422,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_py_path",
-      "community": 4,
+      "community": 73,
       "norm_label": "path"
     },
     {
@@ -5432,7 +5432,7 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_extension_artifact_path",
-      "community": 4,
+      "community": 73,
       "norm_label": "extension_artifact_path()"
     },
     {
@@ -5442,7 +5442,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_extension_number",
-      "community": 4,
+      "community": 28,
       "norm_label": "_extension_number()"
     },
     {
@@ -5452,7 +5452,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_normal_timestamp",
-      "community": 4,
+      "community": 28,
       "norm_label": "_normal_timestamp()"
     },
     {
@@ -5462,7 +5462,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_is_sha256",
-      "community": 4,
+      "community": 28,
       "norm_label": "_is_sha256()"
     },
     {
@@ -5472,7 +5472,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_normalized_entity_name",
-      "community": 4,
+      "community": 28,
       "norm_label": "_normalized_entity_name()"
     },
     {
@@ -5482,7 +5482,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_extension_set_sha256",
-      "community": 4,
+      "community": 28,
       "norm_label": "extension_set_sha256()"
     },
     {
@@ -5492,7 +5492,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_py_any",
-      "community": 4,
+      "community": 28,
       "norm_label": "any"
     },
     {
@@ -5502,7 +5502,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_core_record",
-      "community": 4,
+      "community": 28,
       "norm_label": "_core_record()"
     },
     {
@@ -5512,7 +5512,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_make_extension_record",
-      "community": 4,
+      "community": 28,
       "norm_label": "make_extension_record()"
     },
     {
@@ -5522,7 +5522,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_validate_extension_record",
-      "community": 4,
+      "community": 28,
       "norm_label": "validate_extension_record()"
     },
     {
@@ -5532,7 +5532,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_build_extension_artifact",
-      "community": 4,
+      "community": 28,
       "norm_label": "build_extension_artifact()"
     },
     {
@@ -5542,7 +5542,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_validate_extension_artifact",
-      "community": 4,
+      "community": 28,
       "norm_label": "validate_extension_artifact()"
     },
     {
@@ -5552,7 +5552,7 @@
       "source_location": "L348",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_load_extension_artifacts",
-      "community": 4,
+      "community": 28,
       "norm_label": "load_extension_artifacts()"
     },
     {
@@ -5562,7 +5562,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_write_extension_artifact",
-      "community": 4,
+      "community": 73,
       "norm_label": "write_extension_artifact()"
     },
     {
@@ -5572,7 +5572,7 @@
       "source_location": "L406",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_extension_acceptance_records",
-      "community": 4,
+      "community": 28,
       "norm_label": "extension_acceptance_records()"
     },
     {
@@ -5582,7 +5582,7 @@
       "source_location": "L418",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_audit_row",
-      "community": 4,
+      "community": 28,
       "norm_label": "_audit_row()"
     },
     {
@@ -5592,7 +5592,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_validate_audit_row",
-      "community": 4,
+      "community": 28,
       "norm_label": "_validate_audit_row()"
     },
     {
@@ -5602,7 +5602,7 @@
       "source_location": "L491",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_load_extension_audit",
-      "community": 4,
+      "community": 73,
       "norm_label": "load_extension_audit()"
     },
     {
@@ -5612,7 +5612,7 @@
       "source_location": "L512",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_write_extension_admission_audit",
-      "community": 4,
+      "community": 73,
       "norm_label": "write_extension_admission_audit()"
     },
     {
@@ -5622,7 +5622,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_plan_unindexed_current_records",
-      "community": 4,
+      "community": 28,
       "norm_label": "plan_unindexed_current_records()"
     },
     {
@@ -5632,7 +5632,7 @@
       "source_location": "L625",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_admit_unindexed_current_records",
-      "community": 4,
+      "community": 28,
       "norm_label": "admit_unindexed_current_records()"
     },
     {
@@ -5642,7 +5642,7 @@
       "source_location": "L101",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_101",
-      "community": 4,
+      "community": 28,
       "norm_label": "a current or retained extension cannot join the effective set."
     },
     {
@@ -5652,7 +5652,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_105",
-      "community": 4,
+      "community": 73,
       "norm_label": "bind an extension to exact immutable historical-index bytes."
     },
     {
@@ -5662,7 +5662,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_140",
-      "community": 4,
+      "community": 28,
       "norm_label": "retain a bounded official issuer name without normalizing its meaning."
     },
     {
@@ -5672,7 +5672,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_153",
-      "community": 4,
+      "community": 28,
       "norm_label": "stable chain binding for all earlier extension artifacts."
     },
     {
@@ -5682,7 +5682,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_185",
-      "community": 4,
+      "community": 28,
       "norm_label": "create one auditable extension record from already official metadata."
     },
     {
@@ -5692,7 +5692,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_221",
-      "community": 4,
+      "community": 28,
       "norm_label": "validate one retained extension record without relaxing core rules."
     },
     {
@@ -5702,7 +5702,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_262",
-      "community": 4,
+      "community": 28,
       "norm_label": "build one immutable versioned extension artifact in memory."
     },
     {
@@ -5712,7 +5712,7 @@
       "source_location": "L304",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_304",
-      "community": 4,
+      "community": 28,
       "norm_label": "validate an immutable extension and its chain bindings."
     },
     {
@@ -5722,7 +5722,7 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_353",
-      "community": 4,
+      "community": 28,
       "norm_label": "load every contiguous extension version and verify the full chain."
     },
     {
@@ -5732,7 +5732,7 @@
       "source_location": "L395",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_395",
-      "community": 4,
+      "community": 73,
       "norm_label": "write exactly one new extension version; existing versions never change."
     },
     {
@@ -5742,7 +5742,7 @@
       "source_location": "L409",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_409",
-      "community": 4,
+      "community": 28,
       "norm_label": "return core acceptance records for the effective reconciliation set."
     },
     {
@@ -5752,7 +5752,7 @@
       "source_location": "L518",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_518",
-      "community": 4,
+      "community": 73,
       "norm_label": "append any missing artifact-bound admission entries, never rewrites."
     },
     {
@@ -5762,7 +5762,7 @@
       "source_location": "L557",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_557",
-      "community": 4,
+      "community": 28,
       "norm_label": "build, but do not write, one extension for valid unseen accessions."
     },
     {
@@ -5772,7 +5772,7 @@
       "source_location": "L638",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_sec_acceptance_extensions_rationale_638",
-      "community": 4,
+      "community": 28,
       "norm_label": "persist a planned extension only after the caller validates the batch."
     },
     {
@@ -5952,7 +5952,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract",
-      "community": 36,
+      "community": 30,
       "norm_label": "phase5r_shadow_llm_contract.py"
     },
     {
@@ -5962,7 +5962,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_shadowcontracterror",
-      "community": 36,
+      "community": 30,
       "norm_label": "shadowcontracterror"
     },
     {
@@ -5972,7 +5972,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_valueerror",
-      "community": 36,
+      "community": 30,
       "norm_label": "valueerror"
     },
     {
@@ -5982,7 +5982,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_object",
-      "community": 36,
+      "community": 30,
       "norm_label": "_object()"
     },
     {
@@ -5992,7 +5992,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_any",
-      "community": 36,
+      "community": 30,
       "norm_label": "any"
     },
     {
@@ -6002,7 +6002,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text",
-      "community": 36,
+      "community": 30,
       "norm_label": "_text()"
     },
     {
@@ -6012,7 +6012,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier",
-      "community": 36,
+      "community": 30,
       "norm_label": "_identifier()"
     },
     {
@@ -6022,7 +6022,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_text_list",
-      "community": 36,
+      "community": 30,
       "norm_label": "_text_list()"
     },
     {
@@ -6032,7 +6032,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_identifier_list",
-      "community": 36,
+      "community": 30,
       "norm_label": "_identifier_list()"
     },
     {
@@ -6042,7 +6042,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_enum",
-      "community": 36,
+      "community": 30,
       "norm_label": "_enum()"
     },
     {
@@ -6052,7 +6052,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_assert_nonimperative",
-      "community": 36,
+      "community": 30,
       "norm_label": "_assert_nonimperative()"
     },
     {
@@ -6062,7 +6062,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_read_regular_json",
-      "community": 36,
+      "community": 30,
       "norm_label": "_read_regular_json()"
     },
     {
@@ -6072,7 +6072,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_path",
-      "community": 36,
+      "community": 2,
       "norm_label": "path"
     },
     {
@@ -6082,7 +6082,7 @@
       "source_location": "L174",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_load_packet",
-      "community": 36,
+      "community": 2,
       "norm_label": "load_packet()"
     },
     {
@@ -6092,7 +6092,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_source_index",
-      "community": 36,
+      "community": 30,
       "norm_label": "_source_index()"
     },
     {
@@ -6102,7 +6102,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_calculation_index",
-      "community": 36,
+      "community": 30,
       "norm_label": "_calculation_index()"
     },
     {
@@ -6112,7 +6112,7 @@
       "source_location": "L240",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_entity_tickers",
-      "community": 36,
+      "community": 30,
       "norm_label": "_entity_tickers()"
     },
     {
@@ -6122,7 +6122,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_primary_source_registry",
-      "community": 36,
+      "community": 30,
       "norm_label": "primary_source_registry()"
     },
     {
@@ -6132,7 +6132,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_finite_number",
-      "community": 36,
+      "community": 30,
       "norm_label": "_finite_number()"
     },
     {
@@ -6142,7 +6142,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_py_decimal",
-      "community": 36,
+      "community": 30,
       "norm_label": "decimal"
     },
     {
@@ -6152,7 +6152,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_deterministic_baseline",
-      "community": 36,
+      "community": 30,
       "norm_label": "build_deterministic_baseline()"
     },
     {
@@ -6162,7 +6162,7 @@
       "source_location": "L306",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_check",
-      "community": 36,
+      "community": 50,
       "norm_label": "deterministic_claim_check()"
     },
     {
@@ -6172,7 +6172,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_deterministic_claim_capture",
-      "community": 36,
+      "community": 30,
       "norm_label": "deterministic_claim_capture()"
     },
     {
@@ -6182,7 +6182,7 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_semantic_view",
-      "community": 2,
+      "community": 30,
       "norm_label": "build_semantic_view()"
     },
     {
@@ -6192,7 +6192,7 @@
       "source_location": "L436",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_provider_schema_subset",
-      "community": 36,
+      "community": 75,
       "norm_label": "_provider_schema_subset()"
     },
     {
@@ -6202,7 +6202,7 @@
       "source_location": "L458",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_analyst_schema",
-      "community": 36,
+      "community": 75,
       "norm_label": "analyst_schema()"
     },
     {
@@ -6212,7 +6212,7 @@
       "source_location": "L565",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_critic_schema",
-      "community": 36,
+      "community": 75,
       "norm_label": "critic_schema()"
     },
     {
@@ -6222,7 +6222,7 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_blind_judge_target",
-      "community": 36,
+      "community": 46,
       "norm_label": "build_blind_judge_target()"
     },
     {
@@ -6232,7 +6232,7 @@
       "source_location": "L757",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_judge_schema",
-      "community": 36,
+      "community": 75,
       "norm_label": "judge_schema()"
     },
     {
@@ -6242,7 +6242,7 @@
       "source_location": "L863",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_claim",
-      "community": 36,
+      "community": 30,
       "norm_label": "_validate_claim()"
     },
     {
@@ -6252,7 +6252,7 @@
       "source_location": "L934",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_analyst",
-      "community": 36,
+      "community": 30,
       "norm_label": "validate_analyst()"
     },
     {
@@ -6262,7 +6262,7 @@
       "source_location": "L1028",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_critic",
-      "community": 36,
+      "community": 30,
       "norm_label": "validate_critic()"
     },
     {
@@ -6272,7 +6272,7 @@
       "source_location": "L1137",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_validate_judge",
-      "community": 36,
+      "community": 30,
       "norm_label": "validate_judge()"
     },
     {
@@ -6282,7 +6282,7 @@
       "source_location": "L1258",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_build_automatic_evaluation",
-      "community": 36,
+      "community": 50,
       "norm_label": "build_automatic_evaluation()"
     },
     {
@@ -6292,7 +6292,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_71",
-      "community": 36,
+      "community": 30,
       "norm_label": "a packet or model artifact violated the closed shadow contract."
     },
     {
@@ -6302,7 +6302,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_249",
-      "community": 36,
+      "community": 30,
       "norm_label": "expose only primary source identifiers needed to audit human omissions."
     },
     {
@@ -6312,7 +6312,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_271",
-      "community": 36,
+      "community": 30,
       "norm_label": "give the judge the facts/calculations already available without an llm.      the"
     },
     {
@@ -6322,7 +6322,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_307",
-      "community": 36,
+      "community": 50,
       "norm_label": "conservative one-fact sign check, never a generic semantic truth judge.      com"
     },
     {
@@ -6332,7 +6332,7 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_382",
-      "community": 2,
+      "community": 30,
       "norm_label": "return the only packet view eligible for external shadow inference."
     },
     {
@@ -6342,7 +6342,7 @@
       "source_location": "L437",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_437",
-      "community": 36,
+      "community": 75,
       "norm_label": "keep provider-side schemas in the portable structured outputs subset.      the p"
     },
     {
@@ -6352,7 +6352,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_contract_rationale_695",
-      "community": 36,
+      "community": 46,
       "norm_label": "create a deterministic candidate set without origin or model labels."
     },
     {
@@ -6362,7 +6362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider",
-      "community": 2,
+      "community": 48,
       "norm_label": "phase5r_shadow_llm_provider.py"
     },
     {
@@ -6372,7 +6372,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_classify_nonzero_exit",
-      "community": 2,
+      "community": 48,
       "norm_label": "classify_nonzero_exit()"
     },
     {
@@ -6382,7 +6382,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror",
-      "community": 2,
+      "community": 48,
       "norm_label": "shadowprovidererror"
     },
     {
@@ -6392,7 +6392,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_runtimeerror",
-      "community": 2,
+      "community": 48,
       "norm_label": "runtimeerror"
     },
     {
@@ -6402,7 +6402,7 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_shadowprovidererror_init",
-      "community": 2,
+      "community": 48,
       "norm_label": ".__init__()"
     },
     {
@@ -6412,7 +6412,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_providerresult",
-      "community": 2,
+      "community": 48,
       "norm_label": "providerresult"
     },
     {
@@ -6442,7 +6442,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_provider_generate",
-      "community": 2,
+      "community": 48,
       "norm_label": ".generate()"
     },
     {
@@ -6452,7 +6452,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_any",
-      "community": 2,
+      "community": 48,
       "norm_label": "any"
     },
     {
@@ -6462,7 +6462,7 @@
       "source_location": "L106",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_cli_reported_token_usage",
-      "community": 2,
+      "community": 48,
       "norm_label": "cli_reported_token_usage()"
     },
     {
@@ -6472,7 +6472,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider",
-      "community": 2,
+      "community": 48,
       "norm_label": "fixtureprovider"
     },
     {
@@ -6482,7 +6482,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_init",
-      "community": 2,
+      "community": 48,
       "norm_label": ".__init__()"
     },
     {
@@ -6492,7 +6492,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_fixtureprovider_generate",
-      "community": 2,
+      "community": 48,
       "norm_label": ".generate()"
     },
     {
@@ -6502,7 +6502,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_executable_sha256",
-      "community": 2,
+      "community": 48,
       "norm_label": "executable_sha256()"
     },
     {
@@ -6512,7 +6512,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_py_path",
-      "community": 2,
+      "community": 48,
       "norm_label": "path"
     },
     {
@@ -6522,7 +6522,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_minimal_codex_environment",
-      "community": 2,
+      "community": 48,
       "norm_label": "minimal_codex_environment()"
     },
     {
@@ -6532,7 +6532,7 @@
       "source_location": "L311",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider",
-      "community": 2,
+      "community": 48,
       "norm_label": "codexcliprovider"
     },
     {
@@ -6542,7 +6542,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_init",
-      "community": 2,
+      "community": 48,
       "norm_label": ".__init__()"
     },
     {
@@ -6552,7 +6552,7 @@
       "source_location": "L357",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_revalidate",
-      "community": 2,
+      "community": 48,
       "norm_label": ".revalidate()"
     },
     {
@@ -6562,7 +6562,7 @@
       "source_location": "L364",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_codexcliprovider_generate",
-      "community": 2,
+      "community": 48,
       "norm_label": ".generate()"
     },
     {
@@ -6572,7 +6572,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_41",
-      "community": 2,
+      "community": 48,
       "norm_label": "map provider text to a closed code without retaining provider text."
     },
     {
@@ -6582,7 +6582,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_77",
-      "community": 2,
+      "community": 48,
       "norm_label": "one external inference attempt failed without canonical side effects."
     },
     {
@@ -6592,7 +6592,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_107",
-      "community": 2,
+      "community": 48,
       "norm_label": "extract the exact token counters emitted by ``codex exec --json``."
     },
     {
@@ -6602,7 +6602,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_154",
-      "community": 2,
+      "community": 48,
       "norm_label": "return exact fixture payloads without launching a process or using a network."
     },
     {
@@ -6612,7 +6612,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_232",
-      "community": 2,
+      "community": 48,
       "norm_label": "hash a pinned non-linked executable while rejecting path replacement."
     },
     {
@@ -6622,7 +6622,7 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_287",
-      "community": 2,
+      "community": 48,
       "norm_label": "pass only operating-system identity and locale needed by external auth."
     },
     {
@@ -6632,7 +6632,7 @@
       "source_location": "L312",
       "_origin": "ast",
       "id": "09_scripts_phase5r_phase5r_shadow_llm_provider_rationale_312",
-      "community": 2,
+      "community": 48,
       "norm_label": "run an externally authenticated cli in an empty, ephemeral directory."
     },
     {
@@ -7302,7 +7302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state",
-      "community": 17,
+      "community": 72,
       "norm_label": "reconcile_phase5r_c9b_account_state.py"
     },
     {
@@ -7312,7 +7312,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_parse_args",
-      "community": 17,
+      "community": 72,
       "norm_label": "parse_args()"
     },
     {
@@ -7322,7 +7322,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_py_namespace",
-      "community": 17,
+      "community": 72,
       "norm_label": "namespace"
     },
     {
@@ -7332,7 +7332,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_select_default",
-      "community": 17,
+      "community": 72,
       "norm_label": "select_default()"
     },
     {
@@ -7342,7 +7342,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_update_confirmed_applied",
-      "community": 17,
+      "community": 72,
       "norm_label": "update_confirmed_applied()"
     },
     {
@@ -7352,7 +7352,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_upsert_reconciliation_row",
-      "community": 17,
+      "community": 72,
       "norm_label": "upsert_reconciliation_row()"
     },
     {
@@ -7362,7 +7362,7 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_write_pending_outputs",
-      "community": 17,
+      "community": 72,
       "norm_label": "write_pending_outputs()"
     },
     {
@@ -7372,7 +7372,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_reconcile_fill",
-      "community": 17,
+      "community": 72,
       "norm_label": "reconcile_fill()"
     },
     {
@@ -7382,7 +7382,7 @@
       "source_location": "L328",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_main",
-      "community": 17,
+      "community": 72,
       "norm_label": "main()"
     },
     {
@@ -7392,7 +7392,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "09_scripts_phase5r_reconcile_phase5r_c9b_account_state_rationale_117",
-      "community": 17,
+      "community": 72,
       "norm_label": "preserve the audit trail while replacing this execution's latest view."
     },
     {
@@ -10072,7 +10072,7 @@
       "source_location": "L765",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_shadow_llm_evaluation_runtime_sha256",
-      "community": 2,
+      "community": 75,
       "norm_label": "_runtime_sha256()"
     },
     {
@@ -10082,7 +10082,7 @@
       "source_location": "L778",
       "_origin": "ast",
       "id": "09_scripts_phase5r_run_phase5r_shadow_llm_evaluation_run_identity",
-      "community": 2,
+      "community": 75,
       "norm_label": "_run_identity()"
     },
     {
@@ -10362,7 +10362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates",
-      "community": 410,
+      "community": 74,
       "norm_label": "score_phase5r_b2_candidates.py"
     },
     {
@@ -10372,7 +10372,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_timestamp",
-      "community": 410,
+      "community": 74,
       "norm_label": "timestamp()"
     },
     {
@@ -10382,7 +10382,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_read_csv",
-      "community": 410,
+      "community": 74,
       "norm_label": "read_csv()"
     },
     {
@@ -10392,7 +10392,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_py_path",
-      "community": 410,
+      "community": 74,
       "norm_label": "path"
     },
     {
@@ -10402,7 +10402,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_write_csv",
-      "community": 410,
+      "community": 74,
       "norm_label": "write_csv()"
     },
     {
@@ -10412,7 +10412,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_append_audit",
-      "community": 410,
+      "community": 74,
       "norm_label": "append_audit()"
     },
     {
@@ -10422,7 +10422,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_as_float",
-      "community": 410,
+      "community": 74,
       "norm_label": "as_float()"
     },
     {
@@ -10432,7 +10432,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_clamp",
-      "community": 410,
+      "community": 74,
       "norm_label": "clamp()"
     },
     {
@@ -10442,7 +10442,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_score_row",
-      "community": 410,
+      "community": 74,
       "norm_label": "score_row()"
     },
     {
@@ -10452,7 +10452,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_phase5r_score_phase5r_b2_candidates_main",
-      "community": 410,
+      "community": 74,
       "norm_label": "main()"
     },
     {
@@ -10932,7 +10932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production",
-      "community": 57,
+      "community": 21,
       "norm_label": "test_phase5r_active_production.py"
     },
     {
@@ -10952,7 +10952,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_notification_policy_is_event_driven_and_clock_independent",
-      "community": 10,
+      "community": 21,
       "norm_label": ".test_notification_policy_is_event_driven_and_clock_independent()"
     },
     {
@@ -11012,7 +11012,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_uncertainty_maps_to_smaller_whole_share_sizing",
-      "community": 21,
+      "community": 52,
       "norm_label": ".test_uncertainty_maps_to_smaller_whole_share_sizing()"
     },
     {
@@ -11022,7 +11022,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_active_production_activeproductiontests_test_core_starter_is_whole_share_and_not_forced",
-      "community": 21,
+      "community": 52,
       "norm_label": ".test_core_starter_is_whole_share_and_not_forced()"
     },
     {
@@ -11832,7 +11832,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_b2_refresh_cadence",
-      "community": 410,
+      "community": 8,
       "norm_label": "test_phase5r_b2_refresh_cadence.py"
     },
     {
@@ -12602,7 +12602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration",
-      "community": 28,
+      "community": 57,
       "norm_label": "test_phase5r_discovery_integration.py"
     },
     {
@@ -12612,57 +12612,67 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
-      "community": 28,
+      "community": 22,
       "norm_label": "independentdiscoveryintegrationtests"
+    },
+    {
+      "label": ".test_discovery_timeout_is_reported_without_suppressing_valid_account_review()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_timeout_is_reported_without_suppressing_valid_account_review",
+      "community": 22,
+      "norm_label": ".test_discovery_timeout_is_reported_without_suppressing_valid_account_review()"
     },
     {
       "label": ".test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L16",
+      "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not",
-      "community": 28,
+      "community": 22,
       "norm_label": ".test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not()"
     },
     {
       "label": ".test_candidate_fit_uses_actual_allocation_not_theme()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L34",
+      "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_candidate_fit_uses_actual_allocation_not_theme",
-      "community": 28,
+      "community": 22,
       "norm_label": ".test_candidate_fit_uses_actual_allocation_not_theme()"
     },
     {
       "label": ".test_theme_labels_cannot_change_legacy_score()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L40",
+      "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_theme_labels_cannot_change_legacy_score",
-      "community": 28,
+      "community": 22,
       "norm_label": ".test_theme_labels_cannot_change_legacy_score()"
     },
     {
       "label": ".test_only_fetch_cycle_requests_discovery_network()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L53",
+      "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_only_fetch_cycle_requests_discovery_network",
-      "community": 28,
+      "community": 22,
       "norm_label": ".test_only_fetch_cycle_requests_discovery_network()"
     },
     {
       "label": ".test_bootstrap_invokes_only_discovery()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L63",
+      "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_bootstrap_invokes_only_discovery",
-      "community": 28,
+      "community": 22,
       "norm_label": ".test_bootstrap_invokes_only_discovery()"
     },
     {
@@ -13896,10 +13906,20 @@
       "norm_label": ".test_refresh_reuses_cache_and_failure_never_falls_back_to_old_shortlist()"
     },
     {
-      "label": ".test_network_exception_is_sanitized_and_budget_is_finite()",
+      "label": ".test_held_only_coverage_changes_comparison_but_never_independent_rank()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
       "source_location": "L186",
+      "_origin": "ast",
+      "id": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_held_only_coverage_changes_comparison_but_never_independent_rank",
+      "community": 19,
+      "norm_label": ".test_held_only_coverage_changes_comparison_but_never_independent_rank()"
+    },
+    {
+      "label": ".test_network_exception_is_sanitized_and_budget_is_finite()",
+      "file_type": "code",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_network_exception_is_sanitized_and_budget_is_finite",
       "community": 19,
@@ -13909,7 +13929,7 @@
       "label": ".test_oversize_http_and_redirect_are_rejected()",
       "file_type": "code",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
-      "source_location": "L197",
+      "source_location": "L222",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_oversize_http_and_redirect_are_rejected",
       "community": 19,
@@ -13922,7 +13942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_market_regime",
-      "community": 7,
+      "community": 12,
       "norm_label": "test_phase5r_market_regime.py"
     },
     {
@@ -14842,7 +14862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting",
-      "community": 60,
+      "community": 52,
       "norm_label": "test_phase5r_reassessment_reporting.py"
     },
     {
@@ -14852,7 +14872,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests",
-      "community": 60,
+      "community": 52,
       "norm_label": "reassessmentreportingtests"
     },
     {
@@ -14862,7 +14882,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_cash_affordability_and_target_gap_are_separate",
-      "community": 21,
+      "community": 52,
       "norm_label": ".test_cash_affordability_and_target_gap_are_separate()"
     },
     {
@@ -14872,7 +14892,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_origin_never_uses_close_before_creation",
-      "community": 60,
+      "community": 52,
       "norm_label": ".test_origin_never_uses_close_before_creation()"
     },
     {
@@ -14882,7 +14902,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_forward_evaluation_preserves_legacy_and_deduplicates",
-      "community": 60,
+      "community": 52,
       "norm_label": ".test_forward_evaluation_preserves_legacy_and_deduplicates()"
     },
     {
@@ -14892,7 +14912,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_no_new_or_ineligible_are_not_adds",
-      "community": 60,
+      "community": 52,
       "norm_label": ".test_no_new_or_ineligible_are_not_adds()"
     },
     {
@@ -14902,7 +14922,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_reverse_expectations_are_explicit_and_missing_debt_stays_unknown",
-      "community": 60,
+      "community": 52,
       "norm_label": ".test_reverse_expectations_are_explicit_and_missing_debt_stays_unknown()"
     },
     {
@@ -14912,7 +14932,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_reassessment_reporting_reassessmentreportingtests_test_whole_share_scenarios_do_not_change_account",
-      "community": 60,
+      "community": 52,
       "norm_label": ".test_whole_share_scenarios_do_not_change_account()"
     },
     {
@@ -15002,7 +15022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits",
-      "community": 21,
+      "community": 52,
       "norm_label": "test_phase5r_research_risk_limits.py"
     },
     {
@@ -15012,7 +15032,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests",
-      "community": 70,
+      "community": 52,
       "norm_label": "researchrisklimitstests"
     },
     {
@@ -15022,7 +15042,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_state",
-      "community": 70,
+      "community": 52,
       "norm_label": ".state()"
     },
     {
@@ -15032,7 +15052,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_limits",
-      "community": 70,
+      "community": 52,
       "norm_label": ".limits()"
     },
     {
@@ -15042,7 +15062,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_absent_overlay_preserves_legacy_and_returns_independent_copy",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_absent_overlay_preserves_legacy_and_returns_independent_copy()"
     },
     {
@@ -15052,7 +15072,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_only_three_caps_change_and_raw_bytes_hash_remain_identical",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_only_three_caps_change_and_raw_bytes_hash_remain_identical()"
     },
     {
@@ -15062,7 +15082,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_cash_timestamps_and_unconfirmed_basis_cannot_be_overlaid",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_cash_timestamps_and_unconfirmed_basis_cannot_be_overlaid()"
     },
     {
@@ -15072,7 +15092,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_missing_nonfinite_bool_and_bad_ordering_are_rejected",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_missing_nonfinite_bool_and_bad_ordering_are_rejected()"
     },
     {
@@ -15082,7 +15102,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_overlay_below_recorded_active_target_fails_closed",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_overlay_below_recorded_active_target_fails_closed()"
     },
     {
@@ -15092,7 +15112,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_real_config_accepts_valid_optional_overlay_without_activation",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_real_config_accepts_valid_optional_overlay_without_activation()"
     },
     {
@@ -15102,7 +15122,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_research_risk_limits_researchrisklimitstests_test_selected_profile_removes_old_size_blocks_not_evidence_or_cash_checks",
-      "community": 70,
+      "community": 52,
       "norm_label": ".test_selected_profile_removes_old_size_blocks_not_evidence_or_cash_checks()"
     },
     {
@@ -15682,7 +15702,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched",
-      "community": 11,
+      "community": 4,
       "norm_label": ".test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched()"
     },
     {
@@ -15692,7 +15712,7 @@
       "source_location": "L123",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_durable_ledger_repairs_stale_seen_accession_cache",
-      "community": 34,
+      "community": 4,
       "norm_label": ".test_durable_ledger_repairs_stale_seen_accession_cache()"
     },
     {
@@ -15772,7 +15792,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_submissions_parser_captures_exact_acceptance_time",
-      "community": 34,
+      "community": 4,
       "norm_label": ".test_submissions_parser_captures_exact_acceptance_time()"
     },
     {
@@ -15782,7 +15802,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancetests_test_daily_parser_excludes_out_of_window_legacy_metadata",
-      "community": 34,
+      "community": 4,
       "norm_label": ".test_daily_parser_excludes_out_of_window_legacy_metadata()"
     },
     {
@@ -15792,7 +15812,7 @@
       "source_location": "L263",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests",
-      "community": 4,
+      "community": 70,
       "norm_label": "secacceptancerefreshfailuretests"
     },
     {
@@ -15802,7 +15822,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_submissions_payload",
-      "community": 4,
+      "community": 70,
       "norm_label": "._submissions_payload()"
     },
     {
@@ -15812,7 +15832,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_run_acceptance_failure",
-      "community": 4,
+      "community": 70,
       "norm_label": "._run_acceptance_failure()"
     },
     {
@@ -15822,7 +15842,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_test_identity_conflict_fails_closed_without_mutation",
-      "community": 4,
+      "community": 70,
       "norm_label": ".test_identity_conflict_fails_closed_without_mutation()"
     },
     {
@@ -15832,7 +15852,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_test_unindexed_official_accession_is_admitted_to_versioned_extension",
-      "community": 4,
+      "community": 70,
       "norm_label": ".test_unindexed_official_accession_is_admitted_to_versioned_extension()"
     },
     {
@@ -15842,7 +15862,7 @@
       "source_location": "L552",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_test_valid_reconciliation_releases_staged_ledger_without_index_mutation",
-      "community": 4,
+      "community": 70,
       "norm_label": ".test_valid_reconciliation_releases_staged_ledger_without_index_mutation()"
     },
     {
@@ -15852,7 +15872,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_run_user_agent_preflight_failure",
-      "community": 4,
+      "community": 70,
       "norm_label": "._run_user_agent_preflight_failure()"
     },
     {
@@ -15862,7 +15882,7 @@
       "source_location": "L792",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_test_missing_user_agent_preflight_fails_closed_without_network_or_mutation",
-      "community": 4,
+      "community": 70,
       "norm_label": ".test_missing_user_agent_preflight_fails_closed_without_network_or_mutation()"
     },
     {
@@ -15872,7 +15892,7 @@
       "source_location": "L798",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_secacceptancerefreshfailuretests_test_invalid_user_agent_preflight_fails_closed_without_network_or_mutation",
-      "community": 4,
+      "community": 70,
       "norm_label": ".test_invalid_user_agent_preflight_fails_closed_without_network_or_mutation()"
     },
     {
@@ -15882,7 +15902,7 @@
       "source_location": "L264",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_rationale_264",
-      "community": 4,
+      "community": 70,
       "norm_label": "regression coverage for the sec acceptance precommit boundary."
     },
     {
@@ -15892,7 +15912,7 @@
       "source_location": "L295",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_rationale_295",
-      "community": 4,
+      "community": 70,
       "norm_label": "run an offline refresh that must fail before any evidence commit."
     },
     {
@@ -15902,7 +15922,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_rationale_553",
-      "community": 4,
+      "community": 70,
       "norm_label": "an accepted time representation change logs without rewriting the index."
     },
     {
@@ -15912,7 +15932,7 @@
       "source_location": "L701",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_rationale_701",
-      "community": 4,
+      "community": 70,
       "norm_label": "a rejected user-agent must close before any sec or evidence mutation."
     },
     {
@@ -15922,7 +15942,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions",
-      "community": 4,
+      "community": 73,
       "norm_label": "test_phase5r_sec_acceptance_extensions.py"
     },
     {
@@ -15932,7 +15952,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_acceptance_record",
-      "community": 4,
+      "community": 73,
       "norm_label": "acceptance_record()"
     },
     {
@@ -15942,7 +15962,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_secacceptanceextensiontests",
-      "community": 4,
+      "community": 73,
       "norm_label": "secacceptanceextensiontests"
     },
     {
@@ -15952,7 +15972,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_secacceptanceextensiontests_plan",
-      "community": 4,
+      "community": 73,
       "norm_label": "._plan()"
     },
     {
@@ -15962,7 +15982,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_secacceptanceextensiontests_test_valid_extension_preserves_historical_bytes_and_is_audit_bound",
-      "community": 4,
+      "community": 73,
       "norm_label": ".test_valid_extension_preserves_historical_bytes_and_is_audit_bound()"
     },
     {
@@ -15972,7 +15992,7 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_secacceptanceextensiontests_test_duplicate_or_identity_conflict_is_rejected_without_extension_write",
-      "community": 4,
+      "community": 73,
       "norm_label": ".test_duplicate_or_identity_conflict_is_rejected_without_extension_write()"
     },
     {
@@ -15982,7 +16002,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_extensions_secacceptanceextensiontests_test_audit_raw_byte_binding_detects_artifact_rewrite",
-      "community": 4,
+      "community": 73,
       "norm_label": ".test_audit_raw_byte_binding_detects_artifact_rewrite()"
     },
     {
@@ -15992,7 +16012,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation",
-      "community": 4,
+      "community": 55,
       "norm_label": "test_phase5r_sec_acceptance_reconciliation.py"
     },
     {
@@ -16002,7 +16022,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_acceptance_record",
-      "community": 4,
+      "community": 55,
       "norm_label": "acceptance_record()"
     },
     {
@@ -16012,7 +16032,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests",
-      "community": 4,
+      "community": 55,
       "norm_label": "secacceptancereconciliationtests"
     },
     {
@@ -16022,7 +16042,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_reconcile",
-      "community": 4,
+      "community": 55,
       "norm_label": "._reconcile()"
     },
     {
@@ -16032,7 +16052,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_eastern_wall_clock_shift_is_audited_and_index_stays_unchanged",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_eastern_wall_clock_shift_is_audited_and_index_stays_unchanged()"
     },
     {
@@ -16052,7 +16072,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_later_sec_correction_from_wall_clock_to_absolute_utc_is_audited",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_later_sec_correction_from_wall_clock_to_absolute_utc_is_audited()"
     },
     {
@@ -16062,7 +16082,7 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_same_utc_instant_with_different_timezone_notation_is_reconciled",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_same_utc_instant_with_different_timezone_notation_is_reconciled()"
     },
     {
@@ -16072,7 +16092,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_unknown_accession_is_never_silently_accepted",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_unknown_accession_is_never_silently_accepted()"
     },
     {
@@ -16082,7 +16102,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_missing_immutable_index_cannot_be_bootstrapped_by_reconciliation",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_missing_immutable_index_cannot_be_bootstrapped_by_reconciliation()"
     },
     {
@@ -16092,7 +16112,7 @@
       "source_location": "L145",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_identity_mismatch_is_never_reconciled_as_a_time_difference",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_identity_mismatch_is_never_reconciled_as_a_time_difference()"
     },
     {
@@ -16102,7 +16122,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_arbitrary_timestamp_shift_is_rejected",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_arbitrary_timestamp_shift_is_rejected()"
     },
     {
@@ -16112,7 +16132,7 @@
       "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_invalid_batch_never_partially_appends_to_log",
-      "community": 4,
+      "community": 55,
       "norm_label": ".test_invalid_batch_never_partially_appends_to_log()"
     },
     {
@@ -16422,7 +16442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls",
-      "community": 2,
+      "community": 60,
       "norm_label": "test_phase5r_shadow_event_controls.py"
     },
     {
@@ -16432,7 +16452,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_economic_packet",
-      "community": 2,
+      "community": 60,
       "norm_label": "economic_packet()"
     },
     {
@@ -16442,7 +16462,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests",
-      "community": 2,
+      "community": 60,
       "norm_label": "shadoweventcontroltests"
     },
     {
@@ -16452,7 +16472,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_document_resampling_is_not_a_new_event_but_new_evidence_is",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_document_resampling_is_not_a_new_event_but_new_evidence_is()"
     },
     {
@@ -16462,7 +16482,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_official_provenance_enrichment_alone_is_not_a_paid_semantic_event()"
     },
     {
@@ -16472,7 +16492,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_all_refresh_wrappers_change_without_a_new_semantic_event",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_all_refresh_wrappers_change_without_a_new_semantic_event()"
     },
     {
@@ -16482,7 +16502,7 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_period_filing_text_and_thesis_changes_remain_events",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_period_filing_text_and_thesis_changes_remain_events()"
     },
     {
@@ -16492,7 +16512,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_semantic_digest_does_not_mutate_raw_provenance",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_semantic_digest_does_not_mutate_raw_provenance()"
     },
     {
@@ -16502,7 +16522,7 @@
       "source_location": "L127",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_historical_archive_reindex_prevents_migration_duplicate",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_historical_archive_reindex_prevents_migration_duplicate()"
     },
     {
@@ -16512,7 +16532,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_same_event_captures_archive_without_overwrite_conflict",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_same_event_captures_archive_without_overwrite_conflict()"
     },
     {
@@ -16522,7 +16542,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_candidate_ranking_subset_of_seen_issuers_is_not_new_research",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_candidate_ranking_subset_of_seen_issuers_is_not_new_research()"
     },
     {
@@ -16532,7 +16552,7 @@
       "source_location": "L184",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_replay_sampling_deduplicates_refreshes_and_rejects_future_sources()"
     },
     {
@@ -16542,7 +16562,7 @@
       "source_location": "L204",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_critic_skips_mechanical_restatement_but_judge_remains_separate",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_critic_skips_mechanical_restatement_but_judge_remains_separate()"
     },
     {
@@ -16552,7 +16572,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_input_budget_fails_before_any_provider_attempt",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_input_budget_fails_before_any_provider_attempt()"
     },
     {
@@ -16562,7 +16582,7 @@
       "source_location": "L221",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_downstream_judge_headroom_is_checked_before_analyst_invocation",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_downstream_judge_headroom_is_checked_before_analyst_invocation()"
     },
     {
@@ -16572,7 +16592,7 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_observed_token_budget_preserves_unknown_cost_and_unreported_calls",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_observed_token_budget_preserves_unknown_cost_and_unreported_calls()"
     },
     {
@@ -16582,7 +16602,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_preflight_is_read_only_and_does_not_create_call_ledger",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_preflight_is_read_only_and_does_not_create_call_ledger()"
     },
     {
@@ -16592,7 +16612,7 @@
       "source_location": "L262",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_preflight_cli_dispatches_packet_once_and_never_calls_provider",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_preflight_cli_dispatches_packet_once_and_never_calls_provider()"
     },
     {
@@ -16602,7 +16622,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_event_controls_shadoweventcontroltests_test_auto_live_cli_passes_packet_to_resample_guard",
-      "community": 2,
+      "community": 60,
       "norm_label": ".test_auto_live_cli_passes_packet_to_resample_guard()"
     },
     {
@@ -16612,7 +16632,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm",
-      "community": 36,
+      "community": 46,
       "norm_label": "test_phase5r_shadow_llm.py"
     },
     {
@@ -16622,7 +16642,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_fake_packet",
-      "community": 36,
+      "community": 46,
       "norm_label": "fake_packet()"
     },
     {
@@ -16632,7 +16652,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_analyst",
-      "community": 36,
+      "community": 46,
       "norm_label": "valid_analyst()"
     },
     {
@@ -16642,7 +16662,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_critic",
-      "community": 36,
+      "community": 46,
       "norm_label": "valid_critic()"
     },
     {
@@ -16652,7 +16672,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_valid_judge",
-      "community": 36,
+      "community": 46,
       "norm_label": "valid_judge()"
     },
     {
@@ -16662,7 +16682,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider",
-      "community": 36,
+      "community": 46,
       "norm_label": "failingprovider"
     },
     {
@@ -16672,7 +16692,7 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_init",
-      "community": 36,
+      "community": 46,
       "norm_label": ".__init__()"
     },
     {
@@ -16682,7 +16702,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_failingprovider_generate",
-      "community": 36,
+      "community": 46,
       "norm_label": ".generate()"
     },
     {
@@ -16692,7 +16712,7 @@
       "source_location": "L186",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests",
-      "community": 36,
+      "community": 46,
       "norm_label": "shadowllmtests"
     },
     {
@@ -16702,7 +16722,7 @@
       "source_location": "L187",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_evaluation_scheduler_is_event_driven_and_nonproduction",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_evaluation_scheduler_is_event_driven_and_nonproduction()"
     },
     {
@@ -16712,7 +16732,7 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_provider_schemas_use_only_portable_constraints",
-      "community": 36,
+      "community": 75,
       "norm_label": ".test_provider_schemas_use_only_portable_constraints()"
     },
     {
@@ -16722,7 +16742,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_dynamic_schemas_bind_hashes_and_coverage",
-      "community": 36,
+      "community": 75,
       "norm_label": ".test_dynamic_schemas_bind_hashes_and_coverage()"
     },
     {
@@ -16732,7 +16752,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_provider_failure_text_is_reduced_to_closed_codes",
-      "community": 2,
+      "community": 48,
       "norm_label": ".test_provider_failure_text_is_reduced_to_closed_codes()"
     },
     {
@@ -16742,7 +16762,7 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_usage_parser_requires_exact_completed_usage",
-      "community": 2,
+      "community": 48,
       "norm_label": ".test_cli_usage_parser_requires_exact_completed_usage()"
     },
     {
@@ -16752,7 +16772,7 @@
       "source_location": "L283",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_accepts_source_bound_outputs",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_contract_accepts_source_bound_outputs()"
     },
     {
@@ -16762,7 +16782,7 @@
       "source_location": "L293",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_blind_target_hides_self_grading_labels",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_blind_target_hides_self_grading_labels()"
     },
     {
@@ -16772,7 +16792,7 @@
       "source_location": "L313",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_critic_routing_is_conditional",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_critic_routing_is_conditional()"
     },
     {
@@ -16782,7 +16802,7 @@
       "source_location": "L323",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_semantic_event_ignores_daily_market_and_account_churn",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_semantic_event_ignores_daily_market_and_account_churn()"
     },
     {
@@ -16792,7 +16812,7 @@
       "source_location": "L342",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_legacy_semantic_view_prevents_automatic_duplicate",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_legacy_semantic_view_prevents_automatic_duplicate()"
     },
     {
@@ -16802,7 +16822,7 @@
       "source_location": "L371",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_contract_rejects_unknown_source_numeric_and_action_language",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_contract_rejects_unknown_source_numeric_and_action_language()"
     },
     {
@@ -16812,7 +16832,7 @@
       "source_location": "L386",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_packet_loader_rejects_symlinks",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_packet_loader_rejects_symlinks()"
     },
     {
@@ -16822,7 +16842,7 @@
       "source_location": "L396",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_fixture_run_is_blind_judged_and_excluded_from_metrics",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_fixture_run_is_blind_judged_and_excluded_from_metrics()"
     },
     {
@@ -16832,7 +16852,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_low_risk_fixture_skips_critic_but_keeps_blind_judge",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_low_risk_fixture_skips_critic_but_keeps_blind_judge()"
     },
     {
@@ -16842,7 +16862,7 @@
       "source_location": "L456",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_no_human_review_is_required_to_aggregate",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_no_human_review_is_required_to_aggregate()"
     },
     {
@@ -16852,7 +16872,7 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_current_evaluation_snapshot_can_be_atomically_refreshed",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_current_evaluation_snapshot_can_be_atomically_refreshed()"
     },
     {
@@ -16862,7 +16882,7 @@
       "source_location": "L471",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_failed_live_role_is_terminal_and_not_retried",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_failed_live_role_is_terminal_and_not_retried()"
     },
     {
@@ -16872,7 +16892,7 @@
       "source_location": "L503",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_full_run_capacity_fails_closed_before_provider_call",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_full_run_capacity_fails_closed_before_provider_call()"
     },
     {
@@ -16882,7 +16902,7 @@
       "source_location": "L528",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_new_stage_allowance_is_enforced_without_legacy_ledger",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_new_stage_allowance_is_enforced_without_legacy_ledger()"
     },
     {
@@ -16892,7 +16912,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_production_entrypoints_do_not_reference_shadow_surface",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_production_entrypoints_do_not_reference_shadow_surface()"
     },
     {
@@ -16902,7 +16922,7 @@
       "source_location": "L571",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_llm_shadowllmtests_test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_cli_provider_uses_json_usage_minimal_env_and_disabled_tools()"
     },
     {
@@ -16912,7 +16932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement",
-      "community": 36,
+      "community": 50,
       "norm_label": "test_phase5r_shadow_measurement.py"
     },
     {
@@ -16922,7 +16942,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_fact_packet",
-      "community": 36,
+      "community": 50,
       "norm_label": "fact_packet()"
     },
     {
@@ -16932,7 +16952,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_net_loss_claim",
-      "community": 36,
+      "community": 50,
       "norm_label": "net_loss_claim()"
     },
     {
@@ -16942,7 +16962,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_evaluation_bundle",
-      "community": 36,
+      "community": 50,
       "norm_label": "evaluation_bundle()"
     },
     {
@@ -16952,7 +16972,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests",
-      "community": 36,
+      "community": 50,
       "norm_label": "shadowmeasurementtests"
     },
     {
@@ -16962,7 +16982,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_latest_official_packet_supplements_historical_proofs_and_is_wired",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_latest_official_packet_supplements_historical_proofs_and_is_wired()"
     },
     {
@@ -16972,7 +16992,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_baseline_includes_fact_sign_and_original_calculations",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_baseline_includes_fact_sign_and_original_calculations()"
     },
     {
@@ -16982,7 +17002,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_net_loss_restatement_is_baseline_not_incremental",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_net_loss_restatement_is_baseline_not_incremental()"
     },
     {
@@ -16992,7 +17012,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_scope_unknowns_and_forward_claims_are_not_filled_in",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_scope_unknowns_and_forward_claims_are_not_filled_in()"
     },
     {
@@ -17002,7 +17022,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_false_sign_is_mechanically_refuted",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_false_sign_is_mechanically_refuted()"
     },
     {
@@ -17012,7 +17032,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_cash_flow_sign_and_simple_income_contrast_are_already_baseline",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_cash_flow_sign_and_simple_income_contrast_are_already_baseline()"
     },
     {
@@ -17022,7 +17042,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_partial_period_qualification_excluded_v1_retained",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_partial_period_qualification_excluded_v1_retained()"
     },
     {
@@ -17032,7 +17052,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_blinded_sign_controls_are_not_incremental_candidates",
-      "community": 36,
+      "community": 46,
       "norm_label": ".test_blinded_sign_controls_are_not_incremental_candidates()"
     },
     {
@@ -17042,7 +17062,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_repeat_passage_is_one_family_despite_prose_id_changes",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_repeat_passage_is_one_family_despite_prose_id_changes()"
     },
     {
@@ -17052,7 +17072,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_aggregate_deduplicates_substantive_coverage_and_labels_recall",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_aggregate_deduplicates_substantive_coverage_and_labels_recall()"
     },
     {
@@ -17062,7 +17082,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_replay_and_live_same_event_cannot_double_count_promotion_samples",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_replay_and_live_same_event_cannot_double_count_promotion_samples()"
     },
     {
@@ -17072,7 +17092,7 @@
       "source_location": "L157",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_different_offsets_in_same_documents_do_not_inflate_event_count",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_different_offsets_in_same_documents_do_not_inflate_event_count()"
     },
     {
@@ -17082,7 +17102,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_missing_sealed_packet_cannot_claim_baseline_incremental_value",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_missing_sealed_packet_cannot_claim_baseline_incremental_value()"
     },
     {
@@ -17092,7 +17112,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "09_scripts_phase5r_tests_test_phase5r_shadow_measurement_shadowmeasurementtests_test_later_fetch_or_later_period_is_not_official_confirmation",
-      "community": 36,
+      "community": 50,
       "norm_label": ".test_later_fetch_or_later_period_is_not_official_confirmation()"
     },
     {
@@ -18012,7 +18032,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account",
-      "community": 8,
+      "community": 1,
       "norm_label": "update_phase5r_manual_account.py"
     },
     {
@@ -18032,7 +18052,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_parse_position",
-      "community": 8,
+      "community": 1,
       "norm_label": "parse_position()"
     },
     {
@@ -18042,7 +18062,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_phase5r_update_phase5r_manual_account_main",
-      "community": 8,
+      "community": 1,
       "norm_label": "main()"
     },
     {
@@ -29345,7 +29365,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L38",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_candidate_fit_uses_actual_allocation_not_theme",
       "target": "09_scripts_phase5r_phase5r_c9_common_dynamic_candidate_fit"
@@ -30748,7 +30768,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L449",
+      "source_location": "L454",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_daily_common_now_et"
@@ -31789,7 +31809,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L449",
+      "source_location": "L454",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_daily_common_latest_published_market_session"
@@ -33306,7 +33326,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L27",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not",
       "target": "09_scripts_phase5r_phase5r_daily_common_recommendation_notification_fingerprint"
@@ -37239,7 +37259,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L448",
+      "source_location": "L453",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
@@ -37249,7 +37269,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L476",
+      "source_location": "L481",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_main",
@@ -37458,7 +37478,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L453",
+      "source_location": "L458",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_discoveryerror",
@@ -37502,7 +37522,7 @@
       "context": "argument",
       "confidence": "INFERRED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L441",
+      "source_location": "L446",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_refresh_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_discoveryerror",
@@ -37687,7 +37707,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L448",
+      "source_location": "L453",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_py_any",
@@ -37896,7 +37916,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L448",
+      "source_location": "L453",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_py_path",
@@ -37940,7 +37960,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L451",
+      "source_location": "L456",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_cache_read",
@@ -38006,7 +38026,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L448",
+      "source_location": "L453",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_py_datetime",
@@ -38319,7 +38339,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L455",
+      "source_location": "L460",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_empty",
@@ -38330,7 +38350,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L442",
+      "source_location": "L447",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_refresh_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_empty",
@@ -38341,7 +38361,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L435",
+      "source_location": "L440",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_refresh_discovery",
       "target": "09_scripts_phase5r_phase5r_market_discovery_build_report",
@@ -38352,7 +38372,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L480",
+      "source_location": "L485",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_main",
       "target": "09_scripts_phase5r_phase5r_market_discovery_refresh_discovery",
@@ -38363,7 +38383,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/phase5r_market_discovery.py",
-      "source_location": "L480",
+      "source_location": "L485",
       "weight": 1.0,
       "source": "09_scripts_phase5r_phase5r_market_discovery_main",
       "target": "09_scripts_phase5r_phase5r_market_discovery_load_discovery",
@@ -41205,6 +41225,17 @@
       "source_location": "L79",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_decision_discipline_longhorizondecisiondisciplinetests_exact_action",
+      "target": "09_scripts_phase5r_phase5r_risk_policy_diagnostic_holding_value"
+    },
+    {
+      "relation": "indirect_call",
+      "context": "argument",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_timeout_is_reported_without_suppressing_valid_account_review",
       "target": "09_scripts_phase5r_phase5r_risk_policy_diagnostic_holding_value"
     },
     {
@@ -64439,7 +64470,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L63",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_bootstrap_invokes_only_discovery",
@@ -64449,7 +64480,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L34",
+      "source_location": "L48",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_candidate_fit_uses_actual_allocation_not_theme",
@@ -64459,7 +64490,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L16",
+      "source_location": "L30",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not",
@@ -64469,7 +64500,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L53",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_discovery_timeout_is_reported_without_suppressing_valid_account_review",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
+      "source_location": "L67",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_only_fetch_cycle_requests_discovery_network",
@@ -64479,7 +64520,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_discovery_integration.py",
-      "source_location": "L40",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests",
       "target": "09_scripts_phase5r_tests_test_phase5r_discovery_integration_independentdiscoveryintegrationtests_test_theme_labels_cannot_change_legacy_score",
@@ -66905,6 +66946,17 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_held_only_coverage_changes_comparison_but_never_independent_rank",
+      "target": "09_scripts_phase5r_tests_test_phase5r_market_discovery_fixtures",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
       "source_location": "L151",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_missing_or_stale_benchmark_cannot_rank",
@@ -66988,6 +67040,16 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
+      "source_location": "L186",
+      "weight": 1.0,
+      "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests",
+      "target": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_held_only_coverage_changes_comparison_but_never_independent_rank",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
       "source_location": "L150",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests",
@@ -66998,7 +67060,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
-      "source_location": "L186",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests",
       "target": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_network_exception_is_sanitized_and_budget_is_finite",
@@ -67008,7 +67070,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/phase5r/tests/test_phase5r_market_discovery.py",
-      "source_location": "L197",
+      "source_location": "L222",
       "weight": 1.0,
       "source": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests",
       "target": "09_scripts_phase5r_tests_test_phase5r_market_discovery_discoverytests_test_oversize_http_and_redirect_are_rejected",
@@ -78313,5 +78375,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "f594f057e4a9aaac76372033d201ae9f7167de63"
+  "built_at_commit": "0ac8babf8f25b831512dfbefac0866c40fba15de"
 }

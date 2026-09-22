@@ -183,6 +183,31 @@ class DiscoveryTests(unittest.TestCase):
             self.assertFalse(failed["complete"]); self.assertEqual(failed["top_stocks"], [])
             self.assertEqual(md.load_discovery(root, NOW)["status"], "unavailable")
 
+    def test_held_only_coverage_changes_comparison_but_never_independent_rank(self):
+        meta, days = fixtures()
+        class Fake:
+            calls = 0
+            def fetch_metadata(self, day): self.calls += 1; return deepcopy(meta)
+            def fetch_grouped(self, day): self.calls += 1; return deepcopy(days[str(day)])
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            seed = root / "03_source_data/phase5r/phase5r_universe_seed.csv"
+            seed.parent.mkdir(parents=True)
+            seed.write_text("ticker,theme\nBBB,Irrelevant\n")
+            baseline = md.refresh_discovery(root, NOW, client=Fake())
+            positions = root / "05_risk_and_positions/current_positions.local.csv"
+            positions.parent.mkdir(parents=True)
+            positions.write_text("ticker,current_shares,current_value,cash\nAAA,INVALID_SHARES,INVALID_VALUE,INVALID_CASH\n")
+            compared = md.refresh_discovery(root, NOW, client=Fake())
+            self.assertTrue(baseline["complete"] and compared["complete"])
+            strip_flags = lambda rows: [{k:v for k,v in row.items() if k != "in_legacy_universe"} for row in rows]
+            self.assertEqual(strip_flags(baseline["all_stocks"]), strip_flags(compared["all_stocks"]))
+            self.assertFalse(baseline["all_stocks"][0]["in_legacy_universe"])
+            self.assertTrue(compared["all_stocks"][0]["in_legacy_universe"])
+            self.assertEqual(compared["coverage"]["screen_eligible_outside_legacy_count"],
+                             baseline["coverage"]["screen_eligible_outside_legacy_count"]-1)
+            self.assertNotIn("INVALID_", json.dumps(compared))
+
     def test_network_exception_is_sanitized_and_budget_is_finite(self):
         def bad(*args): raise RuntimeError("SECRET_TOKEN https://bad.example")
         with tempfile.TemporaryDirectory() as tmp:
