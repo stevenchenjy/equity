@@ -28,7 +28,7 @@ _RESEARCH_HOSTS = _SOURCE_HOSTS | {
     "www.samsara.com", "investors.samsara.com",
     "www.chase.com", "chase.com", "www.jpmorgan.com",
     "newsroom.servicenow.com", "abc.xyz", "investor.tsmc.com", "pr.tsmc.com", "newsroom.arm.com",
-    "investors.applovin.com", "investor.atmeta.com", "developers.meta.com",
+    "investors.applovin.com", "investor.atmeta.com", "developers.meta.com", "www.meta.com",
     "investors.rocketlabcorp.com", "rocketlabcorp.com", "investor.servicenow.com",
     "www.invesco.com", "www.vaneck.com", "www.ssga.com", "www.bls.gov",
     "www.bea.gov", "www.irs.gov", "www.nasdaq.com", "ir.amd.com",
@@ -39,7 +39,7 @@ _HYPOTHETICAL_BLOCKERS = {"cash_not_confirmed", "existing_tactical_risk_unconfir
                           "event_calendar_unconfirmed", "existing_order_requires_reconciliation"}
 _TRADING_RULES = (
     "规则 1｜入场前写明催化剂或价格形态、失效条件、止盈和复核日期；3–5 个交易日未兑现则复核，不把失败短线自动改成长持。",
-    "规则 2｜普通短线计划风险不超过组合的 0.5%，事件交易不超过 0.25%；股数还受整股、现金、预留和仓位上限约束。止损遇跳空可能超过计划损失。",
+    "规则 2｜普通短线计划风险不超过组合的 0.5%，事件交易不超过 0.25%，合计不超过 2%；单个短线标的资金上限 5%。股数还受整股、现金、预留约束；跳空可能超过计划损失。",
     "规则 3｜预期目标价差至少覆盖计划风险的 2 倍（2R）；没有可核验依据或条件未满足时，本次新增 0 股、NO TRADE，不为交易而交易。",
     "规则 4｜长期核心仓与短线仓分别记录；卖出后仅按事先写明且重新核验的条件买回，不自动补仓，也不保证能在更低价买回。",
 )
