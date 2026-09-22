@@ -64,14 +64,14 @@ SEC_REFRESH_TIMEOUT_SECONDS = 240
 # approved Keychain-backed launcher. It runs only B2 and cannot invoke a
 # model, sender, broker, portfolio action, or order surface.
 MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
-MARKET_REFRESH_TIMEOUT_SECONDS = 480
+MARKET_REFRESH_TIMEOUT_SECONDS = 600
 # One-shot complete deterministic refresh using the already validated local
 # close. This repair/verification entrypoint runs through the credentialed
 # dailyrefresh launcher but cannot invoke a model, sender, broker, or order.
 FULL_REFRESH_REUSE_ONLY_ENV = (
     "PHASE5R_FULL_REFRESH_REUSE_ONLY_20260901_7C31"
 )
-# The publication-window refresh can contain the bounded, paced 29-request
+# The publication-window refresh can contain the bounded, paced 33-request
 # market import. Its parent timeout exceeds that child budget and leaves a
 # finite allowance for the existing local refresh steps. Retry slots are
 # separate launchd cycles and stop as soon as a full current refresh passes.

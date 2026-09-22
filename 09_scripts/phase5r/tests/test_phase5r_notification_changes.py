@@ -28,6 +28,40 @@ def notification_fixture():
 
 
 class RecommendationNotificationTests(unittest.TestCase):
+    def test_tactical_plan_and_order_changes_notify_but_rollover_and_rejected_prices_do_not(self):
+        prior = notification_fixture()
+        prior["tactical_review"] = {
+            "schema_version": "phase5r_tactical_review_v1", "as_of": "2026-09-22T18:00:00-04:00",
+            "blockers": ["cash_not_confirmed"], "cash_basis": "ledger_estimate",
+            "risk_policy": {"ordinary_risk_pct": 0.5},
+            "open_orders": {"complete": False, "as_of": "2026-09-22T15:24:00-04:00", "orders": [
+                {"ticker": "NOW", "order_id": "owner-1", "status": "open", "review_status": "open",
+                 "quantity": 1, "remaining_quantity": 1, "limit_price": 133, "time_in_force": "GTD"}]},
+            "drafts": [
+                {"ticker": "NVDA", "quantity": 0, "eligible": False, "hypothetical_quantity": 1,
+                 "entry_price": 223, "stop_price": 217.75, "target_price": 233.50,
+                 "price_evidence": {"validated": True}, "blockers": ["cash_not_confirmed"],
+                 "session_date": "2026-09-23", "time_exit_session": "2026-09-29"},
+                {"ticker": "META", "quantity": 0, "eligible": False, "hypothetical_quantity": 0,
+                 "entry_price": 740, "stop_price": 720, "target_price": 741,
+                 "blockers": ["reward_to_risk_below_2"]}],
+        }
+        same = copy.deepcopy(prior)
+        same["tactical_review"].update(as_of="2026-09-23T18:00:00-04:00", risk_budget={"ordinary_usd": 29.4})
+        same["tactical_review"]["drafts"][0].update(session_date="2026-09-24", time_exit_session="2026-09-30", entry_price="223.00")
+        same["tactical_review"]["drafts"][1].update(entry_price=741, target_price=742)
+        self.assertEqual(common.recommendation_notification_fingerprint(prior), common.recommendation_notification_fingerprint(same))
+        for mutate in (
+            lambda review: review["drafts"][0].update(entry_price=222),
+            lambda review: review["drafts"][0].update(hypothetical_quantity=0),
+            lambda review: review["drafts"][0].update(blockers=["event_calendar_unconfirmed"]),
+            lambda review: review["open_orders"]["orders"][0].update(status="filled"),
+            lambda review: review["open_orders"]["orders"][0].update(limit_price=134),
+        ):
+            changed = copy.deepcopy(prior)
+            mutate(changed["tactical_review"])
+            self.assertNotEqual(common.recommendation_notification_fingerprint(prior), common.recommendation_notification_fingerprint(changed))
+
     def test_new_mode_ignores_raw_events_and_unchanged_weekly_while_legacy_remains(self):
         values = dict(is_weekend=True, weekly_summary_due=True, material_event=True,
                       decision_changed=True, account_conflict=True, fundamental_weakening=True,

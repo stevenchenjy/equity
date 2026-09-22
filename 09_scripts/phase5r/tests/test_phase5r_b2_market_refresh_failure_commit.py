@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tempfile
+import json
 import unittest
 from contextlib import ExitStack
 from datetime import date, datetime
@@ -19,12 +20,12 @@ _FIXED_NOW = "2026-08-06T11:15:00-04:00"
 POST_CLOSE = datetime(2026, 8, 6, 11, 15, tzinfo=ZoneInfo("America/New_York"))
 UNIVERSE_TICKERS = [
     *b2.SMOKE_TICKERS,
-    *[f"T{index:02d}" for index in range(1, 25)],
+    *sorted(b2.APPROVED_PRODUCTION_TICKERS - set(b2.SMOKE_TICKERS) - {"IOT", "RBRK"}),
 ]
 HELD_TICKERS = ["IOT", "RBRK"]
 B2_TICKERS = [*UNIVERSE_TICKERS, *HELD_TICKERS]
-assert len(UNIVERSE_TICKERS) == 27
-assert len(B2_TICKERS) == 29
+assert len(UNIVERSE_TICKERS) == 31
+assert len(B2_TICKERS) == 33
 _CANARY = "massive-provider-detail-must-not-persist-7e4a"
 
 
@@ -114,7 +115,7 @@ def _valid_bars(current: datetime) -> list[dict[str, object]]:
     ]
 
 
-class _PartialTwentyNineTickerClient:
+class _PartialApprovedTickerClient:
     def __init__(self, current: datetime, missing_ticker: str) -> None:
         self.current = current
         self.missing_ticker = missing_ticker
@@ -270,6 +271,9 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             paths = self._paths(Path(directory))
             self._write_prior_outputs(paths)
             prior = self._trio_bytes(paths)
+            cache = paths["snapshot"].with_name("phase5r_tactical_price_history.local.json")
+            cache.write_text('{"prior_cache": true}\n')
+            prior_cache = cache.read_bytes()
             client = _FailingFullFetchClient(POST_CLOSE)
             result = self._run_with_client(paths, client)
 
@@ -277,6 +281,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             self.assertEqual(client.calls, [*b2.SMOKE_TICKERS, b2.SMOKE_TICKERS[0]])
             for name, expected in prior.items():
                 self.assertEqual(paths[name].read_bytes(), expected, name)
+            self.assertEqual(cache.read_bytes(), prior_cache)
             persisted = "\n".join(
                 path.read_text(encoding="utf-8")
                 for path in (paths["audit"], paths["decision"], paths["report"], paths["run_log"])
@@ -286,7 +291,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             )
             self.assertNotIn(_CANARY, persisted)
 
-    def test_complete_valid_batch_commits_all_twenty_nine_rows_once(self) -> None:
+    def test_complete_valid_batch_commits_all_thirty_three_rows_and_bound_history_once(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_prior_outputs(paths)
@@ -296,15 +301,20 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             result = self._run_with_client(paths, client)
 
             self.assertEqual(result, 0)
-            self.assertEqual(len(client.calls), 29)
+            self.assertEqual(len(client.calls), 33)
             self.assertEqual(set(client.calls), set(B2_TICKERS))
             self.assertTrue(any(paths[name].read_bytes() != prior[name] for name in prior))
             snapshot = b2.read_csv(paths["snapshot"])
             quality = b2.read_csv(paths["quality"])
             candidates = b2.read_csv(paths["candidates"])
-            self.assertEqual(len(snapshot), 29)
-            self.assertEqual(len(quality), 29)
-            self.assertEqual(len(candidates), 27)
+            self.assertEqual(len(snapshot), 33)
+            self.assertEqual(len(quality), 33)
+            self.assertEqual(len(candidates), 31)
+            history = json.loads(paths["snapshot"].with_name("phase5r_tactical_price_history.local.json").read_text())
+            self.assertEqual(history["snapshot_sha256"], b2.sha256_file(paths["snapshot"]))
+            self.assertEqual(set(history["tickers"]), set(B2_TICKERS))
+            self.assertEqual(len(history["tickers"]["SPY"]["bars"]), 20)
+            self.assertEqual(history["tickers"]["SPY"]["bars"][-1]["session_date"], "2026-08-05")
             self.assertEqual({row["ticker"] for row in snapshot}, set(B2_TICKERS))
             self.assertEqual(
                 {row["data_source"] for row in snapshot},
@@ -317,7 +327,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
             audit = b2.read_csv(paths["audit"])
             self.assertIn("session_diagnostic=passed", audit[0]["safety_notes"])
 
-    def test_thirtieth_ticker_is_rejected_before_client_construction(self) -> None:
+    def test_thirty_fourth_ticker_is_rejected_before_client_construction(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_prior_outputs(paths)
@@ -334,25 +344,39 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 factory = stack.enter_context(
                     patch.object(b2.MassiveBasicEODClient, "from_environment")
                 )
-                with self.assertRaisesRegex(RuntimeError, "exact approved 29"):
+                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
                     b2.main()
 
             factory.assert_not_called()
 
-    def test_partial_twenty_nine_ticker_fetch_cannot_commit_any_part_of_prior_trio(self) -> None:
-        """A single unusable ticker makes the complete 29-ticker batch noncommittable."""
+    def test_same_count_unapproved_replacement_is_rejected_before_client(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            seeds = [_seed("EXTRA" if ticker == "APP" else ticker) for ticker in UNIVERSE_TICKERS]
+            b2.write_csv(paths["data"] / "phase5r_universe_seed.csv", seeds, list(seeds[0]))
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                factory = stack.enter_context(patch.object(b2.MassiveBasicEODClient, "from_environment"))
+                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
+                    b2.main()
+            factory.assert_not_called()
+
+    def test_partial_thirty_three_ticker_fetch_cannot_commit_any_part_of_prior_trio(self) -> None:
+        """A single unusable ticker makes the complete 33-ticker batch noncommittable."""
 
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
             self._write_prior_outputs(paths)
             prior = self._trio_bytes(paths)
-            client = _PartialTwentyNineTickerClient(POST_CLOSE, B2_TICKERS[-1])
+            client = _PartialApprovedTickerClient(POST_CLOSE, B2_TICKERS[-1])
             result = self._run_with_client(paths, client)
 
             self.assertEqual(result, 1)
             self.assertEqual(client.calls[:3], b2.SMOKE_TICKERS)
             self.assertEqual(client.calls[3:], B2_TICKERS)
-            self.assertEqual(len(client.calls[3:]), 29)
+            self.assertEqual(len(client.calls[3:]), 33)
             for name, expected in prior.items():
                 self.assertEqual(paths[name].read_bytes(), expected, name)
             audit = b2.read_csv(paths["audit"])

@@ -13,6 +13,8 @@ from typing import Any
 
 from phase5r_daily_common import (
     atomic_write_csv,
+    atomic_write_json,
+    sha256_file,
     is_us_market_session_date,
     latest_published_market_session,
     now_et,
@@ -44,8 +46,13 @@ DECISION_PATH = CONTROL_DIR / "phase5r_b2_data_source_decision.md"
 REPORT_PATH = RESEARCH_DIR / "phase5r_b2_data_report.md"
 
 SMOKE_TICKERS = ["QQQ", "XLK", "SPY"]
-EXPECTED_PRODUCTION_B2_TICKER_COUNT = 29
-REQUIRED_PRODUCTION_TICKERS = frozenset({"IOT", "RBRK", *SMOKE_TICKERS})
+APPROVED_PRODUCTION_TICKERS = frozenset({
+    "NVDA", "AMD", "AVGO", "TSM", "ASML", "ARM", "MU", "SMCI", "VRT", "EQIX", "DLR",
+    "MSFT", "GOOGL", "AMZN", "META", "ORCL", "NOW", "CRM", "SNOW", "DDOG", "NET",
+    "CRWD", "PANW", "ZS", "QQQ", "XLK", "SPY", "APP", "RKLB", "QQQM", "XLI", "IOT", "RBRK",
+})
+EXPECTED_PRODUCTION_B2_TICKER_COUNT = 33
+REQUIRED_PRODUCTION_TICKERS = APPROVED_PRODUCTION_TICKERS
 MARKET_FIELDS = [
     "ticker", "last_price", "previous_close", "intraday_change_pct", "volume",
     "average_volume", "relative_volume", "dollar_volume", "day_high", "day_low",
@@ -478,6 +485,7 @@ def retrieve_full_universe(
     *,
     client: MassiveBasicEODClient,
     current: datetime,
+    history_out: dict[str, Any] | None = None,
 ) -> tuple[
     list[dict[str, str]],
     str,
@@ -491,17 +499,25 @@ def retrieve_full_universe(
         first_diagnostic: dict[str, str] | None = None
         for ticker in tickers:
             diagnostic: dict[str, str] = {}
+            bars = client.fetch_daily_bars(
+                ticker, start_date=start_date, end_date=end_date,
+            )
             row = market_row_from_massive_bars(
                 ticker,
-                client.fetch_daily_bars(
-                    ticker,
-                    start_date=start_date,
-                    end_date=end_date,
-                ),
+                bars,
                 now,
                 current,
                 diagnostic=diagnostic,
             )
+            if history_out is not None and row.get("data_quality_label") == "ok":
+                history_out[ticker] = {
+                    "source_url": f"https://api.massive.com/v2/aggs/ticker/{ticker}/range/1/day/{start_date}/{end_date}?adjusted=false",
+                    "bars": [
+                        {"session_date": bar["session_date"].isoformat(),
+                         **{key: bar[key] for key in ("open", "high", "low", "close", "volume")}}
+                        for bar in bars[-20:]
+                    ],
+                }
             rows.append(row)
             if (
                 first_diagnostic is None
@@ -1077,9 +1093,9 @@ def main(argv: list[str] | None = None) -> int:
     if (
         len(tickers) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
         or len(set(tickers)) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
-        or not REQUIRED_PRODUCTION_TICKERS.issubset(tickers)
+        or set(tickers) != APPROVED_PRODUCTION_TICKERS
     ):
-        raise RuntimeError("production B2 ticker scope must be the exact approved 29")
+        raise RuntimeError("production B2 ticker scope must be the exact approved 33")
 
     refresh_time = now_et()
     now = timestamp()
@@ -1133,6 +1149,7 @@ def main(argv: list[str] | None = None) -> int:
     source_failure = False
     full_retrieval_succeeded = False
     full_diagnostic: dict[str, str] | None = None
+    tactical_history: dict[str, Any] = {}
     prior_outputs_preserved = False
     prior_validation_reason = "not_checked"
     if smoke_passed:
@@ -1147,6 +1164,7 @@ def main(argv: list[str] | None = None) -> int:
             now,
             client=client,
             current=refresh_time,
+            history_out=tactical_history,
         )
         if full_retrieval_succeeded:
             committable, commit_code = full_universe_rows_are_committable(
@@ -1289,6 +1307,20 @@ def main(argv: list[str] | None = None) -> int:
         write_csv(SNAPSHOT_PATH, market_rows, MARKET_FIELDS)
         write_csv(QUALITY_PATH, quality_rows, QUALITY_FIELDS)
         write_csv(CANDIDATES_PATH, candidates, CANDIDATE_FIELDS)
+        # Public research cache only. Binding to committed snapshot bytes means
+        # a interrupted or failed update cannot promote mismatched history.
+        # Derive its location from SNAPSHOT_PATH to keep offline fixture writes
+        # isolated and leave prior cache bytes untouched on source failure.
+        if tactical_history and set(tactical_history) == set(tickers):
+            atomic_write_json(SNAPSHOT_PATH.with_name("phase5r_tactical_price_history.local.json"), {
+                "schema_version": "phase5r_tactical_price_history_v1",
+                "validated": True,
+                "data_source": MASSIVE_DATA_SOURCE,
+                "generated_at": now,
+                "market_session": latest_published_market_session(refresh_time).isoformat(),
+                "snapshot_sha256": sha256_file(SNAPSHOT_PATH),
+                "tickers": tactical_history,
+            })
 
     write_decision(
         smoke_rows,

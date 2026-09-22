@@ -1,6 +1,6 @@
 {
   "schema_version": "phase5r_active_production_config_v1",
-  "effective_from": "2026-08-31",
+  "effective_from": "2026-09-22",
   "review_by": "2026-09-30",
   "authority": "active production configuration; historical Phase 5R pilot policies are non-authoritative",
   "workflow": {
@@ -12,10 +12,10 @@
     "automatic_orders_allowed": false
   },
   "account": {
-    "investment_horizon_years": 5,
-    "core_target_pct": 60.0,
-    "active_target_pct": 20.0,
-    "cash_target_pct": 20.0,
+    "investment_horizon_years": 1,
+    "core_target_pct": 40.0,
+    "active_target_pct": 50.0,
+    "cash_target_pct": 10.0,
     "single_stock_default_cap_pct": 15.0,
     "single_stock_hard_cap_pct": 15.0,
     "research_risk_limits": {
@@ -31,7 +31,9 @@
         "name": "high_conviction_allocation",
         "target_position_pct": 6.0,
         "minimum_score": 8.25,
-        "allowed_confidence": ["high"],
+        "allowed_confidence": [
+          "high"
+        ],
         "minimum_expected_upside_pct": 25.0,
         "minimum_reward_to_risk": 2.5,
         "minimum_entry_score": 6.5,
@@ -41,7 +43,10 @@
         "name": "normal_allocation",
         "target_position_pct": 5.0,
         "minimum_score": 7.5,
-        "allowed_confidence": ["medium_high", "high"],
+        "allowed_confidence": [
+          "medium_high",
+          "high"
+        ],
         "minimum_expected_upside_pct": 15.0,
         "minimum_reward_to_risk": 2.0,
         "minimum_entry_score": 6.0,
@@ -51,7 +56,10 @@
         "name": "starter_allocation",
         "target_position_pct": 3.0,
         "minimum_score": 7.0,
-        "allowed_confidence": ["medium_high", "high"],
+        "allowed_confidence": [
+          "medium_high",
+          "high"
+        ],
         "minimum_expected_upside_pct": 10.0,
         "minimum_reward_to_risk": 1.25,
         "minimum_entry_score": 5.5,
@@ -103,8 +111,16 @@
     "canonical_authority": false
   },
   "outcome_tracking": {
-    "horizons_market_sessions": [1, 5, 20, 60],
-    "benchmarks": ["SPY", "QQQ"],
+    "horizons_market_sessions": [
+      1,
+      5,
+      20,
+      60
+    ],
+    "benchmarks": [
+      "SPY",
+      "QQQ"
+    ],
     "price_basis": "officially completed daily close",
     "retrospective_every_material_reviews": 10
   },

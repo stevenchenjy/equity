@@ -145,7 +145,9 @@ class LongHorizonResearchTests(unittest.TestCase):
             if path == baseline.SIGNAL_SCORES_PATH:
                 return [{"ticker": "LOUD", "total_score": "9", "data_quality_label": "ok"}]
             raise AssertionError(path)
-        with patch.object(baseline, "read_csv", side_effect=inputs), patch.object(baseline, "read_json", return_value=POLICY):
+        with patch.object(baseline, "read_csv", side_effect=inputs), \
+             patch.object(baseline, "read_json", return_value=POLICY), \
+             patch.object(baseline, "requested_coverage_tickers", return_value=set()):
             selected, held = baseline.selected_tickers()
         self.assertEqual(set(selected), {"QUIET", "LOUD", "HELD", "SPY"})
         self.assertEqual(held, {"HELD"})

@@ -57,6 +57,7 @@ from phase5r_c9_common import is_core_allocation_ticker, load_account_state
 from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
 from phase5r_email_brief import EMAIL_BRIEF_VERSION, render_email
+from phase5r_tactical_review import load_tactical_review
 from phase5r_market_regime import load_regime_controls
 from phase5r_official_news import read_official_news_status
 from update_phase5r_manual_account import current_manual_snapshot_matches
@@ -1049,6 +1050,10 @@ def main() -> int:
             "trade_placed": False,
         },
     }
+    decision["tactical_review"] = load_tactical_review(
+        decision, current=current, market_rows=read_csv(MARKET_SNAPSHOT_PATH),
+        exact_actions=read_csv(EXACT_ACTION_PATH), all_candidates=candidate_recommendations,
+    )
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
         decision["notification_policy"]["regular_delivery_mode"] = notification_mode

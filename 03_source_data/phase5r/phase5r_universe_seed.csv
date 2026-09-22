@@ -26,3 +26,7 @@ ZS,Zscaler,Technology,Cybersecurity,Cybersecurity,large,high,no,2.0,Zero-trust s
 QQQ,Invesco QQQ Trust,ETF,Benchmark ETF,Benchmark ETF,mega,medium,yes,10.0,Nasdaq-100 benchmark
 XLK,Technology Select Sector SPDR Fund,ETF,Benchmark ETF,Benchmark ETF,mega,medium,yes,10.0,Technology sector benchmark
 SPY,SPDR S&P 500 ETF Trust,ETF,Benchmark ETF,Benchmark ETF,mega,low,yes,10.0,Broad market benchmark
+APP,AppLovin Corporation,Technology,Advertising Software,Advertising technology,large,high,no,4.0,Owner-requested coverage 2026-09-22; analyst qualitative sector/theme/liquidity/volatility labels and legacy metadata cap; not measured liquidity or allocation approval; existing evidence and portfolio gates apply
+RKLB,Rocket Lab Corporation,Industrials,Aerospace and Defense,Space systems,large,very_high,no,2.5,Owner-requested coverage 2026-09-22; analyst qualitative sector/theme/liquidity/volatility labels and legacy metadata cap; launch and execution risks require review; existing evidence and portfolio gates apply
+QQQM,Invesco NASDAQ 100 ETF,ETF,Index ETF,Benchmark ETF,large,medium,yes,10.0,Owner-requested coverage 2026-09-22; analyst research classifications; company XBRL not applicable; benchmark classification does not grant SPY core allocation approval
+XLI,Industrial Select Sector SPDR Fund,ETF,Sector ETF,Benchmark ETF,large,medium,yes,10.0,Owner-requested alternative coverage 2026-09-22; analyst research classifications; company XBRL not applicable; benchmark classification does not grant SPY core allocation approval

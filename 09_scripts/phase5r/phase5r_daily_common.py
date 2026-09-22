@@ -494,12 +494,54 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
         signals = [{key: item.get(key) for key in ("code", "observations", "evidence_date")}
                    for item in row.get("review_signals", []) if isinstance(item, dict)]
         research_warnings.append({"ticker": row.get("ticker"), "signals": sorted(signals, key=lambda item: str(item.get("code")))})
+    tactical = decision.get("tactical_review", {})
+    tactical_meaning = None
+    if isinstance(tactical, dict) and tactical.get("schema_version") == "phase5r_tactical_review_v1":
+        drafts = []
+        for row in tactical.get("drafts", []):
+            if not isinstance(row, dict):
+                continue
+            quantity = numeric(row.get("quantity"))
+            hypothetical = numeric(row.get("hypothetical_quantity"))
+            # Rejected price observations move every day; they are not a new
+            # actionable plan. A complete conditional plan's prices are meaning.
+            proposed = ((row.get("eligible") is True and quantity is not None and Decimal(quantity) > 0)
+                        or (hypothetical is not None and Decimal(hypothetical) > 0))
+            levels = [numeric(row.get(key)) for key in ("entry_price", "stop_price", "target_price")]
+            geometry = (all(value is not None for value in levels)
+                        and Decimal(levels[2]) > Decimal(levels[0]) > Decimal(levels[1]) > 0
+                        and (Decimal(levels[2]) - Decimal(levels[0])) >= 2 * (Decimal(levels[0]) - Decimal(levels[1])))
+            priced = proposed and geometry and row.get("price_evidence", {}).get("validated") is True
+            drafts.append({"ticker": row.get("ticker", ""), "side": row.get("side", ""),
+                           "eligible": row.get("eligible") is True,
+                           "quantity": quantity, "hypothetical_quantity": hypothetical,
+                           "blockers": sorted(set(row.get("blockers", []))),
+                           "event_risk": row.get("event_risk") is True,
+                           "entry_stop_target": levels if priced else None,
+                           "order_type": row.get("order_type", "") if priced else None,
+                           "time_in_force": row.get("time_in_force", "") if priced else None,
+                           "holding_sessions_max": row.get("holding_sessions_max") if priced else None})
+        orders = []
+        order_review = tactical.get("open_orders", {})
+        for row in order_review.get("orders", []):
+            if not isinstance(row, dict):
+                continue
+            orders.append({key: numeric(row.get(key)) if key in {"quantity", "remaining_quantity", "limit_price"}
+                           else row.get(key, "") for key in ("order_id", "ticker", "side", "quantity",
+                           "remaining_quantity", "limit_price", "time_in_force", "expiration_date", "status", "review_status")})
+        tactical_meaning = {"schema_version": tactical["schema_version"],
+                            "blockers": sorted(set(tactical.get("blockers", []))),
+                            "cash_basis": tactical.get("cash_basis"),
+                            "risk_policy": tactical.get("risk_policy", {}),
+                            "drafts": ordered(drafts), "orders": ordered(orders),
+                            "orders_complete": order_review.get("complete") is True}
     return canonical_sha256({
         "version": "phase5r_recommendation_notification_v1", "decision_code": code,
         "gates": gates, "account_conflicts": conflicts, "cash_estimated": cash_estimated,
         "weakening_tickers": sorted(set(decision.get("fundamental_gate", {}).get("weakening_tickers", []))),
         "actions": ordered(actions), "watch_candidates": ordered(candidates),
         "held_research_warnings": ordered(research_warnings),
+        "tactical_review": tactical_meaning,
     })
 
 

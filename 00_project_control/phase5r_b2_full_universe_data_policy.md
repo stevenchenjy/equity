@@ -27,7 +27,7 @@ Phase 5R-B2 creates one read-only daily research dataset for the canonical Phase
   session was forbidden under the active Basic credential. No credential
   value or provider response body was retained.
 - Massive Stocks Basic is limited to five API calls per minute. The adapter enforces a conservative minimum request interval and performs no automatic retry or pagination follow-up.
-- The active production fetch is limited to the exact approved 29-ticker scope (27 canonical candidates plus held-only IOT and RBRK). Any scope change blocks before client construction and requires a separately reviewed update.
+- The active production fetch is limited to the exact approved 33-ticker scope, reviewed September 22, 2026 (31 canonical candidates including newly requested APP, RKLB, QQQM and XLI, plus held-only IOT and RBRK). Any scope change blocks before client construction and requires a separately reviewed update.
 - The benchmark preflight runs before any full-universe retrieval.
 - A successful preflight requires a current and prior close for QQQ, XLK, and SPY.
 - A recognized Massive rate limit is recorded only as the finite code `massive_rate_limited`; response text, URLs, headers, and credentials are never persisted.
@@ -57,3 +57,7 @@ Scores are research prioritization only. They are not investment advice, an orde
 - No archived legacy files. For current-position price monitoring, B2 may read ticker symbols only from `05_risk_and_positions/current_positions.local.csv`; it must not use stored weights, notes, account values, or actions.
 - Each generated ticket requires a human confirmation and explicitly prohibits broker connection and real-order capability.
 - Phase 5R-C is outside this phase.
+
+## Tactical research extension (September 22, 2026)
+
+After a complete validated batch, retain the last 20 daily OHLCV bars in an ignored local sidecar, bound by SHA-256 to the canonical snapshot. A failed batch preserves prior artifacts; old or mismatched history cannot authorize a tactical draft. QQQM and XLI are ETFs exempt from company XBRL valuation, not newly approved core allocations. The deterministic daily plan uses completed published data and cannot verify live entry triggers.

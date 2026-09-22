@@ -272,8 +272,13 @@ def build_long_horizon_report(
     prior_companies = (previous_report or {}).get("companies", {})
     for ticker in sorted(held | selected):
         if ticker in policy["excluded_benchmarks"]:
-            companies[ticker] = {"readiness": "not_applicable_core", "held": ticker in held,
-                "thesis": {"status": "core_allocation_policy"}, "review_signals": [], "missing_evidence": []}
+            is_core = ticker == "SPY"
+            companies[ticker] = {
+                "readiness": "not_applicable_core" if is_core else "not_applicable_etf",
+                "held": ticker in held,
+                "thesis": {"status": "core_allocation_policy" if is_core else "allocation_policy_review_required"},
+                "review_signals": [], "missing_evidence": [],
+            }
             continue
         raw = fact_by.get(ticker, {})
         facts = source_facts(raw, observed_at)

@@ -6,7 +6,9 @@
   "excluded_benchmarks": [
     "SPY",
     "QQQ",
-    "XLK"
+    "XLK",
+    "QQQM",
+    "XLI"
   ],
   "horizons_years": [
     3,

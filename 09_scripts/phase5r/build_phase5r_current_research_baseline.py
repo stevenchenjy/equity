@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import re
+
 from phase5r_daily_common import (
     EVIDENCE_LEDGER_PATH,
     FUNDAMENTALS_PATH,
@@ -23,6 +25,7 @@ from phase5r_long_horizon_research import fundamentals_candidate_queue
 
 SIGNAL_SCORES_PATH = ROOT / "03_source_data" / "phase5r" / "phase5r_b2_signal_scores.csv"
 UNIVERSE_PATH = ROOT / "03_source_data" / "phase5r" / "phase5r_universe_seed.csv"
+TACTICAL_POLICY_PATH = ROOT / "01_policies" / "tactical_trade_policy.json"
 OUTPUT_PATH = (
     ROOT / "04_research" / "realtime_stock_picker_phase5r"
     / "phase5r_current_research_baseline.csv"
@@ -54,6 +57,21 @@ def clamp(value: float) -> float:
     return max(0.0, min(10.0, value))
 
 
+def requested_coverage_tickers() -> set[str]:
+    """Keep owner-requested research visible without granting trade eligibility."""
+
+    policy = read_json(TACTICAL_POLICY_PATH)
+    tickers = policy.get("coverage_tickers") if isinstance(policy, dict) else None
+    if (
+        not isinstance(tickers, list)
+        or not tickers
+        or any(not isinstance(ticker, str) or re.fullmatch(r"[A-Z][A-Z0-9.-]{0,9}", ticker) is None for ticker in tickers)
+        or len(set(tickers)) != len(tickers)
+    ):
+        raise ValueError("requested research coverage must contain unique uppercase ticker symbols")
+    return set(tickers)
+
+
 def selected_tickers() -> tuple[list[str], set[str]]:
     held = {
         row.get("ticker", "").strip().upper()
@@ -74,7 +92,7 @@ def selected_tickers() -> tuple[list[str], set[str]]:
     policy = read_json(ROOT / "01_policies/phase5r_long_horizon_research_policy.json")
     fundamental_queue = fundamentals_candidate_queue(read_csv(FUNDAMENTALS_PATH), held, policy)
     fundamental_candidates = [row["ticker"] for row in fundamental_queue[:policy["candidate_limit"]]]
-    return sorted(held | {"SPY", *candidates, *fundamental_candidates}), held
+    return sorted(held | requested_coverage_tickers() | {"SPY", *candidates, *fundamental_candidates}), held
 
 
 def main() -> int:
@@ -140,11 +158,13 @@ def main() -> int:
         role = (
             "current_position" if ticker in held else
             "core_allocation_candidate" if ticker == "SPY" else
+            "etf_research_candidate" if is_benchmark else
             "individual_stock_candidate"
         )
         recommendation = (
             "hold_existing" if ticker in held else
             "core_allocation_candidate" if ticker == "SPY" else
+            "watch_for_allocation_review" if is_benchmark else
             "watch_for_valuation"
         )
         primary_url = fundamental.get("source_url", "")
@@ -156,7 +176,10 @@ def main() -> int:
             "portfolio_concentration_status": "calculated_downstream_from_current_shares_and_close",
             "theme": theme,
             "holding_horizon_candidate": position.get("horizon_class", "long_term_research"),
-            "valuation_check": "deterministic_source_bound_valuation_follows_this_step",
+            "valuation_check": (
+                "company_valuation_not_applicable_to_etf; allocation_policy_and_portfolio_checks_required"
+                if is_benchmark else "deterministic_source_bound_valuation_follows_this_step"
+            ),
             "filing_check": f"SEC companyfacts refreshed {fundamental.get('fetched_at', 'not_applicable_to_etf')}",
             "earnings_check": f"revenue_yoy_pct={fundamental.get('revenue_yoy_pct') or 'unavailable'}; net_margin_pct={fundamental.get('net_margin_pct') or 'unavailable'}",
             "news_check": "new_material_official_filing" if ticker in material_today else "no_new_material_official_filing_detected",

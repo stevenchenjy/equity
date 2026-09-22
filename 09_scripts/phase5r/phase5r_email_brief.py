@@ -28,7 +28,21 @@ _RESEARCH_HOSTS = _SOURCE_HOSTS | {
     "www.samsara.com", "investors.samsara.com",
     "www.chase.com", "chase.com", "www.jpmorgan.com",
     "newsroom.servicenow.com", "abc.xyz", "investor.tsmc.com", "pr.tsmc.com", "newsroom.arm.com",
+    "investors.applovin.com", "investor.atmeta.com", "developers.meta.com",
+    "investors.rocketlabcorp.com", "rocketlabcorp.com", "investor.servicenow.com",
+    "www.invesco.com", "www.vaneck.com", "www.ssga.com", "www.bls.gov",
+    "www.bea.gov", "www.irs.gov", "www.nasdaq.com", "ir.amd.com",
+    "newsroom.amd.com", "www.ismworld.org",
 }
+_UNCONFIRMED_CASH_BASES = {"ledger_estimate", "owner_assumption", "owner_assumed", "planning_assumption"}
+_HYPOTHETICAL_BLOCKERS = {"cash_not_confirmed", "existing_tactical_risk_unconfirmed", "open_orders_unconfirmed",
+                          "event_calendar_unconfirmed", "existing_order_requires_reconciliation"}
+_TRADING_RULES = (
+    "规则 1｜入场前写明催化剂或价格形态、失效条件、止盈和复核日期；3–5 个交易日未兑现则复核，不把失败短线自动改成长持。",
+    "规则 2｜普通短线计划风险不超过组合的 0.5%，事件交易不超过 0.25%；股数还受整股、现金、预留和仓位上限约束。止损遇跳空可能超过计划损失。",
+    "规则 3｜预期目标价差至少覆盖计划风险的 2 倍（2R）；没有可核验依据或条件未满足时，本次新增 0 股、NO TRADE，不为交易而交易。",
+    "规则 4｜长期核心仓与短线仓分别记录；卖出后仅按事先写明且重新核验的条件买回，不自动补仓，也不保证能在更低价买回。",
+)
 _BLOCKED_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 _LABELS = {
     "account_conflict_hold": ("需核对账户", "先核对账户，暂停仓位方案"),
@@ -186,6 +200,164 @@ def _conflict_tasks(decision: dict[str, Any]) -> list[str]:
     return tasks or ["本地账户记录存在冲突，需核对已确认的持仓、现金与成交状态。"]
 
 
+def _tactical_view(
+    decision: dict[str, Any], plans: list[dict[str, str]], *, global_block: bool
+) -> list[dict[str, Any]]:
+    """Project optional short-term evidence without granting new eligibility.
+
+    Malformed or incomplete additions fail closed, while the existing canonical
+    long-term view remains independently governed by its original guards.
+    """
+    review = decision.get("tactical_review")
+    no_trade = "短线 NO TRADE：本次新增 0 股、暂不设新委托。"
+    if not isinstance(review, dict):
+        return [{"title": "本次短线与订单复核", "lines": [
+            no_trade, "缺少可核验的短线行情历史、完整订单快照及入场/退出依据；补齐后再复核，不编造价格。",
+        ]}]
+
+    sections = []
+    account_value = _decimal(decision.get("account", {}).get("account_total_value"))
+    blockers = review.get("blockers", [])
+    blockers = blockers if isinstance(blockers, list) else ["malformed_review"]
+    next_session = str(review.get("next_session") or "待确认")
+    market_session = str(review.get("market_session") or "待确认")
+    lines = [f"复核时间：{_time(review.get('as_of'))} 美东；行情交易日：{market_session}（非实时）；适用交易日：{next_session}。",
+             "配置复核与短线草案是不同研究情景；同一标的的股数不能相加或叠加委托，实际操作前重新核对共同现金和风险预算。"]
+    if global_block or review.get("global_gates_passed") is not True:
+        lines.append(no_trade + "账户、现金、证据或现行准入条件尚未全部通过；观察价不是实际委托。")
+    if blockers:
+        lines.append("尚缺条件：" + "；".join(str(item) for item in blockers))
+    sections.append({"title": "本次短线与订单复核", "lines": lines})
+
+    orders = review.get("open_orders")
+    if not isinstance(orders, dict):
+        orders = {}
+    order_lines = [f"订单快照：{_time(orders.get('as_of'))} 美东；完整性：{'已记录完整清单' if orders.get('complete') is True else '未确认完整'}。"]
+    order_rows = orders.get("orders", [])
+    if not isinstance(order_rows, list) or not order_rows:
+        order_lines.append("订单明细缺失；不能把未见订单理解为没有订单。")
+        order_rows = []
+    for order in order_rows:
+        if not isinstance(order, dict):
+            order_lines.append("订单记录格式不完整，状态待核对。")
+            continue
+        status = str(order.get("status") or "unknown").lower()
+        tif = str(order.get("time_in_force") or "待确认").upper()
+        observed = {"open": "当时为未完成", "cancelled": "当时显示已撤单", "canceled": "当时显示已撤单",
+                    "filled": "当时显示已成交", "expired": "当时显示已到期"}.get(status, "当时状态待确认")
+        review_status = str(order.get("review_status") or "unknown")
+        order_day = str(order.get("session_date") or str(orders.get("as_of") or "")[:10])
+        stale_day = tif == "DAY" and status == "open" and bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", order_day)) and order_day < next_session
+        if stale_day or "expired" in review_status or "stale" in review_status:
+            current = "时效或快照已过期，最终状态待核对；不能据此认定成交或撤单"
+        else:
+            current = "最终状态仍需券商核对；快照不证明当前仍开放"
+        side = {"buy": "买入", "sell": "卖出"}.get(str(order.get("side") or "").lower(), "方向待确认")
+        order_lines.append(f"{order.get('ticker', '待确认')}：已记录{side} {shares(order.get('remaining_quantity', order.get('quantity')))} 股；限价 {money(order.get('limit_price'))}；{tif}；{observed}；{current}。")
+        if order.get("expiration_date"):
+            order_lines.append(f"记录的到期日期：{order['expiration_date']}。")
+        if order.get("review_reason"):
+            order_lines.append("复核依据：" + str(order["review_reason"]))
+    order_lines.append("已记录订单股数不是本次新增建议；替换前先确认撤单和剩余数量，未成交不改变持仓。")
+    sections.append({"title": "已记录订单的状态与时效", "lines": order_lines})
+
+    canonical = {row["ticker"] for row in plans}
+    caps = {}
+    for row in decision.get("held_positions", []):
+        if isinstance(row, dict) and _action_kind(row) == "新增复核":
+            caps[str(row.get("ticker", ""))] = _decimal(row.get("whole_shares_to_change"))
+    for row in decision.get("watch_candidates", []):
+        if isinstance(row, dict):
+            caps[str(row.get("ticker", ""))] = _decimal(row.get("suggested_whole_shares"))
+    drafts = review.get("drafts", [])
+    if not isinstance(drafts, list):
+        drafts = []
+    if not drafts:
+        sections.append({"title": "短线候选", "lines": [no_trade, "没有具备完整价格、风险和退出依据的短线草案。"]})
+    for draft in drafts:
+        if not isinstance(draft, dict):
+            sections.append({"title": "短线候选记录待核验", "lines": [no_trade, "草案格式不完整，需补齐数据。"]})
+            continue
+        ticker = str(draft.get("ticker") or "待确认")
+        entry, stop, target = (_decimal(draft.get(key)) for key in ("entry_price", "stop_price", "target_price"))
+        qty, rr = _decimal(draft.get("quantity")), _decimal(draft.get("reward_to_risk"))
+        evidence = draft.get("price_evidence")
+        evidence = evidence if isinstance(evidence, dict) else {}
+        history_ok = (evidence.get("validated") is True and evidence.get("history_session") == market_session
+                      and bool(re.fullmatch(r"[0-9a-f]{64}", str(evidence.get("snapshot_sha256") or ""))))
+        levels_ok = (history_ok and entry is not None and stop is not None and target is not None
+                     and 0 < stop < entry < target and rr is not None and rr > 0)
+        actual_rr = (target - entry) / (entry - stop) if levels_ok else None
+        risk_ok = bool(levels_ok and rr >= 2 and actual_rr >= 2 and abs(rr - actual_rr) <= Decimal("0.02"))
+        required = ("entry_rule", "invalidation_rule", "time_exit_session", "reentry_rule", "price_basis")
+        details_ok = all(isinstance(draft.get(key), str) and draft[key].strip() for key in required)
+        session_ok = (bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", next_session))
+                      and draft.get("session_date") == next_session and draft.get("time_in_force") == "DAY")
+        try:
+            exit_day = datetime.strptime(str(draft.get("time_exit_session", ""))[:10], "%Y-%m-%d").date()
+            session_ok = session_ok and exit_day >= datetime.strptime(next_session, "%Y-%m-%d").date()
+        except ValueError:
+            session_ok = False
+        cap = caps.get(ticker)
+        draft_blockers = draft.get("blockers", [])
+        eligible = (not global_block and review.get("global_gates_passed") is True
+                    and review.get("research_only") is True and review.get("automatic_action_allowed") is False
+                    and orders.get("complete") is True and not blockers and not draft_blockers
+                    and ticker in canonical and draft.get("eligible") is True
+                    and draft.get("classification") == "real-trade candidate" and draft.get("side") == "buy"
+                    and qty is not None and qty > 0 and qty == qty.to_integral_value()
+                    and cap is not None and qty <= cap and risk_ok and details_ok and session_ok
+                    and account_value is not None and account_value > 0
+                    and qty * entry <= account_value * Decimal("0.05")
+                    and qty * (entry - stop) <= account_value * Decimal("0.005")
+                    and market_session == decision.get("market_gate", {}).get("expected_market_session"))
+        row_lines = [f"{ticker} · {'有条件的人工作业草案（real-trade candidate）' if eligible else '观察名单（watchlist）'}；适用日期：{draft.get('session_date') or next_session}。"]
+        if eligible:
+            row_lines.append(f"待人工判断：新增 {shares(qty)} 股；限价不高于 {money(entry)}；DAY；尚未提交或执行。")
+        else:
+            row_lines.append(no_trade)
+        if levels_ok and details_ok:
+            row_lines.extend([
+                ("草案价格：" if eligible else "仅供观察的价格情景（非委托）：")
+                + f"入场上限 {money(entry)}；失效/止损参考 {money(stop)}；目标 {money(target)}；收益/风险 {number(actual_rr)}R。",
+                "入场条件：" + draft["entry_rule"], "失效条件：" + draft["invalidation_rule"],
+                "时间退出：" + draft["time_exit_session"], "再次买回：" + draft["reentry_rule"],
+                "价格依据：" + draft["price_basis"],
+            ])
+            if eligible:
+                row_lines.append(f"按上述入场上限的计划风险：{money(qty * (entry - stop))}；跳空或滑点可能扩大损失。")
+            hypothetical = _decimal(draft.get("hypothetical_quantity"))
+            assumptions = draft.get("hypothetical_assumptions", [])
+            all_blockers = set(str(item) for item in blockers)
+            if isinstance(draft_blockers, list):
+                all_blockers.update(str(item) for item in draft_blockers)
+            else:
+                all_blockers.add("malformed_review")
+            hypothetical_risk_pct = Decimal("0.0025") if draft.get("event_risk") is True or "event_calendar_unconfirmed" in all_blockers else Decimal("0.005")
+            canonical_tickers = set(decision.get("eligible_action_review_candidates", [])) | set(decision.get("eligible_new_position_review_candidates", []))
+            hypothetical_ok = (not eligible and qty == 0 and risk_ok and session_ok
+                               and review.get("research_only") is True and review.get("automatic_action_allowed") is False
+                               and bool(all_blockers) and all_blockers <= _HYPOTHETICAL_BLOCKERS
+                               and not decision.get("account_conflicts") and decision.get("decision_code") not in _BLOCKED_CODES
+                               and all(decision.get(key, {}).get("passed") is True for key in ("market_gate", "evidence_gate", "fundamental_gate"))
+                               and ticker in canonical_tickers and ticker not in set(decision.get("pending_stability_candidates", []))
+                               and isinstance(assumptions, list) and bool(assumptions)
+                               and hypothetical is not None and hypothetical > 0 and hypothetical == hypothetical.to_integral_value()
+                               and cap is not None and hypothetical <= cap
+                               and account_value is not None and account_value > 0
+                               and hypothetical * entry <= account_value * Decimal("0.05")
+                               and hypothetical * (entry - stop) <= account_value * hypothetical_risk_pct)
+            if hypothetical_ok:
+                row_lines.append(f"独立假设情景：{shares(hypothetical)} 股、金额不超过 {money(hypothetical * entry)}；实际合格新增仍为 0 股。")
+                row_lines.append("仅在以下假设经确认且所有条件仍成立时重新评估：" + "；".join(str(item) for item in assumptions))
+        else:
+            row_lines.append("行情历史或入场、止损、目标、时间退出、买回依据未齐/格式无效；不提供完整价格草案。")
+        if draft_blockers:
+            row_lines.append("未通过：" + ("；".join(str(item) for item in draft_blockers) if isinstance(draft_blockers, list) else "草案条件格式待核对"))
+        sections.append({"title": ticker + " · 短线复核", "lines": row_lines})
+    return sections
+
+
 def _watch_view(
     decision: dict[str, Any], plans: list[dict[str, str]], *, gates_passed: bool
 ) -> list[dict[str, str]]:
@@ -236,8 +408,8 @@ def _watch_view(
         elif decision.get("decision_code") == "fundamental_weakening_review":
             reasons.append("当前优先复核持仓基本面变化，新增方案暂停")
             conditions.append("先完成持仓基本面复核")
-        elif decision.get("account", {}).get("cash_basis") == "ledger_estimate":
-            reasons.append("现金仍为账本估算，精确新增股数尚未获准展示")
+        elif decision.get("account", {}).get("cash_basis") in _UNCONFIRMED_CASH_BASES:
+            reasons.append("现金仍为账本估算或用户指定的规划假设，精确新增股数尚未获准展示")
             conditions.append("实际交易前校准可用现金与仓位分母")
         blockers = {item.strip() for item in str(row.get("gate_blockers", "")).split(",") if item.strip()}
         if not _is_core(row) and _valuation(row).startswith("估值证据不足"):
@@ -279,7 +451,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     watch = decision.get("watch_candidates", [])
     events = decision.get("material_events", [])
     account = decision.get("account", {})
-    estimated_cash = account.get("cash_basis") == "ledger_estimate"
+    estimated_cash = account.get("cash_basis") in _UNCONFIRMED_CASH_BASES
     global_block = bool(decision.get("account_conflicts")) or code in _BLOCKED_CODES
     gates_passed = all(decision.get(key, {}).get("passed") is True for key in ("market_gate", "evidence_gate", "fundamental_gate"))
     global_block = global_block or not gates_passed or estimated_cash
@@ -303,7 +475,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         summary = "这是经营假设复核，不是自动减仓信号。"
     elif estimated_cash:
         label, title = "资金区间研究", "持仓已更新，按资金范围评估"
-        summary = "现金沿用账本估算；研究继续，暂不展示依赖精确现金的交易股数。"
+        summary = "现金沿用账本估算或用户指定的规划假设；研究继续，暂不展示依赖精确现金的交易股数。"
         tasks = ["本次无需补交精确现金即可阅读研究；实际交易前核对券商可用资金和最终仓位比例。"]
     elif code not in _LABELS:
         tasks = ["报告状态未识别，需先核对系统输出；不展示仓位方案。"]
@@ -393,7 +565,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     else:
         account_lines.append("账户估值 = 本地现金 + 已记录股数按参考收盘计值；不是实时券商余额。")
     if estimated_cash:
-        account_lines.append("现金及上表权重基于原账本扣除已报告支出，未核对未录入的出入金；银行备用资金未计入账户。")
+        account_lines.append("现金及上表权重基于本地账本估算或用户指定的规划现金假设，尚非券商已确认的可用或已结算资金；未核对的出入金不自动计入；银行备用资金未计入账户。")
     funding_lines = []
     low, high = _decimal(account.get("planning_capital_min")), _decimal(account.get("planning_capital_max"))
     if low is not None and high is not None and 0 < low <= high:
@@ -455,6 +627,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "positions": positions, "account_lines": account_lines, "quality": quality,
         "watchlist": _watch_view(decision, plans, gates_passed=gates_passed),
         "funding_lines": funding_lines,
+        "trading_rules": list(_TRADING_RULES),
+        "tactical_sections": _tactical_view(decision, plans, global_block=global_block),
         "limitations": limitations, "documents": documents, "receipt": receipt,
         "as_of": (f"{'已核验参考收盘' if decision.get('market_gate', {}).get('passed') is True else '待核验目标收盘'}："
                   f"{decision.get('market_gate', {}).get('expected_market_session') or '待确认'}（非实时） · 生成：{_time(decision.get('generated_at'))} 美东"),
@@ -497,6 +671,9 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     lines.extend("- " + item for item in view["tasks"])
     for plan in view["plans"]:
         lines.extend(["", plan["title"], plan["scenario"], "依据：" + plan["reason"], "限制：" + plan["limit"]])
+    lines.extend(["", "短线与长期仓的四条规则", *view["trading_rules"]])
+    for section in view["tactical_sections"]:
+        lines.extend(["", section["title"], *section["lines"]])
     lines.extend(["", baseline_title])
     lines.extend(f"- {row['ticker']}：{row['quantity']} · {row['weight']} · 参考收盘 {row['price']} · {row['state']}" for row in view["positions"])
     lines.extend(view["account_lines"])
@@ -531,7 +708,10 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
                 host = urlsplit(url).hostname
                 source_label = ("行情参考来源" if host == "stockanalysis.com"
                                 else "券商订单说明来源" if host in {"www.chase.com", "chase.com", "www.jpmorgan.com"}
-                                else "官方研究来源" if host in {"www.investor.gov", "www.finra.org", "www.federalreserve.gov"}
+                                else "官方研究来源" if host in {"www.investor.gov", "www.finra.org", "www.federalreserve.gov",
+                                                              "www.bea.gov", "www.bls.gov", "www.irs.gov", "www.ismworld.org",
+                                                              "www.nasdaq.com", "www.invesco.com", "www.vaneck.com", "www.ssga.com",
+                                                              "developers.meta.com", "rocketlabcorp.com"}
                                 else "官方财报来源")
                 content.append(f'<p><a style="color:#245d76" href="{esc(url)}">{esc(section["title"])} · {source_label}</a></p>')
         content.append(heading("原定时报告背景（保留原生成日期与规则结论）"))
@@ -546,6 +726,11 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     ])
     for plan in view["plans"]:
         content.extend([heading(plan["title"]), paragraph(plan["scenario"]), paragraph("依据：" + plan["reason"]), paragraph("限制：" + plan["limit"])])
+    content.append(heading("短线与长期仓的四条规则"))
+    content.extend(paragraph(item) for item in view["trading_rules"])
+    for section in view["tactical_sections"]:
+        content.append(heading(section["title"]))
+        content.extend(paragraph(item) for item in section["lines"])
     content.append(heading(baseline_title))
     content.append('<table style="width:100%;border-collapse:collapse;font-size:14px;line-height:1.55"><caption style="text-align:left;font-size:12px;color:#526170;padding-bottom:8px">已记录持仓 · 权重按参考收盘计算</caption><thead><tr>')
     for header in ("标的", "持仓 / 权重", "参考收盘", "本次状态"):

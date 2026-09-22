@@ -1,0 +1,15 @@
+{
+  "schema_version": "phase5r_tactical_policy_v1",
+  "investment_horizon_years": 1,
+  "ordinary_risk_pct": 0.5,
+  "event_risk_pct": 0.25,
+  "combined_risk_pct": 2.0,
+  "max_position_pct": 5.0,
+  "min_reward_to_risk": 2.0,
+  "max_holding_sessions": 5,
+  "coverage_tickers": ["SPY", "APP", "IOT", "RBRK", "RKLB", "META", "NOW", "QQQM", "NVDA", "XLI"],
+  "method": "prior_close_breakout_with_observed_20_session_resistance",
+  "research_only": true,
+  "automatic_action_allowed": false,
+  "performance_claim": "A risk discipline selected by the owner; not a backtested or demonstrated profitable strategy."
+}

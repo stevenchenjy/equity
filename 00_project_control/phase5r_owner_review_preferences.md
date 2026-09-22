@@ -126,3 +126,55 @@ delivery authorization itself never changes risk limits.
 These preferences improve specificity and delivery. They do not certify an
 incomplete valuation, promote a watchlist name to an eligible buy, change
 whole-share or portfolio caps, connect to Chase, or submit any trade.
+
+
+## One-year evaluation and tactical orders (2026-09-22)
+
+The owner accepts a 40–50% portfolio drawdown and explicitly permits holding
+periods of days or less than one week alongside longer holdings and planned
+exits/re-entries. This is tolerance, not a loss target or a guaranteed floor.
+The evaluation horizon is one year; an individual tactical trade has a separate
+maximum five-session review/exit date. No assumption of positive weekly returns
+is permitted. The owner asked to apply the four rules to existing regular emails:
+
+1. State setup/catalyst, entry trigger and maximum price, invalidation, target,
+   whole-share size, order type/session/expiration and exit/review date before
+   entry. Separate core positions from tactical trades.
+2. Planned risk is at most 0.5% of account value per ordinary tactical trade,
+   0.25% for event exposure, and 2% across simultaneous tactical trades. Initial
+   tactical exposure per name is at most 5%; size to the smallest cash, position
+   and risk allowance. Gaps/slippage can exceed planned risk.
+3. Require at least 2:1 plausible reward to planned loss for a fresh tactical
+   entry, and reassess/exit in three to five sessions. An unsuccessful short
+   trade cannot silently become a long-term holding. These rules are a research
+   discipline, not a backtested profitable strategy.
+4. Use explicit exit/re-entry triggers and maximum repurchase prices. Preserve
+   a core holding when the business thesis remains intact rather than selling
+   everything on a guessed pullback. Never chase or automatically average down.
+
+The planning profile is 60% economic core, up to 30% tactical capacity and 10%
+cash. In this codebase's different asset-type taxonomy it is represented as
+40% broad ETFs, 50% individual stocks and 10% cash. The economic core includes
+20 percentage points of individual stocks. This is a destination for staged
+research, not an instruction to fully deploy cash or relax stock/ETF evidence
+gates. The existing 50% aggregate-stock and 15% single-stock hard caps remain.
+The precise cash reserve and current account values remain in ignored local
+account records; the published configuration's reserve is a default only.
+
+Use the owner's directed total Cash & Sweep assumption for scenario planning,
+not an amount added on top of the displayed broker balance. This is an owner
+assumption, not confirmed settled cash or a newly verified deposit. Preserve
+cash_basis=ledger_estimate and source provenance in the audited local snapshot.
+Exact holdings, share counts, costs, cash, order IDs and account values belong
+only in ignored local files, never in the public source repository. Subsequent
+fills must be reconciled before a scenario becomes an eligible order draft.
+
+Regular delivery remains the existing after-13:30 ET watch/action-change mode:
+check daily, email on a meaningful new/changed buy/sell/watch plan, and do not
+send unchanged filler. Include material tactical price/quantity/invalidation or
+order-status changes in notification comparisons. End-of-day inputs cannot
+verify an intraday trigger, a fill, settled funds or an exhaustive event calendar.
+Every positive hypothetical draft must list unresolved assumptions separately;
+it is not today's cleared order quantity. Preserve full named coverage even
+when a candidate is not in the ranking shortlist. No duplicate scheduler, new
+recipient, live broker link or automated execution is authorized by this change.

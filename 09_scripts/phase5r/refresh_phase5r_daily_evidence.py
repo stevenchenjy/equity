@@ -233,7 +233,7 @@ SEPARATE_SOFTWARE_CAPEX_ISSUERS = {"RBRK"}
 # reported FCF also deducts financed-asset principal; absence is not zero.
 # Official definition: SEC 0001045810-25-000207/q2fy26cfocommentary.htm.
 PRODUCTIVE_ASSET_CAPEX_ISSUERS = {"NVDA"}
-NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "XLK"})
+NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI"})
 
 
 def request_json(url: str, user_agent: str) -> Any:
@@ -304,7 +304,7 @@ def researched_tickers() -> tuple[list[str], list[str]]:
 
 
 def company_fundamentals_required(ticker: str) -> bool:
-    """SPY is the canonical ETF core; company XBRL is not applicable to it."""
+    """ETF research does not use company XBRL; this grants no core allocation."""
 
     return ticker.strip().upper() not in NONCOMPANY_BENCHMARKS
 
