@@ -343,8 +343,8 @@ def dynamic_candidate_fit(theme: str, active_weight: float, account: dict[str, o
     target = as_float(account["active_stock_target_pct"], "active_stock_target_pct")
     hard = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     fit = 7.0 if active_weight <= target + 1e-9 else 5.0 if active_weight <= hard + 1e-9 else 1.0
-    if theme == "AI infrastructure":
-        fit -= 2.0
+    # Theme names alone do not measure actual overlap or concentration. Keep
+    # allocation limits, but do not add a second label-based score penalty.
     return max(1.0, min(10.0, fit))
 
 

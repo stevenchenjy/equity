@@ -50,7 +50,7 @@ EXECUTION_LOG_RELATIVE_PATH = Path(
 FETCH_TIMEOUT_SECONDS = 180
 GIT_TIMEOUT_SECONDS = 60
 # A pathological but still bounded holder can consume the individual Git
-# command budgets plus the refresh scheduler's 900-second deterministic child.
+# command budgets plus the refresh scheduler's 1080-second deterministic child.
 # One hour exceeds that aggregate budget with margin while surfacing a stuck
 # holder. The waiting launchd job remains active, so launchd cannot start a
 # duplicate instance of that label while it is queued here.

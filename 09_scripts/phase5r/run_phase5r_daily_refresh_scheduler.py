@@ -65,6 +65,10 @@ SEC_REFRESH_TIMEOUT_SECONDS = 240
 # model, sender, broker, portfolio action, or order surface.
 MARKET_REFRESH_ONLY_ENV = "PHASE5R_MARKET_REFRESH_ONLY_20260831_9A27"
 MARKET_REFRESH_TIMEOUT_SECONDS = 600
+# One-shot bootstrap through the existing credentialed, locked runtime. This
+# invokes only read-only broad discovery; it cannot send mail or place orders.
+MARKET_DISCOVERY_ONLY_ENV = "PHASE5R_MARKET_DISCOVERY_ONLY_20260922_62A1"
+MARKET_DISCOVERY_BOOTSTRAP_TIMEOUT_SECONDS = 900
 # One-shot complete deterministic refresh using the already validated local
 # close. This repair/verification entrypoint runs through the credentialed
 # dailyrefresh launcher but cannot invoke a model, sender, broker, or order.
@@ -75,7 +79,7 @@ FULL_REFRESH_REUSE_ONLY_ENV = (
 # market import. Its parent timeout exceeds that child budget and leaves a
 # finite allowance for the existing local refresh steps. Retry slots are
 # separate launchd cycles and stop as soon as a full current refresh passes.
-DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 900
+DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 1080
 
 
 def due_slots(current: datetime) -> list[str]:
@@ -216,6 +220,21 @@ def _run_market_refresh_only() -> int:
     return completed.returncode
 
 
+def _run_market_discovery_only() -> int:
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(ROOT / "09_scripts/phase5r/phase5r_market_discovery.py"), "--refresh"],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=MARKET_DISCOVERY_BOOTSTRAP_TIMEOUT_SECONDS,
+            check=False,
+        )
+    except subprocess.TimeoutExpired:
+        return 124
+    return completed.returncode
+
+
 def _run_full_refresh_reuse_only() -> int:
     """Run one full no-send refresh against the validated local close."""
 
@@ -257,6 +276,8 @@ def main() -> int:
         return _run_sec_refresh_only()
     if os.environ.get(MARKET_REFRESH_ONLY_ENV) == "1":
         return _run_market_refresh_only()
+    if os.environ.get(MARKET_DISCOVERY_ONLY_ENV) == "1":
+        return _run_market_discovery_only()
     if os.environ.get(FULL_REFRESH_REUSE_ONLY_ENV) == "1":
         return _run_full_refresh_reuse_only()
     expected_cycle_date = os.environ.get(RUNTIME_EXPECTED_CYCLE_DATE_ENV)

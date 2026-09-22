@@ -56,7 +56,8 @@ from phase5r_daily_common import (
 from phase5r_c9_common import is_core_allocation_ticker, load_account_state
 from phase5r_active_config import load_active_config
 from phase5r_c9b_common import applied_reconciliation_matches_current_state
-from phase5r_email_brief import EMAIL_BRIEF_VERSION, render_email
+from phase5r_email_brief import EMAIL_BRIEF_VERSION, build_discovery_view, render_email
+from phase5r_market_discovery import load_discovery
 from phase5r_tactical_review import load_tactical_review
 from phase5r_market_regime import load_regime_controls
 from phase5r_official_news import read_official_news_status
@@ -1054,6 +1055,15 @@ def main() -> int:
         decision, current=current, market_rows=read_csv(MARKET_SNAPSHOT_PATH),
         exact_actions=read_csv(EXACT_ACTION_PATH), all_candidates=candidate_recommendations,
     )
+    # Discovery supplies a separate research queue, never trade eligibility or
+    # positive fundamentals. Missing coverage remains visible instead of falling
+    # back to the pre-existing seed list as though it represented the market.
+    discovery = load_discovery(root=ROOT, current=current)
+    # Full ranked rows remain in the local research cache, not every daily
+    # decision/email artifact. The bounded shortlist and coverage are enough.
+    decision["independent_market_discovery"] = {
+        key: value for key, value in discovery.items() if key not in {"all_stocks", "all_etfs"}
+    }
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
         decision["notification_policy"]["regular_delivery_mode"] = notification_mode
@@ -1099,6 +1109,8 @@ def main() -> int:
         f"期间 {row.get('latest_frame') or 'n/a'}。"
         for row in held_fundamentals
     )
+    discovery_view = build_discovery_view(decision)
+    discovery_lines = "\n\n".join(discovery_view["lines"])
     report = f"""{report_heading("daily_decision")} — {cycle_date()}
 
 ## 决定性结论
@@ -1125,6 +1137,10 @@ def main() -> int:
 ## 新候选
 
 {watch_lines}
+
+## 独立市场初筛
+
+{discovery_lines}
 
 ## 可靠性门槛
 

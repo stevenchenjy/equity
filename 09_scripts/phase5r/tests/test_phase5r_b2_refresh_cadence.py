@@ -228,7 +228,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "passed")
         self.assertEqual(daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS, 600)
         self.assertEqual(refresh_scheduler.MARKET_REFRESH_TIMEOUT_SECONDS, 600)
-        self.assertEqual(refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS, 900)
+        self.assertEqual(refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS, 1080)
         self.assertGreaterEqual(
             daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS,
             33 * massive.MASSIVE_MIN_REQUEST_INTERVAL_SECONDS + 120,

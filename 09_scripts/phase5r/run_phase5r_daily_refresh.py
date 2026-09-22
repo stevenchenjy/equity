@@ -39,8 +39,12 @@ MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
 # retain the historical short timeout.
 DEFAULT_CHILD_TIMEOUT_SECONDS = 240
 EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
+# Daily reference pagination plus one new grouped day is paced at 13 seconds.
+# Cold 21-session bootstrap uses the separate no-send 900-second entrypoint.
+MARKET_DISCOVERY_TIMEOUT_SECONDS = 360
 STEP_SPECS = [
     ("market_refresh", "run_phase5r_b2_full_universe_market_data.py", False),
+    ("market_discovery", "phase5r_market_discovery.py", True),
     ("market_scoring", "score_phase5r_b2_candidates.py", False),
     ("official_evidence", "refresh_phase5r_daily_evidence.py", True),
     (
@@ -102,6 +106,8 @@ def run_step(
         EOD_MARKET_REFRESH_TIMEOUT_SECONDS
         if name == "market_refresh"
         and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
+        else MARKET_DISCOVERY_TIMEOUT_SECONDS
+        if name == "market_discovery"
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     extra_arguments = (
@@ -109,7 +115,9 @@ def run_step(
         if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
         else
         ["--refresh"]
-        if name == "sec_filing_artifacts"
+        if name == "sec_filing_artifacts" or (
+            name == "market_discovery" and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
+        )
         else ["--build"]
         if name == "evidence_packet"
         else []
@@ -188,7 +196,14 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         row["name"]
         for row in steps
         if row["exit_code"] != 0 and row["allowed_to_fail"]
+        and row["name"] != "market_discovery"
     ]
+    # Discovery has no path to canonical eligibility. Its stale/unavailable
+    # status is shown in the report; an outage must not suppress otherwise
+    # valid held-position and order-risk reporting. Preserve the actual exit
+    # code in steps and track the failure separately, without inventing success.
+    advisory_failures = [row["name"] for row in steps
+                         if row["name"] == "market_discovery" and row["exit_code"] != 0]
     decision_completed = any(
         row["name"] == "daily_decision" and row["exit_code"] == 0 for row in steps
     )
@@ -207,6 +222,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         "outcome": outcome,
         "hard_failures": hard_failures,
         "soft_failures": soft_failures,
+        "advisory_failures": advisory_failures,
         "decision_created": decision_completed,
         "market_snapshot_mode": market_snapshot_mode,
         "steps": steps,

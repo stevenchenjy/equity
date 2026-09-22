@@ -444,6 +444,110 @@ def _watch_view(
     return result
 
 
+def build_discovery_view(decision: dict[str, Any]) -> dict[str, Any]:
+    """Describe independent price/volume discovery without granting trade status.
+
+    Keep this separate from watch_candidates and all eligibility lists. Even an
+    unexpected quantity in an input artifact is never read or displayed here.
+    """
+    title = "独立市场初筛 · 新机会研究队列"
+    review = decision.get("independent_market_discovery")
+    unavailable = ["独立市场初筛暂不可用；本次不能提供已核验的跨市场候选。",
+                   "已有观察名单仍单独复核，不会被当作全市场筛选结果；本节新增 0 股、无新委托。"]
+    result = {"title": title, "status": "unavailable", "lines": unavailable, "candidates": []}
+    if not isinstance(review, dict) or review.get("schema_version") != "phase5r_market_discovery_v1":
+        return result
+    failure = str(review.get("failure_code") or "")
+    if failure:
+        reason = {
+            "local_unavailable": "缺少有效的本地跨市场快照",
+            "metadata_incomplete": "证券目录抓取不完整",
+            "bars_incomplete": "跨市场历史行情不完整",
+            "benchmark_missing": "比较基准行情不足",
+            "cache_invalid": "行情快照校验未通过",
+            "request_failed": "公开行情请求未完成",
+            "authentication_missing": "公开行情服务尚未就绪",
+            "request_budget_exceeded": "本次公开行情请求额度已用尽",
+        }.get(failure, "数据获取或快照校验未完成")
+        result["lines"] = [unavailable[0] + " 原因：" + reason + "。", unavailable[1]]
+    as_of = str(review.get("as_of_session") or "")
+    expected = str(review.get("expected_session") or "")
+    try:
+        datetime.strptime(as_of, "%Y-%m-%d")
+        datetime.strptime(expected, "%Y-%m-%d")
+    except ValueError:
+        return result
+    if review.get("status") == "stale" or as_of != expected:
+        result.update(status="stale", lines=[
+            f"独立市场初筛已过期：上次数据 {as_of}，本次需要 {expected}；旧候选不作为今日机会展示。",
+            unavailable[1],
+        ])
+        return result
+    if review.get("status") != "complete" or review.get("complete") is not True:
+        return result
+    coverage = review.get("coverage")
+    if not isinstance(coverage, dict):
+        return result
+
+    def count(key: str) -> str:
+        value = coverage.get(key)
+        return f"{value:,}" if type(value) is int and value >= 0 else "待确认"
+
+    rows = []
+    candidate_lines = []
+    for key, label in (("top_stocks", "股票"), ("top_etfs", "ETF")):
+        candidates = review.get(key)
+        if not isinstance(candidates, list):
+            return result
+        if not candidates:
+            candidate_lines.append(f"{label}：本次没有符合初筛条件的候选。")
+        for row in candidates[:3]:
+            if not isinstance(row, dict):
+                return result
+            ticker = str(row.get("ticker", ""))
+            if (not re.fullmatch(r"[A-Z0-9][A-Z0-9.\-]{0,14}", ticker)
+                    or row.get("classification") != "watchlist"
+                    or row.get("research_status") != "unresearched_discovery"
+                    or _decimal(row.get("close")) is None or _decimal(row.get("close")) <= 0
+                    or any(_decimal(row.get(field)) is None for field in (
+                        "return_5d_pct", "relative_strength_20d_pct", "relative_volume"))):
+                return result
+            name = " ".join(str(row.get("name", "")).split())[:80]
+            candidate_lines.append(
+                f"{label} {ticker}{' · ' + name if name else ''}：参考收盘 {money(row['close'])}；"
+                f"5 日涨跌 {percent(row['return_5d_pct'])}，20 日收益较 SPY {number(row['relative_strength_20d_pct'])} 个百分点，"
+                f"相对成交量 {number(row['relative_volume'])} 倍。"
+            )
+            rows.append({"ticker": ticker, "classification": "watchlist", "research_status": "unresearched_discovery",
+                         "suggested_whole_shares": 0, "group": key})
+    excluded = coverage.get("excluded_counts", {})
+    exclusion_labels = {
+        "unsupported_type": "证券类型不符", "exchange_or_currency": "上市地或币种不符",
+        "complex_etf_name_screen": "复杂 ETF 名称过滤", "missing_21_session_history": "历史行情不足",
+        "price_below_5": "股价低于 $5", "liquidity_below_20m": "日均成交额不足 $2,000 万",
+        "large_discontinuity_review": "异常大幅价格变动待核验",
+    }
+    exclusion_text = "；".join(
+        f"{exclusion_labels.get(key, '其他筛选限制')} {value:,}"
+        for key, value in sorted(excluded.items())
+        if isinstance(key, str) and type(value) is int and value > 0
+    ) if isinstance(excluded, dict) else ""
+    lines = [
+        f"数据日期：{as_of} 收盘（非实时）。证券目录 {count('metadata_count')} 个；"
+        f"其中普通股 {count('common_stock_count')}、ETF {count('etf_count')}；"
+        f"取得 21 个交易日行情 {count('with_21_bars_count')} 个。",
+        f"通过初筛 {count('screen_eligible_count')} 个（股票 {count('stock_screen_eligible_count')}、"
+        f"ETF {count('etf_screen_eligible_count')}）；其中原观察范围以外 {count('screen_eligible_outside_legacy_count')} 个。"
+        + (" 排除计数：" + exclusion_text + "。" if exclusion_text else ""),
+        "以下分别列股票和 ETF 前 3 名。观察名单成员不加分；排名依据价格和成交量，不代表已完成全市场基本面研究。"
+        "相对成交量以此前 20 个交易日均量为基准。",
+        *candidate_lines,
+        "全部为待研究观察项（watchlist）：新增 0 股，无新委托。需补齐公司/事件或 ETF 结构核验、"
+        "入场退出依据与账户风险检查，才能另行形成交易复核方案。",
+    ]
+    return {"title": title, "status": "complete", "lines": lines, "candidates": rows}
+
+
 def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     code = str(decision.get("decision_code", ""))
     label, title = _LABELS.get(code, ("需核对报告", "报告状态待核对"))
@@ -629,6 +733,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "funding_lines": funding_lines,
         "trading_rules": list(_TRADING_RULES),
         "tactical_sections": _tactical_view(decision, plans, global_block=global_block),
+        "discovery": build_discovery_view(decision),
         "limitations": limitations, "documents": documents, "receipt": receipt,
         "as_of": (f"{'已核验参考收盘' if decision.get('market_gate', {}).get('passed') is True else '待核验目标收盘'}："
                   f"{decision.get('market_gate', {}).get('expected_market_session') or '待确认'}（非实时） · 生成：{_time(decision.get('generated_at'))} 美东"),
@@ -743,6 +848,7 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     for row in view["watchlist"]:
         lines.extend(["", row["title"], row["reference"], row["instruction"],
                       "依据：" + row["reason"], "再次复核条件：" + row["next_step"]])
+    lines.extend(["", view["discovery"]["title"], *view["discovery"]["lines"]])
     lines.extend(["", "短线与长期仓的四条规则", *view["trading_rules"]])
     lines.extend(["", "证据与限制", view["quality"], *view["limitations"]])
     if view["documents"]:
@@ -809,6 +915,8 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     for row in view["watchlist"]:
         content.extend([heading(row["title"]), paragraph(row["reference"]), paragraph(row["instruction"]),
                         paragraph("依据：" + row["reason"]), paragraph("再次复核条件：" + row["next_step"])])
+    content.append(heading(view["discovery"]["title"]))
+    content.extend(paragraph(item) for item in view["discovery"]["lines"])
     content.append(heading("短线与长期仓的四条规则"))
     content.extend(paragraph(item) for item in view["trading_rules"])
     content.extend([heading("证据与限制"), paragraph(view["quality"])])

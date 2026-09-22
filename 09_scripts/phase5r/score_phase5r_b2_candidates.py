@@ -15,7 +15,7 @@ SCORES_PATH = DATA_DIR / "phase5r_b2_signal_scores.csv"
 AUDIT_PATH = DATA_DIR / "phase5r_b2_audit_trail.csv"
 
 LEGACY_TICKERS = {"IOT", "RBRK"}
-FORMULA_VERSION = "phase5r_b2_daily_read_only_v1"
+FORMULA_VERSION = "phase5r_b2_daily_read_only_v2_neutral_theme"
 SCORE_FIELDS = [
     "rank", "ticker", "company_name", "theme", "last_price", "intraday_change_pct", "relative_volume", "dollar_volume",
     "trend_score", "volume_score", "catalyst_score", "quality_score", "risk_penalty", "total_score", "action_label",
@@ -23,7 +23,10 @@ SCORE_FIELDS = [
 ]
 AUDIT_FIELDS = ["timestamp", "script_name", "action", "input_path", "output_path", "status", "safety_notes"]
 VOLATILITY_PENALTY = {"low": 1.0, "medium": 2.5, "high": 5.5, "very_high": 7.5}
-THEME_CATALYST = {"AI infrastructure": 8.5, "Semiconductors": 7.5, "Cybersecurity": 7.0, "Cloud software": 6.5, "Data centers": 7.0, "Benchmark ETF": 5.0}
+# A sector/theme label is not evidence of an upcoming catalyst. Keep the
+# existing score schema compatible, but give every row the same neutral value.
+# This legacy monitor is not the independent broad-market discovery ranking.
+NEUTRAL_CATALYST_SCORE = 5.0
 
 
 def timestamp() -> str:
@@ -100,7 +103,7 @@ def score_row(
         }
     trend = round(clamp(5.0 + change * 1.2), 2)
     volume = round(clamp(4.0 + rel_volume * 2.0 + (1.0 if dollar_volume >= 1_000_000_000 else 0.0)), 2)
-    catalyst = THEME_CATALYST.get(row["theme"], 5.0)
+    catalyst = NEUTRAL_CATALYST_SCORE
     quality = {"mega": 9.0, "large": 7.5, "mid": 5.5}.get(row["liquidity_tier"], 5.0) + (0.5 if row["is_benchmark"] == "yes" else 0.0)
     penalty = round(clamp(VOLATILITY_PENALTY.get(row["volatility_tier"], 4.0) + max(0.0, change - 3.0) * 0.8), 2)
     total = round(0.30 * trend + 0.25 * volume + 0.20 * catalyst + 0.15 * quality - 0.10 * penalty, 2)
@@ -108,7 +111,7 @@ def score_row(
     return base | {
         "trend_score": f"{trend:.2f}", "volume_score": f"{volume:.2f}", "catalyst_score": f"{catalyst:.2f}",
         "quality_score": f"{quality:.2f}", "risk_penalty": f"{penalty:.2f}", "total_score": f"{total:.2f}", "action_label": action,
-        "score_explanation": f"Daily read-only score {total:.2f}; trend={trend:.2f}, volume={volume:.2f}, catalyst={catalyst:.2f}, quality={quality:.2f}, risk_penalty={penalty:.2f}.",
+        "score_explanation": f"Configured-watchlist heuristic {total:.2f}; one-day trend={trend:.2f}, volume={volume:.2f}, catalyst={catalyst:.2f} (neutral; no verified event), liquidity-tier proxy={quality:.2f}, risk_penalty={penalty:.2f}. Not an expected return or a market-wide ranking.",
     }
 
 

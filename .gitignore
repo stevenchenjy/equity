@@ -23,6 +23,7 @@ graphify-out/graph.html
 05_risk_and_positions/current_account_state.local.json
 05_risk_and_positions/current_open_orders.local.json
 03_source_data/phase5r/phase5r_tactical_price_history.local.json
+03_source_data/phase5r/market_discovery.local/
 05_risk_and_positions/manual_account_snapshot.local.json
 05_risk_and_positions/manual_snapshots.local/
 07_automation/scheduler/phase5r_c9_maintenance_inhibit.local.json

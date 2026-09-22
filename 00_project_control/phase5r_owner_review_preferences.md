@@ -179,6 +179,33 @@ it is not today's cleared order quantity. Preserve full named coverage even
 when a candidate is not in the ranking shortlist. No duplicate scheduler, new
 recipient, live broker link or automated execution is authorized by this change.
 
+## Independent market discovery (2026-09-22 follow-up)
+
+The owner clarified that opportunity selection must search beyond their
+watchlist and aim to grow the portfolio. The configured 31-name candidate list
+plus held-only monitoring is not a whole-market search. Holdings and named
+candidates must still be reviewed for risk and open orders, but membership in
+either list earns no preference in independent opportunity ranking. Theme
+labels are not catalyst evidence. Do not apply static AI/theme bonuses or
+held-first ordering to broad discovery.
+
+Use a separate broad US-listed common-stock and ETF price/liquidity screen,
+with dated coverage counts and explicit exclusions, followed by focused
+official-source diligence on the strongest candidates. Rank stocks and ETFs
+separately; apply cash, sizing, overlap and pending-order constraints after
+opportunity ranking. This is broad screening plus focused research, not
+fundamental analysis of every company. An EOD momentum screen is only a
+research queue, not proof of a weekly trading edge or a one-year growth thesis.
+Do not force sector quotas or replace a good existing candidate just to be new.
+
+Distinguish discovery candidates, researched setups and eligible conditional
+order drafts. A newly discovered name has zero cleared shares until actual
+evidence and account checks support a plan. Show whether new candidates offer
+a better case than adding to an existing holding or retaining cash. When broad
+data is stale or unavailable, say so; never quietly substitute the old watchlist
+and describe it as market-wide research. Scheduled reports disclose discovery
+coverage and meaningful shortlist changes under the existing email cadence.
+
 
 ## Email readability (2026-09-22 follow-up)
 

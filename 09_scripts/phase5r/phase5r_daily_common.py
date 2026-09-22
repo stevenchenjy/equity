@@ -535,6 +535,24 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
                             "risk_policy": tactical.get("risk_policy", {}),
                             "drafts": ordered(drafts), "orders": ordered(orders),
                             "orders_complete": order_review.get("complete") is True}
+    discovery = decision.get("independent_market_discovery")
+    discovery_meaning = None
+    if isinstance(discovery, dict) and discovery.get("schema_version") == "phase5r_market_discovery_v1":
+        membership = []
+        complete = discovery.get("status") == "complete" and discovery.get("complete") is True
+        if complete:
+            for group in ("top_stocks", "top_etfs"):
+                rows = discovery.get(group, [])
+                if not isinstance(rows, list):
+                    continue
+                # Mirror the report's bounded shortlist. Daily score/price
+                # fluctuations and reordered names do not create extra mail.
+                membership.extend({"group": group, "ticker": row.get("ticker", ""),
+                                   "classification": row.get("classification", ""),
+                                   "research_status": row.get("research_status", "")}
+                                  for row in rows[:3] if isinstance(row, dict))
+        discovery_meaning = {"status": discovery.get("status", "unavailable"),
+                             "complete": complete, "membership": ordered(membership)}
     return canonical_sha256({
         "version": "phase5r_recommendation_notification_v1", "decision_code": code,
         "gates": gates, "account_conflicts": conflicts, "cash_estimated": cash_estimated,
@@ -542,6 +560,7 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
         "actions": ordered(actions), "watch_candidates": ordered(candidates),
         "held_research_warnings": ordered(research_warnings),
         "tactical_review": tactical_meaning,
+        "independent_market_discovery": discovery_meaning,
     })
 
 
