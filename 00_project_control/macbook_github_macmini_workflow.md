@@ -135,10 +135,10 @@ Status:
 Installed logs remain outside both repositories:
 
 ```text
-/Users/messssi/Library/Logs/phase5r_dailyrefresh.out.log
-/Users/messssi/Library/Logs/phase5r_dailyrefresh.err.log
-/Users/messssi/Library/Logs/phase5r_dailydecision.out.log
-/Users/messssi/Library/Logs/phase5r_dailydecision.err.log
+/Users/messssi/Library/Logs/equity_research_dailyrefresh.out.log
+/Users/messssi/Library/Logs/equity_research_dailyrefresh.err.log
+/Users/messssi/Library/Logs/equity_research_dailydecision.out.log
+/Users/messssi/Library/Logs/equity_research_dailydecision.err.log
 ```
 
 Do not repair a dirty, ahead, or divergent production clone automatically.
