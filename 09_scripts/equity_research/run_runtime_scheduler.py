@@ -42,7 +42,7 @@ EXPECTED_BRANCH = "main"
 RUNTIME_LOCK_PATH = (
     PRODUCTION_RUNTIME_ROOT.parent
     / ".locks"
-    / "equity-equity_research-runtime.lock"
+    / "equity-research-runtime.lock"
 )
 EXECUTION_LOG_RELATIVE_PATH = Path(
     "00_project_control/run_logs/runtime_execution_log.csv"
