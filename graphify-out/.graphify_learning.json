@@ -13,7 +13,7 @@
         }
       ],
       "score": 0.977081044,
-      "source_file": "00_project_control/phase5r_b_data_adapter_policy.md",
+      "source_file": "00_project_control/b_data_adapter_policy.md",
       "status": "tentative",
       "uses": 1
     },
@@ -45,7 +45,7 @@
         }
       ],
       "score": 0.977081044,
-      "source_file": "09_scripts/phase5r/phase5r_massive_payload_adapter.py",
+      "source_file": "09_scripts/equity_research/massive_payload_adapter.py",
       "status": "tentative",
       "uses": 1
     },
@@ -61,7 +61,7 @@
         }
       ],
       "score": 0.977081044,
-      "source_file": "09_scripts/phase5r/run_phase5r_daily_refresh_scheduler.py",
+      "source_file": "09_scripts/equity_research/run_daily_refresh_scheduler.py",
       "status": "tentative",
       "uses": 1
     }

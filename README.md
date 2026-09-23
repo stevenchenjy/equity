@@ -21,7 +21,7 @@ The Mac mini production scheduler path is outside iCloud:
 
 Code flows from an authoring commit through GitHub `main` to the Mac mini
 runtime clone. The LaunchAgents never execute from Desktop. See
-[`00_project_control/phase5r_macbook_github_macmini_workflow.md`](00_project_control/phase5r_macbook_github_macmini_workflow.md)
+[`00_project_control/macbook_github_macmini_workflow.md`](00_project_control/macbook_github_macmini_workflow.md)
 for the synchronization, lock, failure, and operator procedures.
 
 ## Current Workflow
@@ -40,11 +40,11 @@ The active workflow is `daily_decision` and the only active email pipeline is
 - Weekend briefs are suppressed unless an official material event, decision
   change, or account-state conflict appears.
 - The production AI operating decision remains
-  [`00_project_control/phase5r_ai_operating_decision.md`](00_project_control/phase5r_ai_operating_decision.md):
+  [`00_project_control/ai_operating_decision.md`](00_project_control/ai_operating_decision.md):
   AI is excluded from active production. The old `0/10` and `$0` figures refer
   only to the retired August 31 commissioning record, not current evaluation
   usage. A separate event-driven, noncanonical
-  [`SHADOW_LLM evaluation`](08_reviews/phase5r_shadow_llm/README.md) is authorized
+  [`SHADOW_LLM evaluation`](08_reviews/shadow_llm/README.md) is authorized
   outside the production path. Its output cannot affect a decision, email,
   account, position, scheduler result, or order.
 - Daily analysis does not imply daily portfolio action.
@@ -67,7 +67,7 @@ The active workflow is `daily_decision` and the only active email pipeline is
 
 ## Long-horizon workflow upgrade (2026-09-20)
 
-The implementation plan is [the four-standard improvement plan](00_project_control/phase5r_workflow_improvement_plan_20260920.md).
+The implementation plan is [the four-standard improvement plan](00_project_control/workflow_improvement_plan_20260920.md).
 Low technical scores request research instead of independently proposing a full exit. A sourced, reviewed thesis break or the existing concentration rules governs action review. An unassessed material filing receives neutral catalyst credit. Candidate stability is tracked per ticker and counts distinct valid closes; ordinary quote updates do not reset it.
 
 The daily pipeline builds a fundamentals-led research queue alongside the existing price-based queue, source-bound company research, explicit 3-/5-year equity cash-flow sensitivities and 2x/3x hurdle arithmetic. Conditional sensitivities are not forecasts or canonical price targets. Unresolved business evidence is labeled pending research.
@@ -78,9 +78,9 @@ Official issuer news for IOT, RBRK and NVDA is checked at 08:15, 11:15, 16:45 an
 
 Current additional reports in the runtime clone:
 
-- `08_reviews/current/phase5r_long_horizon_research.local.md`
-- `08_reviews/current/phase5r_market_regime.local.md`
-- `03_source_data/phase5r/phase5r_official_news_status.local.json`
+- `08_reviews/current/long_horizon_research.local.md`
+- `08_reviews/current/market_regime.local.md`
+- `03_source_data/equity_research/official_news_status.local.json`
 
 ## Safety Boundaries
 
@@ -114,15 +114,15 @@ Run production status checks from the Mac mini runtime path:
 
 ```bash
 cd /Users/messssi/LocalRuntime/equity
-/bin/zsh 07_automation/scheduler/check_phase5r_daily_scheduler_status.sh
+/bin/zsh 07_automation/scheduler/check_daily_scheduler_status.sh
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailyrefresh --safe-check
+  09_scripts/equity_research/run_runtime_scheduler.py --job dailyrefresh --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/run_phase5r_runtime_scheduler.py --job dailydecision --safe-check
+  09_scripts/equity_research/run_runtime_scheduler.py --job dailydecision --safe-check
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/generate_phase5r_current_status.py
+  09_scripts/equity_research/generate_current_status.py
 /Library/Frameworks/Python.framework/Versions/3.13/bin/python3 \
-  09_scripts/phase5r/run_phase5r_active_tests.py
+  09_scripts/equity_research/run_active_tests.py
 ```
 
 These checks do not read SMTP configuration, send email, invoke a model,
@@ -132,8 +132,8 @@ The separate SHADOW_LLM preflight is also read-only and does not invoke a
 model:
 
 ```bash
-python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --check
-python3 09_scripts/phase5r/run_phase5r_shadow_llm_evaluation.py --preflight
+python3 09_scripts/equity_research/run_shadow_llm_evaluation.py --check
+python3 09_scripts/equity_research/run_shadow_llm_evaluation.py --preflight
 ```
 
 `--auto-live` evaluates only a previously unattempted research-semantic event;
@@ -144,8 +144,8 @@ cost-accounting, threshold, and evaluation-only LaunchAgent commands. This
 surface remains absent from all production schedulers and entrypoints.
 
 The single active configuration is
-[`00_project_control/phase5r_active_production_config.json`](00_project_control/phase5r_active_production_config.json).
-The [current-document index](00_project_control/phase5r_current_documents.md)
+[`00_project_control/active_production_config.json`](00_project_control/active_production_config.json).
+The [current-document index](00_project_control/current_documents.md)
 identifies authoritative configuration, live generated reports, and dated
 historical assessments. Runtime-generated status is authoritative for current
 operations; an old authoring-clone report is not a runtime status check. Retired
@@ -157,7 +157,7 @@ and cash balance. Do not copy historical account numbers from documentation.
 Inspect the command interface first:
 
 ```bash
-python3 09_scripts/phase5r/update_phase5r_manual_account.py --help
+python3 09_scripts/equity_research/update_manual_account.py --help
 ```
 
 Use `--preview` with confirmed inputs and `--apply` only after checking the

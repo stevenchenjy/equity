@@ -35,7 +35,7 @@ Codex may prepare research, calculate risk, screen a local watchlist, summarize 
 
 ## Owner-Requested Reviews and Email
 
-- Read `00_project_control/phase5r_owner_review_preferences.md` before handling an owner-requested portfolio recheck, redo, or research email.
+- Read `00_project_control/owner_review_preferences.md` before handling an owner-requested portfolio recheck, redo, or research email.
 - Each explicit request to redo/recheck includes standing authorization to send that completed review once to the existing configured recipient, even if the scheduled report is unchanged. Use the audited owner-review delivery mode; never falsify normal send eligibility or claim inbox delivery from SMTP acceptance alone.
 - The owner uses the Chase app. Give dated, broker-appropriate, conditional human-review order drafts with quantities, prices, order type, time in force, invalidation and rationale; do not place orders or treat a draft as execution authorization.
 

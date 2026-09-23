@@ -664,8 +664,8 @@
       "source": "main()",
       "target": "read_universe()",
       "source_files": [
-        "09_scripts/phase5r/run_phase5r_b_market_data_update.py",
-        "09_scripts/phase5r/phase5r_market_data_adapter.py"
+        "09_scripts/equity_research/run_b_market_data_update.py",
+        "09_scripts/equity_research/market_data_adapter.py"
       ],
       "confidence": "INFERRED",
       "relation": "calls",
@@ -675,8 +675,8 @@
       "source": "main()",
       "target": "load_market_data()",
       "source_files": [
-        "09_scripts/phase5r/run_phase5r_b_market_data_update.py",
-        "09_scripts/phase5r/phase5r_market_data_adapter.py"
+        "09_scripts/equity_research/run_b_market_data_update.py",
+        "09_scripts/equity_research/market_data_adapter.py"
       ],
       "confidence": "INFERRED",
       "relation": "calls",
@@ -691,7 +691,7 @@
     },
     {
       "type": "isolated_nodes",
-      "question": "What connects `check_phase5r_d1_scheduler_status.sh script`, `check_phase5r_d2_scheduler_status.sh script`, `install_phase5r_d1_scheduler.sh script` to the rest of the system?",
+      "question": "What connects `check_d1_scheduler_status.sh script`, `check_d2_scheduler_status.sh script`, `install_d1_scheduler.sh script` to the rest of the system?",
       "why": "6 weakly-connected nodes found - possible documentation gaps or missing edges."
     }
   ]

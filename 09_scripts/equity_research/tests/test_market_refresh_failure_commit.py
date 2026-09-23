@@ -1,0 +1,676 @@
+from __future__ import annotations
+
+import tempfile
+import json
+import unittest
+from contextlib import ExitStack
+from datetime import date, datetime
+from pathlib import Path
+from unittest.mock import Mock, patch
+from zoneinfo import ZoneInfo
+
+from _support import SCRIPT_DIR  # noqa: F401
+import market_data_adapter as massive
+import run_full_universe_market_data as b2
+
+
+_FIXED_NOW = "2026-08-06T11:15:00-04:00"
+# Kept as the shared fixture name for this failure-boundary suite; the value is
+# now the next-day Basic EOD publication boundary, not same-day market close.
+POST_CLOSE = datetime(2026, 8, 6, 11, 15, tzinfo=ZoneInfo("America/New_York"))
+UNIVERSE_TICKERS = [
+    *b2.SMOKE_TICKERS,
+    *sorted(b2.APPROVED_PRODUCTION_TICKERS - set(b2.SMOKE_TICKERS) - {"IOT", "RBRK"}),
+]
+HELD_TICKERS = ["IOT", "RBRK"]
+B2_TICKERS = [*UNIVERSE_TICKERS, *HELD_TICKERS]
+assert len(UNIVERSE_TICKERS) == 31
+assert len(B2_TICKERS) == 33
+_CANARY = "massive-provider-detail-must-not-persist-7e4a"
+
+
+def _seed(ticker: str) -> dict[str, str]:
+    return {
+        "ticker": ticker,
+        "company_name": f"{ticker} Holdings",
+        "sector": "Technology",
+        "industry": "Software",
+        "theme": "research",
+        "liquidity_tier": "high",
+        "volatility_tier": "medium",
+        "is_benchmark": "yes" if ticker in b2.SMOKE_TICKERS else "no",
+        "max_position_pct": "0.10",
+    }
+
+
+def _market_row(ticker: str, price: str) -> dict[str, str]:
+    return {
+        "ticker": ticker,
+        "last_price": price,
+        "previous_close": "99.0000",
+        "intraday_change_pct": "1.0101",
+        "volume": "100000",
+        "average_volume": "90000",
+        "relative_volume": "1.1111",
+        "dollar_volume": "10000000",
+        "day_high": "101.0000",
+        "day_low": "98.0000",
+        "fifty_two_week_high": "120.0000",
+        "fifty_two_week_low": "75.0000",
+        "market_session_date": "2026-08-05",
+        "market_age_calendar_days": "0",
+        "data_timestamp": _FIXED_NOW,
+        "data_source": massive.MASSIVE_DATA_SOURCE,
+        "data_quality_label": "ok",
+    }
+
+
+def _quality_row(market: dict[str, str]) -> dict[str, str]:
+    return {
+        "ticker": market["ticker"],
+        "data_source": market["data_source"],
+        "data_quality_label": market["data_quality_label"],
+        "missing_fields": "",
+        "usable_for_scoring": "yes",
+        "notes": "read-only public row ready for scoring",
+    }
+
+
+def _candidate_row(seed: dict[str, str], market: dict[str, str]) -> dict[str, str]:
+    row = {
+        key: seed[key]
+        for key in (
+            "ticker",
+            "company_name",
+            "sector",
+            "industry",
+            "theme",
+            "liquidity_tier",
+            "volatility_tier",
+            "is_benchmark",
+            "max_position_pct",
+        )
+    }
+    row.update({field: market[field] for field in b2.MARKET_FIELDS[1:]})
+    row.update(
+        {
+            "market_data_usable": "yes",
+            "candidate_note": "daily public data attached",
+        }
+    )
+    return row
+
+
+def _valid_bars(current: datetime) -> list[dict[str, object]]:
+    return [
+        {
+            "session_date": session,
+            "open": 90.0 + index,
+            "high": 92.0 + index,
+            "low": 89.0 + index,
+            "close": 91.0 + index,
+            "volume": 100000.0 + index,
+        }
+        for index, session in enumerate(b2.expected_history_sessions(current))
+    ]
+
+
+class _PartialApprovedTickerClient:
+    def __init__(self, current: datetime, missing_ticker: str) -> None:
+        self.current = current
+        self.missing_ticker = missing_ticker
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        if ticker == self.missing_ticker:
+            return _valid_bars(self.current)[:-1]
+        return _valid_bars(self.current)
+
+
+class _FailingFullFetchClient:
+    def __init__(self, current: datetime) -> None:
+        self.current = current
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        if len(self.calls) <= len(b2.SMOKE_TICKERS):
+            return _valid_bars(self.current)
+        raise OSError(_CANARY)
+
+
+class _CompleteCachedClient:
+    def __init__(self, current: datetime) -> None:
+        self.current = current
+        self.calls: list[str] = []
+        self.cache: dict[str, list[dict[str, object]]] = {}
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        if ticker not in self.cache:
+            self.calls.append(ticker)
+            self.cache[ticker] = _valid_bars(self.current)
+        return [dict(bar) for bar in self.cache[ticker]]
+
+
+class _StaticBarsClient:
+    def __init__(self, bars: list[dict[str, object]]) -> None:
+        self.bars = bars
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        return [dict(bar) for bar in self.bars]
+
+
+class _DuplicateSessionErrorClient:
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def fetch_daily_bars(
+        self, ticker: str, *, start_date: date, end_date: date
+    ) -> list[dict[str, object]]:
+        self.calls.append(ticker)
+        raise massive.MassiveB2Error(
+            massive.HISTORICAL_SESSION_SEQUENCE_CODE,
+            diagnostic={"duplicate_session_dates": "2026-07-17"},
+        )
+
+
+class B2MarketRefreshFailureCommitTests(unittest.TestCase):
+    def _paths(self, root: Path) -> dict[str, Path]:
+        return {
+            "root": root,
+            "data": root / "03_source_data" / "equity_research",
+            "positions": root / "05_risk_and_positions" / "current_positions.local.csv",
+            "snapshot": root / "03_source_data" / "equity_research" / "market_data_snapshot.csv",
+            "quality": root / "03_source_data" / "equity_research" / "market_data_quality_report.csv",
+            "candidates": root / "03_source_data" / "equity_research" / "candidates_with_market_data.csv",
+            "audit": root / "03_source_data" / "equity_research" / "audit_trail.csv",
+            "decision": root / "00_project_control" / "data_source_decision.md",
+            "report": root / "04_research" / "company_research" / "data_report.md",
+            "run_log": root / "00_project_control" / "run_logs" / "market_data_run_log.csv",
+        }
+
+    def _patch_paths(self, stack: ExitStack, paths: dict[str, Path]) -> None:
+        for name, path in (
+            ("ROOT", paths["root"]),
+            ("DATA_DIR", paths["data"]),
+            ("UNIVERSE_PATH", paths["data"] / "universe_seed.csv"),
+            ("LOCAL_POSITIONS_PATH", paths["positions"]),
+            ("SNAPSHOT_PATH", paths["snapshot"]),
+            ("QUALITY_PATH", paths["quality"]),
+            ("CANDIDATES_PATH", paths["candidates"]),
+            ("AUDIT_PATH", paths["audit"]),
+            ("DECISION_PATH", paths["decision"]),
+            ("REPORT_PATH", paths["report"]),
+            ("RUN_LOG", paths["run_log"]),
+        ):
+            stack.enter_context(patch.object(b2, name, path))
+
+    def _write_prior_outputs(self, paths: dict[str, Path]) -> None:
+        seeds = [_seed(ticker) for ticker in UNIVERSE_TICKERS]
+        market_rows = [
+            _market_row(ticker, f"{100 + index:.4f}")
+            for index, ticker in enumerate(B2_TICKERS)
+        ]
+        market_by_ticker = {row["ticker"]: row for row in market_rows}
+        b2.write_csv(paths["data"] / "universe_seed.csv", seeds, list(seeds[0]))
+        b2.write_csv(
+            paths["positions"],
+            [{"ticker": ticker} for ticker in HELD_TICKERS],
+            ["ticker"],
+        )
+        b2.write_csv(paths["snapshot"], market_rows, b2.MARKET_FIELDS)
+        b2.write_csv(
+            paths["quality"],
+            [_quality_row(row) for row in market_rows],
+            b2.QUALITY_FIELDS,
+        )
+        b2.write_csv(
+            paths["candidates"],
+            [_candidate_row(seed, market_by_ticker[seed["ticker"]]) for seed in seeds],
+            b2.CANDIDATE_FIELDS,
+        )
+
+    @staticmethod
+    def _trio_bytes(paths: dict[str, Path]) -> dict[str, bytes]:
+        return {
+            name: paths[name].read_bytes()
+            for name in ("snapshot", "quality", "candidates")
+        }
+
+    def _run_with_client(
+        self, paths: dict[str, Path], client: object
+    ) -> int:
+        with ExitStack() as stack:
+            self._patch_paths(stack, paths)
+            stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+            stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+            stack.enter_context(
+                patch.object(
+                    b2.MassiveBasicEODClient,
+                    "from_environment",
+                    return_value=client,
+                )
+            )
+            return b2.main()
+
+    def test_full_massive_provider_failure_preserves_coherent_prior_trio_and_logs_only_code(self) -> None:
+        """A post-preflight provider failure cannot overwrite the last complete batch."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            cache = paths["snapshot"].with_name("tactical_price_history.local.json")
+            cache.write_text('{"prior_cache": true}\n')
+            prior_cache = cache.read_bytes()
+            client = _FailingFullFetchClient(POST_CLOSE)
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, [*b2.SMOKE_TICKERS, b2.SMOKE_TICKERS[0]])
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+            self.assertEqual(cache.read_bytes(), prior_cache)
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (paths["audit"], paths["decision"], paths["report"], paths["run_log"])
+            )
+            self.assertIn(
+                f"source_failure_code={massive.REQUEST_FAILED_CODE}", persisted
+            )
+            self.assertNotIn(_CANARY, persisted)
+
+    def test_complete_valid_batch_commits_all_thirty_three_rows_and_bound_history_once(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _CompleteCachedClient(POST_CLOSE)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 0)
+            self.assertEqual(len(client.calls), 33)
+            self.assertEqual(set(client.calls), set(B2_TICKERS))
+            self.assertTrue(any(paths[name].read_bytes() != prior[name] for name in prior))
+            snapshot = b2.read_csv(paths["snapshot"])
+            quality = b2.read_csv(paths["quality"])
+            candidates = b2.read_csv(paths["candidates"])
+            self.assertEqual(len(snapshot), 33)
+            self.assertEqual(len(quality), 33)
+            self.assertEqual(len(candidates), 31)
+            history = json.loads(paths["snapshot"].with_name("tactical_price_history.local.json").read_text())
+            self.assertEqual(history["snapshot_sha256"], b2.sha256_file(paths["snapshot"]))
+            self.assertEqual(set(history["tickers"]), set(B2_TICKERS))
+            self.assertEqual(len(history["tickers"]["SPY"]["bars"]), 20)
+            self.assertEqual(history["tickers"]["SPY"]["bars"][-1]["session_date"], "2026-08-05")
+            self.assertEqual({row["ticker"] for row in snapshot}, set(B2_TICKERS))
+            self.assertEqual(
+                {row["data_source"] for row in snapshot},
+                {massive.MASSIVE_DATA_SOURCE},
+            )
+            self.assertEqual(
+                {row["market_session_date"] for row in snapshot},
+                {"2026-08-05"},
+            )
+            audit = b2.read_csv(paths["audit"])
+            self.assertIn("session_diagnostic=passed", audit[0]["safety_notes"])
+
+    def test_thirty_fourth_ticker_is_rejected_before_client_construction(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            extra_seed = _seed("EXTRA")
+            seeds = [_seed(ticker) for ticker in UNIVERSE_TICKERS] + [extra_seed]
+            b2.write_csv(
+                paths["data"] / "universe_seed.csv",
+                seeds,
+                list(seeds[0]),
+            )
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                factory = stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment")
+                )
+                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
+                    b2.main()
+
+            factory.assert_not_called()
+
+    def test_same_count_unapproved_replacement_is_rejected_before_client(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            seeds = [_seed("EXTRA" if ticker == "APP" else ticker) for ticker in UNIVERSE_TICKERS]
+            b2.write_csv(paths["data"] / "universe_seed.csv", seeds, list(seeds[0]))
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                factory = stack.enter_context(patch.object(b2.MassiveBasicEODClient, "from_environment"))
+                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
+                    b2.main()
+            factory.assert_not_called()
+
+    def test_partial_thirty_three_ticker_fetch_cannot_commit_any_part_of_prior_trio(self) -> None:
+        """A single unusable ticker makes the complete 33-ticker batch noncommittable."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _PartialApprovedTickerClient(POST_CLOSE, B2_TICKERS[-1])
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls[:3], b2.SMOKE_TICKERS)
+            self.assertEqual(client.calls[3:], B2_TICKERS)
+            self.assertEqual(len(client.calls[3:]), 33)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+            audit = b2.read_csv(paths["audit"])
+            self.assertIn(
+                f"source_failure_code={b2.SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE}",
+                audit[1]["safety_notes"],
+            )
+            self.assertIn(
+                f"full_session_diagnostic_ticker={B2_TICKERS[-1]}",
+                audit[1]["safety_notes"],
+            )
+            self.assertIn(
+                "full_session_diagnostic_missing_session_dates=2026-08-05",
+                audit[1]["safety_notes"],
+            )
+
+    def test_failed_source_leaves_even_an_invalid_prior_trio_byte_for_byte_unchanged(self) -> None:
+        """Failure is not authority to replace a malformed baseline with fallback rows."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            malformed_candidates = paths["candidates"].read_bytes() + b"truncated,prior,row\n"
+            paths["candidates"].write_bytes(malformed_candidates)
+            prior = self._trio_bytes(paths)
+            smoke_rows = [
+                {
+                    "ticker": ticker,
+                    "last_price": "",
+                    "previous_close": "",
+                    "volume": "",
+                    "status": "failed",
+                    "error_code": massive.MALFORMED_RESPONSE_CODE,
+                }
+                for ticker in b2.SMOKE_TICKERS
+            ]
+            full_retrieval = Mock(
+                side_effect=AssertionError("failed smoke must prevent full fetch")
+            )
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                stack.enter_context(patch.object(b2, "timestamp", return_value=_FIXED_NOW))
+                stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
+                stack.enter_context(
+                    patch.object(b2.MassiveBasicEODClient, "from_environment", return_value=object())
+                )
+                stack.enter_context(
+                    patch.object(b2, "smoke_test", return_value=(smoke_rows, False))
+                )
+                stack.enter_context(
+                    patch.object(b2, "retrieve_full_universe", full_retrieval)
+                )
+                result = b2.main()
+
+            self.assertEqual(result, 1)
+            full_retrieval.assert_not_called()
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_full_response_requires_the_latest_completed_session(self) -> None:
+        """A complete-looking delayed Massive response remains noncommittable."""
+
+        rows = [
+            _market_row(ticker, str(100 + index))
+            for index, ticker in enumerate(B2_TICKERS)
+        ]
+        rows[0]["market_session_date"] = "2026-08-04"
+        rows[0]["market_age_calendar_days"] = "1"
+
+        committable, code = b2.full_universe_rows_are_committable(
+            market_rows=rows,
+            tickers=B2_TICKERS,
+            held_tickers=HELD_TICKERS,
+            current=POST_CLOSE,
+        )
+
+        self.assertFalse(committable)
+        self.assertEqual(code, b2.FULL_UNIVERSE_STALE_CODE)
+
+    def test_current_session_publication_lag_is_exact_and_nonreflective(self) -> None:
+        """A is emitted only when the newest session alone is unavailable."""
+
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)[:-1]
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE, persisted)
+            self.assertIn("missing_session_dates=2026-08-05", persisted)
+            self.assertIn("expected_latest_session=2026-08-05", persisted)
+            self.assertIn("observed_latest_session=2026-08-04", persisted)
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_historical_gap_and_duplicate_dates_are_reported_exactly(self) -> None:
+        """B records only normalized affected dates, never raw bar contents."""
+
+        bars = _valid_bars(POST_CLOSE)
+        missing_date = bars[len(bars) // 2]["session_date"]
+        del bars[len(bars) // 2]
+        gap = b2.session_coverage_diagnostic(bars, POST_CLOSE)
+
+        self.assertEqual(
+            gap["validation_code"],
+            b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE,
+        )
+        self.assertEqual(gap["missing_session_dates"], missing_date.isoformat())
+        self.assertEqual(gap["duplicate_session_dates"], "")
+
+        duplicate_bars = _valid_bars(POST_CLOSE)
+        duplicate_date = duplicate_bars[len(duplicate_bars) // 2]["session_date"]
+        duplicate_bars.insert(
+            len(duplicate_bars) // 2,
+            dict(duplicate_bars[len(duplicate_bars) // 2]),
+        )
+        duplicate = b2.session_coverage_diagnostic(duplicate_bars, POST_CLOSE)
+
+        self.assertEqual(
+            duplicate["validation_code"],
+            b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE,
+        )
+        self.assertEqual(
+            duplicate["duplicate_session_dates"], duplicate_date.isoformat()
+        )
+        self.assertEqual(duplicate["missing_session_dates"], "")
+
+    def test_historical_gap_is_persisted_without_payload_or_partial_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)
+            missing_date = bars[len(bars) // 2]["session_date"]
+            del bars[len(bars) // 2]
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_HISTORICAL_SESSION_SEQUENCE_CODE, persisted)
+            self.assertIn(
+                f"missing_session_dates={missing_date.isoformat()}", persisted
+            )
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_adapter_duplicate_session_diagnostic_survives_main_safely(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            client = _DuplicateSessionErrorClient()
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(massive.HISTORICAL_SESSION_SEQUENCE_CODE, persisted)
+            self.assertIn("duplicate_session_dates=2026-07-17", persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_concrete_calculation_mismatch_has_finite_c_code(self) -> None:
+        bars = _valid_bars(POST_CLOSE)
+        for bar in bars[-20:]:
+            bar["volume"] = 0.0
+        diagnostic: dict[str, str] = {}
+
+        row = b2.market_row_from_massive_bars(
+            "QQQ",
+            bars,
+            _FIXED_NOW,
+            POST_CLOSE,
+            diagnostic=diagnostic,
+        )
+
+        self.assertEqual(row["data_quality_label"], "insufficient_data")
+        self.assertEqual(
+            diagnostic["validation_code"],
+            b2.SMOKE_MARKET_ROW_VALIDATION_CODE,
+        )
+        self.assertEqual(diagnostic["missing_session_dates"], "")
+        self.assertEqual(diagnostic["unexpected_session_dates"], "")
+        self.assertEqual(diagnostic["duplicate_session_dates"], "")
+
+    def test_concrete_calculation_mismatch_is_end_to_end_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            bars = _valid_bars(POST_CLOSE)
+            for bar in bars[-20:]:
+                bar["volume"] = 0.0
+            bars[-1]["provider_detail"] = _CANARY
+            client = _StaticBarsClient(bars)
+
+            result = self._run_with_client(paths, client)
+
+            self.assertEqual(result, 1)
+            self.assertEqual(client.calls, ["QQQ"])
+            persisted = "\n".join(
+                path.read_text(encoding="utf-8")
+                for path in (
+                    paths["audit"],
+                    paths["decision"],
+                    paths["report"],
+                    paths["run_log"],
+                )
+            )
+            self.assertIn(b2.SMOKE_MARKET_ROW_VALIDATION_CODE, persisted)
+            self.assertNotIn(_CANARY, persisted)
+            for name, expected in prior.items():
+                self.assertEqual(paths[name].read_bytes(), expected, name)
+
+    def test_massive_bars_preserve_all_existing_b2_calculations(self) -> None:
+        bars = [
+            {
+                "session_date": session,
+                "open": 100.0,
+                "high": 105.0,
+                "low": 95.0,
+                "close": 100.0,
+                "volume": 1000.0,
+            }
+            for session in b2.expected_history_sessions(POST_CLOSE)
+        ]
+        bars[-2]["close"] = 99.0
+        bars[-1].update(
+            {"high": 111.0, "low": 98.0, "close": 110.0, "volume": 2000.0}
+        )
+
+        row = b2.market_row_from_massive_bars(
+            "IOT", bars, _FIXED_NOW, POST_CLOSE
+        )
+
+        self.assertEqual(row["last_price"], "110.0000")
+        self.assertEqual(row["previous_close"], "99.0000")
+        self.assertEqual(row["intraday_change_pct"], "11.1111")
+        self.assertEqual(row["volume"], "2000")
+        self.assertEqual(row["average_volume"], "1050")
+        self.assertEqual(row["relative_volume"], "1.9048")
+        self.assertEqual(row["dollar_volume"], "220000")
+        self.assertEqual(row["day_high"], "111.0000")
+        self.assertEqual(row["day_low"], "98.0000")
+        self.assertEqual(row["fifty_two_week_high"], "111.0000")
+        self.assertEqual(row["fifty_two_week_low"], "95.0000")
+        self.assertEqual(row["market_session_date"], "2026-08-05")
+        self.assertEqual(row["data_source"], massive.MASSIVE_DATA_SOURCE)
+        self.assertEqual(row["data_quality_label"], "ok")
+
+        del bars[len(bars) // 2]
+        incomplete = b2.market_row_from_massive_bars(
+            "IOT", bars, _FIXED_NOW, POST_CLOSE
+        )
+        self.assertEqual(incomplete["data_quality_label"], "insufficient_data")
+
+
+if __name__ == "__main__":
+    unittest.main()

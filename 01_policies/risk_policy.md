@@ -4,7 +4,7 @@ Scope note (2026-09-04): this is the legacy general planning reference, not the
 executable Phase 5R threshold configuration. Its planning limits are retained,
 but a rule written here is not evidence that runtime enforces it. Current
 single-stock, sleeve, cash, and core-allocation gates are identified in
-[the current-document index](../00_project_control/phase5r_current_documents.md).
+[the current-document index](../00_project_control/current_documents.md).
 The historical 20% position warning below is not permission to exceed a lower
 active Phase 5R cap. No limit is relaxed by this clarification.
 
