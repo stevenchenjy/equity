@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-09-24T15:17:12.000-04:00",
+  "artifact_sha256": "e1ca6e62bb209d55e01cec557f9cb1760230945b9e5caae74a8e21d07a731c45",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v28",
+  "prior_extension_set_sha256": "8c0986bba4c3f75800c60e246797690bd8c794132fc7df5171bce3972fb7c375",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-09-24T06:02:44.000+00:00",
+      "accession_number": "0001046179-26-000660",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-24T15:17:12.000-04:00",
+      "cik": "1046179",
+      "entity_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "extension_record_sha256": "2c3b7707109195c3cc3e83c0e009ee84dc1016191fef66eee7d84fc923d8174d",
+      "extension_version": "v28",
+      "filing_date": "2026-09-24",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "695470cfc4f13203db9b39e47a15d291c39940139694f4815239230bae899219",
+      "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+      "ticker": "TSM"
+    },
+    {
+      "accepted_at": "2026-09-24T06:38:08.000+00:00",
+      "accession_number": "0001628280-26-063311",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-09-24T15:17:12.000-04:00",
+      "cik": "1674101",
+      "entity_name": "Vertiv Holdings Co",
+      "extension_record_sha256": "8e846abe49a7e0d1a4cc061549195c518d2e29941bf9bbcff2d28680cb56d242",
+      "extension_version": "v28",
+      "filing_date": "2026-09-24",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "b34edf5baec0f37f2e2a66b8ea5ec1c84c7d04b61769b210c058fbe120ffd11e",
+      "source_url": "https://data.sec.gov/submissions/CIK0001674101.json",
+      "ticker": "VRT"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
