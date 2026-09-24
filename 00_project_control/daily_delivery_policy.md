@@ -152,6 +152,28 @@ that this system is a regulated adviser or has obtained regulatory approval.
 
 ## Duplicate Protection
 
+### Same-day requested-review precedence (2026-09-23)
+
+A requested review sent or durably claimed on the current ET calendar date
+covers routine scheduled screening for that date. The normal sender checks
+the actual ledger timestamp, not the review's possibly previous-day canonical
+cycle, under the existing delivery lock and before reading SMTP configuration.
+Routine watch/discovery changes alone do not produce a second report.
+
+New official material events, account conflicts, failed data gates, fundamental
+weakening, or validated action plans remain eligible for the normal notification
+checks. Explicit owner reviews and authorized corrections retain their own
+deduplication rules. This does not roll forward analyst prices, change decision
+eligibility, or suppress a future day's research.
+
+Scheduled messages use six compact cards with a clear automatic-data-update
+label. They do not claim to replace a separately researched stop or exit date.
+Rejected mechanical tactical price scenarios and raw diagnostic codes remain
+in the local canonical decision rather than being mailed as alternative plans.
+Validated positive drafts retain their complete conditions and risk limits.
+The historical sent message bodies and delivery hashes must be preserved before
+re-rendering current artifacts after a presentation change.
+
 The sender uses a process lock and a durable append-only delivery ledger.
 
 Blocking states for the same ET date:

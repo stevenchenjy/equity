@@ -209,6 +209,14 @@ coverage and meaningful shortlist changes under the existing email cadence.
 
 ## Email readability (2026-09-22 follow-up)
 
+The September 23 delivery audit found a requested compact review followed by
+a separate long scheduled report. Apply compact cards to scheduled reports
+as well. A same-day requested review covers routine automatic watch changes;
+new verified risk/action developments remain independently reportable under
+the daily delivery policy. Do not present rejected mechanical price scenarios
+as another set of instructions or imply that a rule-based no-action result
+revokes a separately researched protective stop or tactical exit deadline.
+
 Use one language and one primary narrative per message. For interactive reviews,
 set presentation=compact and provide at most six short sections, with a summary
 first and one card per trade. Use short labelled lines for shares, entry trigger,

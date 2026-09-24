@@ -19,7 +19,7 @@ from email.utils import formataddr
 from typing import Any, Callable
 
 from active_config import load_active_config
-from email_brief import EMAIL_BRIEF_VERSION, email_subject, render_email
+from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from daily_common import (
     DAILY_BRIEF_HTML_PATH,
     DAILY_BRIEF_TEXT_PATH,
@@ -517,6 +517,33 @@ def owner_review_eligibility(
     return True, "explicit_owner_review_request"
 
 
+def routine_covered_by_owner_review(rows: list[dict[str, str]], decision: dict[str, Any]) -> bool:
+    """A same-day requested review covers routine screening, not new risk alerts.
+
+    Use actual send/claim date in ET, never the older canonical cycle_date of a
+    premarket review. Durable claims and uncertain sends also prevent duplicates.
+    This does not carry analyst prices forward or change decision eligibility.
+    """
+    if (decision.get("account_conflicts") or decision.get("material_events")
+            or decision.get("fundamental_gate", {}).get("weakening_tickers")
+            or any(decision.get(key, {}).get("passed") is not True
+                   for key in ("market_gate", "evidence_gate", "fundamental_gate"))
+            or build_email_view(decision)["plans"]):
+        return False
+    current = now_et()
+    for row in rows:
+        if row.get("status", "").strip() not in OWNER_REVIEW_DELIVERY_STATUSES:
+            continue
+        try:
+            stamp = datetime.fromisoformat(row.get("timestamp", "").replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        if (stamp.tzinfo is not None and stamp <= current
+                and stamp.astimezone(current.tzinfo).date() == current.date()):
+            return True
+    return False
+
+
 def send_once(
     smtp_factory: Callable[..., Any] = smtplib.SMTP,
     *,
@@ -585,6 +612,8 @@ def send_once(
             prior_status = correction_reason
         else:
             blocked, prior_status = cycle_is_blocked(delivery_rows, target_cycle)
+            if not blocked and routine_covered_by_owner_review(delivery_rows, decision):
+                blocked, prior_status = True, "owner_review_already_covers_today"
         if blocked:
             log_daily_run(
                 component="daily_sender",

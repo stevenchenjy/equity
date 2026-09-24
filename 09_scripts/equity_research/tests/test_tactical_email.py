@@ -126,7 +126,7 @@ class TacticalEmailTests(unittest.TestCase):
     def test_markup_is_escaped_and_cash_label_does_not_invent_ledger_arithmetic(self) -> None:
         decision = tactical_fixture()
         decision["account"]["cash_basis"] = "owner_assumption"
-        decision["tactical_review"]["drafts"][0]["entry_rule"] = '<img src="x">'
+        decision["tactical_review"]["drafts"][0]["ticker"] = '<img src="x">'
         _, text, html = render_email(decision)
         self.assertIn('<img src="x">', text)
         self.assertNotIn('<img src="x">', html)

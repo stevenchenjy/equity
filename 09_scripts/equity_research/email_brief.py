@@ -643,7 +643,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
             tasks.append("没有需要你确认的交易方案；继续按既有条件观察。")
             summary = "确定性规则本次没有形成新的仓位调整建议。"
     if code == "hold_pending_research" and not plans:
-        summary = "当前维持仓位；长期持有逻辑或估值仍待研究补齐，不能把暂未调整理解为已完成投资论证。"
+        summary = "自动筛选本次没有形成新的仓位调整方案；这不撤销另行分析中已设定的止损、退出期限或条件。"
 
     plan_tickers = {row["ticker"] for row in plans}
     positions = []
@@ -809,12 +809,85 @@ def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any
     return subject, '\n'.join(lines)+'\n', document
 
 
+def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
+    """One card layout; omit rejected mechanical price scenarios from email.
+
+    The complete tactical diagnostics remain in the canonical local decision.
+    Only already validated positive tactical drafts get a price card here.
+    """
+    subject = email_subject(decision)
+    provenance = "自动数据更新：不代表重新完成个股分析，也不替换另行复核中设定的止损或退出期限。"
+    sections = [("本次结论", [view["title"], view["summary"], view["as_of"], provenance, "需要你处理", *view["tasks"]])]
+    positions = [f"{r['ticker']}：{r['quantity']} · {r['weight']} · 参考收盘 {r['price']} · {r['state']}" for r in view["positions"]]
+    sections.append(("持仓与现金", positions + view["account_lines"] + ([view["receipt"]] if view["receipt"] else []) + view["funding_lines"]))
+    trade_lines = []
+    for plan in view["plans"]:
+        trade_lines += [plan["title"], plan["scenario"], "依据：" + plan["reason"], "限制：" + plan["limit"]]
+    rejected = []
+    for section in view["tactical_sections"]:
+        if " · 短线复核" in section["title"]:
+            if any(line.startswith("待人工判断：新增") for line in section["lines"]):
+                trade_lines += [section["title"], *section["lines"]]
+            else:
+                rejected.append(section["title"].split(" · ")[0])
+        else:
+            trade_lines += [section["title"], *[line for line in section["lines"]
+                            if not line.startswith(("复核依据：", "尚缺条件："))]]
+    if rejected:
+        trade_lines += ["待研究标的：" + "、".join(rejected),
+                        "上述自动短线情景未通过准入，本次新增 0 股。机械生成的观察价格和原始阻断代码仅保留在本地报告，不作为新的指令发送。"]
+    sections.append(("订单与可复核方案", trade_lines))
+    watch_lines = ["仅列本次确定性候选清单；不是全市场机会排名。"]
+    for row in view["watchlist"]:
+        watch_lines += [row["title"], row["reference"], row["instruction"], "依据：" + row["reason"], "再次复核条件：" + row["next_step"]]
+    if not view["watchlist"]:
+        watch_lines.append("本次候选清单没有未持仓标的。")
+    watch_lines += [view["discovery"]["title"], *view["discovery"]["lines"]]
+    sections.append(("观察与市场发现", watch_lines))
+    evidence = [view["quality"], *view["limitations"]]
+    if view["documents"]:
+        evidence.append("本次新纳入的官方文件（披露日不一定是今天）：")
+    for row in view["documents"]:
+        evidence += [row["title"], row["url"] or "来源链接待核验"]
+    sections.append(("证据与限制", evidence))
+    sections.append(("四条规则与下一步", [*view["trading_rules"], view["next_step"], view["ai_note"]]))
+    esc = lambda value: html.escape(str(value), quote=True)
+    text = [subject]
+    content = [f'<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">{esc(view["title"])}</h1>']
+    safe_links = {row["url"] for row in view["documents"] if row["url"]}
+    for index, (title, lines) in enumerate(sections):
+        text += ["", title, *lines]
+        background = "#eef5f8" if index == 0 else "#ffffff"
+        content.append(f'<div style="background:{background};border:1px solid #dbe4e9;border-radius:10px;padding:18px;margin:18px 0"><h2 style="font-size:19px;line-height:1.35;margin:0 0 12px">{esc(title)}</h2>')
+        if title == "持仓与现金":
+            content.append('<table style="width:100%;border-collapse:collapse"><thead><tr><th scope="col">标的</th><th scope="col">已记录持仓 / 权重</th><th scope="col">参考收盘</th><th scope="col">状态</th></tr></thead><tbody>')
+            for row in view["positions"]:
+                content.append(f'<tr><th scope="row">{esc(row["ticker"])}</th><td>{esc(row["quantity"])} / {esc(row["weight"])}</td><td>{esc(row["price"])}</td><td>{esc(row["state"])}</td></tr>')
+            content.append('</tbody></table>')
+        for line in lines:
+            if title == "持仓与现金" and line in positions:
+                continue
+            rendered = esc(line)
+            if line in safe_links:
+                rendered = f'<a href="{esc(line)}">官方文件来源</a>'
+            content.append(f'<p style="font-size:15px;line-height:1.65;margin:9px 0">{rendered}</p>')
+        content.append("</div>")
+    document = ('<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">'
+                '<meta name="viewport" content="width=device-width,initial-scale=1">'
+                f'<title>{esc(subject)}</title></head><body style="margin:0;background:#f3f5f7;color:#172b3a;font-family:Arial,Helvetica,sans-serif">'
+                '<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;overflow-wrap:break-word">'
+                + ''.join(content) + '</div></body></html>\n')
+    return subject, "\n".join(text) + "\n", document
+
+
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
     owner_research = _owner_research(decision)
     review = decision.get("owner_requested_research", {})
     if owner_research and review.get("presentation") == "compact":
         return _render_compact_owner(decision, owner_research)
+    if not owner_research:
+        return _render_compact_scheduled(decision, view)
     dated_review = bool(owner_research and review.get("request_id"))
     subject = email_subject(decision, owner_review=dated_review)
     research_note = "以下为本次人工请求的研究解读，不覆盖确定性规则，不参与自动通知或 SHADOW 评估；下次自动刷新不沿用。"
