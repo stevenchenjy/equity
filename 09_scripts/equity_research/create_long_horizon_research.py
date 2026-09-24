@@ -5,10 +5,12 @@ from __future__ import annotations
 from equity_naming import report_heading
 
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 from daily_common import ROOT, atomic_write_json, atomic_write_text, iso_now, read_csv, read_json
 from long_horizon_research import build_long_horizon_report
+from thesis_evidence import STORE_REL
 
 REPORT_REL = Path("04_research/company_research/long_horizon_research.local.json")
 MARKDOWN_REL = Path("08_reviews/current/long_horizon_research.local.md")
@@ -53,7 +55,10 @@ def render_report(report: dict) -> str:
     for ticker, row in companies:
         facts = row.get("facts", {})
         values = [display(facts.get(key, {}).get("value")) for key in ("revenue_yoy_pct", "ttm_revenue_yoy_pct", "share_dilution_pct")]
-        readiness = "宽基核心，适用核心配置政策" if row["readiness"] == "not_applicable_core" else "研究尚未完成"
+        readiness = {"not_applicable_core": "宽基核心，适用核心配置政策",
+            "not_applicable_etf": "ETF 配置复核", "reviewed_thesis_valuation_pending": "商业逻辑已审阅；估值未完成",
+            "reviewed_research": "研究已审阅；不代表交易获准", "research_reassessment_required": "已有观点需重新审阅",
+            "pending_research": "研究尚未完成"}.get(row["readiness"], "研究尚未完成")
         signals = "、".join(SIGNAL_LABELS.get(x["code"], x["code"]) for x in row["review_signals"]) or "未触发；假设仍待验证"
         lines.append(f"| {ticker} | {readiness} | {' | '.join(values)} | {signals} |")
     lines += ["", "## 当前持仓的倍增条件", "",
@@ -61,7 +66,7 @@ def render_report(report: dict) -> str:
         "", "| 持仓 | 已知 TTM 增速 | 5 年 2× 所需收入 CAGR | 5 年 3× 所需收入 CAGR | 可实现性 |",
         "| --- | ---: | --- | --- | --- |"]
     for ticker, row in companies:
-        if not row.get("held") or row["readiness"] == "not_applicable_core":
+        if not row.get("held") or row["readiness"].startswith("not_applicable"):
             continue
         diagnostic = row["hurdle_diagnostic"]
         ranges = {item["price_hurdle_multiple"]: item for item in diagnostic["required_revenue_growth_ranges"] if item["years"] == 5}
@@ -76,13 +81,45 @@ def render_report(report: dict) -> str:
     coverage = report["coverage"]
     lines += ["", f"覆盖：{coverage['fundamental_rows']} 条基本面；应覆盖公司 {coverage['required_company_count']} 家；缺失：{', '.join(coverage['missing_company_rows']) or '无'}；质量未通过：{', '.join(coverage['unusable_company_rows']) or '无'}。"]
     for ticker, row in companies:
-        if row["readiness"] == "not_applicable_core":
+        if row["readiness"].startswith("not_applicable"):
             continue
         reference = row["market_reference"]
         dated = row["facts"]["revenue_latest"]
         lines += ["", f"## {ticker}", "",
             f"市场参考：${display(reference['price'])}，{reference['market_session_date']}；财务期间截至 {dated['financial_period_end'] or '未知'}，证据抓取 {dated['fetched_at'] or '未知'}。",
-            "", "待验证的商业假设：", ""]
+        ]
+        maintained = row.get("maintained_view", {})
+        record = maintained.get("review_record")
+        if record:
+            lines += ["", f"维护观点：{maintained['status']}；版本 {record['version']}；审阅 {record['reviewed_at']}；下次复核 {record['next_review_at']}。",
+                f"商业判断：{record['business_case']['status']}；估值：{record['valuation']['status']}。",
+                f"已记录观点：{record['conclusion']}", f"本次版本原因：{record['change_reason']}"]
+            if maintained["reopen_reasons"]:
+                lines += ["**上面是此前审阅观点，当前已重新打开复核，不能当作完成的新结论。**",
+                    "复核原因："+"；".join(maintained["reopen_reasons"])]
+            for section, label in (("business_case", "商业逻辑"), ("per_share_economics", "每股经济性"),
+                                   ("valuation", "估值与价格"), ("portfolio_role_and_alternatives", "组合角色与替代方案")):
+                lines += ["", f"{label}：{record[section]['summary']}"]
+            source_by = {source["source_id"]: source for source in record["sources"]}
+            lines += ["", "支持与反证（事实和分析推断分别标记）：", ""]
+            for claim in record["claims"]:
+                links = list(dict.fromkeys(source_by[citation["source_id"]]["url"] for citation in claim["citations"]))
+                lines += [f"- [{claim['kind']} / {claim['stance']}] {claim['statement']} " + " ".join(f"[原始文件]({url})" for url in links)]
+            if record.get("reviewed_material_filings"):
+                lines += ["", "已审阅的非定期重大文件（单独保留处置结论，不改变财务期间）：", ""]
+                lines += [f"- [{receipt['form']} {receipt['accession']}]({receipt['url']})：{receipt['assessment']} 处置：{receipt['disposition']}。"
+                          for receipt in record["reviewed_material_filings"]]
+        else:
+            lines += ["", "尚无通过来源验证的维护观点。"]
+            if maintained.get("validation_errors"):
+                lines += ["验证问题："+"；".join(maintained["validation_errors"])]
+        news_review = maintained.get("news_review", {})
+        if news_review.get("pending_events"):
+            lines += ["", "官方新闻尚待逐项审阅；下列标题仅为待核验线索，不代表已纳入商业观点或构成买卖信号：", ""]
+            lines += [f"- {event['published_at']} · [{event['title']}]({event['url']}) · {event['reason']}" for event in news_review["pending_events"]]
+        if news_review.get("coverage_complete") is not True:
+            lines += ["", "官方新闻覆盖未完整通过；没有待审标题不代表没有重要新闻。"]
+        lines += ["", "待检验的持续经营假设：", ""]
         lines += [f"- {text}" for text in row["thesis"]["hypotheses"]]
         lines += ["", "需要反证检查的条件（不是自动退出条件）：", ""]
         lines += [f"- {text}" for text in row["thesis"]["invalidation_checks"]]
@@ -92,7 +129,7 @@ def render_report(report: dict) -> str:
         lines += [f"- {missing_label(item)}" for item in dict.fromkeys(row["missing_evidence"])]
         source = row["facts"]["revenue_latest"]["source_url"]
         if source:
-            lines += ["", f"原始证据：[SEC companyfacts]({source})；各字段来源、官方可得时间和财务期间保存在 JSON。"]
+            lines += ["", f"财务来源：[来源索引]({source})；各字段的具体文件、官方可得时间和财务期间保存在 JSON，若使用申报文件补足亦单独记录。"]
         scenarios = row["sensitivity_scenarios"]
         if not scenarios["forward"]:
             lines += ["", "情景未计算：" + "、".join(missing_label(item) for item in scenarios["missing_inputs"]) + "。缺少证据不补零。"]
@@ -117,13 +154,35 @@ def main() -> int:
     input_root, output_root = args.input_root.resolve(), args.output_root.resolve()
     policy = read_json(ROOT/POLICY_REL)
     output = output_root/REPORT_REL
+    observed_at = iso_now()
+    positions = read_csv(input_root/"05_risk_and_positions/current_positions.local.csv")
+    # Latest financial selection must have passed its own reconciliation. A
+    # missing report explicitly reopens a dossier instead of assuming no change.
+    try:
+        from earnings_incorporation import read_earnings_incorporation_status
+        incorporation = read_earnings_incorporation_status(root=input_root)
+    except ImportError:
+        incorporation = read_json(input_root / "03_source_data/equity_research/earnings_incorporation_status.local.json", {})
+    from workflow_integrity import current_news_context
+    news = current_news_context({"held_positions": [{"ticker": row["ticker"],
+        "asset_role": "core_allocation" if row["ticker"] in policy["excluded_benchmarks"] else "active_stock"}
+        for row in positions]}, root=input_root, current=datetime.fromisoformat(observed_at),
+        persist_queue=input_root == output_root)
     report = build_long_horizon_report(
         read_csv(input_root/"03_source_data/equity_research/daily_fundamentals.csv"),
-        read_csv(input_root/"05_risk_and_positions/current_positions.local.csv"),
+        positions,
         read_csv(input_root/"03_source_data/equity_research/market_data_snapshot.csv"),
-        policy, iso_now(), previous_report=read_json(output, {}),
+        policy, observed_at, previous_report=read_json(output, {}),
         universe=read_csv(input_root/"03_source_data/equity_research/universe_seed.csv"),
+        thesis_store=read_json(input_root/STORE_REL, None), evidence_root=input_root,
+        material_events=read_csv(input_root/"03_source_data/equity_research/daily_evidence_ledger.csv"),
+        incorporation_report=incorporation,
+        official_news_report=news,
     )
+    if input_root == output_root:
+        from issuer_news_queue import record_review_states
+        record_review_states({ticker: row.get("maintained_view", {}) for ticker, row in report["companies"].items()},
+            root=input_root, current=datetime.fromisoformat(observed_at))
     atomic_write_json(output, report)
     atomic_write_text(output_root/MARKDOWN_REL, render_report(report))
     print(f"long_horizon_companies={len(report['companies'])} fundamental_candidates={len(report['candidate_queue'])} automatic_action_allowed=false")

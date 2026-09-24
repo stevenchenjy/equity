@@ -5,6 +5,9 @@ from datetime import date, datetime
 import json
 import math
 from typing import Any
+from pathlib import Path
+
+from thesis_evidence import evaluate_thesis, evidence_context, apply_issuer_news_review
 
 FACT_FIELDS = (
     "revenue_latest", "revenue_yoy_pct", "ttm_revenue", "ttm_revenue_yoy_pct",
@@ -262,6 +265,10 @@ def build_long_horizon_report(
     fundamentals: list[dict[str, Any]], positions: list[dict[str, Any]],
     market: list[dict[str, Any]], policy: dict[str, Any], observed_at: str,
     previous_report: dict[str, Any] | None = None, universe: list[dict[str, Any]] | None = None,
+    thesis_store: dict[str, Any] | None = None, evidence_root: Path | None = None,
+    material_events: list[dict[str, Any]] | None = None,
+    incorporation_report: dict[str, Any] | None = None,
+    official_news_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     held = {str(row["ticker"]).upper() for row in positions}
     fact_by = {str(row["ticker"]).upper(): row for row in fundamentals}
@@ -269,6 +276,14 @@ def build_long_horizon_report(
     queue = fundamentals_candidate_queue(fundamentals, held, policy)
     selected = {row["ticker"] for row in queue[:policy["candidate_limit"]]}
     companies = {}
+    # A corrupt evidence context becomes an explicit per-company unresolved
+    # state; it must not erase the last authored dossier or pass as reviewed.
+    context = None
+    if thesis_store is not None and evidence_root is not None:
+        try:
+            context = evidence_context(evidence_root)
+        except (OSError, ValueError, KeyError, TypeError):
+            context = {"acceptance": {}, "artifacts": {}}
     prior_companies = (previous_report or {}).get("companies", {})
     for ticker in sorted(held | selected):
         if ticker in policy["excluded_benchmarks"]:
@@ -310,6 +325,23 @@ def build_long_horizon_report(
             "review_signals": signals, "missing_evidence": missing,
             "quarterly_history": (history+[observation])[-8:], "sensitivity_scenarios": scenarios,
             "hurdle_diagnostic": hurdle_diagnostic(scenarios, facts)}
+        maintained = evaluate_thesis(thesis_store, ticker, observed_at, evidence_root, context=context,
+            material_events=material_events,
+            incorporation=(incorporation_report or {}).get("companies", {}).get(ticker))
+        apply_issuer_news_review(maintained, ticker=ticker, news=official_news_report or {}, current=timestamp(observed_at))
+        companies[ticker]["maintained_view"] = maintained
+        companies[ticker]["business_case_readiness"] = maintained["business_case_status"]
+        companies[ticker]["valuation_readiness"] = maintained["valuation_readiness"]
+        if maintained["review_record"]:
+            companies[ticker]["missing_evidence"] = [item for item in missing if not item.startswith("unresolved_business_evidence:")]
+            companies[ticker]["missing_evidence"] += ["unresolved_business_evidence:"+item for item in maintained["review_record"]["unresolved_questions"]]
+            companies[ticker]["thesis"]["status"] = maintained["status"]
+            companies[ticker]["thesis"]["maintained_conclusion"] = maintained["conclusion"]
+            companies[ticker]["thesis"]["hypotheses_are_unproven"] = True
+        if maintained["status"] in {"reviewed", "monitor"}:
+            companies[ticker]["readiness"] = "reviewed_thesis_valuation_pending" if maintained["valuation_readiness"] == "unresolved" else "reviewed_research"
+        elif maintained["status"] in {"reassess", "invalidated"}:
+            companies[ticker]["readiness"] = "research_reassessment_required"
     required = {str(row["ticker"]).upper() for row in (universe or []) if row.get("is_benchmark") != "yes"} | (held-set(policy["excluded_benchmarks"]))
     held_sessions = {quote_by.get(ticker, {}).get("market_session_date", "") for ticker in held}
     market_session = next(iter(held_sessions)) if len(held_sessions) == 1 else ""

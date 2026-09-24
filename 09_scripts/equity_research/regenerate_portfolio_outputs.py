@@ -490,6 +490,8 @@ def main() -> None:
     memo_lines = [
         report_heading("account_memo"),
         "",
+        "Baseline diagnostic calculation only. Current maintained instructions and unresolved states are in 04_research/company_research/daily_decision.md and 08_reviews/current/maintained_plans.local.md. These quantities do not supersede those plans or renew expired orders.",
+        "",
         f"Generated: `{timestamp()}`",
         "",
         "## Account State",
@@ -501,7 +503,7 @@ def main() -> None:
         f"- Invested capital: `${float(summary['current_holdings_value']):.2f}` (`{invested_pct:.4f}%`); underdeployment review threshold `{underdeployment_threshold:.2f}%`.",
         f"- Cash/holding reconciliation difference: `${float(summary['reconciliation_difference']):.2f}` (`{summary['reconciliation_status']}`).",
         "",
-        "## Current Position Actions",
+        "## Baseline Position Diagnostics",
         "",
         *action_lines,
         "",
@@ -524,7 +526,7 @@ def main() -> None:
         f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. At most one candidate is surfaced per refresh; every scenario remains research-only and requires independent human confirmation.",
         "Uncertainty now maps to starter, normal, or high-conviction sizing. Negative/incomplete valuation, inadequate reward/risk, or infeasible whole-share concentration still produces zero allocation.",
         "",
-        "## Portfolio After All Current Reviews",
+        "## Hypothetical Baseline Portfolio",
         "",
         f"- Hypothetical active stocks: `${float(selected_post_action['resulting_active_value']):.2f}` (`{float(selected_post_action['active_weight_pct']):.4f}%`).",
         f"- Hypothetical core: `${float(selected_post_action['resulting_core_value']):.2f}` (`{float(selected_post_action['core_weight_pct']):.4f}%`).",
@@ -542,6 +544,8 @@ def main() -> None:
     allocation_rows = read_csv(TARGET_ALLOCATION_REPORT)
     allocation_lines = [
         report_heading("allocation_report"),
+        "",
+        "Baseline diagnostic calculation only. Current maintained instructions and unresolved states are in 04_research/company_research/daily_decision.md and 08_reviews/current/maintained_plans.local.md. These quantities do not supersede those plans or renew expired orders.",
         "",
         f"Generated: `{timestamp()}`",
         "",
@@ -568,6 +572,8 @@ def main() -> None:
     weekly_lines = [
         report_heading("decision_summary"),
         "",
+        "Baseline diagnostic calculation only. Current maintained instructions and unresolved states are in 04_research/company_research/daily_decision.md and 08_reviews/current/maintained_plans.local.md. These quantities do not supersede those plans or renew expired orders.",
+        "",
         f"Generated: `{timestamp()}`",
         "",
         f"- Primary scenario: `c9_account_aware_manual_review`.",
@@ -579,7 +585,7 @@ def main() -> None:
         f"- New eligible individual-stock count: `{len(eligible_individual)}`.",
         f"- Next review date: `{review_date}`.",
         "",
-        "## Exact Current-Position Review",
+        "## Baseline Current-Position Calculation",
         "",
         *action_lines,
         "",

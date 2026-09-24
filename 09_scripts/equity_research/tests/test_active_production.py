@@ -258,6 +258,7 @@ class ActiveProductionTests(unittest.TestCase):
             patch.object(daily_refresh, "load_active_state"),
             patch.object(daily_refresh, "load_inhibit"),
             patch.object(daily_refresh, "log_daily_run"),
+            patch("workflow_evaluation.record_refresh"),
             patch.object(daily_refresh, "run_step", side_effect=fake_run_step),
             patch.object(
                 daily_refresh,
@@ -295,6 +296,7 @@ class ActiveProductionTests(unittest.TestCase):
             patch.object(daily_refresh, "load_active_state"),
             patch.object(daily_refresh, "load_inhibit"),
             patch.object(daily_refresh, "log_daily_run"),
+            patch("workflow_evaluation.record_refresh"),
             patch.object(daily_refresh, "run_step", side_effect=fake_run_step),
             patch.object(daily_refresh, "atomic_write_json"),
         ):

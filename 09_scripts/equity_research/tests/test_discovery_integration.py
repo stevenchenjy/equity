@@ -19,6 +19,7 @@ class IndependentDiscoveryIntegrationTests(unittest.TestCase):
             return {"name": name, "script": script, "allowed_to_fail": allowed,
                     "exit_code": 124 if name == "market_discovery" else 0}
         with (patch.object(refresh, "load_active_state"), patch.object(refresh, "load_inhibit"),
+              patch("workflow_evaluation.record_refresh"),
               patch.object(refresh, "log_daily_run"), patch.object(refresh, "run_step", side_effect=step),
               patch.object(refresh, "atomic_write_json", side_effect=lambda path, value: writes.append(copy.deepcopy(value)))):
             self.assertEqual(refresh.run_refresh(no_lock=True, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE), 0)

@@ -51,6 +51,7 @@ _LABELS = {
     "action_review_candidate": ("有方案待复核", "有仓位方案需要你判断"),
     "pending_new_position_stability": ("等待稳定性确认", "新增方案尚未完成稳定性确认"),
     "hold_no_new_position": ("无交易待办", "本次没有新增仓位方案"),
+    "maintained_plan_review": ("现有计划待复核", "按维护中的计划复核"),
     "hold_pending_research": ("持仓研究待补齐", "暂维持仓位，补齐长期研究依据"),
 }
 
@@ -248,12 +249,18 @@ def _tactical_view(
         review_status = str(order.get("review_status") or "unknown")
         order_day = str(order.get("session_date") or str(orders.get("as_of") or "")[:10])
         stale_day = tif == "DAY" and status == "open" and bool(re.fullmatch(r"\d{4}-\d{2}-\d{2}", order_day)) and order_day < next_session
-        if stale_day or "expired" in review_status or "stale" in review_status:
+        terminal = status in {"filled", "cancelled", "canceled", "expired", "rejected"}
+        if terminal:
+            current = "历史终态记录，非当前待处理订单"
+        elif stale_day or "expired" in review_status or "stale" in review_status:
             current = "时效或快照已过期，最终状态待核对；不能据此认定成交或撤单"
         else:
             current = "最终状态仍需券商核对；快照不证明当前仍开放"
         side = {"buy": "买入", "sell": "卖出"}.get(str(order.get("side") or "").lower(), "方向待确认")
-        order_lines.append(f"{order.get('ticker', '待确认')}：已记录{side} {shares(order.get('remaining_quantity', order.get('quantity')))} 股；限价 {money(order.get('limit_price'))}；{tif}；{observed}；{current}。")
+        quantity_label = f"原委托{side} {shares(order.get('quantity'))} 股"
+        if not terminal:
+            quantity_label += f"，快照剩余 {shares(order.get('remaining_quantity'))} 股"
+        order_lines.append(f"{order.get('ticker', '待确认')}：{quantity_label}；限价 {money(order.get('limit_price'))}；{tif}；{observed}；{current}。")
         if order.get("expiration_date"):
             order_lines.append(f"记录的到期日期：{order['expiration_date']}。")
         if order.get("review_reason"):
@@ -645,6 +652,28 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     if code == "hold_pending_research" and not plans:
         summary = "自动筛选本次没有形成新的仓位调整方案；这不撤销另行分析中已设定的止损、退出期限或条件。"
 
+    maintained_lines = []
+    thesis_lines = []
+    continuity = decision.get("plan_continuity", {})
+    if continuity:
+        from investment_plans import render_plan_lines
+        maintained_lines = render_plan_lines(continuity)
+        if code == "maintained_plan_review" and not decision.get("account_conflicts") and gates_passed:
+            label, title = _LABELS[code]
+            summary = "现有计划保留版本、复核期限和未解决状态；旧报价与 DAY 草案不自动续期。"
+            tasks = (["核对下方未解决计划与券商最新订单状态；完成核对前不新增仓位。"]
+                     if continuity.get("block_new_capital") else ["按下方当前计划复核；本次没有新增交易待办。"])
+        for ticker, view in sorted(decision.get("long_horizon_research", {}).get("views", {}).items()):
+            state = {"reviewed": "已形成有来源支持的业务判断", "reassess": "新证据或期限触发重新复核",
+                     "unresolved": "研究结论待补齐", "monitor": "持续观察", "invalidated": "原投资逻辑已失效"}.get(view.get("status"), "研究状态待核对")
+            valuation = "估值已完成" if view.get("valuation_readiness") == "reviewed_scenarios" else "估值仍待补齐"
+            thesis_lines.append(f"{ticker}：{state}；{valuation}。" + str(view.get("conclusion") or ""))
+            pending_news = view.get("news_review", {}).get("pending_events", [])
+            if pending_news:
+                thesis_lines.append(f"{ticker}：{len(pending_news)} 条官方公告尚待人工判断其影响；上述业务结论不表示所有新闻已完成评估。")
+            if view.get("next_review_at"):
+                thesis_lines.append(f"{ticker} 下次业务复核：{view['next_review_at']}；不等同于订单截止时间。")
+
     plan_tickers = {row["ticker"] for row in plans}
     positions = []
     for row in held:
@@ -658,6 +687,10 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
             state = "等待确认"
         else:
             state = "持仓不变，研究待补齐" if row.get("action") == "hold_pending_research" else "持仓不变" if row.get("action") == "hold" else "仅观察"
+        if row.get("plan_status"):
+            state = {"maintained": "按现有计划观察", "expired_pending_verification": "旧草案已过期，待核对",
+                     "time_exit_due_pending_verification": "退出期限已到，待核对",
+                     "review_due": "计划复核到期", "completed_observed": "完成情况已有记录"}.get(row["plan_status"], "计划待核对")
         positions.append({"ticker": ticker, "quantity": shares(row.get("current_shares")) + " 股", "weight": percent(row.get("current_weight_pct")), "price": money(row.get("current_price")), "state": state})
 
     account_lines = [
@@ -692,6 +725,10 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     news = decision.get("evidence_coverage", {}).get("official_news", {})
     if news:
         limitations.append(f"官方新闻覆盖：{news.get('status', 'missing')}；公告出现不代表利好，抓取失败也不代表没有事件。")
+    incorporation = decision.get("earnings_incorporation", {})
+    if incorporation:
+        pending_earnings = incorporation.get("held_pending_tickers", [])
+        limitations.append("最新财报纳入：" + ("、".join(pending_earnings) + " 仍待纳入或核验；不能据此升级新增方案。" if pending_earnings else "持仓公司的最新报表已通过纳入校验；这不代表估值完成或值得买入。"))
     if incomplete:
         limitations.append("、".join(incomplete) + " 估值证据不足；基础财务校验通过不代表估值完整。")
     core_gap = [str(row.get("ticker", "")) for row in watch if "whole_share_target_gap" in str(row.get("gate_blockers", ""))]
@@ -722,6 +759,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         next_step = "复核前再次核对最新价格、股数、现金及费用；邮件不是实时行情或限时交易通知。"
     if estimated_cash and gates_passed and not decision.get("account_conflicts"):
         next_step = "继续按官方证据研究；资金实际转入或准备交易时再校准现金，不因本次余额未精确核对而要求立即增减仓。"
+    if continuity:
+        next_step = "下方现有计划中的期限持续有效；过期价格/草案需重新核验，未确认成交或撤单的状态继续保留。账户或数据暂停不会取消原复核期限。"
     next_date = str(decision.get("next_scheduled_review", ""))
     if next_date:
         next_step += f" 例行研究复核：{next_date}；这是研究日期，不是交易期限。"
@@ -729,6 +768,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "version": EMAIL_BRIEF_VERSION, "cycle": str(decision.get("cycle_date", "")),
         "label": label, "title": title, "summary": summary, "tasks": tasks, "plans": plans,
         "positions": positions, "account_lines": account_lines, "quality": quality,
+        "maintained_plan_lines": maintained_lines, "thesis_lines": thesis_lines,
         "watchlist": _watch_view(decision, plans, gates_passed=gates_passed),
         "funding_lines": funding_lines,
         "trading_rules": list(_TRADING_RULES),
@@ -820,7 +860,7 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
     sections = [("本次结论", [view["title"], view["summary"], view["as_of"], provenance, "需要你处理", *view["tasks"]])]
     positions = [f"{r['ticker']}：{r['quantity']} · {r['weight']} · 参考收盘 {r['price']} · {r['state']}" for r in view["positions"]]
     sections.append(("持仓与现金", positions + view["account_lines"] + ([view["receipt"]] if view["receipt"] else []) + view["funding_lines"]))
-    trade_lines = []
+    trade_lines = list(view.get("maintained_plan_lines", []))
     for plan in view["plans"]:
         trade_lines += [plan["title"], plan["scenario"], "依据：" + plan["reason"], "限制：" + plan["limit"]]
     rejected = []
@@ -844,7 +884,7 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
         watch_lines.append("本次候选清单没有未持仓标的。")
     watch_lines += [view["discovery"]["title"], *view["discovery"]["lines"]]
     sections.append(("观察与市场发现", watch_lines))
-    evidence = [view["quality"], *view["limitations"]]
+    evidence = [view["quality"], *view["limitations"], *view.get("thesis_lines", [])]
     if view["documents"]:
         evidence.append("本次新纳入的官方文件（披露日不一定是今天）：")
     for row in view["documents"]:

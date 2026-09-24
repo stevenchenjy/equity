@@ -21,6 +21,7 @@ from typing import Any, Callable
 from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from daily_common import (
+    ROOT,
     DAILY_BRIEF_HTML_PATH,
     DAILY_BRIEF_TEXT_PATH,
     DAILY_DECISION_JSON_PATH,
@@ -220,12 +221,12 @@ def validate_owner_review(decision: dict[str, Any], request_id: str) -> None:
 def validate_decision(
     *, correction: bool = False, owner_review_request_id: str | None = None,
     snapshot_hashes: dict[str, str] | None = None,
+    snapshot_briefs: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    # Retain exactly the bytes parsed for an explicit review. A concurrent
+    # Retain exactly the bytes parsed for every delivery mode. A concurrent
     # producer may replace the canonical files after this validation returns.
-    decision_bytes = (DAILY_DECISION_JSON_PATH.read_bytes()
-                      if owner_review_request_id is not None else None)
-    decision = json.loads(decision_bytes) if decision_bytes is not None else read_json(DAILY_DECISION_JSON_PATH)
+    decision_bytes = DAILY_DECISION_JSON_PATH.read_bytes()
+    decision = json.loads(decision_bytes)
     decision_cycle_text = str(decision.get("cycle_date", ""))
     try:
         decision_cycle = date.fromisoformat(decision_cycle_text)
@@ -368,24 +369,35 @@ def validate_decision(
         raise ValueError("prohibited_action_boundary_invalid")
     if not DAILY_BRIEF_TEXT_PATH.exists() or not DAILY_BRIEF_HTML_PATH.exists():
         raise ValueError("daily_brief_missing")
-    if not DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8").strip():
+    text_bytes = DAILY_BRIEF_TEXT_PATH.read_bytes()
+    html_bytes = DAILY_BRIEF_HTML_PATH.read_bytes()
+    brief_text, brief_html = text_bytes.decode("utf-8"), html_bytes.decode("utf-8")
+    if not brief_text.strip():
         raise ValueError("daily_text_brief_empty")
-    if not DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8").strip():
+    if not brief_html.strip():
         raise ValueError("daily_html_brief_empty")
     version = decision.get("email_brief_version")
+    if (decision.get("decision_code") == "maintained_plan_review" or "plan_continuity" in decision) and decision.get("workflow_integrity") is None:
+        raise ValueError("maintained_workflow_contract_missing")
+    if decision.get("workflow_integrity") is not None:
+        from workflow_integrity import validate_published_workflow
+        # Historical notification-policy evaluation is allowed for corrections;
+        # expiry, source freshness and current plans always use the real clock.
+        validate_published_workflow(decision, root=ROOT, current=current)
     if version is not None:
         if version != EMAIL_BRIEF_VERSION:
             raise ValueError("daily_brief_version_unsupported")
         _, expected_text, expected_html = render_email(decision)
-        if (DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8") != expected_text
-                or DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8") != expected_html):
+        if brief_text != expected_text or brief_html != expected_html:
             raise ValueError("daily_brief_decision_mismatch")
-        if decision_bytes is not None and snapshot_hashes is not None:
-            snapshot_hashes.update({
-                "decision_sha256": hashlib.sha256(decision_bytes).hexdigest(),
-                "brief_text_sha256": hashlib.sha256(expected_text.encode("utf-8")).hexdigest(),
-                "brief_html_sha256": hashlib.sha256(expected_html.encode("utf-8")).hexdigest(),
-            })
+    if snapshot_hashes is not None:
+        snapshot_hashes.update({
+            "decision_sha256": hashlib.sha256(decision_bytes).hexdigest(),
+            "brief_text_sha256": hashlib.sha256(text_bytes).hexdigest(),
+            "brief_html_sha256": hashlib.sha256(html_bytes).hexdigest(),
+        })
+    if snapshot_briefs is not None:
+        snapshot_briefs.update(text=brief_text, html=brief_html)
     return decision
 
 
@@ -395,6 +407,7 @@ def build_message(
     *,
     correction: bool = False,
     owner_review: bool = False,
+    snapshot_briefs: dict[str, str] | None = None,
 ) -> EmailMessage:
     if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
         subject = safe_header(
@@ -410,10 +423,11 @@ def build_message(
     # retained for config compatibility, never used as the display authority.
     message["From"] = formataddr((safe_header(brand_name(), "display_brand"), config["smtp_username"]))
     message["To"] = config["recipient_email"]
-    if owner_review:
-        # Only this validated in-memory decision supplies explicit-review
-        # content; reading the shared briefs here would race the producer.
+    if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
+        # All bound delivery modes render the validated in-memory decision.
         _, body_text, body_html = render_email(decision)
+    elif snapshot_briefs is not None:
+        body_text, body_html = snapshot_briefs["text"], snapshot_briefs["html"]
     else:
         body_text = DAILY_BRIEF_TEXT_PATH.read_text(encoding="utf-8")
         body_html = DAILY_BRIEF_HTML_PATH.read_text(encoding="utf-8")
@@ -621,7 +635,8 @@ def send_once(
         return 0
 
     target_cycle = str(decision["cycle_date"])
-    owner_content_hashes: dict[str, str] | None = {} if owner_review else None
+    content_hashes: dict[str, str] = {}
+    snapshot_briefs: dict[str, str] = {}
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
         delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
         if owner_review:
@@ -652,20 +667,21 @@ def send_once(
             )
             return 0
 
-        if owner_review:
-            try:
-                if validate_decision(owner_review_request_id=owner_review_request_id,
-                                     snapshot_hashes=owner_content_hashes) != decision:
-                    raise ValueError("owner_review_changed_before_claim")
-            except (OSError, ValueError) as exc:
-                log_daily_run(component="daily_sender", run_mode=run_mode,
-                              outcome="blocked", reason=str(exc))
-                print(f"email_sent=false reason={exc} smtp_config_read=false")
-                return 2
+        try:
+            revalidated = validate_decision(correction=correction, owner_review_request_id=owner_review_request_id,
+                snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs)
+            if revalidated != decision:
+                raise ValueError("owner_review_changed_before_claim" if owner_review else "decision_changed_before_claim")
+        except (OSError, ValueError) as exc:
+            log_daily_run(component="daily_sender", run_mode=run_mode,
+                          outcome="blocked", reason=str(exc))
+            print(f"email_sent=false reason={exc} smtp_config_read=false")
+            return 2
 
         try:
             config = load_config()
-            message = build_message(config, decision, correction=correction, owner_review=owner_review)
+            message = build_message(config, decision, correction=correction, owner_review=owner_review,
+                                    snapshot_briefs=snapshot_briefs)
         except (ConfigError, OSError, ValueError, RuntimeError):
             log_daily_run(
                 component="daily_sender",
@@ -686,6 +702,14 @@ def send_once(
             ";" + owner_review_request_key(owner_review_request_id)
             + ";" + owner_review_coverage_key(decision)
         ) if owner_review else ""
+        try:
+            if decision.get("workflow_integrity") is not None:
+                from workflow_integrity import validate_published_workflow
+                validate_published_workflow(decision, root=ROOT, current=now_et())
+        except (OSError, ValueError) as exc:
+            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
+            print(f"email_sent=false reason={exc} smtp_config_read=true")
+            return 2
         # This durable claim is intentionally written before any SMTP operation.
         append_delivery(
             status=status_prefix + "send_claimed",
@@ -695,7 +719,7 @@ def send_once(
             email_sent="no",
             smtp_config_read="yes",
             message_count="0",
-            content_hashes=owner_content_hashes,
+            content_hashes=content_hashes,
         )
         try:
             with smtp_factory("smtp.gmail.com", 587, timeout=30) as client:
@@ -713,7 +737,7 @@ def send_once(
                 email_sent="unknown",
                 smtp_config_read="yes",
                 message_count="0_or_1",
-                content_hashes=owner_content_hashes,
+                content_hashes=content_hashes,
             )
             log_daily_run(
                 component="daily_sender",
@@ -738,7 +762,7 @@ def send_once(
             email_sent="yes",
             smtp_config_read="yes",
             message_count="1",
-            content_hashes=owner_content_hashes,
+            content_hashes=content_hashes,
         )
         log_daily_run(
             component="daily_sender",

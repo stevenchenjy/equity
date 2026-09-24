@@ -13,13 +13,14 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 import re
 import stat
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import NoReturn, Sequence
 from zoneinfo import ZoneInfo
@@ -52,6 +53,10 @@ RUNTIME_LOCK_PATH = (
 EXECUTION_LOG_RELATIVE_PATH = Path(
     "00_project_control/run_logs/runtime_execution_log.csv"
 )
+VERIFIED_DEPLOYMENT_RELATIVE_PATH = Path(
+    "00_project_control/run_logs/verified_deployment.local.json"
+)
+VERIFIED_DEPLOYMENT_MAX_AGE = timedelta(hours=24)
 FETCH_TIMEOUT_SECONDS = 180
 GIT_TIMEOUT_SECONDS = 60
 # A pathological but still bounded holder can consume the individual Git
@@ -480,6 +485,114 @@ def sync_runtime_repository(
     )
 
 
+def _deployment_receipt_path(root: Path) -> Path:
+    """Receipts are private, owned regular files; never follow a linked parent."""
+    target = root / VERIFIED_DEPLOYMENT_RELATIVE_PATH
+    if _run_git_process(root, ["check-ignore", "--quiet", "--", str(VERIFIED_DEPLOYMENT_RELATIVE_PATH)]).returncode != 0:
+        raise RuntimeSyncError("verified_deployment_receipt_not_ignored")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.parent.resolve() != target.parent.absolute() or not _is_relative_to(target.parent.resolve(), root.resolve()):
+        raise RuntimeSyncError("verified_deployment_receipt_parent_unsafe")
+    if target.exists() or target.is_symlink():
+        metadata = target.lstat()
+        if (not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1
+                or metadata.st_uid != os.getuid() or stat.S_IMODE(metadata.st_mode) != 0o600
+                or not 0 < metadata.st_size < 16384):
+            raise RuntimeSyncError("verified_deployment_receipt_unsafe")
+    return target
+
+
+def _record_verified_deployment(state: RepositoryState, *, verified_at: datetime) -> None:
+    """Only online validation of a wholly clean tree can renew the 24-hour lease."""
+    if state.runtime_evidence_changes:
+        return
+    target = _deployment_receipt_path(state.root)
+    receipt = {"schema_version": "verified_deployment_v1", "runtime_root": str(state.root.resolve()),
+               "remote_url": state.remote_url, "branch": state.branch, "commit": state.head,
+               "verified_at": verified_at.isoformat()}
+    # Atomic replacement avoids partial receipts; the caller holds the runtime lock.
+    temporary = target.with_name(target.name + f".{os.getpid()}.tmp")
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(receipt, handle, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def _eligible_connectivity_failure(error: RuntimeSyncError) -> bool:
+    """Recognize only explicit transport availability failures, never auth/TLS."""
+    if error.code != "git_fetch_failed":
+        return False
+    detail = error.detail.lower()
+    if any(token in detail for token in ("authentication", "authorization", "permission", "certificate", "ssl", "tls", "403", "401")):
+        return False
+    return any(token in detail for token in (
+        "could not resolve host", "couldn?t resolve host", "could not resolve proxy",
+        "failed to connect", "couldn?t connect to server", "connection timed out",
+        "network is unreachable", "no route to host",
+    ))
+
+
+def sync_runtime_for_job(
+    root: Path, *, job: str, sync_only: bool = False,
+    expected_remote_url: str = EXPECTED_REMOTE_URL,
+    expected_branch: str = EXPECTED_BRANCH,
+    current: datetime | None = None,
+) -> SyncResult:
+    """Public collection may reuse an unchanged verified deployment during DNS loss.
+
+    The runtime lock must be held by the caller. Sender and operator sync modes
+    keep strict online synchronization. This changes no data-quality gates.
+    """
+    checked_at = current or datetime.now(ET)
+    try:
+        result = sync_runtime_repository(root, expected_remote_url=expected_remote_url,
+                                         expected_branch=expected_branch)
+    except RuntimeSyncError as error:
+        if job != "dailyrefresh" or sync_only or not _eligible_connectivity_failure(error):
+            raise
+        state = inspect_runtime_repository(root, expected_remote_url=expected_remote_url,
+                                           expected_branch=expected_branch)
+        if state.runtime_evidence_changes:
+            raise RuntimeSyncError("verified_deployment_fallback_requires_clean_tree") from error
+        path = _deployment_receipt_path(state.root)
+        if not path.exists():
+            raise RuntimeSyncError("verified_deployment_receipt_missing") from error
+        try:
+            receipt = json.loads(path.read_text(encoding="utf-8"))
+            verified_at = datetime.fromisoformat(receipt["verified_at"])
+            if verified_at.tzinfo is None or checked_at.tzinfo is None:
+                raise ValueError("aware timestamps required")
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            raise RuntimeSyncError("verified_deployment_receipt_invalid") from exc
+        expected = {"schema_version": "verified_deployment_v1", "runtime_root": str(state.root.resolve()),
+                    "remote_url": expected_remote_url, "branch": expected_branch, "commit": state.head}
+        if any(receipt.get(key) != value for key, value in expected.items()):
+            raise RuntimeSyncError("verified_deployment_identity_mismatch") from error
+        if not timedelta(0) <= checked_at - verified_at <= VERIFIED_DEPLOYMENT_MAX_AGE:
+            raise RuntimeSyncError("verified_deployment_receipt_expired_or_future") from error
+        remote_head = _git(state.root, ["rev-parse", f"refs/remotes/origin/{expected_branch}"], error_code="remote_head_unreadable")
+        if remote_head != state.head:
+            raise RuntimeSyncError("verified_deployment_cached_remote_mismatch") from error
+        # Revalidate after receipt reads. No merge/reset/fetch result is invented.
+        final = inspect_runtime_repository(state.root, expected_remote_url=expected_remote_url, expected_branch=expected_branch)
+        if final.head != state.head or final.runtime_evidence_changes:
+            raise RuntimeSyncError("verified_deployment_changed_during_fallback") from error
+        return SyncResult(before_head=state.head, commit=state.head, remote_head=remote_head,
+                          action="verified_deployment_network_fallback")
+    state = inspect_runtime_repository(root, expected_remote_url=expected_remote_url, expected_branch=expected_branch)
+    if state.head != result.commit:
+        raise RuntimeSyncError("verified_deployment_changed_after_sync")
+    _record_verified_deployment(state, verified_at=checked_at)
+    return result
+
+
 def _append_execution_record(
     root: Path,
     *,
@@ -713,7 +826,7 @@ def main() -> int:
                     )
                     return process.returncode
 
-                result = sync_runtime_repository(root)
+                result = sync_runtime_for_job(root, job=args.job, sync_only=args.sync_only)
                 if args.sync_only:
                     _append_execution_record(
                         root,

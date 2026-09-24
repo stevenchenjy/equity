@@ -65,6 +65,8 @@ from sec_acceptance_extensions import (
     write_extension_artifact,
 )
 from sec_supplemental_facts import NVDA_PRINCIPAL_TAG, supplement_companyfacts
+from earnings_incorporation import SecPayload, retain_sec_response, write_selection_receipt
+from latest_report_facts import supplement_cached_latest_report
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -79,6 +81,11 @@ SEC_DAILY_SUBMISSION_LOOKBACK_DAYS = 730
 RELEVANT_FORMS = {
     "10-K",
     "10-Q",
+    "10-Q/A",
+    "10-K/A",
+    "8-K/A",
+    "20-F/A",
+    "40-F/A",
     "20-F",
     "40-F",
     "8-K",
@@ -236,6 +243,16 @@ PRODUCTIVE_ASSET_CAPEX_ISSUERS = {"NVDA"}
 NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI"})
 
 
+
+def approved_inline_tags() -> set[str]:
+    return set().union(REVENUE_TAGS, NET_INCOME_TAGS, CASH_TAGS,
+        ASSET_TAGS, LIABILITY_TAGS, OPERATING_CASH_FLOW_TAGS, CAPEX_TAGS,
+        DILUTED_SHARES_TAGS, SHARES_OUTSTANDING_TAGS, DEBT_CURRENT_TAGS,
+        DEBT_NONCURRENT_TAGS, SHORT_TERM_DEBT_TAGS, TOTAL_DEBT_TAGS,
+        COMBINED_CURRENT_DEBT_TAGS, PARTIAL_DEBT_TAGS,
+        {"PaymentsForSoftware", "PaymentsToAcquireProductiveAssets"})
+
+
 def request_json(url: str, user_agent: str) -> Any:
     request = urllib.request.Request(
         url,
@@ -254,7 +271,12 @@ def request_json(url: str, user_agent: str) -> Any:
                 payload = response.read(maximum_bytes + 1)
                 if len(payload) > maximum_bytes:
                     raise ValueError("SEC JSON response exceeds size cap")
-                return json.loads(payload.decode("utf-8"))
+                value = json.loads(payload.decode("utf-8"))
+                receipt = retain_sec_response(payload, url=url, retrieved_at=iso_now(), root=ROOT)
+                if receipt:
+                    value = SecPayload(value)
+                    value.receipt = receipt
+                return value
         except urllib.error.HTTPError as exc:
             if attempt or (exc.code != 429 and not 500 <= exc.code <= 599):
                 raise
@@ -363,6 +385,7 @@ def recent_filings(
                 "accession_number": str(accession).strip(),
                 "form": form,
                 "filing_date": filing_date,
+                "report_date": value("reportDate"),
                 "accepted_at": normalize_acceptance_timestamp(
                     value("acceptanceDateTime")
                 ),
@@ -1031,6 +1054,7 @@ def fundamental_row(
 
 
 def classify_materiality(form: str, items: str) -> tuple[str, str, str]:
+    form = form.removesuffix("/A")
     if form in HIGH_MATERIALITY_FORMS:
         return "high", "yes", "yes"
     if form == "8-K":
@@ -1262,6 +1286,7 @@ def main() -> int:
     errors: list[str] = []
     fundamental_errors: list[str] = []
     fundamental_rows: list[dict[str, str]] = []
+    pending_selection_receipts: list[dict[str, Any]] = []
     missing_tickers: list[str] = []
     new_material_events: list[dict[str, str]] = []
     # Bind the separate extension layer to the exact historical index bytes.
@@ -1414,6 +1439,13 @@ def main() -> int:
                     SEC_COMPANYFACTS_URL.format(cik=cik), user_agent
                 )
                 time.sleep(0.20)
+                raw_facts_receipt = getattr(companyfacts, "receipt", {})
+                approved_tags = approved_inline_tags()
+                companyfacts, selection_diagnostics = supplement_cached_latest_report(
+                    companyfacts, ticker=ticker, cik=cik, filings=filings, root=ROOT,
+                    as_of=datetime.fromisoformat(attempt_at.replace("Z", "+00:00")),
+                    allowed_tags=approved_tags,
+                )
                 try:
                     companyfacts = supplement_companyfacts(
                         ticker, cik, companyfacts, filings, user_agent,
@@ -1423,15 +1455,19 @@ def main() -> int:
                     # Keep valid standard facts; unresolved custom scope stays
                     # explicitly insufficient and cannot authorize valuation.
                     fundamental_errors.append(f"{ticker}:supplemental_cash_flow_unavailable")
-                fundamental_rows.append(
-                    fundamental_row(
-                        ticker, cik, companyfacts, attempt_at,
-                        acceptance_by_accession={
-                            filing["accession_number"]: filing["accepted_at"]
-                            for filing in filings
-                        },
-                    )
+                selected_row = fundamental_row(
+                    ticker, cik, companyfacts, attempt_at,
+                    acceptance_by_accession={
+                        filing["accession_number"]: filing["accepted_at"]
+                        for filing in filings
+                    },
                 )
+                fundamental_rows.append(selected_row)
+                pending_selection_receipts.append(dict(
+                    ticker=ticker, cik=cik, fundamental=selected_row, filings=filings,
+                    submissions_receipt=getattr(payload, "receipt", {}),
+                    companyfacts_receipt=raw_facts_receipt, diagnostic=selection_diagnostics,
+                ))
             except (OSError, ValueError, urllib.error.URLError) as exc:
                 fundamental_errors.append(f"{ticker}:{type(exc).__name__}")
 
@@ -1562,6 +1598,8 @@ def main() -> int:
     for row in pending_ledger_rows:
         append_csv_durable(EVIDENCE_LEDGER_PATH, LEDGER_FIELDS, row)
     atomic_write_csv(FUNDAMENTALS_PATH, FUNDAMENTAL_FIELDS, fundamental_rows)
+    for receipt in pending_selection_receipts:
+        write_selection_receipt(**receipt, root=ROOT)
     success_at = iso_now()
     state.update(
         {

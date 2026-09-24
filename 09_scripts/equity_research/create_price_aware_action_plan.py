@@ -193,6 +193,8 @@ def main() -> None:
     lines = [
         report_heading("execution_report"),
         "",
+        "Baseline diagnostic calculation only. Current maintained instructions and unresolved states are in 04_research/company_research/daily_decision.md and 08_reviews/current/maintained_plans.local.md. These quantities do not supersede those plans or renew expired orders.",
+        "",
         f"Generated: `{timestamp()}`",
         "",
         "## Execution State",
@@ -201,7 +203,7 @@ def main() -> None:
         "- A pending fill does not change current positions or account state.",
         "- No fill price, cash proceeds, or post-fill account total has been inferred.",
         "",
-        "## Price-Aware Review",
+        "## Baseline Price-Aware Diagnostic",
         "",
         "| Ticker | Action | Shares | Target shares | Reference | Max slippage | Style | Target weight |",
         "| --- | --- | ---: | ---: | ---: | ---: | --- | ---: |",

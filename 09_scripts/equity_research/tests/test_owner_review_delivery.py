@@ -61,6 +61,21 @@ def save_decision(decision):
 
 
 class OwnerReviewDeliveryTests(unittest.TestCase):
+    def test_current_owner_review_rechecks_expiry_at_actual_send_time(self):
+        decision = owner_review_fixture()
+        decision["workflow_integrity"] = {"schema_version": "equity_workflow_integrity_v1"}
+        request_id = decision["owner_requested_research"]["request_id"]
+        with delivery_fixture() as (config, smtp):
+            save_decision(decision)
+            def require_current_clock(_decision, *, root, current):
+                self.assertEqual(current.hour, 20)
+                self.assertNotEqual(current.isoformat(), decision["generated_at"])
+                raise ValueError("workflow_plan_state_changed_recompose_required")
+            with patch("workflow_integrity.validate_published_workflow", side_effect=require_current_clock):
+                self.assertEqual(sender.send_once(smtp, owner_review_request_id=request_id), 2)
+            config.assert_not_called()
+            smtp.assert_not_called()
+
     def test_claim_sent_and_unknown_records_bind_exact_canonical_coverage(self):
         for fail_smtp in (False, True):
             with self.subTest(fail_smtp=fail_smtp), delivery_fixture() as (_, smtp):

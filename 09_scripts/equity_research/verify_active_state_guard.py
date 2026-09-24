@@ -53,6 +53,12 @@ ACTIVE_CONFIG_PATH = CONTROL_DIR / "active_production_config.json"
 # first receipt or analyst review exists. Optionality is a closed path/type
 # contract, never a registry-controlled exemption for other required inputs.
 OPTIONAL_ACTIVE_INPUTS = {
+    "05_risk_and_positions/investment_plans.local.json": "optional_versioned_private",
+    "04_research/company_research/thesis_dossiers.local.json": "optional_versioned_private",
+    "03_source_data/equity_research/earnings_incorporation_status.local.json": "optional_generated_research",
+    "08_reviews/current/workflow_evaluation.local.json": "optional_generated_research",
+    "05_risk_and_positions/performance_observations.local.jsonl": "optional_append_only",
+    "04_research/company_research/issuer_news_review_queue.local.jsonl": "optional_append_only",
     "05_risk_and_positions/thesis_reviews.local.json": "optional_current_review",
     "04_research/company_research/long_horizon_research.local.json": "optional_generated_research",
     "04_research/company_research/market_regime.local.json": "optional_generated_research",

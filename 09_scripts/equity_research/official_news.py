@@ -56,7 +56,9 @@ def timestamp(value: str) -> datetime:
 
 def canonical_url(value: str, hosts: list[str]) -> str:
     try:
-        parts = urlsplit(value.strip())
+        # Some issuer feeds wrap HTML-escaped URLs in CDATA; normalize once.
+        value = unescape(value.strip())
+        parts = urlsplit(value)
         if (parts.scheme != "https" or parts.hostname not in hosts
                 or parts.username is not None or parts.password is not None
                 or parts.port not in (None, 443) or not parts.path.startswith("/")
@@ -156,6 +158,7 @@ class _PlainText(HTMLParser):
 def clean_title(value: str) -> str:
     parser = _PlainText()
     parser.feed(unescape(value))
+    parser.close()
     title = " ".join(" ".join(parser.parts).split())
     title = "".join(ch for ch in title if ord(ch) >= 32 and ord(ch) != 127)
     if not title or len(title) > 1000:

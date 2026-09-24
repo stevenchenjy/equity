@@ -55,6 +55,19 @@ def action_fixture() -> dict:
 
 
 class EmailPresentationTests(unittest.TestCase):
+    def test_terminal_orders_preserve_original_quantity_without_new_reconciliation(self) -> None:
+        decision = decision_fixture()
+        decision["tactical_review"] = {"as_of": "2026-09-01T12:00:00-04:00",
+            "next_session": "2026-09-02", "open_orders": {
+                "as_of": "2026-09-01T12:00:00-04:00", "complete": True,
+                "orders": [{"ticker": "XBI", "side": "sell", "quantity": 1,
+                    "remaining_quantity": 0, "status": "filled", "time_in_force": "DAY"}]}}
+        for body in render_email(decision)[1:]:
+            self.assertIn("原委托卖出 1 股", body)
+            self.assertIn("历史终态记录，非当前待处理订单", body)
+            self.assertNotIn("已记录卖出 0 股", body)
+            self.assertNotIn("最终状态仍需券商核对", body)
+
     def test_all_nonheld_watch_candidates_show_zero_adds_and_dated_evidence_blocks(self) -> None:
         decision = decision_fixture()
         decision["held_positions"].append({"ticker": "SPY", "current_shares": "1"})

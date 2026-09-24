@@ -553,7 +553,7 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
                                   for row in rows[:3] if isinstance(row, dict))
         discovery_meaning = {"status": discovery.get("status", "unavailable"),
                              "complete": complete, "membership": ordered(membership)}
-    return canonical_sha256({
+    payload = {
         "version": "phase5r_recommendation_notification_v1", "decision_code": code,
         "gates": gates, "account_conflicts": conflicts, "cash_estimated": cash_estimated,
         "weakening_tickers": sorted(set(decision.get("fundamental_gate", {}).get("weakening_tickers", []))),
@@ -561,7 +561,11 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
         "held_research_warnings": ordered(research_warnings),
         "tactical_review": tactical_meaning,
         "independent_market_discovery": discovery_meaning,
-    })
+    }
+    if "workflow_integrity" in decision:
+        from workflow_integrity import workflow_meaning
+        payload["maintained_workflow"] = workflow_meaning(decision)
+    return canonical_sha256(payload)
 
 
 def notification_change_comparison(

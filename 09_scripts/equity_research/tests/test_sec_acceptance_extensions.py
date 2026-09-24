@@ -8,6 +8,7 @@ from pathlib import Path
 from sec_acceptance import build_acceptance_index, make_acceptance_record, write_acceptance_index
 from sec_acceptance_extensions import (
     ExtensionValidationError,
+    make_extension_record,
     extension_acceptance_records,
     load_extension_artifacts,
     load_extension_audit,
@@ -115,6 +116,29 @@ class SecAcceptanceExtensionTests(unittest.TestCase):
                 row["prior_immutable_index_sha256"],
                 historical_sha,
             )
+
+    def test_explicit_amendment_form_survives_artifact_and_audit_validation(self) -> None:
+        current = acceptance_record(accession="0000000001-26-000002")
+        for form in ("10-Q/A", "10-K/A", "8-K/A", "20-F/A", "40-F/A"):
+            with self.subTest(form=form), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                planned, count = plan_unindexed_current_records(
+                    historical_records=[], extension_artifacts=[], current_records=[current],
+                    forms_by_accession={current["accession_number"]: form},
+                    expected_cik_by_ticker={"TST": "1"}, expected_entity_by_ticker={"TST": "Test Issuer, Inc."},
+                    permitted_forms={form}, historical_index_sha256="a" * 64,
+                    admitted_at="2026-07-25T12:00:00+00:00")
+                self.assertEqual(count, 1)
+                write_extension_artifact(planned[-1], directory=root / "extensions")
+                write_extension_admission_audit(planned, path=root / "audit.csv", directory=root / "extensions")
+                loaded = load_extension_artifacts(historical_index_sha256="a" * 64, directory=root / "extensions")
+                self.assertEqual(extension_acceptance_records(loaded), [current])
+                self.assertEqual(next(iter(load_extension_audit(root / "audit.csv").values()))["form"], form)
+        for invalid in ("10-Q/OTHER", "10-Q/A/A", "../A", "A" * 31 + "/A"):
+            with self.subTest(invalid=invalid), self.assertRaises(ExtensionValidationError):
+                make_extension_record(acceptance_record=current, form=invalid,
+                    entity_name="Test Issuer, Inc.", extension_version="v1",
+                    admitted_at="2026-07-25T12:00:00+00:00", prior_immutable_index_sha256="a" * 64)
 
     def test_duplicate_or_identity_conflict_is_rejected_without_extension_write(self) -> None:
         with tempfile.TemporaryDirectory(prefix="phase5r-sec-extension-") as directory:

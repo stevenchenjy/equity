@@ -60,7 +60,7 @@ While holding the lock, the wrapper verifies all of the following:
    permitted working-tree changes are append-only SEC ledger/audit/
    reconciliation rows and strictly named versioned acceptance extensions
    whose complete hash chain and audit bindings validate;
-4. `origin/main` can be fetched non-interactively;
+4. `origin/main` can be fetched non-interactively, except for the bounded public-refresh-only verified-deployment fallback below;
 5. local and remote ancestry is safe.
 
 If HEADs are equal, execution continues, including when the validated runtime
@@ -89,7 +89,8 @@ lock and this ledger are not committed.
 | Runtime is ahead or histories diverge | Fetch the remote-tracking ref, leave local HEAD/worktree unchanged, do not run |
 | Another run holds the runtime lock | Wait for the active bounded run, acquire the same lock, then evaluate this job's due state; after one abnormal hour, exit 75 with `runtime_lock_wait_timeout` without changing due state |
 | Lock handoff or preflight crosses midnight ET | Fail closed with an explicit cycle-date error and do not reinterpret the prior check as current-day work |
-| GitHub, DNS, or authentication is unavailable | Exit with `git_fetch_failed`; do not run stale code |
+| Explicit DNS or network-connectivity failure during public `dailyrefresh` | Continue only on the unchanged, wholly clean, previously verified deployment for at most 24 hours; see the bounded fallback below |
+| Authentication, TLS/certificate, permission, unknown fetch error, or generic command timeout; any sender or sync-only fetch failure | Fail closed; the verified-deployment fallback cannot authorize these cases |
 | Origin, branch, upstream, root, or `.git` is unexpected | Fail closed and do not run |
 
 Failures go to the existing per-agent launchd error logs and, when the local
@@ -104,6 +105,33 @@ acceptance-extension filename pattern, and those extensions are accepted only
 after full chain and audit validation. If a future tracked path would overwrite
 a local ignored file, Git itself refuses the fast-forward and the wrapper fails
 closed.
+
+## Bounded collection continuity during network failure
+
+A successful online synchronization of a wholly clean runtime records the exact
+root, origin, branch, deployed commit, and aware verification time in the ignored,
+owned mode-0600 file
+`00_project_control/run_logs/verified_deployment.local.json`.
+
+Only the live `dailyrefresh` public-data job can reuse that verified deployment
+when Git reports an explicit DNS or network-connectivity failure. Its receipt
+must be no more than 24 hours old and cannot be from the future. Local HEAD,
+cached `origin/main`, and the receipt commit must all match. Full repository
+identity and cleanliness checks run again; even valid but uncommitted SEC
+evidence appends prevent this conservative fallback. Receipt links, unexpected
+ownership/permissions, changed origin/branch, dirty files, unknown untracked
+files, known newer remote state, or a changed local commit remain blocking.
+
+The execution log records `verified_deployment_network_fallback`, so a successful
+collection does not imply Git synchronization succeeded. The fallback never
+renews its receipt age, merges code, changes credentials, resets due-state,
+weakens data freshness checks, or sends email. Online synchronization is retried
+normally on the next launch. The daily decision/sender and operator `--sync-only`
+paths always retain strict online synchronization. Authentication, certificate,
+TLS, permission and unknown errors are never treated as DNS failure.
+
+This keeps bounded public collection available on a known deployment; it cannot
+make unavailable data providers succeed or authorize publishing stale decisions.
 
 ## Runtime operations
 

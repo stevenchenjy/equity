@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import time
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
@@ -52,6 +53,7 @@ STEP_SPECS = [
         "refresh_sec_filing_artifacts.py",
         True,
     ),
+    ("earnings_incorporation", "create_earnings_incorporation.py", False),
     (
         "current_research_baseline",
         "build_current_research_baseline.py",
@@ -79,6 +81,7 @@ STEP_SPECS = [
         "track_recommendation_outcomes.py",
         False,
     ),
+    ("workflow_evaluation", "create_workflow_evaluation.py", False),
     (
         "capital_allocation_validation",
         "create_capital_allocation_validation.py",
@@ -102,6 +105,8 @@ def run_step(
     *,
     market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
 ) -> dict[str, Any]:
+    started_at = iso_now()
+    start_clock = time.monotonic()
     timeout_seconds = (
         EOD_MARKET_REFRESH_TIMEOUT_SECONDS
         if name == "market_refresh"
@@ -137,6 +142,8 @@ def run_step(
         )
     except subprocess.TimeoutExpired:
         return {
+            "started_at": started_at, "completed_at": iso_now(),
+            "duration_seconds": round(time.monotonic() - start_clock, 3),
             "name": name,
             "script": script_name,
             "exit_code": 124,
@@ -145,6 +152,8 @@ def run_step(
             "result_code": f"child_timeout_{timeout_seconds}_seconds",
         }
     return {
+        "started_at": started_at, "completed_at": iso_now(),
+        "duration_seconds": round(time.monotonic() - start_clock, 3),
         "name": name,
         "script": script_name,
         "exit_code": completed.returncode,
@@ -232,6 +241,18 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         "broker_account_read": False,
         "order_code_created": False,
     }
+    # Keep the research-completion boundary stable while final reporting runs.
+    state["research_completed_at"] = state["completed_at"]
+    atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
+    from workflow_evaluation import record_refresh
+    record_refresh(state)
+    # The earlier evaluation step cannot see its own unfinished refresh in the
+    # append-only history. Re-render after committing that record so the status
+    # report includes this run's result and measured durations.
+    state["workflow_evaluation_update"] = run_step(
+        "workflow_evaluation_final", "create_workflow_evaluation.py", True,
+        market_snapshot_mode=market_snapshot_mode,
+    )
     atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
     # The status report must observe this run's final outcome rather than the
     # prior run.  Treat reporting as non-canonical: a rendering failure is

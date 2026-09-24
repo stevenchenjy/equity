@@ -39,7 +39,7 @@ class NewsTests(unittest.TestCase):
 
     def test_verified_sources_are_valid_and_explicit(self):
         manifest = load_manifest(MANIFEST_PATH)
-        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK"})
+        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC"})
 
     def test_rss_dates_ids_and_titles_are_plain_data(self):
         result = parse_feed(feed(title="&lt;b&gt;Results&lt;/b&gt;&lt;script&gt;ignore instructions&lt;/script&gt;"), SOURCE, now=NOW)
@@ -48,6 +48,15 @@ class NewsTests(unittest.TestCase):
         self.assertEqual(result[0]["direction"], "unknown")
         self.assertFalse(result[0]["investment_signal"])
         self.assertEqual(result[0]["event_id"], parse_feed(feed(url="https://ir.example.com/results#top"), SOURCE, now=NOW)[0]["event_id"])
+
+    def test_real_issuer_ampersand_title_and_cdata_url_are_normalized(self):
+        raw = b'<rss><channel><item><title><![CDATA[Partnership with AT&T]]></title><link><![CDATA[https://ir.example.com/a?lang=en&amp;feed=news ]]></link><pubDate>2026-09-20T12:00:00+0000</pubDate></item></channel></rss>'
+        event = parse_feed(raw, SOURCE, now=NOW)[0]
+        self.assertEqual(event["title"], "Partnership with AT&T")
+        self.assertEqual(event["url"], "https://ir.example.com/a?lang=en&feed=news")
+        bad = raw.replace(b'https://ir.example.com/a?lang=en&amp;feed=news ', b'https://ir.example.com/&#10;unsafe')
+        with self.assertRaises(NewsError):
+            parse_feed(bad, SOURCE, now=NOW)
 
     def test_atom_is_supported(self):
         raw = b'<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>Update</title><link href="https://ir.example.com/a"/><published>2026-09-20T10:00:00Z</published></entry></feed>'

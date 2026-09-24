@@ -129,3 +129,26 @@ graphify-out/graph.html
 
 # Local-only migration backups and receipts; historical Git archives are tracked.
 11_archive/runtime_naming_migration_*.local/
+
+# Maintained research, plans, incorporation receipts and evaluation history.
+05_risk_and_positions/investment_plans.local.json
+05_risk_and_positions/investment_plans.local.lock
+04_research/company_research/thesis_dossiers.local.json
+04_research/company_research/thesis_dossiers.local.lock
+04_research/company_research/issuer_news_review_queue.local.jsonl
+04_research/company_research/issuer_news_review_queue.local.lock
+00_project_control/run_logs/thesis_dossiers.lock
+03_source_data/equity_research/earnings_incorporation_status.local.json
+02_filings/companyfacts_snapshots.local/
+08_reviews/current/workflow_evaluation.local.json
+08_reviews/current/workflow_evaluation.local.md
+05_risk_and_positions/performance_observations.local.jsonl
+05_risk_and_positions/performance_observations.local.lock
+00_project_control/run_logs/refresh_history.local.jsonl
+00_project_control/run_logs/refresh_history.local.lock
+00_project_control/run_logs/decision_history.local.jsonl
+00_project_control/run_logs/decision_history.local.lock
+08_reviews/current/maintained_plans.local.md
+08_reviews/current/maintained_plans.local.json
+
+00_project_control/run_logs/verified_deployment.local.json

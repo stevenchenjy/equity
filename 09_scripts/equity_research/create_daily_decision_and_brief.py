@@ -63,6 +63,8 @@ from market_regime import load_regime_controls
 from official_news import read_official_news_status
 from update_manual_account import current_manual_snapshot_matches
 from create_long_horizon_research import SIGNAL_LABELS, missing_label
+from workflow_integrity import apply_workflow_integrity, record_decision_history
+from investment_plans import render_plan_lines
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -426,12 +428,13 @@ def held_research_context(
             signal for signal in company.get("review_signals", [])
             if isinstance(signal, dict) and signal.get("status") == "review_required"
         ]
-        if readiness == "pending_research" or signals:
+        if readiness not in {"research_complete", "reviewed_research"} or signals:
             warning = {
                 "ticker": ticker, "readiness": readiness,
                 "missing_evidence": company.get("missing_evidence", []) if current else ["current_long_horizon_report"],
                 "review_signals": signals,
                 "thesis_break_confirmed": False,
+                "maintained_view": company.get("maintained_view", {}),
             }
             warnings.append(warning)
             if row.get("action") in {"hold", "hold_pending_research"}:
@@ -446,6 +449,8 @@ def held_research_context(
         "status": "current" if current else "unavailable_or_stale",
         "market_session_date": report.get("market_session_date", ""),
         "warnings": warnings,
+        "views": {row["ticker"]: companies.get(row["ticker"], {}).get("maintained_view", {}) for row in held_rows
+                  if row.get("asset_role") != "core_allocation"},
         "action_authority": False,
     }
 
@@ -511,6 +516,8 @@ def research_warning_lines(context: dict[str, Any]) -> str:
 
 def plain_action(action: str) -> str:
     normalized = action.lower()
+    if normalized == "maintained_plan_review":
+        return "以维护中的当前计划状态为准"
     if normalized == "hold":
         return "继续持有"
     if normalized == "hold_pending_research":
@@ -1051,6 +1058,19 @@ def main() -> int:
             "trade_placed": False,
         },
     }
+    apply_workflow_integrity(decision, root=ROOT, current=current)
+    official_news = decision["evidence_coverage"]["official_news"]
+    long_horizon_context = decision["long_horizon_research"]
+    headline, decisive_advice, decision_code = (decision[key] for key in ("headline", "decisive_advice", "decision_code"))
+    decision_fingerprint = decision["decision_fingerprint"]
+    decision_changed = bool(prior_fingerprint) and decision_fingerprint != prior_fingerprint
+    decision["decision_changed"] = decision_changed
+    first_material_baseline = bool(not prior_fingerprint and (
+        decision["eligible_action_review_candidates"] or decision["eligible_new_position_review_candidates"]
+        or conflicts or material_events or weakening_tickers))
+    decision["notification_policy_evaluation"]["first_material_baseline"] = first_material_baseline
+    proposed_deployment = decision["capital_allocation"]["proposed_deployment_value"]
+    human_review_required = decision["human_review_required"]
     decision["tactical_review"] = load_tactical_review(
         decision, current=current, market_rows=read_csv(MARKET_SNAPSHOT_PATH),
         exact_actions=read_csv(EXACT_ACTION_PATH), all_candidates=candidate_recommendations,
@@ -1081,6 +1101,7 @@ def main() -> int:
             decision["send_recommended"] = send_recommended
             decision["send_reason"] = send_reason
     atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
+    record_decision_history(decision, root=ROOT)
 
     held_lines = "\n".join(
         f"- {row['ticker']}: {held_position_summary(row)}" for row in held_rows
@@ -1111,6 +1132,9 @@ def main() -> int:
     )
     discovery_view = build_discovery_view(decision)
     discovery_lines = "\n\n".join(discovery_view["lines"])
+    maintained_plan_lines = "\n\n".join(render_plan_lines(decision["plan_continuity"]))
+    incorporated_pending = [ticker for ticker, row in decision["earnings_incorporation"].get("companies", {}).items()
+                            if ticker in held_company_tickers and row.get("positive_decision_eligible") is not True]
     report = f"""{report_heading("daily_decision")} — {cycle_date()}
 
 ## 决定性结论
@@ -1127,12 +1151,18 @@ def main() -> int:
 - 已投资：${portfolio_summary.get('current_holdings_value', 'n/a')}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）。
 - 现金：${portfolio_summary.get('cash_available', 'n/a')}（{portfolio_summary.get('current_cash_pct', 'n/a')}%）；其中战略储备 ${portfolio_summary.get('cash_reserved', 'n/a')}。
 - 当前证据支持的新增复核金额：${proposed_deployment:.2f}；任何真实操作仍需人工决定。
-- 全部当前复核后的假设现金：${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
-- 保留现金原因：{post_action.get('retained_cash_reason', 'n/a')}
+- 底层 C9 诊断情景的假设现金（不是当前计划或已成交结果）：${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
+- 底层现金情景说明（不覆盖当前计划）：{post_action.get('retained_cash_reason', 'n/a')}
 
 ## 当前持仓
 
 {held_lines}
+
+## 当前计划与历史方案的边界
+
+{maintained_plan_lines}
+
+本报告的当前计划是指令展示依据；baseline_research 和底层 C9 数量表保留为诊断情景，不覆盖维护中的研究计划。计划到期不证明已成交，也不会自动形成下一交易日委托。
 
 ## 新候选
 
@@ -1148,6 +1178,7 @@ def main() -> int:
 
 官方新闻补充覆盖：{official_news.get('status', 'missing')}；最近事件 {official_news.get('recent_event_count', 0)} 条。范围限已配置公司官方来源，抓取成功不代表全部新闻覆盖；未评估方向的事件不作正向加分。
 未配置官方新闻来源的持仓：{'、'.join(official_news.get('unconfigured_held_tickers', [])) or '无'}。
+最新财报尚未纳入数值分析的持仓：{'、'.join(incorporated_pending) or '无'}。抓取成功、最新期间纳入、投资逻辑审阅、估值充分分别判定。
 
 ## 长期基本面
 

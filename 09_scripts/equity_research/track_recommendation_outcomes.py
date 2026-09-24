@@ -10,7 +10,7 @@ import csv
 import json
 import math
 import os
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -23,6 +23,7 @@ from daily_common import (
     atomic_write_text,
     canonical_sha256,
     iso_now,
+    is_us_market_session_date,
     read_csv,
     read_json,
 )
@@ -56,6 +57,8 @@ OUTCOME_FIELDS = [
     "price_basis", "corporate_action_review_required",
     "evaluation_basis", "source_market_session", "forecast_origin_session",
     "independent_observation_id", "primary_observation",
+    "plan_id", "plan_version", "thesis_id", "thesis_version",
+    "decision_fingerprint", "benchmark_comparison_basis", "plan_status", "plan_action",
 ]
 FEEDBACK_LABELS = {"helpful", "noisy", "wrong", "missed_event"}
 
@@ -93,6 +96,10 @@ def number(value: object) -> float | None:
 
 def classification(action: str) -> str:
     normalized = action.lower()
+    if normalized == "reconcile_plan":
+        return "RECONCILE"
+    if normalized == "protect_review":
+        return "PROTECTION_REVIEW"
     if "no_new" in normalized:
         return "NO_NEW_POSITION"
     if "ineligible" in normalized or "not_eligible" in normalized:
@@ -138,6 +145,33 @@ def observation_id(snapshot: dict[str, Any], origin: str) -> str:
     })
 
 
+def market_sessions(history_rows: list[dict[str, Any]]) -> list[str]:
+    """Count exchange sessions, never compress a missing data day away."""
+    dates = sorted({str(row.get("market_session", "")) for row in history_rows
+                    if row.get("market_session")})
+    if not dates:
+        return []
+    start, end = date.fromisoformat(dates[0]), date.fromisoformat(dates[-1])
+    return [(start + timedelta(days=i)).isoformat()
+            for i in range((end - start).days + 1)
+            if is_us_market_session_date(start + timedelta(days=i))]
+
+
+def linked_record(payload: Any, ticker: str) -> dict[str, Any]:
+    """Accept report-level lists/maps while preserving absent historical links."""
+    if isinstance(payload, list):
+        return next((row for row in payload if isinstance(row, dict)
+                     and str(row.get("ticker", "")).upper() == ticker), {})
+    if isinstance(payload, dict):
+        if ticker in payload and isinstance(payload[ticker], dict):
+            return payload[ticker]
+        for key in ("plans", "active_plans", "companies", "holdings", "rows", "views", "candidate_views"):
+            result = linked_record(payload.get(key), ticker)
+            if result:
+                return result
+    return {}
+
+
 def update_history() -> tuple[list[dict[str, str]], str]:
     existing = read_csv(HISTORY_PATH)
     seen = {(row["market_session"], row["ticker"]) for row in existing}
@@ -177,9 +211,21 @@ def recommendation_rows(decision: dict[str, Any]) -> list[dict[str, Any]]:
             if not isinstance(row, dict) or not row.get("ticker"):
                 continue
             action = str(row.get("action") or row.get("label") or "watch")
+            ticker = str(row["ticker"]).upper()
+            plan = linked_record(decision.get("plan_continuity"), ticker)
+            if action == "maintained_plan_review":
+                action = str(plan.get("action", "reconcile_plan")) if plan.get("status") == "maintained" else "reconcile_plan"
+            thesis = linked_record(decision.get("long_horizon_research"), ticker)
+            thesis = thesis.get("maintained_view", thesis)
             rows.append({
-                "ticker": str(row["ticker"]).upper(),
+                "ticker": ticker,
+                "plan_id": row.get("plan_id") or plan.get("plan_id", ""),
+                "plan_version": row.get("plan_version") or plan.get("version", plan.get("plan_version", "")),
+                "thesis_id": row.get("thesis_id") or thesis.get("thesis_id", ""),
+                "thesis_version": row.get("thesis_version") or thesis.get("thesis_version", thesis.get("version", "")),
                 "role": role,
+                "plan_status": plan.get("status", ""),
+                "plan_action": plan.get("action", ""),
                 "classification": classification(action),
                 "action_label": action,
                 "confidence": row.get("confidence", ""),
@@ -213,12 +259,16 @@ def persist_snapshots(decision: dict[str, Any], session: str) -> int:
             "market_session": session,
             "ticker": recommendation["ticker"],
             "role": recommendation["role"],
+            "plan_id": recommendation["plan_id"],
+            "plan_version": recommendation["plan_version"],
+            "thesis_id": recommendation["thesis_id"],
+            "thesis_version": recommendation["thesis_version"],
         }
         snapshot_id = canonical_sha256(identity)
         if snapshot_id in existing_ids:
             continue
         append_jsonl(SNAPSHOT_PATH, {
-            "schema_version": "phase5r_recommendation_snapshot_v1",
+            "schema_version": "recommendation_snapshot_v2",
             "snapshot_id": snapshot_id,
             "created_at": iso_now(),
             "market_session": session,
@@ -244,7 +294,9 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
         if price is not None and price > 0:
             by_ticker.setdefault(row["ticker"], {})[row["market_session"]] = price
             sessions.add(row["market_session"])
-    ordered_sessions = sorted(sessions)
+    ordered_sessions = market_sessions(history_rows)
+    bases = {(str(row.get("ticker")), str(row.get("market_session"))): str(row.get("price_basis", ""))
+             for row in history_rows}
     snapshots = jsonl(SNAPSHOT_PATH)
     # Retain all source snapshots, but fix the primary representative by time
     # and ID, not by the eventual return. Roles share one future price path;
@@ -278,9 +330,11 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
             for benchmark in ("SPY", "QQQ"):
                 benchmark_entry = by_ticker.get(benchmark, {}).get(start)
                 benchmark_end = by_ticker.get(benchmark, {}).get(target_session)
+                same_basis = bool(bases.get((ticker, start))) and len({bases.get((symbol, day))
+                    for symbol in (ticker, benchmark) for day in (start, target_session)}) == 1
                 relative[benchmark] = (
                     f"{absolute - (benchmark_end / benchmark_entry - 1.0) * 100.0:.4f}"
-                    if benchmark_entry and benchmark_end else ""
+                    if benchmark_entry and benchmark_end and same_basis else ""
                 )
             changed = any(
                 later.get("ticker") == ticker
@@ -311,6 +365,14 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
                 "forecast_origin_session": str(start),
                 "independent_observation_id": observation_id(snapshot, str(start)),
                 "primary_observation": "yes" if primary[observation_id(snapshot, str(start))] == snapshot["snapshot_id"] else "no",
+                "plan_status": str(snapshot.get("plan_status", "")),
+                "plan_action": str(snapshot.get("plan_action", "")),
+                "plan_id": str(snapshot.get("plan_id", "")),
+                "plan_version": str(snapshot.get("plan_version", "")),
+                "thesis_id": str(snapshot.get("thesis_id", "")),
+                "thesis_version": str(snapshot.get("thesis_version", "")),
+                "decision_fingerprint": str(snapshot.get("decision_fingerprint", "")),
+                "benchmark_comparison_basis": "matched_provider_price_basis_only; not_total_return",
             })
     results.sort(key=lambda row: (row["recommendation_session"], row["ticker"], int(row["horizon_sessions"])))
     # The old derived returns used the source close as a forecast origin.
@@ -335,13 +397,14 @@ def evaluate(history_rows: list[dict[str, str]]) -> list[dict[str, str]]:
 
 
 def write_retrospective() -> None:
+    from workflow_evaluation import outcome_coverage
     snapshots = jsonl(SNAPSHOT_PATH)
     material = [row for row in snapshots if row.get("human_confirmation_required") == "yes"]
     feedback = jsonl(FEEDBACK_PATH)
-    completed_groups = len(material) // 10
     sessions = {row.get("market_session") for row in snapshots if row.get("market_session")}
     outcomes = read_csv(OUTCOME_PATH)
     primary_outcomes = [row for row in outcomes if row.get("primary_observation") == "yes"]
+    coverage = outcome_coverage(snapshots, outcomes, read_csv(HISTORY_PATH))
     lines = [
         report_heading("recommendation_outcomes"),
         "",
@@ -351,15 +414,18 @@ def write_retrospective() -> None:
         f"- Distinct source market sessions: `{len(sessions)}`; snapshot rows are not independent trials.",
         f"- Forward outcome rows: `{len(outcomes)}`; primary ticker/origin/horizon rows: `{len(primary_outcomes)}`.",
         f"- Material review snapshots: `{len(material)}`.",
-        f"- Completed ten-review retrospective groups: `{completed_groups}`.",
+        f"- Unique matured ticker/origin observations: `{coverage['unique_matured_observations']}`.",
+        f"- Distinct material instruction versions: `{coverage['unique_material_instruction_versions']}`; repeated snapshots do not create completed reviews.",
         f"- Human feedback records: `{len(feedback)}`.",
         "- Evaluation remains close-based; every result is marked for corporate-action review.",
         "- Origin is the next observed close after the aware creation date; missing timestamps or future closes remain pending.",
         "- Same-origin observations across overlapping horizons or correlated issuers are not statistically independent.",
         "- Human feedback is optional and does not block tracking or research measurement.",
     ]
-    if completed_groups == 0:
-        lines.extend(["", "No ten-material-review retrospective is due yet."])
+    lines.extend(["", "| Horizon (sessions) | Matured observations | Pending or missing data |", "|---:|---:|---:|"])
+    for horizon in coverage["horizons"]:
+        lines.append(f"| {horizon['horizon_sessions']} | {horizon['matured']} | {horizon['pending_or_missing']} |")
+    lines.extend(["", "No completed review meeting, profitable strategy, execution return, or independent statistical sample is inferred from counts."])
     atomic_write_text(RETROSPECTIVE_PATH, "\n".join(lines) + "\n")
 
 

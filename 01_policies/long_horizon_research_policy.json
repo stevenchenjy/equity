@@ -124,5 +124,16 @@
     "reason": "Complete source data is not independently reviewed company conviction; no automatic confidence promotion",
     "automatic_high_confidence_promotion": false
   },
-  "balance_sheet_treatment": "No cash/debt add-back or subtraction in equity P/FCF sensitivity; missing balance-sheet evidence remains a research risk gap"
+  "balance_sheet_treatment": "No cash/debt add-back or subtraction in equity P/FCF sensitivity; missing balance-sheet evidence remains a research risk gap",
+  "maintained_reviews": {
+    "schema_version": "maintained_company_theses_v1",
+    "store": "04_research/company_research/thesis_dossiers.local.json",
+    "maximum_review_interval_days": 31,
+    "company_view_and_valuation_are_separate": true,
+    "primary_filing_hash_and_period_required": true,
+    "supporting_and_contradictory_evidence_required": true,
+    "new_material_period_reopens_review": true,
+    "data_quality_implies_investment_conviction": false,
+    "automatic_position_mandate_changes": false
+  }
 }

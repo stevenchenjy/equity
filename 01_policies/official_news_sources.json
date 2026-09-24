@@ -1,7 +1,7 @@
 {
   "schema_version": "phase5r_official_news_sources_v1",
   "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
-  "verified_on": "2026-09-20",
+  "verified_on": "2026-09-24",
   "max_age_hours": 36,
   "event_lookback_days": 7,
   "retention_days": 180,
@@ -13,7 +13,9 @@
       "ticker": "IOT",
       "url": "https://investors.samsara.com/rss/pressrelease.aspx",
       "format": "rss_atom",
-      "allowed_hosts": ["investors.samsara.com"],
+      "allowed_hosts": [
+        "investors.samsara.com"
+      ],
       "required": true,
       "verification_page": "https://investors.samsara.com/news/default.aspx"
     },
@@ -22,7 +24,9 @@
       "ticker": "RBRK",
       "url": "https://ir.rubrik.com/rss/pressrelease.aspx",
       "format": "rss_atom",
-      "allowed_hosts": ["ir.rubrik.com"],
+      "allowed_hosts": [
+        "ir.rubrik.com"
+      ],
       "required": true,
       "verification_page": "https://ir.rubrik.com/news-events/press-releases/default.aspx"
     },
@@ -31,9 +35,40 @@
       "ticker": "NVDA",
       "url": "https://nvidianews.nvidia.com/releases.xml",
       "format": "rss_atom",
-      "allowed_hosts": ["nvidianews.nvidia.com", "blogs.nvidia.com"],
+      "allowed_hosts": [
+        "nvidianews.nvidia.com",
+        "blogs.nvidia.com"
+      ],
       "required": true,
       "verification_page": "https://nvidianews.nvidia.com/rss"
+    },
+    {
+      "source_id": "applovin_ir",
+      "ticker": "APP",
+      "url": "https://investors.applovin.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "investors.applovin.com",
+        "axon.ai"
+      ],
+      "required": true,
+      "verification_page": "https://investors.applovin.com/",
+      "verification_note": "Official issuer RSS includes AppLovin Axon product announcements on axon.ai."
+    },
+    {
+      "source_id": "semtech_ir",
+      "ticker": "SMTC",
+      "url": "https://irpages2.eqs.com/websites/semtechcorp-rss/English/10/news-rss.html",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "irpages2.eqs.com",
+        "ir-api.eqs.com",
+        "investors.semtech.com",
+        "www.semtech.com"
+      ],
+      "required": true,
+      "verification_page": "https://www.semtech.com/rss",
+      "verification_note": "Semtech official RSS directory explicitly links this EQS-hosted Latest Investor News feed."
     }
   ]
 }
