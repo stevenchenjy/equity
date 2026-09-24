@@ -8,6 +8,7 @@ import csv
 from datetime import date, datetime, timedelta, timezone
 import math
 from pathlib import Path
+import re
 import sys
 from typing import Any
 
@@ -46,13 +47,11 @@ DECISION_PATH = CONTROL_DIR / "data_source_decision.md"
 REPORT_PATH = RESEARCH_DIR / "data_report.md"
 
 SMOKE_TICKERS = ["QQQ", "XLK", "SPY"]
-APPROVED_PRODUCTION_TICKERS = frozenset({
+APPROVED_CANDIDATE_TICKERS = frozenset({
     "NVDA", "AMD", "AVGO", "TSM", "ASML", "ARM", "MU", "SMCI", "VRT", "EQIX", "DLR",
     "MSFT", "GOOGL", "AMZN", "META", "ORCL", "NOW", "CRM", "SNOW", "DDOG", "NET",
-    "CRWD", "PANW", "ZS", "QQQ", "XLK", "SPY", "APP", "RKLB", "QQQM", "XLI", "IOT", "RBRK",
+    "CRWD", "PANW", "ZS", "QQQ", "XLK", "SPY", "APP", "RKLB", "QQQM", "XLI",
 })
-EXPECTED_PRODUCTION_B2_TICKER_COUNT = 33
-REQUIRED_PRODUCTION_TICKERS = APPROVED_PRODUCTION_TICKERS
 MARKET_FIELDS = [
     "ticker", "last_price", "previous_close", "intraday_change_pct", "volume",
     "average_volume", "relative_volume", "dollar_volume", "day_high", "day_low",
@@ -1062,6 +1061,9 @@ def main(argv: list[str] | None = None) -> int:
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
         raise RuntimeError("Canonical Phase 5R universe is empty")
+    if (len(candidate_tickers) != len(APPROVED_CANDIDATE_TICKERS)
+            or set(candidate_tickers) != APPROVED_CANDIDATE_TICKERS):
+        raise RuntimeError("production candidate scope must be the exact approved 31")
     if set(SMOKE_TICKERS) - set(candidate_tickers):
         raise RuntimeError(
             "Canonical universe must include QQQ, XLK, and SPY for the preflight"
@@ -1069,15 +1071,16 @@ def main(argv: list[str] | None = None) -> int:
     if not LOCAL_POSITIONS_PATH.exists():
         raise RuntimeError("Current local positions are required for C9 price monitoring")
     current_positions = read_csv(LOCAL_POSITIONS_PATH)
-    held_tickers = sorted(
-        {
-            row.get("ticker", "").strip().upper()
-            for row in current_positions
-            if row.get("ticker", "").strip()
-        }
-    )
+    # Read symbols only: holdings extend price coverage, never candidate
+    # admission. Validate before either reuse or constructing a remote client.
+    held_tickers = [row.get("ticker", "").strip().upper() for row in current_positions]
     if not held_tickers:
         raise RuntimeError("Current local positions contain no ticker symbols")
+    if (len(set(held_tickers)) != len(held_tickers)
+            or any(re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker) is None
+                   for ticker in held_tickers)):
+        raise RuntimeError("current held ticker symbols must be valid and unique")
+    held_tickers.sort()
     tickers = list(candidate_tickers)
     tickers.extend(
         ticker for ticker in held_tickers if ticker not in set(candidate_tickers)
@@ -1089,13 +1092,6 @@ def main(argv: list[str] | None = None) -> int:
             tickers=tickers,
             held_tickers=held_tickers,
         )
-
-    if (
-        len(tickers) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
-        or len(set(tickers)) != EXPECTED_PRODUCTION_B2_TICKER_COUNT
-        or set(tickers) != APPROVED_PRODUCTION_TICKERS
-    ):
-        raise RuntimeError("production B2 ticker scope must be the exact approved 33")
 
     refresh_time = now_et()
     now = timestamp()

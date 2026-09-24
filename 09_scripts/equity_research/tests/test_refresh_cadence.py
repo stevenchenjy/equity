@@ -81,8 +81,8 @@ class B2RefreshCadenceTests(unittest.TestCase):
         }
 
     def _write_coherent_snapshot(self, paths: dict[str, Path], session: str) -> None:
-        seeds = [_seed(ticker) for ticker in b2.SMOKE_TICKERS]
-        rows = [_market_row(ticker, session) for ticker in (*b2.SMOKE_TICKERS, "IOT")]
+        seeds = [_seed(ticker) for ticker in sorted(b2.APPROVED_CANDIDATE_TICKERS)]
+        rows = [_market_row(ticker, session) for ticker in (*sorted(b2.APPROVED_CANDIDATE_TICKERS), "IOT")]
         by_ticker = {row["ticker"]: row for row in rows}
         b2.write_csv(paths["data"] / "universe_seed.csv", seeds, list(seeds[0]))
         b2.write_csv(paths["positions"], [{"ticker": "IOT"}], ["ticker"])

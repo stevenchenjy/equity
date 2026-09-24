@@ -24,9 +24,14 @@ from pathlib import Path
 from typing import NoReturn, Sequence
 from zoneinfo import ZoneInfo
 
+from active_config import load_active_config
 from daily_common import (
+    ROOT,
     RUNTIME_EXPECTED_CYCLE_DATE_ENV,
     ExclusiveFileLock,
+    load_active_state,
+    load_inhibit,
+    publish_automation_alert,
 )
 from sec_acceptance_extensions import (
     extension_artifact_path,
@@ -626,6 +631,39 @@ def _best_effort_failure_record(root: Path, job: str, error: RuntimeSyncError) -
         pass
 
 
+def _best_effort_preflight_alert(root: Path, *, job: str) -> None:
+    """Surface a blocked live scheduler after the existing terminal deadline.
+
+    Called while the runtime lock is held, so the shared once-per-cycle local
+    notification cannot race between refresh and decision jobs. Failure detail
+    is deliberately not passed to the alert; it stays in the existing logs.
+    Alert failure must never authorize a child or replace the original error.
+    """
+    try:
+        if (
+            root.resolve() != ROOT.resolve()
+            or root.resolve() != PRODUCTION_RUNTIME_ROOT.resolve()
+        ):
+            return
+        if job not in SCHEDULER_SCRIPTS or bool(load_inhibit().get("active")):
+            return
+        current = datetime.now(ET)
+        active = load_active_state()
+        if current.date().isoformat() < str(active.get("operational_from", "")):
+            return
+        deadline = load_active_config()["notifications"]["terminal_alert_after_et"]
+        if current.strftime("%H:%M") < deadline:
+            return
+        publish_automation_alert(
+            component="runtime_preflight",
+            reason="scheduled_runtime_preflight_blocked",
+        )
+    except Exception:
+        # Operational visibility is best effort; fail-closed Git and scheduler
+        # behavior remains authoritative even with malformed local state.
+        pass
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", required=True, choices=sorted(SCHEDULER_SCRIPTS))
@@ -709,6 +747,8 @@ def main() -> int:
                 )
             except RuntimeSyncError as exc:
                 _best_effort_failure_record(root, args.job, exc)
+                if not args.safe_check and not args.sync_only:
+                    _best_effort_preflight_alert(root, job=args.job)
                 raise
     except RuntimeSyncError as exc:
         print(

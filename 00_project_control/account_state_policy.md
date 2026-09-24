@@ -49,6 +49,26 @@ After a separately selected overlay is activated, rebuild all downstream
 portfolio and decision artifacts together from the same dated cached inputs.
 An old report does not become current simply because configuration changed.
 
+## Manual UI valuation bootstrap
+
+`update_manual_account.py --valuation-snapshot PATH` can record a complete,
+explicitly observed manual cash/share snapshot before a newly held symbol has
+canonical public prices. The local CSV must contain exactly `ticker`,
+`last_price`, `valuation_basis`, `data_source` and `data_timestamp`; every
+positive-share position must appear once, prices must be finite and positive,
+the basis must be `manual_ui_observation`, and sourced timestamps must be
+timezone-aware observations from the current local date. No broker connection
+is made by the updater.
+
+The marks value only the reported account-total reference. A private archived
+copy and SHA-256 are bound into the existing owner snapshot receipt alongside
+before/after account and position hashes. This does not write the canonical B2
+snapshot, fabricate Massive provenance, or waive any downstream price gate.
+After recording the actual holdings, refresh their public price-only coverage
+and regenerate account-aware outputs from validated canonical prices. Run this
+sequence under the existing runtime lock. A failed public refresh leaves the
+new manual truth recorded and research eligibility blocked, not falsely current.
+
 ## Privacy and Execution Boundary
 
 The account file is gitignored and local-user-readable only. C9 does not read SMTP credentials, archived position files, broker accounts, or transaction systems. Every output is research planning for manual confirmation.

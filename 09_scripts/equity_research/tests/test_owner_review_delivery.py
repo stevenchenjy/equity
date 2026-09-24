@@ -61,6 +61,25 @@ def save_decision(decision):
 
 
 class OwnerReviewDeliveryTests(unittest.TestCase):
+    def test_claim_sent_and_unknown_records_bind_exact_canonical_coverage(self):
+        for fail_smtp in (False, True):
+            with self.subTest(fail_smtp=fail_smtp), delivery_fixture() as (_, smtp):
+                decision = owner_review_fixture()
+                request_id = decision['owner_requested_research']['request_id']
+                save_decision(decision)
+                if fail_smtp:
+                    smtp.return_value.__enter__.return_value.send_message.side_effect = OSError('offline failure')
+                self.assertEqual(sender.send_once(smtp, owner_review_request_id=request_id), int(fail_smtp))
+                rows = sender.read_csv(sender.DAILY_DELIVERY_LEDGER_PATH)
+                self.assertEqual(len(rows), 2)
+                self.assertEqual(rows[0]['status'], 'owner_review_send_claimed')
+                self.assertEqual(rows[1]['status'], 'owner_review_delivery_unknown' if fail_smtp else 'owner_review_sent')
+                for row in rows:
+                    markers = row['reason'].split(';')
+                    self.assertIn(sender.owner_review_request_key(request_id), markers)
+                    self.assertIn(sender.owner_review_coverage_key(decision), markers)
+                    self.assertEqual(set(row), set(sender.LEDGER_FIELDS))
+
     def test_concurrent_artifact_replacement_cannot_change_review_or_ledger_hashes(self):
         decision = owner_review_fixture()
         request_id = decision["owner_requested_research"]["request_id"]

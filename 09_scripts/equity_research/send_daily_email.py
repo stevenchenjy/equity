@@ -29,6 +29,7 @@ from daily_common import (
     EMAIL_CONFIG_PATH,
     ExclusiveFileLock,
     append_csv_durable,
+    canonical_sha256,
     cycle_date,
     delivery_guard,
     iso_now,
@@ -504,6 +505,21 @@ def owner_review_request_key(request_id: str) -> str:
     return "owner_request_sha256=" + hashlib.sha256(request_id.encode("utf-8")).hexdigest()
 
 
+def owner_review_coverage_key(decision: dict[str, Any]) -> str:
+    """Bind an owner review to its exact underlying canonical decision.
+
+    Preserve all dates, gates, events, account/order facts and action content.
+    Only the separately dated owner appendix is excluded. This deliberately
+    favors a fresh review over suppression when any canonical content changes.
+    The reason marker keeps the append-only delivery ledger schema unchanged.
+    """
+    canonical = {key: value for key, value in decision.items()
+                 if key != "owner_requested_research"}
+    return "owner_review_coverage_sha256=" + canonical_sha256({
+        "schema_version": "owner_review_coverage_v1", "decision": canonical,
+    })
+
+
 def owner_review_eligibility(
     rows: list[dict[str, str]], request_id: str
 ) -> tuple[bool, str]:
@@ -518,19 +534,14 @@ def owner_review_eligibility(
 
 
 def routine_covered_by_owner_review(rows: list[dict[str, str]], decision: dict[str, Any]) -> bool:
-    """A same-day requested review covers routine screening, not new risk alerts.
+    """Cover same-day routine screening and exactly reviewed critical content.
 
     Use actual send/claim date in ET, never the older canonical cycle_date of a
     premarket review. Durable claims and uncertain sends also prevent duplicates.
     This does not carry analyst prices forward or change decision eligibility.
     """
-    if (decision.get("account_conflicts") or decision.get("material_events")
-            or decision.get("fundamental_gate", {}).get("weakening_tickers")
-            or any(decision.get(key, {}).get("passed") is not True
-                   for key in ("market_gate", "evidence_gate", "fundamental_gate"))
-            or build_email_view(decision)["plans"]):
-        return False
     current = now_et()
+    same_day_owner_rows = []
     for row in rows:
         if row.get("status", "").strip() not in OWNER_REVIEW_DELIVERY_STATUSES:
             continue
@@ -540,8 +551,22 @@ def routine_covered_by_owner_review(rows: list[dict[str, str]], decision: dict[s
             continue
         if (stamp.tzinfo is not None and stamp <= current
                 and stamp.astimezone(current.tzinfo).date() == current.date()):
-            return True
-    return False
+            same_day_owner_rows.append(row)
+    if not same_day_owner_rows:
+        return False
+    coverage_key = owner_review_coverage_key(decision)
+    if any(coverage_key in row.get("reason", "").split(";")
+           for row in same_day_owner_rows):
+        return True
+    # Historical rows have no coverage marker. Retain their conservative
+    # behavior: any critical content remains eligible for normal checks.
+    if (decision.get("account_conflicts") or decision.get("material_events")
+            or decision.get("fundamental_gate", {}).get("weakening_tickers")
+            or any(decision.get(key, {}).get("passed") is not True
+                   for key in ("market_gate", "evidence_gate", "fundamental_gate"))
+            or build_email_view(decision)["plans"]):
+        return False
+    return True
 
 
 def send_once(
@@ -657,7 +682,10 @@ def send_once(
 
         status_prefix = "owner_review_" if owner_review else "correction_" if correction else ""
         reason_prefix = "explicit_owner_review_" if owner_review else "explicit_correction_" if correction else ""
-        request_suffix = (";" + owner_review_request_key(owner_review_request_id)) if owner_review else ""
+        request_suffix = (
+            ";" + owner_review_request_key(owner_review_request_id)
+            + ";" + owner_review_coverage_key(decision)
+        ) if owner_review else ""
         # This durable claim is intentionally written before any SMTP operation.
         append_delivery(
             status=status_prefix + "send_claimed",

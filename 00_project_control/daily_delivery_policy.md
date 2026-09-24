@@ -144,6 +144,16 @@ that this system is a regulated adviser or has obtained regulatory approval.
 - Waiting for a current refresh does not consume either of the two SMTP/send
   attempts. At 15:30 ET, an unresolved refresh becomes one terminal local
   automation alert rather than an unbounded retry loop.
+- Runtime preflight failures (including unavailable Git synchronization) also
+  publish the fixed-text local alert after the configured 15:30 ET terminal
+  gate, under the existing runtime lock and once-per-cycle notification guard.
+  Maintenance inhibit, the operational date, safe checks and sync-only runs
+  retain their suppression rules. No provider error text enters the alert,
+  and alert failure never authorizes extraction or delivery.
+- A loaded/enabled LaunchAgent and matching plist confirm configuration, not
+  freshness. Check the runtime execution log and current-cycle refresh handoff
+  when verifying operation; a preflight failure can prevent either scheduler
+  from reaching its own status files.
 - That refresh-deadline terminal may clear automatically only after a fully
   passed handoff for the same ET cycle appears. Delivery-unknown and exhausted
   SMTP-attempt terminals never auto-clear, preserving duplicate protection.
@@ -162,9 +172,17 @@ Routine watch/discovery changes alone do not produce a second report.
 
 New official material events, account conflicts, failed data gates, fundamental
 weakening, or validated action plans remain eligible for the normal notification
-checks. Explicit owner reviews and authorized corrections retain their own
-deduplication rules. This does not roll forward analyst prices, change decision
-eligibility, or suppress a future day's research.
+checks unless the exact canonical decision was already covered by a same-day
+owner review. New owner-review claims, completed sends and uncertain sends
+include an `owner_review_coverage_sha256` marker in the existing reason field.
+It hashes the entire canonical decision, including timestamps, gates, account,
+orders, action details and material events, excluding only the separate owner
+research appendix. Matching coverage prevents a second email describing the
+same risk or plan; any canonical change retains the normal critical-content
+checks. Historical rows without the marker keep their conservative behavior.
+Explicit owner reviews and authorized corrections retain their own request and
+content deduplication rules. This does not roll forward analyst prices, change
+decision eligibility, or suppress a future day's research.
 
 Scheduled messages use six compact cards with a clear automatic-data-update
 label. They do not claim to replace a separately researched stop or exit date.

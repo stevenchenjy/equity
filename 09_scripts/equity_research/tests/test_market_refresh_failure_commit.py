@@ -20,7 +20,7 @@ _FIXED_NOW = "2026-08-06T11:15:00-04:00"
 POST_CLOSE = datetime(2026, 8, 6, 11, 15, tzinfo=ZoneInfo("America/New_York"))
 UNIVERSE_TICKERS = [
     *b2.SMOKE_TICKERS,
-    *sorted(b2.APPROVED_PRODUCTION_TICKERS - set(b2.SMOKE_TICKERS) - {"IOT", "RBRK"}),
+    *sorted(b2.APPROVED_CANDIDATE_TICKERS - set(b2.SMOKE_TICKERS)),
 ]
 HELD_TICKERS = ["IOT", "RBRK"]
 B2_TICKERS = [*UNIVERSE_TICKERS, *HELD_TICKERS]
@@ -344,7 +344,7 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 factory = stack.enter_context(
                     patch.object(b2.MassiveBasicEODClient, "from_environment")
                 )
-                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
+                with self.assertRaisesRegex(RuntimeError, "exact approved 31"):
                     b2.main()
 
             factory.assert_not_called()
@@ -359,8 +359,69 @@ class B2MarketRefreshFailureCommitTests(unittest.TestCase):
                 self._patch_paths(stack, paths)
                 stack.enter_context(patch.object(b2, "now_et", return_value=POST_CLOSE))
                 factory = stack.enter_context(patch.object(b2.MassiveBasicEODClient, "from_environment"))
-                with self.assertRaisesRegex(RuntimeError, "exact approved 33"):
+                with self.assertRaisesRegex(RuntimeError, "exact approved 31"):
                     b2.main()
+            factory.assert_not_called()
+
+    def test_new_held_symbols_get_prices_and_history_but_never_candidate_admission(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            held = [*HELD_TICKERS, "NEW", "FUND"]
+            b2.write_csv(paths["positions"], [{"ticker": ticker} for ticker in held], ["ticker"])
+            client = _CompleteCachedClient(POST_CLOSE)
+            self.assertEqual(self._run_with_client(paths, client), 0)
+            expected = set(UNIVERSE_TICKERS) | set(held)
+            self.assertEqual(set(client.calls), expected)
+            self.assertEqual({row["ticker"] for row in b2.read_csv(paths["snapshot"])}, expected)
+            self.assertEqual({row["ticker"] for row in b2.read_csv(paths["quality"])}, expected)
+            self.assertEqual({row["ticker"] for row in b2.read_csv(paths["candidates"])}, set(UNIVERSE_TICKERS))
+            history = json.loads(paths["snapshot"].with_name("tactical_price_history.local.json").read_text())
+            self.assertEqual(set(history["tickers"]), expected)
+            self.assertEqual(history["snapshot_sha256"], b2.sha256_file(paths["snapshot"]))
+
+    def test_sold_held_only_symbols_are_not_required_by_production_scope(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            b2.write_csv(paths["positions"], [{"ticker": "SPY"}, {"ticker": "NEW"}], ["ticker"])
+            client = _CompleteCachedClient(POST_CLOSE)
+            self.assertEqual(self._run_with_client(paths, client), 0)
+            self.assertEqual(set(client.calls), set(UNIVERSE_TICKERS) | {"NEW"})
+
+    def test_new_held_partial_history_preserves_prior_trio(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            prior = self._trio_bytes(paths)
+            b2.write_csv(paths["positions"], [{"ticker": "NEW"}], ["ticker"])
+            self.assertEqual(self._run_with_client(paths, _PartialApprovedTickerClient(POST_CLOSE, "NEW")), 1)
+            self.assertEqual(self._trio_bytes(paths), prior)
+
+    def test_invalid_held_symbol_rejected_before_network_client(self) -> None:
+        for held in (["../BAD"], ["NEW", "NEW"], [""]):
+            with self.subTest(held=held), tempfile.TemporaryDirectory() as directory:
+                paths = self._paths(Path(directory))
+                self._write_prior_outputs(paths)
+                b2.write_csv(paths["positions"], [{"ticker": ticker} for ticker in held], ["ticker"])
+                with ExitStack() as stack:
+                    self._patch_paths(stack, paths)
+                    factory = stack.enter_context(patch.object(b2.MassiveBasicEODClient, "from_environment"))
+                    with self.assertRaisesRegex(RuntimeError, "held ticker symbols"):
+                        b2.main()
+                factory.assert_not_called()
+
+    def test_snapshot_reuse_cannot_admit_a_changed_candidate_universe(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._paths(Path(directory))
+            self._write_prior_outputs(paths)
+            seeds = [_seed(ticker) for ticker in UNIVERSE_TICKERS] + [_seed("EXTRA")]
+            b2.write_csv(paths["data"] / "universe_seed.csv", seeds, list(seeds[0]))
+            with ExitStack() as stack:
+                self._patch_paths(stack, paths)
+                factory = stack.enter_context(patch.object(b2.MassiveBasicEODClient, "from_environment"))
+                with self.assertRaisesRegex(RuntimeError, "exact approved 31"):
+                    b2.main(["--reuse-validated-snapshot"])
             factory.assert_not_called()
 
     def test_partial_thirty_three_ticker_fetch_cannot_commit_any_part_of_prior_trio(self) -> None:

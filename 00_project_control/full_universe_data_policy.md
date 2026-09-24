@@ -5,7 +5,7 @@
 Phase 5R-B2 creates one read-only daily research dataset for the canonical Phase 5R universe. It supports an AI Investment Research Assistant workflow with low daily attention and manual execution only.
 
 "Full universe" in legacy B2 filenames means the configured 31 candidates plus
-two held-only symbols. It does not mean the entire listed market. The separate
+the current local held-only symbols. It does not mean the entire listed market. The separate
 market-discovery extension below implements the owner's September 22 request
 for independent broad screening, without changing B2's evidence contract.
 
@@ -32,7 +32,7 @@ for independent broad screening, without changing B2's evidence contract.
   session was forbidden under the active Basic credential. No credential
   value or provider response body was retained.
 - Massive Stocks Basic is limited to five API calls per minute. The adapter enforces a conservative minimum request interval and performs no automatic retry or pagination follow-up.
-- The active production fetch is limited to the exact approved 33-ticker scope, reviewed September 22, 2026 (31 canonical candidates including newly requested APP, RKLB, QQQM and XLI, plus held-only IOT and RBRK). Any scope change blocks before client construction and requires a separately reviewed update.
+- The production candidate set remains the exact approved 31 symbols. Added, missing, replaced or duplicate candidate symbols block before client construction, including no-network reuse. The September 24 held-position repair allows valid, unique ticker symbols from the current local positions file to extend price monitoring only; sold held-only symbols are no longer required. These rows receive the same complete Massive history, quality, freshness and atomic-trio checks, without admission to candidate scoring. Existing request pacing, no-retry behavior and bounded child runtime remain unchanged; an oversized or slow refresh fails visibly rather than loosening validation.
 - The benchmark preflight runs before any full-universe retrieval.
 - A successful preflight requires a current and prior close for QQQ, XLK, and SPY.
 - A recognized Massive rate limit is recorded only as the finite code `massive_rate_limited`; response text, URLs, headers, and credentials are never persisted.
@@ -81,7 +81,7 @@ separate read-only layer, Massive Stocks Basic may additionally retrieve
 Official references: [All Tickers](https://massive.com/docs/rest/stocks/tickers/all-tickers)
 and [Daily Market Summary](https://massive.com/docs/rest/stocks/aggregates/daily-market-summary).
 This is a reviewed exception to the B2 Custom Bars-only scope above, not
-permission to alter B2's 33-symbol dataset or use another market provider.
+permission to alter B2's approved candidate set or use another market provider.
 
 The extension screens active, exchange-listed US common stocks and ETFs, with
 explicit exclusions and coverage counts. It excludes OTC, non-common-stock
