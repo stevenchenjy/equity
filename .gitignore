@@ -152,3 +152,4 @@ graphify-out/graph.html
 08_reviews/current/maintained_plans.local.json
 
 00_project_control/run_logs/verified_deployment.local.json
+07_automation/email_delivery/sent_decisions.local/
