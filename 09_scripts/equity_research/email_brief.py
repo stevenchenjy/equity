@@ -793,26 +793,21 @@ def email_subject(
             return f"[Equity] Your trading plan | {review_date}"
         return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
     prefix = subject_prefix(correction=correction)
+    if decision.get("workflow_integrity"):
+        return f"{prefix} Portfolio update | {view['cycle']}"
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
 
-def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any]]) -> tuple[str, str, str]:
-    """One readable owner brief; never append a second, older decision report."""
-    review = decision['owner_requested_research']
-    subject = email_subject(decision, owner_review=True)
+def _render_cards(subject: str, sections: list[dict[str, Any]], *, title: str,
+                  stamp: str, footer: str, note: str = "") -> tuple[str, str, str]:
+    """Shared text and HTML layout for automatic and requested reviews."""
     esc = lambda value: html.escape(str(value), quote=True)
-    stamp = f"Prices: {review.get('market_as_of', 'unconfirmed')} close · Not live"
-    note = "Formatting update only. Research conclusions and price levels are unchanged; verify current quotes and order status before acting."
-    lines = [subject, stamp, note]
+    lines = [subject, stamp] + ([note] if note else [])
     content = [f'<p style="color:#526170;font-size:12px;margin:0 0 10px">{esc(brand_name())}</p>',
-               '<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">Your trading plan</h1>',
+               f'<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">{esc(title)}</h1>',
                f'<p style="font-size:13px;color:#526170;margin:0 0 12px">{esc(stamp)}</p>']
-    # This note is specific to a formatting-only correction, not a claim that
-    # every future owner review repeats an earlier research conclusion.
-    if review.get('formatting_only') is True:
+    if note:
         content.append(f'<p style="font-size:13px;line-height:1.5;color:#526170">{esc(note)}</p>')
-    else:
-        lines.remove(note)
     for index, section in enumerate(sections):
         lines.extend(['', section['title']])
         background = '#eef5f8' if index == 0 else '#ffffff'
@@ -837,8 +832,6 @@ def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any
                 lines.append(f'Source [{i}]: {url}')
             content.append('<p style="font-size:12px;line-height:1.5;margin:14px 0 0;color:#526170">' + ' · '.join(links) + '</p>')
         content.append('</div>')
-    baseline = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
-    footer = f"Research only. No orders have been placed or changed. The automated baseline uses {baseline} data; this dated owner review is separate and does not override its eligibility checks."
     lines.extend(['', footer])
     content.append(f'<p style="font-size:12px;line-height:1.6;color:#526170;margin-top:24px">{esc(footer)}</p>')
     document = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
@@ -847,6 +840,26 @@ def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any
                 '<div style="max-width:600px;margin:0 auto;padding:24px 16px;background:#ffffff;overflow-wrap:break-word">'
                 + ''.join(content) + '</div></body></html>\n')
     return subject, '\n'.join(lines)+'\n', document
+
+
+
+def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any]]) -> tuple[str, str, str]:
+    review = decision['owner_requested_research']
+    baseline = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
+    return _render_cards(email_subject(decision, owner_review=True), sections, title="Your trading plan",
+        stamp=f"Prices: {review.get('market_as_of', 'unconfirmed')} close · Not live",
+        note=("Formatting update only. Research conclusions and price levels are unchanged; verify current quotes and order status before acting."
+              if review.get('formatting_only') is True else ""),
+        footer=f"Research only. No orders have been placed or changed. The automated baseline uses {baseline} data; this dated owner review is separate and does not override its eligibility checks.")
+
+
+def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
+    from scheduled_email import cards
+    session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
+    verified = decision.get('market_gate', {}).get('passed') is True
+    return _render_cards(email_subject(decision), cards(decision, view), title="Portfolio update",
+        stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
+        footer="Automated research status, not a new analyst review. Unresolved plans remain open until verified. No orders have been placed or changed.")
 
 
 def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
@@ -927,6 +940,8 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     if owner_research and review.get("presentation") == "compact":
         return _render_compact_owner(decision, owner_research)
     if not owner_research:
+        if decision.get("workflow_integrity"):
+            return _render_maintained_scheduled(decision, view)
         return _render_compact_scheduled(decision, view)
     dated_review = bool(owner_research and review.get("request_id"))
     subject = email_subject(decision, owner_review=dated_review)

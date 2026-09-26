@@ -1,5 +1,17 @@
 # Owner-requested research reviews
 
+## Current email correction (2026-09-26)
+
+The owner asked to fix repeated old-format automatic messages. The current
+delivery/presentation rule at the top of `daily_delivery_policy.md` takes
+precedence over earlier watch-membership-only and same-day-only wording below.
+Use concise English cards for current automatic reports and compact requested
+reviews. Continue researching every cycle, but compare automatic notifications
+with the last delivered content across dates; raw screening churn and aging an
+already communicated deadline are not new conclusions. Preserve meaningful
+plan, order, account, evidence and risk changes. This correction does not itself
+authorize another email, an altered investment plan or a brokerage action.
+
 Recorded from the owner's explicit requests on 2026-09-14. These preferences
 apply to interactive rechecks and their email delivery. They do not authorize
 broker access, automatic trading, new recipients, or extra scheduled sends.

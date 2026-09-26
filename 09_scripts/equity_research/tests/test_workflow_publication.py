@@ -49,7 +49,8 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertEqual(value['held_positions'][0]['baseline_research']['reason'], 'generic hold')
         validate_published_workflow(value, root=self.root, current=self.now)
         for body in render_email(value)[1:]:
-            self.assertIn('TEST-plan', body)
+            self.assertRegex(body, r'TEST:(?:</strong>)? 4 held')
+            self.assertIn('protection review', body)
             self.assertIn('2026-09-25T15:45', body)
             self.assertNotIn('报告状态未识别', body)
         with self.assertRaisesRegex(ValueError, 'plan_state_changed'):
@@ -75,7 +76,7 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertFalse(view['plans'])
         self.assertIn('期限持续有效', view['next_step'])
         text = render_email(value)[1]
-        self.assertIn('旧方案已到期', text)
+        self.assertIn('dated plan expired; outcome unconfirmed', text)
         self.assertIn('2026-09-25T15:45', text)
         self.assertNotIn('没有交易截止时刻', text)
 

@@ -1,5 +1,40 @@
 # Phase 5R Daily Delivery Policy
 
+## Current delivery and presentation rule (2026-09-26)
+
+This section supersedes earlier same-calendar-day coverage and long scheduled
+email presentation requirements for the maintained workflow. The owner reported
+repeated old-format automatic emails and requested a full fix.
+
+- Preserve daily research, current plan states, eligibility and history. An
+  automatically changed research fingerprint is necessary but not sufficient
+  for another email: compare with the latest durable delivery receipt across
+  dates, including an evening requested review covering the next session.
+- Record `delivery_meaning_v1` in every new claim/sent/unknown receipt. Only the
+  latest receipt is the comparison baseline; never skip over a changed risk
+  message by finding an older matching one. Explicit requested reviews and
+  authorized corrections retain their existing separate delivery rules.
+- Unreviewed watch/screen ranking changes, quotes, rejected-entry diagnostics,
+  and clock-only aging of an unchanged plan/order snapshot do not independently
+  warrant another automatic email. They remain visible in local reports.
+- Changed held or reviewed-company evidence, maintained plan versions, broker
+  order facts, recorded shares/cash, eligible proposals, conflicts, and data/risk
+  gates remain reportable. An unconfirmed outcome is retained, never marked
+  completed by notification suppression. No suppressed message cancels a
+  deadline, verifies a fill, or permits an expired order to be renewed.
+- Legacy delivery receipts can be compared only using an archived decision
+  whose exact bytes match the receipt's recorded SHA-256. Missing or invalid
+  evidence does not suppress a message. Preserve original bodies and ledgers.
+- Current automatic messages use the same six-card layout as compact requested
+  reviews, with English summaries, dated references, held plans, order checks,
+  cash provenance, research candidates and concise risk rules. Do not append
+  the full diagnostic report or raw mixed-language thesis text. Label automatic
+  status updates separately from fresh analyst reviews. Legacy historical
+  schemas retain their renderer compatibility; production uses the maintained
+  workflow path.
+- Formatting repairs do not authorize a resend or a test message. Regression
+  checks must use local previews and mocked SMTP.
+
 ## Eligibility
 
 The only authorized sender is `send_daily_email.py`. It requires:

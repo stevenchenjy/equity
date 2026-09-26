@@ -20,6 +20,7 @@ from typing import Any, Callable
 
 from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
+from delivery_continuity import covered_by_last_delivery, delivery_meaning_key
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -652,7 +653,11 @@ def send_once(
             prior_status = correction_reason
         else:
             blocked, prior_status = cycle_is_blocked(delivery_rows, target_cycle)
-            if not blocked and routine_covered_by_owner_review(delivery_rows, decision):
+            if not blocked and covered_by_last_delivery(delivery_rows, decision, current=now_et(),
+                    archive_dir=DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local"):
+                blocked, prior_status = True, "last_delivery_already_covers_plan"
+            if (not blocked and not decision.get("workflow_integrity")
+                    and routine_covered_by_owner_review(delivery_rows, decision)):
                 blocked, prior_status = True, "owner_review_already_covers_today"
         if blocked:
             log_daily_run(
@@ -702,6 +707,7 @@ def send_once(
             ";" + owner_review_request_key(owner_review_request_id)
             + ";" + owner_review_coverage_key(decision)
         ) if owner_review else ""
+        request_suffix += ";" + delivery_meaning_key(decision)
         try:
             if decision.get("workflow_integrity") is not None:
                 from workflow_integrity import validate_published_workflow
