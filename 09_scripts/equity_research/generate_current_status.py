@@ -259,6 +259,10 @@ def main() -> int:
         ).stdout.strip()
     except (OSError, subprocess.SubprocessError):
         commit = "unavailable"
+    from delivery_continuity import covered_by_last_delivery
+    delivery_path = ROOT / "07_automation/email_delivery/daily_delivery_ledger.csv"
+    delivery_covered = covered_by_last_delivery(read_csv(delivery_path), decision,
+        current=current, archive_dir=delivery_path.parent / "sent_decisions.local")
     status: dict[str, Any] = {
         "schema_version": "phase5r_current_production_status_v1",
         "generated_at": iso_now(),
@@ -287,6 +291,7 @@ def main() -> int:
             "headline": decision.get("headline", ""),
             "send_recommended": decision.get("send_recommended", False),
             "send_reason": decision.get("send_reason", ""),
+            "last_delivery_covers_content": delivery_covered,
             "next_review": decision.get("next_scheduled_review", ""),
         },
         "account": {
@@ -345,7 +350,7 @@ def main() -> int:
         f"- Deterministic refresh: `{status['deterministic_refresh']['outcome']}`.",
         f"- Market: `{status['market']['valid_rows']}/{status['market']['total_rows']}` valid rows; latest validated published close `{status['market']['latest_completed_session'] or 'none'}` (provider publication can lag the exchange calendar).",
         f"- SEC evidence: `{status['official_evidence']['status']}`; held coverage `{status['official_evidence']['held_coverage_complete']}`.",
-        f"- Decision: `{status['decision']['code']}`; email `{status['decision']['send_reason'] or 'not generated'}`.",
+        f"- Decision: `{status['decision']['code']}`; research notification signal `{status['decision']['send_reason'] or 'not generated'}`; delivery comparison: `{'already covered; no repeat automatic email' if status['decision']['last_delivery_covers_content'] else 'not covered; remaining sender checks still apply'}`.",
         f"- Valuation: `{status['valuation']['complete_records']}/{status['valuation']['total_records']}` complete records.",
         f"- Outcome evidence: `{status['outcomes']['recommendation_snapshots']}` snapshots, `{status['outcomes']['evaluated_horizon_rows']}` evaluated horizon rows.",
         f"- Production model: retired; calls allowed `{status['model']['calls_allowed']}`; retired-pilot metered cost `${status['model']['metered_cost_usd']}`. These are not current SHADOW usage or costs; see `08_reviews/shadow_llm/reviews.local/evaluation.md`.",

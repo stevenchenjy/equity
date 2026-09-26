@@ -2432,7 +2432,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_equity_research_earnings_incorporation_secpayload",
-      "community": 67,
+      "community": 115,
       "norm_label": "secpayload"
     },
     {
@@ -2442,7 +2442,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "dict",
-      "community": 67,
+      "community": 115,
       "norm_label": "dict"
     },
     {
@@ -2582,7 +2582,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_equity_research_earnings_incorporation_rationale_27",
-      "community": 67,
+      "community": 115,
       "norm_label": "json object with out-of-band raw-byte receipt (never inserted in facts)."
     },
     {
@@ -5732,7 +5732,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_refresh_daily_evidence",
-      "community": 4,
+      "community": 67,
       "norm_label": "refresh_daily_evidence.py"
     },
     {
@@ -5742,7 +5742,7 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "09_scripts_equity_research_refresh_daily_evidence_approved_inline_tags",
-      "community": 100,
+      "community": 67,
       "norm_label": "approved_inline_tags()"
     },
     {
@@ -5802,7 +5802,7 @@
       "source_location": "L352",
       "_origin": "ast",
       "id": "09_scripts_equity_research_refresh_daily_evidence_recent_filings",
-      "community": 4,
+      "community": 67,
       "norm_label": "recent_filings()"
     },
     {
@@ -5972,7 +5972,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_equity_research_refresh_daily_evidence_money",
-      "community": 4,
+      "community": 67,
       "norm_label": "money()"
     },
     {
@@ -20392,7 +20392,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_integrity",
-      "community": 101,
+      "community": 96,
       "norm_label": "test_workflow_integrity.py"
     },
     {
@@ -21402,7 +21402,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account",
-      "community": 66,
+      "community": 89,
       "norm_label": "update_manual_account.py"
     },
     {
@@ -21412,7 +21412,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_read_ui_valuation",
-      "community": 66,
+      "community": 89,
       "norm_label": "read_ui_valuation()"
     },
     {
@@ -21422,7 +21422,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_py_path",
-      "community": 66,
+      "community": 89,
       "norm_label": "path"
     },
     {
@@ -21442,7 +21442,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_parse_position",
-      "community": 66,
+      "community": 89,
       "norm_label": "parse_position()"
     },
     {
@@ -21462,7 +21462,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_rationale_35",
-      "community": 66,
+      "community": 89,
       "norm_label": "read an auditable manual valuation reference, never a b2 market row."
     },
     {
@@ -33252,7 +33252,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/generate_current_status.py",
-      "source_location": "L264",
+      "source_location": "L268",
       "weight": 1.0,
       "source": "09_scripts_equity_research_generate_current_status_main",
       "target": "09_scripts_equity_research_daily_common_iso_now"
@@ -34909,7 +34909,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/generate_current_status.py",
-      "source_location": "L370",
+      "source_location": "L375",
       "weight": 1.0,
       "source": "09_scripts_equity_research_generate_current_status_main",
       "target": "09_scripts_equity_research_daily_common_atomic_write_text"
@@ -37078,6 +37078,17 @@
       "source": "09_scripts_equity_research_delivery_continuity_rationale_73",
       "target": "09_scripts_equity_research_delivery_continuity_covered_by_last_delivery",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "09_scripts/equity_research/generate_current_status.py",
+      "source_location": "L264",
+      "weight": 1.0,
+      "source": "09_scripts_equity_research_generate_current_status_main",
+      "target": "09_scripts_equity_research_delivery_continuity_covered_by_last_delivery"
     },
     {
       "relation": "calls",
@@ -40212,7 +40223,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/generate_current_status.py",
-      "source_location": "L341",
+      "source_location": "L346",
       "weight": 1.0,
       "source": "09_scripts_equity_research_generate_current_status_main",
       "target": "users_messssi_desktop_equity_09_scripts_phase5r_equity_naming_report_heading"
@@ -43187,7 +43198,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/generate_current_status.py",
-      "source_location": "L305",
+      "source_location": "L310",
       "weight": 1.0,
       "source": "09_scripts_equity_research_generate_current_status_main",
       "target": "09_scripts_equity_research_generate_current_status_jsonl_count",
@@ -96393,5 +96404,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "369c3744c8b8c5f89b0739a778dca4b338714dde"
+  "built_at_commit": "0c9c655f4636fa1b6f0d7a41de89d765ffdbe96b"
 }

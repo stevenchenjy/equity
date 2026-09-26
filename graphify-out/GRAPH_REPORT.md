@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-26)
 
 ## Corpus Check
-- 229 files · ~232,045 words
+- 229 files · ~232,084 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2544 nodes · 6650 edges · 132 communities (102 shown, 30 thin omitted)
-- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 1236 edges (avg confidence: 0.79)
+- 2544 nodes · 6651 edges · 133 communities (104 shown, 29 thin omitted)
+- Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 1237 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `369c3744`
+- Built from commit: `0c9c655f`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -129,6 +129,7 @@
 - main
 - OwnerSnapshotTests
 - cards
+- SecPayload
 - issuer_news_continuity.md
 - graphify reference: query, path, explain
 - Source Policy
@@ -174,7 +175,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (132 total, 30 thin omitted)
+## Communities (133 total, 29 thin omitted)
 
 ### Community 0 - "market_data_adapter.py"
 Cohesion: 0.13
@@ -193,8 +194,8 @@ Cohesion: 0.05
 Nodes (79): _allowed_classifications_by_ticker(), _artifact_map(), build_packet(), _compact_fact_provenance(), _date_from_period(), _decimal(), _decision_tickers(), _entities() (+71 more)
 
 ### Community 4 - "test_active_production.py"
-Cohesion: 0.21
-Nodes (29): _debt_fact(), _derived_fact(), _derived_provenance(), _duration_days(), duration_values(), fact_provenance(), fact_units(), fundamental_row() (+21 more)
+Cohesion: 0.19
+Nodes (27): _debt_fact(), _derived_fact(), _derived_provenance(), _duration_days(), duration_values(), fact_provenance(), fact_units(), fundamental_row() (+19 more)
 
 ### Community 5 - "score_b_candidates.py"
 Cohesion: 0.05
@@ -409,12 +410,12 @@ Cohesion: 0.29
 Nodes (6): Admission requirements, Boundaries, Commit and recovery behavior, Immutable historical layer, Phase 5R SEC Acceptance-Index Extension Policy v1, Versioned artifacts and audit
 
 ### Community 66 - "ResearchRiskLimitsTests"
-Cohesion: 0.12
-Nodes (33): main(), atomic_write_json(), atomic_write_text(), bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), load_active_state() (+25 more)
+Cohesion: 0.14
+Nodes (29): main(), atomic_write_json(), atomic_write_text(), bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), load_active_state() (+21 more)
 
 ### Community 67 - "test_owner_snapshot.py"
-Cohesion: 0.10
-Nodes (25): append_csv_durable(), iso_now(), log_daily_run(), JSON object with out-of-band raw-byte receipt (never inserted in facts)., SecPayload, acceptance_index_failure_reason(), classify_materiality(), company_fundamentals_required() (+17 more)
+Cohesion: 0.13
+Nodes (25): append_csv_durable(), iso_now(), log_daily_run(), acceptance_index_failure_reason(), approved_inline_tags(), classify_materiality(), company_fundamentals_required(), count_unindexed_acceptance_accessions() (+17 more)
 
 ### Community 68 - "Equity Research 命名迁移验收"
 Cohesion: 0.50
@@ -472,6 +473,10 @@ Nodes (7): Path, brand_name(), desktop_alert_script(), load_display_names(), Sha
 Cohesion: 0.50
 Nodes (3): Cash-Deployment Decision, Phase 5R-C9 Core Allocation Policy, Separation
 
+### Community 89 - "next_thursday"
+Cohesion: 0.24
+Nodes (6): ManualValuationBootstrapTests, mark(), parse_position(), Path, Read an auditable manual valuation reference, never a B2 market row., read_ui_valuation()
+
 ### Community 93 - "SecAcceptanceReconciliationTests"
 Cohesion: 0.18
 Nodes (14): acceptance_map(), AcceptanceReconciliationError, load_acceptance_reconciliation_log(), load_immutable_acceptance_index(), Path, Load the historical index only when the retained artifact exists.      The times, Fields that must remain fixed across an idempotent log retry., Load the append-only reconciliation log or fail closed on corruption. (+6 more)
@@ -481,7 +486,7 @@ Cohesion: 0.50
 Nodes (4): Authoritative policy and boundaries, Current runtime outputs — read their generated timestamps, Equity Research — current document entrypoints, Historical material — retained, not current instructions
 
 ### Community 96 - "OwnerSnapshotTests"
-Cohesion: 0.20
+Cohesion: 0.19
 Nodes (17): WorkflowPublicationTests, apply_workflow_integrity(), current_news_context(), current_thesis_views(), incorporation_meaning(), news_meaning(), Any, datetime (+9 more)
 
 ### Community 98 - "ResearchRiskLimitsTests"
@@ -493,11 +498,11 @@ Cohesion: 0.14
 Nodes (13): deployment_health(), jsonl_count(), main(), Any, datetime, Path, Keep operational completion, maintained views, and price readiness separate., workflow_health() (+5 more)
 
 ### Community 100 - "earnings_incorporation.py"
-Cohesion: 0.26
-Nodes (16): main(), _accessions(), assess_company(), build_earnings_incorporation(), Any, datetime, Path, Hash-bound financial selection receipts and offline incorporation gate.  Collect (+8 more)
+Cohesion: 0.28
+Nodes (15): main(), _accessions(), assess_company(), build_earnings_incorporation(), Any, datetime, Path, Hash-bound financial selection receipts and offline incorporation gate.  Collect (+7 more)
 
 ### Community 101 - "MaintainedThesisTests"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (7): fixture(), MaintainedThesisTests, material_fixture(), ValueError, The review cannot be used as a current maintained conclusion., seal_review(), ThesisValidationError
 
 ### Community 102 - "supplement_cached_latest_report"
@@ -527,6 +532,10 @@ Nodes (6): acceptance_map(), fetch(), main(), Path, Return a finite configuratio
 ### Community 114 - "cards"
 Cohesion: 0.50
 Nodes (3): cards(), Any, Brief English cards for the maintained workflow, without raw diagnostics.
+
+### Community 115 - "SecPayload"
+Cohesion: 0.67
+Nodes (3): JSON object with out-of-band raw-byte receipt (never inserted in facts)., SecPayload, dict
 
 ### Community 126 - "graphify reference: query, path, explain"
 Cohesion: 0.22
@@ -583,7 +592,7 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
 ## Knowledge Gaps
 - **208 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+203 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **30 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
