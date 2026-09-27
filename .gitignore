@@ -23,6 +23,7 @@ graphify-out/graph.html
 05_risk_and_positions/current_account_state.local.json
 05_risk_and_positions/current_open_orders.local.json
 03_source_data/equity_research/tactical_price_history.local.json
+03_source_data/equity_research/market_coverage_recompositions.local/
 03_source_data/equity_research/market_discovery.local/
 05_risk_and_positions/manual_account_snapshot.local.json
 05_risk_and_positions/manual_snapshots.local/

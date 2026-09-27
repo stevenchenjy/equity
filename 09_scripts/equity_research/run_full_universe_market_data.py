@@ -6,15 +6,21 @@ import argparse
 from collections import Counter
 import csv
 from datetime import date, datetime, timedelta, timezone
+import hashlib
+import json
 import math
 from pathlib import Path
 import re
 import sys
+import tempfile
 from typing import Any
+import uuid
 
 from daily_common import (
     atomic_write_csv,
     atomic_write_json,
+    atomic_write_text,
+    ExclusiveFileLock,
     sha256_file,
     is_us_market_session_date,
     latest_published_market_session,
@@ -711,6 +717,7 @@ def prior_outputs_are_coherent(
     universe: list[dict[str, str]],
     tickers: list[str],
     held_tickers: list[str],
+    output_paths: tuple[Path, Path, Path] | None = None,
 ) -> tuple[bool, list[dict[str, str]], str]:
     """Validate a prior B2 trio before leaving it untouched after source failure.
 
@@ -720,19 +727,20 @@ def prior_outputs_are_coherent(
     from replacing a structurally coherent prior baseline with empty rows.
     """
 
-    required_paths = (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH)
+    required_paths = output_paths or (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH)
+    snapshot_path, quality_path, candidates_path = required_paths
     if not all(path.exists() for path in required_paths):
         return False, [], "prior_output_missing"
     try:
         if (
-            csv_header(SNAPSHOT_PATH) != MARKET_FIELDS
-            or csv_header(QUALITY_PATH) != QUALITY_FIELDS
-            or csv_header(CANDIDATES_PATH) != CANDIDATE_FIELDS
+            csv_header(snapshot_path) != MARKET_FIELDS
+            or csv_header(quality_path) != QUALITY_FIELDS
+            or csv_header(candidates_path) != CANDIDATE_FIELDS
         ):
             return False, [], "prior_output_schema_mismatch"
-        market_rows = read_csv(SNAPSHOT_PATH)
-        quality_rows = read_csv(QUALITY_PATH)
-        candidate_rows = read_csv(CANDIDATES_PATH)
+        market_rows = read_csv(snapshot_path)
+        quality_rows = read_csv(quality_path)
+        candidate_rows = read_csv(candidates_path)
     except (OSError, StopIteration, UnicodeError, csv.Error):
         return False, [], "prior_output_unreadable"
     if any(
@@ -960,6 +968,7 @@ def validated_snapshot_reuse(
     tickers: list[str],
     held_tickers: list[str],
     current: datetime | None = None,
+    output_paths: tuple[Path, Path, Path] | None = None,
 ) -> tuple[bool, str, str]:
     """Accept only an exact, coherent local close for no-network reuse.
 
@@ -974,6 +983,7 @@ def validated_snapshot_reuse(
         universe=universe,
         tickers=tickers,
         held_tickers=held_tickers,
+        output_paths=output_paths,
     )
     if not coherent:
         return False, REUSE_INVALID_SNAPSHOT_CODE, ""
@@ -982,6 +992,140 @@ def validated_snapshot_reuse(
     if observed_sessions != {expected_session}:
         return False, REUSE_STALE_SNAPSHOT_CODE, expected_session
     return True, REUSE_VALIDATED_SNAPSHOT_CODE, expected_session
+
+
+def recompose_current_coverage(
+    *, universe: list[dict[str, str]], tickers: list[str], held_tickers: list[str],
+) -> int:
+    """Explicit offline projection after a held-only symbol leaves the account.
+
+    This cannot add data, repair inconsistent rows, renew timestamps or change
+    candidate membership. The original wider trio must itself pass the existing
+    complete-current-close validator before the exact current subset is staged.
+    The caller holds the daily pipeline lock throughout this operation.
+    """
+    current = now_et()
+    paths = (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH)
+    history_path = SNAPSHOT_PATH.with_name("tactical_price_history.local.json")
+    evidence_paths = (*paths, UNIVERSE_PATH, LOCAL_POSITIONS_PATH)
+    if history_path.exists():
+        evidence_paths = (*evidence_paths, history_path)
+    try:
+        original = {path: path.read_bytes() for path in evidence_paths}
+        rows = read_csv(SNAPSHOT_PATH)
+    except (OSError, UnicodeError, csv.Error):
+        print("coverage_recomposition_complete=false; reason=local_inputs_unreadable")
+        return 1
+    old_tickers = [row.get("ticker", "").strip().upper() for row in rows]
+    expected = set(tickers)
+    retired = set(old_tickers) - expected
+    if not retired:
+        return reuse_validated_snapshot(universe=universe, tickers=tickers, held_tickers=held_tickers)
+    if (not expected.issubset(old_tickers)
+            or retired & {row["ticker"].upper() for row in universe}
+            or any(re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker) is None for ticker in old_tickers)):
+        print("coverage_recomposition_complete=false; reason=coverage_is_not_retired_held_only_subset")
+        return 1
+    valid, code, session = validated_snapshot_reuse(
+        universe=universe, tickers=old_tickers,
+        held_tickers=sorted(set(held_tickers) | retired), current=current,
+    )
+    if not valid:
+        print(f"coverage_recomposition_complete=false; reason={code}")
+        return 1
+
+    before_hashes = {path.name: hashlib.sha256(data).hexdigest() for path, data in original.items()}
+    projected = [row for row in rows if row["ticker"].strip().upper() in expected]
+    quality = [row for row in read_csv(QUALITY_PATH) if row["ticker"].strip().upper() in expected]
+    with tempfile.TemporaryDirectory(prefix="equity-market-coverage-") as directory:
+        stage = Path(directory)
+        staged_paths = tuple(stage / path.name for path in paths)
+        write_csv(staged_paths[0], projected, MARKET_FIELDS)
+        write_csv(staged_paths[1], quality, QUALITY_FIELDS)
+        staged_paths[2].write_bytes(original[CANDIDATES_PATH])
+        valid, code, _ = validated_snapshot_reuse(
+            universe=universe, tickers=tickers, held_tickers=held_tickers,
+            current=current, output_paths=staged_paths,
+        )
+        if not valid:
+            print(f"coverage_recomposition_complete=false; reason={code}")
+            return 1
+        replacements = {
+            SNAPSHOT_PATH: staged_paths[0].read_bytes(),
+            QUALITY_PATH: staged_paths[1].read_bytes(),
+        }
+
+    # A sidecar may be rebound only if every retained series passes the same
+    # existing checks against the unchanged original close. Unverified history
+    # stays byte-identical and remains unusable under its old snapshot binding.
+    history_status = "absent"
+    if history_path in original:
+        history_status = "unverified_preserved_without_rebinding"
+        try:
+            from tactical_review import _validated_bars
+            history = json.loads(original[history_path])
+            old_hash = before_hashes[SNAPSHOT_PATH.name]
+            if (isinstance(history, dict) and history.get("data_source") == MASSIVE_DATA_SOURCE
+                    and all(not _validated_bars(history, row["ticker"], date.fromisoformat(session),
+                                                old_hash, row["last_price"])[1] for row in projected)):
+                history["tickers"] = {ticker: history["tickers"][ticker] for ticker in tickers}
+                history["snapshot_sha256"] = hashlib.sha256(replacements[SNAPSHOT_PATH]).hexdigest()
+                replacements[history_path] = (json.dumps(history, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+                history_status = "validated_unchanged_bars_rebound_to_projected_snapshot"
+        except (ValueError, TypeError, KeyError):
+            pass
+
+    # Detect a changed input before any canonical write, including an account
+    # edit by another operator while the projected files were being validated.
+    if (any(not path.exists() or path.read_bytes() != data for path, data in original.items())
+            or (history_path not in original and history_path.exists())):
+        print("coverage_recomposition_complete=false; reason=local_inputs_changed")
+        return 1
+    archive = SNAPSHOT_PATH.parent / "market_coverage_recompositions.local" / (
+        current.strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:12]
+    )
+    archive.mkdir(parents=True, exist_ok=False)
+    for path, data in original.items():
+        (archive / path.name).write_bytes(data)
+    receipt = {
+        "schema_version": "market_coverage_recomposition_v1", "status": "prepared",
+        "recorded_at": current.isoformat(), "market_session": session,
+        "removed_held_only_tickers": sorted(retired), "retained_tickers": sorted(expected),
+        "before_sha256": before_hashes,
+        "after_sha256": {path.name: hashlib.sha256(replacements.get(path, data)).hexdigest()
+                         for path, data in original.items()},
+        "history_status": history_status, "retained_market_values_unchanged": True,
+        "observation_timestamps_unchanged": True, "candidate_bytes_unchanged": True,
+        "network_attempted": False, "email_sent": False, "broker_connected": False,
+    }
+    receipt_path = archive / "receipt.json"
+    atomic_write_json(receipt_path, receipt)
+    try:
+        for path, data in replacements.items():
+            atomic_write_text(path, data.decode("utf-8"))
+        valid, code, _ = validated_snapshot_reuse(
+            universe=universe, tickers=tickers, held_tickers=held_tickers, current=current,
+        )
+        if not valid:
+            raise RuntimeError(f"coverage_recomposition_postcheck_failed:{code}")
+    except Exception:
+        for path in replacements:
+            atomic_write_text(path, original[path].decode("utf-8"))
+        receipt["status"] = "rolled_back"
+        atomic_write_json(receipt_path, receipt)
+        raise
+    receipt["status"] = "complete"
+    atomic_write_json(receipt_path, receipt)
+    append_audit(
+        "recompose_current_market_coverage", ";".join(str(path.relative_to(ROOT)) for path in evidence_paths),
+        str(receipt_path.relative_to(ROOT)), "complete",
+        "network_attempted=no; public_source_called=no; original_bytes_archived=yes; "
+        "retained_values_and_timestamps_unchanged=yes; candidate_bytes_unchanged=yes; "
+        f"removed_held_only_tickers={','.join(sorted(retired))}; expected_completed_session={session}; "
+        f"history_status={history_status}",
+    )
+    print(f"coverage_recomposition_complete=true; public_source_called=false; removed_held_only_tickers={','.join(sorted(retired))}")
+    return 0
 
 
 def reuse_validated_snapshot(
@@ -1044,10 +1188,15 @@ def massive_auth_probe_exit_code() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--reuse-validated-snapshot",
         action="store_true",
         help="validate and reuse only the current coherent local B2 trio",
+    )
+    mode.add_argument(
+        "--recompose-current-coverage", action="store_true",
+        help="archive and remove retired held-only rows from a validated current local trio; no network",
     )
     parser.add_argument(
         "--massive-auth-presence-probe",
@@ -1057,6 +1206,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args([] if argv is None else argv)
     if args.massive_auth_presence_probe:
         return massive_auth_probe_exit_code()
+    if args.recompose_current_coverage:
+        with ExclusiveFileLock(ROOT / "00_project_control/run_logs/daily_pipeline.lock"):
+            return _run_main(args)
+    return _run_main(args)
+
+
+def _run_main(args: argparse.Namespace) -> int:
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
@@ -1086,6 +1242,8 @@ def main(argv: list[str] | None = None) -> int:
         ticker for ticker in held_tickers if ticker not in set(candidate_tickers)
     )
 
+    if args.recompose_current_coverage:
+        return recompose_current_coverage(universe=universe, tickers=tickers, held_tickers=held_tickers)
     if args.reuse_validated_snapshot:
         return reuse_validated_snapshot(
             universe=universe,
