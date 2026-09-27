@@ -53,6 +53,9 @@ STEP_SPECS = [
         "refresh_sec_filing_artifacts.py",
         True,
     ),
+    # Bounded objective work uses retained official receipts before the normal
+    # incorporation and valuation gates. It cannot author an investment thesis.
+    ("research_backlog", "create_research_backlog.py", True),
     ("earnings_incorporation", "create_earnings_incorporation.py", False),
     (
         "current_research_baseline",
@@ -99,6 +102,17 @@ CURRENT_STATUS_SPEC = (
 )
 
 
+def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
+    if result["name"] == "research_backlog":
+        # Persist before composing the decision, including a killed child that
+        # could not replace its own previous success report.
+        atomic_write_json(ROOT / "08_reviews/research_backlog.local/last_run.json", {
+            "schema_version": "equity_research_backlog_run_v1",
+            **{key: result[key] for key in ("started_at", "completed_at", "exit_code")},
+        })
+    return result
+
+
 def run_step(
     name: str,
     script_name: str,
@@ -117,7 +131,9 @@ def run_step(
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     extra_arguments = (
-        ["--reuse-validated-snapshot"]
+        ["--apply-objective-updates"]
+        if name == "research_backlog"
+        else ["--reuse-validated-snapshot"]
         if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
         else
         ["--refresh"]
@@ -142,7 +158,7 @@ def run_step(
             check=False,
         )
     except subprocess.TimeoutExpired:
-        return {
+        return _record_work_step({
             "started_at": started_at, "completed_at": iso_now(),
             "duration_seconds": round(time.monotonic() - start_clock, 3),
             "name": name,
@@ -151,8 +167,8 @@ def run_step(
             "allowed_to_fail": allowed_to_fail,
             "outcome": "timed_out",
             "result_code": f"child_timeout_{timeout_seconds}_seconds",
-        }
-    return {
+        })
+    return _record_work_step({
         "started_at": started_at, "completed_at": iso_now(),
         "duration_seconds": round(time.monotonic() - start_clock, 3),
         "name": name,
@@ -163,7 +179,7 @@ def run_step(
         "result_code": (
             "child_completed" if completed.returncode == 0 else "child_nonzero_exit"
         ),
-    }
+    })
 
 
 def safe_check() -> int:

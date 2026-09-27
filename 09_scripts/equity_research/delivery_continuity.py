@@ -20,6 +20,10 @@ RECEIPTS = {prefix + state for prefix in ("", "owner_review_", "correction_")
             for state in ("send_claimed", "sent", "delivery_unknown")}
 CLOCK_STATES = {"maintained", "review_due", "expired_pending_verification",
                 "time_exit_due_pending_verification"}
+CLOCK_BLOCKERS = (CLOCK_STATES - {"maintained"}) | {
+    "order_snapshot_requires_recheck",
+    "sell_order_terminal_status_unverified",
+}
 
 
 def delivery_meaning_key(decision: dict[str, Any]) -> str:
@@ -51,6 +55,19 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
             # projection can relabel it reconcile_plan when its clock expires.
             row["action"] = "retained_record"
             row["blockers"] = [b for b in row.get("blockers", []) if b != "order_snapshot_requires_recheck"]
+    # Scope maps repeat some derived clock labels. Normalize them only for
+    # delivery comparison; proposal eligibility, raw orders, account changes
+    # and the production/publication gates remain independently bound.
+    for context in (value.get("plan_continuity", {}), value.get("workflow_integrity", {})):
+        for field in ("blockers", "global_blockers"):
+            if field in context:
+                context[field] = [b for b in context[field] if b not in CLOCK_BLOCKERS]
+        for field in ("ticker_blockers", "strategy_blockers"):
+            context[field] = {name: kept for name, codes in context.get(field, {}).items()
+                              if (kept := [b for b in codes if b not in CLOCK_BLOCKERS])}
+    context = value.get("plan_continuity", {})
+    if context.get("status") in {"current", "needs_reconciliation"}:
+        context["status"] = "retained_context"
     # Financial refreshes for an unrelated screened-out company are not a
     # changed portfolio conclusion. Held/reviewed companies remain covered.
     relevant = {r.get("ticker") for r in value.get("held_positions", [])} | eligible

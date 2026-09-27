@@ -9,6 +9,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 import re
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
@@ -304,34 +305,157 @@ def append_plan(payload: dict[str, Any], proposal: dict[str, Any], *, root: Path
 
 
 def _observed_orders(open_orders: dict[str, Any], ticker: str) -> list[dict[str, Any]]:
-    return [row for row in open_orders.get("orders", []) if isinstance(row, dict) and row.get("ticker") == ticker]
+    return [row for row in open_orders.get("orders", []) if isinstance(row, dict) and row.get("ticker") == ticker
+            and isinstance(row.get("status"), str) and isinstance(row.get("side", ""), str)]
+
+
+def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime) -> tuple[list[str], dict[str, list[str]], dict[str, list[str]]]:
+    """Bound shared cash/holdings separately from a named plan's execution work."""
+    global_blockers: list[str] = []
+    ticker_blockers: dict[str, list[str]] = {}
+    strategy_blockers: dict[str, list[str]] = {}
+    if not isinstance(open_orders, dict) or not isinstance(open_orders.get("orders"), list):
+        return ["order_inventory_missing_or_invalid"], {}, {}
+    try:
+        observed = stamp(open_orders.get("as_of"))
+        fresh = open_orders.get("complete") is True and timedelta(0) <= current-observed <= timedelta(hours=24)
+        if is_us_market_session_date(current.date()) and current >= regular_close(current.date().isoformat()):
+            fresh = fresh and observed >= regular_close(current.date().isoformat())
+    except (ValueError, TypeError):
+        fresh = False
+    if not fresh:
+        # A stale/incomplete whole inventory cannot exclude new BUY commitments.
+        global_blockers.append("order_inventory_unverified_cannot_bound_buy_commitments")
+    if open_orders.get("schema_version", "phase5r_open_orders_v1") != "phase5r_open_orders_v1":
+        global_blockers.append("order_inventory_schema_invalid")
+    seen: set[str] = set()
+    reserved: dict[str, int] = {}
+    sides: dict[str, set[str]] = {}
+    for order in open_orders["orders"]:
+        if not isinstance(order, dict):
+            global_blockers.append("order_record_invalid")
+            continue
+        identity = order.get("order_id", order.get("id"))
+        if identity is not None:
+            identity = str(identity)
+            if identity in seen:
+                global_blockers.append("duplicate_or_contradictory_order_identity")
+            seen.add(identity)
+        ticker, status = order.get("ticker"), order.get("status")
+        if not isinstance(ticker, str) or not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker):
+            global_blockers.append("order_ticker_invalid")
+            continue
+        if not isinstance(status, str):
+            global_blockers.append("order_status_or_side_unknown")
+            continue
+        if "side" in order and str(order["side"]).lower() not in {"buy", "sell"}:
+            global_blockers.append("order_status_or_side_unknown")
+            continue
+        if status in {"cancelled", "canceled", "filled", "rejected", "expired"}:
+            if "remaining_quantity" in order:
+                try:
+                    if _whole(order["remaining_quantity"]) != 0:
+                        raise ValueError("terminal_order_has_remaining_quantity")
+                except ValueError:
+                    global_blockers.append("terminal_order_quantity_contradiction")
+            continue
+        side = str(order.get("side", "")).lower()
+        if status not in {"open", "pending", "partial_fill", "partially_filled"} or side not in {"buy", "sell"}:
+            global_blockers.append("order_status_or_side_unknown")
+            continue
+        try:
+            remaining = _whole(order.get("remaining_quantity"))
+            quantity = _whole(order.get("quantity"))
+            if not identity or remaining <= 0 or remaining > quantity:
+                raise ValueError("invalid_open_quantity")
+        except ValueError:
+            global_blockers.append("order_quantity_or_identity_unverified")
+            continue
+        sides.setdefault(ticker, set()).add(side)
+        if side == "buy":
+            # The canonical allocation does not net order reservations. Preserve
+            # that shared-cash barrier instead of implicitly spending it twice.
+            global_blockers.append("pending_buy_commitments_require_cash_reconciliation")
+        else:
+            reserved[ticker] = reserved.get(ticker, 0) + remaining
+            ticker_blockers.setdefault(ticker, []).append("outstanding_sell_reserves_current_shares")
+            # A fresh complete inventory can identify a still-unresolved old
+            # sell without releasing any holdings or assuming sale proceeds.
+            tif = order.get("time_in_force")
+            try:
+                expired = (current >= regular_close(order["session_date"]) if tif == "DAY"
+                           else current.date() > date.fromisoformat(order["expiration_date"]) if tif == "GTD" else True)
+                if expired:
+                    ticker_blockers[ticker].append("sell_order_terminal_status_unverified")
+            except (ValueError, TypeError, KeyError):
+                ticker_blockers[ticker].append("sell_order_validity_unverified")
+    if any(quantity > held.get(ticker, 0) for ticker, quantity in reserved.items()):
+        global_blockers.append("sell_reservations_exceed_observed_holdings")
+    if any(len(value) > 1 for value in sides.values()):
+        global_blockers.append("contradictory_buy_sell_orders_require_reconciliation")
+    try:
+        risk = float(open_orders.get("existing_tactical_risk_usd"))
+        risk_verified = (open_orders.get("existing_tactical_risk_confirmed") is True
+                         and not isinstance(open_orders.get("existing_tactical_risk_usd"), bool)
+                         and math.isfinite(risk) and risk >= 0)
+    except (TypeError, ValueError):
+        risk_verified = False
+    if not risk_verified:
+        strategy_blockers.setdefault("tactical", []).append("existing_tactical_risk_unconfirmed")
+    if open_orders.get("cash_confirmed") is not True:
+        strategy_blockers.setdefault("tactical", []).append("cash_not_confirmed_for_tactical_execution")
+    return sorted(set(global_blockers)), ticker_blockers, strategy_blockers
+
+
+def _finish_scopes(context: dict[str, Any]) -> None:
+    context["global_blockers"] = sorted(set(context.get("global_blockers", [])))
+    context["ticker_blockers"] = {ticker: sorted(set(codes)) for ticker, codes in sorted(context.get("ticker_blockers", {}).items()) if codes}
+    context["strategy_blockers"] = {name: sorted(set(codes)) for name, codes in sorted(context.get("strategy_blockers", {}).items()) if codes}
+    context["blocked_tickers"] = sorted(context["ticker_blockers"])
+    context["unresolved_tickers"] = sorted(set(context.get("unresolved_tickers", [])) | set(context["blocked_tickers"]))
+    context["block_new_capital"] = bool(context["global_blockers"])
+    if context.get("status") not in {"invalid", "missing_or_invalid"}:
+        context["status"] = "needs_reconciliation" if context["global_blockers"] or context["unresolved_tickers"] else "current"
 
 
 def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
                    current: datetime, open_orders: dict[str, Any], root: Path | None = None) -> dict[str, Any]:
     current = stamp(current.isoformat())
     base = {"schema_version": "equity_plan_continuity_v1", "as_of": current.isoformat(),
-            "automatic_action_allowed": False, "orders_verified_at": open_orders.get("as_of", ""),
-            "plans": [], "conflicts": [], "unresolved_tickers": [], "block_new_capital": False}
+            "automatic_action_allowed": False, "orders_verified_at": open_orders.get("as_of", "") if isinstance(open_orders, dict) else "",
+            "plans": [], "conflicts": [], "unresolved_tickers": [], "block_new_capital": False,
+            "global_blockers": [], "ticker_blockers": {}, "strategy_blockers": {}, "blocked_tickers": []}
     try:
         latest = validate_ledger(payload, root=root)
     except (ValueError, TypeError, OSError) as exc:
-        base.update(status="invalid", conflicts=[str(exc)], block_new_capital=True)
+        base.update(status="invalid", conflicts=[str(exc)], block_new_capital=True, global_blockers=["plan_ledger_integrity_invalid"])
         return base
-    held = {row["ticker"]: _whole(row.get("current_shares", row.get("shares_optional", 0))) for row in positions}
+    try:
+        held = {row["ticker"]: _whole(row.get("current_shares", row.get("shares_optional", 0))) for row in positions}
+        if len(held) != len(positions) or any(not isinstance(ticker, str) or not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker) for ticker in held):
+            raise ValueError("duplicate_or_invalid_position")
+    except (ValueError, KeyError, TypeError):
+        base.update(status="invalid", conflicts=["positions_invalid"], block_new_capital=True, global_blockers=["position_inventory_integrity_invalid"])
+        return base
+    base["global_blockers"], base["ticker_blockers"], base["strategy_blockers"] = _order_scopes(open_orders, held, current)
+    if not isinstance(open_orders, dict) or not isinstance(open_orders.get("orders"), list):
+        open_orders = {"orders": [], "complete": False}
     active: dict[str, list[dict[str, Any]]] = {}
     for row in latest.values():
         if stamp(row["recorded_at"]) > current or stamp(row["effective_at"]) > current:
             base["conflicts"].append(row["ticker"] + ":future_plan_record")
+            base["ticker_blockers"].setdefault(row["ticker"], []).append("future_plan_record")
             continue
         if row["state"] not in TERMINAL:
             active.setdefault(row["ticker"], []).append(row)
     for ticker, rows in sorted(active.items()):
         if len(rows) > 1:
             base["conflicts"].append(ticker + ":multiple_active_plans")
+            base["ticker_blockers"].setdefault(ticker, []).append("multiple_active_plans")
     for ticker in sorted(set(held) | set(active)):
         rows = active.get(ticker, [])
         if len(rows) != 1:
+            base["ticker_blockers"].setdefault(ticker, []).append("plan_conflict" if rows else "plan_unrecorded")
             base["unresolved_tickers"].append(ticker)
             base["plans"].append({"ticker": ticker, "status": "conflict" if rows else "unrecorded",
                 "role": "unclassified", "action": "reconcile_plan", "instruction": "研究计划缺失或冲突；先核对，不生成新增股数。",
@@ -392,6 +516,8 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
             reasons.append("order_snapshot_requires_recheck")
         if row["action"] != "hold":
             reasons.append("fresh_quote_and_available_shares_required")
+        if row["role"] == "tactical":
+            reasons.extend(base["strategy_blockers"].get("tactical", []))
         labels = {
             "maintained": "保留研究计划",
             "failed_setup_pending_review": "研究记录已确认原方案失效；保留失败记录，重新评估后才能更改持仓目的或续期",
@@ -418,9 +544,10 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         base["plans"].append(effective)
         if status != "completed_observed" and (status != "maintained" or reasons):
             base["unresolved_tickers"].append(ticker)
-    base["unresolved_tickers"] = sorted(set(base["unresolved_tickers"]))
-    base["block_new_capital"] = bool(base["conflicts"] or base["unresolved_tickers"])
-    base["status"] = "needs_reconciliation" if base["block_new_capital"] else "current"
+            base["ticker_blockers"].setdefault(ticker, []).extend(reasons)
+            if status != "maintained":
+                base["ticker_blockers"][ticker].append(status)
+    _finish_scopes(base)
     base["ledger_head"] = payload["records"][-1]["record_hash"] if payload["records"] else ""
     base["semantic_fingerprint"] = canonical_sha256(semantic_state(base))
     return base
@@ -428,6 +555,8 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
 
 def semantic_state(context: dict[str, Any]) -> dict[str, Any]:
     return {"status": context.get("status"), "conflicts": context.get("conflicts", []),
+            "global_blockers": context.get("global_blockers", []), "ticker_blockers": context.get("ticker_blockers", {}),
+            "strategy_blockers": context.get("strategy_blockers", {}),
             "plans": [{key: row.get(key) for key in ("ticker", "plan_id", "version", "record_hash", "role", "status", "action", "current_shares", "review_at", "time_exit_at", "blockers")}
                       for row in context.get("plans", [])]}
 
@@ -440,6 +569,7 @@ def load_plan_context(root: Path, positions: list[dict[str, Any]], current: date
         return {"schema_version": "equity_plan_continuity_v1", "status": "missing_or_invalid",
                 "as_of": current.isoformat(), "plans": [], "conflicts": [type(exc).__name__ + ":plan_inputs_unavailable"],
                 "unresolved_tickers": [row["ticker"] for row in positions], "block_new_capital": True,
+                "global_blockers": ["plan_or_order_inputs_unavailable"], "ticker_blockers": {}, "strategy_blockers": {}, "blocked_tickers": [],
                 "automatic_action_allowed": False}
     return evaluate_plans(payload, positions, current=current, open_orders=orders, root=root)
 
@@ -467,8 +597,12 @@ def apply_plan_context(held_rows: list[dict[str, Any]], context: dict[str, Any])
                 row["current_instruction"] = row["reason"]
                 row["invalidation"] = row["reason"]
                 context["conflicts"].append(row["ticker"] + ":baseline_risk_review_requires_merge")
-                context["block_new_capital"] = True
-                context["status"] = "needs_reconciliation"
+                context.setdefault("ticker_blockers", {}).setdefault(row["ticker"], []).append("baseline_risk_review_requires_merge")
+    # Legacy callers with an explicitly global block retain that conservative
+    # interpretation until a scoped context has been recomputed.
+    if "global_blockers" not in context and context.get("block_new_capital"):
+        context["global_blockers"] = ["legacy_plan_scope_unverified"]
+    _finish_scopes(context)
     context["semantic_fingerprint"] = canonical_sha256(semantic_state(context))
 
 

@@ -9,6 +9,7 @@ import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from work_queue_reporting import read_backlog_summary, work_health
 
 from active_config import ACTIVE_CONFIG_PATH, load_active_config
 from daily_common import (
@@ -144,7 +145,11 @@ def workflow_health(decision: dict, long_report: dict, incorporation: dict, eval
     return {
         "plan_continuity": {"status": plan.get("status", "missing"), "as_of": plan.get("as_of", ""),
             "semantic_fingerprint": plan.get("semantic_fingerprint", ""),
-            "block_new_capital": bool(plan.get("block_new_capital", True) or plan_gaps),
+            "block_new_capital": bool(plan.get("block_new_capital", True) or any(gap in plan_gaps for gap in (
+                "plan_continuity_stale_or_future", "plan_continuity_timestamp_missing", "plan_continuity_missing"))),
+            "global_blockers": plan.get("global_blockers", []),
+            "ticker_blockers": plan.get("ticker_blockers", {}),
+            "strategy_blockers": plan.get("strategy_blockers", {}),
             "conflicts": plan.get("conflicts", []), "unresolved_tickers": plan.get("unresolved_tickers", []),
             "missing_held_tickers": missing_plans, "gaps": plan_gaps, "plans": plan_rows},
         "earnings_incorporation": {"generated_at": incorporation.get("generated_at", ""),
@@ -271,6 +276,9 @@ def main() -> int:
     except (OSError, ValueError, TypeError):
         momentum = None
     momentum = momentum_health(momentum, refresh, current=current, expected_session=expected_session)
+    backlog = read_backlog_summary(ROOT, current=current, refresh=refresh)
+    work_queue = work_health(decision.get("capital_work_queue"), refresh,
+                             current=current, step="daily_decision")
     health = workflow_health(decision, long_report, incorporation, evaluation, refresh,
         {row.get("ticker") for row in positions if row.get("ticker")}, held_companies, current=current)
     for company in health["maintained_research"]["companies"]:
@@ -382,6 +390,10 @@ def main() -> int:
             "historical_archive": config["model_policy"]["historical_archive"],
         },
         "momentum_experiment": momentum,
+        "research_backlog": backlog,
+        "capital_work_queue": work_queue,
+        "workflow_blocker_scopes": {key: decision.get("workflow_integrity", {}).get(key, {})
+            for key in ("global_blockers", "ticker_blockers", "strategy_blockers")},
         "blockers": sorted(set(blockers)),
         "boundaries": config["boundaries"],
     }
@@ -409,6 +421,9 @@ def main() -> int:
         f"- Workflow evaluation: `{health['workflow_evaluation']['status']}`; `{health['workflow_evaluation']['reason']}`; on-time `{evaluation.get('operations', {}).get('on_time_cycles', 'unknown')}/{evaluation.get('operations', {}).get('due_calendar_cycles', 'unknown')}` due calendar cycles; late `{evaluation.get('operations', {}).get('late_cycles', 'unknown')}`. A stale report is historical only.",
         f"- Actual portfolio performance readiness: `{health['workflow_evaluation']['portfolio_performance'].get('status', 'unknown')}`; planning cash is excluded.",
         f"- Momentum experiment: `{momentum.get('status', 'missing')}`; evidence freshness `{momentum['freshness']}`; frozen observations `{momentum.get('observations', 'unknown')}`, forward outcomes `{momentum.get('outcomes', 'unknown')}`. No demonstrated incremental value or actionable quantities; see `08_reviews/momentum_experiment.local/report.md`. Advisory failure does not suppress existing risk reporting.",
+        f"- Recurring objective research: `{backlog.get('status', 'missing')}`; freshness `{backlog['freshness']}`; see `08_reviews/current/research_backlog.local.md`. Source-derived numerical completion does not approve a thesis or valuation.",
+        f"- Cash and reassessment queue: `{work_queue.get('status', 'missing')}`; freshness `{work_queue['freshness']}`; active items `{work_queue.get('active_item_count', 'unknown')}`; see `08_reviews/capital_work_queue.local/report.md`.",
+        f"- Account-wide workflow blockers: `{', '.join(decision.get('workflow_integrity', {}).get('global_blockers', [])) or 'none'}`; ticker-specific issues: `{', '.join(decision.get('workflow_integrity', {}).get('blocked_tickers', [])) or 'none'}`. Local research work is not an account-wide capital freeze.",
         f"- Deployment: `{deployment['status']}`; latest sync action `{deployment.get('latest_sync_action', '')}`; public collection fallback observed `{deployment.get('public_collection_fallback_observed', False)}`; last verified online `{deployment.get('verified_at', '')}`.",
         "- Boundaries: research only; no broker read, automatic order, or trade placement.",
         "",

@@ -1,6 +1,7 @@
 """Brief English cards for the maintained workflow, without raw diagnostics."""
 from __future__ import annotations
 from typing import Any
+from work_queue_reporting import cash_lines as work_cash_lines, research_lines as work_research_lines
 
 
 def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]]:
@@ -27,6 +28,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         summary.append("Action: resolve the account or data verification problem. New trade drafts are withheld.")
     elif decision.get("fundamental_gate", {}).get("weakening_tickers"):
         summary.append("Action: reassess the business evidence for " + ", ".join(decision['fundamental_gate']['weakening_tickers']) + ". No automatic exit.")
+        if allowed:
+            summary.append("Separately eligible proposals are listed below for review; none has been submitted.")
     elif allowed:
         summary.append("Action: review the eligible proposals below; none has been submitted.")
     else:
@@ -81,8 +84,10 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     # Reuse the existing presentation gate; never expose rejected/stale positive
     # quantities just because a lower-level screen has an optimistic number.
     for ticker in sorted(allowed):
-        row=next((r for r in [*decision.get('held_positions',[]),*decision.get('watch_candidates',[])] if r.get('ticker')==ticker),{})
-        qty=row.get('whole_shares_to_change') if ticker in held else row.get('suggested_whole_shares')
+        candidate_origin = ticker in decision.get('eligible_new_position_review_candidates', [])
+        source_rows = decision.get('watch_candidates', []) if candidate_origin else decision.get('held_positions', [])
+        row=next((r for r in source_rows if r.get('ticker')==ticker),{})
+        qty=row.get('suggested_whole_shares') if candidate_origin else row.get('whole_shares_to_change')
         order_lines.append(f"{ticker} eligible research proposal: change up to {quantity(qty)} shares; action {actions.get(row.get('action'), 'entry review' if ticker not in held else 'position review')}; "
                            f"maximum entry/review price {price(row.get('maximum_review_price'))}. Verify direction, current quote, funds and complete plan before any order; not submitted.")
     for draft in decision.get('tactical_review',{}).get('drafts',[]):
@@ -96,11 +101,13 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     cash_lines=[f"{'Planning scenario' if estimated else 'Local account record'}: total {price(account.get('account_total_value'))}; "
                 f"cash {price(account.get('cash_available'))}; reserve {price(account.get('cash_reserved'))}.",
                 "These local figures do not establish current broker buying power or settled cash. Planning cash is not a confirmed deposit."]
+    cash_lines.extend(work_cash_lines(decision))
     sections.append(section("Cash",cash_lines))
 
     watch=[r['ticker'] for r in decision.get('watch_candidates',[]) if r.get('ticker') not in held and r.get('ticker') not in allowed]
     discovery=decision.get('independent_market_discovery',{})
     research=[]
+    research.extend(work_research_lines(decision))
     if watch:
         research.append("Nonheld watch: " + ", ".join(watch) + ". Zero new shares; evidence, valuation, sizing or eligibility remains incomplete.")
     for group,label in [('top_stocks','Stock screen'),('top_etfs','ETF screen')]:

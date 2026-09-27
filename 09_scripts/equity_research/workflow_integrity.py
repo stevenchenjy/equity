@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import os
+from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -43,7 +44,35 @@ def workflow_meaning(decision: dict[str, Any]) -> dict[str, Any]:
             "incorporation": incorporation_meaning(decision.get("earnings_incorporation", {})),
             "theses": thesis_meaning(decision.get("long_horizon_research", {})),
             "news": news_meaning(decision.get("evidence_coverage", {}).get("official_news", {})),
-            "blockers": decision.get("workflow_integrity", {}).get("blockers", [])}
+            "blockers": decision.get("workflow_integrity", {}).get("blockers", []),
+            "ticker_blockers": decision.get("workflow_integrity", {}).get("ticker_blockers", {}),
+            "strategy_blockers": decision.get("workflow_integrity", {}).get("strategy_blockers", {})}
+
+
+def _account_blockers(decision: dict[str, Any]) -> list[str]:
+    """Shared planning invariants; do not promote tactical execution assumptions."""
+    blockers = []
+    if decision.get("account_conflicts") or decision.get("pending_execution_summaries"):
+        blockers.append("account_or_execution_conflict")
+    account = decision.get("account")
+    try:
+        values = {key: Decimal(str(account[key])) for key in ("account_total_value", "cash_available", "cash_reserved")}
+        if (any(not value.is_finite() for value in values.values())
+                or values["account_total_value"] <= 0 or values["cash_available"] < 0
+                or not 0 <= values["cash_reserved"] <= values["cash_available"] <= values["account_total_value"]):
+            raise ValueError("account_values_invalid")
+        if account.get("cash_basis") == "ledger_estimate":
+            blockers.append("planning_cash_unverified")
+    except (ValueError, TypeError, KeyError, InvalidOperation):
+        blockers.append("shared_account_values_unverified")
+    return blockers
+
+
+def _ticker_strategy(row: dict[str, Any], plans: dict[str, Any]) -> str | None:
+    if row.get("strategy_horizon") in {"intraday_momentum", "multi_day_trend"} or row.get("role") == "tactical" or row.get("asset_role") == "tactical":
+        return "tactical"
+    return next(("tactical" for plan in plans.get("plans", [])
+                 if plan.get("ticker") == row.get("ticker") and plan.get("role") == "tactical"), None)
 
 
 def current_thesis_views(decision: dict[str, Any], *, root: Path, current: datetime,
@@ -127,24 +156,34 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         incorporation = {"schema_version": "earnings_incorporation_v1", "companies": {},
                          "held_pending_tickers": [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"],
                          "status": "invalid"}
-    blockers = []
+    blockers = _account_blockers(decision)
+    ticker_blockers = {ticker: list(codes) for ticker, codes in plans.get("ticker_blockers", {}).items()}
+    strategy_blockers = {strategy: list(codes) for strategy, codes in plans.get("strategy_blockers", {}).items()}
+    def local(ticker: str, code: str) -> None:
+        ticker_blockers.setdefault(ticker, []).append(code)
     baseline_code = decision.get("decision_code")
-    if baseline_code in CRITICAL_CODES:
+    weakening = decision.get("fundamental_gate", {}).get("weakening_tickers", [])
+    if baseline_code in CRITICAL_CODES and (baseline_code != "fundamental_weakening_review" or not weakening):
         blockers.append("baseline_risk_gate:"+baseline_code)
+    for ticker in weakening:
+        local(ticker, "fundamental_weakening_requires_review")
     if any(decision.get(gate, {}).get("passed") is not True for gate in ("market_gate", "evidence_gate", "fundamental_gate")):
         blockers.append("baseline_data_prerequisites_unresolved")
-    if plans.get("block_new_capital"):
-        blockers.append("maintained_plans_require_reconciliation")
+    blockers.extend(plans.get("global_blockers", []))
+    if plans.get("block_new_capital") and not plans.get("global_blockers"):
+        blockers.append("legacy_plan_scope_unverified")
     companies = incorporation.get("companies", {})
     held_pending = [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"
                     and companies.get(row["ticker"], {}).get("positive_decision_eligible") is not True]
-    if held_pending:
-        blockers.append("held_latest_earnings_pending:" + ",".join(sorted(held_pending)))
+    for ticker in held_pending:
+        local(ticker, "latest_earnings_pending_incorporation")
     news = current_news_context(decision, root=root, current=current, persist_queue=True)
     decision.setdefault("evidence_coverage", {})["official_news"] = news
-    if news.get("required_coverage_complete") is not True:
-        blockers.append("held_news_coverage_incomplete")
     views = current_thesis_views(decision, root=root, current=current, incorporation=incorporation, news=news)
+    if news.get("required_coverage_complete") is not True:
+        for row in held:
+            if row.get("asset_role") != "core_allocation" and views.get(row["ticker"], {}).get("news_review", {}).get("coverage_complete") is not True:
+                local(row["ticker"], "issuer_news_coverage_incomplete")
     decision.setdefault("long_horizon_research", {})["views"] = views
     eligible = set(decision.get("eligible_new_position_review_candidates", []))
     candidate_tickers = {row["ticker"] for row in decision.get("watch_candidates", []) if row.get("ticker") in eligible
@@ -157,8 +196,9 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
     for warning in decision["long_horizon_research"].get("warnings", []):
         warning["maintained_view"] = views.get(warning.get("ticker"), {})
     reassess = [ticker for ticker, view in views.items() if view.get("status") in {"reassess", "invalidated"} or view.get("validation_errors")]
-    if reassess:
-        blockers.append("company_reviews_require_reassessment:"+",".join(sorted(reassess)))
+    for ticker in reassess:
+        local(ticker, "company_review_requires_reassessment")
+    blockers = sorted(set(blockers))
     # A durable plan is a research instruction, not permission to recreate its
     # former quantity. Preserve the original deterministic proposal separately.
     decision["baseline_decision"] = {key: decision.get(key) for key in ("headline", "decisive_advice", "decision_code", "eligible_action_review_candidates", "eligible_new_position_review_candidates")}
@@ -169,30 +209,57 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         core = row.get("valuation_applicability") == "not_applicable_broad_market_etf" or row.get("asset_role") in {"core_allocation", "core_allocation_candidate"}
         missing = not core and companies.get(ticker, {}).get("positive_decision_eligible") is not True
         review_missing = ticker in candidate_tickers and not reviewed_candidate_ready(candidate_views.get(ticker, {}))
-        if blockers or missing or review_missing:
+        if missing:
+            local(ticker, "latest_earnings_pending_incorporation")
+        if review_missing:
+            local(ticker, "maintained_company_research_incomplete")
+        strategy = _ticker_strategy(row, plans)
+        if strategy:
+            ticker_blockers.setdefault(ticker, []).extend(strategy_blockers.get(strategy, []))
+        scoped = sorted(set(ticker_blockers.get(ticker, [])))
+        row["workflow_global_blockers"] = list(blockers)
+        row["workflow_ticker_blockers"] = scoped
+        if blockers or scoped:
             row["baseline_research_proposal"] = {key: row.get(key) for key in ("label", "action", "suggested_whole_shares", "maximum_review_price")}
             row["suggested_whole_shares"] = "0"
             row["action"] = "research_prerequisites_unresolved"
             row["label"] = "watchlist"
-            row["gate_blockers"] = ",".join(filter(None, [str(row.get("gate_blockers", "")), *blockers,
-                                                    "latest_earnings_pending_incorporation" if missing else "",
-                                                    "maintained_company_research_incomplete" if review_missing else ""]))
+            row["gate_blockers"] = ",".join(filter(None, [str(row.get("gate_blockers", "")), *blockers, *scoped]))
         elif ticker in decision.get("eligible_new_position_review_candidates", []):
             retained_new.append(ticker)
     decision["eligible_new_position_review_candidates"] = retained_new
     decision["plan_continuity"] = plans
     decision["earnings_incorporation"] = incorporation
+    ticker_blockers = {ticker: sorted(set(codes)) for ticker, codes in sorted(ticker_blockers.items()) if codes}
     decision["workflow_integrity"] = {"schema_version": "equity_workflow_integrity_v1", "blockers": blockers,
+        "global_blockers": blockers, "ticker_blockers": ticker_blockers, "blocked_tickers": sorted(ticker_blockers),
+        "strategy_blockers": strategy_blockers,
         "new_capital_allowed": not blockers, "current_instruction_authority": "versioned_plans_reconciled_with_observed_facts",
         "input_hashes": {path: sha256_file(root / path) if (root / path).exists() else None for path in sorted(WORKFLOW_INPUTS)},
         "historical_baseline_is_current_instruction": False, "automatic_action_allowed": False}
+    if retained_new and not blockers and baseline_code == "fundamental_weakening_review" and weakening:
+        decision["decision_code"] = "action_review_candidate"
+        decision["headline"] = "明确行动候选｜" + "、".join(retained_new) + "；" + "、".join(weakening) + " 单独复核"
+        decision["decisive_advice"] = ("仅对已通过各自证据与资金条件的 " + "、".join(retained_new)
+            + " 保留原有研究方案；" + "、".join(weakening) + " 的经营假设仍待复核，不自动减仓或扩大其仓位。所有真实操作仍需人工决定。")
     if not retained_new and not decision.get("account_conflicts") and baseline_code not in CRITICAL_CODES:
         decision["decision_code"] = "maintained_plan_review"
         decision["headline"] = "按维护中的计划复核｜过期方案与待补证据已分开标示"
         decision["decisive_advice"] = "以当前计划状态为准；旧报价和旧 DAY 委托不自动续期。待核对事项未解决前不新增仓位。" if blockers else "按已记录计划观察；本次未形成新增仓位方案。"
     if blockers or not retained_new:
         decision["capital_allocation"]["proposed_deployment_value"] = 0
-    decision["human_review_reasons"] = sorted(set(decision.get("human_review_reasons", []) + (["maintained_plan_reconciliation"] if blockers else [])))
+    else:
+        # Removing one candidate must not leave its cash in the proposed total.
+        try:
+            retained_value = sum(Decimal(str(row["suggested_whole_shares"])) * Decimal(str(row["current_price"]))
+                                 for row in decision.get("watch_candidates", []) if row.get("ticker") in retained_new)
+            old_value = Decimal(str(decision["capital_allocation"]["proposed_deployment_value"]))
+            if not retained_value.is_finite() or retained_value < 0 or not old_value.is_finite() or old_value < 0:
+                raise ValueError("deployment_value_invalid")
+            decision["capital_allocation"]["proposed_deployment_value"] = float(min(old_value, retained_value))
+        except (ValueError, TypeError, KeyError, InvalidOperation):
+            decision["capital_allocation"]["proposed_deployment_value"] = 0
+    decision["human_review_reasons"] = sorted(set(decision.get("human_review_reasons", []) + (["maintained_plan_reconciliation"] if blockers or ticker_blockers else [])))
     decision["human_review_required"] = bool(decision["human_review_reasons"])
     decision["decision_fingerprint"] = canonical_sha256({"baseline": decision["decision_fingerprint"], "workflow": workflow_meaning(decision)})
     atomic_write_json(root / "08_reviews/current/maintained_plans.local.json", plans)

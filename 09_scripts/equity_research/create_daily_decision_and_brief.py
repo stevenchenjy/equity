@@ -65,6 +65,8 @@ from update_manual_account import current_manual_snapshot_matches
 from create_long_horizon_research import SIGNAL_LABELS, missing_label
 from workflow_integrity import apply_workflow_integrity, record_decision_history
 from investment_plans import render_plan_lines
+from capital_work_queue import refresh_capital_work_queue
+from work_queue_reporting import read_backlog_summary, report_section
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -1084,6 +1086,11 @@ def main() -> int:
     decision["independent_market_discovery"] = {
         key: value for key, value in discovery.items() if key not in {"all_stocks", "all_etfs"}
     }
+    # Work queues explain and carry forward research. They never admit trades,
+    # renew a plan or modify the approved capital/risk policy.
+    work_current = now_et()
+    decision["research_backlog"] = read_backlog_summary(ROOT, current=work_current)
+    decision["capital_work_queue"] = refresh_capital_work_queue(decision, root=ROOT, current=work_current)
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
         decision["notification_policy"]["regular_delivery_mode"] = notification_mode
@@ -1153,6 +1160,8 @@ def main() -> int:
 - 当前证据支持的新增复核金额：${proposed_deployment:.2f}；任何真实操作仍需人工决定。
 - 底层 C9 诊断情景的假设现金（不是当前计划或已成交结果）：${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
 - 底层现金情景说明（不覆盖当前计划）：{post_action.get('retained_cash_reason', 'n/a')}
+
+{report_section(decision)}
 
 ## 当前持仓
 

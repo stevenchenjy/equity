@@ -156,3 +156,11 @@ graphify-out/graph.html
 
 # Private append-only momentum experiment; never a canonical recommendation.
 08_reviews/momentum_experiment.local/
+
+# Private recurring research work and source-bound objective completion.
+08_reviews/capital_work_queue.local/
+04_research/company_research/research_backlog.local.json
+04_research/company_research/research_backlog_history.local.jsonl
+04_research/company_research/objective_evidence.local/
+08_reviews/current/research_backlog.local.md
+08_reviews/research_backlog.local/

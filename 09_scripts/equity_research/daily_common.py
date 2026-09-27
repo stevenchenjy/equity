@@ -476,7 +476,7 @@ def recommendation_notification_fingerprint(decision: dict[str, Any]) -> str:
     candidates = []
     for row in decision.get("watch_candidates", []):
         ticker = str(row.get("ticker", ""))
-        if ticker in held_tickers:
+        if ticker in held_tickers and ticker not in new_eligible:
             continue
         eligible = (ticker in new_eligible and ticker not in pending
                     and int(row.get("stability_distinct_closes", decision.get("new_candidate_stability_distinct_closes", 0)) or 0)

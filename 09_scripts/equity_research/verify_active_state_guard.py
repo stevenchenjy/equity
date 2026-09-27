@@ -53,6 +53,9 @@ ACTIVE_CONFIG_PATH = CONTROL_DIR / "active_production_config.json"
 # first receipt or analyst review exists. Optionality is a closed path/type
 # contract, never a registry-controlled exemption for other required inputs.
 OPTIONAL_ACTIVE_INPUTS = {
+    "04_research/company_research/research_backlog.local.json": "optional_generated_research",
+    "04_research/company_research/research_backlog_history.local.jsonl": "optional_append_only",
+    "08_reviews/capital_work_queue.local/state.json": "optional_generated_research",
     "05_risk_and_positions/investment_plans.local.json": "optional_versioned_private",
     "04_research/company_research/thesis_dossiers.local.json": "optional_versioned_private",
     "03_source_data/equity_research/earnings_incorporation_status.local.json": "optional_generated_research",
@@ -64,6 +67,9 @@ OPTIONAL_ACTIVE_INPUTS = {
     "04_research/company_research/market_regime.local.json": "optional_generated_research",
     "03_source_data/equity_research/official_news_events.local.json": "optional_generated_research",
     "03_source_data/equity_research/official_news_status.local.json": "optional_generated_research",
+}
+OPTIONAL_ACTIVE_PATTERNS = {
+    "04_research/company_research/objective_evidence.local/*.json": "optional_generated_research",
 }
 SMTP_CONFIG_PATH = (
     ROOT
@@ -195,6 +201,9 @@ def _registry_paths(
         optional = (
             path_kind == "exact"
             and OPTIONAL_ACTIVE_INPUTS.get(path_spec) == freshness
+        ) or (
+            path_kind == "pattern"
+            and OPTIONAL_ACTIVE_PATTERNS.get(path_spec) == freshness
         )
         if freshness.startswith("optional_") and not optional:
             forbidden.append(f"{row.get('registry_id', '')}:unsupported_optional_input")
@@ -224,7 +233,10 @@ def _registry_paths(
             if not target.is_file() and not absent_optional:
                 missing.append(path_spec)
         elif path_kind == "pattern":
-            if not any(path.is_file() for path in ROOT.glob(path_spec)):
+            matches = list(ROOT.glob(path_spec))
+            if (optional and any(not path.is_file() or path.is_symlink() for path in matches)) or (
+                not optional and not any(path.is_file() for path in matches)
+            ):
                 missing.append(path_spec)
         else:
             forbidden.append(

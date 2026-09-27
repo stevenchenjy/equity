@@ -91,7 +91,8 @@ class InvestmentPlanTests(unittest.TestCase):
         rows = [{"ticker": "TEST", "action": "trim_specific_shares_review", "current_shares": 4}]
         apply_plan_context(rows, context)
         self.assertIn("TEST:baseline_risk_review_requires_merge", context["conflicts"])
-        self.assertTrue(context["block_new_capital"])
+        self.assertFalse(context["block_new_capital"])
+        self.assertIn("baseline_risk_review_requires_merge", context["ticker_blockers"]["TEST"])
 
     def test_missing_holding_does_not_invent_a_fill(self):
         self.assertEqual(evaluate(shares=0)["plans"][0]["status"], "position_absent_pending_verification")
@@ -181,7 +182,7 @@ class ClosureEvidenceTests(unittest.TestCase):
             order = {"ticker": "TEST", "order_id": "one", "status": "filled", "side": "sell", "quantity": 4, "remaining_quantity": 0, **change}
             result = evaluate(ledger(row), shares=0, orders={"as_of": observed, "complete": True, "orders": [order]})
             self.assertEqual(result["plans"][0]["status"], "position_absent_pending_verification")
-            self.assertTrue(result["block_new_capital"])
+            self.assertIn("TEST", result["blocked_tickers"])
 
     def test_invalid_time_exit_cannot_be_maintained(self):
         for deadline in ("2026-09-25T00:00:00-04:00", "2026-09-23T15:00:00-04:00"):
