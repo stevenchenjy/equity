@@ -14,12 +14,18 @@ from typing import Any
 from daily_common import (
     FUNDAMENTALS_PATH,
     MARKET_SNAPSHOT_PATH,
+    POSITIONS_PATH,
     ROOT,
     atomic_write_csv,
     atomic_write_json,
     iso_now,
     read_csv,
     read_json,
+    latest_published_market_session,
+    now_et,
+)
+from build_current_research_baseline import (
+    PRICE_UNVERIFIED_ROLE, requested_coverage_tickers, requested_only_price_unverified,
 )
 from valuation_input_bundle import (
     DEFAULT_BUNDLE_PATH,
@@ -178,6 +184,23 @@ def main() -> int:
     updated_rows: list[dict[str, str]] = []
     for row in baseline:
         ticker = row["ticker"].upper()
+        if row.get("research_role") == PRICE_UNVERIFIED_ROLE:
+            if not requested_only_price_unverified(
+                ticker, held={item.get("ticker", "").upper() for item in read_csv(POSITIONS_PATH)},
+                requested=requested_coverage_tickers(), market_row=market.get(ticker, {}),
+                expected_session=latest_published_market_session(now_et()).isoformat(),
+            ):
+                raise ValueError(f"invalid research-only price-unverified scope for {ticker}")
+            row["valuation_check"] = "current_price_unverified; no_price_dependent_valuation"
+            row["valuation_reasonableness_score"] = ""
+            updated_rows.append(row)
+            scenario_records.append({
+                "ticker": ticker, "status": "insufficient", "missing_inputs": ["share_price"],
+                "input_limitations": ["current_price_unverified", "outside_current_approved_market_coverage"],
+                "automatic_action_allowed": False, "market_source_url": "",
+                "fundamental_source_url": fundamentals.get(ticker, {}).get("source_url", ""),
+            })
+            continue
         if ticker == "SPY":
             row["valuation_check"] = "broad_market_core_candidate; individual-company EV/revenue model not applicable"
             row["valuation_reasonableness_score"] = "5.0"

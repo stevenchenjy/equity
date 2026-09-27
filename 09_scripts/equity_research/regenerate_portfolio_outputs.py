@@ -40,6 +40,10 @@ from account_common import (
     write_text,
 )
 from portfolio_construction import individual_sizing_decision
+from build_current_research_baseline import (
+    PRICE_UNVERIFIED_ROLE, requested_coverage_tickers, requested_only_price_unverified,
+)
+from daily_common import latest_published_market_session, now_et
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -147,6 +151,34 @@ VALUATION_SCENARIO_PATH = (
 )
 
 
+def price_unverified_score(ticker, packet):
+    row = {field: "" for field in SCORE_FIELDS}
+    row.update({"ticker": ticker, "asset_role": "individual_stock_candidate",
+                "current_weight_pct": "0.0000", "concentration_status": "not_held",
+                "holding_horizon_candidate": "unverified", "recommendation_label": "watch_for_price_evidence",
+                "recommendation_confidence": "unverified", "portfolio_rule_applied": "current_price_unverified",
+                "human_action_required": "no", "automatic_action_allowed": "no",
+                "score_formula": "not_computed_current_price_unverified"})
+    return row
+
+
+def price_unverified_recommendation(ticker, packet):
+    row = {field: "" for field in NEW_FIELDS}
+    row.update({"ticker": ticker, "asset_role": "individual_stock_candidate", "theme": packet["theme"],
+                "recommendation_confidence": "unverified", "controlled_research_packet_exists": "yes",
+                "valuation_applicability": "current_price_unverified",
+                "eligibility_label": "wait_for_more_evidence", "recommended_action": "watch_only",
+                "reason": "Owner-requested research is outside current approved market coverage; a current completed close is unverified. No price, conviction score, valuation range or eligible shares supplied.",
+                "human_confirmation_required": "no", "automatic_action_allowed": "no",
+                "suggested_whole_shares": "0", "suggested_position_pct": "0.0000",
+                "sizing_tier": "no_allocation", "small_account_exception_used": "no",
+                "gate_blockers": "current_price_unverified,outside_current_approved_market_coverage",
+                "holding_horizon": "unverified", "invalidation_condition": packet["exit_or_trim_conditions"],
+                "valuation_source": packet.get("primary_source_url", "")})
+    row.update({field: "no" for field in NEW_FIELDS if field.endswith("_pass")})
+    return row
+
+
 def run_children() -> None:
     for script in CHILD_SCRIPTS:
         result = subprocess.run(
@@ -192,9 +224,19 @@ def main() -> None:
         {},
     )
     active_weight = as_float(summary["current_active_stock_weight_pct"], "current_active_stock_weight_pct")
+    requested = requested_coverage_tickers()
+    expected_session = latest_published_market_session(now_et()).isoformat()
+    price_unverified = set()
 
     scored: list[dict[str, str]] = []
     for ticker, packet in packets.items():
+        if packet.get("research_role") == PRICE_UNVERIFIED_ROLE:
+            if not requested_only_price_unverified(ticker, held=set(weights), requested=requested,
+                                                  market_row=market_by_ticker.get(ticker, {}), expected_session=expected_session):
+                raise ValueError(f"invalid research-only price-unverified scope for {ticker}")
+            price_unverified.add(ticker)
+            scored.append(price_unverified_score(ticker, packet))
+            continue
         if ticker in weights:
             weight_row = weights[ticker]
             role = "current_position"
@@ -250,9 +292,11 @@ def main() -> None:
             }
         )
     role_order = {"current_position": 0, "core_allocation_candidate": 1, "individual_stock_candidate": 2}
-    scored.sort(key=lambda row: (role_order[row["asset_role"]], -float(row["account_aware_conviction_score"]), row["ticker"]))
+    scored.sort(key=lambda row: (3 if row["ticker"] in price_unverified else role_order[row["asset_role"]],
+                                -float(row["account_aware_conviction_score"]) if row["ticker"] not in price_unverified else 0,
+                                row["ticker"]))
     for rank, row in enumerate(scored, start=1):
-        row["weekly_rank"] = str(rank)
+        row["weekly_rank"] = str(rank) if row["ticker"] not in price_unverified else ""
     write_csv(C9_SCORES, scored, SCORE_FIELDS)
 
     score_by_ticker = {row["ticker"]: row for row in scored}
@@ -308,6 +352,9 @@ def main() -> None:
     active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     for score in scored:
         ticker = score["ticker"]
+        if ticker in price_unverified:
+            new_rows.append(price_unverified_recommendation(ticker, packets[ticker]))
+            continue
         is_core = ticker == "SPY"
         if score["asset_role"] == "current_position" and not is_core:
             continue

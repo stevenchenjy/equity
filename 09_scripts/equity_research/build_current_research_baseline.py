@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import math
 
 from daily_common import (
     EVIDENCE_LEDGER_PATH,
@@ -21,6 +22,7 @@ from daily_common import (
 )
 
 from long_horizon_research import fundamentals_candidate_queue
+from run_full_universe_market_data import APPROVED_CANDIDATE_TICKERS
 
 
 SIGNAL_SCORES_PATH = ROOT / "03_source_data" / "equity_research" / "signal_scores.csv"
@@ -43,6 +45,7 @@ FIELDS = [
     "primary_source_url", "filing_source_url", "market_data_source",
     "evidence_checked_at",
 ]
+PRICE_UNVERIFIED_ROLE = "requested_research_price_unverified"
 
 
 def number(value: object) -> float | None:
@@ -50,7 +53,42 @@ def number(value: object) -> float | None:
         result = float(value)
     except (TypeError, ValueError):
         return None
-    return result if result == result else None
+    return result if math.isfinite(result) else None
+
+
+def valid_completed_close(market_row: dict[str, str], expected_session: str) -> bool:
+    price = number(market_row.get("last_price"))
+    return (market_row.get("market_session_date") == expected_session
+            and market_row.get("data_quality_label") in {"ok", "partial"}
+            and price is not None and price > 0)
+
+
+def requested_only_price_unverified(ticker, *, held, requested, market_row, expected_session) -> bool:
+    return (ticker in requested and ticker not in held and ticker not in APPROVED_CANDIDATE_TICKERS
+            and not valid_completed_close(market_row, expected_session))
+
+
+def price_unverified_research_row(ticker, fundamental, expected_session):
+    row = {field: "" for field in FIELDS}
+    row.update({
+        "ticker": ticker, "research_role": PRICE_UNVERIFIED_ROLE,
+        "current_position_status": "not_held", "portfolio_concentration_status": "not_held",
+        "theme": "Owner-requested research", "holding_horizon_candidate": "unverified",
+        "valuation_check": "current_price_unverified; no_price_dependent_valuation",
+        "filing_check": f"SEC companyfacts fetched {fundamental.get('fetched_at', 'unverified')}",
+        "earnings_check": f"revenue_yoy_pct={fundamental.get('revenue_yoy_pct') or 'unavailable'}; net_margin_pct={fundamental.get('net_margin_pct') or 'unavailable'}",
+        "news_check": "separate_official_evidence_review_required",
+        "technical_check": f"current_price_unverified; required_completed_session={expected_session}; outside_current_approved_market_coverage",
+        "risk_check": "research_only; missing_current_price; zero_eligible_shares",
+        "entry_discipline": "no_entry_or_sizing_without_current_verified_price_and_all_existing_gates",
+        "exit_or_trim_conditions": "not_held; no_exit_instruction",
+        "recommendation_label": "watch_for_price_evidence", "recommendation_confidence": "unverified",
+        "human_action_required": "no",
+        "notes": "Owner-requested research retained. Current price and price-dependent scores are unverified; no historical-price substitution or market-scope admission.",
+        "primary_source_url": fundamental.get("source_url", ""),
+        "filing_source_url": fundamental.get("source_url", ""), "evidence_checked_at": iso_now(),
+    })
+    return row
 
 
 def clamp(value: float) -> float:
@@ -98,6 +136,7 @@ def selected_tickers() -> tuple[list[str], set[str]]:
 def main() -> int:
     expected_session = latest_published_market_session(now_et()).isoformat()
     tickers, held = selected_tickers()
+    requested = requested_coverage_tickers()
     market = {row.get("ticker", "").strip().upper(): row for row in read_csv(MARKET_SNAPSHOT_PATH)}
     scores = {row.get("ticker", "").strip().upper(): row for row in read_csv(SIGNAL_SCORES_PATH)}
     fundamentals = {row.get("ticker", "").strip().upper(): row for row in read_csv(FUNDAMENTALS_PATH)}
@@ -113,11 +152,11 @@ def main() -> int:
     rows: list[dict[str, str]] = []
     for ticker in tickers:
         market_row = market.get(ticker, {})
-        if (
-            market_row.get("market_session_date") != expected_session
-            or market_row.get("data_quality_label") not in {"ok", "partial"}
-            or number(market_row.get("last_price")) is None
-        ):
+        if not valid_completed_close(market_row, expected_session):
+            if requested_only_price_unverified(ticker, held=held, requested=requested,
+                                              market_row=market_row, expected_session=expected_session):
+                rows.append(price_unverified_research_row(ticker, fundamentals.get(ticker, {}), expected_session))
+                continue
             raise ValueError(f"current research baseline lacks a valid completed close for {ticker}")
         score_row = scores.get(ticker, {})
         fundamental = fundamentals.get(ticker, {})

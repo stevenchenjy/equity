@@ -10,6 +10,8 @@ from _support import PROJECT_ROOT, SCRIPT_DIR  # noqa: F401
 import build_current_research_baseline as baseline
 import account_common as c9
 import refresh_daily_evidence as evidence
+import regenerate_portfolio_outputs as portfolio
+import refresh_valuation_scenarios as valuation
 from long_horizon_research import build_long_horizon_report
 
 
@@ -98,6 +100,89 @@ class RequestedCoverageTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "valid completed close for RKLB"):
                 baseline.main()
         write.assert_not_called()
+
+    def test_unheld_requested_only_missing_price_is_visible_without_scores_or_shares(self):
+        def rows(path):
+            if path == baseline.MARKET_SNAPSHOT_PATH:
+                return [{"ticker": "SPY", "last_price": "100", "market_session_date": "2026-09-18",
+                         "data_quality_label": "ok", "data_source": "fixture"}]
+            if path == baseline.UNIVERSE_PATH:
+                return [{"ticker": "SPY", "is_benchmark": "yes"}]
+            if path == baseline.FUNDAMENTALS_PATH:
+                return [{"ticker": "IOT", "revenue_yoy_pct": "30", "source_url": "https://www.sec.gov/fixture"}]
+            return []
+
+        with patch.object(baseline, "selected_tickers", return_value=(["IOT", "SPY"], {"SPY"})), \
+             patch.object(baseline, "read_csv", side_effect=rows), \
+             patch.object(baseline, "latest_published_market_session", return_value=date(2026, 9, 18)), \
+             patch.object(baseline, "atomic_write_csv") as write:
+            self.assertEqual(baseline.main(), 0)
+        packets = {row["ticker"]: row for row in write.call_args.args[2]}
+        row = packets["IOT"]
+        self.assertEqual(row["research_role"], baseline.PRICE_UNVERIFIED_ROLE)
+        self.assertEqual(row["recommendation_label"], "watch_for_price_evidence")
+        for field in ("market_score", "technical_entry_discipline_score", "market_data_source"):
+            self.assertEqual(row[field], "")
+        self.assertIn("30", row["earnings_check"])
+        self.assertEqual(packets["SPY"]["recommendation_label"], "hold_existing")
+        score = portfolio.price_unverified_score("IOT", row)
+        self.assertEqual(score["account_aware_conviction_score"], "")
+        self.assertEqual(score["technical_entry_discipline_score"], "")
+        self.assertEqual(score["weekly_rank"], "")
+        recommendation = portfolio.price_unverified_recommendation("IOT", row)
+        self.assertEqual(recommendation["suggested_whole_shares"], "0")
+        self.assertEqual(recommendation["recommended_action"], "watch_only")
+        self.assertEqual(recommendation["current_price"], "")
+        self.assertEqual(recommendation["maximum_review_price"], "")
+        self.assertEqual(recommendation["valuation_base_price"], "")
+        self.assertEqual(recommendation["automatic_action_allowed"], "no")
+        self.assertTrue(all(recommendation[field] == "no" for field in recommendation if field.endswith("_pass")))
+
+    def test_missing_close_for_held_or_approved_or_unrequested_remains_fatal(self):
+        for ticker, held in (("IOT", {"IOT"}), ("RKLB", set()), ("SPY", set()), ("UNREQ", set())):
+            with self.subTest(ticker=ticker), \
+                 patch.object(baseline, "selected_tickers", return_value=([ticker], held)), \
+                 patch.object(baseline, "read_csv", return_value=[]), \
+                 patch.object(baseline, "atomic_write_csv") as write:
+                with self.assertRaisesRegex(ValueError, f"valid completed close for {ticker}"):
+                    baseline.main()
+                write.assert_not_called()
+
+    def test_research_only_guard_independently_checks_scope_and_market_validity(self):
+        kwargs = {"held": set(), "requested": {"IOT", "RKLB"}, "market_row": {}, "expected_session": "2026-09-18"}
+        self.assertTrue(baseline.requested_only_price_unverified("IOT", **kwargs))
+        self.assertFalse(baseline.requested_only_price_unverified("RKLB", **kwargs))
+        self.assertFalse(baseline.requested_only_price_unverified("UNREQ", **kwargs))
+        self.assertFalse(baseline.requested_only_price_unverified("IOT", **(kwargs | {"held": {"IOT"}})))
+        valid_quote = {"market_session_date": "2026-09-18", "data_quality_label": "ok", "last_price": "40"}
+        self.assertFalse(baseline.requested_only_price_unverified("IOT", **(kwargs | {"market_row": valid_quote})))
+        for invalid_price in ("0", "-1", "nan", "inf", ""):
+            self.assertFalse(baseline.valid_completed_close(valid_quote | {"last_price": invalid_price}, "2026-09-18"))
+
+    def test_missing_or_stale_requested_only_quote_never_creates_valuation(self):
+        for quote in ({}, {"ticker": "IOT", "last_price": "40", "market_session_date": "2026-09-17", "data_quality_label": "ok"}):
+            packet = baseline.price_unverified_research_row("IOT", {}, "2026-09-18")
+
+            def rows(path):
+                if path == valuation.BASELINE_PATH:
+                    return [packet]
+                if path == valuation.MARKET_SNAPSHOT_PATH:
+                    return [quote] if quote else []
+                return []
+
+            with self.subTest(quote=quote), patch.object(valuation, "read_csv", side_effect=rows), \
+                 patch.object(valuation, "latest_published_market_session", return_value=date(2026, 9, 18)), \
+                 patch.object(valuation, "valuation_input_issues", side_effect=AssertionError("must not construct valuation")), \
+                 patch.object(valuation, "atomic_write_csv") as csv_write, \
+                 patch.object(valuation, "atomic_write_json") as json_write:
+                self.assertEqual(valuation.main(), 0)
+            self.assertEqual(csv_write.call_args.args[2][0]["valuation_reasonableness_score"], "")
+            payloads = {call.args[0]: call.args[1] for call in json_write.call_args_list}
+            scenario = payloads[valuation.SCENARIO_PATH]["records"][0]
+            self.assertEqual(scenario["status"], "insufficient")
+            self.assertNotIn("current_price", scenario)
+            self.assertNotIn("scenario_prices", scenario)
+            self.assertEqual(payloads[valuation.DEFAULT_BUNDLE_PATH]["records"], [])
 
     def test_held_noncore_etf_omits_company_scenarios_without_core_promotion(self):
         report = build_long_horizon_report(
