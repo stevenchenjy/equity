@@ -5,6 +5,11 @@ The owner explicitly requested these four workflow changes. This document
 does not change allocation targets, risk limits, cash reserve, trading
 authority, or the experimental status of the momentum adaptation.
 
+Subsequent explicit owner approval on the same date removes the mandatory
+internal cash reserve. See `account_state_policy.md`: the reserve floor is
+zero, no additional reserve asset is recorded, and existing allocation targets
+and position risk limits remain unchanged.
+
 ## Blocker scope
 
 Account integrity, unresolved executions, unbounded buy commitments, invalid

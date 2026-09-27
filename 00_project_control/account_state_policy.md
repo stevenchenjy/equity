@@ -31,6 +31,14 @@ If the local account file is absent, production fails closed. It never creates a
 
 ## Optional research-only risk limits
 
+Owner-approved reserve rule, 2026-09-27: there is no mandatory internal
+cash reserve. The canonical account `cash_reserved` and configuration reserve
+metadata are zero. No additional external reserve amount is recorded or added
+to investment capital. This supersedes earlier reserve requirements; historical
+snapshots retain their original values. Cash is still limited by actual funds,
+order commitments, evidence and position limits. Allocation targets remain
+unchanged; a cash allocation target is not a minimum-cash reserve requirement.
+
 `account.research_risk_limits` in the active production configuration may
 override exactly `active_stock_hard_cap_pct`, `single_stock_default_cap_pct`
 and `single_stock_hard_cap_pct` for research consumers. It is optional and is

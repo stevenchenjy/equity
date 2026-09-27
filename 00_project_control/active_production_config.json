@@ -23,7 +23,7 @@
       "single_stock_default_cap_pct": 15.0,
       "single_stock_hard_cap_pct": 15.0
     },
-    "cash_reserved_usd": 500.0,
+    "cash_reserved_usd": 0.0,
     "underdeployment_review_invested_pct_below": 25.0,
     "small_account_whole_share_exception_max_overshoot_pct": 2.0,
     "candidate_sizing_tiers": [
