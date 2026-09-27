@@ -1,12 +1,13 @@
 # Equity Research — current document entrypoints
 
-Updated 2026-09-20 ET. This index identifies where to read current state; it
+Updated 2026-09-27 ET. This index identifies where to read current state; it
 does not freeze balances, test counts, call counts, or open-item counts.
 
 ## Authoritative policy and boundaries
 
 - [Equity Research naming decision and migration plan](equity_naming_policy.md): fixed user-facing name and functional naming rules; display names are centralized; legacy technical identifiers remain compatible.
 - [Active production configuration](active_production_config.json): active paths and deterministic production controls.
+- [Momentum integration decision](momentum_integration_20260927.md), [experimental parameters](../01_policies/momentum_experiment.json) and [position-purpose reassessment](position_purpose_reassessment.md): autonomous research without changing allocation, risk caps or trade authority.
 - [SHADOW evaluation configuration](shadow_llm_config.json) and [policy](shadow_llm_evaluation_policy.md): evaluation allowance, routing, measurements, and future authority-review thresholds.
 - [Research working agreement](research_working_agreement.md): routine autonomous work versus authority-changing choices.
 - [Account-state policy](account_state_policy.md), [action thresholds](action_threshold_policy.md), and [core-allocation policy](core_allocation_policy.md): deterministic account and portfolio constraints.
@@ -24,6 +25,7 @@ These paths refer to `/Users/messssi/LocalRuntime/equity`, not cached reports
 in the authoring clone. Missing local reports are not assumed complete.
 
 - [Production status](/Users/messssi/LocalRuntime/equity/00_project_control/current_production_status.local.md).
+- [Experimental momentum observations and forward evaluation](/Users/messssi/LocalRuntime/equity/08_reviews/momentum_experiment.local/report.md): private frozen cohorts, costs, missed/expired setups and explicitly unverified execution. Check current status for failures; a historical report is not a current signal.
 - [Current daily research decision](/Users/messssi/LocalRuntime/equity/04_research/company_research/daily_decision.md).
 - [SHADOW measured results](/Users/messssi/LocalRuntime/equity/08_reviews/shadow_llm/reviews.local/evaluation.md) and [machine-readable results](/Users/messssi/LocalRuntime/equity/08_reviews/shadow_llm/reviews.local/evaluation.json).
 - [Long-horizon company research and 2×/3× conditions](/Users/messssi/LocalRuntime/equity/08_reviews/current/long_horizon_research.local.md) and [source-bound JSON](/Users/messssi/LocalRuntime/equity/04_research/company_research/long_horizon_research.local.json): held-company research gaps, numerical review signals and explicit 3/5-year sensitivities; no automatic action or forecast authority.

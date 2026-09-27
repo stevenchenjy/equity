@@ -153,3 +153,6 @@ graphify-out/graph.html
 
 00_project_control/run_logs/verified_deployment.local.json
 07_automation/email_delivery/sent_decisions.local/
+
+# Private append-only momentum experiment; never a canonical recommendation.
+08_reviews/momentum_experiment.local/

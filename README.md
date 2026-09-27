@@ -84,6 +84,14 @@ Current additional reports in the runtime clone:
 
 ## Safety Boundaries
 
+The [September 27 momentum integration](00_project_control/momentum_integration_20260927.md)
+adds a private, autonomous EOD forward study after the daily research pipeline
+and prospective position-purpose reassessment checks. Its hypotheses remain
+experimental, with zero actionable quantities, frozen policy versions and
+cost-sensitive outcome cohorts. Current reports live at
+`08_reviews/momentum_experiment.local/report.md`; current status shows failures
+separately from the main strategy. Approved risk and allocation are unchanged.
+
 - No live trading.
 - No brokerage API integration.
 - No broker credential handling.

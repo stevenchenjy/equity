@@ -20,6 +20,8 @@ from daily_common import canonical_sha256, is_us_market_session_date
 SCHEMA = "equity_investment_plans_v1"
 RELATIVE_PATH = Path("05_risk_and_positions/investment_plans.local.json")
 ROLES = {"broad_core", "long_term_growth", "tactical", "unclassified"}
+HORIZON_ROLES = {"intraday_momentum": "tactical", "multi_day_trend": "tactical",
+                 "long_term_growth": "long_term_growth", "broad_core": "broad_core"}
 ACTIONS = {"hold", "protect_review", "exit_review", "trim_review", "watch"}
 TERMINAL = {"completed", "cancelled", "superseded"}
 ET = ZoneInfo("America/New_York")
@@ -57,6 +59,132 @@ def _whole(value: Any) -> int:
         return int(number)
     except (TypeError, ValueError, OverflowError) as exc:
         raise ValueError("plan_quantity_invalid") from exc
+
+
+def _required_text(value: Any, fields: tuple[str, ...], label: str) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(label + "_required")
+    for field in fields:
+        if not isinstance(value.get(field), str) or not value[field].strip():
+            raise ValueError(label + "_required_field:" + field)
+
+
+def _bound_sources(value: dict[str, Any], row: dict[str, Any], label: str) -> None:
+    """A narrative must cite receipts already verified by validate_record."""
+    sources = value.get("sources")
+    if not isinstance(sources, list) or not sources:
+        raise ValueError(label + "_sources_required")
+    for source in sources:
+        if (not isinstance(source, dict) or not isinstance(source.get("path"), str)
+                or not re.fullmatch(r"[0-9a-f]{64}", str(source.get("sha256", "")))
+                or not any(source["path"] == item["path"] and source["sha256"] == item["sha256"]
+                           for item in row["sources"])):
+            raise ValueError(label + "_source_not_bound_to_record")
+
+
+def _validate_purpose(row: dict[str, Any]) -> None:
+    horizon = row.get("strategy_horizon")
+    if horizon is None:
+        if row.get("purpose") is not None:
+            raise ValueError("plan_purpose_requires_strategy_horizon")
+        return  # Legacy records are not retroactively reclassified.
+    if not isinstance(horizon, str) or HORIZON_ROLES.get(horizon) != row["role"]:
+        raise ValueError("plan_strategy_horizon_role_incompatible")
+    purpose = row.get("purpose")
+    _required_text(purpose, ("strategy", "holding_period_justification", "entry_validity",
+                            "failure_condition", "exit_rule"), "plan_purpose")
+    _bound_sources(purpose, row, "plan_purpose")
+    if horizon == "intraday_momentum":
+        effective = stamp(row["effective_at"])
+        deadline = stamp(row["time_exit_at"])
+        if (deadline.date() != effective.date()
+                or deadline > regular_close(effective.date().isoformat())
+                or stamp(row["review_at"]) > deadline
+                or (row.get("valid_until") and stamp(row["valid_until"]) > deadline)
+                or (row.get("order_draft") and row["order_draft"]["session_date"] != effective.date().isoformat())):
+            raise ValueError("plan_intraday_same_session_exit_and_review_required")
+
+
+def _validate_reassessment(row: dict[str, Any]) -> None:
+    if "reassessment" not in row:
+        return
+    review = row["reassessment"]
+    _required_text(review, ("previous_plan_id", "previous_record_hash", "reviewed_at", "reviewer",
+                           "reason", "evidence_summary", "strategy_justification",
+                           "holding_period_justification"), "plan_reassessment")
+    if not re.fullmatch(r"[0-9a-f]{64}", review["previous_record_hash"]):
+        raise ValueError("plan_reassessment_prior_hash_invalid")
+    outcome = review.get("prior_outcome")
+    _required_text(outcome, ("status", "detail"), "plan_reassessment_prior_outcome")
+    if outcome["status"] not in {"active", "failed", "expired", "expired_and_failed",
+                                  "completed", "cancelled", "superseded", "unverified"}:
+        raise ValueError("plan_reassessment_prior_outcome_invalid")
+    if stamp(review["reviewed_at"]) > stamp(row["recorded_at"]):
+        raise ValueError("plan_reassessment_after_recording")
+    _bound_sources(review, row, "plan_reassessment")
+
+
+def _expired_at(row: dict[str, Any], current: datetime) -> bool:
+    return (any(row.get(field) and current >= stamp(row[field])
+                for field in ("time_exit_at", "valid_until"))
+            or bool(row.get("order_draft") and current >= regular_close(row["order_draft"]["session_date"])))
+
+
+def _validate_append_transition(payload: dict[str, Any], latest: dict[str, dict[str, Any]],
+                                proposal: dict[str, Any]) -> None:
+    """Prospective authoring rules; old, hash-valid histories remain readable."""
+    prior = latest.get(proposal["plan_id"])
+    other_active = [row for row in latest.values() if row["ticker"] == proposal["ticker"]
+                    and row["plan_id"] != proposal["plan_id"] and row["state"] not in TERMINAL]
+    if other_active and (prior is None or proposal["state"] not in TERMINAL):
+        raise ValueError("plan_other_active_same_ticker_requires_reconciliation")
+    ticker_prior = next((row for row in reversed(payload["records"])
+                         if row["ticker"] == proposal["ticker"]), None)
+    if prior is not None and ticker_prior is not None and prior["plan_id"] != ticker_prior["plan_id"]:
+        if proposal["state"] not in TERMINAL:
+            raise ValueError("plan_older_lineage_cannot_be_reopened")
+    previous = prior or ticker_prior
+    if previous is None:
+        if proposal["role"] == "tactical" and proposal.get("strategy_horizon") is None:
+            raise ValueError("plan_new_tactical_requires_strategy_horizon")
+        if "reassessment" in proposal:
+            raise ValueError("plan_reassessment_has_no_prior")
+        return
+    changed_purpose = (proposal["role"] != previous["role"]
+                       or proposal.get("strategy_horizon") != previous.get("strategy_horizon")
+                       or proposal.get("purpose") != previous.get("purpose"))
+    extended = any(previous.get(field) and (not proposal.get(field)
+                   or stamp(proposal[field]) > stamp(previous[field]))
+                   for field in ("time_exit_at", "valid_until"))
+    # Terminal records keep the outcome known at their own recording time.
+    # An already-completed plan is not later relabeled expired by the clock.
+    expired = _expired_at(previous, stamp(previous["recorded_at"])
+                          if previous["state"] in TERMINAL else stamp(proposal["recorded_at"]))
+    expired = expired or previous.get("setup_status") == "expired"
+    failed = previous.get("setup_status") == "failed"
+    overdue_review_renewed = (stamp(proposal["recorded_at"]) >= stamp(previous["review_at"])
+                             and stamp(proposal["review_at"]) > stamp(previous["review_at"]))
+    required = (changed_purpose or extended or expired or failed or overdue_review_renewed or prior is None
+                or previous["state"] in TERMINAL)
+    review = proposal.get("reassessment")
+    if not review:
+        if required:
+            raise ValueError("plan_reassessment_required_for_purpose_or_validity_change")
+        return
+    if (review["previous_plan_id"] != previous["plan_id"]
+            or review["previous_record_hash"] != previous["record_hash"]):
+        raise ValueError("plan_reassessment_prior_identity_mismatch")
+    if stamp(review["reviewed_at"]) < stamp(previous["recorded_at"]):
+        raise ValueError("plan_reassessment_predates_prior")
+    if expired and review["prior_outcome"]["status"] not in {"expired", "expired_and_failed"}:
+        raise ValueError("plan_reassessment_must_preserve_expired_outcome")
+    if failed and review["prior_outcome"]["status"] not in {"failed", "expired_and_failed"}:
+        raise ValueError("plan_reassessment_must_preserve_failed_outcome")
+    if changed_purpose or extended:
+        # A legacy tactical plan must acquire an explicit supported horizon
+        # before authoring a new purpose or lengthening its life.
+        if proposal.get("strategy_horizon") is None:
+            raise ValueError("plan_changed_purpose_or_extension_requires_strategy_horizon")
 
 
 def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
@@ -126,6 +254,12 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
                 raise ValueError("plan_source_missing")
             if hashlib.sha256(target.read_bytes()).hexdigest() != source["sha256"]:
                 raise ValueError("plan_source_hash_mismatch")
+    if "setup_status" in row:
+        if not isinstance(row["setup_status"], str) or row["setup_status"] not in {"active", "failed", "expired", "unverified"}:
+            raise ValueError("plan_setup_status_invalid")
+        _required_text(row, ("setup_status_reason",), "plan_setup_status")
+    _validate_purpose(row)
+    _validate_reassessment(row)
 
 
 def validate_ledger(payload: dict[str, Any], *, root: Path | None = None) -> dict[str, dict[str, Any]]:
@@ -155,6 +289,7 @@ def append_plan(payload: dict[str, Any], proposal: dict[str, Any], *, root: Path
     if any(key in proposal for key in ("version", "record_hash", "previous_hash", "supersedes")):
         raise ValueError("plan_writer_owns_version_fields")
     validate_record(proposal, root=root)
+    _validate_append_transition(payload, latest, proposal)
     prior = latest.get(proposal["plan_id"])
     row = copy.deepcopy(proposal)
     row["expected_shares"] = _whole(row["expected_shares"])
@@ -224,6 +359,10 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         elif quantity != row["expected_shares"]:
             status = "position_changed_pending_verification"
             reasons.append("remaining_quantity_changed")
+        elif row.get("setup_status") == "failed":
+            status = "failed_setup_pending_review"
+        elif row.get("setup_status") == "expired":
+            status = "expired_pending_verification"
         elif row.get("time_exit_at") and current >= stamp(row["time_exit_at"]):
             status = "time_exit_due_pending_verification"
         elif row.get("valid_until") and current >= stamp(row["valid_until"]):
@@ -255,6 +394,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
             reasons.append("fresh_quote_and_available_shares_required")
         labels = {
             "maintained": "保留研究计划",
+            "failed_setup_pending_review": "研究记录已确认原方案失效；保留失败记录，重新评估后才能更改持仓目的或续期",
             "expired_pending_verification": "旧方案已到期；成交/撤单及剩余持仓待核对，不续用旧报价",
             "time_exit_due_pending_verification": "原定时间退出期限已到；先核对实际成交及剩余持仓，不顺延期限",
             "position_changed_pending_verification": "持仓数量变化；核对成交并修订计划后再形成数量方案",
@@ -269,7 +409,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
             instruction += "；仅为未提交的研究计划，先核验报价、订单和剩余股数。"
         if row.get("time_exit_at") and quantity:
             instruction += " 原定时间退出/复核：" + row["time_exit_at"] + "。"
-        effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources")}
+        effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources", "strategy_horizon", "purpose", "setup_status", "setup_status_reason", "reassessment")}
         effective.update(status=status, action=row["action"] if status == "maintained" else "reconcile_plan",
                          instruction=instruction, historical_instruction=row["instruction"],
                          current_shares=quantity, eligible_quantity=0, proposed_change_shares=row["proposed_change_shares"],
@@ -335,7 +475,10 @@ def apply_plan_context(held_rows: list[dict[str, Any]], context: dict[str, Any])
 def render_plan_lines(context: dict[str, Any]) -> list[str]:
     lines = ["当前计划状态：" + context.get("status", "missing") + "；历史价格/草案不自动续期。"]
     for row in context.get("plans", []):
-        lines.append(f"{row['ticker']} · {row.get('role', 'unclassified')} · {row.get('plan_id') or '未建档'} v{row.get('version') or '?'}：{row['instruction']}")
+        purpose = row.get("role", "unclassified")
+        if row.get("strategy_horizon"):
+            purpose += " / " + row["strategy_horizon"]
+        lines.append(f"{row['ticker']} · {purpose} · {row.get('plan_id') or '未建档'} v{row.get('version') or '?'}：{row['instruction']}")
     if context.get("conflicts"):
         lines.append("计划校验冲突：" + "; ".join(context["conflicts"]))
     return lines

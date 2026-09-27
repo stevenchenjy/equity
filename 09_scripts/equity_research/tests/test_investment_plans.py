@@ -25,7 +25,14 @@ def record(ticker="TEST", role="tactical"):
 
 
 def ledger(row=None):
-    return append_plan({"schema_version": SCHEMA, "records": []}, row or record())
+    """Load a valid historical fixture, including pre-horizon tactical records."""
+    from daily_common import canonical_sha256
+    historical = copy.deepcopy(row or record())
+    historical.update(version=1, supersedes=None, previous_hash="")
+    historical["record_hash"] = canonical_sha256(historical)
+    result = {"schema_version": SCHEMA, "records": [historical]}
+    validate_ledger(result)
+    return result
 
 
 def evaluate(payload=None, when="2026-09-24T12:05:00-04:00", shares=4, orders=None):
@@ -106,7 +113,15 @@ class InvestmentPlanTests(unittest.TestCase):
     def test_two_active_plans_fail_closed(self):
         second = record()
         second["plan_id"] = "another"
-        result = evaluate(append_plan(ledger(), second))
+        first = ledger()
+        with self.assertRaisesRegex(ValueError, "other_active_same_ticker"):
+            append_plan(first, second)
+        # An older ledger created before the prospective authoring guard must
+        # still be readable and surface its existing conflict for reconciliation.
+        from daily_common import canonical_sha256
+        second.update(version=1, supersedes=None, previous_hash=first["records"][-1]["record_hash"])
+        second["record_hash"] = canonical_sha256(second)
+        result = evaluate({"schema_version": SCHEMA, "records": [*first["records"], second]})
         self.assertIn("TEST:multiple_active_plans", result["conflicts"])
 
     def test_long_term_role_does_not_inherit_tactical_deadline(self):

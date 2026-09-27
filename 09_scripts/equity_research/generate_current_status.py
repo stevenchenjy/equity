@@ -45,6 +45,43 @@ DEPLOYMENT_RECEIPT_PATH = ROOT / "00_project_control/run_logs/verified_deploymen
 RUNTIME_EXECUTION_PATH = ROOT / "00_project_control/run_logs/runtime_execution_log.csv"
 
 
+def momentum_health(payload: Any, refresh: dict, *, current: datetime,
+                    expected_session: str) -> dict[str, Any]:
+    """An advisory file cannot break status rendering or hide a failed refresh."""
+    if (not isinstance(payload, dict) or not isinstance(payload.get("status"), str)
+            or payload["status"] not in {"experimental", "failed"}):
+        result: dict[str, Any] = {"status": "missing_or_invalid"}
+    else:
+        result = {key: payload[key] for key in (
+            "status", "generated_at", "market_session", "observations", "outcomes", "reason",
+            "software_reliability", "incremental_value_established", "automatic_action_allowed") if key in payload}
+    fresh = False
+    try:
+        observed = datetime.fromisoformat(str(result.get("generated_at", "")).replace("Z", "+00:00"))
+        fresh = (observed.tzinfo is not None and observed <= current
+                 and observed.astimezone(current.tzinfo).date() == current.date()
+                 and result.get("market_session") == expected_session)
+    except (ValueError, TypeError):
+        pass
+    result["freshness"] = "current" if fresh else "stale_or_unverified"
+    if not fresh and result["status"] == "experimental":
+        result["status"] = "stale_or_unverified"
+    # A timeout may prevent the child from replacing yesterday's or an earlier
+    # same-day success file. The completed parent step remains authoritative.
+    steps = refresh.get("steps", [])
+    step = next((row for row in reversed(steps) if isinstance(row, dict)
+                 and row.get("name") == "momentum_experiment"), {}) if isinstance(steps, list) else {}
+    if (refresh.get("cycle_date") == current.date().isoformat()
+            and refresh.get("expected_market_session") == expected_session
+            and isinstance(step.get("exit_code"), int) and step["exit_code"] != 0):
+        result.update(status="failed", reason="current_refresh_momentum_step_failed",
+                      refresh_step_exit_code=step["exit_code"])
+    result["prior_report_is_historical"] = result["status"] != "experimental" or not fresh
+    result["incremental_value_established"] = False
+    result["automatic_action_allowed"] = False
+    return result
+
+
 def workflow_health(decision: dict, long_report: dict, incorporation: dict, evaluation: dict,
                     refresh: dict, held_tickers: set[str], held_companies: set[str],
                     *, current: datetime) -> dict[str, Any]:
@@ -228,6 +265,12 @@ def main() -> int:
         evaluation = read_json(WORKFLOW_EVALUATION_PATH, {})
     except (OSError, ValueError, TypeError):
         evaluation = {}
+    # Advisory research health is visible without changing canonical eligibility.
+    try:
+        momentum = read_json(ROOT / "08_reviews/momentum_experiment.local/status.json", {})
+    except (OSError, ValueError, TypeError):
+        momentum = None
+    momentum = momentum_health(momentum, refresh, current=current, expected_session=expected_session)
     health = workflow_health(decision, long_report, incorporation, evaluation, refresh,
         {row.get("ticker") for row in positions if row.get("ticker")}, held_companies, current=current)
     for company in health["maintained_research"]["companies"]:
@@ -338,6 +381,7 @@ def main() -> int:
             "monthly_hard_cap_usd": config["model_policy"]["monthly_hard_cap_usd"],
             "historical_archive": config["model_policy"]["historical_archive"],
         },
+        "momentum_experiment": momentum,
         "blockers": sorted(set(blockers)),
         "boundaries": config["boundaries"],
     }
@@ -364,6 +408,7 @@ def main() -> int:
         f"- Retained daily refresh completions: `{reliability['fully_refreshed_days']}/{len(retained)}` calendar days; delivery-unknown dates `{', '.join(reliability['delivery_unknown_days']) or 'none'}`.",
         f"- Workflow evaluation: `{health['workflow_evaluation']['status']}`; `{health['workflow_evaluation']['reason']}`; on-time `{evaluation.get('operations', {}).get('on_time_cycles', 'unknown')}/{evaluation.get('operations', {}).get('due_calendar_cycles', 'unknown')}` due calendar cycles; late `{evaluation.get('operations', {}).get('late_cycles', 'unknown')}`. A stale report is historical only.",
         f"- Actual portfolio performance readiness: `{health['workflow_evaluation']['portfolio_performance'].get('status', 'unknown')}`; planning cash is excluded.",
+        f"- Momentum experiment: `{momentum.get('status', 'missing')}`; evidence freshness `{momentum['freshness']}`; frozen observations `{momentum.get('observations', 'unknown')}`, forward outcomes `{momentum.get('outcomes', 'unknown')}`. No demonstrated incremental value or actionable quantities; see `08_reviews/momentum_experiment.local/report.md`. Advisory failure does not suppress existing risk reporting.",
         f"- Deployment: `{deployment['status']}`; latest sync action `{deployment.get('latest_sync_action', '')}`; public collection fallback observed `{deployment.get('public_collection_fallback_observed', False)}`; last verified online `{deployment.get('verified_at', '')}`.",
         "- Boundaries: research only; no broker read, automatic order, or trade placement.",
         "",

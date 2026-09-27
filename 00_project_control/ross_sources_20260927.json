@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "research_cutoff": "2026-09-27",
+  "scope": "Dated Ross Cameron and Warrior Trading primary-source practice audit; no claims of transferable profitability",
+  "sources": [
+    {
+      "source_id": "R01",
+      "title": "Day 1 of the Small Day Trading Account Challenge of 2017",
+      "url": "https://www.warriortrading.com/small-day-trading-account-challenge/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Ross Cameron",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": "2017-01-03",
+      "date_basis": "event corroborated by R02; page publication date unavailable",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R02",
+      "title": "2016 - Year In Review: Trading Statistics",
+      "url": "https://www.warriortrading.com/2016-year-trading-statistics/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Ross Cameron",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": "2017-01-03",
+      "date_basis": "2016 retrospective and 2017 goals; page publication date unavailable",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R03",
+      "title": "Verified Earnings 2017",
+      "url": "https://www.warriortrading.com/verified-earnings-2017/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Warrior Trading",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": "2017",
+      "date_basis": "statement periods; page publication date unavailable",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R04",
+      "title": "Broker Recommendations: US & International",
+      "url": "https://support.warriortrading.com/support/solutions/articles/19000045045-broker-recommendations",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Warrior Trading support",
+      "published_date": null,
+      "modified_date": "2023-12-04",
+      "event_or_coverage_date": null,
+      "date_basis": "explicit modified date",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VII",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R05",
+      "title": "My Small Account Trading Challenge",
+      "url": "https://warriortradingnews.com/2024/03/20/my-small-account-trading-challenge/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Duane Leem; house article in Ross Cameron voice",
+      "published_date": "2024-03-20",
+      "modified_date": null,
+      "event_or_coverage_date": null,
+      "date_basis": "explicit publication date",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R06",
+      "title": "There Was Only 1 Obvious Trade Today",
+      "url": "https://warriortradingnews.com/2024/09/20/there-was-only-1-obvious-trade-today/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Duane Leem; house article in Ross Cameron voice",
+      "published_date": "2024-09-20",
+      "modified_date": null,
+      "event_or_coverage_date": null,
+      "date_basis": "explicit publication date",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R07",
+      "title": "Small Account Challenges at Warrior Trading",
+      "url": "https://support.warriortrading.com/support/solutions/articles/19000168902-small-account-challenges-at-warrior-trading",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Warrior Trading support",
+      "published_date": null,
+      "modified_date": "2025-10-09",
+      "event_or_coverage_date": "2025-09-22",
+      "date_basis": "explicit modified and challenge start dates",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R08",
+      "title": "Bull Flag Chart Pattern & Trading Strategies",
+      "url": "https://www.warriortrading.com/bull-flag-trading/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Ross Cameron",
+      "published_date": null,
+      "modified_date": "2023-10-22",
+      "event_or_coverage_date": null,
+      "date_basis": "explicit updated date",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VII",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R09",
+      "title": "Small Account Challenge 2025 v2 / Tool Kit 1013",
+      "url": "https://cdn.warriortrading.com/warriortrading.com/assets/2025-Small-Account-Tool-Kit-1013.pdf",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Ross Cameron / Warrior Trading",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": "2025",
+      "date_basis": "year/version label only; exact publication and revision date unverified",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VII",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R10",
+      "title": "Watch List of the Best Stocks for Day Trading - Updated Daily",
+      "url": "https://www.warriortrading.com/day-trading-watch-list-top-stocks-to-watch/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Ross Cameron / Warrior Trading",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": null,
+      "date_basis": "undated mutable live page; retrieval date only",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VII",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R11",
+      "title": "Routing, Hot Keys, and Buying/Selling Process",
+      "url": "https://support.warriortrading.com/support/solutions/articles/19000045007-routing-hot-keys-and-buying-selling-process",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Warrior Trading support",
+      "published_date": null,
+      "modified_date": "2026-07-22",
+      "event_or_coverage_date": null,
+      "date_basis": "explicit modified date",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VII",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    },
+    {
+      "source_id": "R12",
+      "title": "Ross Cameron's Verified Day Trading Earnings",
+      "url": "https://www.warriortrading.com/ross-camerons-verified-day-trading-earnings/",
+      "publisher": "Warrior Trading",
+      "author_or_attribution": "Warrior Trading",
+      "published_date": null,
+      "modified_date": null,
+      "event_or_coverage_date": "2017-01-01/2025-12-31",
+      "date_basis": "stated audit period; page publication date unavailable",
+      "retrieved_date": "2026-09-27",
+      "source_type": "primary_practitioner_or_provider",
+      "evidence_level": "VI",
+      "existence_verified": true,
+      "documented_practice_verification": "primary self-description",
+      "independent_performance_validation": false,
+      "conflicts_of_interest": [
+        "commercial education or tools provider",
+        "practitioner describing own strategy"
+      ],
+      "source_text_archived": false
+    }
+  ]
+}
