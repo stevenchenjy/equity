@@ -1,5 +1,39 @@
 # Momentum integration decision — 2026-09-27
 
+## Owner-approved first-cohort review timing — September 27 follow-up
+
+The owner selected manual review as soon as the first complete five-trading-session
+forward cohort is available. `01_policies/momentum_experiment_review.json` records
+this review timing separately from the frozen experiment. The daily refresh now
+runs `create_momentum_experiment_review.py` after the study and links its private
+packet from current production status. It does not require additional cohorts,
+a minimum winning percentage, profitability or a minimum trade count merely to
+open an owner review. Complete coverage, chronological observations and the
+existing 10/25/50 bps one-way cost scenarios remain necessary for an honest
+five-session comparison. Unfinished, missing or corrected observations remain
+visible; they cannot be treated as completed outcomes.
+
+Review availability does not establish an investment edge, change recommendation
+eligibility or allocate capital. A batch with no selected breakout-plus-volume
+names permits a review of coverage and missed opportunities but cannot establish
+that strategy's performance. Current entry quotes, setup validity, account/order
+facts and the existing risk checks still apply to any subsequent action plan.
+No holding-period or experimental threshold changed, and the original ledger,
+policy and implementation fingerprints remain intact.
+
+For the v2 observations captured September 27 using the September 25 close,
+the earliest modeled entry is September 28 and the fifth close is October 2.
+The first existing Basic EOD publication slot able to evaluate that interval is
+October 3 at 11:15 ET, plus collection and pipeline time, conditional on complete
+valid data. The 33 overlapping ticker observations form one time cohort, not
+33 independent trials. DDOG and SMCI met the frozen breakout-only condition;
+none met breakout plus 2x daily volume. These are historical experimental
+selections, not current buy recommendations.
+
+The earlier sections below retain the original audit and promotion constraints.
+The new minimum changes when an owner can review the evidence, not whether the
+strategy has been validated for use with capital.
+
 The production strategy remains the deterministic, fundamentals-led daily research workflow. This upgrade adds prospective position-purpose controls and an autonomous **experimental EOD research study**. It does not replace the strategy with Ross Cameron's intraday trading, change approved allocation or risk, purchase services, or enable orders. A successful software run is not evidence of profitable investing.
 
 ## What was verified

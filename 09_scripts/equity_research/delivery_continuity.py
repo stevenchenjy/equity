@@ -85,13 +85,8 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
                                      "shares": quantities, "cash": facts})
 
 
-def covered_by_last_delivery(rows: list[dict[str, str]], decision: dict[str, Any], *,
-                             current: datetime, archive_dir: Path) -> bool:
-    """Compare only the latest receipt, never search past a changed risk alert.
-
-Legacy migration accepts only an archived decision whose exact bytes match the
-receipt's SHA-256. Unknown/missing evidence does not suppress a message.
-"""
+def latest_delivery_receipt(rows: list[dict[str, str]], *, current: datetime) -> dict[str, str] | None:
+    """Use the latest durable receipt, including claimed or uncertain delivery."""
     candidates = []
     for index, row in enumerate(rows):
         if row.get("status") not in RECEIPTS:
@@ -104,19 +99,51 @@ receipt's SHA-256. Unknown/missing evidence does not suppress a message.
             continue
         candidates.append((stamp, index, row))
     if not candidates:
-        return False
-    row = max(candidates, key=lambda item: (item[0], item[1]))[2]
+        return None
+    return max(candidates, key=lambda item: (item[0], item[1]))[2]
+
+
+def receipt_meaning_key(row: dict[str, str], *, archive_dir: Path) -> str | None:
+    """Legacy receipts require an archive whose exact bytes match their digest."""
     prior = next((part for part in row.get("reason", "").split(";")
                   if re.fullmatch(MARKER + r"[0-9a-f]{64}", part)), None)
     if prior is None:
         digest = row.get("decision_sha256", "")
         if not re.fullmatch(r"[0-9a-f]{64}", digest):
-            return False
+            return None
         try:
             raw = (archive_dir / (digest + ".json")).read_bytes()
             if hashlib.sha256(raw).hexdigest() != digest:
-                return False
+                return None
             prior = delivery_meaning_key(json.loads(raw))
         except (OSError, ValueError, TypeError, KeyError):
-            return False
-    return prior == delivery_meaning_key(decision)
+            return None
+    return prior
+
+
+def delivery_notification_comparison(decision: dict[str, Any], fallback: dict[str, Any], *,
+                                     rows: list[dict[str, str]], current: datetime,
+                                     archive_dir: Path) -> dict[str, Any]:
+    """Keep meaningful undelivered changes pending across research cycles.
+
+    A later research run cannot acknowledge a notification. Only a durable
+    delivery receipt supplies this baseline. Missing receipt evidence retains
+    the existing research comparison, including quiet initial seeding.
+    """
+    row = latest_delivery_receipt(rows, current=current)
+    prior = receipt_meaning_key(row, archive_dir=archive_dir) if row else None
+    if prior is None:
+        return copy.deepcopy(fallback)
+    fingerprint = delivery_meaning_key(decision)
+    return {"fingerprint": fingerprint.removeprefix(MARKER),
+            "prior_fingerprint": prior.removeprefix(MARKER),
+            "changed": fingerprint != prior, "comparison_source": "last_delivery",
+            "compared_at": current.isoformat(), "receipt_sha256": canonical_sha256(row)}
+
+
+def covered_by_last_delivery(rows: list[dict[str, str]], decision: dict[str, Any], *,
+                             current: datetime, archive_dir: Path) -> bool:
+    """Compare only the latest receipt; unavailable evidence cannot suppress."""
+    row = latest_delivery_receipt(rows, current=current)
+    prior = receipt_meaning_key(row, archive_dir=archive_dir) if row else None
+    return prior is not None and prior == delivery_meaning_key(decision)

@@ -1,0 +1,12 @@
+{
+  "schema_version": "equity_momentum_manual_review_policy_v1",
+  "version": "first-complete-five-session-cohort-v1-20260927",
+  "review_trigger": "first_complete_five_session_cohort",
+  "minimum_complete_cohorts": 1,
+  "required_holding_sessions": 5,
+  "owner_review_required": true,
+  "automatic_promotion": false,
+  "changes_canonical_eligibility": false,
+  "automatic_action_allowed": false,
+  "interpretation": "This is the owner's earliest manual-review timing preference. One complete cohort does not establish profitability, incremental value, independent sample sufficiency or execution feasibility. Missing or correction-required outcomes do not count as complete. Preserve the frozen experiment, its cost assumptions, unsuccessful and unselected observations, and version boundaries."
+}

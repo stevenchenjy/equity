@@ -46,6 +46,33 @@ DEPLOYMENT_RECEIPT_PATH = ROOT / "00_project_control/run_logs/verified_deploymen
 RUNTIME_EXECUTION_PATH = ROOT / "00_project_control/run_logs/runtime_execution_log.csv"
 
 
+def momentum_review_health(payload: Any, refresh: dict, *, current: datetime,
+                           expected_session: str) -> dict[str, Any]:
+    """Only a current, successful advisory packet can advertise owner readiness."""
+    allowed = {"waiting_for_complete_cohort", "ready_for_owner_review", "failed"}
+    if (not isinstance(payload, dict) or not isinstance(payload.get("status"), str)
+            or payload["status"] not in allowed):
+        payload = {"status": "missing_or_invalid"}
+    result = work_health(payload, refresh, current=current, step="momentum_experiment_review")
+    if result.get("market_session") != expected_session:
+        result["freshness"] = "stale_or_unverified"
+        if result.get("status") != "failed":
+            result["status"] = "stale_or_unverified"
+    steps = refresh.get("steps", [])
+    experiment_step = next((row for row in reversed(steps)
+                            if isinstance(row, dict) and row.get("name") == "momentum_experiment"), {}) if isinstance(steps, list) else {}
+    if (refresh.get("cycle_date") == current.date().isoformat()
+            and type(experiment_step.get("exit_code")) is int and experiment_step["exit_code"] != 0):
+        result.update(status="failed", reason="current_experiment_step_failed")
+    result["ready_for_owner_review"] = (result.get("status") == "ready_for_owner_review"
+                                        and result["freshness"] == "current"
+                                        and result.get("ready_for_owner_review") is True)
+    result["automatic_action_allowed"] = False
+    result["incremental_value_established"] = False
+    result["changes_canonical_eligibility"] = False
+    return result
+
+
 def momentum_health(payload: Any, refresh: dict, *, current: datetime,
                     expected_session: str) -> dict[str, Any]:
     """An advisory file cannot break status rendering or hide a failed refresh."""
@@ -276,6 +303,12 @@ def main() -> int:
     except (OSError, ValueError, TypeError):
         momentum = None
     momentum = momentum_health(momentum, refresh, current=current, expected_session=expected_session)
+    try:
+        experiment_review = read_json(ROOT / "08_reviews/momentum_experiment_review.local/status.json", {})
+    except (OSError, ValueError, TypeError):
+        experiment_review = None
+    experiment_review = momentum_review_health(experiment_review, refresh, current=current,
+                                               expected_session=expected_session)
     backlog = read_backlog_summary(ROOT, current=current, refresh=refresh)
     work_queue = work_health(decision.get("capital_work_queue"), refresh,
                              current=current, step="daily_decision")
@@ -390,6 +423,7 @@ def main() -> int:
             "historical_archive": config["model_policy"]["historical_archive"],
         },
         "momentum_experiment": momentum,
+        "momentum_experiment_review": experiment_review,
         "research_backlog": backlog,
         "capital_work_queue": work_queue,
         "workflow_blocker_scopes": {key: decision.get("workflow_integrity", {}).get(key, {})
@@ -421,6 +455,7 @@ def main() -> int:
         f"- Workflow evaluation: `{health['workflow_evaluation']['status']}`; `{health['workflow_evaluation']['reason']}`; on-time `{evaluation.get('operations', {}).get('on_time_cycles', 'unknown')}/{evaluation.get('operations', {}).get('due_calendar_cycles', 'unknown')}` due calendar cycles; late `{evaluation.get('operations', {}).get('late_cycles', 'unknown')}`. A stale report is historical only.",
         f"- Actual portfolio performance readiness: `{health['workflow_evaluation']['portfolio_performance'].get('status', 'unknown')}`; planning cash is excluded.",
         f"- Momentum experiment: `{momentum.get('status', 'missing')}`; evidence freshness `{momentum['freshness']}`; frozen observations `{momentum.get('observations', 'unknown')}`, forward outcomes `{momentum.get('outcomes', 'unknown')}`. No demonstrated incremental value or actionable quantities; see `08_reviews/momentum_experiment.local/report.md`. Advisory failure does not suppress existing risk reporting.",
+        f"- First-cohort manual review: `{experiment_review.get('status', 'missing')}`; evidence freshness `{experiment_review['freshness']}`; ready for owner review `{experiment_review['ready_for_owner_review']}`. One complete five-session cohort permits review without an additional sample-count or profitability requirement; it does not promote a strategy. See `08_reviews/momentum_experiment_review.local/report.md`.",
         f"- Recurring objective research: `{backlog.get('status', 'missing')}`; freshness `{backlog['freshness']}`; see `08_reviews/current/research_backlog.local.md`. Source-derived numerical completion does not approve a thesis or valuation.",
         f"- Cash and reassessment queue: `{work_queue.get('status', 'missing')}`; freshness `{work_queue['freshness']}`; active items `{work_queue.get('active_item_count', 'unknown')}`; see `08_reviews/capital_work_queue.local/report.md`.",
         f"- Account-wide workflow blockers: `{', '.join(decision.get('workflow_integrity', {}).get('global_blockers', [])) or 'none'}`; ticker-specific issues: `{', '.join(decision.get('workflow_integrity', {}).get('blocked_tickers', [])) or 'none'}`. Local research work is not an account-wide capital freeze.",

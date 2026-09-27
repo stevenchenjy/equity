@@ -22,6 +22,7 @@ from daily_common import (
     DAILY_DECISION_JSON_PATH,
     DAILY_DECISION_REPORT_PATH,
     DAILY_DECISION_STATE_PATH,
+    DAILY_DELIVERY_LEDGER_PATH,
     EVIDENCE_LEDGER_PATH,
     EVIDENCE_STATUS_PATH,
     EXACT_ACTION_PATH,
@@ -67,6 +68,7 @@ from workflow_integrity import apply_workflow_integrity, record_decision_history
 from investment_plans import render_plan_lines
 from capital_work_queue import refresh_capital_work_queue
 from work_queue_reporting import read_backlog_summary, report_section
+from delivery_continuity import delivery_notification_comparison
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -1094,7 +1096,13 @@ def main() -> int:
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
         decision["notification_policy"]["regular_delivery_mode"] = notification_mode
-    notification_change = notification_change_comparison(decision, prior_state, prior_decision)
+    research_notification_change = notification_change_comparison(decision, prior_state, prior_decision)
+    notification_change = research_notification_change
+    if notification_mode == WATCH_ACTION_NOTIFICATION_MODE:
+        notification_change = delivery_notification_comparison(
+            decision, research_notification_change, rows=read_csv(DAILY_DELIVERY_LEDGER_PATH),
+            current=now_et(), archive_dir=DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
+        )
     decision["notification_change"] = notification_change
     if notification_mode == WATCH_ACTION_NOTIFICATION_MODE:
         if not bool(inhibit.get("active")) and cycle_date() >= str(active_state.get("operational_from", "")):
@@ -1229,8 +1237,8 @@ def main() -> int:
         "updated_at": iso_now(),
         "cycle_date": cycle_date(),
         "decision_fingerprint": decision_fingerprint,
-        "notification_change_fingerprint": notification_change["fingerprint"],
-        "notification_change_anchor": notification_change["prior_fingerprint"] or notification_change["fingerprint"],
+        "notification_change_fingerprint": research_notification_change["fingerprint"],
+        "notification_change_anchor": research_notification_change["prior_fingerprint"] or research_notification_change["fingerprint"],
         "decision_code": decision_code,
         "action_proposal_fingerprint": proposal_fingerprint,
         "action_proposal_session": (

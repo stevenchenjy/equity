@@ -1,14 +1,31 @@
 # Phase 5R Daily Delivery Policy
 
+## Durable delivery handoff correction (2026-09-27)
+
+Regular notification comparison uses the latest verifiable durable delivery
+meaning across dates. Repeated research composition, including a next-day
+refresh, must not consume a material change that has not yet been delivered.
+The research comparison remains a fallback when no verifiable delivery baseline
+exists; initial empty-baseline seeding stays quiet. A delivery receipt already
+covering the conclusions still suppresses repeats, including screening churn
+and clock-only aging. No send clock, daily deduplication or attempt limit changes.
+
+For Monday September 28 the existing research boundaries are 08:15 ET and
+11:15 ET; publication recovery slots are 11:45, 12:15 and 12:45. Regular email
+eligibility starts at 13:30 ET after a successful same-day refresh. The loaded
+jobs poll every 900 seconds, so these are eligibility boundaries, not guaranteed
+delivery minutes. The machine and network must be available. Monday uses Friday
+September 25 as the latest published close. There is no premarket action-plan
+email appointment and no mandatory unchanged daily email.
+
 ## Current delivery and presentation rule (2026-09-26)
 
 This section supersedes earlier same-calendar-day coverage and long scheduled
 email presentation requirements for the maintained workflow. The owner reported
 repeated old-format automatic emails and requested a full fix.
 
-- Preserve daily research, current plan states, eligibility and history. An
-  automatically changed research fingerprint is necessary but not sufficient
-  for another email: compare with the latest durable delivery receipt across
+- Preserve daily research, current plan states, eligibility and history.
+  Compare notification meaning with the latest durable delivery receipt across
   dates, including an evening requested review covering the next session.
 - Record `delivery_meaning_v1` in every new claim/sent/unknown receipt. Only the
   latest receipt is the comparison baseline; never skip over a changed risk

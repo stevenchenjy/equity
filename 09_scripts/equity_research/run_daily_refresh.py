@@ -94,7 +94,9 @@ STEP_SPECS = [
     # artifact. No model or external inference path consumes it in production.
     ("evidence_packet", "build_decision_evidence_packet.py", False),
     ("momentum_experiment", "create_momentum_experiment.py", True),
+    ("momentum_experiment_review", "create_momentum_experiment_review.py", True),
 ]
+ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review"}
 CURRENT_STATUS_SPEC = (
     "current_status",
     "generate_current_status.py",
@@ -222,14 +224,14 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         row["name"]
         for row in steps
         if row["exit_code"] != 0 and row["allowed_to_fail"]
-        and row["name"] not in {"market_discovery", "momentum_experiment"}
+        and row["name"] not in ADVISORY_STEPS
     ]
-    # Discovery and the momentum experiment have no path to canonical eligibility. Their stale/unavailable
+    # Discovery and the momentum study/review have no path to canonical eligibility. Their stale/unavailable
     # status is shown in the report; an outage must not suppress otherwise
     # valid held-position and order-risk reporting. Preserve the actual exit
     # code in steps and track the failure separately, without inventing success.
     advisory_failures = [row["name"] for row in steps
-                         if row["name"] in {"market_discovery", "momentum_experiment"} and row["exit_code"] != 0]
+                         if row["name"] in ADVISORY_STEPS and row["exit_code"] != 0]
     decision_completed = any(
         row["name"] == "daily_decision" and row["exit_code"] == 0 for row in steps
     )

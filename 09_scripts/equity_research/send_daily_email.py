@@ -20,7 +20,7 @@ from typing import Any, Callable
 
 from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
-from delivery_continuity import covered_by_last_delivery, delivery_meaning_key
+from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -335,13 +335,31 @@ def validate_decision(
         prior = comparison.get("prior_fingerprint")
         if (not isinstance(prior, str)
                 or (prior and re.fullmatch(r"[0-9a-f]{64}", prior) is None)
-                or comparison.get("comparison_source") not in {"prior_state", "same_cycle_anchor", "prior_decision_migration", "initial_baseline"}
+                or comparison.get("comparison_source") not in {"prior_state", "same_cycle_anchor", "prior_decision_migration", "initial_baseline", "last_delivery"}
                 or type(comparison.get("changed")) is not bool):
             raise ValueError("decision_notification_change_invalid")
-        fingerprint = recommendation_notification_fingerprint(decision)
-        notification_changed = bool(prior) and fingerprint != prior
-        if comparison.get("fingerprint") != fingerprint or comparison["changed"] is not notification_changed:
-            raise ValueError("decision_notification_change_mismatch")
+        if comparison.get("comparison_source") == "last_delivery":
+            try:
+                compared_at = datetime.fromisoformat(comparison["compared_at"])
+                generated_at = datetime.fromisoformat(decision["generated_at"])
+                if (compared_at.tzinfo is None or generated_at.tzinfo is None
+                        or not generated_at <= compared_at <= current
+                        or compared_at.date() != decision_cycle):
+                    raise ValueError("invalid_delivery_comparison_timestamp")
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("decision_notification_change_invalid") from exc
+            expected_comparison = delivery_notification_comparison(
+                decision, {}, rows=read_csv(DAILY_DELIVERY_LEDGER_PATH), current=compared_at,
+                archive_dir=DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
+            )
+            if comparison != expected_comparison:
+                raise ValueError("decision_notification_change_mismatch")
+            notification_changed = comparison["changed"]
+        else:
+            fingerprint = recommendation_notification_fingerprint(decision)
+            notification_changed = bool(prior) and fingerprint != prior
+            if comparison.get("fingerprint") != fingerprint or comparison["changed"] is not notification_changed:
+                raise ValueError("decision_notification_change_mismatch")
     policy_send, policy_reason = delivery_policy(
         is_weekend=expected_evaluation["is_weekend"],
         weekly_summary_due=expected_evaluation["weekly_summary_due"],
