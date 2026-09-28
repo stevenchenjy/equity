@@ -32,6 +32,7 @@ from valuation_input_bundle import (
     SCHEMA_VERSION as BUNDLE_SCHEMA_VERSION,
     seal_bundle,
 )
+from valuation_research_inputs import compose_research_inputs
 
 
 BASELINE_PATH = (
@@ -376,7 +377,6 @@ def main() -> int:
             inputs["prior_diluted_shares"] = valuation_input(prior_shares, "shares", "prior-year comparable quarter", accepted_sec, [sec_id])
         bundle_records.append({"ticker": ticker, "inputs": inputs, "sources": sources})
 
-    atomic_write_csv(BASELINE_PATH, list(updated_rows[0].keys()), updated_rows)
     scenario_payload = {
         "schema_version": "phase5r_valuation_scenarios_v1",
         "generated_at": iso_now(),
@@ -388,7 +388,6 @@ def main() -> int:
             "trade_placed": False,
         },
     }
-    atomic_write_json(SCENARIO_PATH, scenario_payload)
     unsigned_bundle = {
         "schema_version": BUNDLE_SCHEMA_VERSION,
         "prepared_at_utc": prepared_at,
@@ -403,10 +402,20 @@ def main() -> int:
         },
         "bundle_sha256": "",
     }
-    atomic_write_json(DEFAULT_BUNDLE_PATH, seal_bundle(unsigned_bundle))
+    composed_bundle, research_status = compose_research_inputs(
+        seal_bundle(unsigned_bundle), project_root=ROOT, derived_path=DEFAULT_BUNDLE_PATH,
+        fundamentals=fundamentals, market=market,
+        active_tickers={row["ticker"].upper() for row in baseline},
+    )
+    atomic_write_csv(BASELINE_PATH, list(updated_rows[0].keys()), updated_rows)
+    atomic_write_json(SCENARIO_PATH, scenario_payload)
+    atomic_write_json(ROOT / "04_data/equity_research/valuation_research_status.local.json", research_status)
+    atomic_write_json(DEFAULT_BUNDLE_PATH, composed_bundle)
     complete = sum(record["status"] == "complete" for record in scenario_records)
     print(
         f"valuation_scenarios_complete={complete} total={len(scenario_records)} "
+        f"maintained_research_records={research_status['active_records']} "
+        f"maintained_research_status={research_status['status']} "
         "source_bound=true model_used=false automatic_action_allowed=false"
     )
     return 0

@@ -8,7 +8,7 @@ thesis, valuation and publication validators. It is research, not execution.
 
 ## Each run
 
-1. Verify the clean production commit and inspect current production status,
+1. Verify the production code commit and inspect current production status,
    the latest validated market session, the capital work queue, the research
    backlog, maintained plans, issuer-news reviews and prior analyst receipts.
    Production is `/Users/messssi/LocalRuntime/equity`; source code is
@@ -16,6 +16,13 @@ thesis, valuation and publication validators. It is research, not execution.
    `/Users/messssi/Documents/equity`, which is neither executable checkout.
    Use absolute script paths and explicit production roots as described below.
    Do not work from stale chat summaries.
+   Distinguish code changes from expected append-only public SEC evidence
+   admitted by `run_runtime_scheduler._runtime_evidence_changes`. Record those
+   validated data changes and pending source/runtime reconciliation; they do
+   not require abandoning independent research or overwriting retained evidence.
+   Unexpected code changes block mutation until resolved. A routine analyst
+   wake does not deploy source code, and a completed data refresh need not leave
+   the tracked evidence tree clean.
 2. Prioritize overdue held-position risk and purpose reviews, then the most
    decision-relevant research gaps and otherwise-qualified core opportunities.
    A broker-dependent blocked item must not monopolize the run: record the
@@ -83,21 +90,45 @@ accepted append `--apply`. Its store is
 
 For valuation research inputs, the actual CLI is
 `/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/valuation_input_bundle.py`
-with `--check --input PROPOSAL --as-of MARKET_SESSION` and optional repeated
-`--ticker TICKER`. `MARKET_SESSION` is the validated packet session, not an
-assumed wall-clock date. This CLI has **no `--root` or `--apply` option**:
+with `--check --input PROPOSAL --as-of PACKET_AS_OF` and optional repeated
+`--ticker TICKER`. `PACKET_AS_OF` is the validated packet's timezone-aware ISO
+timestamp, not a bare session date; retain the separate validated close date.
+This CLI has **no `--root` or `--apply` option**:
 executing the production script selects the production root. Its `--seal`
 mode, with explicit `--output PRIVATE_STAGED_BUNDLE`, seals and validates a
 staged bundle; it does not provide coordinated canonical admission. The
-private research input store is
-`/Users/messssi/LocalRuntime/equity/04_data/equity_research/valuation_inputs.local.json`.
-Preserve existing bundle records when adding an admissible input. A coordinated
+durable analyst research input store is
+`/Users/messssi/LocalRuntime/equity/04_data/equity_research/valuation_research_inputs.local.json`.
+Preserve existing admitted records when adding an input; retain exact prior
+bytes in the dated admission receipt before replacement. A coordinated
 writer may call `seal_bundle` and `validate_and_materialize_bundle` with
 `project_root=Path('/Users/messssi/LocalRuntime/equity')`, then publish the exact
-validated research bundle under the locks below. Such publication retains
+validated research bundle to that durable store under the locks below. Such publication retains
 `canonical_effect=false`; it does not complete canonical financial fields,
 valuation scenarios or recommendation eligibility. If a financial amendment
 has no identified validator and admitted writer, retain it as pending admission.
+
+`valuation_inputs.local.json` is the refresh-owned composed packet bundle;
+never use it as the durable amendment target. The valuation generator preserves
+the analyst store unchanged, archives every observed version verbatim under
+`04_data/equity_research/valuation_input_history.local/`, and revalidates each
+manual record's sources and current financial/market period. A current generated
+ticker record takes precedence in the composed bundle; the manual record stays
+historical with an explicit status. Invalid bindings or advanced reporting
+periods keep the original research but exclude it from the current packet.
+Legacy mixed bundles are captured verbatim into the durable store only if that
+store does not yet exist. This compatibility step cannot recover a record that
+an earlier refresh already deleted: restore such a record from a validated
+proposal and retained receipt under the normal locks.
+
+After admission and refresh, inspect
+`04_data/equity_research/valuation_research_status.local.json` and confirm the
+expected ticker is `active_research_only` in the packet. An `unverified` or
+`historical_generated_record_precedence` status is not completed current
+analysis. Count research numeric observations separately from canonical
+financial fields and complete valuations; the latter do not change through
+this store. Include the durable store's hash in protected-input checks and
+allow the derived composed bundle to change only through validated regeneration.
 
 ## Locking and publication
 

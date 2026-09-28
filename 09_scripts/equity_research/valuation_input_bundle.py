@@ -330,19 +330,17 @@ def _declared_tickers(bundle: Mapping[str, Any]) -> set[str]:
     }
 
 
-def validate_and_materialize_bundle(
+def validate_bundle_envelope(
     bundle: Any,
     *,
     packet_as_of: str,
-    active_tickers: set[str],
-    project_root: Path = ROOT,
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Validate a sealed bundle and build valuation receipts plus packet sources."""
+) -> dict[str, Any]:
+    """Check integrity and authority before inspecting records independently."""
 
     checked = _require_exact_fields(bundle, _TOP_FIELDS, "bundle")
     if checked["schema_version"] != SCHEMA_VERSION:
         raise ValuationInputBundleError("bundle: unsupported schema_version")
-    packet_time, packet_time_utc = _packet_as_of(packet_as_of)
+    packet_time, _ = _packet_as_of(packet_as_of)
     prepared_at = _parse_utc(checked["prepared_at_utc"], "bundle.prepared_at_utc")
     if prepared_at > packet_time:
         raise ValuationInputBundleError("bundle: future preparation is forbidden")
@@ -368,6 +366,21 @@ def validate_and_materialize_bundle(
     records = checked["records"]
     if not isinstance(records, list):
         raise ValuationInputBundleError("bundle.records must be an array")
+    return checked
+
+
+def validate_and_materialize_bundle(
+    bundle: Any,
+    *,
+    packet_as_of: str,
+    active_tickers: set[str],
+    project_root: Path = ROOT,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Validate a sealed bundle and build valuation receipts plus packet sources."""
+
+    checked = validate_bundle_envelope(bundle, packet_as_of=packet_as_of)
+    packet_time, packet_time_utc = _packet_as_of(packet_as_of)
+    records = checked["records"]
     normalized_active = {str(ticker).strip().upper() for ticker in active_tickers}
     seen_tickers: set[str] = set()
     all_source_ids: set[str] = set()

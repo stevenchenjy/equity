@@ -425,8 +425,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/valuation_input_bundle.py": {
-    "mtime": 1790161922.058031,
-    "ast_hash": "170c62d9560235bf3ff30ed76612a213",
+    "mtime": 1790632741.8662784,
+    "ast_hash": "5f5e5ce82ce38a00c1637292bb48b7e2",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_valuation_input_bundle.py": {
@@ -530,8 +530,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/refresh_valuation_scenarios.py": {
-    "mtime": 1790535588.6949751,
-    "ast_hash": "fd7aa42c912278b81278c4ef1fbb8de4",
+    "mtime": 1790632741.8682024,
+    "ast_hash": "c641a00a78bb527826bc7c916b68a397",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_active_tests.py": {
@@ -1380,8 +1380,8 @@
     "semantic_hash": ""
   },
   "00_project_control/analyst_followthrough.md": {
-    "mtime": 1790623391.087118,
-    "ast_hash": "ce0df1fcef708690d6974b262255a7e1",
+    "mtime": 1790632830.7159948,
+    "ast_hash": "ccea7685dc12f2cf8e89808b6da770b4",
     "semantic_hash": ""
   },
   "00_project_control/objective_research_budget_20260928.md": {
@@ -1392,6 +1392,26 @@
   "00_project_control/pipeline_repair_20260928.md": {
     "mtime": 1790623711.4690619,
     "ast_hash": "73170a6a3bcff8c6903aba9e48e712e5",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v32.json": {
+    "mtime": 1790632389.8979034,
+    "ast_hash": "8b702192c11e1b46503df5984ebd85cf",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/tests/test_valuation_research_retention.py": {
+    "mtime": 1790633197.762393,
+    "ast_hash": "9d1782ebd3fb63b36fb2fe245a3fc288",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/valuation_research_inputs.py": {
+    "mtime": 1790633197.761259,
+    "ast_hash": "cd5cf1706fb5d11d616f2c6d40664b2c",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/tests/test_valuation_research_archive.py": {
+    "mtime": 1790633107.2155507,
+    "ast_hash": "3d86498cd80b1dee8d1baaf04f55f5c2",
     "semantic_hash": ""
   }
 }

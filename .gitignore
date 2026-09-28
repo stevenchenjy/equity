@@ -42,6 +42,9 @@ graphify-out/graph.html
 02_filings/issuer_filings/
 04_data/equity_research/valuation_inputs.local.json
 04_data/equity_research/valuation_inputs.local.lock
+04_data/equity_research/valuation_research_inputs.local.json
+04_data/equity_research/valuation_research_status.local.json
+04_data/equity_research/valuation_input_history.local/
 04_data/equity_research/valuation_source_*.local.*
 04_data/equity_research/valuation_scenarios.local.json
 04_research/company_research/current_research_baseline.csv
