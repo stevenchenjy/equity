@@ -68,6 +68,9 @@ Codex may prepare research, calculate risk, screen a local watchlist, summarize 
   recorded assessments and investment-performance evidence.
 - Recurring analyst work follows `00_project_control/analyst_followthrough.md`.
   A scheduled analyst wake is not an explicit owner-requested email resend.
+- Interactive reviews that change maintained plans must pass the durable
+  writer and final recomposition checks in `owner_review_preferences.md`.
+  An emailed narrative is not proof that the ongoing plan store changed.
 
 ## graphify
 

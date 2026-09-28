@@ -1,5 +1,29 @@
 # Owner-requested research reviews
 
+## Durable follow-through for interactive reviews (2026-09-28)
+
+An emailed analyst review is not by itself an update to maintained plans.
+When an interactive review changes a holding's plan, use the existing
+source-bound investment-plan writer before presenting it as the current
+maintained instruction. Record the accepted plan ID, version and hash in the
+private review receipt. Preserve source dates, the prior plan's outcome and
+all broker-dependent unknowns. For accounting or valuation analysis, use the
+durable research-input store documented in `analyst_followthrough.md`.
+
+Recompose and compare the final maintained-plan state and rendered review
+before any otherwise-authorized delivery. If required evidence or an admitted
+writer is unavailable, label the new analysis as a pending proposal and record
+the dependency; do not claim the recurring workflow has adopted it. A past
+review discovered later may be backfilled with its actual original effective
+dates and an explicit current recording time. Expired prices, deadlines and
+DAY drafts remain expired.
+
+Reviews in different chats share the same private stores. Inspect existing
+plan history and exact delivery receipts before another append or send; use
+the documented locks and source/hash checks. Do not infer that another chat
+updated a plan from its email alone. A periodic analyst wake and a technical
+pipeline audit do not create an owner-review resend request.
+
 ## Current email correction (2026-09-26)
 
 The owner asked to fix repeated old-format automatic messages. The current
