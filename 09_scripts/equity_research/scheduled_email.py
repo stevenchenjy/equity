@@ -75,6 +75,22 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         if status in {'filled','cancelled','canceled','expired','rejected'}:
             terminal.append(f"{row.get('ticker')} {status}")
             continue
+        if row.get('record_scope') == 'unresolved_historical_reservation':
+            order_lines.append(f"{row.get('ticker')}: unresolved historical {row.get('side','order')} record; "
+                               f"original quantity {quantity(row.get('quantity'))}; limit {price(row.get('limit_price'))}; "
+                               f"{row.get('time_in_force','unconfirmed')}; last verified {row.get('last_verified_at') or 'unavailable'}. "
+                               f"Local conservative reservation: {quantity(row.get('remaining_quantity'))} shares; "
+                               "this is not a current broker-reported pending order or remaining quantity. Historical terminal status still needs evidence.")
+            if row.get('current_inventory_presence') == 'not_shown_in_current_no_orders_page':
+                order_lines.append(f"{row.get('ticker')}: not shown in the no-orders page observed at {orders.get('as_of') or 'an unverified time'}. "
+                                   "That observation does not establish the old ticket's exact terminal status.")
+            continue
+        if (row.get('current_status_verified') is False
+                or row.get('review_status') in {'expired_pending_verification','unknown_pending_verification'}):
+            order_lines.append(f"{row.get('ticker')}: prior {row.get('side','order')} {quantity(row.get('quantity'))}; "
+                               f"limit {price(row.get('limit_price'))}; {row.get('time_in_force','unconfirmed')}. "
+                               "Current status and remaining quantity are unverified; the recorded pending state is historical.")
+            continue
         label={'open':'open in snapshot','pending':'pending in snapshot','partial_fill':'partially filled in snapshot'}.get(status,'unconfirmed')
         order_lines.append(f"{row.get('ticker')}: recorded {row.get('side','order')} {quantity(row.get('quantity'))}; remaining {quantity(row.get('remaining_quantity'))}; "
                            f"limit {price(row.get('limit_price'))}; {row.get('time_in_force','unconfirmed')} — {label}.")
