@@ -6,6 +6,8 @@ Neither this module nor its output connects to a broker or submits an order.
 """
 from __future__ import annotations
 
+import copy
+import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from pathlib import Path
@@ -88,56 +90,153 @@ def _money(value: Decimal | None) -> float | None:
     return float(value.quantize(Decimal("0.01"))) if value is not None else None
 
 
-def review_open_orders(payload: dict[str, Any], current: datetime, session: date) -> dict[str, Any]:
+def review_open_orders(payload: dict[str, Any], current: datetime, session: date,
+                       held_positions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Verify current inventory separately from retained unresolved sell history.
+
+    A fresh empty inventory does not prove an old ticket's terminal state. Its
+    bounded sell reservation remains local; unknown inventory, buys and malformed
+    contradictions still block the shared tactical cash budget.
+    """
+    payload = payload if isinstance(payload, dict) else {}
+    def order_identity(row):
+        identity = row.get("order_id", row.get("id", "")) if isinstance(row, dict) else None
+        return identity if isinstance(identity, str) and identity and identity == identity.strip() else ""
     stamp = _stamp(payload.get("as_of"))
     completed_close = datetime.combine(last_completed_market_session(current), time(16),
                                        tzinfo=ZoneInfo("America/New_York"))
     fresh = bool(stamp and timedelta(0) <= current - stamp <= timedelta(hours=24)
                  and stamp >= completed_close)
-    complete = (payload.get("schema_version") == "phase5r_open_orders_v1"
-                and isinstance(payload.get("orders"), list)
-                and payload.get("complete") is True and fresh)
+    inventory_verified = (payload.get("schema_version") == "phase5r_open_orders_v1"
+                          and isinstance(payload.get("orders"), list)
+                          and payload.get("complete") is True and fresh)
+    global_blockers = [] if inventory_verified else ["order_inventory_unverified_cannot_bound_buy_commitments"]
+    observation = payload.get("current_inventory_observation")
+    observed_ids: set[str] = set()
+    observed_by_id: dict[str, dict[str, Any]] = {}
+    observation_verified = False
+    if "current_inventory_observation" in payload:
+        if isinstance(observation, dict):
+            observed_stamp = _stamp(observation.get("as_of"))
+            observed_rows = observation.get("orders_shown")
+            source = observation.get("source")
+            observation_verified = bool(inventory_verified and observed_stamp == stamp
+                and observation.get("complete") is True and isinstance(observed_rows, list)
+                and isinstance(source, dict) and isinstance(source.get("path"), str) and source["path"]
+                and re.fullmatch(r"[0-9a-f]{64}", str(source.get("sha256", ""))))
+            for observed in observed_rows if isinstance(observed_rows, list) else []:
+                identity = order_identity(observed)
+                if not identity or identity in observed_ids:
+                    observation_verified = False
+                observed_ids.add(identity)
+                if isinstance(observed, dict):
+                    observed_by_id[identity] = observed
+        if not observation_verified:
+            global_blockers.append("current_inventory_observation_invalid")
     rows = []
     reserve = Decimal(0)
     active_tickers: set[str] = set()
+    ticker_blockers: dict[str, list[str]] = {}
+    identities: set[str] = set()
+    current_ids: set[str] = set()
+    sides: dict[str, set[str]] = {}
+    sell_reserved: dict[str, Decimal] = {}
     for raw in payload.get("orders", []) if isinstance(payload.get("orders"), list) else []:
         if not isinstance(raw, dict):
-            complete = False
+            global_blockers.append("order_record_invalid")
             continue
-        row = dict(raw)
+        row = copy.deepcopy(raw)
         ticker = str(row.get("ticker", "")).upper()
         status = str(row.get("status", "unknown")).lower()
         tif = str(row.get("time_in_force", "")).upper()
+        side = str(row.get("side", "")).lower()
+        identity = order_identity(row)
+        if not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker) or side not in {"buy", "sell"}:
+            global_blockers.append("order_ticker_or_side_invalid")
+        if identity and identity in identities:
+            global_blockers.append("duplicate_order_identity")
+        identities.add(identity)
         row["review_status"] = status
         row["review_reason"] = "Historical status as reported; never proof of a fill."
         remaining = _number(row.get("remaining_quantity"))
         price = _positive(row.get("limit_price"))
         if status in {"open", "partial_fill", "partially_filled", "pending"}:
             active_tickers.add(ticker)
+            quantity = _positive(row.get("quantity"))
+            well_formed = bool(identity and re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker)
+                and side in {"buy", "sell"} and tif in {"DAY", "GTD"}
+                and _day(row.get("session_date") if tif == "DAY" else row.get("expiration_date")) is not None
+                and remaining is not None and remaining > 0 and remaining == remaining.to_integral_value()
+                and quantity is not None and quantity == quantity.to_integral_value() and remaining <= quantity)
+            if not well_formed:
+                global_blockers.append("order_quantity_or_identity_unverified")
+            sides.setdefault(ticker, set()).add(side)
+            historical = row.get("record_scope") == "unresolved_historical_reservation"
+            if not historical:
+                current_ids.add(identity)
+                observed = observed_by_id.get(identity)
+                if observation_verified and (observed is None or
+                    any(observed.get(key) != row.get(key) for key in
+                        ("ticker", "side", "status", "quantity", "remaining_quantity", "limit_price", "stop_price",
+                         "order_type", "time_in_force", "session_date", "expiration_date"))):
+                    global_blockers.append("current_inventory_order_facts_conflict")
             expired = ((tif == "DAY" and (_day(row.get("session_date")) or date.min) < session)
                        or (tif == "GTD" and (_day(row.get("expiration_date")) or date.min) < session))
+            scoped_sell = bool(historical and well_formed and side == "sell" and observation_verified
+                and identity not in observed_ids and row.get("current_status_verified") is False
+                and row.get("current_inventory_presence") == "not_shown_in_current_no_orders_page")
             if expired:
                 row["review_status"] = "expired_pending_verification"
                 row["review_reason"] = "Named session/date has passed; verify terminal status and any fills before replacement."
-                complete = False
-            elif (tif not in {"DAY", "GTD"} or remaining is None or remaining <= 0
-                  or remaining != remaining.to_integral_value() or not ticker
-                  or str(row.get("side", "")).lower() not in {"buy", "sell"}):
+                if not scoped_sell:
+                    global_blockers.append("expired_order_terminal_status_unverified")
+            elif not well_formed:
                 row["review_status"] = "unknown_pending_verification"
-                complete = False
-            if str(row.get("side", "")).lower() == "buy":
+            if historical or row.get("current_status_verified") is False:
+                if scoped_sell:
+                    ticker_blockers.setdefault(ticker, []).extend([
+                        "outstanding_sell_reserves_current_shares", "sell_order_terminal_status_unverified"])
+                else:
+                    global_blockers.append("historical_order_commitment_unverified")
+            if side == "sell" and remaining is not None and remaining > 0:
+                sell_reserved[ticker] = sell_reserved.get(ticker, Decimal(0)) + remaining
+            if side == "buy":
                 if price is None or remaining is None or remaining <= 0:
-                    complete = False
+                    global_blockers.append("buy_commitment_unbounded")
                 else:
                     reservation = price * remaining
                     reserve += reservation
                     row["cash_reservation_usd"] = _money(reservation)
-        elif status not in {"cancelled", "canceled", "filled", "rejected", "expired"}:
-            complete = False
+        elif status in {"cancelled", "canceled", "filled", "rejected", "expired"}:
+            if "remaining_quantity" in row and remaining != 0:
+                global_blockers.append("terminal_order_remaining_quantity_invalid")
+        else:
+            global_blockers.append("order_status_unverified")
             active_tickers.add(ticker)
         rows.append(row)
+    if observation_verified and current_ids != observed_ids:
+        global_blockers.append("current_inventory_orders_conflict")
+    if any(len(values) > 1 for values in sides.values()):
+        global_blockers.append("contradictory_buy_sell_orders_require_reconciliation")
+    if held_positions is not None:
+        held: dict[str, Decimal] = {}
+        for position in held_positions:
+            ticker = str(position.get("ticker", "")).upper() if isinstance(position, dict) else ""
+            quantity = _number(position.get("current_shares")) if isinstance(position, dict) else None
+            if not ticker or ticker in held or quantity is None or quantity < 0 or quantity != quantity.to_integral_value():
+                global_blockers.append("position_inventory_integrity_invalid")
+            else:
+                held[ticker] = quantity
+        if any(quantity > held.get(ticker, Decimal(0)) for ticker, quantity in sell_reserved.items()):
+            global_blockers.append("sell_reservations_exceed_observed_holdings")
+    complete = not global_blockers
     return {"as_of": payload.get("as_of", ""), "source": payload.get("source", ""),
             "complete": complete, "status": "verified_snapshot" if complete else "unconfirmed_snapshot",
+            "inventory_status": "verified_current_inventory" if inventory_verified and not global_blockers else "unverified_current_inventory",
+            "global_blockers": sorted(set(global_blockers)),
+            "ticker_blockers": {ticker: sorted(set(codes)) for ticker, codes in sorted(ticker_blockers.items())},
+            "current_inventory_observation": copy.deepcopy(observation),
+            "broker_balance_observation": copy.deepcopy(payload.get("broker_balance_observation")),
             "orders": rows, "cash_reservation_usd": _money(reserve), "active_tickers": sorted(active_tickers)}
 
 
@@ -215,7 +314,7 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
                       (cash_basis == "owner_recorded" and open_orders.get("cash_confirmed") is True))
     if not cash_confirmed:
         blockers.append("cash_not_confirmed")
-    order_review = review_open_orders(open_orders, current, next_session)
+    order_review = review_open_orders(open_orders, current, next_session, decision.get("held_positions", []))
     if not order_review["complete"]:
         blockers.append("open_orders_unconfirmed")
     existing_risk = _number(open_orders.get("existing_tactical_risk_usd"))

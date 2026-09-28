@@ -2,6 +2,7 @@
 from __future__ import annotations
 import json
 import os
+from copy import deepcopy
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from pathlib import Path
@@ -73,6 +74,60 @@ def _ticker_strategy(row: dict[str, Any], plans: dict[str, Any]) -> str | None:
         return "tactical"
     return next(("tactical" for plan in plans.get("plans", [])
                  if plan.get("ticker") == row.get("ticker") and plan.get("role") == "tactical"), None)
+
+
+def _recompose_capital_projection(decision: dict[str, Any], retained_new: list[str]) -> str | None:
+    """Project retained research quantities, never the superseded baseline buys.
+
+    A missing price or inconsistent account leaves the projection unverified;
+    it must not preserve arithmetic that includes a blocked recommendation.
+    This display projection grants no additional recommendation authority.
+    """
+    allocation = decision["capital_allocation"]
+    fields = ("post_review_active_value", "post_review_core_value", "post_review_cash", "post_review_cash_pct")
+    failure = "shared_capital_projection_inputs_unverified"
+    try:
+        def amount(value):
+            result = Decimal(str(value))
+            if not result.is_finite() or result < 0:
+                raise ValueError("projection_value_invalid")
+            return result
+        account = decision["account"]
+        cash, total = amount(account["cash_available"]), amount(account["account_total_value"])
+        active = core = Decimal(0)
+        for row in decision.get("held_positions", []):
+            value = amount(row["current_shares"]) * amount(row["current_price"])
+            if row.get("asset_role") == "core_allocation":
+                core += value
+            else:
+                active += value
+        if total <= 0 or abs(cash + core + active - total) > Decimal("0.01"):
+            raise ValueError("projection_account_does_not_reconcile")
+        proposed = Decimal(0)
+        for row in decision.get("watch_candidates", []):
+            if row.get("ticker") not in retained_new:
+                continue
+            value = amount(row["suggested_whole_shares"]) * amount(row["current_price"])
+            proposed += value
+            if (row.get("valuation_applicability") == "not_applicable_broad_market_etf"
+                    or row.get("asset_role") in {"core_allocation", "core_allocation_candidate"}):
+                core += value
+            else:
+                active += value
+        if proposed != amount(allocation["proposed_deployment_value"]):
+            failure = "retained_deployment_total_inconsistent"
+            raise ValueError(failure)
+        if cash - proposed < amount(account["cash_reserved"]):
+            failure = "retained_proposals_exceed_deployable_cash"
+            raise ValueError(failure)
+        allocation.update(post_review_active_value=f"{active:.2f}", post_review_core_value=f"{core:.2f}",
+            post_review_cash=f"{cash-proposed:.2f}", post_review_cash_pct=f"{(cash-proposed)/total*100:.4f}",
+            projection_status="retained_research_proposals_only")
+        return None
+    except (KeyError, TypeError, ValueError, InvalidOperation):
+        allocation.update({key: None for key in fields})
+        allocation["projection_status"] = "unverified_projection_inputs"
+        return failure
 
 
 def current_thesis_views(decision: dict[str, Any], *, root: Path, current: datetime,
@@ -147,6 +202,9 @@ def news_meaning(context: dict[str, Any]) -> dict[str, Any]:
 
 
 def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: datetime) -> None:
+    allocation = decision["capital_allocation"]
+    allocation.setdefault("baseline_research_projection", deepcopy({
+        key: value for key, value in allocation.items() if key != "baseline_research_projection"}))
     held = decision.get("held_positions", [])
     plans = load_plan_context(root, held, current)
     apply_plan_context(held, plans)
@@ -216,6 +274,16 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         strategy = _ticker_strategy(row, plans)
         if strategy:
             ticker_blockers.setdefault(ticker, []).extend(strategy_blockers.get(strategy, []))
+        if ticker in eligible:
+            # A malformed candidate is local; it must not poison otherwise
+            # funded peers, nor survive as a positive but unpriced proposal.
+            try:
+                price, quantity = (Decimal(str(row[key])) for key in ("current_price", "suggested_whole_shares"))
+                if (not price.is_finite() or price <= 0 or not quantity.is_finite()
+                        or quantity <= 0 or quantity != quantity.to_integral_value()):
+                    raise ValueError("candidate_amount_invalid")
+            except (KeyError, TypeError, ValueError, InvalidOperation):
+                local(ticker, "capital_projection_candidate_inputs_unverified")
         scoped = sorted(set(ticker_blockers.get(ticker, [])))
         row["workflow_global_blockers"] = list(blockers)
         row["workflow_ticker_blockers"] = scoped
@@ -227,6 +295,34 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
             row["gate_blockers"] = ",".join(filter(None, [str(row.get("gate_blockers", "")), *blockers, *scoped]))
         elif ticker in decision.get("eligible_new_position_review_candidates", []):
             retained_new.append(ticker)
+    if blockers or not retained_new:
+        allocation["proposed_deployment_value"] = 0
+    else:
+        try:
+            retained_value = sum(Decimal(str(row["suggested_whole_shares"])) * Decimal(str(row["current_price"]))
+                                 for row in decision.get("watch_candidates", []) if row.get("ticker") in retained_new)
+            old_value = Decimal(str(allocation["proposed_deployment_value"]))
+            if not old_value.is_finite() or old_value < 0:
+                raise ValueError("deployment_value_invalid")
+            allocation["proposed_deployment_value"] = float(min(old_value, retained_value))
+        except (ValueError, TypeError, KeyError, InvalidOperation):
+            allocation["proposed_deployment_value"] = 0
+    projection_failure = _recompose_capital_projection(decision, retained_new)
+    if projection_failure and retained_new:
+        # Shared cash can be spent only once. Individual/core sizing can each
+        # pass alone yet fail jointly; do not publish unfunded eligibility.
+        blockers = sorted(set(blockers + [projection_failure]))
+        for row in decision.get("watch_candidates", []):
+            row["workflow_global_blockers"] = list(blockers)
+            if row.get("ticker") not in retained_new:
+                continue
+            row.setdefault("baseline_research_proposal", {key: row.get(key) for key in
+                ("label", "action", "suggested_whole_shares", "maximum_review_price")})
+            row.update(suggested_whole_shares="0", action="research_prerequisites_unresolved", label="watchlist")
+            row["gate_blockers"] = ",".join(filter(None, [str(row.get("gate_blockers", "")), projection_failure]))
+        retained_new = []
+        allocation["proposed_deployment_value"] = 0
+        _recompose_capital_projection(decision, retained_new)
     decision["eligible_new_position_review_candidates"] = retained_new
     decision["plan_continuity"] = plans
     decision["earnings_incorporation"] = incorporation
@@ -246,19 +342,6 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         decision["decision_code"] = "maintained_plan_review"
         decision["headline"] = "按维护中的计划复核｜过期方案与待补证据已分开标示"
         decision["decisive_advice"] = "以当前计划状态为准；旧报价和旧 DAY 委托不自动续期。待核对事项未解决前不新增仓位。" if blockers else "按已记录计划观察；本次未形成新增仓位方案。"
-    if blockers or not retained_new:
-        decision["capital_allocation"]["proposed_deployment_value"] = 0
-    else:
-        # Removing one candidate must not leave its cash in the proposed total.
-        try:
-            retained_value = sum(Decimal(str(row["suggested_whole_shares"])) * Decimal(str(row["current_price"]))
-                                 for row in decision.get("watch_candidates", []) if row.get("ticker") in retained_new)
-            old_value = Decimal(str(decision["capital_allocation"]["proposed_deployment_value"]))
-            if not retained_value.is_finite() or retained_value < 0 or not old_value.is_finite() or old_value < 0:
-                raise ValueError("deployment_value_invalid")
-            decision["capital_allocation"]["proposed_deployment_value"] = float(min(old_value, retained_value))
-        except (ValueError, TypeError, KeyError, InvalidOperation):
-            decision["capital_allocation"]["proposed_deployment_value"] = 0
     decision["human_review_reasons"] = sorted(set(decision.get("human_review_reasons", []) + (["maintained_plan_reconciliation"] if blockers or ticker_blockers else [])))
     decision["human_review_required"] = bool(decision["human_review_reasons"])
     decision["decision_fingerprint"] = canonical_sha256({"baseline": decision["decision_fingerprint"], "workflow": workflow_meaning(decision)})

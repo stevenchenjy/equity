@@ -42,7 +42,7 @@ def write_valid_backlog(root):
     gap.update(gap_id=canonical_sha256(gap),status="pending_research",next_step="Verify the specific valuation countercase.")
     report={"schema_version":"equity_research_backlog_v1","generated_at":WHEN.isoformat(),"status":"ready",
         "automatic_action_allowed":False,"items":[gap],"priority_queue":[{"ticker":"DDOG","priority_rank":1,"gap_ids":[gap["gap_id"]],"priority_reasons":["recorded_gap"]}],
-        "issuer_queue":[],"attempts_latest_run":[],"selected_tickers":[],"counts":{"pending_research":1},
+        "issuer_queue":[],"attempts_latest_run":[],"selected_tickers":[],"work_budget_tickers":3,"counts":{"pending_research":1},
         "history_records":0,"history_head_hash":"","objective_dossiers_completed":0,"financial_fields_completed":0,"canonical_numeric_updates":0,
         "inputs":{"fundamentals_sha256_after":hashlib.sha256(fundamentals.read_bytes()).hexdigest()}}
     report["report_hash"]=canonical_sha256(report)

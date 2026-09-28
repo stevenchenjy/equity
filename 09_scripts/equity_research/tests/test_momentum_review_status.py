@@ -43,6 +43,17 @@ class MomentumReviewStatusTests(unittest.TestCase):
             self.assertEqual(result["status"], "failed")
             self.assertFalse(result["ready_for_owner_review"])
 
+    def test_historical_readiness_is_separate_and_fails_closed_on_stale_or_failed_packet(self):
+        payload = {**self.payload, "status": "waiting_for_complete_cohort", "ready_for_owner_review": False,
+                   "historical_ready_for_owner_review": True}
+        self.assertFalse(self.health(payload)["ready_for_owner_review"])
+        self.assertTrue(self.health(payload)["historical_ready_for_owner_review"])
+        stale = {**payload, "generated_at": "2026-10-02T11:30:00-04:00"}
+        self.assertFalse(self.health(stale)["historical_ready_for_owner_review"])
+        for name in ("momentum_experiment", "momentum_experiment_review"):
+            state = {"cycle_date": "2026-10-03", "steps": [{"name": name, "exit_code": 1}]}
+            self.assertFalse(self.health(payload, state)["historical_ready_for_owner_review"])
+
     def test_review_failure_is_visible_but_not_canonical_refresh_failure(self):
         writes = []
         def step(name, script, allowed, **kwargs):

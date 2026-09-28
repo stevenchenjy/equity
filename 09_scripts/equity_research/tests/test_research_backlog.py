@@ -151,6 +151,42 @@ class ResearchBacklogTests(unittest.TestCase):
         self.assertEqual(result["selected_tickers"], ["ABC"])
         self.assertEqual(result["objective_dossiers_completed"], 1)
 
+    def test_news_repoll_without_changed_evidence_does_not_repeat_objective_work(self):
+        self.set_report(inline())  # No admissible numeric patch to retry.
+        path = self.root / "03_source_data/equity_research/official_news_events.local.json"
+        event = {"ticker": "ABC", "event_id": "story-1", "title": "Customer announcement",
+            "url": "https://example.test/announcement", "published_at": ACCEPTED,
+            "first_seen_at": NOW.isoformat(), "last_seen_at": NOW.isoformat()}
+        atomic_write_json(path, {"events": [event]})
+        first = self.execute()
+        self.assertEqual(first["selected_tickers"], ["ABC"])
+        dossier_before = (self.root / DOSSIER_REL / "ABC.json").read_bytes()
+        history_before = (self.root / HISTORY_REL).read_bytes()
+        event["last_seen_at"] = (NOW + timedelta(hours=1)).isoformat()
+        atomic_write_json(path, {"events": [event]})
+        repeated = self.execute(current=NOW + timedelta(hours=1))
+        self.assertEqual(repeated["selected_tickers"], [])
+        self.assertEqual(repeated["objective_dossiers_completed"], 0)
+        self.assertEqual((self.root / DOSSIER_REL / "ABC.json").read_bytes(), dossier_before)
+        self.assertTrue((self.root / HISTORY_REL).read_bytes().startswith(history_before))
+
+    def test_changed_news_content_and_new_events_reopen_objective_work(self):
+        self.set_report(inline())
+        path = self.root / "03_source_data/equity_research/official_news_events.local.json"
+        event = {"ticker": "ABC", "event_id": "story-1", "title": "Customer announcement",
+            "url": "https://example.test/announcement", "published_at": ACCEPTED,
+            "first_seen_at": NOW.isoformat(), "last_seen_at": NOW.isoformat()}
+        atomic_write_json(path, {"events": [event]})
+        self.execute()
+        event["title"] = "Corrected customer announcement"
+        atomic_write_json(path, {"events": [event]})
+        self.assertEqual(self.execute()["selected_tickers"], ["ABC"])
+        event["published_at"] = (NOW - timedelta(hours=1)).isoformat()
+        atomic_write_json(path, {"events": [event]})
+        self.assertEqual(self.execute()["selected_tickers"], ["ABC"])
+        atomic_write_json(path, {"events": [event, {**event, "event_id": "story-2"}]})
+        self.assertEqual(self.execute()["selected_tickers"], ["ABC"])
+
     def test_new_material_evidence_cannot_be_hidden_by_current_same_period(self):
         atomic_write_csv(self.root / "03_source_data/equity_research/daily_evidence_ledger.csv",
             ["ticker", "form", "items", "filing_date", "accession_number"],
@@ -185,6 +221,14 @@ class ResearchBacklogTests(unittest.TestCase):
             self.assertEqual(before, {p.relative_to(self.root).as_posix(): sha256_file(p) for p in self.root.rglob("*") if p.is_file()})
             with self.assertRaisesRegex(ValueError, "cross_root_objective_updates_forbidden"):
                 self.execute(output_root=Path(out), apply_objective_updates=True)
+
+    def test_ten_issuer_budget_is_valid_and_out_of_bounds_is_rejected(self):
+        result = self.execute(max_tickers=10)
+        self.assertEqual(result["work_budget_tickers"], 10)
+        validate_report(result, root=self.root, current=NOW)
+        for budget in (0, 11, -1, True, 1.5):
+            with self.subTest(budget=budget), self.assertRaisesRegex(ValueError, "research_work_budget_out_of_bounds"):
+                self.execute(max_tickers=budget)
 
     def test_report_and_history_tampering_fail_closed_and_preserve_records(self):
         result = self.execute()

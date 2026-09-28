@@ -8,6 +8,7 @@ from equity_naming import report_heading
 import argparse
 import copy
 import csv
+import hashlib
 import json
 import os
 import re
@@ -389,38 +390,58 @@ def _discover(runs_root: Path, ledger_rows: list[dict[str, Any]], *, packet_arch
     legacy_run_ids: list[str] = []
     current_failures: list[dict[str, Any]] = []
     commissioning_failures: list[dict[str, Any]] = []
+    invalid_archives: list[dict[str, Any]] = []
+    def retain_invalid(path: Path, exc: Exception) -> None:
+        digest = None
+        try:
+            metadata = path.lstat()
+            if stat.S_ISREG(metadata.st_mode) and metadata.st_nlink == 1 and metadata.st_size <= 10_000_000:
+                digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            pass
+        invalid_archives.append({'path': str(path.relative_to(runs_root)), 'sha256': digest,
+            'reason': 'archive_validation_failed', 'error_class': type(exc).__name__,
+            'source_rewritten': False})
     if not runs_root.exists():
         return {
             "automatic": automatic,
             "legacy_run_ids": legacy_run_ids,
             "current_failures": current_failures,
             "commissioning_failures": commissioning_failures,
+            "invalid_archives": invalid_archives,
         }
     for path in sorted(runs_root.glob("*/bundle.json")):
-        raw = _read_regular_json(path)
-        if raw.get("schema_version") == BUNDLE_SCHEMA_VERSION:
-            automatic.append(load_automatic_bundle(path, ledger_rows=ledger_rows, packet_archive_root=packet_archive_root))
-        elif raw.get("schema_version") == LEGACY_BUNDLE_SCHEMA_VERSION:
-            run_id = raw.get("run_id")
-            if isinstance(run_id, str) and _SHA256.fullmatch(run_id):
-                legacy_run_ids.append(run_id)
+        try:
+            raw = _read_regular_json(path)
+            if raw.get("schema_version") == BUNDLE_SCHEMA_VERSION:
+                automatic.append(load_automatic_bundle(path, ledger_rows=ledger_rows, packet_archive_root=packet_archive_root))
+            elif raw.get("schema_version") == LEGACY_BUNDLE_SCHEMA_VERSION:
+                run_id = raw.get("run_id")
+                if isinstance(run_id, str) and _SHA256.fullmatch(run_id):
+                    legacy_run_ids.append(run_id)
+                else:
+                    raise ShadowEvaluationError("legacy bundle run id is invalid")
             else:
-                raise ShadowEvaluationError("legacy bundle run id is invalid")
-        else:
-            raise ShadowEvaluationError("unknown bundle schema version")
+                raise ShadowEvaluationError("unknown bundle schema version")
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            retain_invalid(path, exc)
     for path in sorted(runs_root.glob("*/failure.json")):
-        failure = _read_regular_json(path)
-        if failure.get("schema_version") == "phase5r_shadow_failure_v2":
-            current_failures.append(failure)
-        elif failure.get("schema_version") == "phase5r_shadow_failure_v1":
-            commissioning_failures.append(failure)
-        else:
-            raise ShadowEvaluationError("unknown failure schema version")
+        try:
+            failure = _read_regular_json(path)
+            if failure.get("schema_version") == "phase5r_shadow_failure_v2":
+                current_failures.append(failure)
+            elif failure.get("schema_version") == "phase5r_shadow_failure_v1":
+                commissioning_failures.append(failure)
+            else:
+                raise ShadowEvaluationError("unknown failure schema version")
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            retain_invalid(path, exc)
     return {
         "automatic": automatic,
         "legacy_run_ids": legacy_run_ids,
         "current_failures": current_failures,
         "commissioning_failures": commissioning_failures,
+        "invalid_archives": invalid_archives,
     }
 
 
@@ -677,11 +698,13 @@ def aggregate(
     outcome_path: Path = DEFAULT_OUTCOME_PATH,
     packet_archive_root: Path = DEFAULT_PACKET_ARCHIVE_ROOT,
     later_official_packets: list[dict[str, Any]] | None = None,
+    invalid_archives: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     current_failures = current_failures or []
     legacy_run_ids = legacy_run_ids or []
     commissioning_failures = commissioning_failures or []
     ledger_rows = ledger_rows or []
+    invalid_archives = invalid_archives or []
     run_ids = [bundle["run_id"] for bundle in bundles]
     if len(run_ids) != len(set(run_ids)):
         raise ShadowEvaluationError("one run cannot be counted more than once")
@@ -867,7 +890,7 @@ def aggregate(
         "raw_replay_runs": sum(bundle["evaluation_class"] == "replay" for bundle in evaluation_bundles),
         "raw_live_shadow_runs": sum(bundle["evaluation_class"] == "live_shadow" for bundle in evaluation_bundles),
         "failed_current_stage_events": len(current_failures),
-        "completed_event_rate": _ratio(len(current_stage_bundles), attempted_events),
+        "completed_event_rate": (None if invalid_archives else _ratio(len(current_stage_bundles), attempted_events)),
         "distinct_issuers": len(issuers),
         "packet_entity_issuers_not_substantive_coverage": len(packet_issuers),
         "substantive_issuer_tickers": sorted(issuers),
@@ -985,6 +1008,7 @@ def aggregate(
         metrics, config["evaluation"]["authority_review"]
     )
     for checks in (continuation_checks, usefulness_checks, authority_checks):
+        checks["archive_integrity_complete"] = not invalid_archives
         checks["sealed_baseline_reassessment_complete"] = metrics["baseline_reassessment_complete"]
         checks["no_deterministic_control_failures"] = metrics["deterministic_control_failures"] == 0
         checks["no_offline_judge_sign_contradictions"] = metrics["offline_judge_sign_contradictions"] == 0
@@ -998,7 +1022,9 @@ def aggregate(
         + config["event_selection"]["maximum_replay_events_in_stage"]
     )
     stage_exhausted = attempted_events >= stage_event_limit
-    if authority_ready:
+    if invalid_archives:
+        status = "blocked_invalid_archived_evidence"
+    elif authority_ready:
         status = "eligible_for_future_authority_review"
     elif usefulness_ready:
         status = "useful_continue_shadow_evaluation"
@@ -1013,6 +1039,13 @@ def aggregate(
         "generated_at": iso_now(),
         "config_sha256": canonical_sha256(config),
         "evaluation_stage": current_stage,
+        "archive_integrity": {
+            "status": "degraded" if invalid_archives else "validated",
+            "invalid_archives": invalid_archives,
+            "valid_bundle_count": len(bundles),
+            "source_archives_rewritten": False,
+            "interpretation": "Invalid archives remain preserved and excluded; subset metrics cannot establish continuation or promotion while history is incomplete.",
+        },
         "included_run_ids": sorted(
             bundle["run_id"] for bundle in evaluation_bundles
         ),
@@ -1073,7 +1106,8 @@ def aggregate(
             "continue_evaluation_evidence_met": continuation_ready,
             "usefulness_evidence_met": usefulness_ready,
             "authority_review_evidence_met": authority_ready,
-            "current_stage_exhausted": stage_exhausted,
+            "current_stage_exhausted": None if invalid_archives else stage_exhausted,
+            "stage_capacity_status": "unverified_incomplete_archived_history" if invalid_archives else "evaluated_from_validated_history",
             "promotion_authorized": False,
             "production_influence": False,
             "canonical_effect": False,
@@ -1139,6 +1173,8 @@ def _report(payload: dict[str, Any]) -> str:
     return f"""{report_heading("shadow_evaluation")}
 
 - Status: `{payload['decision']['status']}`
+- Archive integrity: `{payload.get('archive_integrity', {}).get('status', 'unverified')}`
+- Invalid archives excluded (originals preserved): `{len(payload.get('archive_integrity', {}).get('invalid_archives', []))}`
 - Automatically judged events: `{metrics['automatically_judged_events']}`
 - Duplicate / existing-document resample runs (cost retained): `{metrics['duplicate_semantic_event_runs']}`
 - Current-stage failures: `{metrics['failed_current_stage_events']}`
@@ -1197,6 +1233,7 @@ def main(argv: list[str] | None = None) -> int:
         current_failures=discovered["current_failures"],
         legacy_run_ids=discovered["legacy_run_ids"],
         commissioning_failures=discovered["commissioning_failures"],
+        invalid_archives=discovered["invalid_archives"],
         ledger_rows=ledger_rows,
         snapshot_path=args.snapshot_path,
         outcome_path=args.outcome_path,

@@ -191,6 +191,18 @@ def build_review(*, policy, frozen_policy, records, experiment_report, experimen
     complete = [row for row in active if row["complete"]]
     first = min(complete or active, key=lambda row: (row["earliest_complete_session"], row["signal_session"])) if active else {}
     ready = bool(complete)
+    retained = [row for row in cohorts if row["experiment_version"] != version]
+    retained_complete = [row for row in retained if row["complete"]]
+    retained_first = min(retained_complete or retained,
+        key=lambda row: (row["earliest_complete_session"], row["signal_session"], row["experiment_version"])) if retained else {}
+    retained_summary = {key: retained_first[key] for key in (
+        "cohort_id", "experiment_version", "policy_sha256", "implementation_sha256", "signal_session",
+        "earliest_model_entry_session", "earliest_complete_session", "earliest_publication_at",
+        "observations", "matured_price_paths", "pending_or_missing_outcomes", "correction_required_outcomes", "complete")
+        if key in retained_first}
+    historical_review_key = canonical_sha256({"review_policy": policy,
+        "cohort_id": retained_first.get("cohort_id"), "complete": bool(retained_complete),
+        "record_refs": retained_first.get("observation_refs", [])})
     # This stable key identifies the first complete review even as later cohorts
     # arrive. It is never a promotion, recommendation or delivery identifier.
     review_key = canonical_sha256({"review_policy": policy, "experiment_version": version,
@@ -202,6 +214,10 @@ def build_review(*, policy, frozen_policy, records, experiment_report, experimen
         "active_experiment_version": version, "review_policy": policy,
         "review_policy_sha256": canonical_sha256(policy), "review_key": review_key,
         "ready_for_owner_review": ready, "complete_cohorts": len(complete),
+        "historical_ready_for_owner_review": bool(retained_complete),
+        "historical_complete_cohorts": len(retained_complete), "historical_review_key": historical_review_key,
+        "earliest_retained_cohort": retained_summary,
+        "historical_review_scope": "separate_frozen_version_review_not_validation_of_active_version",
         "active_cohorts": len(active), "cohorts_by_version": dict(Counter(row["experiment_version"] for row in cohorts)),
         "first_review_cohort_id": first.get("cohort_id", ""),
         "earliest_model_entry_session": first.get("earliest_model_entry_session", ""),
@@ -224,11 +240,20 @@ def build_review(*, policy, frozen_policy, records, experiment_report, experimen
 
 def markdown(report):
     lines = ["# First complete momentum cohort: manual review", "",
-        f"Status: **{report['status']}** · active version: `{report['active_experiment_version']}`.",
+        f"Active-version status: **{report['status']}** · active version: `{report['active_experiment_version']}`.",
         f"Generated: {report['generated_at']}. Complete active cohorts: {report['complete_cohorts']}.", "",
         "This packet opens an owner review. It does not establish profitability or change recommendation eligibility, risk limits or execution authority.", "",
         f"Earliest modeled entry: {report['earliest_model_entry_session'] or 'not yet observed'}; fifth session: {report['earliest_complete_session'] or 'unavailable'}; earliest provider publication boundary: {report['earliest_publication_at'] or 'unavailable'}.",
         "The publication boundary is conditional on complete validated data and a successful scheduled refresh.", ""]
+    retained = report.get("earliest_retained_cohort", {})
+    if retained:
+        lines.extend(["## Retained earlier-version review", "",
+            f"Historical owner review ready: **{report['historical_ready_for_owner_review']}**. "
+            f"Complete historical cohorts: {report['historical_complete_cohorts']}. "
+            "This separate packet does not validate the active version; versions are not pooled.",
+            f"Version: `{retained['experiment_version']}`; cohort: `{retained['cohort_id']}`; "
+            f"fifth session: {retained['earliest_complete_session']}; earliest provider publication: {retained['earliest_publication_at']}.",
+            f"Review key: `{report['historical_review_key']}`. Full frozen observations and cost comparisons remain under that version below.", ""])
     for cohort in report["cohorts"]:
         lines.extend([f"## {cohort['experiment_version']} · signal {cohort['signal_session']} · entry {cohort['earliest_model_entry_session']}", "",
             f"Complete: {cohort['complete']}. Frozen observations: {cohort['observations']}; matured: {cohort['matured_price_paths']}; pending/missing: {cohort['pending_or_missing_outcomes']}; correction review: {cohort['correction_required_outcomes']}.",
@@ -266,6 +291,8 @@ def run(root: Path, current: datetime, output: Path | None = None):
         atomic_write_text(output / "report.md", markdown(report))
         status_fields = ("schema_version", "generated_at", "status", "market_session", "active_experiment_version",
             "review_key", "complete_cohorts", "ready_for_owner_review", "earliest_model_entry_session",
+            "historical_ready_for_owner_review", "historical_complete_cohorts", "historical_review_key",
+            "earliest_retained_cohort", "historical_review_scope",
             "earliest_complete_session", "earliest_publication_at", "automatic_action_allowed",
             "incremental_value_established", "automatic_promotion", "changes_canonical_eligibility")
         atomic_write_json(output / "status.json", {key: report[key] for key in status_fields})

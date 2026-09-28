@@ -26,7 +26,8 @@ def main(argv=None):
                   else "review_io_error" if isinstance(exc, OSError) else "review_internal_error")
         atomic_write_json(output / "status.json", {"schema_version": SCHEMA, "status": "failed",
             "generated_at": now_et().isoformat(), "reason": reason, "prior_report_is_historical": True,
-            "ready_for_owner_review": False, "complete_cohorts": 0, "incremental_value_established": False,
+            "ready_for_owner_review": False, "historical_ready_for_owner_review": False,
+            "complete_cohorts": 0, "historical_complete_cohorts": 0, "incremental_value_established": False,
             "automatic_action_allowed": False, "automatic_promotion": False, "changes_canonical_eligibility": False})
         print(f"momentum_manual_review_failed=true reason={reason} email_sent=false trade_placed=false")
         return 1

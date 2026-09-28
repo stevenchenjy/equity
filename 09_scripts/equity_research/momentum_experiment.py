@@ -434,7 +434,7 @@ def comparison_markdown(summary):
 
 def _run(root: Path, current: datetime, output: Path):
     implementation = {name: sha256_file(Path(__file__).parent / name) for name in
-        ("momentum_experiment.py", "tactical_review.py", "investment_plans.py", "daily_common.py")}
+        ("momentum_experiment.py", "tactical_review.py", "investment_plans.py", "daily_common.py", "archived_momentum.py")}
     implementation_hash = canonical_sha256(implementation)
     source_paths = {"market_sha256": SNAPSHOT, "history_sha256": HISTORY, "decision_sha256": DECISION, "news_sha256": NEWS}
     inputs = {key: sha256_file(root / path) for key, path in source_paths.items()}
@@ -475,6 +475,21 @@ def _run(root: Path, current: datetime, output: Path):
                 if outcome:
                     outcome["evaluation_inputs"] = inputs
                     append_chained(ledger, records, outcome)
+        # Software repairs start a new implementation version, but never orphan
+        # already captured cohorts. Old outcomes use their registered old code.
+        from archived_momentum import evaluate_archived
+        archived_outcomes = evaluate_archived(root=root, records=records, history=history,
+                market=market, current=current, inputs=inputs)
+        preview = copy.deepcopy(records)
+        for outcome in archived_outcomes:
+            candidate = copy.deepcopy(outcome)
+            candidate["previous_hash"] = preview[-1]["record_hash"] if preview else ""
+            candidate["record_hash"] = canonical_sha256(candidate)
+            preview.append(candidate)
+        validate_chain(preview, current)  # Validate the whole append before changing durable history.
+        for outcome in archived_outcomes:
+            append_chained(ledger, records, outcome)
+        complete = {r["observation_id"] for r in records if r["kind"] == "outcome"}
         validate_chain(records, current)
         report = {"schema_version": "equity_momentum_report_v1", "generated_at": current.isoformat(),
             "market_session": history["market_session"], "status": "experimental",

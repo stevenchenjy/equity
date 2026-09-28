@@ -49,14 +49,19 @@ def _usd(value: Decimal | None) -> float | None:
 
 def _next_check(current: datetime, *, plan: bool = False, scheduler_state: dict | None = None) -> str:
     # Owner times are suggested appointments, never order expiry. Automatic
-    # boundaries come from the installed scheduler implementation, not email time.
-    from run_daily_refresh_scheduler import WEEKDAY_SLOTS, WEEKEND_SLOTS
+    # Routine boundaries come from the installed scheduler. Later publication
+    # slots are recovery attempts: a successful in-flight refresh retires them
+    # only after this report is composed, so they are not promised next checks.
+    from run_daily_refresh_scheduler import (WEEKDAY_SLOTS, WEEKEND_SLOTS,
+                                            EOD_PUBLICATION_RETRY_SLOTS)
+    recovery_slots = set(EOD_PUBLICATION_RETRY_SLOTS[1:])
     day = current.date()
     while True:
         if plan:
             slots = ["09:35"] if is_us_market_session_date(day) else []
         else:
-            slots = WEEKEND_SLOTS if day.weekday() >= 5 else WEEKDAY_SLOTS
+            configured = WEEKEND_SLOTS if day.weekday() >= 5 else WEEKDAY_SLOTS
+            slots = [slot for slot in configured if slot not in recovery_slots]
         completed = set(((scheduler_state or {}).get("dates", {}).get(day.isoformat(), {})).get("refresh_slots_completed", []))
         for slot in slots:
             stamp = datetime.combine(day, time.fromisoformat(slot), ET)
@@ -273,7 +278,7 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
         "top_opportunities": [copy.deepcopy(r) for r in active if r["kind"] == "opportunity_research"][:3],
         "plan_reassessment_status": "current" if plan_context_verified else "unverified",
         "plan_reassessment_queue": [copy.deepcopy(r) for r in active if r["kind"] == "plan_reassessment"],
-        "next_automatic_review_at": research_check, "schedule_basis": "Existing full-refresh scheduler boundary; actual start depends on 900-second launchd polling and host availability.", "attention_policy": "Routine research refreshes automatically; combine outstanding account checks into a brief market-session review. No continuous intraday monitoring is assumed."}
+        "next_automatic_review_at": research_check, "schedule_basis": "Next routine full-refresh boundary. Later publication slots are conditional recovery checks and are skipped after success; actual start depends on 900-second launchd polling and host availability.", "attention_policy": "Routine research refreshes automatically; combine outstanding account checks into a brief market-session review. No continuous intraday monitoring is assumed."}
     run = {"run_id": canonical_sha256(source), "observed_at": now, "source": source, "active_item_count": len(active)}
     if not any(r["run_id"] == run["run_id"] for r in state["runs"]):
         state["runs"].append(run)

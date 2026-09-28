@@ -1,0 +1,25 @@
+{
+  "schema_version": "equity_frozen_implementation_archives_v1",
+  "archives": [
+    {
+      "experiment_version": "eod-breakout-v1-20260927",
+      "git_commit": "16e3842a5be2ecd00f663d77f363661122f9c076",
+      "implementation_files": {
+        "momentum_experiment.py": "b5dd1c48878a179fa5fdde0c1d039e1023a4b1f54f4ec9e20df2616c4a8dcfee",
+        "tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
+        "investment_plans.py": "c65aab6efc27cf7cf517528c01e423b9b62ceea253bcb1af3cb45efed086d23f",
+        "daily_common.py": "c8dd3288bc0a80ee4a1f44a31fff0efd3e0df77de41bf6ad4bdf27aa6de4d9cb"
+      }
+    },
+    {
+      "experiment_version": "eod-breakout-v2-20260927",
+      "git_commit": "8ac043a2a4b4a7c726efeaa73bbbef41acf68d77",
+      "implementation_files": {
+        "momentum_experiment.py": "b5dd1c48878a179fa5fdde0c1d039e1023a4b1f54f4ec9e20df2616c4a8dcfee",
+        "tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
+        "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06"
+      }
+    }
+  ]
+}

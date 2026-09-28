@@ -122,6 +122,43 @@ class MomentumExperimentReviewTests(unittest.TestCase):
         self.assertEqual(result["cohorts_by_version"], {"active-version": 1, "old-version": 1})
         self.assertTrue(next(row for row in result["cohorts"] if row["experiment_version"] == "old-version")["complete"])
 
+    def test_v2_first_cohort_stays_reviewable_october_third_after_software_v3(self):
+        from tactical_review import _last_sessions
+        def captured(version, stamp):
+            values = fixtures.fixture()
+            values["policy"]["version"] = version
+            values["current"] = datetime.fromisoformat(stamp)
+            values["inputs"]["implementation_sha256"] = ("a" if "v2" in version else "c") * 64
+            values["history"]["market_session"] = "2026-09-25"
+            values["history"]["generated_at"] = stamp
+            for bar, session in zip(values["history"]["tickers"]["TEST"]["bars"], _last_sessions(date(2026, 9, 25), 20)):
+                bar["session_date"] = session
+            values["market"][0]["market_session_date"] = "2026-09-25"
+            values["market"][0]["data_timestamp"] = stamp
+            values["decision"]["generated_at"] = stamp
+            values["decision"]["market_gate"]["expected_market_session"] = "2026-09-25"
+            return experiment.observe(**values)[0]
+        old = captured("eod-breakout-v2-20260927", "2026-09-27T15:00:00-04:00")
+        active = captured("eod-breakout-v3-20260928", "2026-09-28T15:00:00-04:00")
+        current = datetime(2026, 10, 3, 12, tzinfo=experiment.ET)
+        values = payloads([*old, *active, *(outcome(row, current=current) for row in old)],
+                          active_policy=active[0]["policy"], current=current)
+        values["experiment_report"]["market_session"] = "2026-10-02"
+        values["experiment_status"]["market_session"] = "2026-10-02"
+        result = review.build_review(**values)
+        self.assertFalse(result["ready_for_owner_review"])
+        self.assertEqual(result["complete_cohorts"], 0)
+        self.assertTrue(result["historical_ready_for_owner_review"])
+        self.assertEqual(result["historical_complete_cohorts"], 1)
+        retained = result["earliest_retained_cohort"]
+        self.assertEqual(retained["experiment_version"], "eod-breakout-v2-20260927")
+        self.assertEqual(retained["earliest_complete_session"], "2026-10-02")
+        self.assertEqual(retained["earliest_publication_at"], "2026-10-03T11:15:00-04:00")
+        self.assertTrue(retained["complete"])
+        self.assertIn("does not validate the active version", review.markdown(result))
+        self.assertFalse(result["changes_canonical_eligibility"])
+        self.assertFalse(result["incremental_value_established"])
+
     def test_late_addition_uses_separate_entry_window(self):
         rows = observations()
         rows[1]["recorded_at"] = "2026-09-24T13:30:00-04:00"

@@ -107,7 +107,7 @@ class WorkflowBlockerScopeTests(unittest.TestCase):
         return {"decision_code": "action_review_candidate", "headline": "Baseline research", "decisive_advice": "Baseline",
             "decision_fingerprint": "baseline", "generated_at": CURRENT.isoformat(), "account_conflicts": [],
             "market_gate": {"passed": True}, "evidence_gate": {"passed": True}, "fundamental_gate": {"passed": True},
-            "held_positions": [{"ticker": "SMTC", "current_shares": 4, "asset_role": "active_stock", "action": "hold", "reason": "baseline"}],
+            "held_positions": [{"ticker": "SMTC", "current_shares": 4, "current_price": "250", "asset_role": "active_stock", "action": "hold", "reason": "baseline"}],
             "account": {"account_total_value": 4000, "cash_available": 3000, "cash_reserved": 587, "cash_basis": "owner_recorded"},
             "long_horizon_research": {"views": {}, "warnings": []}, "eligible_action_review_candidates": [],
             "eligible_new_position_review_candidates": ["SPY"],
@@ -151,8 +151,9 @@ class WorkflowBlockerScopeTests(unittest.TestCase):
         payload = append_plan(ledger(record("SMTC")), spy)
         (self.root / RELATIVE_PATH).write_text(json.dumps(payload))
         value = self.decision()
+        value["account"]["cash_available"] = 2900
         value["held_positions"].append({"ticker": "SPY", "asset_role": "core_allocation", "current_shares": 1,
-                                        "action": "hold", "reason": "Existing core allocation"})
+                                        "current_price": "100", "action": "hold", "reason": "Existing core allocation"})
         self.apply(value)
         self.assertEqual(value["eligible_new_position_review_candidates"], ["SPY"])
         self.assertEqual(value["eligible_action_review_candidates"], [])
@@ -164,7 +165,8 @@ class WorkflowBlockerScopeTests(unittest.TestCase):
         payload = append_plan(payload, spy)
         (self.root / RELATIVE_PATH).write_text(json.dumps(payload))
         later = self.decision()
-        later["held_positions"].append({"ticker": "SPY", "asset_role": "core_allocation", "current_shares": 1, "action": "hold"})
+        later["account"]["cash_available"] = 2900
+        later["held_positions"].append({"ticker": "SPY", "asset_role": "core_allocation", "current_shares": 1, "current_price": "100", "action": "hold"})
         self.apply(later)
         self.assertFalse(later["eligible_new_position_review_candidates"])
         self.assertEqual(later["watch_candidates"][0]["suggested_whole_shares"], "0")

@@ -56,6 +56,9 @@ class SenderPublicationTests(unittest.TestCase):
                         ("decision_sha256", sender.DAILY_DECISION_JSON_PATH),
                         ("brief_text_sha256", sender.DAILY_BRIEF_TEXT_PATH),
                         ("brief_html_sha256", sender.DAILY_BRIEF_HTML_PATH))}
+                    expected_bytes = {suffix: path.read_bytes() for suffix, path in (
+                        (".json", sender.DAILY_DECISION_JSON_PATH),
+                        (".txt", sender.DAILY_BRIEF_TEXT_PATH), (".html", sender.DAILY_BRIEF_HTML_PATH))}
                     def replace_after_validation():
                         sender.DAILY_DECISION_JSON_PATH.write_text('{"replacement":true}')
                         sender.DAILY_BRIEF_TEXT_PATH.write_text("replacement body")
@@ -71,6 +74,9 @@ class SenderPublicationTests(unittest.TestCase):
                     rows = sender.read_csv(sender.DAILY_DELIVERY_LEDGER_PATH)[-2:]
                     for row in rows:
                         self.assertEqual({key: row[key] for key in expected_hashes}, expected_hashes)
+                    archive = sender.DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local"
+                    for field, suffix in (("decision_sha256", ".json"), ("brief_text_sha256", ".txt"), ("brief_html_sha256", ".html")):
+                        self.assertEqual((archive / (expected_hashes[field] + suffix)).read_bytes(), expected_bytes[suffix])
                     self.assertTrue(rows[-1]["status"].endswith("delivery_unknown" if fail_smtp else "sent"))
 
     def test_changed_artifacts_while_waiting_for_lock_block_before_credentials(self):

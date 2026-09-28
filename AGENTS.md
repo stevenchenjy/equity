@@ -4,7 +4,7 @@ Guidance for AI assistants and scripts working inside this project.
 
 ## Purpose
 
-This repo is for education, research, risk calculation, and journaling only. It supports a small cash-account portfolio currently operating at approximately the $3,000 scale. Current account value must be derived from manually maintained cash and shares at current canonical prices, never from this descriptive scale.
+This repo is for education, research, risk calculation, and journaling only. It supports a small cash-account portfolio. Current account value must be derived from the approved private account record and shares at current canonical prices, never from a descriptive scale or an older chat summary.
 
 Codex may prepare research, calculate risk, screen a local watchlist, summarize filings, draft memos, and create trade plans for human review. Codex may not execute trades.
 
@@ -54,6 +54,20 @@ Codex may prepare research, calculate risk, screen a local watchlist, summarize 
 - Scripts must not store credentials.
 - Network use is allowed only for public research sources, such as SEC endpoints, and should be explicit in script arguments or comments.
 - Scripts must not add live trading, margin, options, short selling, or broker API functionality.
+
+## Completion evidence for pipeline changes
+
+- Verify a reported fault across its real path: retained input, derived decision,
+  final text/HTML, deployment commit and delivery receipt when relevant. A
+  passing suite or successful refresh alone does not establish factual accuracy.
+- Add a regression that fails on the observed defect and test material countercases.
+  Preserve exact private sent inputs; do not overwrite history to make it agree.
+- Report separately what was coded, tested, deployed, recomposed and actually
+  delivered. Never describe a preview or queued research item as a completed send
+  or analytical conclusion. Distinguish processed dossiers, new financial fields,
+  recorded assessments and investment-performance evidence.
+- Recurring analyst work follows `00_project_control/analyst_followthrough.md`.
+  A scheduled analyst wake is not an explicit owner-requested email resend.
 
 ## graphify
 

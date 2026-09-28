@@ -2,7 +2,7 @@
 
 The existing SEC collectors supply the network and immutable raw receipts. This
 pass admits only supported consolidated facts from an already cached official
-report. A three-issuer work budget limits processing, not investment eligibility.
+report. A bounded issuer work budget limits processing, not investment eligibility.
 """
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ OBJECTIVE_FIELDS = ("revenue_latest", "revenue_prior_year", "revenue_yoy_pct", "
     "revenue_yoy_prior_quarter_pct", "net_margin_prior_quarter_pct")
 REQUIRED_FIELDS = ("cash_latest", "ttm_revenue", "ttm_revenue_yoy_pct", "ttm_free_cash_flow",
     "ttm_free_cash_flow_margin_pct", "diluted_shares_latest", "share_dilution_pct", "debt_latest")
+MAX_WORK_BUDGET = 10
 
 
 def numeric(value):
@@ -76,7 +77,13 @@ def _source_fingerprint(root: Path, ticker: str, row: dict, current: datetime) -
         "selection_time_valid": bool(_time(receipt.get("selected_at")) and _time(receipt.get("selected_at")) <= current
             and all(_time(r.get("retrieved_at")) and _time(r.get("retrieved_at")) <= _time(receipt.get("selected_at")) for r in sources)),
         "material_ledger": [r for r in read_csv(root / "03_source_data/equity_research/daily_evidence_ledger.csv") if r.get("ticker") == ticker],
-        "official_news": [r for r in read_json(root / "03_source_data/equity_research/official_news_events.local.json", {}).get("events", []) if r.get("ticker") == ticker],
+        # The collector updates last_seen_at on every successful poll of the
+        # same announcement. That timestamp is collection activity, not new
+        # accounting evidence. Keep all event identity/content, publication
+        # and first-observation fields so genuine changes still reopen work.
+        "official_news": [{k: v for k, v in r.items() if k != "last_seen_at"}
+            for r in read_json(root / "03_source_data/equity_research/official_news_events.local.json", {}).get("events", [])
+            if r.get("ticker") == ticker],
         "raw_sources": [{**{k: r.get(k) for k in ("raw_sha256", "raw_path", "source_url", "cik", "kind")},
             "actual_sha256": actual_hash(r.get("raw_path")),
             "fresh": bool(_time(r.get("retrieved_at")) and timedelta(0) <= current-_time(r.get("retrieved_at")) <= timedelta(hours=MAX_AGE_HOURS))}
@@ -346,7 +353,10 @@ def validate_report(report: dict, *, root: Path | None = None, current: datetime
             raise ValueError
         if any(not isinstance(r, dict) or not _ticker(r.get("ticker")) for r in report["attempts_latest_run"]):
             raise ValueError
-        if report["selected_tickers"] != [r["ticker"] for r in report["attempts_latest_run"]] or len(report["selected_tickers"]) > 3:
+        budget = report.get("work_budget_tickers")
+        if (type(budget) is not int or not 1 <= budget <= MAX_WORK_BUDGET
+                or report["selected_tickers"] != [r["ticker"] for r in report["attempts_latest_run"]]
+                or len(report["selected_tickers"]) > budget):
             raise ValueError
         for name in ("history_records", "objective_dossiers_completed", "financial_fields_completed", "canonical_numeric_updates"):
             if type(report[name]) is not int or report[name] < 0:
@@ -386,7 +396,7 @@ def render_report(report: dict) -> str:
 
 def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: int = 3,
         apply_objective_updates: bool = False) -> dict:
-    if type(max_tickers) is not int or not 1 <= max_tickers <= 3:
+    if type(max_tickers) is not int or not 1 <= max_tickers <= MAX_WORK_BUDGET:
         raise ValueError("research_work_budget_out_of_bounds")
     input_root, output_root = input_root.resolve(), output_root.resolve()
     if apply_objective_updates and input_root != output_root:

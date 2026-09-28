@@ -1,5 +1,8 @@
 """Brief English cards for the maintained workflow, without raw diagnostics."""
 from __future__ import annotations
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
+import re
 from typing import Any
 from work_queue_reporting import cash_lines as work_cash_lines, research_lines as work_research_lines
 
@@ -69,6 +72,11 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
 
     orders=decision.get('tactical_review',{}).get('open_orders',{})
     order_lines=[f"Order snapshot: {orders.get('as_of') or 'unavailable'}; current broker status must be rechecked."]
+    observation = orders.get('current_inventory_observation', {})
+    if (isinstance(observation, dict) and observation.get('complete') is True
+            and observation.get('orders_shown') == [] and observation.get('as_of')):
+        order_lines.append(f"Broker page observation at {observation['as_of']}: no orders shown then. "
+                           "Recheck before acting; this does not establish older tickets' terminal outcomes.")
     terminal=[]
     for row in orders.get('orders',[]):
         status=row.get('status','unknown')
@@ -97,6 +105,69 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     if terminal:
         order_lines.append("Historical terminal records: " + "; ".join(terminal) + ". These are not new instructions.")
     order_lines.append("Replacement: confirm cancellation and available shares first. A target limit does not protect against a decline; no fill means exposure remains.")
+    # Maintained analyst plans have their own source-bound authority. The
+    # workflow intentionally clears baseline held-position eligibility; this
+    # display must neither hide a valid retained draft nor renew an expired one.
+    for plan in plans:
+        if (continuity.get('schema_version') != 'equity_plan_continuity_v1'
+                or plan.get('status') != 'maintained'
+                or plan.get('action') not in {'protect_review', 'exit_review', 'trim_review'}
+                or plan.get('automatic_action_allowed') is not False
+                or plan.get('validity') != 'research_only_requires_current_verification'
+                or not re.fullmatch(r'[0-9a-f]{64}', str(plan.get('record_hash', '')))):
+            continue
+        draft = plan.get('historical_order_draft')
+        try:
+            from investment_plans import regular_close
+            def positive(value):
+                result = Decimal(str(value))
+                if not result.is_finite() or result <= 0:
+                    raise ValueError('invalid_draft_value')
+                return result
+            if (not isinstance(draft, dict) or draft.get('side') != 'sell'
+                    or draft.get('type') not in {'STOP', 'LIMIT', 'MARKETABLE_LIMIT'}
+                    or draft.get('time_in_force') != 'DAY'):
+                continue
+            qty = positive(draft['quantity'])
+            held_qty = positive(held.get(plan['ticker'], {}).get('current_shares', plan.get('current_shares')))
+            if qty != qty.to_integral_value() or qty != positive(plan['proposed_change_shares']) or qty > held_qty:
+                continue
+            generated = datetime.fromisoformat(decision['generated_at'])
+            review = datetime.fromisoformat(plan['review_at'])
+            if (generated.tzinfo is None or review.tzinfo is None
+                    or generated >= review or generated >= regular_close(draft['session_date'])):
+                continue
+            if plan.get('time_exit_at'):
+                exit_at = datetime.fromisoformat(plan['time_exit_at'])
+                if exit_at.tzinfo is None or generated >= exit_at:
+                    continue
+            positive(draft['stop_price'] if draft['type'] == 'STOP' else draft['limit_price'])
+            for field in ('limit_price', 'stop_price'):
+                if draft.get(field) is not None:
+                    positive(draft[field])
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            continue
+        levels = '; '.join(f"{label} {price(draft[field])}" for field, label in
+                           (('limit_price', 'limit'), ('stop_price', 'stop')) if draft.get(field) is not None)
+        order_lines.append(f"Maintained conditional plan — {plan['ticker']}: sell {quantity(qty)} shares; "
+            f"{draft['type']}; {levels}; {draft['time_in_force']}; session {draft['session_date']}; "
+            f"review {plan['review_at']}" + (f"; exit/review {plan['time_exit_at']}" if plan.get('time_exit_at') else '')
+            + ". Recorded analyst draft, not submitted; this does not create new canonical trade eligibility. "
+              "Verify a fresh quote, available shares and current orders before any manual action.")
+        purpose = plan.get('purpose') if isinstance(plan.get('purpose'), dict) else {}
+        for field, label in (('entry_validity', 'Validity'), ('failure_condition', 'Failure condition'), ('exit_rule', 'Exit rule')):
+            if isinstance(purpose.get(field), str) and purpose[field].strip():
+                order_lines.append(f"{plan['ticker']} {label.lower()}: {purpose[field]}")
+        blocker_labels = {'fresh_quote_and_available_shares_required': 'fresh quote and available shares',
+            'order_snapshot_requires_recheck': 'current order inventory recheck',
+            'cash_not_confirmed_for_tactical_execution': 'cash confirmation for tactical execution',
+            'existing_tactical_risk_unconfirmed': 'existing tactical risk confirmation',
+            'sell_order_terminal_status_unverified': 'historical sell-ticket terminal evidence',
+            'outstanding_sell_reserves_current_shares': 'shares reserved by the unresolved sell record'}
+        known = sorted(set(plan.get('blockers', []) + continuity.get('global_blockers', [])))
+        if known:
+            order_lines.append(f"{plan['ticker']} outstanding checks: " + '; '.join(
+                blocker_labels.get(code, str(code).replace('_', ' ')) for code in known) + ".")
     # Reuse the existing presentation gate; never expose rejected/stale positive
     # quantities just because a lower-level screen has an optimistic number.
     for ticker in sorted(allowed):

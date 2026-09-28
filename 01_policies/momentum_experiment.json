@@ -1,6 +1,6 @@
 {
   "schema_version": "equity_momentum_experiment_v1",
-  "version": "eod-breakout-v2-20260927",
+  "version": "eod-breakout-v3-20260928",
   "status": "experimental",
   "research_only": true,
   "automatic_action_allowed": false,
@@ -12,7 +12,11 @@
   "holding_sessions": 5,
   "profit_reference_r": 2.0,
   "maximum_gap_r": 0.25,
-  "one_way_cost_bps": [10, 25, 50],
+  "one_way_cost_bps": [
+    10,
+    25,
+    50
+  ],
   "commission_per_share_usd": 0.0,
   "threshold_basis": "Predeclared EOD hypotheses, not Ross parameters or optimized thresholds. Nineteen prior observations use the existing validated 20-bar sidecar without including the signal bar. RVOL 2 is an exploratory daily-volume ablation; Ross intraday RVOL is not equivalent. Five sessions preserves the existing tactical maximum. 2R is a hypothetical profit-management reference, not observed resistance. Gap tolerance 0.25R tests a bounded delayed entry. Costs are per-side spread/slippage/fee sensitivities, not verified executions; no paid services added.",
   "promotion": "No automatic promotion, retuning, risk changes or allocation changes. Review net incremental evidence across distinct nonoverlapping forward cohorts and market conditions, include failures/missing coverage, execution feasibility and costs. Version any change before new observations. Owner approval required for capital/risk changes."

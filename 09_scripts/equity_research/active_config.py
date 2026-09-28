@@ -62,6 +62,9 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     if review_by < effective:
         raise ActiveConfigError("review_by cannot precede effective_from")
     account = config.get("account", {})
+    research_budget = config.get("workflow", {}).get("objective_research_max_tickers", 3)
+    if type(research_budget) is not int or not 1 <= research_budget <= 10:
+        raise ActiveConfigError("objective research budget must be an integer from 1 to 10")
     if "research_risk_limits" in account:
         validate_research_risk_limits(account["research_risk_limits"])
     boundaries = config.get("boundaries", {})

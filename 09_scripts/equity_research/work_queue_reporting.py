@@ -92,7 +92,10 @@ def cash_lines(decision: dict) -> list[str]:
             f"{_money(cash.get('unallocated_research_cash_usd'))} awaiting qualified opportunities.",
             "Pending checks: " + (", ".join(reasons) or "the existing evidence and execution checks")
             + ". Reasons overlap; they are not additional dollar allocations.",
-            f"Next scheduled research check: {queue.get('next_automatic_review_at') or 'unverified'}; execution funds still require confirmation."]
+            f"Next routine research window: {queue.get('next_automatic_review_at') or 'unverified'} "
+            f"(schedule as of {queue.get('generated_at') or decision.get('generated_at') or 'unverified'}). "
+            "Earlier publication slots are conditional recovery checks, skipped after a successful refresh. "
+            "Start depends on host availability and scheduler polling; execution funds still require confirmation."]
 
 
 def research_lines(decision: dict, *, detailed: bool = False) -> list[str]:

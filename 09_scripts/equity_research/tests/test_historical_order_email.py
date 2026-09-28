@@ -35,6 +35,17 @@ class HistoricalOrderEmailTests(unittest.TestCase):
         self.assertIn('pending in snapshot',self.render({'ticker':'TEST','status':'pending','quantity':2}))
         self.assertIn('Historical terminal records: TEST filled',self.render({'ticker':'TEST','status':'filled'}))
 
+    def test_recorded_empty_inventory_survives_without_any_historical_ticket(self):
+        observation = {'as_of': '2026-09-28T14:54:00-04:00', 'complete': True,
+                       'orders_shown': [], 'statement': "You don't have any orders."}
+        decision = {'tactical_review': {'open_orders': {'orders': [],
+                    'current_inventory_observation': observation}}}
+        text = next(c['body'] for c in cards(decision, {'plans': []}) if c['title']=='Orders and proposals')
+        self.assertIn('Broker page observation at 2026-09-28T14:54:00-04:00: no orders shown then', text)
+        observation['complete'] = False
+        text = next(c['body'] for c in cards(decision, {'plans': []}) if c['title']=='Orders and proposals')
+        self.assertNotIn('no orders shown then', text)
+
 
 if __name__ == '__main__':
     unittest.main()

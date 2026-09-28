@@ -7,6 +7,7 @@
     "baseline": "deterministic_public_evidence",
     "market_provider": "Massive Basic end-of-day, read-only",
     "official_fundamentals_provider": "SEC submissions and companyfacts",
+    "objective_research_max_tickers": 10,
     "portfolio_execution": "manual only",
     "broker_connectivity_allowed": false,
     "automatic_orders_allowed": false

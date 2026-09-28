@@ -44,6 +44,44 @@ OUTCOME_PATH = (
 WORKFLOW_EVALUATION_PATH = ROOT / "08_reviews/current/workflow_evaluation.local.json"
 DEPLOYMENT_RECEIPT_PATH = ROOT / "00_project_control/run_logs/verified_deployment.local.json"
 RUNTIME_EXECUTION_PATH = ROOT / "00_project_control/run_logs/runtime_execution_log.csv"
+SHADOW_EVALUATION_PATH = ROOT / "08_reviews/shadow_llm/reviews.local/evaluation.json"
+
+
+def shadow_evaluation_health(payload: Any, *, current: datetime) -> dict[str, Any]:
+    """Report independent SHADOW health without altering canonical eligibility."""
+    result = {"status": "missing_or_invalid", "freshness": "stale_or_unverified",
+        "generated_at": "", "archive_integrity_status": "unverified", "invalid_archive_count": None,
+        "valid_bundle_count": None, "evaluation_decision_status": "unverified",
+        "report_path": "08_reviews/shadow_llm/reviews.local/evaluation.json",
+        "scope": "independent_shadow_evaluation_advisory_only",
+        "automatic_action_allowed": False, "changes_canonical_eligibility": False,
+        "email_eligible": False, "production_authority": False}
+    if not isinstance(payload, dict) or payload.get("schema_version") != "phase5r_shadow_incremental_value_evaluation_v3":
+        return result
+    result["generated_at"] = payload.get("generated_at", "")
+    try:
+        stamp = datetime.fromisoformat(str(result["generated_at"]).replace("Z", "+00:00"))
+        fresh = stamp.tzinfo is not None and stamp <= current and stamp.astimezone(current.tzinfo).date() == current.date()
+    except (ValueError, TypeError):
+        fresh = False
+    result["freshness"] = "current" if fresh else "stale_or_unverified"
+    integrity = payload.get("archive_integrity")
+    if not isinstance(integrity, dict):
+        result["reason"] = "archive_integrity_health_not_reported"
+        return result
+    invalid, valid = integrity.get("invalid_archives"), integrity.get("valid_bundle_count")
+    if (integrity.get("status") not in {"validated", "degraded"}
+            or not isinstance(invalid, list) or not all(isinstance(row, dict) for row in invalid)
+            or type(valid) is not int or valid < 0
+            or (integrity["status"] == "validated" and invalid)):
+        result["reason"] = "archive_integrity_health_invalid"
+        return result
+    result.update(archive_integrity_status=integrity["status"], invalid_archive_count=len(invalid),
+                  valid_bundle_count=valid, status=integrity["status"] if fresh else "stale_or_unverified")
+    decision = payload.get("decision")
+    if isinstance(decision, dict) and isinstance(decision.get("status"), str):
+        result["evaluation_decision_status"] = decision["status"]
+    return result
 
 
 def momentum_review_health(payload: Any, refresh: dict, *, current: datetime,
@@ -67,6 +105,9 @@ def momentum_review_health(payload: Any, refresh: dict, *, current: datetime,
     result["ready_for_owner_review"] = (result.get("status") == "ready_for_owner_review"
                                         and result["freshness"] == "current"
                                         and result.get("ready_for_owner_review") is True)
+    result["historical_ready_for_owner_review"] = (result.get("status") in {
+        "waiting_for_complete_cohort", "ready_for_owner_review"} and result["freshness"] == "current"
+        and result.get("historical_ready_for_owner_review") is True)
     result["automatic_action_allowed"] = False
     result["incremental_value_established"] = False
     result["changes_canonical_eligibility"] = False
@@ -256,6 +297,10 @@ def main() -> int:
         if isinstance(row, dict)
     )
     current = now_et()
+    try:
+        shadow_health = shadow_evaluation_health(read_json(SHADOW_EVALUATION_PATH, {}), current=current)
+    except (OSError, ValueError, TypeError):
+        shadow_health = shadow_evaluation_health({}, current=current)
     expected_session = latest_published_market_session(current).isoformat()
     if any(row.get("market_session_date") != expected_session for row in market_rows) or not market_rows:
         blockers.append("market_snapshot_not_expected_published_session")
@@ -423,6 +468,7 @@ def main() -> int:
             "historical_archive": config["model_policy"]["historical_archive"],
         },
         "momentum_experiment": momentum,
+        "shadow_evaluation": shadow_health,
         "momentum_experiment_review": experiment_review,
         "research_backlog": backlog,
         "capital_work_queue": work_queue,
@@ -444,6 +490,7 @@ def main() -> int:
         f"- Valuation: `{status['valuation']['complete_records']}/{status['valuation']['total_records']}` complete records.",
         f"- Outcome evidence: `{status['outcomes']['recommendation_snapshots']}` snapshots, `{status['outcomes']['evaluated_horizon_rows']}` evaluated horizon rows.",
         f"- Production model: retired; calls allowed `{status['model']['calls_allowed']}`; retired-pilot metered cost `${status['model']['metered_cost_usd']}`. These are not current SHADOW usage or costs; see `08_reviews/shadow_llm/reviews.local/evaluation.md`.",
+        f"- Independent SHADOW evaluation: `{shadow_health['status']}`; freshness `{shadow_health['freshness']}`; generated `{shadow_health['generated_at'] or 'unavailable'}`; archive integrity `{shadow_health['archive_integrity_status']}`; valid bundles `{shadow_health['valid_bundle_count']}`, invalid archives `{shadow_health['invalid_archive_count']}`. Advisory evaluation only; it does not block canonical research or grant model, recommendation or email authority. See `{shadow_health['report_path']}`.",
         f"- Current blockers: `{', '.join(status['blockers']) or 'none'}`.",
         f"- Research coverage: `{len(held_companies & valued)}/{len(held_companies)}` held-company valuations complete; gaps `{', '.join(research_gaps) or 'see company thesis review status'}`.",
         f"- Maintained business views: `{health['maintained_research']['reviewed_business_views']}/{len(held_companies)}` reviewed/monitor; reviewed company-specific valuations: `{health['maintained_research']['reviewed_company_valuations']}/{len(held_companies)}`. A business conclusion does not establish an attractive entry price.",
@@ -455,7 +502,7 @@ def main() -> int:
         f"- Workflow evaluation: `{health['workflow_evaluation']['status']}`; `{health['workflow_evaluation']['reason']}`; on-time `{evaluation.get('operations', {}).get('on_time_cycles', 'unknown')}/{evaluation.get('operations', {}).get('due_calendar_cycles', 'unknown')}` due calendar cycles; late `{evaluation.get('operations', {}).get('late_cycles', 'unknown')}`. A stale report is historical only.",
         f"- Actual portfolio performance readiness: `{health['workflow_evaluation']['portfolio_performance'].get('status', 'unknown')}`; planning cash is excluded.",
         f"- Momentum experiment: `{momentum.get('status', 'missing')}`; evidence freshness `{momentum['freshness']}`; frozen observations `{momentum.get('observations', 'unknown')}`, forward outcomes `{momentum.get('outcomes', 'unknown')}`. No demonstrated incremental value or actionable quantities; see `08_reviews/momentum_experiment.local/report.md`. Advisory failure does not suppress existing risk reporting.",
-        f"- First-cohort manual review: `{experiment_review.get('status', 'missing')}`; evidence freshness `{experiment_review['freshness']}`; ready for owner review `{experiment_review['ready_for_owner_review']}`. One complete five-session cohort permits review without an additional sample-count or profitability requirement; it does not promote a strategy. See `08_reviews/momentum_experiment_review.local/report.md`.",
+        f"- First-cohort manual review: `{experiment_review.get('status', 'missing')}`; evidence freshness `{experiment_review['freshness']}`; active version ready `{experiment_review['ready_for_owner_review']}`; retained earlier-version review ready `{experiment_review['historical_ready_for_owner_review']}`. One complete five-session cohort permits review without an additional sample-count or profitability requirement; earlier versions remain separate and do not validate the active version. No strategy promotion. See `08_reviews/momentum_experiment_review.local/report.md`.",
         f"- Recurring objective research: `{backlog.get('status', 'missing')}`; freshness `{backlog['freshness']}`; see `08_reviews/current/research_backlog.local.md`. Source-derived numerical completion does not approve a thesis or valuation.",
         f"- Cash and reassessment queue: `{work_queue.get('status', 'missing')}`; freshness `{work_queue['freshness']}`; active items `{work_queue.get('active_item_count', 'unknown')}`; see `08_reviews/capital_work_queue.local/report.md`.",
         f"- Account-wide workflow blockers: `{', '.join(decision.get('workflow_integrity', {}).get('global_blockers', [])) or 'none'}`; ticker-specific issues: `{', '.join(decision.get('workflow_integrity', {}).get('blocked_tickers', [])) or 'none'}`. Local research work is not an account-wide capital freeze.",

@@ -111,6 +111,85 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertFalse(decision["workflow_integrity"]["new_capital_allowed"])
         self.assertFalse(decision["eligible_new_position_review_candidates"])
 
+    def test_blocked_proposal_cannot_remain_in_post_review_cash_or_holdings(self):
+        decision = self.decision("action_review_candidate")
+        decision["account"] = {"account_total_value": "1000", "cash_available": "900",
+            "cash_reserved": "0", "cash_basis": "owner_recorded"}
+        decision["held_positions"][0]["current_price"] = "100"
+        decision["watch_candidates"] = [{"ticker": "ABC", "suggested_whole_shares": "2",
+            "current_price": "100", "action": "eligible_buy_review"}]
+        decision["eligible_new_position_review_candidates"] = ["ABC"]
+        decision["capital_allocation"] = {"proposed_deployment_value": 200,
+            "post_review_active_value": "300", "post_review_core_value": "0",
+            "post_review_cash": "700", "post_review_cash_pct": "70"}
+        baseline = deepcopy(decision["capital_allocation"])
+        self.publish(decision)
+        allocation = decision["capital_allocation"]
+        self.assertEqual(allocation["proposed_deployment_value"], 0)
+        self.assertEqual(allocation["post_review_cash"], "900.00")
+        self.assertEqual(allocation["post_review_active_value"], "100.00")
+        self.assertEqual(allocation["post_review_core_value"], "0.00")
+        self.assertEqual(allocation["post_review_cash_pct"], "90.0000")
+        self.assertEqual(allocation["baseline_research_projection"], baseline)
+
+    def test_post_review_projection_counts_only_retained_candidate_cash(self):
+        decision = self.decision("action_review_candidate")
+        decision["account"] = {"account_total_value": "1000", "cash_available": "900",
+            "cash_reserved": "0", "cash_basis": "owner_recorded"}
+        decision["held_positions"][0]["current_price"] = "100"
+        decision["watch_candidates"] = [
+            {"ticker": "ABC", "suggested_whole_shares": "2", "current_price": "100", "action": "eligible_buy_review"},
+            {"ticker": "SPY", "suggested_whole_shares": "2", "current_price": "50",
+                "action": "core_allocation_tranche_review", "valuation_applicability": "not_applicable_broad_market_etf"}]
+        decision["eligible_new_position_review_candidates"] = ["ABC", "SPY"]
+        decision["capital_allocation"] = {"proposed_deployment_value": 300,
+            "post_review_active_value": "300", "post_review_core_value": "100",
+            "post_review_cash": "600", "post_review_cash_pct": "60"}
+        self.publish(decision)
+        self.assertEqual(decision["eligible_new_position_review_candidates"], ["SPY"])
+        allocation = decision["capital_allocation"]
+        self.assertEqual(allocation["proposed_deployment_value"], 100)
+        self.assertEqual(allocation["post_review_cash"], "800.00")
+        self.assertEqual(allocation["post_review_active_value"], "100.00")
+        self.assertEqual(allocation["post_review_core_value"], "100.00")
+        self.assertEqual(allocation["post_review_cash_pct"], "80.0000")
+
+    def core_proposals(self):
+        decision = self.decision("action_review_candidate")
+        decision["account"] = {"account_total_value": "1000", "cash_available": "900",
+            "cash_reserved": "0", "cash_basis": "owner_recorded"}
+        decision["held_positions"][0]["current_price"] = "100"
+        decision["watch_candidates"] = [
+            {"ticker": ticker, "suggested_whole_shares": "1", "current_price": price,
+                "action": "core_allocation_tranche_review", "valuation_applicability": "not_applicable_broad_market_etf"}
+            for ticker, price in (("SPY", "500"), ("QQQ", "500"))]
+        decision["eligible_new_position_review_candidates"] = ["SPY", "QQQ"]
+        decision["capital_allocation"] = {"proposed_deployment_value": 1000}
+        return decision
+
+    def test_jointly_unfunded_proposals_cannot_remain_eligible(self):
+        decision = self.publish(self.core_proposals())
+        self.assertEqual(decision["eligible_new_position_review_candidates"], [])
+        self.assertTrue(all(row["suggested_whole_shares"] == "0" for row in decision["watch_candidates"]))
+        self.assertIn("retained_proposals_exceed_deployable_cash", decision["workflow_integrity"]["global_blockers"])
+        self.assertEqual(decision["capital_allocation"]["post_review_cash"], "900.00")
+
+    def test_shared_holding_valuation_unknown_prevents_positive_proposal(self):
+        decision = self.core_proposals()
+        decision["held_positions"][0].pop("current_price")
+        self.publish(decision)
+        self.assertEqual(decision["eligible_new_position_review_candidates"], [])
+        self.assertIn("shared_capital_projection_inputs_unverified", decision["workflow_integrity"]["global_blockers"])
+
+    def test_malformed_candidate_is_local_and_does_not_block_valid_peer(self):
+        decision = self.core_proposals()
+        decision["watch_candidates"][1]["current_price"] = "NaN"
+        self.publish(decision)
+        self.assertEqual(decision["eligible_new_position_review_candidates"], ["SPY"])
+        self.assertEqual(decision["workflow_integrity"]["global_blockers"], [])
+        self.assertIn("capital_projection_candidate_inputs_unverified", decision["workflow_integrity"]["ticker_blockers"]["QQQ"])
+        self.assertEqual(decision["capital_allocation"]["post_review_cash"], "400.00")
+
     def test_missing_input_binding_rejected(self):
         decision = self.publish()
         decision["workflow_integrity"]["input_hashes"].pop(str(STORE_REL))

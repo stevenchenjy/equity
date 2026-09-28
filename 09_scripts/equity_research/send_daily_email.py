@@ -21,6 +21,7 @@ from typing import Any, Callable
 from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
+from delivery_archive import archive_validated_delivery
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -223,6 +224,7 @@ def validate_decision(
     *, correction: bool = False, owner_review_request_id: str | None = None,
     snapshot_hashes: dict[str, str] | None = None,
     snapshot_briefs: dict[str, str] | None = None,
+    snapshot_bytes: dict[str, bytes] | None = None,
 ) -> dict[str, Any]:
     # Retain exactly the bytes parsed for every delivery mode. A concurrent
     # producer may replace the canonical files after this validation returns.
@@ -417,6 +419,9 @@ def validate_decision(
         })
     if snapshot_briefs is not None:
         snapshot_briefs.update(text=brief_text, html=brief_html)
+    if snapshot_bytes is not None:
+        snapshot_bytes.update(decision_sha256=decision_bytes,
+            brief_text_sha256=text_bytes, brief_html_sha256=html_bytes)
     return decision
 
 
@@ -656,6 +661,7 @@ def send_once(
     target_cycle = str(decision["cycle_date"])
     content_hashes: dict[str, str] = {}
     snapshot_briefs: dict[str, str] = {}
+    snapshot_bytes: dict[str, bytes] = {}
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
         delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
         if owner_review:
@@ -692,13 +698,22 @@ def send_once(
 
         try:
             revalidated = validate_decision(correction=correction, owner_review_request_id=owner_review_request_id,
-                snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs)
+                snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
             if revalidated != decision:
                 raise ValueError("owner_review_changed_before_claim" if owner_review else "decision_changed_before_claim")
         except (OSError, ValueError) as exc:
             log_daily_run(component="daily_sender", run_mode=run_mode,
                           outcome="blocked", reason=str(exc))
             print(f"email_sent=false reason={exc} smtp_config_read=false")
+            return 2
+
+        try:
+            archive_validated_delivery(DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
+                contents=snapshot_bytes, hashes=content_hashes)
+        except (OSError, ValueError):
+            log_daily_run(component="daily_sender", run_mode=run_mode,
+                          outcome="blocked", reason="delivery_archive_failed")
+            print("email_sent=false reason=delivery_archive_failed smtp_config_read=false")
             return 2
 
         try:
