@@ -33,9 +33,13 @@ SEC_EVIDENCE_REFRESH = ROOT / "09_scripts" / "equity_research" / "refresh_daily_
 MASSIVE_B2_RUNNER = (
     ROOT / "09_scripts" / "equity_research" / "run_full_universe_market_data.py"
 )
-EOD_PUBLICATION_RETRY_SLOTS = ("11:15", "11:45", "12:15", "12:45")
-WEEKDAY_SLOTS = ("08:15", *EOD_PUBLICATION_RETRY_SLOTS)
-WEEKEND_SLOTS = EOD_PUBLICATION_RETRY_SLOTS
+EOD_PUBLICATION_RETRY_SLOTS = ("08:00", "08:30", "09:00", "09:45")
+AFTERNOON_REFRESH_SLOTS = ("13:30", "14:00")
+ROUTINE_REFRESH_SLOTS = (EOD_PUBLICATION_RETRY_SLOTS[0], AFTERNOON_REFRESH_SLOTS[0])
+WEEKDAY_SLOTS = (*EOD_PUBLICATION_RETRY_SLOTS, *AFTERNOON_REFRESH_SLOTS)
+# Retain a later local recompose on weekends too: historical experiment
+# cohorts still use their frozen 11:15 publication rule and can mature then.
+WEEKEND_SLOTS = WEEKDAY_SLOTS
 FIRST_EOD_PUBLICATION_RETRY_SLOT = EOD_PUBLICATION_RETRY_SLOTS[0]
 LAST_EOD_PUBLICATION_RETRY_SLOT = EOD_PUBLICATION_RETRY_SLOTS[-1]
 MARKET_SNAPSHOT_FETCH = "fetch"
@@ -98,7 +102,7 @@ def market_snapshot_mode(
 
     if (
         not market_ready
-        and any(slot in due for slot in EOD_PUBLICATION_RETRY_SLOTS)
+        and any(slot in due for slot in (*EOD_PUBLICATION_RETRY_SLOTS, *AFTERNOON_REFRESH_SLOTS))
     ):
         return MARKET_SNAPSHOT_FETCH
     return MARKET_SNAPSHOT_REUSE
@@ -299,6 +303,7 @@ def main() -> int:
         )
         if (
             configured_slots != EOD_PUBLICATION_RETRY_SLOTS
+            or tuple(notifications.get("afternoon_refresh_slots_et", [])) != AFTERNOON_REFRESH_SLOTS
             or notifications["market_data_publication_after_et"]
             != BASIC_EOD_PUBLICATION_TIME_ET
         ):
@@ -347,7 +352,26 @@ def main() -> int:
     )
     date_state = state.setdefault("dates", {}).setdefault(cycle_date(), {})
     completed = set(date_state.get("refresh_slots_completed", []))
+    if (date_state.get("decision_completed") is True and "delivery_windows" not in date_state
+            and "11:15" in completed):
+        print("scheduler_action=none reason=legacy_schedule_cycle_completed")
+        return 0
     pending = [slot for slot in due if slot not in completed]
+    # A late wake must not start a morning fetch after its useful owner window,
+    # or turn an afternoon report into an evening instruction. News collection
+    # remains independently scheduled above.
+    clock = current.strftime("%H:%M")
+    expired = {slot for slot in pending if
+        (slot in EOD_PUBLICATION_RETRY_SLOTS and clock > "10:15") or
+        (slot in AFTERNOON_REFRESH_SLOTS and clock > "14:30")}
+    if expired:
+        completed.update(expired)
+        date_state["refresh_slots_completed"] = sorted(completed)
+        date_state.setdefault("refresh_slots_missed", []).extend(
+            slot for slot in sorted(expired) if slot not in date_state.get("refresh_slots_missed", []))
+        state["updated_at"] = iso_now()
+        atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
+        pending = [slot for slot in pending if slot not in expired]
     if not pending:
         print("scheduler_action=none reason=refresh_slots_already_completed")
         return 0
@@ -371,7 +395,7 @@ def main() -> int:
     market_attempt: dict[str, object] | None = None
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
         attempt_slots = [
-            slot for slot in pending if slot in EOD_PUBLICATION_RETRY_SLOTS
+            slot for slot in pending if slot in (*EOD_PUBLICATION_RETRY_SLOTS, *AFTERNOON_REFRESH_SLOTS)
         ]
         if not attempt_slots:
             raise RuntimeError("EOD market fetch has no publication retry slot")
@@ -456,14 +480,16 @@ def main() -> int:
     date_state["refresh_fully_passed"] = refresh_fully_passed
     if refresh_fully_passed:
         date_state["refresh_last_passed_at"] = iso_now()
-        if any(slot in due for slot in EOD_PUBLICATION_RETRY_SLOTS):
-            # No later retry is useful once the latest published close and all
-            # deterministic evidence gates have passed.
+        if any(slot in pending for slot in EOD_PUBLICATION_RETRY_SLOTS):
+            # Morning success retires only morning retries. The independent
+            # afternoon evidence refresh must still run for its delivery window.
             completed.update(EOD_PUBLICATION_RETRY_SLOTS)
+        if any(slot in pending for slot in AFTERNOON_REFRESH_SLOTS):
+            completed.update(AFTERNOON_REFRESH_SLOTS)
     date_state["refresh_slots_completed"] = sorted(completed)
     if (
         not refresh_fully_passed
-        and LAST_EOD_PUBLICATION_RETRY_SLOT in pending
+        and (LAST_EOD_PUBLICATION_RETRY_SLOT in pending or AFTERNOON_REFRESH_SLOTS[-1] in pending)
     ):
         publish_automation_alert(
             component="daily_refresh",

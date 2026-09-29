@@ -1,0 +1,18 @@
+{
+  "status": "superseded_preserved",
+  "active_authority": false,
+  "files": [
+    {
+      "source_commit": "e199070b5dff899bc829402059417a96491d19cd",
+      "source_path": "09_scripts/equity_research/news_schedule.py",
+      "archive_path": "11_archive/schedule_before_owner_windows_20260928/09_scripts/equity_research/news_schedule.py",
+      "sha256": "fce9f3d1eff05a0f83d0df199966462e9b5a94c742370df22a21ba85fded763c"
+    },
+    {
+      "source_commit": "e199070b5dff899bc829402059417a96491d19cd",
+      "source_path": "00_project_control/daily_research_policy.md",
+      "archive_path": "11_archive/schedule_before_owner_windows_20260928/00_project_control/daily_research_policy.md",
+      "sha256": "faea19e9d9e0b0b6b133bde03d77594c367433ffc030f65e7c8efb2f1daad320"
+    }
+  ]
+}

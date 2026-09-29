@@ -21,48 +21,26 @@ for independent broad screening, without changing B2's evidence contract.
 
 ## Data Handling
 
-- The actual collector uses [Custom Bars REST](https://massive.com/docs/rest/stocks/aggregates/custom-bars),
-  whose Basic access is end-of-day. This endpoint has no documented 11:00 ET
-  publication guarantee in the verified documentation. The former 11:15
-  boundary was inferred from [S3 day aggregate files](https://massive.com/docs/flat-files/stocks/day-aggregates),
-  a different product that is not included in Basic. It is retired as a REST
-  availability assumption; see [collector timing evidence](collector_timing_20260928.md).
-- The expected date is the most recent U.S. market session on or before the
-  previous Eastern calendar day. This is the date requested and validated,
-  not a claim that the provider has already published it. Missing expected
-  bars remain a freshness failure even when HTTP status is 200.
-- A bounded Custom Bars diagnostic at 20:35 ET on September 28 requested the
-  completed September 28 session. HTTP 200 / DELAYED returned 250 of the 251
-  expected daily bars, ending September 25 and missing September 28. A control
-  ending September 25 returned HTTP 200 / OK and all 251 expected bars. Exactly
-  two requests were made; no canonical data changed and no provider response
-  body or credential was retained. This establishes neither morning
-  availability nor a fixed publication time. The older September 1 grouped
-  endpoint diagnostic remains historical evidence for that separate endpoint.
+- Provider-SLA decision: Massive identifies Stocks Basic as end-of-day data,
+  and its official day-aggregate documentation says finalized daily datasets
+  become available at approximately 11:00 ET on the following day. Production
+  uses 11:15 ET as a conservative publication boundary. References:
+  [Stocks pricing](https://massive.com/pricing?product=stocks) and
+  [day aggregates](https://massive.com/docs/flat-files/stocks/day-aggregates).
+- A bounded 2026-09-01 runtime diagnostic confirmed the contract mismatch:
+  the prior session's grouped daily result was available while the same-day
+  session was forbidden under the active Basic credential. No credential
+  value or provider response body was retained.
 - Massive Stocks Basic is limited to five API calls per minute. The adapter enforces a conservative minimum request interval and performs no automatic retry or pagination follow-up.
 - The production candidate set remains the exact approved 31 symbols. Added, missing, replaced or duplicate candidate symbols block before client construction, including no-network reuse. The September 24 held-position repair allows valid, unique ticker symbols from the current local positions file to extend price monitoring only; sold held-only symbols are no longer required. These rows receive the same complete Massive history, quality, freshness and atomic-trio checks, without admission to candidate scoring. Existing request pacing, no-retry behavior and bounded child runtime remain unchanged; an oversized or slow refresh fails visibly rather than loosening validation.
 - The benchmark preflight runs before any full-universe retrieval.
 - A successful preflight requires a current and prior close for QQQ, XLK, and SPY.
 - A recognized Massive rate limit is recorded only as the finite code `massive_rate_limited`; response text, URLs, headers, and credentials are never persisted.
 - On any failed required benchmark, B2 stops the remaining benchmark probes immediately, preserves the prior coherent output trio when available, and exits nonzero. It never performs an immediate, looped, or alternate-source retry.
-- Provider availability is established by an accepted complete response, not
-  merely market close or a scheduled time. There is no night-before email
-  relying on the just-completed close: the observed Basic response lacked it.
-  No live price, next-day DAY validity or entry trigger is inferred from EOD
-  data.
-- Under the daily wrapper, bounded morning requests run at 08:00, 08:30,
-  09:00 and 09:45 ET, with remaining morning recovery attempts suppressed
-  after a fully passed refresh. An independent afternoon refresh at 13:30,
-  with 14:00 recovery, updates the research/plan chain before the owner's
-  afternoon attention window. A passed morning run does not consume the
-  afternoon opportunity to reassess. Final daily-decision recomposition uses
-  `--reuse-validated-snapshot` and never fetches an alternate market source.
-- The scheduler durably reserves each attempt before starting the child. A
-  crash, timeout, provider failure or later deterministic-step failure cannot
-  repeat that attempt on an intervening 15-minute tick; only the next
-  configured recovery slot may retry. Success suppresses later recovery
-  slots within its own morning or afternoon group.
-- Snapshot reuse makes no public-source request, rewrites none of the B2 snapshot/quality/candidate artifacts, and succeeds only when the entire prior trio is coherent and every covered ticker has the exact expected prior-session date. A reuse failure is nonzero and remains a freshness block for provider and email paths.
+- Massive Basic is gated by provider publication, not merely market close. The canonical latest-published session is the prior calendar day's market session at or after 11:15 ET, and the normalized session two calendar days back before 11:15 ET.
+- Under the daily wrapper, a normal Massive fetch is attempted only at the bounded next-day publication slots 11:15, 11:45, 12:15, and 12:45 ET. These slots also run on Saturday so Friday's finalized close can be consumed. The 08:15 weekday refresh and the final daily-decision path use `--reuse-validated-snapshot` instead.
+- The scheduler durably reserves each publication attempt before starting the child. A crash, timeout, provider failure, or later deterministic-step failure cannot repeat that attempt on an intervening 15-minute tick; only the next configured publication slot may retry. All later slots are reserved after the first fully passed refresh.
+- Snapshot reuse makes no public-source request, rewrites none of the B2 snapshot/quality/candidate artifacts, and succeeds only when the entire prior trio is coherent and every covered ticker has the exact latest published market-session date. A reuse failure is nonzero and remains a freshness block for provider and email paths.
 - An explicit operator-only `--recompose-current-coverage` mode can recover a local current-close trio after a held-only symbol leaves the account. Under the daily pipeline lock it first validates the entire original wider trio, then validates a staged projection containing exactly the unchanged 31 candidates and current holdings. It only removes obsolete held-only rows; missing, stale, malformed, duplicated or inconsistent data still blocks. Original artifacts and input hashes are preserved in ignored `market_coverage_recompositions.local/` before any canonical write, with a dated receipt. Candidate bytes, retained prices, provenance and observation timestamps remain unchanged. A previously bound tactical sidecar is projected and rebound only when each retained series passes the existing historical-bar validator against the original snapshot; unverified history is preserved without rebinding. This is local recomposition, never a new market observation or an automatic retry; normal reuse remains read-only.
 - During this one-way migration, an existing coherent trio labeled with the former local yfinance provenance may be read only to validate, preserve byte-for-byte after a Massive failure, or validate no-network reuse. It never authorizes a Yahoo/yfinance request, an alternate remote source, re-dating, a successful current refresh, or a substitution for Massive data.
 - The full refresh requests a one-year daily history to calculate the latest close, prior close, latest volume, 20-session average volume, latest day range, and observed one-year range. The returned session-date sequence must exactly cover every expected U.S. market session in that window; gaps, duplicate session dates, or a truncated history reject the row.

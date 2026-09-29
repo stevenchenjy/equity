@@ -38,15 +38,17 @@ class OfficialNewsScheduleTests(unittest.TestCase):
 
     def test_morning_success_does_not_consume_afternoon_or_evening_news(self) -> None:
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as child:
-            morning = schedule.run_due_news_checks(self.moment("11:30"))
+            morning = schedule.run_due_news_checks(self.moment("08:00"))
             repeated = schedule.run_due_news_checks(self.moment("12:00"))
-            afternoon = schedule.run_due_news_checks(self.moment("16:45"))
+            afternoon = schedule.run_due_news_checks(self.moment("13:30"))
+            after_close = schedule.run_due_news_checks(self.moment("16:45"))
             evening = schedule.run_due_news_checks(self.moment("20:15"))
-        self.assertEqual(morning["covered_slots"], ["08:15", "11:15"])
+        self.assertEqual(morning["covered_slots"], ["08:00"])
         self.assertEqual(repeated["outcome"], "not_due")
-        self.assertEqual(afternoon["covered_slots"], ["16:45"])
+        self.assertEqual(afternoon["covered_slots"], ["13:30"])
+        self.assertEqual(after_close["covered_slots"], ["16:45"])
         self.assertEqual(evening["covered_slots"], ["20:15"])
-        self.assertEqual(len(self.news_calls(child)), 3)
+        self.assertEqual(len(self.news_calls(child)), 4)
 
     def test_late_wakeup_coalesces_all_missed_slots_into_one_attempt(self) -> None:
         def reserved_before_network(command, **_kwargs):
@@ -66,7 +68,7 @@ class OfficialNewsScheduleTests(unittest.TestCase):
 
     def test_timeout_is_not_success_and_waits_for_next_bounded_slot(self) -> None:
         with patch.object(schedule.subprocess, "run", side_effect=subprocess.TimeoutExpired("test", 150)) as child:
-            failed = schedule.run_due_news_checks(self.moment("08:15"))
+            failed = schedule.run_due_news_checks(self.moment("08:00"))
             repeated = schedule.run_due_news_checks(self.moment("08:30"))
         self.assertEqual(failed["outcome"], "degraded")
         self.assertEqual(failed["exit_code"], 124)
@@ -74,18 +76,18 @@ class OfficialNewsScheduleTests(unittest.TestCase):
         self.assertEqual(len(self.news_calls(child)), 1)
         self.assertNotIn("last_success_at", self.state()["dates"]["2026-09-21"])
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
-            recovered = schedule.run_due_news_checks(self.moment("11:15"))
-        self.assertEqual(recovered["covered_slots"], ["11:15"])
+            recovered = schedule.run_due_news_checks(self.moment("13:30"))
+        self.assertEqual(recovered["covered_slots"], ["13:30"])
         self.assertEqual(recovered["outcome"], "passed")
 
     def test_process_crash_leaves_reservation_and_cannot_create_retry_storm(self) -> None:
         with patch.object(schedule.subprocess, "run", side_effect=SystemExit("simulated process termination")):
             with self.assertRaises(SystemExit):
-                schedule.run_due_news_checks(self.moment("11:15"))
+                schedule.run_due_news_checks(self.moment("13:30"))
         today = self.state()["dates"]["2026-09-21"]
         self.assertEqual(today["last_outcome"], "attempt_reserved")
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as child:
-            no_retry = schedule.run_due_news_checks(self.moment("11:30"))
+            no_retry = schedule.run_due_news_checks(self.moment("13:45"))
             recovered = schedule.run_due_news_checks(self.moment("16:45"))
         self.assertEqual(no_retry["outcome"], "not_due")
         self.assertEqual(recovered["outcome"], "passed")
@@ -93,21 +95,21 @@ class OfficialNewsScheduleTests(unittest.TestCase):
 
     def test_nonzero_child_does_not_overwrite_last_success_and_next_day_starts_fresh(self) -> None:
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
-            schedule.run_due_news_checks(self.moment("08:15"))
+            schedule.run_due_news_checks(self.moment("08:00"))
         success_at = self.state()["dates"]["2026-09-21"]["last_success_at"]
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=1)):
-            failure = schedule.run_due_news_checks(self.moment("11:15"))
+            failure = schedule.run_due_news_checks(self.moment("13:30"))
         self.assertEqual(failure["outcome"], "degraded")
         self.assertEqual(self.state()["dates"]["2026-09-21"]["last_success_at"], success_at)
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as child:
-            tomorrow = schedule.run_due_news_checks(self.moment("08:15", "2026-09-22"))
-        self.assertEqual(tomorrow["covered_slots"], ["08:15"])
+            tomorrow = schedule.run_due_news_checks(self.moment("08:00", "2026-09-22"))
+        self.assertEqual(tomorrow["covered_slots"], ["08:00"])
         self.assertEqual(len(self.news_calls(child)), 1)
 
     def test_before_activation_and_before_first_slot_have_no_network_or_state_writes(self) -> None:
         with patch.object(schedule.subprocess, "run") as child:
             before = schedule.run_due_news_checks(self.moment("20:30", "2026-09-19"))
-            early = schedule.run_due_news_checks(self.moment("08:00"))
+            early = schedule.run_due_news_checks(self.moment("07:59"))
         self.assertEqual(before["outcome"], "not_active")
         self.assertEqual(early["outcome"], "not_due")
         child.assert_not_called()
@@ -129,15 +131,51 @@ class OfficialNewsScheduleTests(unittest.TestCase):
         history.update({f"2026-07-{day:02d}": {} for day in range(1, 32)})
         self.state_path.write_text(json.dumps({"schema_version": "phase5r_news_scheduler_v1", "dates": history}))
         with patch.object(schedule.subprocess, "run", return_value=SimpleNamespace(returncode=0)):
-            schedule.run_due_news_checks(self.moment("08:15"))
+            schedule.run_due_news_checks(self.moment("08:00"))
         days = self.state()["dates"]
         self.assertEqual(len(days), 60)
         self.assertIn("2026-09-21", days)
         self.assertNotIn("2026-06-01", days)
 
+    def test_news_check_precedes_each_owner_window_full_refresh(self) -> None:
+        for clock in ("08:00", "13:30"):
+            with self.subTest(clock=clock):
+                self.state_path.unlink(missing_ok=True)
+                current = self.moment(clock)
+                eod_state = {"schema_version": "phase5r_daily_scheduler_state_v1", "dates": {}}
+                ordered_scripts = []
+
+                def child_result(command, **_kwargs):
+                    ordered_scripts.append(command[1])
+                    if command[1] == str(refresh_scheduler.REFRESH_PIPELINE):
+                        news_state = self.state()["dates"]["2026-09-21"]
+                        self.assertEqual(news_state["last_outcome"], "passed")
+                        self.assertIn(clock, news_state["attempted_slots"])
+                    return SimpleNamespace(returncode=0)
+
+                with (
+                    patch.dict(os.environ, {}, clear=True),
+                    patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"]),
+                    patch.object(refresh_scheduler, "load_active_state", return_value={"operational_from": "2026-08-01"}),
+                    patch.object(refresh_scheduler, "load_inhibit", return_value={"active": False}),
+                    patch.object(refresh_scheduler, "cycle_date", return_value="2026-09-21"),
+                    patch.object(refresh_scheduler, "now_et", return_value=current),
+                    patch.object(refresh_scheduler, "iso_now", return_value=current.isoformat()),
+                    patch.object(refresh_scheduler, "read_json", side_effect=lambda path, _default: eod_state if path == refresh_scheduler.DAILY_SCHEDULER_STATE_PATH else {}),
+                    patch.object(refresh_scheduler, "atomic_write_json"),
+                    patch.object(refresh_scheduler.subprocess, "run", side_effect=child_result),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    result = refresh_scheduler.main()
+                self.assertEqual(result, 0)
+                self.assertEqual(ordered_scripts.count(str(schedule.SCRIPT)), 1)
+                self.assertEqual(ordered_scripts.count(str(refresh_scheduler.REFRESH_PIPELINE)), 1)
+                self.assertLess(ordered_scripts.index(str(schedule.SCRIPT)),
+                                ordered_scripts.index(str(refresh_scheduler.REFRESH_PIPELINE)))
+
     def test_malformed_news_state_does_not_stop_eod_refresh(self) -> None:
         self.state_path.write_text("{invalid-json")
-        current = self.moment("11:15")
+        current = self.moment("13:35")
         eod_state = {"schema_version": "phase5r_daily_scheduler_state_v1", "dates": {}}
         output = io.StringIO()
         with (
@@ -158,7 +196,7 @@ class OfficialNewsScheduleTests(unittest.TestCase):
         child.assert_called_once()
         self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), child.call_args.args[0])
         self.assertIn("research_refresh_continues=true", output.getvalue())
-        self.assertIn("11:15", eod_state["dates"]["2026-09-21"]["refresh_slots_completed"])
+        self.assertIn("13:30", eod_state["dates"]["2026-09-21"]["refresh_slots_completed"])
 
 
 if __name__ == "__main__":

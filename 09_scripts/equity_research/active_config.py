@@ -98,6 +98,8 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     )
     send_after = str(notifications.get("send_after_et", ""))
     terminal_after = str(notifications.get("terminal_alert_after_et", ""))
+    windows = notifications.get("delivery_windows_et")
+    afternoon_slots = notifications.get("afternoon_refresh_slots_et")
     time_pattern = re.compile(r"(?:[01]\d|2[0-3]):[0-5]\d")
     if (
         notifications.get("event_driven") is not True
@@ -118,12 +120,22 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         or time_pattern.fullmatch(send_after) is None
         or time_pattern.fullmatch(terminal_after) is None
         or retry_slots[0] < publication_after
-        or retry_slots[-1] >= send_after
+        or retry_slots[0] >= send_after
         or send_after >= terminal_after
     ):
         raise ActiveConfigError(
             "event-driven notification cadence is invalid"
         )
+    if (
+        windows != [
+            {"id": "morning", "start": "09:30", "end": "10:30", "refresh_not_before": "08:00"},
+            {"id": "afternoon", "start": "14:30", "end": "15:05", "refresh_not_before": "13:30"},
+        ]
+        or afternoon_slots != ["13:30", "14:00"]
+        or send_after != windows[0]["start"]
+        or terminal_after != windows[-1]["end"]
+    ):
+        raise ActiveConfigError("owner delivery windows do not match approved schedule")
     return config
 
 

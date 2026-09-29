@@ -21,7 +21,7 @@ class ResearchScheduleReportingTests(unittest.TestCase):
         }}}
         before = copy.deepcopy(scheduler)
         queue = build_capital_work_queue(payload, None, current=current, scheduler_state=scheduler)
-        self.assertEqual(queue["next_automatic_review_at"], "2026-09-29T08:15:00-04:00")
+        self.assertEqual(queue["next_automatic_review_at"], "2026-09-28T13:30:00-04:00")
         self.assertEqual(scheduler, before)
         text = " ".join(cash_lines({"capital_work_queue": compact_summary(queue)}))
         self.assertIn("Next routine research window", text)
@@ -31,8 +31,8 @@ class ResearchScheduleReportingTests(unittest.TestCase):
 
     def test_weekday_and_weekend_routine_boundaries_remain_accurate(self):
         for stamp, expected in [
-            ("2026-09-28T08:20:00-04:00", "2026-09-28T11:15:00-04:00"),
-            ("2026-09-26T11:21:00-04:00", "2026-09-27T11:15:00-04:00"),
+            ("2026-09-28T08:20:00-04:00", "2026-09-28T13:30:00-04:00"),
+            ("2026-09-26T11:21:00-04:00", "2026-09-26T13:30:00-04:00"),
         ]:
             with self.subTest(stamp=stamp):
                 current = datetime.fromisoformat(stamp)

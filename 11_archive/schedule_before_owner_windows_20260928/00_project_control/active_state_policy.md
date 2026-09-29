@@ -26,19 +26,17 @@ without reading their contents.
 - Workflow: `daily_decision`
 - Pipeline: `phase5r_daily`
 - Primary decision: `daily_account_aware_decision`
-- Analysis: morning REST verification at 08:00 ET with bounded 08:30/09:00/09:45
-  recovery; independent afternoon refresh at 13:30 with 14:00 recovery.
-- Email: on exchange sessions, at most one meaningful update in each 09:30–10:30
-  and 14:30–15:05 ET attention window. No unchanged filler, expired-window
-  catch-up, or scheduled evening email. Historical one-window receipts retain
-  their original daily deduplication authority.
+- Analysis: bounded Basic EOD publication retries at 11:15, 11:45, 12:15,
+  and 12:45 ET, with one final decision after 13:30 ET
+- Email: at most one brief per ET cycle; weekend material-change only except
+  the Friday-close weekly summary delivered on its Saturday publication day
 - Authorized sender: `send_daily_email.py`
 - Execution: manual and outside the repository
 
 The only standalone active launchd jobs are:
 
-- `com.steven.equity_research.dailyrefresh`
-- `com.steven.equity_research.dailydecision`
+- `com.steven.phase5r.dailyrefresh`
+- `com.steven.phase5r.dailydecision`
 
 `dailybrief`, `weeklyconviction`, `weeklycatchup`, and the retired production
 `llmshadow` job remain unloaded and their installers are archived. The

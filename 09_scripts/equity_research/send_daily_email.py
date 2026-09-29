@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Send at most one Phase 5R daily brief for an ET calendar date."""
+"""Send one meaningful update per owner-attention window, with durable dedupe."""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
 from delivery_archive import archive_validated_delivery
+from delivery_schedule import active_delivery_window
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -162,6 +163,59 @@ def cycle_is_blocked(
     }
     blocked = sorted(statuses & BLOCKING_DELIVERY_STATUSES)
     return (bool(blocked), blocked[0] if blocked else "")
+
+
+def _current_cycle_receipts(rows: list[dict[str, str]], target_cycle: str) -> list[dict[str, str]]:
+    selected = []
+    for row in rows:
+        actual_date = ""
+        try:
+            stamp = datetime.fromisoformat(row.get("timestamp", "").replace("Z", "+00:00"))
+            if stamp.tzinfo is not None:
+                actual_date = stamp.astimezone(now_et().tzinfo).date().isoformat()
+        except (ValueError, TypeError):
+            pass
+        if row.get("cycle_date", "").strip() == target_cycle or actual_date == target_cycle:
+            selected.append(row)
+    return selected
+
+
+def _attempt_identity(row: dict[str, str]) -> tuple[str, ...] | None:
+    digests = tuple(row.get(key, "") for key in (
+        "decision_sha256", "brief_text_sha256", "brief_html_sha256"))
+    if any(re.fullmatch(r"[0-9a-f]{64}", value) is None for value in digests):
+        return None
+    # An owner's separate explicit request can share identical contents.
+    scope = tuple(part for part in row.get("reason", "").split(";")
+                  if part.startswith(("scheduled_slot=", "owner_request_sha256=")))
+    prefix = row.get("status", "").removesuffix("send_claimed").removesuffix("sent")
+    return (prefix, *digests, *scope)
+
+
+def scheduled_window_is_blocked(rows: list[dict[str, str]], target_cycle: str,
+                                slot: str) -> tuple[bool, str]:
+    """New slots do not erase unknown sends or reinterpret historical receipts."""
+    cycle_rows = _current_cycle_receipts(rows, target_cycle)
+    if any(row.get("status", "").endswith("delivery_unknown") for row in cycle_rows):
+        return True, "delivery_unknown"
+    for index, row in enumerate(cycle_rows):
+        if not row.get("status", "").endswith("send_claimed"):
+            continue
+        identity = _attempt_identity(row)
+        resolved = identity is not None and any(
+            later.get("status", "").endswith("sent") and _attempt_identity(later) == identity
+            for later in cycle_rows[index + 1:])
+        if not resolved:
+            return True, "send_claimed"
+    for row in cycle_rows:
+        if row.get("status", "").strip() != "sent":
+            continue
+        slots = [part.removeprefix("scheduled_slot=") for part in row.get("reason", "").split(";")
+                 if part.startswith("scheduled_slot=")]
+        # Old unscoped successful sends retain their original full-day fence.
+        if len(slots) != 1 or slots[0] not in {"morning", "afternoon"} or slots[0] == slot:
+            return True, "sent"
+    return False, ""
 
 
 def delivery_policy(
@@ -612,16 +666,21 @@ def send_once(
     *,
     correction: bool = False,
     owner_review_request_id: str | None = None,
+    scheduled_slot: str | None = None,
 ) -> int:
     owner_review = owner_review_request_id is not None
-    if correction and owner_review:
+    if (correction and owner_review) or (scheduled_slot is not None and (correction or owner_review)):
         raise ValueError("delivery_modes_mutually_exclusive")
     run_mode = ("explicit_owner_review" if owner_review
                 else "explicit_correction_resend" if correction else "send")
     enabled, guard_reason, _, _ = delivery_guard()
-    if (correction or owner_review) and guard_reason == "before_daily_decision_time":
+    if (correction or owner_review) and guard_reason in {"before_daily_decision_time", "outside_delivery_window"}:
         enabled = True
         guard_reason = "explicit_request_clock_override"
+    if scheduled_slot is not None:
+        window = active_delivery_window(load_active_config()["notifications"], now_et())
+        if window is None or window["id"] != scheduled_slot:
+            enabled, guard_reason = False, "outside_delivery_window"
     if not enabled:
         log_daily_run(
             component="daily_sender",
@@ -676,7 +735,8 @@ def send_once(
             blocked = not correction_allowed
             prior_status = correction_reason
         else:
-            blocked, prior_status = cycle_is_blocked(delivery_rows, target_cycle)
+            blocked, prior_status = (scheduled_window_is_blocked(delivery_rows, target_cycle, scheduled_slot)
+                                     if scheduled_slot is not None else cycle_is_blocked(delivery_rows, target_cycle))
             if not blocked and covered_by_last_delivery(delivery_rows, decision, current=now_et(),
                     archive_dir=DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local"):
                 blocked, prior_status = True, "last_delivery_already_covers_plan"
@@ -741,6 +801,8 @@ def send_once(
             + ";" + owner_review_coverage_key(decision)
         ) if owner_review else ""
         request_suffix += ";" + delivery_meaning_key(decision)
+        if scheduled_slot is not None:
+            request_suffix += ";scheduled_slot=" + scheduled_slot
         try:
             if decision.get("workflow_integrity") is not None:
                 from workflow_integrity import validate_published_workflow
@@ -749,6 +811,15 @@ def send_once(
             log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
             print(f"email_sent=false reason={exc} smtp_config_read=true")
             return 2
+        # A long validation must not deliver after the owner's usable window.
+        if scheduled_slot is not None:
+            enabled_now, reason_now, _, _ = delivery_guard()
+            window = active_delivery_window(load_active_config()["notifications"], now_et())
+            if not enabled_now or window is None or window["id"] != scheduled_slot:
+                reason = reason_now if not enabled_now else "outside_delivery_window"
+                log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=reason)
+                print(f"email_sent=false reason={reason} smtp_config_read=true")
+                return 2
         # This durable claim is intentionally written before any SMTP operation.
         append_delivery(
             status=status_prefix + "send_claimed",
@@ -827,7 +898,11 @@ def main() -> int:
     mode.add_argument("--send-owner-review", metavar="REQUEST_ID",
                       help="Send one explicitly requested, dated owner review; never scheduled")
     mode.add_argument("--check", action="store_true")
+    parser.add_argument("--delivery-window", choices=("morning", "afternoon", "legacy_daily"),
+                        help="Stable ordinary delivery purpose; never an arbitrary retry ID")
     args = parser.parse_args()
+    if args.delivery_window and not args.send:
+        parser.error("--delivery-window requires --send")
     if args.check:
         enabled, reason, _, _ = delivery_guard()
         print(
@@ -835,7 +910,15 @@ def main() -> int:
             f"reason={reason} smtp_config_read=false email_attempted=false"
         )
         return 0
-    return send_once(correction=args.resend_correction, owner_review_request_id=args.send_owner_review)
+    slot = args.delivery_window
+    if args.send and slot is None:
+        window = active_delivery_window(load_active_config()["notifications"], now_et())
+        if window is None:
+            print("email_sent=false reason=outside_delivery_window smtp_config_read=false")
+            return 2
+        slot = window["id"]
+    return send_once(correction=args.resend_correction, owner_review_request_id=args.send_owner_review,
+                     scheduled_slot=slot)
 
 
 if __name__ == "__main__":

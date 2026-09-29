@@ -257,7 +257,7 @@ class MomentumExperimentReviewTests(unittest.TestCase):
             self.assertTrue(all(path.read_bytes() == value for path, value in before.items()))
             status = json.loads((root / review.OUTPUT / "status.json").read_text())
             self.assertEqual(status["earliest_complete_session"], "2026-09-30")
-            self.assertEqual(status["earliest_publication_at"], "2026-10-01T11:15:00-04:00")
+            self.assertEqual(status["earliest_publication_at"], "2026-10-01T08:00:00-04:00")
             report_bytes = (root / review.OUTPUT / "report.json").read_bytes()
             (root / experiment.OUTPUT / "status.json").write_text('{"status":"failed"}')
             self.assertEqual(cli.main(["--root", str(root)]), 1)
@@ -268,6 +268,24 @@ class MomentumExperimentReviewTests(unittest.TestCase):
             before_conflict = (root / experiment.OUTPUT / "status.json").read_bytes()
             self.assertEqual(cli.main(["--root", str(root), "--output", str(root / experiment.OUTPUT)]), 2)
             self.assertEqual((root / experiment.OUTPUT / "status.json").read_bytes(), before_conflict)
+
+    def test_v4_morning_verification_keeps_legacy_review_publication_frozen(self):
+        for version, permitted in (("eod-breakout-v3-20260928", False),
+                                   ("eod-breakout-v4-20260928", True)):
+            rows = observations(version=version)
+            stamp = datetime(2026, 10, 1, 9, 0, tzinfo=experiment.ET)
+            values = payloads([*rows, *(outcome(row, current=stamp) for row in rows)])
+            with self.subTest(version=version):
+                if permitted:
+                    result = review.build_review(**values)
+                    self.assertTrue(result["ready_for_owner_review"])
+                    self.assertEqual(result["earliest_publication_at"], "2026-10-01T08:00:00-04:00")
+                    self.assertEqual(result["publication_timing_basis"],
+                        "first_scheduled_rest_verification_attempt_not_provider_sla")
+                    self.assertIn("not a provider availability guarantee", review.markdown(result))
+                else:
+                    with self.assertRaisesRegex(review.ReviewError, "review_outcome_precedes_data_publication"):
+                        review.build_review(**values)
 
 
 if __name__ == "__main__":

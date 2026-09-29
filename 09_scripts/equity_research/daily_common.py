@@ -244,7 +244,9 @@ def last_completed_market_session(
     return expected_market_session(candidate)
 
 
-BASIC_EOD_PUBLICATION_TIME = time(11, 15)
+# Earliest scheduled REST verification attempt, not a provider publication SLA.
+# The former 11:15 rule came from flat-file documentation for a different API.
+BASIC_EOD_PUBLICATION_TIME = time(8, 0)
 BASIC_EOD_PUBLICATION_TIME_ET = BASIC_EOD_PUBLICATION_TIME.strftime("%H:%M")
 
 
@@ -253,16 +255,14 @@ def latest_published_market_session(
     *,
     publication_time: time = BASIC_EOD_PUBLICATION_TIME,
 ) -> date:
-    """Return the newest close available under the Basic EOD publication SLA.
+    """Return the required close for the scheduled Basic REST verification.
 
-    Massive Basic is an end-of-day product whose finalized daily dataset is
-    published on the following calendar day.  Market close and provider
-    publication are therefore separate boundaries: after 16:15 ET the same
-    day's close is complete, but it is not yet a valid Basic snapshot.
-
-    Before the publication boundary, step back two calendar days; at or after
-    it, step back one.  Normalizing through ``expected_market_session`` keeps
-    weekends and regular U.S. market holidays fail-closed and deterministic.
+    The historical function name is retained for callers. This is a calendar
+    freshness target, NOT evidence of provider availability: the actual Custom
+    Bars collector must return and validate every required session. Before the
+    first 08:00 ET attempt, retain the prior verified-cycle target; afterwards
+    require the previous calendar day's market session. Never treat same-day
+    EOD access or a failed morning request as a verified current snapshot.
     """
 
     current_et = current.astimezone(ET) if current.tzinfo is not None else current
@@ -432,9 +432,16 @@ def delivery_guard() -> tuple[bool, str, dict[str, Any], dict[str, Any]]:
     # production configuration without creating a module-level import cycle.
     from active_config import load_active_config
 
-    send_after = str(load_active_config()["notifications"]["send_after_et"])
-    if now_et().strftime("%H:%M") < send_after:
+    notifications = load_active_config()["notifications"]
+    send_after = str(notifications["send_after_et"])
+    current = now_et()
+    if current.strftime("%H:%M") < send_after:
         return False, "before_daily_decision_time", active_state, inhibit
+    if notifications.get("delivery_windows_et") is not None:
+        from delivery_schedule import active_delivery_window
+        if (not is_us_market_session_date(current.date())
+                or active_delivery_window(notifications, current) is None):
+            return False, "outside_delivery_window", active_state, inhibit
     return True, "delivery_enabled", active_state, inhibit
 
 

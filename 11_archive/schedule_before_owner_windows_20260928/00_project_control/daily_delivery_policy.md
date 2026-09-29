@@ -1,47 +1,22 @@
 # Phase 5R Daily Delivery Policy
 
-## Owner attention windows (2026-09-28; first new cycle September 29)
+## Durable delivery handoff correction (2026-09-27)
 
-This section supersedes the former single after-13:30 schedule and one-normal-
-message-per-day rule. Exact prior policies/configuration are retained under
-`11_archive/schedule_before_owner_windows_20260928/`; archived settings are not
-active. Existing completed legacy calendar cycles and send receipts retain
-all original meaning and are not relabelled as missed new windows.
+Regular notification comparison uses the latest verifiable durable delivery
+meaning across dates. Repeated research composition, including a next-day
+refresh, must not consume a material change that has not yet been delivered.
+The research comparison remains a fallback when no verifiable delivery baseline
+exists; initial empty-baseline seeding stays quiet. A delivery receipt already
+covering the conclusions still suppresses repeats, including screening churn
+and clock-only aging. No send clock, daily deduplication or attempt limit changes.
 
-The owner normally has time 09:45–10:45 and 14:45–15:20 ET. On exchange sessions:
-
-- Morning delivery may begin at 09:30 and must pass its final preclaim clock
-  check by 10:30. It requires a fully passed current-cycle refresh started at
-  or after 08:00, with the exact required previous-session REST data validated.
-- Afternoon delivery may begin at 14:30 and must pass the final clock check by
-  15:05. It requires its own passed refresh started at or after 13:30; a morning
-  handoff alone cannot satisfy this checkpoint.
-- Each stable window can send at most one materially changed ordinary email.
-  Unchanged evaluations consume no send-attempt budget and remain eligible for
-  later meaningful analyst updates inside that same window. A quiet window
-  closes quietly. Missing required research closes with a precise local alert;
-  it never catches up as a late evening trade instruction.
-- Existing 15-minute launchd polling means these are eligible windows, not
-  guaranteed arrival times. SMTP acceptance is not inbox-arrival evidence.
-- Cross-date comparison uses the latest verified durable delivery meaning.
-  Ordinary windows do not bypass an unresolved send claim/unknown receipt in
-  the current cycle. Old unscoped successful normal receipts keep their whole-
-  day fence; no private ledger rewrite or reset is performed.
-- No new scheduled night-before email is enabled. The actual REST evening test
-  returned HTTP200 with the requested current-session bar missing. Earlier
-  evidence can support research preparation, but cannot establish a fresh close
-  or a next-session opening price. An explicitly requested evening review keeps
-  its existing separate authorization and must bind the intended session,
-  conditional entry/max price, invalidation, available shares/funds and expiry.
-  Do not imply that a DAY draft was submitted or that overnight broker handling
-  or an opening fill has been verified.
-
-Research runs at 08:00 with bounded recovery at 08:30/09:00/09:45, and separately
-at 13:30 with 14:00 recovery. Morning success retires only morning retries.
-Weekends retain research/recomposition for historical experimental outcomes,
-without automatic trading-session email. The Codex analyst follow-up runs at
-08:45 and 13:45 weekdays. Material outcomes completed after a window carry
-forward; unchanged filler and expired DAY instructions are never resent.
+For Monday September 28 the existing research boundaries are 08:15 ET and
+11:15 ET; publication recovery slots are 11:45, 12:15 and 12:45. Regular email
+eligibility starts at 13:30 ET after a successful same-day refresh. The loaded
+jobs poll every 900 seconds, so these are eligibility boundaries, not guaranteed
+delivery minutes. The machine and network must be available. Monday uses Friday
+September 25 as the latest published close. There is no premarket action-plan
+email appointment and no mandatory unchanged daily email.
 
 ## Current delivery and presentation rule (2026-09-26)
 
@@ -93,7 +68,7 @@ The only authorized sender is `send_daily_email.py`. It requires:
 ## Frequency
 
 - The owner selected `regular_delivery_mode=watch_or_action_change` on
-  2026-09-14: the then-current single-window emails sent only when the
+  2026-09-14: regular research emails send after 13:30 ET only when the
   watchlist or action recommendations change. Unchanged Saturday/weekly
   reports do not send. Weekdays and weekends use the same change test.
 - Meaningful changes include nonheld candidate membership, eligibility,
@@ -108,8 +83,7 @@ The only authorized sender is `send_daily_email.py`. It requires:
   notification fingerprint exists. With no valid baseline, seed quietly.
   Within one ET cycle, preserve the original comparison anchor so repeated
   pre-send composition does not consume an undelivered change. Normal daily
-  durable deduplication now limits ordinary delivery to one message per stable
-  attention window, while preserving unresolved-send protection across windows.
+  durable deduplication still limits ordinary delivery to one message.
 - Massive Basic publication and refresh timing stay unchanged. The legacy
   `weekly_summary_weekday=friday` remains available for historical policy
   validation but does not authorize an unchanged digest in the active mode.
@@ -206,24 +180,37 @@ that this system is a regulated adviser or has obtained regulatory approval.
 
 ## Refresh handoff and recovery
 
-- Only the existing Keychain-backed dailyrefresh launcher supplies market and
-  SEC identities. Dailydecision consumes the current complete validated handoff
-  and requires its window-specific refresh checkpoint before composing/sending.
-- The required REST session is a calendar target, not a provider publication
-  promise. Data must pass the existing complete one-year session, OHLCV, source,
-  universe and atomic publication checks. A HTTP200 partial response fails.
-- Failed morning fetches get only the configured later attempts. An afternoon
-  refresh reuses a verified current close, or attempts recovery when that close
-  remains unavailable. No stale fallback or new data subscription is admitted.
-- Waiting for research and unchanged eligibility checks do not consume the two
-  bounded failed-send attempts per window. Unknown SMTP outcomes remain blocked
-  across both windows; no automatic retry can manufacture non-delivery.
-- The final sender checks the clock again before claiming a send. A passed
-  handoff does not authorize sending outside the owner's window. Recovery after
-  a closed window may improve research but cannot reopen that expired window.
-- Runtime preflight failures still use the configured final 15:05 alert gate.
-  The deployed launchd configuration proves installation, not future execution;
-  inspect current runtime receipts and exact delivery archives for confirmation.
+- Only the Keychain-backed `dailyrefresh` launcher may supply the Massive
+  credential and SEC User-Agent identity.
+- The `dailydecision` job never receives either credential. It consumes a
+  persisted refresh handoff only when that handoff is for the current ET cycle,
+  the latest market session published under the Basic EOD SLA, and has no hard
+  or soft failures. Market close alone does not satisfy this publication gate.
+- Refresh-time decision composition never applies the 13:30 send clock. The
+  scheduler owns that clock, so a fully passed 12:45 handoff remains eligible
+  when `dailydecision` evaluates it after 13:30.
+- The latest published close is attempted at bounded ET slots `11:15`, `11:45`,
+  `12:15`, and `12:45`, including Saturday so the Friday close can be consumed.
+  A later attempt stops being necessary as soon as the latest published close
+  and complete deterministic refresh pass.
+- Waiting for a current refresh does not consume either of the two SMTP/send
+  attempts. At 15:30 ET, an unresolved refresh becomes one terminal local
+  automation alert rather than an unbounded retry loop.
+- Runtime preflight failures (including unavailable Git synchronization) also
+  publish the fixed-text local alert after the configured 15:30 ET terminal
+  gate, under the existing runtime lock and once-per-cycle notification guard.
+  Maintenance inhibit, the operational date, safe checks and sync-only runs
+  retain their suppression rules. No provider error text enters the alert,
+  and alert failure never authorizes extraction or delivery.
+- A loaded/enabled LaunchAgent and matching plist confirm configuration, not
+  freshness. Check the runtime execution log and current-cycle refresh handoff
+  when verifying operation; a preflight failure can prevent either scheduler
+  from reaching its own status files.
+- That refresh-deadline terminal may clear automatically only after a fully
+  passed handoff for the same ET cycle appears. Delivery-unknown and exhausted
+  SMTP-attempt terminals never auto-clear, preserving duplicate protection.
+- A degraded decision may be retained as fail-closed research evidence, but it
+  never counts as scheduler success and never authorizes email.
 
 ## Duplicate Protection
 
@@ -282,7 +269,7 @@ therefore favors a missed status confirmation over a duplicate email.
 ### Explicit correction resend
 
 - The scheduler never invokes a correction resend; the automatic path remains
-  limited to one ordinary email per stable attention window.
+  limited to one email per ET cycle date.
 - `--resend-correction` is a manual, user-authorized recovery path for a
   materially corrected brief.
 - It requires a prior successful normal delivery for the same cycle date and
@@ -290,7 +277,7 @@ therefore favors a missed status confirmation over a duplicate email.
 - A correction may cover the current or immediately preceding ET cycle date.
   This supports a next-morning repair without presenting prior-cycle evidence
   as a new daily decision.
-- An explicit correction may run before the ordinary attention-window clock;
+- An explicit correction may run before the ordinary 13:30 ET scheduler gate;
   maintenance, operational-date, active-workflow, validation, deduplication,
   and delivery-boundary gates remain enforced.
 - At most one correction attempt is allowed for each exact content-hash set. A
@@ -321,7 +308,7 @@ distinct real user request; retries keep the same ID.
   explicit review eligible. No prior scheduled delivery or changed-content
   hash is required: a user can request another review of unchanged conditions.
 - Preserve maintenance, operational-date, active-workflow and broker/order
-  boundaries. Only the ordinary attention-window clock is waived. Require the versioned
+  boundaries. Only the ordinary 13:30 clock is waived. Require the versioned
   shared renderer and exact decision/text/HTML correspondence before opening
   SMTP configuration; revalidate after obtaining the delivery lock. Explicit
   review MIME bodies are rendered from that validated in-memory decision;

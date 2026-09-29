@@ -1,6 +1,6 @@
 {
   "schema_version": "equity_momentum_experiment_v1",
-  "version": "eod-breakout-v3-20260928",
+  "version": "eod-breakout-v4-20260928",
   "status": "experimental",
   "research_only": true,
   "automatic_action_allowed": false,

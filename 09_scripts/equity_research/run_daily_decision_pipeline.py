@@ -8,6 +8,9 @@ import subprocess
 import sys
 from datetime import datetime, timedelta
 
+from active_config import load_active_config
+from delivery_schedule import active_delivery_window, delivery_window_by_id
+
 from daily_common import (
     DAILY_PIPELINE_LOCK_PATH,
     DAILY_REFRESH_STATE_PATH,
@@ -50,7 +53,7 @@ def _parse_aware_timestamp(value: object) -> datetime | None:
     return parsed if parsed.tzinfo is not None else None
 
 
-def refresh_readiness() -> tuple[bool, str]:
+def refresh_readiness(scheduled_slot: str | None = None) -> tuple[bool, str]:
     """Require today's complete, latest-published-session handoff before delivery."""
 
     try:
@@ -82,6 +85,13 @@ def refresh_readiness() -> tuple[bool, str]:
         return False, "daily_refresh_timestamp_invalid"
     if state_completed.astimezone(ET).date().isoformat() != required_cycle:
         return False, "daily_refresh_completion_not_current"
+    if scheduled_slot is not None:
+        window = delivery_window_by_id(load_active_config()["notifications"], scheduled_slot)
+        if window is None:
+            return False, "delivery_window_invalid"
+        cutoff = datetime.fromisoformat(required_cycle + "T" + window["refresh_not_before"]).replace(tzinfo=ET)
+        if state_started.astimezone(ET) < cutoff:
+            return False, "daily_refresh_before_delivery_window_checkpoint"
     return True, "daily_refresh_ready"
 
 
@@ -123,7 +133,7 @@ def safe_check() -> int:
     return 0
 
 
-def execute(send: bool) -> int:
+def execute(send: bool, scheduled_slot: str | None = None) -> int:
     load_active_state()
     inhibit = load_inhibit()
     if send and bool(inhibit.get("active")):
@@ -133,7 +143,13 @@ def execute(send: bool) -> int:
         )
         return 2
     with ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH):
-        ready, readiness_reason = refresh_readiness()
+        if send and scheduled_slot is not None:
+            window = active_delivery_window(load_active_config()["notifications"], now_et())
+            if window is None or window["id"] != scheduled_slot:
+                print("daily_pipeline_blocked=true reason=outside_delivery_window email_attempted=false")
+                return 2
+        ready, readiness_reason = (refresh_readiness(scheduled_slot)
+                                   if scheduled_slot is not None else refresh_readiness())
         if not ready:
             log_daily_run(
                 component="daily_pipeline",
@@ -158,7 +174,10 @@ def execute(send: bool) -> int:
                 "email_attempted=false email_sent=false"
             )
             return 0
-        sender = run_command([sys.executable, str(SENDER_SCRIPT), "--send"], timeout=90)
+        sender_arguments = [sys.executable, str(SENDER_SCRIPT), "--send"]
+        if scheduled_slot is not None:
+            sender_arguments += ["--delivery-window", scheduled_slot]
+        sender = run_command(sender_arguments, timeout=90)
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
         pipeline_outcome = (
@@ -206,10 +225,18 @@ def main() -> int:
     mode.add_argument("--scheduled", action="store_true")
     mode.add_argument("--no-send", action="store_true")
     mode.add_argument("--safe-check", action="store_true")
+    parser.add_argument("--delivery-window", help="Stable scheduled delivery purpose; never an arbitrary retry ID")
     args = parser.parse_args()
     if args.safe_check:
         return safe_check()
-    return execute(send=args.scheduled)
+    slot = args.delivery_window
+    if args.scheduled and slot is None:
+        window = active_delivery_window(load_active_config()["notifications"], now_et())
+        if window is None:
+            print("daily_pipeline_blocked=true reason=outside_delivery_window email_attempted=false")
+            return 2
+        slot = window["id"]
+    return execute(send=args.scheduled, scheduled_slot=slot)
 
 
 if __name__ == "__main__":

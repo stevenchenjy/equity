@@ -13,10 +13,10 @@ from archived_momentum import evaluate_archived
 
 
 class ArchivedMomentumTests(unittest.TestCase):
-    def inputs(self):
+    def inputs(self, archive_index=-1):
         root = SCRIPT_DIR.parents[1]
         config = json.loads((root / '01_policies/momentum_implementation_archives.json').read_text())
-        archive = config['archives'][-1]
+        archive = config['archives'][archive_index]
         values = fixture()
         values['policy']['version'] = archive['experiment_version']
         values['inputs'].update(implementation_files=archive['implementation_files'],
@@ -70,3 +70,57 @@ class ArchivedMomentumTests(unittest.TestCase):
             target.write_text(json.dumps(config))
             with self.assertRaisesRegex(ValueError, 'archive_config_duplicate'):
                 evaluate_archived(**args)
+
+    def test_legacy_four_file_and_current_five_file_archives_both_mature(self):
+        for index in (0, 1, 2):
+            with self.subTest(archive_index=index):
+                args = self.inputs(index)
+                self.assertEqual(len(evaluate_archived(**args)), 1)
+
+    def test_new_rest_session_waits_for_frozen_publication_rule(self):
+        args = self.inputs()
+        args['current'] = datetime(2026, 10, 1, 9, 0, tzinfo=ET)
+        args['history']['generated_at'] = args['current'].isoformat()
+        args['market'][0]['data_timestamp'] = args['current'].isoformat()
+        before = copy.deepcopy(args)
+        waiting = []
+        self.assertEqual(evaluate_archived(**args, deferred=waiting), [])
+        self.assertEqual(args, before)
+        self.assertEqual(waiting, [{
+            'experiment_version': 'eod-breakout-v3-20260928',
+            'observation_count': 1,
+            'reason': 'historical_publication_rule_not_yet_satisfied',
+            'required_market_session': '2026-09-29',
+            'observed_market_session': '2026-09-30',
+        }])
+        # Actual later time satisfies the old clock; no history rewrite needed.
+        args['current'] = datetime(2026, 10, 1, 11, 15, tzinfo=ET)
+        self.assertEqual(len(evaluate_archived(**args)), 1)
+
+    def test_older_stale_market_session_is_not_silently_deferred(self):
+        args = self.inputs()
+        args['current'] = datetime(2026, 10, 2, 13, 30, tzinfo=ET)
+        with self.assertRaisesRegex(ValueError, 'archive_evaluation_failed'):
+            evaluate_archived(**args, deferred=[])
+
+    def test_future_observation_receipt_is_not_silently_deferred(self):
+        args = self.inputs()
+        args['current'] = datetime(2026, 10, 1, 9, 0, tzinfo=ET)
+        with self.assertRaisesRegex(ValueError, 'archive_evaluation_failed'):
+            evaluate_archived(**args, deferred=[])
+
+    def test_five_file_archive_rejects_changed_archive_runner_binding(self):
+        args = self.inputs()
+        args['records'][0]['inputs']['implementation_files']['archived_momentum.py'] = 'f' * 64
+        with self.assertRaisesRegex(ValueError, 'archive_implementation_mismatch'):
+            evaluate_archived(**args)
+
+    def test_active_version_migration_keeps_every_strategy_parameter(self):
+        import subprocess
+        root = SCRIPT_DIR.parents[1]
+        old = json.loads(subprocess.check_output(['git', 'show',
+            'e199070b5dff899bc829402059417a96491d19cd:01_policies/momentum_experiment.json'], cwd=root))
+        active = json.loads((root / '01_policies/momentum_experiment.json').read_text())
+        self.assertEqual(old.pop('version'), 'eod-breakout-v3-20260928')
+        self.assertEqual(active.pop('version'), 'eod-breakout-v4-20260928')
+        self.assertEqual(active, old)

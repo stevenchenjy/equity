@@ -1,0 +1,16 @@
+{
+  "source_commit": "e199070b5dff899bc829402059417a96491d19cd",
+  "active": false,
+  "files": {
+    "full_universe_data_policy.archive.json": "dedd87b81b670c9a6e2301b2a7e7c24081d909730d6f646a3fe8791573a68cae",
+    "news_schedule.archive.json": "2b1add7d77cd2c860a47a8076fe595566382f36671feb0320a05689f127ab4b8",
+    "00_project_control/daily_research_policy.md": "faea19e9d9e0b0b6b133bde03d77594c367433ffc030f65e7c8efb2f1daad320",
+    "00_project_control/analyst_followthrough.md": "fd726e79c4dc5aa83ee1e48642a1cc3d9d8d6dfb066ed8a30c201b174f9c8144",
+    "00_project_control/active_state_policy.md": "543b871bfbfaa3d5765eee98e0892d70f5ff8b59461d020e98b53c5d6b10af8a",
+    "00_project_control/daily_delivery_policy.md": "035ede8124aae602bf99876ab658f863b01f06d1b6533ba7910777242b97818e",
+    "00_project_control/owner_review_preferences.md": "7d29b10d2f73a43f6eed13e574514d4f4af76e27bc8623309b2d1351d8511758",
+    "00_project_control/full_universe_data_policy.md": "3ee034be8b74b52eba44e52cb15fe659c585237f4630e16de3ccd525d998e0c7",
+    "00_project_control/active_production_config.json": "41e49078f4c8fff63e04ea6f61c10143a566943ecffbeae1e442b8eb901469d8",
+    "09_scripts/equity_research/news_schedule.py": "fce9f3d1eff05a0f83d0df199966462e9b5a94c742370df22a21ba85fded763c"
+  }
+}

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 import hashlib
 import json
 from pathlib import Path
@@ -16,6 +16,12 @@ POLICY = Path("01_policies/momentum_experiment_review.json")
 OUTPUT = Path("08_reviews/momentum_experiment_review.local")
 SCHEMA = "equity_momentum_manual_review_v1"
 PRICE_PATH_STATUS = "matured_price_path_study"
+# Retained cohorts keep the publication rule used by their frozen evaluator.
+# The new REST window is an engineering attempt, never a provider SLA.
+LEGACY_PUBLICATION_VERSIONS = frozenset({
+    "eod-breakout-v1-20260927", "eod-breakout-v2-20260927",
+    "eod-breakout-v3-20260928",
+})
 
 
 class ReviewError(ValueError):
@@ -86,8 +92,12 @@ def _cohort(observations, outcomes):
     policy = first["policy"]
     entry = date.fromisoformat(first["earliest_modeled_entry_session"])
     sessions = [entry.isoformat(), *experiment.sessions_after(entry, policy["holding_sessions"] - 1)]
+    legacy = first["experiment_version"] in LEGACY_PUBLICATION_VERSIONS
+    publication_clock = time(11, 15) if legacy else BASIC_EOD_PUBLICATION_TIME
+    publication_basis = ("retained_frozen_implementation_publication_rule" if legacy
+                         else "first_scheduled_rest_verification_attempt_not_provider_sla")
     publication = datetime.combine(date.fromisoformat(sessions[-1]) + timedelta(days=1),
-                                   BASIC_EOD_PUBLICATION_TIME, tzinfo=ET)
+                                   publication_clock, tzinfo=ET)
     matched = [outcomes[row["observation_id"]] for row in observations if row["observation_id"] in outcomes]
     matured = [row for row in matched if row["status"] == PRICE_PATH_STATUS]
     corrections = [row for row in matched if row["status"] != PRICE_PATH_STATUS]
@@ -97,7 +107,7 @@ def _cohort(observations, outcomes):
         if (outcome.get("evaluation_inputs", {}).get("implementation_sha256")
                 != observation["inputs"].get("implementation_sha256")):
             raise ReviewError("review_outcome_implementation_mismatch")
-        if latest_published_market_session(aware(outcome["recorded_at"])) < date.fromisoformat(sessions[-1]):
+        if latest_published_market_session(aware(outcome["recorded_at"]), publication_time=publication_clock) < date.fromisoformat(sessions[-1]):
             raise ReviewError("review_outcome_precedes_data_publication")
     summary = experiment.summarize([*observations, *matched])
     comparison = summary["comparison_by_version"][first["experiment_version"]]
@@ -112,6 +122,7 @@ def _cohort(observations, outcomes):
         "signal_session": first["signal_session"], "earliest_model_entry_session": entry.isoformat(),
         "earliest_complete_session": sessions[-1], "modeled_sessions": sessions,
         "earliest_publication_at": publication.isoformat(),
+        "publication_timing_basis": publication_basis,
         "observations": len(observations), "matured_price_paths": len(matured),
         "pending_or_missing_outcomes": len(missing), "correction_required_outcomes": len(corrections),
         "complete": bool(observations) and len(matured) == len(observations),
@@ -197,7 +208,7 @@ def build_review(*, policy, frozen_policy, records, experiment_report, experimen
         key=lambda row: (row["earliest_complete_session"], row["signal_session"], row["experiment_version"])) if retained else {}
     retained_summary = {key: retained_first[key] for key in (
         "cohort_id", "experiment_version", "policy_sha256", "implementation_sha256", "signal_session",
-        "earliest_model_entry_session", "earliest_complete_session", "earliest_publication_at",
+        "earliest_model_entry_session", "earliest_complete_session", "earliest_publication_at", "publication_timing_basis",
         "observations", "matured_price_paths", "pending_or_missing_outcomes", "correction_required_outcomes", "complete")
         if key in retained_first}
     historical_review_key = canonical_sha256({"review_policy": policy,
@@ -223,6 +234,7 @@ def build_review(*, policy, frozen_policy, records, experiment_report, experimen
         "earliest_model_entry_session": first.get("earliest_model_entry_session", ""),
         "earliest_complete_session": first.get("earliest_complete_session", ""),
         "earliest_publication_at": first.get("earliest_publication_at", ""),
+        "publication_timing_basis": first.get("publication_timing_basis", ""),
         "cohorts": cohorts, "source_hashes": input_hashes, "ledger_sha256": ledger_sha256,
         "experiment_report_generated_at": experiment_report["generated_at"],
         "source_ledger": str(experiment.OUTPUT / "ledger.jsonl"),
@@ -243,8 +255,8 @@ def markdown(report):
         f"Active-version status: **{report['status']}** · active version: `{report['active_experiment_version']}`.",
         f"Generated: {report['generated_at']}. Complete active cohorts: {report['complete_cohorts']}.", "",
         "This packet opens an owner review. It does not establish profitability or change recommendation eligibility, risk limits or execution authority.", "",
-        f"Earliest modeled entry: {report['earliest_model_entry_session'] or 'not yet observed'}; fifth session: {report['earliest_complete_session'] or 'unavailable'}; earliest provider publication boundary: {report['earliest_publication_at'] or 'unavailable'}.",
-        "The publication boundary is conditional on complete validated data and a successful scheduled refresh.", ""]
+        f"Earliest modeled entry: {report['earliest_model_entry_session'] or 'not yet observed'}; fifth session: {report['earliest_complete_session'] or 'unavailable'}; earliest scheduled verification boundary: {report['earliest_publication_at'] or 'unavailable'}.",
+        "The displayed time is conditional on complete validated data and a successful scheduled refresh; it is not a provider availability guarantee. Historical versions retain their frozen publication rules.", ""]
     retained = report.get("earliest_retained_cohort", {})
     if retained:
         lines.extend(["## Retained earlier-version review", "",
@@ -252,7 +264,7 @@ def markdown(report):
             f"Complete historical cohorts: {report['historical_complete_cohorts']}. "
             "This separate packet does not validate the active version; versions are not pooled.",
             f"Version: `{retained['experiment_version']}`; cohort: `{retained['cohort_id']}`; "
-            f"fifth session: {retained['earliest_complete_session']}; earliest provider publication: {retained['earliest_publication_at']}.",
+            f"fifth session: {retained['earliest_complete_session']}; retained publication rule: {retained['earliest_publication_at']}.",
             f"Review key: `{report['historical_review_key']}`. Full frozen observations and cost comparisons remain under that version below.", ""])
     for cohort in report["cohorts"]:
         lines.extend([f"## {cohort['experiment_version']} · signal {cohort['signal_session']} · entry {cohort['earliest_model_entry_session']}", "",

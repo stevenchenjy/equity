@@ -79,15 +79,15 @@
     "event_driven": true,
     "regular_delivery_mode": "watch_or_action_change",
     "weekly_summary_weekday": "friday",
-    "market_data_publication_after_et": "08:00",
-    "send_after_et": "09:30",
+    "market_data_publication_after_et": "11:15",
+    "send_after_et": "13:30",
     "eod_publication_retry_slots_et": [
-      "08:00",
-      "08:30",
-      "09:00",
-      "09:45"
+      "11:15",
+      "11:45",
+      "12:15",
+      "12:45"
     ],
-    "terminal_alert_after_et": "15:05",
+    "terminal_alert_after_et": "15:30",
     "new_filing_lookback_calendar_days": 7,
     "material_events": [
       "portfolio_action_transition",
@@ -96,25 +96,7 @@
       "long_term_fundamental_weakening",
       "decision_fingerprint_change"
     ],
-    "unchanged_daily_email": false,
-    "afternoon_refresh_slots_et": [
-      "13:30",
-      "14:00"
-    ],
-    "delivery_windows_et": [
-      {
-        "id": "morning",
-        "start": "09:30",
-        "end": "10:30",
-        "refresh_not_before": "08:00"
-      },
-      {
-        "id": "afternoon",
-        "start": "14:30",
-        "end": "15:05",
-        "refresh_not_before": "13:30"
-      }
-    ]
+    "unchanged_daily_email": false
   },
   "model_policy": {
     "status": "removed_from_active_production",

@@ -205,20 +205,15 @@ Exact holdings, share counts, costs, cash, order IDs and account values belong
 only in ignored local files, never in the public source repository. Subsequent
 fills must be reconciled before a scenario becomes an eligible order draft.
 
-Regular delivery now follows the owner's September 28 attention windows:
-09:30–10:30 and 14:30–15:05 ET on exchange sessions, with at most one materially
-changed email per window and cross-window unknown-send protection. These are
-chosen around the owner's 09:45–10:45 and 14:45–15:20 availability. Morning and
-afternoon each require a fresh complete research handoff; unchanged checks stay
-open for later meaningful updates within the window. Do not send filler or
-late catch-up instructions. The exact former 13:30 policy is archived.
-
-No scheduled night-before order email is enabled: actual Basic REST data did
-not include the current day's close in the evening probe. Existing evidence
-may support a clearly dated next-session conditional review, but cannot verify
-opening prices, broker DAY handling, fills, settled funds or order inventory.
-A watch candidate never gains positive executable quantity from the clock.
-There is no new recipient, broker link or automatic execution authority.
+Regular delivery remains the existing after-13:30 ET watch/action-change mode:
+check daily, email on a meaningful new/changed buy/sell/watch plan, and do not
+send unchanged filler. Include material tactical price/quantity/invalidation or
+order-status changes in notification comparisons. End-of-day inputs cannot
+verify an intraday trigger, a fill, settled funds or an exhaustive event calendar.
+Every positive hypothetical draft must list unresolved assumptions separately;
+it is not today's cleared order quantity. Preserve full named coverage even
+when a candidate is not in the ranking shortlist. No duplicate scheduler, new
+recipient, live broker link or automated execution is authorized by this change.
 
 ## Independent market discovery (2026-09-22 follow-up)
 

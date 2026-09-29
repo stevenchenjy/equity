@@ -93,11 +93,11 @@ class ActiveProductionTests(unittest.TestCase):
         )
         self.assertEqual(
             config["notifications"]["send_after_et"],
-            "13:30",
+            "09:30",
         )
         self.assertEqual(
             config["notifications"]["terminal_alert_after_et"],
-            "15:30",
+            "15:05",
         )
 
     def test_recommendation_labels_are_explicit(self) -> None:

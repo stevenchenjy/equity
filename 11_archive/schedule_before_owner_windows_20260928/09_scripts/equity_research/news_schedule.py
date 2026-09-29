@@ -13,7 +13,7 @@ from daily_common import ROOT, atomic_write_json, read_json
 
 STATE_PATH = ROOT / "00_project_control/run_logs/news_scheduler.local.json"
 SCRIPT = ROOT / "09_scripts/equity_research/refresh_official_news.py"
-SLOTS = ("08:00", "13:30", "16:45", "20:15")
+SLOTS = ("08:15", "11:15", "16:45", "20:15")
 EFFECTIVE_FROM = "2026-09-20"
 
 

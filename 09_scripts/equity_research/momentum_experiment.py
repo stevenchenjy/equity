@@ -478,8 +478,9 @@ def _run(root: Path, current: datetime, output: Path):
         # Software repairs start a new implementation version, but never orphan
         # already captured cohorts. Old outcomes use their registered old code.
         from archived_momentum import evaluate_archived
+        archived_deferred = []
         archived_outcomes = evaluate_archived(root=root, records=records, history=history,
-                market=market, current=current, inputs=inputs)
+                market=market, current=current, inputs=inputs, deferred=archived_deferred)
         preview = copy.deepcopy(records)
         for outcome in archived_outcomes:
             candidate = copy.deepcopy(outcome)
@@ -498,11 +499,13 @@ def _run(root: Path, current: datetime, output: Path):
             "current_receipt_at": current.isoformat(), "ledger_sha256": sha256_file(ledger),
             "pending_older_implementation": sum(r["kind"] == "observation" and r["observation_id"] not in complete
                 and r["inputs"].get("implementation_sha256") != implementation_hash for r in records),
+            "archived_evaluation_deferred": archived_deferred,
             "software_run": "passed", "automatic_action_allowed": False}
         atomic_write_json(output / "report.json", report)
         lines = ["# Momentum research experiment", "", f"Generated: {current.isoformat()}; EOD evidence: {history['market_session']}.", "",
             "Experimental only. Zero actionable quantities. Canonical strategy, allocation, risk, decisions and delivery rules are unchanged.", "",
             "## Forward evidence", "", *comparison_markdown(report["summary"]), "",
+            *(["Older implementation outcomes remain pending because their frozen publication rule does not yet admit the supplied market session. No timestamps, bars or prior cohort start dates were changed. See archived_evaluation_deferred in report.json.", ""] if archived_deferred else []),
             "These are overlapping ticker/session price paths, not independent trades, portfolio returns, statistical significance or proven incremental value. Selection comparisons apply an identical future-open to fifth-close path and cost grid to each cohort, separately for each policy version. Original canonical and conditional tactical entry execution is unmodeled. All unselected names remain available for missed-opportunity review.", "",
             "Entry is the first regular-session open strictly AFTER actual first observation, including today's open if the observation is premarket. No elapsed opens are filled retrospectively. The separate experimental stop/target models are gap-adjusted and assume stop first for same-bar ambiguity; their returns are not used for baseline selection comparisons. Per-side costs are the frozen policy's sensitivities, not verified live spreads or fills. Full exit at 2R is an experimental simplification. Missing/delisted observations stay pending; corrections require review. No dividends, capital constraints, halts or borrow are simulated; no leverage is used.", "",
             "Current coverage below reuses immutable first-capture observations. A new receipt does not replace the original timing, catalyst context or baseline eligibility; first-observed and current-received timestamps are recorded separately in report.json.", "",

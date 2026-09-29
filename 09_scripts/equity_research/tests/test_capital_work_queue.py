@@ -73,7 +73,7 @@ class CapitalWorkQueueTests(unittest.TestCase):
         for row in result["plan_reassessment_queue"]:
             self.assertEqual(row["original_time_exit_at"],"2026-09-25T15:45:00-04:00")
             self.assertEqual(row["plan_record_hash"],"2"*64)
-            self.assertEqual(row["next_review_at"],"2026-09-28T09:35:00-04:00")
+            self.assertEqual(row["next_review_at"],"2026-09-28T09:45:00-04:00")
         self.assertFalse(result["automatic_action_allowed"])
 
     def test_unchanged_refresh_no_ticket_or_event_duplicates_and_no_deadline_roll(self):
@@ -167,11 +167,11 @@ class CapitalWorkQueueTests(unittest.TestCase):
 
     def test_automatic_check_uses_real_refresh_boundary_not_mail_time(self):
         report=self.build()
-        self.assertEqual(report["next_automatic_review_at"],"2026-09-28T08:15:00-04:00")
+        self.assertEqual(report["next_automatic_review_at"],"2026-09-28T08:00:00-04:00")
         when=datetime.fromisoformat("2026-09-28T11:30:00-04:00")
         d=decision(); d["generated_at"]="2026-09-28T11:00:00-04:00"
-        report=self.build(d,current=when,scheduler_state={"dates":{"2026-09-28":{"refresh_slots_completed":["08:15","11:15","11:45","12:15","12:45"]}}})
-        self.assertEqual(report["next_automatic_review_at"],"2026-09-29T08:15:00-04:00")
+        report=self.build(d,current=when,scheduler_state={"dates":{"2026-09-28":{"refresh_slots_completed":["08:00","08:30","09:00","09:45","13:30","14:00"]}}})
+        self.assertEqual(report["next_automatic_review_at"],"2026-09-29T08:00:00-04:00")
 
     def test_stale_optional_backlog_is_not_advertised_as_current(self):
         from capital_work_queue import BACKLOG_REL

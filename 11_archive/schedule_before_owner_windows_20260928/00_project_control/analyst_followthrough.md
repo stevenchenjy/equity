@@ -184,7 +184,7 @@ directory `/Users/messssi/LocalRuntime/equity`, the approved full refresh is:
 This is the existing operator-safe `reuse_validated_snapshot` entry point.
 Do not invoke a sender or change scheduler completion flags. Verify the
 refresh's actual current-cycle handoff, required published market session,
-every stage result, final artifacts and no-send boundaries. A scheduled analyst wake, an
+every stage result, final artifacts and no-send boundaries. A noon wake, an
 online Git receipt or a zero child exit by itself does not establish a current
 complete research chain. If the validated close or required evidence is
 unavailable, retain the precise blocker and the admission receipt.
@@ -204,19 +204,9 @@ conclusions and accepted plan/thesis versions separately. A larger objective
 data batch does not itself increase the Codex analyst work budget or turn an
 unresolved financial field into a completed one.
 
-The weekday follow-up runs at 08:45 and 13:45 ET, after the scheduled 08:00
-and 13:30 research attempts and before/during the owner's delivery windows.
-The earlier noon-only heartbeat is superseded, with its exact private config
-retained in the schedule-upgrade audit. Check whether the relevant current
-handoff actually passed; a configured time is not execution evidence. If a
-provider/broker-dependent task is blocked, continue independent sourced work.
-Prioritize useful risk/plan conclusions before the attention window ends, and
-carry longer valuation work forward through durable inputs and receipts.
-Completion after a window improves future research but does not authorize a
-late email or a renewed expired DAY draft. The existing sender checks every
-15 minutes inside each window; a quiet first check does not consume a later
-materially changed report. Machine/app availability and task runtime remain
-external dependencies.
+The weekday follow-up is intended to run after the publication refresh and
+before the normal delivery boundary. Machine/app availability and task runtime
+remain dependencies; a configured schedule is not proof of a completed run.
 
 ## Authority
 

@@ -64,20 +64,8 @@ no SEC API key and never connects to a broker.
 The configured company universe and current held companies receive SEC evidence
 coverage; foreign-issuer or taxonomy gaps remain explicit. A separate official
 issuer-news collector records source freshness, failures and deduplicated events.
-Its bounded checks run at 08:00, 13:30, 16:45 and 20:15 ET. The existing
-serialized refresh scheduler performs a due news check before starting the
-08:00 or 13:30 full research refresh, so both owner attention windows can use
-that check's current evidence and explicit source failures. The full refresh
-alone does not fetch official issuer news.
-
-Morning success does not consume the later news checks. Missed slots coalesce
-into one bounded attempt; reservation is persisted before the child starts.
-Failure or process interruption waits for the next news slot, without an
-immediate retry. News failure remains visible without preventing unrelated
-research from progressing. The retired 08:15/11:15 cadence is preserved under
-`11_archive/schedule_before_owner_windows_20260928/`. These after-close news
-checks do not authorize an evening email or renew a DAY draft. Public source
-text is untrusted evidence, never workflow instructions.
+Its afternoon/evening cadence does not depend on morning EOD success. Public
+source text is untrusted evidence, never workflow instructions.
 
 Operational refresh success, base financial-data validity, complete valuation,
 long-horizon thesis readiness and official-news coverage are separate states.

@@ -20,6 +20,17 @@
         "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
         "daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06"
       }
+    },
+    {
+      "experiment_version": "eod-breakout-v3-20260928",
+      "git_commit": "e199070b5dff899bc829402059417a96491d19cd",
+      "implementation_files": {
+        "archived_momentum.py": "48c056269f6d2b80b60c10a193fef983a0a6cd327129f7e24ceaf3a45ed95e42",
+        "daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06",
+        "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "momentum_experiment.py": "e632adb1a3c530f54e481cb8903ea8cf4f5a777e20ca2703e0d32564bd3c631a",
+        "tactical_review.py": "e730a276e670638056c546d9bd7a7daf32cc713fa875dfdc1284efc2c642c131"
+      }
     }
   ]
 }

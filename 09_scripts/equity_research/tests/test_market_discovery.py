@@ -62,7 +62,7 @@ class DiscoveryTests(unittest.TestCase):
         self.assertEqual(SESSION.isoformat(), "2026-09-21")
         self.assertEqual(len(DAYS), 21)
         self.assertNotIn("2026-09-07", [str(d) for d in DAYS])
-        self.assertEqual(md.published_sessions(datetime(2026, 9, 22, 9, tzinfo=md.ET))[-1].isoformat(), "2026-09-18")
+        self.assertEqual(md.published_sessions(datetime(2026, 9, 22, 9, tzinfo=md.ET))[-1].isoformat(), "2026-09-21")
 
     def test_reference_cursor_only_same_origin(self):
         good = "https://api.massive.com/v3/reference/tickers?cursor=abcDEF123_-"

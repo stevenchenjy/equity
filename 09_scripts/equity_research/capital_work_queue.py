@@ -53,12 +53,13 @@ def _next_check(current: datetime, *, plan: bool = False, scheduler_state: dict 
     # slots are recovery attempts: a successful in-flight refresh retires them
     # only after this report is composed, so they are not promised next checks.
     from run_daily_refresh_scheduler import (WEEKDAY_SLOTS, WEEKEND_SLOTS,
-                                            EOD_PUBLICATION_RETRY_SLOTS)
-    recovery_slots = set(EOD_PUBLICATION_RETRY_SLOTS[1:])
+                                            EOD_PUBLICATION_RETRY_SLOTS,
+                                            AFTERNOON_REFRESH_SLOTS)
+    recovery_slots = set((*EOD_PUBLICATION_RETRY_SLOTS[1:], *AFTERNOON_REFRESH_SLOTS[1:]))
     day = current.date()
     while True:
         if plan:
-            slots = ["09:35"] if is_us_market_session_date(day) else []
+            slots = ["09:45", "14:45"] if is_us_market_session_date(day) else []
         else:
             configured = WEEKEND_SLOTS if day.weekday() >= 5 else WEEKDAY_SLOTS
             slots = [slot for slot in configured if slot not in recovery_slots]
