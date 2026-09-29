@@ -47,12 +47,18 @@ class ActiveDisplayNamesTests(unittest.TestCase):
             self.assertTrue(any("runtime display" in issue for issue in issues))
             self.assertTrue(any("Graphify node" in issue for issue in issues))
 
+            email.write_text("Equity Research\nCurrent plan\n", encoding="utf-8")
+            stale_source = root / "07_automation/email_briefs/daily_email_brief.txt"
+            stale_source.parent.mkdir(parents=True)
+            stale_source.write_text("[Phase 5R] Stale preview\n", encoding="utf-8")
+            self.assertTrue(any("source display" in issue for issue in audit(root, paths, runtime)))
+            stale_source.unlink()
+
             # A cached community name can regress even when its member and
             # source heading are current; Graphify's AST update may retain it.
             current.write_text("# Equity Research — Current\n", encoding="utf-8")
             graph["nodes"][0]["label"] = "Equity Research — Current"
             (out / "graph.json").write_text(json.dumps(graph), encoding="utf-8")
-            email.write_text("Equity Research\nCurrent plan\n", encoding="utf-8")
             cache_issues = audit(root, paths, runtime)
             self.assertTrue(any("cache needs repair" in issue for issue in cache_issues))
 

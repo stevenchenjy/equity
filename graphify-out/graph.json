@@ -1539,7 +1539,7 @@
       "label": "main()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/check_active_display_names.py",
-      "source_location": "L96",
+      "source_location": "L99",
       "_origin": "ast",
       "id": "09_scripts_equity_research_check_active_display_names_main",
       "community": 75,
@@ -11252,7 +11252,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_py_path",
-      "community": 60,
+      "community": 21,
       "norm_label": "path"
     },
     {
@@ -11282,7 +11282,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_write_acceptance_index",
-      "community": 60,
+      "community": 21,
       "norm_label": "write_acceptance_index()"
     },
     {
@@ -11322,7 +11322,7 @@
       "source_location": "L380",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_reconciliation_identity",
-      "community": 60,
+      "community": 21,
       "norm_label": "_reconciliation_identity()"
     },
     {
@@ -11332,7 +11332,7 @@
       "source_location": "L396",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_load_acceptance_reconciliation_log",
-      "community": 60,
+      "community": 21,
       "norm_label": "load_acceptance_reconciliation_log()"
     },
     {
@@ -11342,7 +11342,7 @@
       "source_location": "L417",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_write_acceptance_reconciliation_log",
-      "community": 60,
+      "community": 21,
       "norm_label": "write_acceptance_reconciliation_log()"
     },
     {
@@ -11442,7 +11442,7 @@
       "source_location": "L381",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_381",
-      "community": 60,
+      "community": 21,
       "norm_label": "fields that must remain fixed across an idempotent log retry."
     },
     {
@@ -11452,7 +11452,7 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_399",
-      "community": 60,
+      "community": 21,
       "norm_label": "load the append-only reconciliation log or fail closed on corruption."
     },
     {
@@ -11462,7 +11462,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_421",
-      "community": 60,
+      "community": 21,
       "norm_label": "append only newly observed, validated timestamp reconciliations.      the histor"
     },
     {
@@ -15362,7 +15362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_delivery_windows",
-      "community": 140,
+      "community": 129,
       "norm_label": "test_delivery_windows.py"
     },
     {
@@ -22692,7 +22692,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance",
-      "community": 73,
+      "community": 21,
       "norm_label": "test_sec_acceptance.py"
     },
     {
@@ -22832,7 +22832,7 @@
       "source_location": "L263",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests",
-      "community": 73,
+      "community": 21,
       "norm_label": "secacceptancerefreshfailuretests"
     },
     {
@@ -22842,7 +22842,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_submissions_payload",
-      "community": 73,
+      "community": 21,
       "norm_label": "._submissions_payload()"
     },
     {
@@ -22852,7 +22852,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_run_acceptance_failure",
-      "community": 73,
+      "community": 21,
       "norm_label": "._run_acceptance_failure()"
     },
     {
@@ -22862,7 +22862,7 @@
       "source_location": "L421",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_test_identity_conflict_fails_closed_without_mutation",
-      "community": 73,
+      "community": 21,
       "norm_label": ".test_identity_conflict_fails_closed_without_mutation()"
     },
     {
@@ -22872,7 +22872,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_test_unindexed_official_accession_is_admitted_to_versioned_extension",
-      "community": 73,
+      "community": 21,
       "norm_label": ".test_unindexed_official_accession_is_admitted_to_versioned_extension()"
     },
     {
@@ -22882,7 +22882,7 @@
       "source_location": "L552",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_test_valid_reconciliation_releases_staged_ledger_without_index_mutation",
-      "community": 60,
+      "community": 21,
       "norm_label": ".test_valid_reconciliation_releases_staged_ledger_without_index_mutation()"
     },
     {
@@ -22892,7 +22892,7 @@
       "source_location": "L695",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_run_user_agent_preflight_failure",
-      "community": 73,
+      "community": 21,
       "norm_label": "._run_user_agent_preflight_failure()"
     },
     {
@@ -22902,7 +22902,7 @@
       "source_location": "L792",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_test_missing_user_agent_preflight_fails_closed_without_network_or_mutation",
-      "community": 73,
+      "community": 21,
       "norm_label": ".test_missing_user_agent_preflight_fails_closed_without_network_or_mutation()"
     },
     {
@@ -22912,7 +22912,7 @@
       "source_location": "L798",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancerefreshfailuretests_test_invalid_user_agent_preflight_fails_closed_without_network_or_mutation",
-      "community": 73,
+      "community": 21,
       "norm_label": ".test_invalid_user_agent_preflight_fails_closed_without_network_or_mutation()"
     },
     {
@@ -22922,7 +22922,7 @@
       "source_location": "L264",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_rationale_264",
-      "community": 73,
+      "community": 21,
       "norm_label": "regression coverage for the sec acceptance precommit boundary."
     },
     {
@@ -22932,7 +22932,7 @@
       "source_location": "L295",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_rationale_295",
-      "community": 73,
+      "community": 21,
       "norm_label": "run an offline refresh that must fail before any evidence commit."
     },
     {
@@ -22942,7 +22942,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_rationale_553",
-      "community": 60,
+      "community": 21,
       "norm_label": "an accepted time representation change logs without rewriting the index."
     },
     {
@@ -22952,7 +22952,7 @@
       "source_location": "L701",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_rationale_701",
-      "community": 73,
+      "community": 21,
       "norm_label": "a rejected user-agent must close before any sec or evidence mutation."
     },
     {
@@ -23472,7 +23472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sender_publication",
-      "community": 82,
+      "community": 129,
       "norm_label": "test_sender_publication.py"
     },
     {
@@ -37259,7 +37259,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/check_active_display_names.py",
-      "source_location": "L96",
+      "source_location": "L99",
       "weight": 1.0,
       "source": "09_scripts_equity_research_check_active_display_names",
       "target": "09_scripts_equity_research_check_active_display_names_main",
@@ -37302,7 +37302,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/check_active_display_names.py",
-      "source_location": "L102",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "09_scripts_equity_research_check_active_display_names_main",
       "target": "09_scripts_equity_research_check_active_display_names_tracked_markdown",
@@ -37346,7 +37346,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/check_active_display_names.py",
-      "source_location": "L98",
+      "source_location": "L101",
       "weight": 1.0,
       "source": "09_scripts_equity_research_check_active_display_names_main",
       "target": "09_scripts_equity_research_check_active_display_names_py_path",
@@ -37390,7 +37390,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/check_active_display_names.py",
-      "source_location": "L102",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "09_scripts_equity_research_check_active_display_names_main",
       "target": "09_scripts_equity_research_check_active_display_names_audit",
@@ -121094,5 +121094,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "02b3b7799887ef835fbde1b5d570143a2003ec10"
+  "built_at_commit": "15edfcfdca3821277c4788fe03c7e59ca7991e3a"
 }

@@ -75,9 +75,12 @@ def audit(root: Path, paths: list[str], runtime_root: Path | None = None) -> lis
         if report.is_file() and re.search(r"^#{2,4} Community.*Phase\s*5R\b", report.read_text(encoding="utf-8"), re.M | re.I):
             issues.append("Graphify report community title")
 
-    if runtime_root is not None:
+    display_roots = [("source", root)]
+    if runtime_root is not None and runtime_root.resolve() != root.resolve():
+        display_roots.append(("runtime", runtime_root))
+    for location, display_root in display_roots:
         for name in DISPLAY_PATHS:
-            path = runtime_root / name
+            path = display_root / name
             if not path.is_file():
                 continue
             content = path.read_text(encoding="utf-8")
@@ -89,7 +92,7 @@ def audit(root: Path, paths: list[str], runtime_root: Path | None = None) -> lis
             else:
                 bad = OLD_NAME.search(first_heading(content)) is not None
             if bad:
-                issues.append(f"runtime display title: {name}")
+                issues.append(f"{location} display title: {name}")
     return issues
 
 

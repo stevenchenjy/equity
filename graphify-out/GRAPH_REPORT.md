@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-09-28)
 
 ## Corpus Check
-- 290 files · ~279,903 words
+- 290 files · ~279,940 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 3188 nodes · 8362 edges · 160 communities (121 shown, 39 thin omitted)
+- 3188 nodes · 8362 edges · 159 communities (120 shown, 39 thin omitted)
 - Extraction: 81% EXTRACTED · 19% INFERRED · 0% AMBIGUOUS · INFERRED: 1585 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `02b3b779`
+- Built from commit: `15edfcfd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -88,7 +88,6 @@
 - ResearchRiskLimitsTests
 - build_current_research_baseline.py
 - report_heading
-- write_extension_admission_audit
 - score_candidates.py
 - _run_identity
 - main
@@ -202,7 +201,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (160 total, 39 thin omitted)
+## Communities (159 total, 39 thin omitted)
 
 ### Community 0 - "market_data_adapter.py"
 Cohesion: 0.06
@@ -289,8 +288,8 @@ Cohesion: 0.10
 Nodes (9): B2RefreshCadenceTests, _market_row(), ExitStack, Path, A failed child reserves its slot and waits for the next retry slot., The existing launchd job can refresh SEC evidence without B2 or email., The repair marker reuses local market data and cannot send email., The launchd probe maps only fixed status from the no-network B2 child. (+1 more)
 
 ### Community 21 - "PacketMarketObservationTests"
-Cohesion: 0.12
-Nodes (26): recent_filings(), acceptance_map(), AcceptanceIndexError, build_acceptance_index(), load_acceptance_index(), make_acceptance_record(), _make_reconciliation_row(), normalize_acceptance_timestamp() (+18 more)
+Cohesion: 0.08
+Nodes (39): recent_filings(), acceptance_map(), AcceptanceIndexError, build_acceptance_index(), load_acceptance_index(), load_acceptance_reconciliation_log(), make_acceptance_record(), _make_reconciliation_row() (+31 more)
 
 ### Community 22 - "compare_policies"
 Cohesion: 0.17
@@ -421,8 +420,8 @@ Cohesion: 0.14
 Nodes (12): Applied scheduling interpretation, Bounded observation on the installed collector, Endpoint and primary sources, REST collector timing evidence — September 28, 2026, Data Handling, Equity Research — Configured-Universe Data and Broad Discovery Policy, Independent broad-market discovery extension (September 22, 2026), Permitted Source and Scope (+4 more)
 
 ### Community 60 - "main"
-Cohesion: 0.16
-Nodes (15): AcceptanceReconciliationError, load_acceptance_reconciliation_log(), load_immutable_acceptance_index(), Path, Load the historical index only when the retained artifact exists.      The times, Fields that must remain fixed across an idempotent log retry., Load the append-only reconciliation log or fail closed on corruption., Append only newly observed, validated timestamp reconciliations.      The histor (+7 more)
+Cohesion: 0.29
+Nodes (6): AcceptanceReconciliationError, load_immutable_acceptance_index(), Load the historical index only when the retained artifact exists.      The times, A current SEC record cannot be reconciled to the immutable index., acceptance_record(), SecAcceptanceReconciliationTests
 
 ### Community 61 - "create_long_horizon_research.py"
 Cohesion: 0.25
@@ -468,10 +467,6 @@ Nodes (7): Absolute-path audit, Bounded collection continuity during network fai
 Cohesion: 0.23
 Nodes (14): main(), build_review(), _cohort(), markdown(), datetime, Path, ValueError, Prepare an early manual-review packet without changing the frozen experiment. (+6 more)
 
-### Community 73 - "write_extension_admission_audit"
-Cohesion: 0.21
-Nodes (4): Regression coverage for the SEC acceptance precommit boundary., Run an offline refresh that must fail before any evidence commit., A rejected User-Agent must close before any SEC or evidence mutation., SecAcceptanceRefreshFailureTests
-
 ### Community 74 - "score_candidates.py"
 Cohesion: 0.12
 Nodes (37): append_csv_durable(), bool_value(), cycle_date(), delivery_guard(), easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session() (+29 more)
@@ -501,7 +496,7 @@ Cohesion: 0.20
 Nodes (18): csv_fields(), load_positions(), Path, write_csv(), write_text(), append_c9b_log(), Path, sha256() (+10 more)
 
 ### Community 82 - "test_sender_publication.py"
-Cohesion: 0.54
+Cohesion: 0.57
 Nodes (3): actionable_fixture(), publication_fixture(), SenderPublicationTests
 
 ### Community 89 - "next_thursday"
@@ -633,7 +628,7 @@ Cohesion: 0.47
 Nodes (3): Keep operational completion, maintained views, and price readiness separate., workflow_health(), CurrentWorkflowStatusTests
 
 ### Community 140 - "WorkQueueReportingTests"
-Cohesion: 0.19
+Cohesion: 0.20
 Nodes (3): DeliveryWindowTests, receipt(), stamp()
 
 ### Community 143 - "Equity Research — SHADOW_LLM"

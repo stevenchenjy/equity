@@ -39,4 +39,4 @@ python3 09_scripts/equity_research/repair_graph_display_names.py
 
 工具仅按已登记的现行文档路径、首行位置和原始标题修正文档节点显示名，并修正缺乏实际社区成员支持的旧 Phase 5R 缓存标题；保留仍由历史成员支持的原名。节点 ID、边、归档内容和兼容协议值不变。知识图谱是导航索引，不是政策启用证据；实际内容和生产提交才是依据。
 
-完成命名变更前，运行 `python3 09_scripts/equity_research/check_active_display_names.py --runtime-root /Users/messssi/LocalRuntime/equity`。它检查现行受版本控制文档、显示配置、Graphify 节点与缓存、生产邮件和报告标题；归档与协议兼容标识不参与改名。检查通过后仍需按 [改动验收入口](completion_gate.md) 核实提交、运行环境和实际交付状态。
+完成命名变更前，运行 `python3 09_scripts/equity_research/check_active_display_names.py --runtime-root /Users/messssi/LocalRuntime/equity`。它检查现行受版本控制文档、显示配置、Graphify 节点与缓存，以及源码和生产目录里现存邮件、报告的标题；归档与协议兼容标识不参与改名。检查通过后仍需按 [改动验收入口](completion_gate.md) 核实提交、运行环境和实际交付状态。
