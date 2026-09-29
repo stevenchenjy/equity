@@ -35,7 +35,7 @@ def main() -> None:
         notes=f"result={result}; account_state_local_only=yes; credentials_read=no",
     )
     print(
-        f"Phase 5R-C9 account state {result}; "
+        f"Equity Research account state {result}; "
         f"reported_account_total={float(state['account_total_value']):.2f}; inhibit_validated=true"
     )
 

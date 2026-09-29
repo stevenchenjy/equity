@@ -10,4 +10,4 @@
 python3 09_scripts/equity_research/check_active_display_names.py --runtime-root /Users/messssi/LocalRuntime/equity
 ```
 
-此检查核对现行受版本控制文档标题、统一显示配置、Graphify 当前节点和社区缓存，以及源码检出目录和生产运行目录中现存邮件/报告的显示标题。源码目录的忽略文件也可能是过期的生成品；不能把它们当作当前生产输出，旧生成品应在保留来源和哈希的前提下移出当前产物路径。历史归档、schema、环境变量、旧 launchd 标识和其他兼容键允许保留原值。`graphify update .` 后先运行 `repair_graph_display_names.py` 的检查模式；若发现缓存漂移，按命名规则修正并重跑上述检查。任何验收未完成时写明具体缺口，不能概括为“已修复”。
+此检查核对现行受版本控制文档标题、统一显示配置、命令行展示文案、Graphify 当前节点和社区缓存，以及源码检出目录和生产运行目录中现存邮件/报告的显示标题。源码目录的忽略文件也可能是过期的生成品；不能把它们当作当前生产输出，旧生成品应在保留来源和哈希的前提下移出当前产物路径。历史归档、schema、环境变量、旧 launchd 标识和其他兼容键允许保留原值。`graphify update .` 后先运行 `repair_graph_display_names.py` 的检查模式；若发现缓存漂移，按命名规则修正并重跑上述检查。任何验收未完成时写明具体缺口，不能概括为“已修复”。

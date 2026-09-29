@@ -312,7 +312,7 @@ def main() -> None:
         ),
     )
     print(
-        "Phase 5R-C9 dynamic weights complete; "
+        "Equity Research dynamic weights complete; "
         f"positions={len(dynamic_rows)}; core_weight={core_weight:.4f}%; "
         f"active_weight={active_weight:.4f}%; cash={cash:.2f}"
     )

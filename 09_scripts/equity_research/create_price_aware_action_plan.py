@@ -230,7 +230,7 @@ def main() -> None:
         execution_status=";".join(sorted({row["order_status"] for row in executions})),
         notes="market_at_open_default=no; limit_non_execution_risk=yes; fill_price_invented=no",
     )
-    print(f"Phase 5R-C9B price-aware action plan complete; rows={len(output)}")
+    print(f"Equity Research price-aware action plan complete; rows={len(output)}")
 
 
 if __name__ == "__main__":

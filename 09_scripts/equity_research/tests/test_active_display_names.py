@@ -54,6 +54,12 @@ class ActiveDisplayNamesTests(unittest.TestCase):
             self.assertTrue(any("source display" in issue for issue in audit(root, paths, runtime)))
             stale_source.unlink()
 
+            cli = root / "09_scripts/equity_research/example.py"
+            cli.parent.mkdir(parents=True)
+            cli.write_text('print("Phase 5R-C9 complete")\n', encoding="utf-8")
+            self.assertTrue(any("operator-facing CLI" in issue for issue in audit(root, paths, runtime)))
+            cli.unlink()
+
             # A cached community name can regress even when its member and
             # source heading are current; Graphify's AST update may retain it.
             current.write_text("# Equity Research — Current\n", encoding="utf-8")

@@ -76,7 +76,7 @@ def score_row(
 ) -> dict[str, str]:
     ticker = row["ticker"].upper()
     if ticker in LEGACY_TICKERS:
-        raise RuntimeError("Legacy IOT/RBRK tickers are excluded from Phase 5R-B2")
+        raise RuntimeError("Legacy IOT/RBRK tickers are excluded from the current equity screen")
     change, rel_volume, dollar_volume = (as_float(row[key]) for key in ("intraday_change_pct", "relative_volume", "dollar_volume"))
     base = {
         "rank": "", "ticker": ticker, "company_name": row["company_name"], "theme": row["theme"], "last_price": row["last_price"],
@@ -126,7 +126,7 @@ def main() -> None:
         row["rank"] = str(index)
     write_csv(SCORES_PATH, scores, SCORE_FIELDS)
     append_audit("score_candidates", str(SCORES_PATH.relative_to(ROOT)))
-    print(f"Wrote Phase 5R-B2 score rows: {len(scores)}")
+    print(f"Wrote Equity Research score rows: {len(scores)}")
 
 
 if __name__ == "__main__":

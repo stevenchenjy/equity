@@ -338,7 +338,7 @@ def main() -> None:
         position_count=len(actions),
         notes="whole_share_scenarios_dynamic=yes; adds_to_current_positions=no; manual_confirmation=action_transitions_only",
     )
-    print(f"Phase 5R-C9 exact action plan complete; position_actions={len(actions)}")
+    print(f"Equity Research exact action plan complete; position_actions={len(actions)}")
 
 
 if __name__ == "__main__":

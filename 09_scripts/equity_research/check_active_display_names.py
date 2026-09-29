@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 from pathlib import Path
 import re
@@ -56,6 +57,18 @@ def audit(root: Path, paths: list[str], runtime_root: Path | None = None) -> lis
         )] + list(config.get("reports", {}).values())
         if any(isinstance(value, str) and OLD_NAME.search(value) for value in values):
             issues.append("current display configuration")
+
+    scripts = root / "09_scripts/equity_research"
+    if scripts.is_dir():
+        for path in sorted(scripts.glob("*.py")):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for call in (node for node in ast.walk(tree) if isinstance(node, ast.Call)):
+                name = call.func.id if isinstance(call.func, ast.Name) else None
+                if name not in {"print", "ArgumentParser", "RuntimeError"}:
+                    continue
+                if any(isinstance(item, ast.Constant) and isinstance(item.value, str)
+                       and OLD_NAME.search(item.value) for item in ast.walk(call)):
+                    issues.append(f"operator-facing CLI text: {path.relative_to(root)}:{call.lineno}")
 
     out = root / "graphify-out"
     graph_path, label_path = out / "graph.json", out / ".graphify_labels.json"

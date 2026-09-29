@@ -45,7 +45,7 @@ CONFIRMED_FIELDS = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate or record a human-confirmed Phase 5R-C9B fill.")
+    parser = argparse.ArgumentParser(description="Validate or record a human-confirmed Equity Research fill.")
     parser.add_argument("--execution-id")
     parser.add_argument("--record-status", choices=["filled", "partial_fill", "cancelled"])
     parser.add_argument("--fill-date")
@@ -192,7 +192,7 @@ def main() -> None:
         execution_status=execution_status,
         notes=f"pending_rows={pending_count}; confirmed_rows={confirmed_count}; canonical_state_modified=no",
     )
-    print(f"Phase 5R-C9B execution validation complete; pending={pending_count}; confirmed={confirmed_count}")
+    print(f"Equity Research execution validation complete; pending={pending_count}; confirmed={confirmed_count}")
 
 
 if __name__ == "__main__":

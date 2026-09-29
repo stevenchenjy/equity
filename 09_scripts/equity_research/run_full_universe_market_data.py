@@ -632,7 +632,7 @@ def write_decision(
             ]
         )
     lines.extend([
-        "", "## Boundary", "", "- Candidate rows come only from the canonical Phase 5R universe.",
+        "", "## Boundary", "", "- Candidate rows come only from the configured equity universe.",
         f"- Current-position price-monitoring rows: `{','.join(held_tickers) if held_tickers else 'none'}`; only current local ticker symbols were added to the public snapshot.",
         "- Provider authentication was supplied only by the external runtime; no API key value was printed, logged, persisted, hashed, or written to repository configuration.",
         "- No stored position percentage, position note, archived holding file, broker, account, order, or email workflow was used.",
@@ -1164,7 +1164,7 @@ def reuse_validated_snapshot(
         f"expected_completed_session={expected_session or 'unavailable'}",
     )
     print(
-        "Phase 5R-B2 "
+        "Equity Research "
         f"snapshot_reuse_validated={str(valid).lower()}; "
         "public_source_called=false; "
         f"reuse_validation_code={reuse_code}"
@@ -1216,7 +1216,7 @@ def _run_main(args: argparse.Namespace) -> int:
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
-        raise RuntimeError("Canonical Phase 5R universe is empty")
+        raise RuntimeError("Configured equity universe is empty")
     if (len(candidate_tickers) != len(APPROVED_CANDIDATE_TICKERS)
             or set(candidate_tickers) != APPROVED_CANDIDATE_TICKERS):
         raise RuntimeError("production candidate scope must be the exact approved 31")
@@ -1531,7 +1531,7 @@ def _run_main(args: argparse.Namespace) -> int:
         f"prior_validation={prior_validation_reason}",
     )
     print(
-        f"Phase 5R-B2 smoke_test_passed={smoke_passed}; "
+        f"Equity Research smoke_test_passed={smoke_passed}; "
         f"market_rows={len(market_rows)}; "
         f"source_failure_blocking={str(source_failure).lower()}; "
         f"prior_outputs_preserved={str(prior_outputs_preserved).lower()}"

@@ -277,7 +277,7 @@ def main() -> None:
         ),
     )
     print(
-        "Phase 5R-C9 capital allocation complete; "
+        "Equity Research capital allocation complete; "
         f"dynamic_total={account_total:.2f}; core_status={core_status}; "
         f"core_shares={shares}; released_cash_scenario={released_cash:.2f}"
     )

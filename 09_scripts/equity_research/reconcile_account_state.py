@@ -88,7 +88,7 @@ POST_WEIGHT_FIELDS = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Preview or apply a validated Phase 5R-C9B reconciliation.")
+    parser = argparse.ArgumentParser(description="Preview or apply a validated Equity Research account reconciliation.")
     parser.add_argument("--execution-id")
     parser.add_argument("--apply", action="store_true", help="Apply one validated filled/partial_fill record to canonical state.")
     return parser.parse_args()
@@ -375,7 +375,7 @@ def main() -> None:
         account_state_modified="yes" if modified else "no",
         notes=f"reconciliation_state={state}; fill_price_invented=no",
     )
-    print(f"Phase 5R-C9B reconciliation status={state}; canonical_state_modified={modified}")
+    print(f"Equity Research reconciliation status={state}; canonical_state_modified={modified}")
 
 
 if __name__ == "__main__":

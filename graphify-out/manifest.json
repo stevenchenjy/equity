@@ -10,13 +10,13 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_full_universe_market_data.py": {
-    "mtime": 1790534973.1690586,
-    "ast_hash": "5daa02a4ebbd8c7ca90358ff8b73eb65",
+    "mtime": 1790647769.1745548,
+    "ast_hash": "fb53e22bfac07ecd513c9630022bf91d",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/score_candidates.py": {
-    "mtime": 1790161989.2018056,
-    "ast_hash": "22d8102ab4087bf0d0835083849bb5b8",
+    "mtime": 1790647769.1757638,
+    "ast_hash": "c95908c517168c30832efe707b4078ff",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/verify_active_state_guard.py": {
@@ -135,23 +135,23 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/calculate_dynamic_weights.py": {
-    "mtime": 1790161878.257735,
-    "ast_hash": "7501b99451a9496bbd51fe5382579e0a",
+    "mtime": 1790647769.1686041,
+    "ast_hash": "1e843de0f57ec9f397764dc2afe0d904",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/create_account_state.py": {
-    "mtime": 1790643458.6051688,
-    "ast_hash": "1707f4333947fe1cd72258aec60676de",
+    "mtime": 1790647769.1736252,
+    "ast_hash": "878de052941356376392e1037a1b57b0",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/create_cash_deployment_plan.py": {
-    "mtime": 1790161827.7679996,
-    "ast_hash": "8feb2824be1b80d39d3d35a0aa702df5",
+    "mtime": 1790647769.1730013,
+    "ast_hash": "93d686d41e3cd533b5a129a380a757f3",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/create_exact_action_plan.py": {
-    "mtime": 1790161878.2533956,
-    "ast_hash": "6770451efc232ecb8cd805694b3e3a42",
+    "mtime": 1790647769.1719725,
+    "ast_hash": "e961d5d51226b4b5d39955dd64d7bf0a",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/account_common.py": {
@@ -160,8 +160,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/regenerate_portfolio_outputs.py": {
-    "mtime": 1790535510.9651906,
-    "ast_hash": "c0b4d907c516e024c00fadf74b08dd61",
+    "mtime": 1790647769.1703367,
+    "ast_hash": "b56157e3cce9263119f01d0d761d10aa",
     "semantic_hash": ""
   },
   "00_project_control/account_state_policy.md": {
@@ -185,8 +185,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/create_price_aware_action_plan.py": {
-    "mtime": 1790289619.6022496,
-    "ast_hash": "306080d5c5b5dab62dfc4d6bc164ca6e",
+    "mtime": 1790647769.171291,
+    "ast_hash": "05191715e4ca4f43d581e9c492c48cba",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/execution_common.py": {
@@ -195,13 +195,13 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/reconcile_account_state.py": {
-    "mtime": 1790161827.863636,
-    "ast_hash": "36bab2b7811f4615e95ad63cc3d0e117",
+    "mtime": 1790647769.175123,
+    "ast_hash": "6d91e5bf94f291c2f2be4b1a5fae4a9b",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/validate_execution_fill.py": {
-    "mtime": 1790161826.9837635,
-    "ast_hash": "91e45c2d7eb75f712cd82ec03500321e",
+    "mtime": 1790647769.176476,
+    "ast_hash": "1e5a8cd0b0b1b39b4ecf4693c8073866",
     "semantic_hash": ""
   },
   "00_project_control/account_reconciliation_policy.md": {
@@ -1475,18 +1475,18 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/check_active_display_names.py": {
-    "mtime": 1790647641.6781518,
-    "ast_hash": "c8114b15c02bb10392025dd10b843f9f",
+    "mtime": 1790647799.0845666,
+    "ast_hash": "bc18e7c684967978f94e9c334db419b7",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_active_display_names.py": {
-    "mtime": 1790647641.6792393,
-    "ast_hash": "2825a4436681cbd96685305ca2ecbc23",
+    "mtime": 1790647799.0854933,
+    "ast_hash": "eaa80b7592e5d7820ff897f2f5dd5b58",
     "semantic_hash": ""
   },
   "00_project_control/completion_gate.md": {
-    "mtime": 1790647641.6797814,
-    "ast_hash": "e9025c119db97d93b85780d573d99d30",
+    "mtime": 1790647799.0863192,
+    "ast_hash": "5dc8aafc2b61eccaaf42cc29a26fae44",
     "semantic_hash": ""
   }
 }

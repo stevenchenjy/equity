@@ -669,7 +669,7 @@ def main() -> None:
         ),
     )
     print(
-        "Phase 5R-C9 portfolio regeneration complete; "
+        "Equity Research portfolio regeneration complete; "
         f"positions={len(position_rows)}; individual_eligible={len(eligible_individual)}"
     )
 
