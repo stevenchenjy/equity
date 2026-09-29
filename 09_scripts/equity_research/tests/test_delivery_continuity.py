@@ -123,20 +123,20 @@ class DeliveryContinuityTests(unittest.TestCase):
         d=fixture();p=d['plan_continuity']['plans'][0]
         p.update(status='expired_pending_verification',action='reconcile_plan')
         subject,text,html=render_email(d)
-        self.assertIn('Portfolio update',subject)
-        self.assertEqual(html.count('<h2'),6)
+        self.assertIn('Action plan',subject)
+        self.assertEqual(html.count('<h2'),4)
         self.assertLess(len(text.split()),650)
         for body in [text,html]:
-            self.assertIn('dated plan expired; outcome unconfirmed',body)
-            self.assertIn('previous protection review',body)
-            self.assertIn('zero newly eligible',body)
+            self.assertIn('Current sell/protection price: none',body)
+            self.assertIn('unfinished analysis',body)
+            self.assertIn('0 shares. No candidate has a complete current entry plan',body)
             self.assertNotIn('$80.00',body)
             self.assertNotRegex(body,r'[\u4e00-\u9fff]')
         d['account_conflicts']=['new conflict'];d['eligible_new_position_review_candidates']=['AAA']
         d['watch_candidates'][0].update(suggested_whole_shares='99',maximum_review_price='123.45')
         for body in render_email(d)[1:]:
             self.assertNotIn('123.45',body)
-            self.assertIn('New trade drafts are withheld',body)
+            self.assertIn('no new entry order',body)
 
 
 if __name__=='__main__':unittest.main()

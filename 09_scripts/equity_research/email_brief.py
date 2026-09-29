@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 
-EMAIL_BRIEF_VERSION = "phase5r_action_email_v2"
+EMAIL_BRIEF_VERSION = "equity_action_email_v3"
 _NUMBER = r"-?\d+(?:\.\d+)?"
 _SOURCE_HOSTS = {"sec.gov", "www.sec.gov", "data.sec.gov"}
 _RESEARCH_HOSTS = _SOURCE_HOSTS | {
@@ -800,7 +800,7 @@ def email_subject(
         return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
     prefix = subject_prefix(correction=correction)
     if decision.get("workflow_integrity"):
-        return f"{prefix} Portfolio update | {view['cycle']}"
+        return f"{prefix} Action plan | {view['cycle']}"
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
 
@@ -863,9 +863,9 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
     verified = decision.get('market_gate', {}).get('passed') is True
-    return _render_cards(email_subject(decision), cards(decision, view), title="Portfolio update",
+    return _render_cards(email_subject(decision), cards(decision, view), title="Your action plan",
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
-        footer=("Automated research status, not a new analyst review. Unresolved plans remain open until verified. "
+        footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
                 + ("This system has placed or changed no orders; owner execution is verified only through account records."
                    if "delivery_followthrough" in decision else "No orders have been placed or changed.")))
 

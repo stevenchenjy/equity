@@ -4,7 +4,6 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
-from work_queue_reporting import cash_lines as work_cash_lines, research_lines as work_research_lines
 
 
 def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any]) -> dict[str, Any] | None:
@@ -98,118 +97,41 @@ def core_tranche_steps(draft: dict[str, Any], window: str) -> list[str]:
     ]
 
 
-def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]]:
-    from email_brief import money, shares, _safe_source, _RESEARCH_HOSTS
+def _current_tactical_drafts(decision, allowed):
+    """Only complete, explicitly eligible current drafts may carry numbers."""
+    from investment_plans import regular_close
+    result = []
+    for draft in decision.get('tactical_review', {}).get('drafts', []):
+        try:
+            generated = datetime.fromisoformat(decision['generated_at'])
+            qty, entry, stop, target = [Decimal(str(draft[k])) for k in
+                                        ('quantity', 'entry_price', 'stop_price', 'target_price')]
+            if (draft.get('eligible') is not True or draft.get('ticker') not in allowed
+                    or draft.get('time_in_force') != 'DAY'
+                    or draft.get('session_date') != decision.get('cycle_date')
+                    or generated.tzinfo is None
+                    or generated >= regular_close(draft['session_date'])
+                    or regular_close(draft['time_exit_session']) < regular_close(draft['session_date'])
+                    or not all(v.is_finite() and v > 0 for v in (qty, entry, stop, target))
+                    or qty != qty.to_integral_value() or not stop < entry < target
+                    or not all(isinstance(draft.get(k), str) and draft[k].strip()
+                               for k in ('entry_rule', 'invalidation_rule', 'order_type'))):
+                continue
+            result.append(draft)
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            continue
+    return result
 
+
+def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical):
+    from email_brief import money, shares
+    from delivery_followthrough import continuation_lines
     def price(value):
         return money(value) if value not in (None, "") and money(value).startswith("$") else "unconfirmed"
-
     def quantity(value):
         return shares(value) if value not in (None, "") else "unconfirmed"
-
-    def section(title, lines, sources=()):
-        return {"title": title, "body": "\n".join(lines), "sources": list(sources)}
-
-    continuity = decision.get("plan_continuity", {})
-    plans = continuity.get("plans", [])
-    account = decision.get("account", {})
-    gates = all(decision.get(k, {}).get("passed") is True for k in ("market_gate", "evidence_gate", "fundamental_gate"))
-    blocked = bool(decision.get("account_conflicts")) or not gates
-    estimated = account.get("cash_basis") in {"ledger_estimate", "owner_assumption", "owner_assumed", "planning_assumption"}
-    allowed = {p['ticker'] for p in view['plans']}
-    from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
-    followthrough = decision.get('delivery_followthrough', {})
-    reconcile_delivery = continuation_requires_reconciliation(followthrough)
-    check_window = owner_check_window(decision)
-    expired_session_candidates = set()
-    try:
-        from investment_plans import regular_close
-        if datetime.fromisoformat(decision['generated_at']) >= regular_close(decision['cycle_date']):
-            expired_session_candidates = set(allowed)
-            allowed = set()
-    except (KeyError, TypeError, ValueError):
-        pass
-    if reconcile_delivery:
-        # Delivery continuation cannot spend cash or sell shares twice while
-        # canonical records still describe the pre-assumption portfolio.
-        allowed = set()
-    summary = ["This brief uses the maintained research and plan records with the latest validated close; it is not a live broker view."]
-    if reconcile_delivery:
-        summary.append("Follow-up: earlier instructions require reconciliation. Additional portfolio-changing drafts are withheld from potentially pre-execution records until actual holdings, fills, cash and orders are reconciled; no new order quantity is supplied here.")
-        if followthrough.get('status') == 'prior_action_not_structured':
-            names = followthrough.get('unstructured_candidate_tickers', [])
-            if names:
-                summary.append(f"At your {check_window} check: verify actual " + ", ".join(names)
-                    + " shares, fills and all open orders. The earlier up-to candidate did not specify a completed purchase; "
-                      "do not repeat it or assume a fill. Reassess a new buy only after those facts are recorded.")
-    elif blocked:
-        summary.append("Action: resolve the account or data verification problem. New trade drafts are withheld.")
-    elif decision.get("fundamental_gate", {}).get("weakening_tickers"):
-        summary.append("Action: reassess the business evidence for " + ", ".join(decision['fundamental_gate']['weakening_tickers']) + ". No automatic exit.")
-        if allowed:
-            summary.append("Separately eligible proposals are listed below for review; none has been submitted.")
-    elif allowed:
-        core = [eligible_core_tranche(decision, row) for row in decision.get('watch_candidates', [])
-                if row.get('ticker') in allowed]
-        core = [draft for draft in core if draft]
-        if core:
-            summary.append("Today's conditional decision: consider the exact core draft below; otherwise skip. No order has been submitted.")
-            for draft in core:
-                summary.append(core_tranche_line(draft))
-                summary.extend(core_tranche_steps(draft, check_window))
-        else:
-            summary.append("Action: review the eligible proposals below; no order has been submitted.")
-    else:
-        summary.append("New trades: zero newly eligible buy or sell proposals. Existing exit/protection plans remain separate.")
-    if expired_session_candidates:
-        summary.append("The " + ", ".join(sorted(expired_session_candidates))
-                       + " research review from this session has expired for execution. Reassess after the next validated close and current broker checks; do not reuse its price or DAY terms.")
-    if reconcile_delivery and blocked:
-        summary.append("Account or data verification is also unresolved. These independent blockers remain in force.")
-    unresolved = [p['ticker'] for p in plans if p.get('status') != 'maintained' or p.get('blockers')]
-    if unresolved:
-        if followthrough.get('status') == 'verified_current_snapshot_supersedes':
-            summary.append(f"At your {check_window} check, reassess "
-                           + ", ".join(unresolved) + " against current risk, plan and price evidence. "
-                           "The dated broker snapshot has been recorded; recheck it before acting. Do not reuse expired sell or protection prices.")
-        else:
-            summary.append(f"During your {check_window} account check, reconcile "
-                           + ", ".join(unresolved) + " holdings, fills, available shares and orders. "
-                           "Do not reuse expired sell or protection prices.")
-    sections = [section("What needs your attention", summary)]
-
-    states = {'maintained':'plan retained', 'review_due':'review due; no fill confirmed',
-              'expired_pending_verification':'dated plan expired; outcome unconfirmed',
-              'time_exit_due_pending_verification':'exit deadline passed; outcome unconfirmed',
-              'completed_observed':'completion observed', 'position_changed_pending_verification':'share count changed; reconcile',
-              'position_absent_pending_verification':'position absent; verify the outcome'}
-    actions = {'hold':'retain holding', 'protect_review':'protection review', 'exit_review':'exit review',
-               'trim_review':'trim review', 'watch':'watch'}
-    held = {r['ticker']:r for r in decision.get('held_positions', [])}
-    lines = []
-    if reconcile_delivery:
-        lines.append("Recorded holdings below are the last maintained account observations. They are not adjusted by the separate assumed-execution scenario.")
-    for p in plans:
-        ticker=p['ticker']; row=held.get(ticker,{})
-        intent = actions.get(p.get('action'), 'reconcile the prior plan')
-        if p.get('action') == 'reconcile_plan':
-            draft = p.get('historical_order_draft') or {}
-            intent = ('previous protection review' if draft.get('type') == 'STOP' else
-                      'previous sell review' if draft.get('side') == 'sell' else
-                      'previous hold/watch plan' if not p.get('proposed_change_shares') else 'reconcile the prior plan')
-        lines.append(f"{ticker}: {quantity(row.get('current_shares', p.get('current_shares')))} held; reference {price(row.get('current_price'))}. "
-                     f"Recorded intent: {intent}; {states.get(p.get('status'), 'verification required')}.")
-        deadline = p.get('time_exit_at') or p.get('review_at')
-        if deadline:
-            lines.append(f"{ticker} original {'exit/review' if p.get('time_exit_at') else 'review'} time: {deadline}.")
-    for ticker,row in held.items():
-        if ticker not in {p['ticker'] for p in plans}:
-            lines.append(f"{ticker}: {quantity(row.get('current_shares'))} held; reference {price(row.get('current_price'))}; maintained plan missing, reconcile first.")
-    lines.append("Expired prices and DAY drafts are not renewed. A passed deadline does not prove a sale or cancel the need to reconcile.")
-    sections.append(section("Holdings and retained plans", lines))
-
     orders=decision.get('tactical_review',{}).get('open_orders',{})
-    order_lines=continuation_lines(followthrough)
+    order_lines=continuation_lines(decision.get("delivery_followthrough", {}))
     order_lines.append(f"Order snapshot: {orders.get('as_of') or 'unavailable'}; current broker status must be rechecked.")
     observation = orders.get('current_inventory_observation', {})
     no_active_orders_observed = (isinstance(observation, dict) and observation.get('complete') is True
@@ -319,59 +241,181 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         candidate_origin = ticker in decision.get('eligible_new_position_review_candidates', [])
         source_rows = decision.get('watch_candidates', []) if candidate_origin else decision.get('held_positions', [])
         row=next((r for r in source_rows if r.get('ticker')==ticker),{})
-        qty=row.get('suggested_whole_shares') if candidate_origin else row.get('whole_shares_to_change')
         core_draft = eligible_core_tranche(decision, row) if candidate_origin else None
         if core_draft:
             order_lines.append(f"{ticker}: the conditional buy review and today's exact checks are at the top of this brief; "
                                "do not place a second order from this section.")
-        else:
-            order_lines.append(f"{ticker} research candidate: up to {quantity(qty)} shares at a dated review ceiling of "
-                f"{price(row.get('maximum_review_price'))}. A complete same-session direction and conditions are not recorded here; "
-                "do not place an order from this summary. A separately validated tactical draft, if present below, has its own conditions.")
-    for draft in decision.get('tactical_review',{}).get('drafts',[]):
+        elif not any(d.get('ticker') == ticker for d in tactical):
+            order_lines.append(f"{ticker}: no complete current order draft. Buy/sell 0 from this summary; "
+                               "the analyst must complete its entry, failure and exit conditions before a trade can be proposed.")
+    for draft in tactical:
         if not reconcile_delivery and not blocked and not estimated and draft.get('eligible') is True and draft.get('ticker') in allowed:
             order_lines.append(f"{draft['ticker']} tactical draft: " + ("buy " if "delivery_followthrough" in decision else "") + f"{quantity(draft.get('quantity'))} shares; entry/max {price(draft.get('entry_price'))}, "
                  f"stop {price(draft.get('stop_price'))}, target {price(draft.get('target_price'))}, planned risk {price(draft.get('planned_risk_usd'))}; "
                  f"{draft.get('order_type')}, {draft.get('time_in_force')}, session {draft.get('session_date')}; exit/review {draft.get('time_exit_session')}. "
                  "Only after its entry trigger and current account checks pass. Gaps can exceed planned loss.")
+            order_lines.append(f"{draft['ticker']} entry trigger: {draft.get('entry_rule') or 'unverified; do not enter'}")
+            order_lines.append(f"{draft['ticker']} cancel/exit condition: {draft.get('invalidation_rule') or 'unverified; do not enter'}")
+    return order_lines
+
+
+def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]]:
+    """Owner actions only; full research and queue diagnostics stay local.
+
+    Presentation consumes admitted plans and existing eligibility. It cannot
+    turn an expired plan, a screen ceiling or a cash balance into an order.
+    """
+    from email_brief import money, shares, _safe_source, _RESEARCH_HOSTS
+    from delivery_followthrough import continuation_requires_reconciliation
+    from investment_plans import regular_close
+
+    def section(title, lines, sources=()):
+        return {"title": title, "body": "\n".join(lines), "sources": list(dict.fromkeys(sources))}
+
+    def number(value):
+        try:
+            result = Decimal(str(value))
+            return result if result.is_finite() and result >= 0 else None
+        except (InvalidOperation, TypeError, ValueError):
+            return None
+
+    continuity = decision.get("plan_continuity", {})
+    plans = continuity.get("plans", [])
+    account = decision.get("account", {})
+    held = {r['ticker']: r for r in decision.get('held_positions', [])}
+    gates = all(decision.get(k, {}).get("passed") is True for k in
+                ("market_gate", "evidence_gate", "fundamental_gate"))
+    global_blockers = (continuity.get('global_blockers', [])
+                       + decision.get('workflow_integrity', {}).get('global_blockers', []))
+    blocked = bool(decision.get("account_conflicts") or global_blockers) or not gates
+    estimated = account.get("cash_basis") in {"ledger_estimate", "owner_assumption", "owner_assumed", "planning_assumption"}
+    followthrough = decision.get('delivery_followthrough', {})
+    reconcile_delivery = continuation_requires_reconciliation(followthrough)
+    allowed = {p['ticker'] for p in view['plans']}
+    window = owner_check_window(decision)
+    after_close = False
+    try:
+        after_close = datetime.fromisoformat(decision['generated_at']) >= regular_close(decision['cycle_date'])
+    except (KeyError, TypeError, ValueError):
+        pass
+    expired = set(allowed) if after_close else set()
+    if after_close or reconcile_delivery or blocked or estimated:
+        allowed = set()
+
+    core = [eligible_core_tranche(decision, row) for row in decision.get('watch_candidates', [])
+            if row.get('ticker') in allowed]
+    core = [draft for draft in core if draft]
+    tactical = _current_tactical_drafts(decision, allowed)
+    order_lines = _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical)
+    current_sell = any(line.startswith('Maintained conditional plan —') for line in order_lines)
+    summary = []
+    if reconcile_delivery:
+        summary.append("Now: do not repeat the earlier instructions or place an additional portfolio-changing order. "
+                       "Additional portfolio-changing drafts are withheld. The later-email assumed-fill scenario is separate from actual broker records.")
+        if followthrough.get('status') == 'prior_action_not_structured':
+            names = followthrough.get('unstructured_candidate_tickers', [])
+            if names:
+                summary.append(f"At your {window} check: verify actual " + ", ".join(names)
+                    + " shares, fills and all open orders. The earlier up-to candidate did not specify a completed purchase; "
+                      "do not repeat it or assume a fill. A new buy requires those facts to be recorded.")
+    elif blocked:
+        summary.append("Now: no new entry order. Account-wide or data evidence is incomplete; retained protection is addressed separately below.")
+        if decision.get('account_conflicts'):
+            summary.append("Needed: reconcile the conflicting current holdings, cash and execution records.")
+        if not gates:
+            failed = [label for key, label in (("market_gate", "validated close"),
+                      ("evidence_gate", "source evidence"), ("fundamental_gate", "financial coverage"))
+                      if decision.get(key, {}).get('passed') is not True]
+            summary.append("Needed: " + ', '.join(failed) + ". The system must complete this; no price is cleared for entry.")
+        if global_blockers:
+            summary.append("Needed: " + '; '.join(str(x).replace('_', ' ') for x in sorted(set(global_blockers))) + ".")
+    elif estimated:
+        summary.append("Now: no new entry order. Cash is a planning estimate, not confirmed execution funds; "
+                       "record actual available funds before a positive entry draft.")
+    elif core:
+        summary.append("Preferred action: the core addition below, only if every current check passes; otherwise skip.")
+        for draft in core:
+            summary.append(core_tranche_line(draft))
+            summary.extend(core_tranche_steps(draft, window))
+    elif tactical:
+        summary.append("Preferred action: use the conditional entry draft below only after its trigger and broker checks pass; otherwise skip.")
+    else:
+        if current_sell:
+            summary.append("Now: no new buy order. The current conditional sell/protection instruction is below; act only after its checks pass.")
+        elif held and all(any(p.get('ticker') == t and p.get('status') == 'maintained'
+                              and p.get('action') == 'hold' and p.get('automatic_action_allowed') is False
+                              and re.fullmatch(r'[0-9a-f]{64}', str(p.get('record_hash', '')))
+                              for p in plans) for t in held):
+            summary.append("Now: HOLD your existing shares under the plans below. New buy/sell orders: none from this update.")
+        else:
+            summary.append("Now: no new buy or sell order from this update. Only valid holding instructions below remain applicable; unfinished plans require analyst work.")
+        if after_close:
+            summary.append("When: the regular session is closed. Today's DAY drafts are finished; wait for the next session's validated plan.")
+        elif not allowed:
+            summary.append("New entries: 0 shares. No candidate has a complete current entry plan that passes all required checks.")
+        else:
+            summary.append("Entry prices: none cleared in this summary. A research candidate is not a complete order draft.")
+    if expired:
+        summary.append("The " + ", ".join(sorted(expired))
+                       + " research review from this session has expired for execution; its price and DAY terms cannot be reused tomorrow.")
+    weakening = decision.get("fundamental_gate", {}).get("weakening_tickers", [])
+    if weakening:
+        summary.append("Risk: weaker business evidence for " + ', '.join(weakening)
+                       + ". The analyst must merge it into the maintained plan; no automatic sale is inferred.")
+    sections = [section("What to do now", summary)]
+
+    holding_lines, links = [], []
+    if reconcile_delivery:
+        holding_lines.append("These are last recorded holdings, not adjusted by the separate assumed-execution scenario.")
+    for ticker, row in held.items():
+        plan = next((p for p in plans if p.get('ticker') == ticker), {})
+        qty = shares(row.get('current_shares'))
+        valid = (continuity.get('schema_version') == 'equity_plan_continuity_v1'
+                 and plan.get('status') == 'maintained'
+                 and re.fullmatch(r'[0-9a-f]{64}', str(plan.get('record_hash', '')))
+                 and plan.get('automatic_action_allowed') is False
+                 and isinstance(plan.get('instruction'), str) and bool(plan['instruction'].strip()))
+        if valid and plan.get('action') == 'hold':
+            holding_lines.append(f"{ticker}: HOLD the recorded {qty} {'share' if number(row.get('current_shares')) == 1 else 'shares'}. Add 0 / sell 0 under the holding plan.")
+            holding_lines.append(f"{ticker} plan: {plan['instruction']}")
+            if plan.get('reason'):
+                holding_lines.append(f"{ticker} why: {plan['reason']}")
+            holding_lines.append(f"{ticker} next analyst review: {plan.get('review_at') or 'unverified'}; sooner if material evidence changes.")
+        elif valid and plan.get('action') in {'protect_review', 'exit_review', 'trim_review'}:
+            holding_lines.append(f"{ticker}: {qty} recorded shares. Conditional "
+                                 + {'protect_review': 'protection', 'exit_review': 'exit', 'trim_review': 'reduction'}[plan['action']]
+                                 + " plan below; do not stack another sell order.")
+        else:
+            status = str(plan.get('status') or 'missing').replace('_', ' ')
+            holding_lines.append(f"{ticker}: {qty} recorded shares; add 0. Current sell/protection price: none — plan {status}.")
+            holding_lines.append(f"{ticker} next step: the analyst must record a current risk/purpose decision. "
+                                 "This is unfinished analysis, not a recommendation to hold indefinitely; no expired price is renewed.")
+        reference = row.get('current_price')
+        if decision.get('market_gate', {}).get('passed') is True and number(reference) is not None:
+            holding_lines.append(f"{ticker} reference: {money(reference)} at the dated close above; not a buy limit, stop or live quote.")
+        for source in plan.get('sources', []):
+            url = _safe_source(source.get('url'), _RESEARCH_HOSTS) if isinstance(source, dict) else ''
+            if url:
+                links.append(url)
+    sections.append(section("Holdings and retained plans", holding_lines or ["No holdings recorded; do not infer broker positions from this report."], links))
+    # Never call an expired draft a current execution instruction.
+    if len(order_lines) == 1:
+        order_lines.append("New order: none recorded in this update. Recheck current available shares, quote and buying power before manual execution.")
     sections.append(section("Orders and proposals", order_lines))
 
-    cash_lines=[f"{'Planning scenario' if estimated else 'Local account record'}: total {price(account.get('account_total_value'))}; "
-                f"cash {price(account.get('cash_available'))}; reserve {price(account.get('cash_reserved'))}.",
-                "These local figures do not establish current broker buying power or settled cash. Planning cash is not a confirmed deposit."]
-    cash_lines.extend(work_cash_lines(decision))
-    sections.append(section("Cash",cash_lines))
-
-    watch=[r['ticker'] for r in decision.get('watch_candidates',[]) if r.get('ticker') not in held and r.get('ticker') not in allowed]
-    discovery=decision.get('independent_market_discovery',{})
-    research=[]
-    research.extend(work_research_lines(decision))
-    if watch:
-        research.append("Nonheld watch: " + ", ".join(watch) + ". Zero new shares; evidence, valuation, sizing or eligibility remains incomplete.")
-    for group,label in [('top_stocks','Stock screen'),('top_etfs','ETF screen')]:
-        names=[r['ticker'] for r in discovery.get(group,[])[:3]]
-        if names: research.append(label+": "+', '.join(names)+". Research queue only; no buy orders.")
-    research.append("Discovery: " + ("completed price/liquidity screen, not full-market fundamental research." if discovery.get('complete') is True else "incomplete or unavailable; do not substitute the watchlist for a market-wide scan."))
-    views=decision.get('long_horizon_research',{}).get('views',{})
-    pending=sum(len(v.get('news_review',{}).get('pending_events',[])) for v in views.values())
-    incomplete=[t for t,v in views.items() if v.get('valuation_readiness')!='reviewed_scenarios']
-    if pending: research.append(f"Unresolved evidence: {pending} issuer announcements still need impact review.")
-    if incomplete: research.append("Valuation incomplete: "+', '.join(sorted(incomplete))+". Financial checks do not establish an attractive price.")
-    coverage=decision.get('evidence_coverage',{}).get('official_news',{})
-    if coverage and coverage.get('required_coverage_complete') is not True:
-        research.append("Official news coverage is incomplete; missing coverage is not evidence of no news.")
-    research.append("Recheck: after verified company evidence, valuation or a maintained plan changes. Ranking movement alone is not a new investment conclusion.")
-    links=[]
-    for event in decision.get('material_events',[]):
-        research.append(f"New filing for review: {event.get('ticker','unknown')}, {event.get('form','filing')}, disclosed {event.get('filing_date','unconfirmed')}.")
-        url=_safe_source(event.get('source_url'),_RESEARCH_HOSTS)
-        if url: links.append(url)
-    sections.append(section("Research queue and evidence", research,links))
-    sections.append(section("Rules and next step",[
-        "Before entry: define catalyst, trigger/max price, invalidation, target, share count and exit date; keep core and tactical holdings separate.",
-        "Tactical limits: planned loss at most 0.5% per ordinary trade, 0.25% for event exposure, 2% combined; initial exposure at most 5% per name. Use actual account value; gaps can exceed limits.",
-        "Require at least 2:1 plausible reward/risk; review within 3–5 sessions. No automatic buybacks, averaging down or conversion of a failed short trade into a long-term holding.",
-        ("Next: resolve the outstanding plan/order checks above. Full diagnostics remain in the local research report; "
-         + ("this system has placed no trades. Your actual execution status comes from account records, not this report."
-            if "delivery_followthrough" in decision else "no trades have been placed."))]))
+    cash = number(account.get('cash_available'))
+    pct = number(account.get('cash_pct'))
+    pct_text = f" ({pct:.1f}% of the marked planning portfolio)" if pct is not None else ''
+    cash_lines = [f"Planning cash: {money(cash) if cash is not None else 'unverified'}{pct_text}; "
+                  f"mandatory internal reserve {money(account.get('cash_reserved'))}.",
+                  "This is unallocated capital, not an instruction to keep this cash percentage. "
+                  "Broker buying power, settled funds and any external cash transfer still need confirmation before a purchase."]
+    queue = decision.get('capital_work_queue', {})
+    if queue.get('status') == 'current':
+        cash_lines.append(f"System next step: refresh the next published close and finish decision-relevant plan/valuation work. "
+                          f"Next routine research: {queue.get('next_automatic_review_at') or 'unverified'}; "
+                          "a scheduled time is not a completed run.")
+    else:
+        cash_lines.append("System next step: the research queue is unverified; restore a validated current queue before claiming progress.")
+    sections.append(section("Cash and next update", cash_lines))
     return sections

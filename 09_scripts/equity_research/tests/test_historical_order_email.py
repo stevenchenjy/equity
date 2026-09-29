@@ -56,7 +56,7 @@ class HistoricalOrderEmailTests(unittest.TestCase):
                     'tactical_review':{'open_orders':{'orders':[]}}}
         self.assertEqual(owner_check_window(decision),'next 09:45–10:45 ET window')
         rendered = cards(decision,{'plans':[{'ticker':'SPY'}]})
-        attention = next(c['body'] for c in rendered if c['title']=='What needs your attention')
+        attention = next(c['body'] for c in rendered if c['title']=='What to do now')
         orders = next(c['body'] for c in rendered if c['title']=='Orders and proposals')
         self.assertIn('SPY research review from this session has expired for execution',attention)
         self.assertNotIn('14:45–15:20 ET account check',attention)

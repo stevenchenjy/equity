@@ -1,5 +1,26 @@
 # Owner-requested research reviews
 
+## Action-first regular email (2026-09-29)
+
+The owner asked for clear current actions and prices, with no buzz sections or
+instructions merely to “assess” stocks. Ordinary emails must lead with the
+current decision, then each holding's admitted hold/reduce/protect/exit intent,
+exact quantities and conditional prices where a complete current draft exists,
+applicable session/deadline and skip conditions. A dated close is not an entry
+limit. Missing or expired plans must explicitly state that no current order
+price exists and that the analyst must finish the review; do not turn unfinished
+analysis into indefinite hold advice or transfer analyst work to the owner.
+Internal screens, quota counters, full research queues and generic strategy
+lessons remain in local diagnostics. Preserve material risk, broker checks,
+prior-email continuity and human-only execution in the concise email.
+
+High cash is unallocated investment capital, not a recommendation to retain
+that percentage or a mandatory reserve. The approved owner planning basis remains unchanged, with zero mandatory
+internal reserve; targets, caps and entry evidence
+stay unchanged. This presentation correction authorizes no resend, new trade,
+experimental promotion or invented price. A new numeric draft still requires
+its own current source-bound plan and existing eligibility checks.
+
 ## Later-email continuity preference (2026-09-28)
 
 The owner explicitly chose “默认全部成交，作为明确标注的假设情景”:
