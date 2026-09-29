@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "00_project_control/equity_naming_policy.md": {
-    "mtime": 1790644851.6503005,
-    "ast_hash": "772957aeccaa3207ba4783daa63b78ef",
+    "mtime": 1790647365.693666,
+    "ast_hash": "a4eb8af6f6956f37bf242dab9159e8b3",
     "semantic_hash": ""
   },
   "01_policies/tactical_trade_policy.json": {
@@ -1472,6 +1472,21 @@
   "09_scripts/equity_research/tests/test_graph_display_names.py": {
     "mtime": 1790644717.0710804,
     "ast_hash": "851a3735da631d78ccc29f1cd2c9fea8",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/check_active_display_names.py": {
+    "mtime": 1790647319.5704794,
+    "ast_hash": "12bb2ee24d9245a2a485cdaba5d8500c",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/tests/test_active_display_names.py": {
+    "mtime": 1790647365.692431,
+    "ast_hash": "6c46dc8567ab2623d4d64c8ddc1508d8",
+    "semantic_hash": ""
+  },
+  "00_project_control/completion_gate.md": {
+    "mtime": 1790647279.2741642,
+    "ast_hash": "c92ff24e64b1747b643f543948cecbb5",
     "semantic_hash": ""
   }
 }
