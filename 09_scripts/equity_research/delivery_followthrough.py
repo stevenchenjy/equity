@@ -189,6 +189,26 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                 "assumed_fill_price": str(entry), "source": "exact_displayed_eligible_tactical_draft"})
         except (KeyError, TypeError, ValueError, InvalidOperation):
             incomplete = True
+    from scheduled_email import eligible_core_tranche, core_tranche_line
+    for row in prior.get("watch_candidates", []):
+        if row.get("ticker") not in proposal_tickers or row.get("action") != "core_allocation_tranche_review":
+            continue
+        draft = eligible_core_tranche(prior, row)
+        if not draft:
+            incomplete = True
+            continue
+        try:
+            if sent_at >= regular_close(draft["session_date"]) or not displayed(core_tranche_line(draft)):
+                incomplete = True
+                continue
+            actions.append({"ticker": draft["ticker"], "side": "buy", "quantity": draft["quantity"],
+                "order_type": "LIMIT", "session_date": draft["session_date"],
+                "review_at": draft["review_at"], "time_exit_at": None,
+                "draft_sha256": canonical_sha256(draft), "held_before": draft["held_before"],
+                "assumed_fill_price": draft["max_price"],
+                "source": "exact_displayed_eligible_core_tranche"})
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            incomplete = True
     if proposal_tickers - {action["ticker"] for action in actions}:
         incomplete = True
     if len({action["ticker"] for action in actions}) != len(actions):
@@ -279,6 +299,9 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
             return context
     if incomplete:
         context["status"] = "prior_action_not_structured"
+        context["unstructured_candidate_tickers"] = sorted(
+            set(prior.get("eligible_action_review_candidates", []))
+            | set(prior.get("eligible_new_position_review_candidates", [])))
         return context
     if not actions:
         context["status"] = "prior_no_specific_order"
@@ -300,6 +323,12 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
             current_draft = next((draft for draft in decision.get("tactical_review", {}).get("drafts", [])
                                   if draft.get("ticker") == action["ticker"]), {})
             same = canonical_sha256(current_draft) == action["draft_sha256"]
+        elif action["source"] == "exact_displayed_eligible_core_tranche":
+            from scheduled_email import eligible_core_tranche
+            current_row = next((row for row in decision.get("watch_candidates", [])
+                                if row.get("ticker") == action["ticker"]), {})
+            current_draft = eligible_core_tranche(decision, current_row)
+            same = current_draft is not None and canonical_sha256(current_draft) == action["draft_sha256"]
         else:
             same = plan.get("record_hash") == action["plan_record_hash"]
         expired = current >= _stamp(action["review_at"])
@@ -378,11 +407,15 @@ def continuation_lines(context: dict[str, Any]) -> list[str]:
     messages = {
         "prior_delivery_uncertain": "Delivery status is uncertain; no execution assumption can be established. Check the earlier message and actual order/fill state before a continuation.",
         "prior_exact_content_unavailable": "Exact archived instructions are unavailable; no execution scenario has been reconstructed from the current report.",
-        "prior_action_not_structured": "The previous review contains narrative or quantity limits, not a precise structured completed-order record. Follow-up quantities require reconciliation; none are assumed here.",
+        "prior_action_not_structured": "The previous review contained an up-to quantity or narrative, not a precise completed-order draft. No fill is assumed. Check actual holdings, fills and outstanding orders before another buy or sell.",
         "prior_no_specific_order": "The previous report contained no specific valid order draft; watch/hold/no-action does not create an assumed trade.",
         "account_record_bindings_unavailable": "The prior plan cannot be bound to the same account records; no post-execution quantities are assumed.",
         "records_updated_since_delivery": "Account, holdings or order records changed after that report. Current recorded evidence takes precedence over any assumed execution; this change alone does not prove the earlier order filled or reconcile every earlier instruction. Additional quantities remain withheld pending that reconciliation.",
         "verified_current_snapshot_supersedes": "A later complete owner-recorded account snapshot and sourced current order inventory now supply the actual-state basis. That verified snapshot supersedes the planning assumption; the earlier assumed trade is not applied again. Any new proposal still follows the unchanged canonical evidence and risk checks.",
         "multiple_deliveries_require_reconciliation": "Multiple earlier messages contain different or unstructured instructions. A later status update does not establish that earlier actions were completed or superseded. Reconcile those instructions before an additional portfolio-changing draft; no combined fills or quantities are invented.",
     }
+    names = context.get("unstructured_candidate_tickers", []) if status == "prior_action_not_structured" else []
+    if names:
+        return [lead + "Earlier candidate(s): " + ", ".join(names) + ". "
+                + messages[status]]
     return [lead + messages.get(status, "Continuation requires reconciliation.")]

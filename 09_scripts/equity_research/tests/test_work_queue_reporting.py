@@ -73,14 +73,36 @@ class WorkQueueReportingTests(unittest.TestCase):
 
     def test_held_core_candidate_renders_and_hashes_candidate_quantity(self):
         decision = fixture()
-        decision.update(decision_code='action_review_candidate', eligible_new_position_review_candidates=['SPY'], new_candidate_stability_distinct_closes=2)
+        decision.update(decision_code='action_review_candidate', eligible_new_position_review_candidates=['SPY'], new_candidate_stability_distinct_closes=2,
+            cycle_date='2026-09-28',generated_at='2026-09-28T09:20:00-04:00')
+        decision['account']['cash_basis']='owner_recorded'
+        decision['market_gate']['bar_state']='complete_close'
+        decision['plan_continuity']={'schema_version':'equity_plan_continuity_v1','plans':[
+            {'ticker':'SPY','status':'maintained','role':'broad_core','review_at':'2026-09-29T13:30:00-04:00',
+             'instruction':'Retain the observed core share; separate additions require review.'}]}
         decision['held_positions'] = [{'ticker':'SPY', 'action':'hold', 'current_shares':'1', 'whole_shares_to_change':'0'}]
-        decision['watch_candidates'] = [{'ticker':'SPY', 'action':'core_allocation_tranche_review', 'suggested_whole_shares':'1', 'maximum_review_price':'771.35'}]
+        decision['watch_candidates'] = [{'ticker':'SPY', 'action':'core_allocation_tranche_review',
+            'human_confirmation_required':'yes','valuation_applicability':'not_applicable_broad_market_etf',
+            'stability_distinct_closes':2,'required_distinct_closes':2,
+            'suggested_whole_shares':'1', 'maximum_review_price':'771.35'}]
         text = render_email(decision)[1]
-        self.assertIn('SPY eligible research proposal: change up to 1 shares', text)
+        self.assertIn('Core conditional draft — SPY: buy 1 additional share; LIMIT; max $771.35; DAY; session 2026-09-28', text)
+        self.assertIn('09:45–10:45 or 14:45–15:20 ET',text)
+        self.assertIn('Otherwise skip; do not raise the cap',text)
         self.assertNotIn('change up to 0 shares', text)
         after = copy.deepcopy(decision); after['watch_candidates'][0]['suggested_whole_shares'] = '2'
         self.assertNotEqual(recommendation_notification_fingerprint(decision), recommendation_notification_fingerprint(after))
+        for changed in ('global_order_blocker', 'insufficient_planning_cash', 'expired_session'):
+            blocked = copy.deepcopy(decision)
+            if changed == 'global_order_blocker':
+                blocked['workflow_integrity']['global_blockers'] = ['order_inventory_unverified']
+            elif changed == 'insufficient_planning_cash':
+                blocked['account']['cash_available'] = '100'
+            else:
+                blocked['generated_at'] = '2026-09-29T09:20:00-04:00'
+            body = render_email(blocked)[1]
+            self.assertNotIn('Core conditional draft — SPY: buy', body)
+            self.assertIn('do not place an order from this summary', body)
 
     def test_status_does_not_promote_local_review_gaps_to_global_freeze(self):
         args = status_tests.CurrentWorkflowStatusTests().fixture()

@@ -51,6 +51,39 @@ def archive(root,prior,when=MORNING,prefix="",status="sent",alter_text=None,alte
 
 
 class FollowthroughTests(unittest.TestCase):
+    def test_exact_core_buy_is_actionable_and_only_hypothetically_filled_later(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);prior=decision()
+            prior.update(decision_code="action_review_candidate",
+                eligible_new_position_review_candidates=["SPY"])
+            prior["account"]["cash_basis"]="owner_recorded"
+            prior["market_gate"]["bar_state"]="complete_close"
+            prior["held_positions"]=[{"ticker":"SPY","current_shares":1,"current_price":50}]
+            prior["plan_continuity"]["plans"]=[{"ticker":"SPY","status":"maintained",
+                "role":"broad_core","review_at":"2026-09-29T13:30:00-04:00",
+                "instruction":"Retain one core share; separate additions require review."}]
+            prior["watch_candidates"]=[{"ticker":"SPY","action":"core_allocation_tranche_review",
+                "suggested_whole_shares":1,"maximum_review_price":50,
+                "human_confirmation_required":"yes",
+                "valuation_applicability":"not_applicable_broad_market_etf",
+                "stability_distinct_closes":2,"required_distinct_closes":2}]
+            archive(root,prior)
+            context=follow.build_followthrough(prior,root=root,current=AFTERNOON)
+            self.assertEqual(context["status"],"conditional_execution_followthrough")
+            action=context["actions"][0]
+            self.assertEqual((action["ticker"],action["side"],action["quantity"]),("SPY","buy",1))
+            self.assertEqual(action["assumed_remaining_shares"],2)
+            self.assertEqual(context["assumed_cash_after_at_stated_levels_before_fees"],"1267.38")
+            self.assertFalse(context["canonical_state_changed"])
+            # A prior ambiguous email cannot gain a fill assumption when code changes.
+            legacy=Path(temp)/"legacy"
+            archive(legacy,prior,alter_text=lambda t:t.replace("Core conditional draft — SPY:",
+                "SPY eligible research proposal: up to 1;"))
+            old=follow.build_followthrough(prior,root=legacy,current=AFTERNOON)
+            self.assertEqual(old["status"],"prior_action_not_structured")
+            self.assertEqual(old["unstructured_candidate_tickers"],["SPY"])
+            self.assertEqual(old["actions"],[])
+
     def test_read_only_full_fill_branch_does_not_record_execution_or_change_eligibility(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp);prior=decision();archive(root,prior)
