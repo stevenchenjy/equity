@@ -236,7 +236,13 @@ def _tactical_view(
     order_lines = [f"订单快照：{_time(orders.get('as_of'))} 美东；完整性：{'已记录完整清单' if orders.get('complete') is True else '未确认完整'}。"]
     order_rows = orders.get("orders", [])
     if not isinstance(order_rows, list) or not order_rows:
-        order_lines.append("订单明细缺失；不能把未见订单理解为没有订单。")
+        observation = orders.get("current_inventory_observation")
+        if (orders.get("complete") is True and isinstance(observation, dict)
+                and observation.get("complete") is True and observation.get("orders_shown") == []
+                and observation.get("as_of") == orders.get("as_of")):
+            order_lines.append("此时券商页面未显示未完成订单；历史终态订单保留在原始观察记录中，提交新委托前仍需复核。")
+        else:
+            order_lines.append("订单明细缺失；不能把未见订单理解为没有订单。")
         order_rows = []
     for order in order_rows:
         if not isinstance(order, dict):

@@ -22,7 +22,7 @@ class HistoricalOrderEmailTests(unittest.TestCase):
         self.assertIn('unresolved historical sell record',text)
         self.assertIn('Local conservative reservation: 2 shares',text)
         self.assertIn('2026-09-24T21:36:00-04:00',text)
-        self.assertIn('no-orders page observed at 2026-09-28T14:54:00-04:00',text)
+        self.assertIn('not shown in the no-orders page observed at 2026-09-28T14:54:00-04:00',text)
         self.assertNotIn('pending in snapshot',text)
 
     def test_expired_snapshot_never_implies_current_remaining_quantity(self):
@@ -32,7 +32,9 @@ class HistoricalOrderEmailTests(unittest.TestCase):
         self.assertNotIn('pending in snapshot',text)
 
     def test_ordinary_pending_and_terminal_records_keep_their_distinction(self):
-        self.assertIn('pending in snapshot',self.render({'ticker':'TEST','status':'pending','quantity':2}))
+        pending = self.render({'ticker':'TEST','status':'pending','quantity':2})
+        self.assertIn('pending in snapshot',pending)
+        self.assertIn('Replacement: confirm cancellation',pending)
         self.assertIn('Historical terminal records: TEST filled',self.render({'ticker':'TEST','status':'filled'}))
 
     def test_recorded_empty_inventory_survives_without_any_historical_ticket(self):
@@ -41,10 +43,12 @@ class HistoricalOrderEmailTests(unittest.TestCase):
         decision = {'tactical_review': {'open_orders': {'orders': [],
                     'current_inventory_observation': observation}}}
         text = next(c['body'] for c in cards(decision, {'plans': []}) if c['title']=='Orders and proposals')
-        self.assertIn('Broker page observation at 2026-09-28T14:54:00-04:00: no orders shown then', text)
+        self.assertIn('Current active orders: none observed at 2026-09-28T14:54:00-04:00', text)
+        self.assertNotIn('Replacement: confirm cancellation', text)
+        self.assertNotIn('no orders shown then', text)
         observation['complete'] = False
         text = next(c['body'] for c in cards(decision, {'plans': []}) if c['title']=='Orders and proposals')
-        self.assertNotIn('no orders shown then', text)
+        self.assertNotIn('Current active orders: none', text)
 
 
 if __name__ == '__main__':

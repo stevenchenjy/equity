@@ -192,10 +192,11 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     order_lines=continuation_lines(followthrough)
     order_lines.append(f"Order snapshot: {orders.get('as_of') or 'unavailable'}; current broker status must be rechecked.")
     observation = orders.get('current_inventory_observation', {})
-    if (isinstance(observation, dict) and observation.get('complete') is True
-            and observation.get('orders_shown') == [] and observation.get('as_of')):
-        order_lines.append(f"Broker page observation at {observation['as_of']}: no orders shown then. "
-                           "Recheck before acting; this does not establish older tickets' terminal outcomes.")
+    no_active_orders_observed = (isinstance(observation, dict) and observation.get('complete') is True
+            and observation.get('orders_shown') == [] and observation.get('as_of'))
+    if no_active_orders_observed:
+        order_lines.append(f"Current active orders: none observed at {observation['as_of']}. "
+                           "Recheck before placing an order; terminal rows and older tickets remain historical records.")
     terminal=[]
     for row in orders.get('orders',[]):
         status=row.get('status','unknown')
@@ -223,7 +224,9 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
                            f"limit {price(row.get('limit_price'))}; {row.get('time_in_force','unconfirmed')} — {label}.")
     if terminal:
         order_lines.append("Historical terminal records: " + "; ".join(terminal) + ". These are not new instructions.")
-    order_lines.append("Replacement: confirm cancellation and available shares first. A target limit does not protect against a decline; no fill means exposure remains.")
+    if any(row.get('status') in {'open', 'pending', 'partial_fill', 'partially_filled'}
+           for row in orders.get('orders', []) if isinstance(row, dict)):
+        order_lines.append("Replacement: confirm cancellation and available shares first. A target limit does not protect against a decline; no fill means exposure remains.")
     # Maintained analyst plans have their own source-bound authority. The
     # workflow intentionally clears baseline held-position eligibility; this
     # display must neither hide a valid retained draft nor renew an expired one.
