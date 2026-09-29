@@ -1,7 +1,7 @@
 import copy
 import unittest
 from _support import SCRIPT_DIR  # noqa: F401
-from scheduled_email import cards
+from scheduled_email import cards, owner_check_window
 
 
 class HistoricalOrderEmailTests(unittest.TestCase):
@@ -49,6 +49,18 @@ class HistoricalOrderEmailTests(unittest.TestCase):
         observation['complete'] = False
         text = next(c['body'] for c in cards(decision, {'plans': []}) if c['title']=='Orders and proposals')
         self.assertNotIn('Current active orders: none', text)
+
+    def test_after_close_draft_does_not_repeat_expired_quantity_or_owner_window(self):
+        decision = {'generated_at':'2026-09-29T16:05:00-04:00','cycle_date':'2026-09-29',
+                    'account':{'cash_basis':'owner_recorded'},
+                    'tactical_review':{'open_orders':{'orders':[]}}}
+        self.assertEqual(owner_check_window(decision),'next 09:45–10:45 ET window')
+        rendered = cards(decision,{'plans':[{'ticker':'SPY'}]})
+        attention = next(c['body'] for c in rendered if c['title']=='What needs your attention')
+        orders = next(c['body'] for c in rendered if c['title']=='Orders and proposals')
+        self.assertIn('SPY research review from this session has expired for execution',attention)
+        self.assertNotIn('14:45–15:20 ET account check',attention)
+        self.assertNotIn('SPY research candidate: up to',orders)
 
 
 if __name__ == '__main__':

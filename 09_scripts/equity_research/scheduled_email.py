@@ -72,7 +72,11 @@ def core_tranche_line(draft: dict[str, Any]) -> str:
 
 def owner_check_window(decision: dict[str, Any]) -> str:
     try:
-        hour = datetime.fromisoformat(decision["generated_at"]).hour
+        from investment_plans import regular_close
+        generated = datetime.fromisoformat(decision["generated_at"])
+        if generated >= regular_close(decision["cycle_date"]):
+            return "next 09:45–10:45 ET window"
+        hour = generated.hour
         return "14:45–15:20 ET" if hour >= 11 else "09:45–10:45 or 14:45–15:20 ET"
     except (KeyError, TypeError, ValueError):
         return "the next market-hours check"
@@ -117,6 +121,14 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     followthrough = decision.get('delivery_followthrough', {})
     reconcile_delivery = continuation_requires_reconciliation(followthrough)
     check_window = owner_check_window(decision)
+    expired_session_candidates = set()
+    try:
+        from investment_plans import regular_close
+        if datetime.fromisoformat(decision['generated_at']) >= regular_close(decision['cycle_date']):
+            expired_session_candidates = set(allowed)
+            allowed = set()
+    except (KeyError, TypeError, ValueError):
+        pass
     if reconcile_delivery:
         # Delivery continuation cannot spend cash or sell shares twice while
         # canonical records still describe the pre-assumption portfolio.
@@ -149,13 +161,21 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
             summary.append("Action: review the eligible proposals below; no order has been submitted.")
     else:
         summary.append("New trades: zero newly eligible buy or sell proposals. Existing exit/protection plans remain separate.")
+    if expired_session_candidates:
+        summary.append("The " + ", ".join(sorted(expired_session_candidates))
+                       + " research review from this session has expired for execution. Reassess after the next validated close and current broker checks; do not reuse its price or DAY terms.")
     if reconcile_delivery and blocked:
         summary.append("Account or data verification is also unresolved. These independent blockers remain in force.")
     unresolved = [p['ticker'] for p in plans if p.get('status') != 'maintained' or p.get('blockers')]
     if unresolved:
-        summary.append(f"During your {check_window} account check, reconcile "
-                       + ", ".join(unresolved) + " holdings, fills, available shares and orders. "
-                       "Do not reuse expired sell or protection prices.")
+        if followthrough.get('status') == 'verified_current_snapshot_supersedes':
+            summary.append(f"At your {check_window} check, reassess "
+                           + ", ".join(unresolved) + " against current risk, plan and price evidence. "
+                           "The dated broker snapshot has been recorded; recheck it before acting. Do not reuse expired sell or protection prices.")
+        else:
+            summary.append(f"During your {check_window} account check, reconcile "
+                           + ", ".join(unresolved) + " holdings, fills, available shares and orders. "
+                           "Do not reuse expired sell or protection prices.")
     sections = [section("What needs your attention", summary)]
 
     states = {'maintained':'plan retained', 'review_due':'review due; no fill confirmed',
