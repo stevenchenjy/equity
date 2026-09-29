@@ -459,6 +459,8 @@ def validate_decision(
         # Historical notification-policy evaluation is allowed for corrections;
         # expiry, source freshness and current plans always use the real clock.
         validate_published_workflow(decision, root=ROOT, current=current)
+    from delivery_followthrough import validate_followthrough
+    validate_followthrough(decision, root=ROOT, current=current)
     if version is not None:
         if version != EMAIL_BRIEF_VERSION:
             raise ValueError("daily_brief_version_unsupported")
@@ -807,6 +809,13 @@ def send_once(
             if decision.get("workflow_integrity") is not None:
                 from workflow_integrity import validate_published_workflow
                 validate_published_workflow(decision, root=ROOT, current=now_et())
+        except (OSError, ValueError) as exc:
+            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
+            print(f"email_sent=false reason={exc} smtp_config_read=true")
+            return 2
+        try:
+            from delivery_followthrough import validate_followthrough
+            validate_followthrough(decision, root=ROOT, current=now_et())
         except (OSError, ValueError) as exc:
             log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
             print(f"email_sent=false reason={exc} smtp_config_read=true")

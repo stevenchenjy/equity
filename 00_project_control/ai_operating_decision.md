@@ -1,4 +1,4 @@
-# Phase 5R AI operating decision
+# Equity Research — AI operating decision
 
 Decision date: `2026-08-31`
 

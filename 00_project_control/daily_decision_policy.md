@@ -1,4 +1,4 @@
-# Phase 5R Daily Decision Policy
+# Equity Research — Daily Decision Policy
 
 ## Required Presentation
 

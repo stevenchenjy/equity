@@ -1,4 +1,43 @@
-# Phase 5R Daily Delivery Policy
+# Equity Research — Daily Delivery Policy
+
+## Same-day continuation under the owner's full-fill assumption (2026-09-28)
+
+For a later report on the same ET date, use the owner's explicitly approved
+**fully filled planning assumption** only for precise prior instructions whose
+successful SMTP receipt and exact decision JSON, text and HTML are archived and
+hash-verified. Label every resulting share/cash figure as assumed. Displayed
+order levels can support an illustrative cash calculation before unverified
+fees, slippage, gaps and settlement; they are not observed fill prices or
+buying power. A placed stop/limit is not evidence of a fill. Pending, partial,
+unsubmitted, expired or unknown orders require reconciliation.
+
+The follow-up carries the earlier plan forward and does not issue its quantity
+again as an additional order. All portfolio-changing draft quantities, including
+other tickers that share cash or risk capacity, remain withheld while they would
+rely on unreconciled pre-execution records. Canonical strategy eligibility and
+risk limits do not change. There is no validated engine for sizing new trades
+against this hypothetical post-fill account. Existing protective purpose is
+retained; this presentation rule does not cancel protection or renew a DAY
+price/deadline. Changes or opposite recommendations explicitly require a review
+of the actual remaining exposure.
+
+Watch/no-action messages do not create assumed trades. Narrative owner reviews,
+quantity ceilings without a complete structured draft, missing archives and
+uncertain delivery do not provide invented quantities. A later status message or
+partial correction cannot erase earlier unresolved instructions. Continuation
+metadata itself never triggers an email; the existing meaningful-change rule,
+attention windows and durable delivery fences still govern sending.
+
+The actual account, positions, orders, execution reports and performance facts
+remain separate and unchanged. A newly recorded complete owner account snapshot
+may supersede the assumption within the same afternoon only when the existing
+snapshot validator binds it to current positions/account/confirmed executions,
+it was recorded after the prior delivery, cash is owner-recorded rather than a
+planning estimate, and a later complete sourced order observation validates.
+An arbitrary hash/comment change is insufficient. Such a snapshot supplies a
+fresh actual-state basis without claiming which fill caused it; all existing
+canonical evidence and risk checks still apply. No previous day's hypothetical
+fill is silently carried into today's account.
 
 ## Owner attention windows (2026-09-28; first new cycle September 29)
 

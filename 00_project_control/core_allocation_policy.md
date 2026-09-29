@@ -1,4 +1,4 @@
-# Phase 5R-C9 Core Allocation Policy
+# Equity Research — Core Allocation Policy
 
 ## Separation
 

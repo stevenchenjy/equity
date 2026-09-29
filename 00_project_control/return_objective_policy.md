@@ -1,4 +1,4 @@
-# Phase 5R Long-Horizon Return Objective Policy
+# Equity Research — Long-Horizon Return Objective Policy
 
 Updated: 2026-08-31
 

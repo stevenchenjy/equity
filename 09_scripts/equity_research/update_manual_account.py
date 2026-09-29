@@ -64,17 +64,19 @@ def read_ui_valuation(path: Path, required_tickers: set[str]) -> tuple[dict[str,
     return market, raw.decode("utf-8"), hashlib.sha256(raw).hexdigest()
 
 
-def current_manual_snapshot_matches(positions_hash: str, account_hash: str) -> bool:
+def current_manual_snapshot_matches(positions_hash: str, account_hash: str, *, root: Path | None = None) -> bool:
     """A later owner snapshot may supersede history, but cannot waive new fills."""
-    if MANUAL_SNAPSHOT_PATH.is_symlink():
+    snapshot_path = root / "05_risk_and_positions/manual_account_snapshot.local.json" if root else MANUAL_SNAPSHOT_PATH
+    confirmed_path = root / "06_execution_records/confirmed_execution_report.csv" if root else CONFIRMED_PATH
+    if snapshot_path.is_symlink():
         return False
     try:
-        receipt = read_json(MANUAL_SNAPSHOT_PATH, {})
+        receipt = read_json(snapshot_path, {})
         return (receipt.get("schema_version") == "phase5r_owner_snapshot_v1"
                 and len(positions_hash) == 64 and len(account_hash) == 64
                 and receipt.get("positions_sha256_after") == positions_hash
                 and receipt.get("account_sha256_after") == account_hash
-                and receipt.get("confirmed_execution_sha256") == sha256_file(CONFIRMED_PATH)
+                and receipt.get("confirmed_execution_sha256") == sha256_file(confirmed_path)
                 and receipt.get("owner_snapshot") is True
                 and bool(receipt.get("source_note")))
     except (OSError, ValueError, TypeError, AttributeError):

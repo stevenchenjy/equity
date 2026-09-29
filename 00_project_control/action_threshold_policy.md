@@ -1,4 +1,4 @@
-# Phase 5R-C9 Action Threshold Policy
+# Equity Research — Action Threshold Policy
 
 ## Current Positions
 

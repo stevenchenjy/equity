@@ -27,3 +27,14 @@
 文件名可以更改；已写入的 schema 值、状态枚举、邮件去重键、Keychain 服务名以及哈希链中的值不能靠全局字符串替换更改。这些旧字符串不是现行文件名。更改它们需要单独的协议迁移、兼容读写和数据验证。私有账户状态、邮件台账、SEC 接受索引的接受记录及其扩展内容按原始字节保留；派生的 SEC 文件索引仅更新路径字段，原始索引另存归档；文件搬迁不改变投资策略、资金、持仓、通知资格或交易权限。
 
 生产迁移已在共享运行锁下搬迁私有状态，并检查现行文件名、旧/新调度、静态 guard 和测试。验收记录见 [naming_runtime_migration_20260923.md](../11_archive/dated_reviews_20260923/naming_runtime_migration_20260923.md)。历史资料可以含原名，但不能成为当前流程输入。
+
+## 派生知识图谱显示名
+
+`graphify update .` 的 AST 更新不保证社区名称缓存与实际成员同步；未重新提取的文档节点也可能保留旧显示名。绿色差异行可能来自社区重新编号，不代表新增政策或重新启用历史策略。更新后运行以下本地校验；若返回需要修正，再加 `--apply`。应用修正需使用已安装 Graphify 的 Python 环境，不调用模型或网络。
+
+```sh
+python3 09_scripts/equity_research/repair_graph_display_names.py
+"$(cat graphify-out/.graphify_python)" 09_scripts/equity_research/repair_graph_display_names.py --apply
+```
+
+工具仅按已登记的现行文档路径、首行位置和原始标题修正文档节点显示名，并修正缺乏实际社区成员支持的旧 Phase 5R 缓存标题；保留仍由历史成员支持的原名。节点 ID、边、归档内容和兼容协议值不变。知识图谱是导航索引，不是政策启用证据；实际内容和生产提交才是依据。

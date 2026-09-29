@@ -1,4 +1,4 @@
-# Phase 5R Daily Research Policy
+# Equity Research — Daily Research Policy
 
 ## Principle
 

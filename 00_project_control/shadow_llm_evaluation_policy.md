@@ -1,4 +1,4 @@
-# Phase 5R SHADOW_LLM Evaluation Policy
+# Equity Research — SHADOW_LLM Evaluation Policy
 
 Effective: `2026-09-02`
 

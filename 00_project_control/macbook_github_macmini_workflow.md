@@ -1,4 +1,4 @@
-# Phase5R MacBook → GitHub → Mac mini workflow
+# Equity Research — MacBook → GitHub → Mac mini workflow
 
 ## Production boundary
 

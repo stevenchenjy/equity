@@ -1,4 +1,4 @@
-# Phase 5R-B2 Configured-Universe Data and Broad Discovery Policy
+# Equity Research — Configured-Universe Data and Broad Discovery Policy
 
 ## Purpose
 

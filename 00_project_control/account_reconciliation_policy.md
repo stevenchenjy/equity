@@ -1,4 +1,4 @@
-# Phase 5R-C9B Account Reconciliation Policy
+# Equity Research — Account Reconciliation Policy
 
 ## Preconditions
 

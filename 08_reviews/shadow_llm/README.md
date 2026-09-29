@@ -1,4 +1,4 @@
-# Phase 5R SHADOW_LLM
+# Equity Research — SHADOW_LLM
 
 SHADOW_LLM is an event-driven, noncanonical analyst/conditional-critic/blind-
 judge evaluation. It may call the pinned externally authenticated Codex CLI,

@@ -1,4 +1,4 @@
-# Phase 5R-C9 Account-State Policy
+# Equity Research — Account-State Policy
 
 ## Canonical Inputs
 

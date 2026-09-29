@@ -1,5 +1,29 @@
 # Owner-requested research reviews
 
+## Later-email continuity preference (2026-09-28)
+
+The owner explicitly chose “默认全部成交，作为明确标注的假设情景”:
+for a later same-day email, assume precise earlier instructions fully filled as
+a clearly labelled planning scenario. Carry forward that plan and avoid repeating
+it as an additional order. This is not permission to record a broker order/fill,
+change actual shares/cash, clear real evidence blockers or execute anything.
+
+Use only exact archived sent content with a complete structured draft. Watch,
+hold, narrative-only and “up to” quantities without a full draft do not establish
+an assumed fill. A later message that addresses only part of the portfolio does
+not erase earlier unresolved instructions. Show missing/partial/pending/unknown
+execution dependencies explicitly; never treat stop/limit placement as a fill.
+Illustrative post-fill shares and cash remain separate from last verified records
+and never determine additional positive trade quantities without their own
+validated scenario calculation and existing strategy checks.
+
+A later complete, validated owner account snapshot and sourced complete current
+order inventory can restore the actual-state basis, without applying the assumed
+trade twice. Mere changed file bytes are not reconciliation evidence. The exact
+release conditions and unchanged delivery/strategy boundaries are maintained in
+`daily_delivery_policy.md`. This preference authorizes no additional email by
+itself and does not change the ordinary meaningful-change requirement.
+
 ## Durable follow-through for interactive reviews (2026-09-28)
 
 An emailed analyst review is not by itself an update to maintained plans.

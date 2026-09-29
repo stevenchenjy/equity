@@ -1,4 +1,4 @@
-# Phase 5R-C9 Dynamic Weight Policy
+# Equity Research — Dynamic Weight Policy
 
 ## Current-Weight Formula
 

@@ -1,6 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import os
+import subprocess
+import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,6 +16,52 @@ from test_owner_review_delivery import delivery_fixture, owner_review_fixture, s
 
 
 class DeliveryArchiveTests(unittest.TestCase):
+    def test_process_exit_after_link_recovers_only_dead_publish_temporary_link(self):
+        contents = {'decision_sha256': b'{}', 'brief_text_sha256': b'text', 'brief_html_sha256': b'<p>text</p>'}
+        hashes = {key: hashlib.sha256(value).hexdigest() for key, value in contents.items()}
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / 'archive'
+            code = """import os, sys, hashlib
+from pathlib import Path
+sys.path.insert(0, sys.argv[1])
+import delivery_archive as archive
+contents = {'decision_sha256': b'{}', 'brief_text_sha256': b'text', 'brief_html_sha256': b'<p>text</p>'}
+hashes = {k: hashlib.sha256(v).hexdigest() for k,v in contents.items()}
+original = os.link
+def crash(*args, **kwargs):
+    original(*args, **kwargs)
+    os._exit(71)
+os.link = crash
+archive.archive_validated_delivery(Path(sys.argv[2]), contents=contents, hashes=hashes)
+"""
+            result = subprocess.run([sys.executable, '-c', code, str(SCRIPT_DIR), str(archive)], check=False)
+            self.assertEqual(result.returncode, 71)
+            target = archive / (hashes['decision_sha256'] + '.json')
+            inode = target.stat().st_ino
+            self.assertEqual(target.stat().st_nlink, 2)
+            self.assertEqual(len(list(archive.glob('.pending-*'))), 1)
+            archive_validated_delivery(archive, contents=contents, hashes=hashes)
+            self.assertEqual(target.stat().st_ino, inode)
+            self.assertEqual(target.stat().st_nlink, 1)
+            self.assertEqual(target.read_bytes(), b'{}')
+            self.assertEqual(list(archive.glob('.pending-*')), [])
+            self.assertEqual(len(list(archive.iterdir())), 3)
+
+    def test_arbitrary_or_live_process_hardlinks_are_not_recovered(self):
+        contents = {'decision_sha256': b'{}', 'brief_text_sha256': b'text', 'brief_html_sha256': b'<p>text</p>'}
+        hashes = {key: hashlib.sha256(value).hexdigest() for key, value in contents.items()}
+        for name in ('arbitrary-link', '.pending-unknown', f'.pending-{os.getpid()}-abcdefgh'):
+            with tempfile.TemporaryDirectory() as directory:
+                archive = Path(directory) / 'archive'
+                archive_validated_delivery(archive, contents=contents, hashes=hashes)
+                target = archive / (hashes['decision_sha256'] + '.json')
+                extra = archive / name
+                os.link(target, extra)
+                with self.assertRaises(ValueError):
+                    archive_validated_delivery(archive, contents=contents, hashes=hashes)
+                self.assertEqual(target.read_bytes(), b'{}')
+                self.assertTrue(extra.exists())
+
     def test_snapshot_hash_mismatch_rejected_before_any_archive_write(self):
         contents = {'decision_sha256': b'{}', 'brief_text_sha256': b'text', 'brief_html_sha256': b'<p>text</p>'}
         hashes = {key: hashlib.sha256(value).hexdigest() for key, value in contents.items()}

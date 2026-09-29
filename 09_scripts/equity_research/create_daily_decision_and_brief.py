@@ -1093,6 +1093,11 @@ def main() -> int:
     work_current = now_et()
     decision["research_backlog"] = read_backlog_summary(ROOT, current=work_current)
     decision["capital_work_queue"] = refresh_capital_work_queue(decision, root=ROOT, current=work_current)
+    # Owner-assumed completion is presentation-only, never an account, order,
+    # strategy or eligibility input. The receipt/content binding is rechecked
+    # before delivery; renderers never read mutable delivery files.
+    from delivery_followthrough import build_followthrough
+    decision["delivery_followthrough"] = build_followthrough(decision, root=ROOT, current=now_et())
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
         decision["notification_policy"]["regular_delivery_mode"] = notification_mode

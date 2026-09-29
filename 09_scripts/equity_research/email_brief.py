@@ -859,7 +859,9 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
     verified = decision.get('market_gate', {}).get('passed') is True
     return _render_cards(email_subject(decision), cards(decision, view), title="Portfolio update",
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
-        footer="Automated research status, not a new analyst review. Unresolved plans remain open until verified. No orders have been placed or changed.")
+        footer=("Automated research status, not a new analyst review. Unresolved plans remain open until verified. "
+                + ("This system has placed or changed no orders; owner execution is verified only through account records."
+                   if "delivery_followthrough" in decision else "No orders have been placed or changed.")))
 
 
 def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:

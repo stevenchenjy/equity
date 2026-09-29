@@ -1,4 +1,4 @@
-# Phase 5R-C8 Canonical Active-State Policy
+# Equity Research — Canonical Active-State Policy
 
 ## Purpose
 

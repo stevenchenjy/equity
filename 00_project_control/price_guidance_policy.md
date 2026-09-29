@@ -1,4 +1,4 @@
-# Phase 5R-C9B Price Guidance Policy
+# Equity Research — Price Guidance Policy
 
 ## Evidence
 

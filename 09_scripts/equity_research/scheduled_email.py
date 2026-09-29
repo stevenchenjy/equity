@@ -26,8 +26,17 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     blocked = bool(decision.get("account_conflicts")) or not gates
     estimated = account.get("cash_basis") in {"ledger_estimate", "owner_assumption", "owner_assumed", "planning_assumption"}
     allowed = {p['ticker'] for p in view['plans']}
+    from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
+    followthrough = decision.get('delivery_followthrough', {})
+    reconcile_delivery = continuation_requires_reconciliation(followthrough)
+    if reconcile_delivery:
+        # Delivery continuation cannot spend cash or sell shares twice while
+        # canonical records still describe the pre-assumption portfolio.
+        allowed = set()
     summary = ["Automatic status update: this is not a fresh analyst review or a replacement for your maintained plan."]
-    if blocked:
+    if reconcile_delivery:
+        summary.append("Follow-up: earlier instructions require reconciliation. Additional portfolio-changing drafts are withheld from potentially pre-execution records until actual holdings, fills, cash and orders are reconciled; no new order quantity is supplied here.")
+    elif blocked:
         summary.append("Action: resolve the account or data verification problem. New trade drafts are withheld.")
     elif decision.get("fundamental_gate", {}).get("weakening_tickers"):
         summary.append("Action: reassess the business evidence for " + ", ".join(decision['fundamental_gate']['weakening_tickers']) + ". No automatic exit.")
@@ -37,6 +46,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         summary.append("Action: review the eligible proposals below; none has been submitted.")
     else:
         summary.append("New trades: zero newly eligible buy or sell proposals. Existing exit/protection plans remain separate.")
+    if reconcile_delivery and blocked:
+        summary.append("Account or data verification is also unresolved. These independent blockers remain in force.")
     unresolved = [p['ticker'] for p in plans if p.get('status') != 'maintained' or p.get('blockers')]
     if unresolved:
         summary.append("Needs confirmation: " + ", ".join(unresolved) + ". Check broker holdings, fills and outstanding orders before acting.")
@@ -51,6 +62,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
                'trim_review':'trim review', 'watch':'watch'}
     held = {r['ticker']:r for r in decision.get('held_positions', [])}
     lines = []
+    if reconcile_delivery:
+        lines.append("Recorded holdings below are the last maintained account observations. They are not adjusted by the separate assumed-execution scenario.")
     for p in plans:
         ticker=p['ticker']; row=held.get(ticker,{})
         intent = actions.get(p.get('action'), 'reconcile the prior plan')
@@ -71,7 +84,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     sections.append(section("Holdings and retained plans", lines))
 
     orders=decision.get('tactical_review',{}).get('open_orders',{})
-    order_lines=[f"Order snapshot: {orders.get('as_of') or 'unavailable'}; current broker status must be rechecked."]
+    order_lines=continuation_lines(followthrough)
+    order_lines.append(f"Order snapshot: {orders.get('as_of') or 'unavailable'}; current broker status must be rechecked.")
     observation = orders.get('current_inventory_observation', {})
     if (isinstance(observation, dict) and observation.get('complete') is True
             and observation.get('orders_shown') == [] and observation.get('as_of')):
@@ -115,6 +129,9 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
                 or plan.get('automatic_action_allowed') is not False
                 or plan.get('validity') != 'research_only_requires_current_verification'
                 or not re.fullmatch(r'[0-9a-f]{64}', str(plan.get('record_hash', '')))):
+            continue
+        if reconcile_delivery:
+            order_lines.append(f"{plan['ticker']}: retained {plan.get('action', 'plan').replace('_', ' ')} context remains recorded. This follow-up does not repeat an additive order or cancel earlier protection; reconcile before any replacement.")
             continue
         draft = plan.get('historical_order_draft')
         try:
@@ -178,8 +195,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         order_lines.append(f"{ticker} eligible research proposal: change up to {quantity(qty)} shares; action {actions.get(row.get('action'), 'entry review' if ticker not in held else 'position review')}; "
                            f"maximum entry/review price {price(row.get('maximum_review_price'))}. Verify direction, current quote, funds and complete plan before any order; not submitted.")
     for draft in decision.get('tactical_review',{}).get('drafts',[]):
-        if not blocked and not estimated and draft.get('eligible') is True and draft.get('ticker') in allowed:
-            order_lines.append(f"{draft['ticker']} tactical draft: {quantity(draft.get('quantity'))} shares; entry/max {price(draft.get('entry_price'))}, "
+        if not reconcile_delivery and not blocked and not estimated and draft.get('eligible') is True and draft.get('ticker') in allowed:
+            order_lines.append(f"{draft['ticker']} tactical draft: " + ("buy " if "delivery_followthrough" in decision else "") + f"{quantity(draft.get('quantity'))} shares; entry/max {price(draft.get('entry_price'))}, "
                  f"stop {price(draft.get('stop_price'))}, target {price(draft.get('target_price'))}, planned risk {price(draft.get('planned_risk_usd'))}; "
                  f"{draft.get('order_type')}, {draft.get('time_in_force')}, session {draft.get('session_date')}; exit/review {draft.get('time_exit_session')}. "
                  "Only after its entry trigger and current account checks pass. Gaps can exceed planned loss.")
@@ -220,5 +237,7 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         "Before entry: define catalyst, trigger/max price, invalidation, target, share count and exit date; keep core and tactical holdings separate.",
         "Tactical limits: planned loss at most 0.5% per ordinary trade, 0.25% for event exposure, 2% combined; initial exposure at most 5% per name. Use actual account value; gaps can exceed limits.",
         "Require at least 2:1 plausible reward/risk; review within 3–5 sessions. No automatic buybacks, averaging down or conversion of a failed short trade into a long-term holding.",
-        "Next: resolve the outstanding plan/order checks above. Full diagnostics remain in the local research report; no trades have been placed."]))
+        ("Next: resolve the outstanding plan/order checks above. Full diagnostics remain in the local research report; "
+         + ("this system has placed no trades. Your actual execution status comes from account records, not this report."
+            if "delivery_followthrough" in decision else "no trades have been placed."))]))
     return sections

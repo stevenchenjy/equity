@@ -1,4 +1,4 @@
-# Phase 5R SEC Acceptance-Index Extension Policy v1
+# Equity Research — SEC Acceptance-Index Extension Policy v1
 
 Policy version: `phase5r_sec_acceptance_extension_policy_v1`
 

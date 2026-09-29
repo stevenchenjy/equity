@@ -1,4 +1,4 @@
-# Phase 5R-C9B Manual Execution Policy
+# Equity Research — Manual Execution Policy
 
 ## Purpose
 
