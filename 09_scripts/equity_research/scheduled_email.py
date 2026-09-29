@@ -70,12 +70,20 @@ def core_tranche_line(draft: dict[str, Any]) -> str:
             f"review {draft['review_at']}.")
 
 
-def core_tranche_steps(draft: dict[str, Any]) -> list[str]:
+def owner_check_window(decision: dict[str, Any]) -> str:
+    try:
+        hour = datetime.fromisoformat(decision["generated_at"]).hour
+        return "14:45–15:20 ET" if hour >= 11 else "09:45–10:45 or 14:45–15:20 ET"
+    except (KeyError, TypeError, ValueError):
+        return "the next market-hours check"
+
+
+def core_tranche_steps(draft: dict[str, Any], window: str) -> list[str]:
     from email_brief import money
     cap = money(draft["max_price"])
     unit = "share" if draft["held_before"] == 1 else "shares"
     return [
-        f"When: at your 09:45–10:45 or 14:45–15:20 ET check on {draft['session_date']}, while the regular market is open.",
+        f"When: at your {window} check on {draft['session_date']}, while the regular market is open.",
         f"Check first: current quote at or below {cap}; broker confirms the recorded {draft['held_before']} {unit}, "
         "no conflicting order, and buying power and settlement rules cover the purchase plus costs. "
         "Also check for material new evidence against the core case.",
@@ -108,6 +116,7 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
     followthrough = decision.get('delivery_followthrough', {})
     reconcile_delivery = continuation_requires_reconciliation(followthrough)
+    check_window = owner_check_window(decision)
     if reconcile_delivery:
         # Delivery continuation cannot spend cash or sell shares twice while
         # canonical records still describe the pre-assumption portfolio.
@@ -115,6 +124,12 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     summary = ["This brief uses the maintained research and plan records with the latest validated close; it is not a live broker view."]
     if reconcile_delivery:
         summary.append("Follow-up: earlier instructions require reconciliation. Additional portfolio-changing drafts are withheld from potentially pre-execution records until actual holdings, fills, cash and orders are reconciled; no new order quantity is supplied here.")
+        if followthrough.get('status') == 'prior_action_not_structured':
+            names = followthrough.get('unstructured_candidate_tickers', [])
+            if names:
+                summary.append(f"At your {check_window} check: verify actual " + ", ".join(names)
+                    + " shares, fills and all open orders. The earlier up-to candidate did not specify a completed purchase; "
+                      "do not repeat it or assume a fill. Reassess a new buy only after those facts are recorded.")
     elif blocked:
         summary.append("Action: resolve the account or data verification problem. New trade drafts are withheld.")
     elif decision.get("fundamental_gate", {}).get("weakening_tickers"):
@@ -129,7 +144,7 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
             summary.append("Today's conditional decision: consider the exact core draft below; otherwise skip. No order has been submitted.")
             for draft in core:
                 summary.append(core_tranche_line(draft))
-                summary.extend(core_tranche_steps(draft))
+                summary.extend(core_tranche_steps(draft, check_window))
         else:
             summary.append("Action: review the eligible proposals below; no order has been submitted.")
     else:
@@ -138,7 +153,7 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         summary.append("Account or data verification is also unresolved. These independent blockers remain in force.")
     unresolved = [p['ticker'] for p in plans if p.get('status') != 'maintained' or p.get('blockers')]
     if unresolved:
-        summary.append("During your next brief account check (09:45–10:45 or 14:45–15:20 ET), reconcile "
+        summary.append(f"During your {check_window} account check, reconcile "
                        + ", ".join(unresolved) + " holdings, fills, available shares and orders. "
                        "Do not reuse expired sell or protection prices.")
     sections = [section("What needs your attention", summary)]

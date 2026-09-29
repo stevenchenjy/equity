@@ -83,6 +83,13 @@ class FollowthroughTests(unittest.TestCase):
             self.assertEqual(old["status"],"prior_action_not_structured")
             self.assertEqual(old["unstructured_candidate_tickers"],["SPY"])
             self.assertEqual(old["actions"],[])
+            later=copy.deepcopy(prior);later["generated_at"]=AFTERNOON.isoformat()
+            later["delivery_followthrough"]=old
+            afternoon_text=render_email(later)[1]
+            lead=afternoon_text.split("Holdings and retained plans")[0]
+            self.assertIn("At your 14:45–15:20 ET check: verify actual SPY shares",lead)
+            self.assertIn("do not repeat it or assume a fill",lead)
+            self.assertNotIn("Core conditional draft — SPY",afternoon_text)
 
     def test_read_only_full_fill_branch_does_not_record_execution_or_change_eligibility(self):
         with tempfile.TemporaryDirectory() as temp:
