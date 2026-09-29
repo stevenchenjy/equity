@@ -121,8 +121,8 @@ def main() -> int:
     positions = read_csv(ROOT / "05_risk_and_positions/current_positions.local.csv")
     facts = {row["ticker"]: row for row in read_csv(FUNDAMENTALS_PATH)}
     valuations = {row["ticker"]: row for row in read_json(ROOT / "04_data/equity_research/valuation_scenarios.local.json", {}).get("records", [])}
-    summary_rows = read_csv(ROOT / "05_risk_and_positions/current_portfolio_summary.csv")
-    weights = read_csv(ROOT / "05_risk_and_positions/dynamic_position_weights.csv")
+    summary_rows = read_csv(ROOT / "05_risk_and_positions/generated/current/current_portfolio_summary.csv")
+    weights = read_csv(ROOT / "05_risk_and_positions/generated/current/dynamic_position_weights.csv")
     account = load_research_account_state()
     prior = read_json(STATE, {}).get("companies", {})
     seen = {row.get("event_id") for row in jsonl(HISTORY)}

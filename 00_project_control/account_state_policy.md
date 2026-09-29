@@ -7,6 +7,14 @@
 - Current prices and provenance: `03_source_data/equity_research/market_data_snapshot.csv`.
 - Current public research evidence: controlled C5 packet fields; portfolio-fit fields from the old packet are not authoritative.
 
+Generated portfolio calculations are in `05_risk_and_positions/generated/current/`.
+Private prior versions are retained by hash in
+`11_archive/portfolio_versions.local/`. Archives are audit evidence only and
+cannot replace a missing or invalid current input. The daily refresh snapshots
+current portfolio files at its boundary; managed writers save changed
+predecessors before replacement. See `05_risk_and_positions/README.md` for
+direct manual edits.
+
 ## Runtime State
 
 No dollar amount, share count, or position weight in this policy is current

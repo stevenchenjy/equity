@@ -34,7 +34,7 @@ BASELINE_PATH = (
     ROOT / "04_research" / "company_research"
     / "current_research_baseline.csv"
 )
-AUDIT_PATH = ROOT / "05_risk_and_positions" / "gate_audit.csv"
+AUDIT_PATH = ROOT / "05_risk_and_positions" / "generated" / "current" / "gate_audit.csv"
 REPORT_PATH = (
     ROOT / "08_reviews" / "current"
     / "capital_allocation_validation.local.md"

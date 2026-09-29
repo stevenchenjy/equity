@@ -637,7 +637,7 @@ def main() -> int:
     )
     routine_review_violations: list[str] = []
     for target in (
-        ROOT / "05_risk_and_positions" / "exact_action_plan.csv",
+        ROOT / "05_risk_and_positions" / "generated" / "current" / "exact_action_plan.csv",
         ROOT
         / "04_research"
         / "company_research"
@@ -648,6 +648,8 @@ def main() -> int:
         / "new_candidate_recommendations.csv",
         ROOT
         / "05_risk_and_positions"
+        / "generated"
+        / "current"
         / "price_aware_action_plan.csv",
     ):
         for row in read_csv(target):

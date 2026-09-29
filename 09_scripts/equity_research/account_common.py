@@ -8,10 +8,13 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 
+from portfolio_archive import archive_before_replace
+
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTROL_DIR = ROOT / "00_project_control"
 POSITION_DIR = ROOT / "05_risk_and_positions"
+GENERATED_POSITION_DIR = POSITION_DIR / "generated" / "current"
 DATA_DIR = ROOT / "03_source_data" / "equity_research"
 RESEARCH_DIR = ROOT / "04_research" / "company_research"
 SCHEDULER_DIR = ROOT / "07_automation" / "scheduler"
@@ -27,14 +30,14 @@ C5_PACKETS = RESEARCH_DIR / "current_research_baseline.csv"
 C9_INHIBIT = SCHEDULER_DIR / "maintenance_inhibit.local.json"
 C9_RUN_LOG = CONTROL_DIR / "run_logs" / "account_run_log.csv"
 
-DYNAMIC_WEIGHTS = POSITION_DIR / "dynamic_position_weights.csv"
-PORTFOLIO_SUMMARY = POSITION_DIR / "current_portfolio_summary.csv"
-EXACT_ACTION_PLAN = POSITION_DIR / "exact_action_plan.csv"
-CASH_DEPLOYMENT_PLAN = POSITION_DIR / "cash_deployment_plan.csv"
-TARGET_ALLOCATION_REPORT = POSITION_DIR / "target_allocation_report.csv"
-POST_ACTION_PORTFOLIO = POSITION_DIR / "post_action_portfolio.csv"
-REVIEW_QUEUE = POSITION_DIR / "account_aware_review_queue.csv"
-WEEKLY_DECISION_SUMMARY = POSITION_DIR / "weekly_decision_summary.md"
+DYNAMIC_WEIGHTS = GENERATED_POSITION_DIR / "dynamic_position_weights.csv"
+PORTFOLIO_SUMMARY = GENERATED_POSITION_DIR / "current_portfolio_summary.csv"
+EXACT_ACTION_PLAN = GENERATED_POSITION_DIR / "exact_action_plan.csv"
+CASH_DEPLOYMENT_PLAN = GENERATED_POSITION_DIR / "cash_deployment_plan.csv"
+TARGET_ALLOCATION_REPORT = GENERATED_POSITION_DIR / "target_allocation_report.csv"
+POST_ACTION_PORTFOLIO = GENERATED_POSITION_DIR / "post_action_portfolio.csv"
+REVIEW_QUEUE = GENERATED_POSITION_DIR / "account_aware_review_queue.csv"
+WEEKLY_DECISION_SUMMARY = GENERATED_POSITION_DIR / "weekly_decision_summary.md"
 
 C9_SCORES = RESEARCH_DIR / "account_aware_conviction_scores.csv"
 C9_POSITION_RECOMMENDATIONS = RESEARCH_DIR / "position_recommendations.csv"
@@ -109,18 +112,26 @@ def csv_fields(path: Path) -> list[str]:
 def write_csv(path: Path, rows: list[dict[str, str]], fields: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-    with temporary.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(rows)
-    os.replace(temporary, path)
+    try:
+        with temporary.open("w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(rows)
+        archive_before_replace(path, temporary.read_bytes())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def write_text(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-    temporary.write_text(content, encoding="utf-8")
-    os.replace(temporary, path)
+    try:
+        temporary.write_text(content, encoding="utf-8")
+        archive_before_replace(path, temporary.read_bytes())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def as_float(value: object, field: str) -> float:

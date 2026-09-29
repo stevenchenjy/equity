@@ -22,6 +22,8 @@ from pathlib import Path
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
 
+from portfolio_archive import archive_before_replace
+
 
 ROOT = Path(__file__).resolve().parents[2]
 ET = ZoneInfo("America/New_York")
@@ -51,7 +53,7 @@ MARKET_QUALITY_PATH = (
     / "market_data_quality_report.csv"
 )
 EXACT_ACTION_PATH = (
-    ROOT / "05_risk_and_positions" / "exact_action_plan.csv"
+    ROOT / "05_risk_and_positions" / "generated" / "current" / "exact_action_plan.csv"
 )
 POSITION_RECOMMENDATION_PATH = (
     ROOT
@@ -66,10 +68,10 @@ NEW_CANDIDATE_PATH = (
     / "new_candidate_recommendations.csv"
 )
 PORTFOLIO_SUMMARY_PATH = (
-    ROOT / "05_risk_and_positions" / "current_portfolio_summary.csv"
+    ROOT / "05_risk_and_positions" / "generated" / "current" / "current_portfolio_summary.csv"
 )
 POST_ACTION_PORTFOLIO_PATH = (
-    ROOT / "05_risk_and_positions" / "post_action_portfolio.csv"
+    ROOT / "05_risk_and_positions" / "generated" / "current" / "post_action_portfolio.csv"
 )
 
 EVIDENCE_LEDGER_PATH = (
@@ -299,6 +301,7 @@ def atomic_write_text(path: Path, content: str) -> None:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
+        archive_before_replace(path, Path(temporary_name).read_bytes())
         os.replace(temporary_name, path)
     finally:
         try:
@@ -335,6 +338,7 @@ def atomic_write_csv(
             writer.writerows(rows)
             handle.flush()
             os.fsync(handle.fileno())
+        archive_before_replace(path, Path(temporary_name).read_bytes())
         os.replace(temporary_name, path)
     finally:
         try:

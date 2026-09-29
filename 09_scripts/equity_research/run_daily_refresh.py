@@ -14,6 +14,8 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 
+from portfolio_archive import snapshot_active_portfolio
+
 from daily_common import (
     DAILY_PIPELINE_LOCK_PATH,
     DAILY_REFRESH_STATE_PATH,
@@ -211,10 +213,14 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     refresh_cycle_date = cycle_date()
     expected_market_session = latest_published_market_session(now_et()).isoformat()
     with lock_context:
-        steps = [
-            run_step(*spec, market_snapshot_mode=market_snapshot_mode)
-            for spec in STEP_SPECS
-        ]
+        snapshot_active_portfolio(ROOT)
+        try:
+            steps = [
+                run_step(*spec, market_snapshot_mode=market_snapshot_mode)
+                for spec in STEP_SPECS
+            ]
+        finally:
+            snapshot_active_portfolio(ROOT)
     hard_failures = [
         row["name"]
         for row in steps

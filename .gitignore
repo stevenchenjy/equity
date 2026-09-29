@@ -107,8 +107,9 @@ graphify-out/graph.html
 
 05_risk_and_positions/*.csv
 05_risk_and_positions/*.md
-05_risk_and_positions/*.csv
-05_risk_and_positions/*.md
+!05_risk_and_positions/README.md
+05_risk_and_positions/generated/current/
+11_archive/portfolio_versions.local/
 06_execution_records/*.csv
 
 07_automation/email_briefs/daily_email_brief.html

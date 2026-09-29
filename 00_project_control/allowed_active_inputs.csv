@@ -16,7 +16,7 @@ AI-014,03_source_data/equity_research/daily_fundamentals.csv,exact,official_evid
 AI-015,03_source_data/equity_research/sec_submission_acceptance_index.json,exact,official_evidence,SEC acceptance-time index,phase5r_daily;deterministic_packet,no,yes,current_run,Point-in-time availability authority.
 AI-016,03_source_data/equity_research/sec_filing_artifact_index.json,exact,official_evidence,local SEC artifact manifest,phase5r_daily;deterministic_packet,no,yes,current_run,Artifacts remain source and hash bound.
 AI-017,04_research/company_research/*.csv,pattern,deterministic_decision,C9 account-aware outputs,phase5r_daily;daily_composer,yes,yes,current_run,C9 remains canonical risk and eligibility authority.
-AI-018,05_risk_and_positions/*.csv,pattern,portfolio_state,C9 portfolio and action-review state,phase5r_daily;daily_composer,yes,yes,current_run,Manual-execution boundary remains mandatory.
+AI-018,05_risk_and_positions/generated/current/*.csv,pattern,portfolio_state,C9 portfolio and action-review state,phase5r_daily;daily_composer,yes,yes,current_run,Generated calculations only; private archives never enter the active workflow.
 AI-019,04_research/company_research/daily_decision.json,exact,daily_decision,current canonical daily decision,daily_sender,no,yes,current_cycle,Must match the ET cycle and active-state boundary.
 AI-020,07_automation/email_briefs/daily_email_brief.txt,exact,daily_email,current plain-text daily brief,daily_sender,no,yes,current_cycle,Generated from the current daily decision only.
 AI-021,07_automation/email_briefs/daily_email_brief.html,exact,daily_email,current HTML daily brief,daily_sender,no,yes,current_cycle,Generated in lockstep with text.

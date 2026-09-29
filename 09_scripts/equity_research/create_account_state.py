@@ -16,7 +16,7 @@ def create_if_missing() -> str:
     if ACCOUNT_STATE.exists():
         return "validated_existing"
     raise FileNotFoundError(
-        "current_account_state.local.json is required; copy the template and "
+        "current_account_state.local.json is required; copy 05_risk_and_positions/examples/current_account_state.local.json.template and "
         "enter manually confirmed cash/account fields instead of inventing a total"
     )
 
