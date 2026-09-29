@@ -189,6 +189,19 @@ class FollowthroughTests(unittest.TestCase):
         self.assertEqual(recommendation_notification_fingerprint(d),recommendation_notification_fingerprint(before))
         self.assertEqual(delivery_meaning_key(d),delivery_meaning_key(before))
 
+    def test_ambiguous_prior_action_gets_one_reconciliation_notice(self):
+        prior=decision()
+        ambiguous=copy.deepcopy(prior)
+        ambiguous["delivery_followthrough"]={"status":"prior_action_not_structured",
+            "unstructured_candidate_tickers":["TEST"],"actions":[]}
+        self.assertNotEqual(delivery_meaning_key(ambiguous),delivery_meaning_key(prior))
+        corrected=copy.deepcopy(ambiguous)
+        corrected["delivery_followthrough"]["status"]="multiple_deliveries_require_reconciliation"
+        self.assertEqual(delivery_meaning_key(corrected),delivery_meaning_key(ambiguous))
+        resolved=copy.deepcopy(ambiguous)
+        resolved["delivery_followthrough"]["status"]="verified_current_snapshot_supersedes"
+        self.assertEqual(delivery_meaning_key(resolved),delivery_meaning_key(prior))
+
     def test_all_additional_quantities_withheld_including_other_ticker_and_tactical_paths(self):
         d=decision();d["account"]["cash_basis"]="verified"
         d["watch_candidates"]=[{"ticker":"NEW","suggested_whole_shares":7,"maximum_review_price":111,"action":"eligible_buy_review"}]

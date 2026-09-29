@@ -81,8 +81,19 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
     quantities = sorted((r.get("ticker"), str(r.get("current_shares")))
                         for r in value.get("held_positions", []))
     facts = {key: account.get(key) for key in ("cash_available", "cash_reserved", "cash_basis")}
-    return MARKER + canonical_sha256({"recommendation": recommendation_notification_fingerprint(value),
-                                     "shares": quantities, "cash": facts})
+    # An earlier email with an ambiguous quantity requires one clear follow-up.
+    # A later status-only email does not resolve that dependency: the
+    # followthrough status then becomes multiple_deliveries_require_reconciliation.
+    # Use the same marker for both states so this correction is sent once and
+    # remains covered until verified broker facts change the recommendation.
+    prior_action_status = decision.get("delivery_followthrough", {}).get("status")
+    ambiguous_prior_action = prior_action_status in {
+        "prior_action_not_structured", "multiple_deliveries_require_reconciliation"}
+    meaning = {"recommendation": recommendation_notification_fingerprint(value),
+               "shares": quantities, "cash": facts}
+    if ambiguous_prior_action:
+        meaning["ambiguous_prior_action_needs_reconciliation"] = True
+    return MARKER + canonical_sha256(meaning)
 
 
 def latest_delivery_receipt(rows: list[dict[str, str]], *, current: datetime) -> dict[str, str] | None:
