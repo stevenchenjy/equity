@@ -76,3 +76,10 @@ h1, h2, h3 { text-wrap: balance; }
 .history-tools > .field { flex: 1; min-width: 140px; }
 .history-tools > .field:has(input) { flex: 2; min-width: min(100%, 200px); }
 .order-list > div { display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }
+@media(max-width:420px) {
+  .account-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .account-strip > div { min-width: 0; }
+  .account-strip > div:first-child { grid-column: 1 / -1; border-right: 0; border-bottom: 1px solid var(--rule); padding: 0 0 12px; margin-bottom: 12px; }
+  .account-strip > div:first-child strong { font-size: 27px; }
+  .account-strip > div:nth-child(2) { padding-left: 0; }
+}
