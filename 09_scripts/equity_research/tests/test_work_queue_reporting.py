@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from _support import SCRIPT_DIR  # noqa
+from _support import SCRIPT_DIR, visible_html_text  # noqa
 from work_queue_reporting import work_health, cash_lines, research_lines, read_backlog_summary, BACKLOG_REL
 from delivery_continuity import delivery_meaning_key
 from daily_common import recommendation_notification_fingerprint
@@ -100,9 +100,15 @@ class WorkQueueReportingTests(unittest.TestCase):
                 blocked['account']['cash_available'] = '100'
             else:
                 blocked['generated_at'] = '2026-09-29T09:20:00-04:00'
-            body = render_email(blocked)[1]
-            self.assertNotIn('Core conditional draft — SPY: buy', body)
-            self.assertIn('do not place an order from this summary', body)
+            _, text, html = render_email(blocked)
+            for body in (text, visible_html_text(html)):
+                with self.subTest(fault=changed, body='plain' if body is text else 'html'):
+                    lead = body.split('Supporting information', 1)[0]
+                    self.assertIn('BUY — none', lead)
+                    self.assertIn('0 shares · no current order price', lead)
+                    self.assertNotIn('Core conditional draft — SPY: buy', body)
+                    self.assertNotIn('$771.35', body)
+                    self.assertNotIn('buy 1 additional share', body)
 
     def test_status_does_not_promote_local_review_gaps_to_global_freeze(self):
         args = status_tests.CurrentWorkflowStatusTests().fixture()

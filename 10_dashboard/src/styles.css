@@ -37,3 +37,42 @@
 .email-original{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:13px;line-height:1.8;color:#42584b;margin:14px 0;}
 
 .price-chart .chart-footnote{margin-top:8px}.price-chart .form-hint{margin-top:6px}.price-chart svg:focus-visible{outline:3px solid #8abca4;outline-offset:3px}
+
+/* Keep keyboard and touch navigation usable alongside the fixed mobile nav. */
+html { scroll-padding-bottom: calc(90px + env(safe-area-inset-bottom)); }
+a:focus-visible { outline: 3px solid #8abca4; outline-offset: 3px; }
+button, a, input, select, textarea, summary { touch-action: manipulation; }
+h1, h2, h3 { text-wrap: balance; }
+.skip-link { position: fixed; top: 8px; left: 12px; z-index: 30; padding: 12px 16px; background: #fff; color: var(--green); border: 1px solid var(--green); border-radius: 6px; transform: translateY(-150%); }
+.skip-link:focus { transform: translateY(0); }
+.form-mode input { min-height: 15px; padding: 0; }
+.chart-values { font-variant-numeric: tabular-nums; }
+.chart-day-controls { display: flex; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.chart-day-controls button { min-height: 40px; font-size: 12px; }
+.chart-day-controls button:disabled { cursor: default; }
+.history-record { content-visibility: auto; contain-intrinsic-size: auto 80px; }
+.history-tools { display: flex; flex-wrap: wrap; align-items: end; gap: 14px; margin: 20px 0 24px; }
+.history-tools label { display: flex; flex-direction: column; gap: 7px; min-width: 140px; flex: 1; font-size: 13px; color: var(--muted); }
+.history-tools label:has(input) { flex: 2; min-width: min(100%, 200px); }
+.review-request-panel { max-width: 710px; margin: 28px 0; padding: 20px; border: 1px solid #dce4df; border-radius: 8px; }
+.review-request-panel form { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.review-request-panel textarea { min-height: 88px; }
+.review-list { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.review-list article, .review-list > div { border: 1px solid var(--rule); border-radius: 6px; padding: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.review-list p { margin-top: 7px; font-size: 13px; color: #52645a; }
+.correction-notice { margin: 14px 0; padding: 14px; border: 1px solid #efcf9e; background: var(--amber-bg); color: var(--amber); border-radius: 6px; font-size: 13px; line-height: 1.7; }
+.unsaved-confirm { margin: 14px 0; padding: 14px; border: 1px solid #efcf9e; background: var(--amber-bg); color: var(--amber); border-radius: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.unsaved-confirm p { flex: 1; min-width: min(100%, 220px); line-height: 1.7; }
+@media(max-width:620px) {
+  input, select, textarea, .wide-form input, .wide-form select, .wide-form textarea { font-size: 16px; }
+  .icon-button { min-width: 44px; min-height: 44px; }
+  .check-field, .form-mode label { min-height: 44px; }
+  .chart-day-controls button { min-height: 44px; }
+  main { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  .review-request-panel { padding: 17px; }
+}
+@media(prefers-reduced-motion:reduce) { *, *::before, *::after { transition: none !important; } }
+
+.history-tools > .field { flex: 1; min-width: 140px; }
+.history-tools > .field:has(input) { flex: 2; min-width: min(100%, 200px); }
+.order-list > div { display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }

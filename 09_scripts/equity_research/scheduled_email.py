@@ -425,6 +425,22 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
             holding_lines.append(f"{ticker}: {qty} recorded shares; add 0. Current sell/protection price: none — plan {status}.")
             holding_lines.append(f"{ticker} next step: the analyst must record a current risk/purpose decision. "
                                  "This is unfinished analysis, not a recommendation to hold indefinitely; no expired price is renewed.")
+            # DAY expiry removes the order draft, not the independent analyst
+            # review/exit deadline retained by the source-bound plan history.
+            # Show that date as pending context, never as a renewed order.
+            if (continuity.get('schema_version') == 'equity_plan_continuity_v1'
+                    and re.fullmatch(r'[0-9a-f]{64}', str(plan.get('record_hash', '')))
+                    and plan.get('automatic_action_allowed') is False):
+                for field, label in (('review_at', 'analyst review'), ('time_exit_at', 'exit/review')):
+                    value = plan.get(field)
+                    try:
+                        deadline = datetime.fromisoformat(value)
+                        if deadline.tzinfo is None:
+                            continue
+                    except (TypeError, ValueError):
+                        continue
+                    holding_lines.append(f"{ticker} recorded {label} deadline: {value}; outcome unconfirmed. "
+                                         "Retained prior-plan context; this does not renew an expired order.")
         reference = row.get('current_price')
         if decision.get('market_gate', {}).get('passed') is True and number(reference) is not None:
             holding_lines.append(f"{ticker} reference: {money(reference)} at the dated close above; not a buy limit, stop or live quote.")

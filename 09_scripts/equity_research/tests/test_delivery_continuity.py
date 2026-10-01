@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-from _support import SCRIPT_DIR  # noqa
+from _support import SCRIPT_DIR, visible_html_text  # noqa
 import send_daily_email as sender
 from delivery_continuity import delivery_meaning_key, covered_by_last_delivery
 from email_brief import render_email
@@ -124,19 +124,29 @@ class DeliveryContinuityTests(unittest.TestCase):
         p.update(status='expired_pending_verification',action='reconcile_plan')
         subject,text,html=render_email(d)
         self.assertIn('Action plan',subject)
-        self.assertEqual(html.count('<h2'),4)
         self.assertLess(len(text.split()),650)
-        for body in [text,html]:
+        for body in [text,visible_html_text(html)]:
+            # Explicit inactive actions precede the recorded holdings/reference
+            # prices. Adding a supporting section must not weaken this contract.
+            lead, supporting = body.split('Supporting information', 1)
+            self.assertIn('SELL — none', lead)
+            self.assertIn('BUY — none', lead)
+            self.assertIn('0 shares · no current order price', lead)
+            self.assertNotIn('RBRK reference', lead)
+            self.assertIn('Holdings and retained plans', supporting)
             self.assertIn('Current sell/protection price: none',body)
+            self.assertIn('plan expired pending verification',body)
             self.assertIn('unfinished analysis',body)
             self.assertIn('0 shares. No candidate has a complete current entry plan',body)
             self.assertNotIn('$80.00',body)
             self.assertNotRegex(body,r'[\u4e00-\u9fff]')
         d['account_conflicts']=['new conflict'];d['eligible_new_position_review_candidates']=['AAA']
         d['watch_candidates'][0].update(suggested_whole_shares='99',maximum_review_price='123.45')
-        for body in render_email(d)[1:]:
+        _, text, html = render_email(d)
+        for body in [text, visible_html_text(html)]:
             self.assertNotIn('123.45',body)
             self.assertIn('no new entry order',body)
+            self.assertIn('BUY — none',body.split('Supporting information', 1)[0])
 
 
 if __name__=='__main__':unittest.main()

@@ -51,7 +51,37 @@ export type FormalRecord = {
   account_version_before: string; plan: {plan_id: string; version: number; record_hash: string} | null;
   production_effect: boolean; order_id?: string; execution_id?: string; error?: string;
   email_version_id?:string|null;
+  correction?: {record_id:string;reason:string}|null;
+  corrected_by?:string[];
 };
+export type ReviewRequest = {
+  id:string; status:'queued'|'running'|'blocked'|'completed'; question:string; tickers:string[];
+  account_version:string; snapshot_id:string; created_at:string; updated_at:string;
+  review_account_version?:string; review_snapshot_id?:string;
+  receipt?:{path:string;sha256:string;summary:string}; receipt_verified?:boolean;
+};
+export function validStoredFeedback(value:unknown):value is Feedback {
+  if(!value||typeof value!=='object')return false;
+  const f=value as Record<string,unknown>;
+  const strings=['ticker','side','status','shares','amount','amount_mode','fee_status','fees','date','time','notes','order_type','order_price','stop_price','time_in_force','remaining','linked_order','cash'];
+  return strings.every(k=>typeof f[k]==='string') && Object.hasOwn(statusNames,String(f.status))
+    && ['buy','sell'].includes(String(f.side)) && ['price','gross','net'].includes(String(f.amount_mode))
+    && ['known','unknown'].includes(String(f.fee_status)) && typeof f.prior_partial==='boolean'
+    && typeof f.inventory_complete==='boolean' && Array.isArray(f.holdings)
+    && f.holdings.every(h=>h&&typeof h.ticker==='string'&&typeof h.shares==='string'&&(h.entry_price===undefined||typeof h.entry_price==='string'));
+}
+export function initialFeedback(data:Snapshot|null,ticker:string,status:FeedbackStatus='filled'):Feedback {
+  const f=defaults(ticker,data?easternDate(Date.parse(data.server_now)):easternDate());
+  return status==='account' ? {...f,status,cash:data?String(data.account.cash_available):'',
+    holdings:data?.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)}))??[],account_observed:false} : {...f,status};
+}
+export function matchesHistory(record:Pick<FormalRecord,'id'|'feedback'|'stage'|'correction'>,query:string,status:string,stage:string):boolean {
+  if(status!=='all'&&record.feedback.status!==status || stage!=='all'&&record.stage!==stage)return false;
+  const f=record.feedback;
+  const haystack=[record.id,f.ticker,f.date,f.time,f.notes,statusNames[f.status],f.side==='buy'?'买入':'卖出',
+    ...f.holdings.map(h=>h.ticker),record.correction?.reason??''].join(' ').toLocaleLowerCase();
+  return query.trim().toLocaleLowerCase().split(/\s+/).every(word=>haystack.includes(word));
+}
 export function easternDate(now = Date.now()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
@@ -61,7 +91,7 @@ export const timeLabel = (value: string | null | undefined): string => {
   return new Intl.DateTimeFormat('zh-CN', { timeZone: 'America/New_York', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(value)) + ' ET';
 };
 export function expired(plan: Plan, now: number): boolean {
-  return plan.status === 'expired' || !plan.expires_at || now >= Date.parse(plan.expires_at);
+  return plan.status === 'expired' || !plan.expires_at || !Number.isFinite(Date.parse(plan.expires_at)) || now >= Date.parse(plan.expires_at);
 }
 
 export function planReference(plan: Plan | undefined): FormalRecord['plan'] {

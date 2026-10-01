@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
-from _support import SCRIPT_DIR  # noqa: F401
+from _support import SCRIPT_DIR, visible_html_text  # noqa: F401
 from test_email_brief import decision_fixture
 from test_investment_plans import ledger
 from daily_common import recommendation_notification_fingerprint
@@ -48,9 +48,18 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertEqual(value['watch_candidates'][0]['suggested_whole_shares'], '0')
         self.assertEqual(value['held_positions'][0]['baseline_research']['reason'], 'generic hold')
         validate_published_workflow(value, root=self.root, current=self.now)
-        for body in render_email(value)[1:]:
-            self.assertRegex(body, r'TEST:(?:</strong>)? 4 held')
-            self.assertIn('protection review', body)
+        _, text, html = render_email(value)
+        for body in (text, visible_html_text(html)):
+            lead, supporting = body.split('Supporting information', 1)
+            self.assertIn('SELL — TEST', lead)
+            self.assertIn('4 shares · STOP $10.00 · DAY', lead)
+            self.assertIn('session 2026-09-24', lead)
+            self.assertIn('not a guaranteed fill price', lead)
+            self.assertIn('complete current order inventory', lead)
+            self.assertIn('otherwise skip', lead)
+            self.assertIn('TEST: 4 recorded shares', supporting)
+            self.assertIn('Conditional protection plan', supporting)
+            self.assertIn('BUY — none', lead)
             self.assertIn('2026-09-25T15:45', body)
             self.assertNotIn('报告状态未识别', body)
         with self.assertRaisesRegex(ValueError, 'plan_state_changed'):
@@ -75,10 +84,53 @@ class WorkflowPublicationTests(unittest.TestCase):
         view = build_email_view(value)
         self.assertFalse(view['plans'])
         self.assertIn('期限持续有效', view['next_step'])
-        text = render_email(value)[1]
-        self.assertIn('dated plan expired; outcome unconfirmed', text)
-        self.assertIn('2026-09-25T15:45', text)
-        self.assertNotIn('没有交易截止时刻', text)
+        _, text, html = render_email(value)
+        for body in (text, visible_html_text(html)):
+            lead, supporting = body.split('Supporting information', 1)
+            self.assertIn('SELL — none', lead)
+            self.assertIn('BUY — none', lead)
+            self.assertIn('0 shares · no current order price', lead)
+            self.assertIn('plan expired pending verification', supporting)
+            self.assertIn('Current sell/protection price: none', supporting)
+            self.assertIn('recorded exit/review deadline: 2026-09-25T15:45', supporting)
+            self.assertIn('outcome unconfirmed', supporting)
+            self.assertIn('unfinished analysis', supporting)
+            self.assertNotIn('$10.00', body)
+            self.assertNotIn('sell 4 shares', body)
+
+    def test_elapsed_exit_deadline_is_retained_without_rolling_or_reissuing_order(self):
+        value = self.decision()
+        current = datetime.fromisoformat('2026-09-28T12:05:00-04:00')
+        value.update(generated_at=current.isoformat(), cycle_date='2026-09-28')
+        apply_workflow_integrity(value, root=self.root, current=current)
+        _, text, html = render_email(value)
+        for body in (text, visible_html_text(html)):
+            self.assertIn('recorded exit/review deadline: 2026-09-25T15:45', body)
+            self.assertIn('outcome unconfirmed', body)
+            self.assertIn('Current sell/protection price: none', body)
+            self.assertNotIn('exit/review deadline: 2026-09-28', body)
+            self.assertNotIn('$10.00', body)
+            self.assertNotIn('sell 4 shares', body)
+
+    def test_invalid_or_unbound_deadline_is_not_presented_as_recorded_plan_context(self):
+        value = self.decision()
+        apply_workflow_integrity(value, root=self.root,
+                                 current=datetime.fromisoformat('2026-09-24T16:01:00-04:00'))
+        for fault in ('naive_timestamp', 'malformed_timestamp', 'missing_plan_hash'):
+            broken = copy.deepcopy(value)
+            plan = broken['plan_continuity']['plans'][0]
+            if fault == 'naive_timestamp':
+                plan['time_exit_at'] = '2026-09-25T15:45:00'
+            elif fault == 'malformed_timestamp':
+                plan['time_exit_at'] = 'not-a-recorded-date'
+            else:
+                plan['record_hash'] = ''
+            _, text, html = render_email(broken)
+            for body in (text, visible_html_text(html)):
+                with self.subTest(fault=fault):
+                    self.assertNotIn('recorded exit/review deadline:', body)
+                    self.assertIn('Current sell/protection price: none', body)
+                    self.assertNotIn('$10.00', body)
 
     def test_history_and_notifications_ignore_clock_but_record_semantic_change(self):
         first = self.decision()

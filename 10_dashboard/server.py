@@ -223,7 +223,7 @@ def chart(root, ticker, records):
     session = datetime.fromisoformat(market['market_session_date']).date()
     bars, errors = _validated_bars(history,ticker,session,digest(raw),market['last_price'])
     if errors: raise SnapshotError(errors[0])
-    fills = [dict(id=r['id'],date=r['feedback']['date'],time=r['feedback']['time'],side=r['feedback']['side'],shares=r['feedback']['shares'],price=r['changes']['fill_price'])
+    fills = [dict(id=r['id'],date=r['feedback']['date'],time=r['feedback']['time'],side=r['feedback']['side'],shares=r['feedback']['shares'],price=r['changes']['fill_price'],account_corrected_by=r.get('corrected_by',[]))
         for r in records if r['stage']=='applied' and r['feedback']['ticker']==ticker and r['feedback']['status'] in {'filled','partial'}]
     if (root/CONFIRMED).exists() and (root/RECONCILED).exists():
         reconciled={r['execution_id'] for r in csv.DictReader(io.StringIO(safe_read(root,RECONCILED).decode())) if r.get('reconciliation_status')=='applied'}
@@ -319,6 +319,12 @@ class Handler(BaseHTTPRequestHandler):
             query = parse_qs(urlsplit(self.path).query)
             if path == '/api/feedback' and hasattr(self.server,'store'):
                 return self.respond(200,json.dumps({'records':self.server.store.history()},ensure_ascii=False).encode(),'application/json')
+            if path == '/api/feedback/events' and hasattr(self.server,'store'):
+                return self.respond(200,json.dumps({'events':self.server.store.events(query.get('id',[''])[0])},ensure_ascii=False).encode(),'application/json')
+            if path == '/api/review-requests' and hasattr(self.server,'store'):
+                return self.respond(200,json.dumps({'requests':self.server.store.reviews()},ensure_ascii=False).encode(),'application/json')
+            if path == '/api/review-requests/events' and hasattr(self.server,'store'):
+                return self.respond(200,json.dumps({'events':self.server.store.review_events(query.get('id',[''])[0])},ensure_ascii=False).encode(),'application/json')
             if path in {'/api/chart','/api/email-versions','/api/email-version','/api/email-publication'}:
                 with RUNTIME_LOCK.open('rb') as lock:
                     fcntl.flock(lock.fileno(),fcntl.LOCK_SH|fcntl.LOCK_NB)
@@ -336,6 +342,7 @@ class Handler(BaseHTTPRequestHandler):
                         if len(matches)!=1: raise SnapshotError('email_publication_not_unique_or_not_sent')
                         result=email_version(root,matches[0])
                 return self.respond(200,json.dumps(result,ensure_ascii=False,allow_nan=False).encode(),'application/json')
+        except FeedbackError as exc: return self.error_json(exc.status,exc.code)
         except (OSError,ValueError,KeyError,TypeError,sqlite3.Error): return self.error_json(503,'requested_data_unavailable')
         if path.startswith("/api/"):
             return self.error_json(404, "route_not_found")
@@ -352,13 +359,15 @@ class Handler(BaseHTTPRequestHandler):
         if not self.permitted() or not self.headers.get('Origin') or self.headers.get('Content-Type')!='application/json':
             return self.error_json(403,'same_origin_json_required')
         path=urlsplit(self.path).path
-        if path not in {'/api/feedback/preview','/api/feedback','/api/feedback/retry'}: return self.error_json(404,'route_not_found')
+        if path not in {'/api/feedback/preview','/api/feedback','/api/feedback/retry','/api/review-requests'}: return self.error_json(404,'route_not_found')
         try:
             length=int(self.headers.get('Content-Length','0'))
             if not 0<length<=32000: return self.error_json(413,'request_too_large')
             payload=json.loads(self.rfile.read(length))
+            if not isinstance(payload,dict): raise FeedbackError('invalid_request')
             store=self.server.store
-            if path.endswith('/preview'): result=store.preview(payload)
+            if path=='/api/review-requests': result=store.request_review(payload)
+            elif path.endswith('/preview'): result=store.preview(payload)
             elif path.endswith('/retry'): result=store.retry(payload.get('record_id'))
             else: result=store.submit(payload)
             return self.respond(200,json.dumps(result,ensure_ascii=False,allow_nan=False).encode(),'application/json')

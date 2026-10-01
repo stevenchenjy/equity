@@ -8,7 +8,7 @@ from unittest.mock import patch
 from datetime import datetime
 
 import test_feedback as fixture_module
-from feedback import ACCOUNT, ORDERS, encoded, read, verify_publication
+from feedback import ACCOUNT, ORDERS, encoded, read, verify_publication, version, sha
 from server import Handler, email_version
 from dashboard_publication import bind_dashboard_link, publication_id
 from email_brief import render_email
@@ -141,3 +141,41 @@ class PrivateRoutesTests(unittest.TestCase):
         self.assertTrue(our_route(config,'test.example.ts.net'))
         config['TCP']['80']={'HTTP':True}
         self.assertFalse(our_route(config,'test.example.ts.net'))
+
+    def test_review_queue_private_form_and_audit_routes_preserve_account(self):
+        import uuid
+        self.fixture.put('04_research/company_research/daily_decision.json',{'context':'current'})
+        payload=dict(request_id=str(uuid.uuid4()),account_version=version(self.root),
+                     snapshot_id=sha(read(self.root,'04_research/company_research/daily_decision.json')),
+                     tickers=['ABC'],question='Reassess the expired plan and downside evidence.')
+        protected={p:read(self.root,p) for p in (ACCOUNT,ORDERS)}
+        private={'Host':'test.example.ts.net','Tailscale-User-Login':'owner@example.test',
+                 'Origin':'https://test.example.ts.net','Content-Type':'application/json'}
+        for headers in [{},dict(private,Origin='http://test.example.ts.net'),
+                        dict(private,**{'Tailscale-User-Login':'other@example.test'}),
+                        dict(private,**{'Sec-Fetch-Site':'cross-site'})]:
+            self.assertEqual(self.request('POST','/api/review-requests',payload,headers)[0],403)
+        self.assertEqual(self.request('GET','/api/review-requests')[1],{'requests':[]})
+        code,request=self.request('POST','/api/review-requests',payload,private)
+        self.assertEqual((code,request['status']),(200,'queued'))
+        self.assertEqual(self.request('POST','/api/review-requests',payload,private),(200,request))
+        self.assertEqual(protected,{p:read(self.root,p) for p in protected})
+        self.assertEqual(self.request('GET','/api/review-requests/events?id='+request['id'])[1]['events'][0]['status'],'queued')
+        self.assertEqual(self.request('GET','/api/review-requests/events?id=missing')[0],404)
+        self.assertEqual(self.request('POST','/api/review-requests/complete',payload,private)[0],404)
+        self.assertEqual(self.request('GET','/api/review-requests',headers=dict(private,**{'Tailscale-User-Login':'other@example.test'}))[0],403)
+
+    def test_nonobject_and_oversized_requests_are_rejected_before_mutation(self):
+        good={'Origin':self.local,'Content-Type':'application/json'}
+        for route in ('/api/feedback','/api/feedback/preview','/api/feedback/retry','/api/review-requests'):
+            self.assertEqual(self.request('POST',route,[],good)[0],422)
+            self.assertEqual(self.request('POST',route,{'padding':'x'*33000},good)[0],413)
+        self.assertEqual(self.fixture.store.history(),[])
+        self.assertEqual(self.fixture.store.reviews(),[])
+
+    def test_feedback_events_keep_prepared_and_applied_states(self):
+        record=self.fixture.submit(self.fixture.payload())
+        code,result=self.request('GET','/api/feedback/events?id='+record['id'])
+        self.assertEqual(code,200)
+        self.assertEqual([r['stage'] for r in result['events']],['applying','applied'])
+        self.assertEqual(self.request('GET','/api/feedback/events?id=missing')[0],404)

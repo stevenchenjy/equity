@@ -190,6 +190,8 @@ class Store:
           CREATE TABLE IF NOT EXISTS requests(id TEXT PRIMARY KEY, payload TEXT NOT NULL, record_id TEXT NOT NULL, state TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS writes(request_id TEXT, path TEXT, before BLOB NOT NULL, after BLOB NOT NULL, PRIMARY KEY(request_id,path));
           CREATE TABLE IF NOT EXISTS events(sequence INTEGER PRIMARY KEY, record_id TEXT, body TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS review_requests(id TEXT PRIMARY KEY, payload TEXT NOT NULL, body TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS review_events(sequence INTEGER PRIMARY KEY, request_id TEXT NOT NULL, body TEXT NOT NULL);
         ''')
         try: yield con
         finally: con.close()
@@ -197,7 +199,20 @@ class Store:
     def history(self):
         with self.db() as con:
             result = [json.loads(r['body']) for r in con.execute('SELECT body FROM records ORDER BY rowid DESC LIMIT 500')]
+            corrections = {}
+            for row in con.execute('SELECT body FROM records'):
+                record = json.loads(row['body'])
+                if record['stage'] == 'applied' and record.get('correction'):
+                    corrections.setdefault(record['correction']['record_id'], []).append(record['id'])
+            for record in result:
+                record['corrected_by'] = corrections.get(record['id'], [])
         return result
+
+    def events(self, record_id):
+        with self.db() as con:
+            if not con.execute('SELECT 1 FROM records WHERE id=?', (record_id,)).fetchone():
+                raise FeedbackError('record_not_found', status=404)
+            return [json.loads(r['body']) for r in con.execute('SELECT body FROM events WHERE record_id=? ORDER BY sequence', (record_id,))]
 
     def export(self, con, replacement=None):
         data = [json.loads(r['body']) for r in con.execute('SELECT body FROM records')]
@@ -224,18 +239,34 @@ class Store:
             r = json.loads(con.execute('SELECT body FROM records WHERE id=?', (req['record_id'],)).fetchone()[0])
             r['stage'] = r.pop('final_stage', 'applied')
             con.execute('UPDATE records SET body=? WHERE id=?', (encoded(r).decode(), r['id']))
+            con.execute('INSERT INTO events(record_id,body) VALUES(?,?)', (r['id'],encoded(r).decode()))
             con.execute("UPDATE requests SET state='complete' WHERE id=?", (req['id'],)); con.commit()
             atomic(self.root, PENDING, self.export(con))
         if (self.root/PENDING).exists() or con.execute('SELECT 1 FROM records LIMIT 1').fetchone():
             expected=self.export(con)
             if read(self.root,PENDING,optional=True)!=expected: atomic(self.root,PENDING,expected)
 
-    def proposal(self, payload):
+    def proposal(self, payload, con=None):
         if not isinstance(payload, dict) or not isinstance(payload.get('feedback'), dict):
             raise FeedbackError('invalid_request')
         if payload.get('account_version') != version(self.root):
             raise FeedbackError('account_version_changed', {'account_version': version(self.root)}, 409)
         f = dict(payload['feedback'])
+        correction = payload.get('correction')
+        if correction is not None:
+            if (not isinstance(correction, dict) or set(correction) != {'record_id', 'reason'}
+                    or not isinstance(correction['record_id'], str)
+                    or not isinstance(correction['reason'], str)
+                    or not correction['reason'].strip() or len(correction['reason']) > 1500
+                    or f.get('status') != 'account'):
+                raise FeedbackError('invalid_account_correction')
+            if con is None:
+                raise FeedbackError('correction_requires_coordinator')
+            original = con.execute('SELECT body FROM records WHERE id=?', (correction['record_id'],)).fetchone()
+            original = json.loads(original['body']) if original else None
+            if (not original or original['stage'] != 'applied' or original.get('production_effect') is not True
+                    or original['feedback']['status'] not in {'filled', 'partial', 'account'}):
+                raise FeedbackError('correction_reference_not_applied', status=409)
         email_id=payload.get('email_version_id')
         if email_id is not None:
             if not isinstance(email_id,str) or re.fullmatch('[0-9a-f]{64}',email_id) is None: raise FeedbackError('invalid_email_reference')
@@ -392,11 +423,14 @@ class Store:
     def preview(self, payload):
         with self.locked(), self.db() as con:
             self.recover(con)
-            f, missing, changes, *_ = self.proposal(payload)
+            f, missing, changes, *_ = self.proposal(payload, con)
+            if payload.get('correction') and missing:
+                raise FeedbackError('complete_account_correction_required', {'missing': missing})
             return dict(missing=missing, changes=None if missing else changes,
                         preview_hash=sha(encoded({'payload':payload,'missing':missing,'changes':changes})))
 
     def submit(self, payload):
+        if not isinstance(payload, dict): raise FeedbackError('invalid_request')
         request_id = payload.get('request_id')
         try: uuid.UUID(request_id)
         except (ValueError, TypeError, AttributeError): raise FeedbackError('invalid_request_id')
@@ -407,7 +441,9 @@ class Store:
             if previous:
                 if previous['payload'] != body: raise FeedbackError('request_id_reused',status=409)
                 return json.loads(con.execute('SELECT body FROM records WHERE id=?',(previous['record_id'],)).fetchone()[0])
-            f, missing, changes, writes, orders, now, price = self.proposal(payload)
+            f, missing, changes, writes, orders, now, price = self.proposal(payload, con)
+            if payload.get('correction') and missing:
+                raise FeedbackError('complete_account_correction_required', {'missing': missing})
             preview_payload = {k:v for k,v in payload.items() if k != 'preview_hash'}
             expected = sha(encoded({'payload':preview_payload,'missing':missing,'changes':changes}))
             if payload.get('preview_hash') != expected: raise FeedbackError('preview_required',status=409)
@@ -423,6 +459,7 @@ class Store:
                 production_effect=not missing and f['status']!='skipped', changes=None if missing else changes,
                 request_id=request_id, email_sent=False)
             record['email_version_id']=payload.get('email_version_id') or (old.get('email_version_id') if old else None)
+            record['correction'] = payload.get('correction')
             if not missing:
                 status = f['status']
                 if status=='pending':
@@ -467,15 +504,18 @@ class Store:
                     writes[RECONCILED] = csv_bytes(rows(read(self.root,RECONCILED,optional=True))+[recon],RECONCILIATION_FIELDS)
                     record['execution_id'] = eid
                 if status=='account':
+                    observation='06_execution_records/dashboard_feedback.local/observations/'+rid+'-v'+str(record['revision'])+'.json'
+                    observed=encoded({'record_id':rid,'revision':record['revision'],'observed_at':now.isoformat(),'feedback':f,'correction':record['correction']})
+                    writes[observation]=observed
                     if f['inventory_complete']:
-                        observation='06_execution_records/dashboard_feedback.local/observations/'+rid+'-v'+str(record['revision'])+'.json'
-                        observed=encoded({'record_id':rid,'revision':record['revision'],'observed_at':orders['as_of'],'feedback':f})
-                        writes[observation]=observed
                         orders['current_inventory_observation']['source']={'path':observation,'sha256':sha(observed)}
                         writes[ORDERS]=encoded(orders)
                     writes[MANUAL] = encoded(dict(schema_version='phase5r_owner_snapshot_v1',owner_snapshot=True,source_note='Owner confirmed full account in dashboard',
                         observed_at=now.isoformat(),positions_sha256_before=sha(read(self.root,POSITIONS)),positions_sha256_after=sha(writes[POSITIONS]),
                         account_sha256_before=sha(read(self.root,ACCOUNT)),account_sha256_after=sha(writes[ACCOUNT]),confirmed_execution_sha256=sha(read(self.root,CONFIRMED)) if (self.root/CONFIRMED).exists() else None))
+                    manual=json.loads(writes[MANUAL])
+                    manual.update(source={'path':observation,'sha256':sha(observed)},correction=record['correction'])
+                    writes[MANUAL]=encoded(manual)
             final = record['stage']
             record['stage'],record['final_stage'] = 'applying',final
             con.execute('INSERT OR REPLACE INTO records VALUES(?,?)',(rid,encoded(record).decode()))
@@ -500,6 +540,145 @@ class Store:
             con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),record_id)); con.commit()
         self.wake.set()
         return r
+
+    def reviews(self):
+        """Analyst work is a separate queue, never a deterministic refresh result."""
+        with self.db() as con:
+            result = [json.loads(r['body']) for r in con.execute('SELECT body FROM review_requests ORDER BY rowid DESC LIMIT 500')]
+        for request in result:
+            receipt = request.get('receipt')
+            if receipt:
+                try:
+                    request['receipt_verified'] = sha(read(self.root,receipt['path'])) == receipt['sha256']
+                except (FeedbackError,OSError):
+                    request['receipt_verified'] = False
+        return result
+
+    def request_review(self, payload):
+        if not isinstance(payload,dict): raise FeedbackError('invalid_request')
+        try: uuid.UUID(payload.get('request_id'))
+        except (ValueError,TypeError,AttributeError): raise FeedbackError('invalid_request_id')
+        if set(payload) != {'request_id','account_version','snapshot_id','tickers','question'}:
+            raise FeedbackError('invalid_review_request')
+        question,tickers = payload['question'],payload['tickers']
+        if (not isinstance(question,str) or not 5 <= len(question.strip()) <= 2000
+                or not isinstance(tickers,list) or len(tickers)>20
+                or any(not isinstance(t,str) or SYMBOL.fullmatch(t) is None for t in tickers)
+                or len(set(tickers))!=len(tickers)):
+            raise FeedbackError('invalid_review_request')
+        body = encoded(payload).decode()
+        with self.locked(),self.db() as con:
+            self.recover(con)
+            previous = con.execute('SELECT payload,body FROM review_requests WHERE id=?',(payload['request_id'],)).fetchone()
+            if previous:
+                if previous['payload'] != body: raise FeedbackError('request_id_reused',status=409)
+                return json.loads(previous['body'])
+            if payload['account_version'] != version(self.root): raise FeedbackError('account_version_changed',status=409)
+            if payload['snapshot_id'] != sha(read(self.root,'04_research/company_research/daily_decision.json')):
+                raise FeedbackError('review_snapshot_changed',status=409)
+            now = datetime.now(ET).isoformat()
+            request = dict(id=payload['request_id'],status='queued',question=question.strip(),tickers=tickers,
+                account_version=payload['account_version'],snapshot_id=payload['snapshot_id'],created_at=now,updated_at=now,
+                production_effect=False,email_sent=False,trade_placed=False)
+            con.execute('INSERT INTO review_requests VALUES(?,?,?)',(request['id'],body,encoded(request).decode()))
+            con.execute('INSERT INTO review_events(request_id,body) VALUES(?,?)',(request['id'],encoded(request).decode()))
+            con.commit()
+            return request
+
+    def review_events(self, request_id):
+        with self.db() as con:
+            if not con.execute('SELECT 1 FROM review_requests WHERE id=?',(request_id,)).fetchone():
+                raise FeedbackError('review_request_not_found',status=404)
+            return [json.loads(r['body']) for r in con.execute('SELECT body FROM review_events WHERE request_id=? ORDER BY sequence',(request_id,))]
+
+    @staticmethod
+    def _save_review(con, request):
+        request['updated_at'] = datetime.now(ET).isoformat()
+        body = encoded(request).decode()
+        con.execute('UPDATE review_requests SET body=? WHERE id=?',(body,request['id']))
+        con.execute('INSERT INTO review_events(request_id,body) VALUES(?,?)',(request['id'],body))
+        con.commit()
+        return request
+
+    def claim_review(self, request_id, *, rebind_current=False):
+        """Local analyst admission; the browser cannot claim or complete a review."""
+        with self.locked(),self.db() as con:
+            self.recover(con)
+            row = con.execute('SELECT body FROM review_requests WHERE id=?',(request_id,)).fetchone()
+            if not row: raise FeedbackError('review_request_not_found',status=404)
+            request = json.loads(row['body'])
+            if request['status']=='completed': raise FeedbackError('review_already_completed',status=409)
+            current = version(self.root)
+            binding = request.get('review_account_version',request['account_version'])
+            if current != binding and not rebind_current:
+                raise FeedbackError('review_account_changed',{'account_version':current},409)
+            snapshot = sha(read(self.root,'04_research/company_research/daily_decision.json'))
+            if (request['status']=='running' and request.get('review_account_version')==current
+                    and request.get('review_snapshot_id')==snapshot): return request
+            request.update(status='running',review_account_version=current,review_snapshot_id=snapshot,
+                rebound_from_account_version=binding if current!=binding else None)
+            request.pop('receipt',None)
+            return self._save_review(con,request)
+
+    def finish_review(self, request_id, status, receipt_path):
+        if status not in {'blocked','completed'}: raise FeedbackError('invalid_review_status')
+        path = Path(receipt_path)
+        if path.is_absolute():
+            try: path = path.relative_to(self.root)
+            except ValueError: raise FeedbackError('invalid_review_receipt_path')
+        relative = path.as_posix()
+        if not relative.startswith('08_reviews/analyst_followthrough.local/') or path.suffix!='.json':
+            raise FeedbackError('invalid_review_receipt_path')
+        with self.locked(),self.db() as con:
+            self.recover(con)
+            row = con.execute('SELECT body FROM review_requests WHERE id=?',(request_id,)).fetchone()
+            if not row: raise FeedbackError('review_request_not_found',status=404)
+            request = json.loads(row['body'])
+            if request['status']=='completed': raise FeedbackError('review_already_completed',status=409)
+            if request['status']!='running': raise FeedbackError('review_must_be_claimed',status=409)
+            raw = read(self.root,relative)
+            receipt = json.loads(raw)
+            summary = receipt.get('summary') if isinstance(receipt,dict) else None
+            if (not isinstance(receipt,dict) or receipt.get('schema_version')!='equity_dashboard_review_receipt_v1'
+                    or receipt.get('request_id')!=request_id
+                    or receipt.get('account_version')!=request['review_account_version']
+                    or receipt.get('analysis_completed') is not (status=='completed')
+                    or not isinstance(summary,str) or not 1 <= len(summary.strip()) <= 2000
+                    or receipt.get('email_sent') is not False or receipt.get('trade_placed') is not False):
+                raise FeedbackError('invalid_analyst_review_receipt')
+            def valid_lines(value):
+                return (isinstance(value,list) and 0<len(value)<=20
+                        and all(isinstance(v,str) and 0<len(v.strip())<=2000 for v in value))
+            if status=='completed':
+                if version(self.root)!=request['review_account_version']:
+                    request.update(status='blocked',blocker='account_changed_during_review',
+                        rejected_receipt={'path':relative,'sha256':sha(raw)})
+                    self._save_review(con,request)
+                    raise FeedbackError('review_account_changed',status=409)
+                decision_raw = read(self.root,'04_research/company_research/daily_decision.json')
+                if receipt.get('decision_sha256')!=sha(decision_raw) or not valid_lines(receipt.get('conclusions')):
+                    raise FeedbackError('review_conclusion_or_decision_unverified')
+                sources = receipt.get('sources')
+                if (not isinstance(sources,list) or not 0<len(sources)<=50
+                        or any(not isinstance(s,dict) or set(s)!={'path','sha256'} or not isinstance(s['path'],str)
+                               or not isinstance(s['sha256'],str) for s in sources)):
+                    raise FeedbackError('review_sources_unverified')
+                if any(sha(read(self.root,s['path']))!=s['sha256'] for s in sources):
+                    raise FeedbackError('review_sources_unverified')
+                decision = json.loads(decision_raw)
+                hashes = decision.get('workflow_integrity',{}).get('input_hashes',{})
+                from workflow_integrity import WORKFLOW_INPUTS
+                if (not isinstance(hashes,dict) or set(hashes)!=WORKFLOW_INPUTS
+                        or any(hashes[p]!=(sha(read(self.root,p)) if (self.root/p).exists() else None) for p in WORKFLOW_INPUTS)):
+                    raise FeedbackError('review_publication_unverified',status=409)
+                try: verify_publication(self.root,decision)
+                except (OSError,ValueError,KeyError,TypeError,InvalidOperation):
+                    raise FeedbackError('review_publication_unverified',status=409)
+            elif not valid_lines(receipt.get('dependencies')):
+                raise FeedbackError('review_dependencies_required')
+            request.update(status=status,receipt=dict(path=relative,sha256=sha(raw),summary=summary.strip()))
+            request.pop('blocker',None)
+            return self._save_review(con,request)
 
     def work_once(self):
         with self.locked(), self.db() as con:

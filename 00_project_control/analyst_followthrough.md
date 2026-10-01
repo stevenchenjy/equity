@@ -29,6 +29,11 @@ thesis, valuation and publication validators. It is research, not execution.
    exact missing evidence and continue work that does not depend on it.
    Processing a company is not completion; count new admissible fields,
    sourced analytical conclusions and validated plan versions separately.
+   Also list the durable owner requests with the production
+   `10_dashboard/record_feedback.py --list-reviews` command. A dashboard request
+   asks for analysis, not an email resend. Select relevant queued or blocked
+   requests alongside the existing risk priorities; do not leave them out of
+   the run merely because they were entered in a form rather than a chat.
 3. Preserve a dated private evidence bundle with original source bytes or an
    explicitly labelled observed-facts receipt, source URLs, observation times
    and hashes under `08_reviews/analyst_followthrough.local/`. Prefer existing
@@ -65,6 +70,43 @@ thesis, valuation and publication validators. It is research, not execution.
    the mail sender; the existing scheduled sender owns normal delivery and
    its meaningful-change policy. A recurring wake is not a new explicit
    owner-review email request.
+
+## Dashboard request receipts
+
+The dashboard queue is private and uses the same account locks as manual
+feedback. Run the following commands from the verified production checkout
+with the Python interpreter specified below:
+
+```sh
+python3 10_dashboard/record_feedback.py --list-reviews
+python3 10_dashboard/record_feedback.py --claim-review REQUEST_ID
+```
+
+Claim before starting substantive work. The original request's account and
+decision hashes stay retained. If those facts changed, inspect the new state
+and claim explicitly with `--rebind-current`; that rebinding is audited. A
+running request retained after interruption can be resumed. An ordinary
+deterministic refresh never completes an analyst request.
+
+Save its outcome under `08_reviews/analyst_followthrough.local/` as a private
+JSON receipt. Required fields are `schema_version` =
+`equity_dashboard_review_receipt_v1`, `request_id`, `account_version` from the
+claimed `review_account_version`, `summary`, `analysis_completed`,
+`email_sent=false`, and `trade_placed=false`. For a completed review, include
+nonempty `conclusions`, exact current `decision_sha256`, and nonempty `sources`
+containing project-relative `path` and actual `sha256` for retained evidence.
+For a blocked review, use `analysis_completed=false` and nonempty
+`dependencies` describing what evidence is missing and the next useful action.
+Do not put credentials or broker access information in receipts.
+
+After analysis, validated durable amendments and full no-send recomposition,
+use `--complete-review REQUEST_ID --receipt PRIVATE_JSON`. If evidence is
+insufficient, use `--block-review REQUEST_ID --receipt PRIVATE_JSON` instead.
+Completion verifies source bytes, current account binding, final decision and
+exact published text/HTML. Changed accounts block completion and require a
+fresh claim and reassessment. The original request, every transition and the
+hashed result remain available in the dashboard. Do not manufacture conclusions
+or mark completion merely because a job ran successfully.
 
 ## Writer paths and admission modes
 

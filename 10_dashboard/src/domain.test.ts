@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { appendRecord, defaults, planReference, expired, makeDemoRecord, parseRecords, validateFeedback } from './domain.ts';
-import type { Plan } from './domain.ts';
+import { appendRecord, defaults, initialFeedback, matchesHistory, validStoredFeedback, planReference, expired, makeDemoRecord, parseRecords, validateFeedback } from './domain.ts';
+import type { Plan, Snapshot, FormalRecord } from './domain.ts';
 
 const at = new Date('2026-09-30T14:00:00-04:00');
 test('Unknown fee stays unknown and creates an incomplete demo, even for a net amount', () => {
@@ -56,6 +56,27 @@ test('Frontend hides a previously current plan as soon as its deadline arrives',
   const plan = { status: 'current', expires_at: '2026-09-30T15:30:00-04:00' } as Plan;
   assert.equal(expired(plan, Date.parse('2026-09-30T15:29:59-04:00')), false);
   assert.equal(expired(plan, Date.parse('2026-09-30T15:30:00-04:00')), true);
+  assert.equal(expired({...plan,expires_at:'invalid'},at.getTime()),true);
+});
+
+test('Account check prefill uses current facts but requires fresh owner confirmation',()=>{
+  const data={server_now:'2026-09-30T23:59:00-04:00',account:{cash_available:123},positions:[{ticker:'SPY',shares:2}]} as Snapshot;
+  const f=initialFeedback(data,'SPY','account');
+  assert.equal(f.date,'2026-09-30');assert.equal(f.cash,'123');assert.equal(f.account_observed,false);
+  assert.deepEqual(f.holdings,[{ticker:'SPY',shares:'2'}]);assert.equal(f.inventory_complete,false);
+});
+test('Formal history search includes event date, owner notes and corrected holdings; filters combine',()=>{
+  const r={id:'record-A',stage:'applied',feedback:{...defaults('SPY','2026-09-30'),status:'account',notes:'券商核对',holdings:[{ticker:'RBRK',shares:'1'}]},correction:{record_id:'old',reason:'重复登记'}} as FormalRecord;
+  assert.equal(matchesHistory(r,'rbrk 2026-09-30','account','applied'),true);
+  assert.equal(matchesHistory(r,'重复登记','all','all'),true);
+  assert.equal(matchesHistory(r,'RBRK','filled','all'),false);
+  assert.equal(matchesHistory(r,'unknown','all','all'),false);
+});
+test('Parseable corrupted pending form never becomes renderable feedback',()=>{
+  assert.equal(validStoredFeedback({}),false);
+  assert.equal(validStoredFeedback({...defaults(),holdings:[{ticker:'SPY',shares:{}}]}),false);
+  assert.equal(validStoredFeedback({...defaults(),status:'unexpected'}),false);
+  assert.equal(validStoredFeedback(defaults()),true);
 });
 
 test('A new holding without a versioned plan does not create an invalid plan reference', () => {
