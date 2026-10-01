@@ -941,7 +941,7 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
     return subject, "\n".join(text) + "\n", document
 
 
-def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
+def _render_email_without_dashboard(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
     owner_research = _owner_research(decision)
     review = decision.get("owner_requested_research", {})
@@ -1070,3 +1070,17 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
                 '<div style="max-width:640px;margin:0 auto;background:#ffffff;padding:24px 16px;overflow-wrap:break-word">'
                 + ''.join(content) + '</div></body></html>\n')
     return subject, "\n".join(lines) + "\n", document
+
+
+def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
+    subject, plain, document = _render_email_without_dashboard(decision)
+    from dashboard_publication import publication_id
+    link=decision.get('dashboard_link',{})
+    url=link.get('url','') if isinstance(link,dict) else ''
+    if isinstance(url,str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[0-9a-f]{64}',url):
+        parsed=urlsplit(url)
+        url='https://'+parsed.hostname+'/?publication='+publication_id(decision)
+        plain+='\nPrivate dashboard: '+url+'\nView this email version, check current conditions, and record your actual operations.\n'
+        addition='<p style="margin:24px;color:#496351"><a href="'+html.escape(url,quote=True)+'">Open private dashboard</a><br>View this email version, check current conditions, and record your actual operations.</p>'
+        document=document.replace('</body>',addition+'</body>')
+    return subject,plain,document

@@ -18,6 +18,7 @@ WORKFLOW_INPUTS = {
     "05_risk_and_positions/investment_plans.local.json", "05_risk_and_positions/current_positions.local.csv",
     "05_risk_and_positions/current_open_orders.local.json", "05_risk_and_positions/current_account_state.local.json",
     str(STORE_REL), str(QUEUE_REL),
+    "06_execution_records/dashboard_feedback_pending.local.json",
 }
 CRITICAL_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 
@@ -215,6 +216,9 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
                          "held_pending_tickers": [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"],
                          "status": "invalid"}
     blockers = _account_blockers(decision)
+    from account_feedback_gate import feedback_blocker
+    feedback=feedback_blocker(root)
+    if feedback: blockers.append(feedback)
     ticker_blockers = {ticker: list(codes) for ticker, codes in plans.get("ticker_blockers", {}).items()}
     strategy_blockers = {strategy: list(codes) for strategy, codes in plans.get("strategy_blockers", {}).items()}
     def local(ticker: str, code: str) -> None:

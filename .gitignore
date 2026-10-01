@@ -172,3 +172,8 @@ graphify-out/graph.html
 04_research/company_research/objective_evidence.local/
 08_reviews/current/research_backlog.local.md
 08_reviews/research_backlog.local/
+
+# Shared dashboard journal, private access config, logs and build outputs.
+06_execution_records/dashboard_feedback.local/
+06_execution_records/dashboard_feedback_pending.local.json
+07_automation/dashboard.local/

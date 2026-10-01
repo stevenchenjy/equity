@@ -20,6 +20,12 @@ does not freeze balances, test counts, call counts, or open-item counts.
 - [Official-news source manifest](../01_policies/official_news_sources.json): approved issuer feeds, source domains, request bounds and freshness requirements; coverage is limited to configured sources.
 - [Allowed active-input registry](allowed_active_inputs.csv): current machine-readable input paths, permitted readers, scope and freshness, including optional source-bound thesis assessments. Absence of an optional assessment cannot create an exit conclusion.
 
+## Dashboard implementation and remaining phases
+
+- [Dashboard phased build plan](dashboard_build_plan.md): Phase 0/1 delivered; Phase 2 formal feedback and no-send recomposition implemented and under production acceptance. Phase 3 charts/history ready; private HTTPS and real phone acceptance require Tailscale login.
+- [Phase 0/1 contract](dashboard_phase01_contract.md): retained initial read-only and demo boundaries.
+- [Dashboard application](../10_dashboard/README.md): shared formal forms, preview/apply receipts, incomplete-record completion, private service setup and operational recovery.
+
 ## Current runtime outputs — read their generated timestamps
 
 These paths refer to `/Users/messssi/LocalRuntime/equity`, not cached reports

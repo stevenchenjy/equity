@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import argparse
 
 
 SECURITY = "/usr/bin/security"
@@ -56,19 +57,27 @@ def keychain_value(service: str) -> bytes | None:
 
 
 def main() -> int:
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--feedback-refresh',action='store_true',help='Internal no-send refresh; dashboard caller owns runtime/daily locks')
+    parser.add_argument('--market-snapshot-mode',choices=['fetch','reuse_validated_snapshot'],default='fetch')
+    args=parser.parse_args()
     os.umask(0o077)
     child_environment = os.environb.copy()
     child_environment.pop(b"MASSIVE_API_KEY", None)
     child_environment.pop(b"OPENAI_API_KEY", None)
     child_environment[b"PHASE5R_SEC_USER_AGENT"] = SEC_USER_AGENT.encode("utf-8")
-    massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE)
-    if massive_secret is None:
-        return KEYCHAIN_UNAVAILABLE_EXIT
-    child_environment[b"MASSIVE_API_KEY"] = massive_secret
+    if not args.feedback_refresh or args.market_snapshot_mode=='fetch':
+        massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE)
+        if massive_secret is None:
+            return KEYCHAIN_UNAVAILABLE_EXIT
+        child_environment[b"MASSIVE_API_KEY"] = massive_secret
+    arguments = ([PYTHON, '/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_daily_refresh.py',
+                  '--run','--no-lock','--market-snapshot-mode',args.market_snapshot_mode]
+                 if args.feedback_refresh else [PYTHON,RUNTIME_SCHEDULER,'--job','dailyrefresh'])
     try:
         os.execve(
             PYTHON,
-            [PYTHON, RUNTIME_SCHEDULER, "--job", "dailyrefresh"],
+            arguments,
             child_environment,
         )
     except OSError:

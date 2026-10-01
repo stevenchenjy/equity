@@ -596,7 +596,7 @@ def main() -> int:
     active_config = load_active_config()
     inhibit = load_inhibit()
     held_rows = normalized_held_rows()
-    if not held_rows:
+    if not held_rows and read_csv(ROOT / "05_risk_and_positions/current_positions.local.csv"):
         raise RuntimeError("C9 exact action plan contains no held positions")
     held_tickers = [row["ticker"] for row in held_rows]
     held_company_tickers = [
@@ -1120,6 +1120,8 @@ def main() -> int:
             )
             decision["send_recommended"] = send_recommended
             decision["send_reason"] = send_reason
+    from dashboard_publication import bind_dashboard_link
+    bind_dashboard_link(decision, ROOT)
     atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
     record_decision_history(decision, root=ROOT)
 

@@ -151,6 +151,11 @@ def load_account_state() -> dict[str, object]:
         state = json.loads(ACCOUNT_STATE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         raise ValueError("current account state is invalid JSON") from exc
+    return validate_account_state(state)
+
+
+def validate_account_state(state: dict[str, object]) -> dict[str, object]:
+    """Validate a proposed account without reading or writing active state."""
     if (not isinstance(state, dict) or not ACCOUNT_FIELDS <= set(state)
             or set(state) - ACCOUNT_FIELDS - OPTIONAL_ACCOUNT_FIELDS):
         raise ValueError("current account state fields do not match the C9 contract")
@@ -265,8 +270,6 @@ def load_positions() -> list[dict[str, object]]:
                 "invalidation_rule": row["invalidation_rule"].strip(),
             }
         )
-    if not parsed:
-        raise ValueError("at least one current position is required")
     return parsed
 
 

@@ -118,14 +118,17 @@ def main() -> int:
     parser.add_argument("--valuation-snapshot", type=Path,
                         help="Local manually observed UI marks for the account-total reference only; never replaces canonical B2 prices")
     parser.add_argument("--position", action="append", type=parse_position, default=[])
+    parser.add_argument("--all-cash", action="store_true", help="Explicitly confirm an empty holdings list")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--preview", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     if not math.isfinite(args.cash) or args.cash < 0:
         raise ValueError("cash cannot be negative")
-    if not args.position:
+    if not args.position and not args.all_cash:
         raise ValueError("at least one --position is required; include every current position")
+    if args.all_cash and args.position:
+        raise ValueError("--all-cash cannot be combined with --position")
     if len({item[0] for item in args.position}) != len(args.position):
         raise ValueError("position tickers must be unique")
 
@@ -141,7 +144,8 @@ def main() -> int:
         raise ValueError("source note is required")
     before_positions = read_csv(POSITIONS_PATH)
     existing = {row["ticker"].upper(): row for row in read_csv(POSITIONS_PATH)}
-    fields = list(read_csv(POSITIONS_PATH)[0].keys())
+    with POSITIONS_PATH.open(newline="", encoding="utf-8") as handle:
+        fields = next(csv.reader(handle))
     valuation_text = ""
     valuation_hash = ""
     if args.valuation_snapshot:

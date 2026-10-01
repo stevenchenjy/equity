@@ -571,7 +571,19 @@ def load_plan_context(root: Path, positions: list[dict[str, Any]], current: date
                 "unresolved_tickers": [row["ticker"] for row in positions], "block_new_capital": True,
                 "global_blockers": ["plan_or_order_inputs_unavailable"], "ticker_blockers": {}, "strategy_blockers": {}, "blocked_tickers": [],
                 "automatic_action_allowed": False}
-    return evaluate_plans(payload, positions, current=current, open_orders=orders, root=root)
+    context = evaluate_plans(payload, positions, current=current, open_orders=orders, root=root)
+    from account_feedback_gate import feedback_blocker
+    blocker=feedback_blocker(root)
+    if blocker:
+        context['global_blockers']=sorted(set(context.get('global_blockers',[])+[blocker]))
+        context['conflicts'].append(blocker)
+        for plan in context.get('plans',[]):
+            if plan.get('status')=='completed_observed': continue
+            plan.update(status='account_feedback_pending_verification',action='reconcile_plan',eligible_quantity=0,order_draft=None,
+                instruction='用户报告的账户事实尚待补全或恢复；先核对实际现金、股数和挂单，历史委托条件暂停。',
+                blockers=sorted(set(plan.get('blockers',[])+[blocker])))
+        _finish_scopes(context)
+    return context
 
 
 def apply_plan_context(held_rows: list[dict[str, Any]], context: dict[str, Any]) -> None:

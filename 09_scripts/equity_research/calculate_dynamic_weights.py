@@ -294,7 +294,7 @@ def main() -> None:
         "cash_status": "above_target" if cash_pct > cash_target + 1e-9 else "within_or_below_target",
         "position_count": str(len(dynamic_rows)),
         "account_state_updated": str(account["last_updated"]),
-        "latest_price_timestamp": max(row["price_timestamp"] for row in dynamic_rows),
+        "latest_price_timestamp": max((row["price_timestamp"] for row in dynamic_rows), default=str(account["last_updated"])),
         "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; SPY_is_core_allocation; other_holdings_are_active_stock; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
     }
     write_csv(DYNAMIC_WEIGHTS, dynamic_rows, DYNAMIC_FIELDS)

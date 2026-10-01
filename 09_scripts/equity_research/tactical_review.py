@@ -164,8 +164,8 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
             active_tickers.add(ticker)
             quantity = _positive(row.get("quantity"))
             well_formed = bool(identity and re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker)
-                and side in {"buy", "sell"} and tif in {"DAY", "GTD"}
-                and _day(row.get("session_date") if tif == "DAY" else row.get("expiration_date")) is not None
+                and side in {"buy", "sell"} and tif in {"DAY", "GTD", "GTC"}
+                and (tif == "GTC" or _day(row.get("session_date") if tif == "DAY" else row.get("expiration_date")) is not None)
                 and remaining is not None and remaining > 0 and remaining == remaining.to_integral_value()
                 and quantity is not None and quantity == quantity.to_integral_value() and remaining <= quantity)
             if not well_formed:

@@ -1,0 +1,26 @@
+{
+  "name": "equity-research-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "start": "python3 server.py",
+    "test": "python3 -m unittest discover -s tests -v && tsx --test src/domain.test.ts"
+  },
+  "dependencies": {
+    "lucide-react": "1.49.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "7.0.2",
+    "tsx": "4.20.6",
+    "vite": "8.3.1"
+  }
+}

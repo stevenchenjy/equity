@@ -3,6 +3,7 @@ from __future__ import annotations
 from equity_naming import report_heading
 
 import argparse
+from contextlib import nullcontext
 from collections import Counter
 import csv
 from datetime import date, datetime, timedelta, timezone
@@ -1203,11 +1204,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help=argparse.SUPPRESS,
     )
+    parser.add_argument("--no-lock", action="store_true", help="Internal: caller owns the daily pipeline lock for coverage recomposition")
     args = parser.parse_args([] if argv is None else argv)
+    if args.no_lock and not args.recompose_current_coverage:
+        parser.error("--no-lock requires --recompose-current-coverage")
     if args.massive_auth_presence_probe:
         return massive_auth_probe_exit_code()
     if args.recompose_current_coverage:
-        with ExclusiveFileLock(ROOT / "00_project_control/run_logs/daily_pipeline.lock"):
+        with (nullcontext() if args.no_lock else ExclusiveFileLock(ROOT / "00_project_control/run_logs/daily_pipeline.lock")):
             return _run_main(args)
     return _run_main(args)
 
@@ -1230,8 +1234,6 @@ def _run_main(args: argparse.Namespace) -> int:
     # Read symbols only: holdings extend price coverage, never candidate
     # admission. Validate before either reuse or constructing a remote client.
     held_tickers = [row.get("ticker", "").strip().upper() for row in current_positions]
-    if not held_tickers:
-        raise RuntimeError("Current local positions contain no ticker symbols")
     if (len(set(held_tickers)) != len(held_tickers)
             or any(re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker) is None
                    for ticker in held_tickers)):
