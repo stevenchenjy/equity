@@ -814,11 +814,24 @@ def _render_cards(subject: str, sections: list[dict[str, Any]], *, title: str,
                f'<p style="font-size:13px;color:#526170;margin:0 0 12px">{esc(stamp)}</p>']
     if note:
         content.append(f'<p style="font-size:13px;line-height:1.5;color:#526170">{esc(note)}</p>')
+    background_started = False
     for index, section in enumerate(sections):
+        if section.get('group') == 'background' and not background_started:
+            background_started = True
+            heading = 'Supporting information — separate from actions'
+            lines.extend(['', '=' * 48, heading, '=' * 48])
+            content.append(f'<h2 style="border-top:3px solid #dbe4e9;padding-top:24px;margin:32px 0 8px;font-size:16px;color:#526170">{esc(heading)}</h2>')
         lines.extend(['', section['title']])
-        background = '#eef5f8' if index == 0 else '#ffffff'
-        content.append(f'<div style="background:{background};border:1px solid #dbe4e9;border-radius:10px;padding:18px;margin:18px 0">')
-        content.append(f'<h2 style="font-size:19px;line-height:1.35;margin:0 0 12px">{esc(section["title"])}</h2>')
+        kind = section.get('kind', '')
+        palette = {'buy': ('#effaf3', '#166534'), 'sell': ('#fff1f2', '#9f1239'),
+                   'inactive': ('#f3f5f7', '#526170')}
+        background, accent = palette.get(kind, ('#eef5f8' if index == 0 else '#ffffff', '#172b3a'))
+        border = f'border-left:6px solid {accent};' if kind in palette else ''
+        content.append(f'<div data-email-group="{esc(section.get("group", ""))}" data-action-kind="{esc(kind)}" style="background:{background};border:1px solid #dbe4e9;{border}border-radius:10px;padding:18px;margin:18px 0">')
+        content.append(f'<h2 style="font-size:{23 if kind in {"buy", "sell"} else 19}px;color:{accent};line-height:1.35;margin:0 0 12px">{esc(section["title"])}</h2>')
+        if section.get('headline'):
+            lines.append(section['headline'])
+            content.append(f'<p style="font-size:22px;font-weight:700;line-height:1.4;margin:0 0 16px;color:{accent}">{esc(section["headline"])}</p>')
         for raw in section['body'].splitlines():
             text = raw.strip()
             if not text:

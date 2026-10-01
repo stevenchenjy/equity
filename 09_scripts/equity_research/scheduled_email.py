@@ -123,7 +123,7 @@ def _current_tactical_drafts(decision, allowed):
     return result
 
 
-def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical):
+def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical, action_cards):
     from email_brief import money, shares
     from delivery_followthrough import continuation_lines
     def price(value):
@@ -216,15 +216,22 @@ def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery,
             continue
         levels = '; '.join(f"{label} {price(draft[field])}" for field, label in
                            (('limit_price', 'limit'), ('stop_price', 'stop')) if draft.get(field) is not None)
-        order_lines.append(f"Maintained conditional plan — {plan['ticker']}: sell {quantity(qty)} shares; "
+        action_lines = [f"Maintained conditional plan — {plan['ticker']}: sell {quantity(qty)} shares; "
             f"{draft['type']}; {levels}; {draft['time_in_force']}; session {draft['session_date']}; "
             f"review {plan['review_at']}" + (f"; exit/review {plan['time_exit_at']}" if plan.get('time_exit_at') else '')
-            + ". Recorded analyst draft, not submitted; this does not create new canonical trade eligibility. "
-              "Verify a fresh quote, available shares and current orders before any manual action.")
+            + ". Conditional analyst draft; not submitted."]
+        action_lines.append(f"When: {draft['session_date']} regular session, before review {plan['review_at']}; DAY only.")
+        if draft['type'] == 'STOP':
+            action_lines.append(f"Trigger: the STOP is triggered at {price(draft['stop_price'])}. "
+                                "This is a trigger price, not a guaranteed fill price; gaps can produce a lower fill.")
+        else:
+            action_lines.append(f"Price: sell limit {price(draft['limit_price'])}; a limit order may remain unfilled.")
+        action_lines.append("Before submitting: confirm the current quote, enough unreserved shares and the complete current order inventory. "
+                            "Do not stack a second sell order; otherwise skip this draft and reconcile first.")
         purpose = plan.get('purpose') if isinstance(plan.get('purpose'), dict) else {}
-        for field, label in (('entry_validity', 'Validity'), ('failure_condition', 'Failure condition'), ('exit_rule', 'Exit rule')):
+        for field, label in (('failure_condition', 'Failure condition'), ('exit_rule', 'Exit rule')):
             if isinstance(purpose.get(field), str) and purpose[field].strip():
-                order_lines.append(f"{plan['ticker']} {label.lower()}: {purpose[field]}")
+                action_lines.append(f"{label}: {purpose[field]}")
         blocker_labels = {'fresh_quote_and_available_shares_required': 'fresh quote and available shares',
             'order_snapshot_requires_recheck': 'current order inventory recheck',
             'cash_not_confirmed_for_tactical_execution': 'cash confirmation for tactical execution',
@@ -233,8 +240,12 @@ def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery,
             'outstanding_sell_reserves_current_shares': 'shares reserved by the unresolved sell record'}
         known = sorted(set(plan.get('blockers', []) + continuity.get('global_blockers', [])))
         if known:
-            order_lines.append(f"{plan['ticker']} outstanding checks: " + '; '.join(
+            action_lines.append("Outstanding checks: " + '; '.join(
                 blocker_labels.get(code, str(code).replace('_', ' ')) for code in known) + ".")
+        level = (f"STOP {price(draft['stop_price'])}" if draft['type'] == 'STOP'
+                 else f"LIMIT {price(draft['limit_price'])}")
+        action_cards.append({'title': f"SELL — {plan['ticker']}", 'kind': 'sell', 'group': 'action',
+            'headline': f"{quantity(qty)} {'share' if qty == 1 else 'shares'} · {level} · DAY", 'body': '\n'.join(action_lines), 'sources': []})
     # Reuse the existing presentation gate; never expose rejected/stale positive
     # quantities just because a lower-level screen has an optimistic number.
     for ticker in sorted(allowed):
@@ -250,12 +261,18 @@ def _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery,
                                "the analyst must complete its entry, failure and exit conditions before a trade can be proposed.")
     for draft in tactical:
         if not reconcile_delivery and not blocked and not estimated and draft.get('eligible') is True and draft.get('ticker') in allowed:
-            order_lines.append(f"{draft['ticker']} tactical draft: " + ("buy " if "delivery_followthrough" in decision else "") + f"{quantity(draft.get('quantity'))} shares; entry/max {price(draft.get('entry_price'))}, "
+            action_lines = [f"{draft['ticker']} tactical draft: " + ("buy " if "delivery_followthrough" in decision else "") + f"{quantity(draft.get('quantity'))} shares; entry/max {price(draft.get('entry_price'))}, "
                  f"stop {price(draft.get('stop_price'))}, target {price(draft.get('target_price'))}, planned risk {price(draft.get('planned_risk_usd'))}; "
                  f"{draft.get('order_type')}, {draft.get('time_in_force')}, session {draft.get('session_date')}; exit/review {draft.get('time_exit_session')}. "
-                 "Only after its entry trigger and current account checks pass. Gaps can exceed planned loss.")
-            order_lines.append(f"{draft['ticker']} entry trigger: {draft.get('entry_rule') or 'unverified; do not enter'}")
-            order_lines.append(f"{draft['ticker']} cancel/exit condition: {draft.get('invalidation_rule') or 'unverified; do not enter'}")
+                 "Only after its entry trigger and current account checks pass. Gaps can exceed planned loss."]
+            action_lines.append(f"When: {draft['session_date']} regular session only; review/exit by {draft['time_exit_session']}.")
+            action_lines.append(f"Entry trigger: {draft.get('entry_rule') or 'unverified; do not enter'}")
+            action_lines.append(f"Cancel/exit condition: {draft.get('invalidation_rule') or 'unverified; do not enter'}")
+            action_lines.append("Before submitting: verify the live quote, holdings, complete current orders, buying power and settlement rules. "
+                                "Skip if any check or entry condition fails; do not chase above the maximum or reuse an expired DAY draft.")
+            action_cards.append({'title': f"BUY — {draft['ticker']}", 'kind': 'buy', 'group': 'action',
+                'headline': f"{quantity(draft['quantity'])} shares · maximum {price(draft['entry_price'])} · DAY",
+                'body': '\n'.join(action_lines), 'sources': []})
     return order_lines
 
 
@@ -269,8 +286,8 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     from delivery_followthrough import continuation_requires_reconciliation
     from investment_plans import regular_close
 
-    def section(title, lines, sources=()):
-        return {"title": title, "body": "\n".join(lines), "sources": list(dict.fromkeys(sources))}
+    def section(title, lines, sources=(), **presentation):
+        return {"title": title, "body": "\n".join(lines), "sources": list(dict.fromkeys(sources)), **presentation}
 
     def number(value):
         try:
@@ -306,8 +323,9 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
             if row.get('ticker') in allowed]
     core = [draft for draft in core if draft]
     tactical = _current_tactical_drafts(decision, allowed)
-    order_lines = _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical)
-    current_sell = any(line.startswith('Maintained conditional plan —') for line in order_lines)
+    action_cards = []
+    order_lines = _order_lines(decision, continuity, plans, held, allowed, reconcile_delivery, blocked, estimated, tactical, action_cards)
+    current_sell = any(card['kind'] == 'sell' for card in action_cards)
     summary = []
     if reconcile_delivery:
         summary.append("Now: do not repeat the earlier instructions or place an additional portfolio-changing order. "
@@ -335,8 +353,10 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     elif core:
         summary.append("Preferred action: the core addition below, only if every current check passes; otherwise skip.")
         for draft in core:
-            summary.append(core_tranche_line(draft))
-            summary.extend(core_tranche_steps(draft, window))
+            action_cards.append(section(f"BUY — {draft['ticker']}",
+                [core_tranche_line(draft), *core_tranche_steps(draft, window)],
+                kind='buy', group='action',
+                headline=f"{draft['quantity']} additional {'share' if draft['quantity'] == 1 else 'shares'} · maximum {money(draft['max_price'])} · DAY"))
     elif tactical:
         summary.append("Preferred action: use the conditional entry draft below only after its trigger and broker checks pass; otherwise skip.")
     else:
@@ -359,12 +379,24 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
         summary.append("The " + ", ".join(sorted(expired))
                        + " research review from this session has expired for execution; its price and DAY terms cannot be reused tomorrow.")
     weakening = decision.get("fundamental_gate", {}).get("weakening_tickers", [])
-    if weakening:
-        summary.append("Risk: weaker business evidence for " + ', '.join(weakening)
-                       + ". The analyst must merge it into the maintained plan; no automatic sale is inferred.")
-    sections = [section("What to do now", summary)]
+    sections = [section("What to do now", summary, kind='status', group='action')]
+    # Risk protection comes first. A price appears here only after the existing
+    # draft admission checks; reference closes and historical orders stay below.
+    for side in ('sell', 'buy'):
+        selected = [card for card in action_cards if card['kind'] == side]
+        if selected:
+            sections.extend(selected)
+        else:
+            reason = ("Do not repeat earlier instructions. Reconcile actual fills, holdings and open orders before another draft."
+                      if reconcile_delivery else
+                      "No valid current conditional draft. No order price is cleared by this update.")
+            sections.append(section(side.upper() + " — none", [reason],
+                kind='inactive', group='action', headline="0 shares · no current order price"))
 
     holding_lines, links = [], []
+    if weakening:
+        holding_lines.append("Risk: weaker business evidence for " + ', '.join(weakening)
+                             + ". The analyst must merge it into the maintained plan; no automatic sale is inferred.")
     if reconcile_delivery:
         holding_lines.append("These are last recorded holdings, not adjusted by the separate assumed-execution scenario.")
     for ticker, row in held.items():
@@ -382,9 +414,12 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
                 holding_lines.append(f"{ticker} why: {plan['reason']}")
             holding_lines.append(f"{ticker} next analyst review: {plan.get('review_at') or 'unverified'}; sooner if material evidence changes.")
         elif valid and plan.get('action') in {'protect_review', 'exit_review', 'trim_review'}:
-            holding_lines.append(f"{ticker}: {qty} recorded shares. Conditional "
+            holding_lines.append(f"{ticker}: {qty} recorded {'share' if number(row.get('current_shares')) == 1 else 'shares'}. Conditional "
                                  + {'protect_review': 'protection', 'exit_review': 'exit', 'trim_review': 'reduction'}[plan['action']]
-                                 + " plan below; do not stack another sell order.")
+                                 + " plan above; do not stack another sell order.")
+            purpose = plan.get('purpose') if isinstance(plan.get('purpose'), dict) else {}
+            if purpose.get('entry_validity'):
+                holding_lines.append(f"{ticker} plan entry validity: {purpose['entry_validity']}")
         else:
             status = str(plan.get('status') or 'missing').replace('_', ' ')
             holding_lines.append(f"{ticker}: {qty} recorded shares; add 0. Current sell/protection price: none — plan {status}.")
@@ -397,11 +432,11 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
             url = _safe_source(source.get('url'), _RESEARCH_HOSTS) if isinstance(source, dict) else ''
             if url:
                 links.append(url)
-    sections.append(section("Holdings and retained plans", holding_lines or ["No holdings recorded; do not infer broker positions from this report."], links))
+    sections.append(section("Holdings and retained plans", holding_lines or ["No holdings recorded; do not infer broker positions from this report."], links, group='background'))
     # Never call an expired draft a current execution instruction.
     if len(order_lines) == 1:
         order_lines.append("New order: none recorded in this update. Recheck current available shares, quote and buying power before manual execution.")
-    sections.append(section("Orders and proposals", order_lines))
+    sections.append(section("Orders and proposals", order_lines, group='background'))
 
     cash = number(account.get('cash_available'))
     pct = number(account.get('cash_pct'))
@@ -417,5 +452,5 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
                           "a scheduled time is not a completed run.")
     else:
         cash_lines.append("System next step: the research queue is unverified; restore a validated current queue before claiming progress.")
-    sections.append(section("Cash and next update", cash_lines))
+    sections.append(section("Cash and next update", cash_lines, group='background'))
     return sections

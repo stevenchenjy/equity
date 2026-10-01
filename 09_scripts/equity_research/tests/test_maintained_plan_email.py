@@ -26,7 +26,10 @@ class MaintainedPlanEmailTests(unittest.TestCase):
         before = copy.deepcopy(decision)
         rendered = cards(decision, {'plans': []})
         self.assertEqual(decision, before)
-        return next(c['body'] for c in rendered if c['title'] == 'Orders and proposals')
+        # Current protection belongs in the leading SELL card; historical
+        # orders stay in the separate supporting section.
+        return '\n'.join(c['body'] for c in rendered
+                         if c.get('kind') == 'sell' or c['title'] == 'Orders and proposals')
 
     def test_current_maintained_protection_draft_survives_empty_new_eligibility(self):
         text = self.render(maintained_plan())

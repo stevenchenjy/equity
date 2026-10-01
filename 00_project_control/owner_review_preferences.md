@@ -2,6 +2,16 @@
 
 ## Action-first regular email (2026-09-29)
 
+September 30 clarification: put BUY and SELL in prominent, separate leading
+cards, with whole-share quantity, maximum/limit/trigger price, applicable
+session and deadline, execution conditions and skip/failure rules together.
+If no current draft passes its existing checks, show zero new shares and no
+current order price explicitly. Put recorded holdings, reference closes,
+historical orders, assumed-fill scenarios, cash and research context after a
+clear supporting-information divider. Never mix a historical or reference
+price into a current action card. Use textual BUY/SELL labels as well as visual
+emphasis so the distinction survives plain-text mail and color limitations.
+
 The owner asked for clear current actions and prices, with no buzz sections or
 instructions merely to “assess” stocks. Ordinary emails must lead with the
 current decision, then each holding's admitted hold/reduce/protect/exit intent,
