@@ -59,7 +59,7 @@ test('Record IDs are idempotent and production-looking storage is refused', () =
   assert.throws(() => parseRecords(JSON.stringify([{ ...record, plan: { plan_id: { unexpected: 'object' }, version: 1, record_hash: 'hash' } }])));
   assert.throws(() => parseRecords(JSON.stringify([{ ...record, feedback: { ...record.feedback, notes: {} } }])));
   assert.throws(() => parseRecords(JSON.stringify([record, record])));
-  assert.throws(() => parseRecords('{'), /演示存储格式无效/);
+  assert.throws(() => parseRecords('{'), /试填存储格式无效/);
   assert.deepEqual(parseRecords(JSON.stringify([record])), [record]);
 });
 test('Frontend hides a previously current plan as soon as its deadline arrives', () => {

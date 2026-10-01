@@ -10,7 +10,7 @@
 :root { color-scheme: light; }
 .form-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
 .form-fields:disabled { opacity: .65; }
-.form-mode { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
+.form-mode { flex-wrap: wrap; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; }
 .form-mode label { font-size: 12px; color: #66776d; display: flex; gap: 5px; align-items: center; }
 .form-mode input { width: 15px; height: 15px; }
 .notice.neutral { color: #4c6858; background: #f1f6f2; border-color: #e4ece5; }
@@ -98,3 +98,8 @@ h1, h2, h3 { text-wrap: balance; }
   .account-strip > div:first-child strong { font-size: 27px; }
   .account-strip > div:nth-child(2) { padding-left: 0; }
 }
+
+.mode-help { margin-top: -8px; padding: 12px 14px; border: 1px solid var(--rule); border-radius: 6px; background: var(--soft); font-size: 13px; line-height: 1.7; color: #52645a; }
+.mode-help strong { color: var(--ink); font-weight: 600; }
+.mode-help p { margin-top: 3px; }
+.mode-help.trial { border-color: #efcf9e; background: var(--amber-bg); }

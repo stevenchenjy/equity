@@ -171,7 +171,7 @@ export function parseRecords(raw: string | null): DemoRecord[] {
   if (raw === null) return [];
   let value: unknown;
   try { value = JSON.parse(raw); }
-  catch { throw new Error('演示存储格式无效，请先清除本地演示记录'); }
+  catch { throw new Error('试填存储格式无效，请先清除本地试填记录'); }
   const strings = ['ticker', 'side', 'status', 'shares', 'amount', 'amount_mode', 'fee_status', 'fees', 'date', 'time', 'notes', 'order_type', 'order_price', 'stop_price', 'time_in_force', 'remaining', 'linked_order', 'cash'];
   if (!Array.isArray(value) || value.length > 200 || value.some(r => {
     if (!r || r.schema_version !== 'equity_dashboard_demo_v1' || r.production_effect !== false || typeof r.id !== 'string' || !r.id || typeof r.recorded_at !== 'string' || !Number.isFinite(Date.parse(r.recorded_at))) return true;
@@ -183,11 +183,11 @@ export function parseRecords(raw: string | null): DemoRecord[] {
       || !['buy', 'sell'].includes(f.side) || !['price', 'gross', 'net'].includes(f.amount_mode) || !['known', 'unknown'].includes(f.fee_status)
       || typeof f.prior_partial !== 'boolean' || typeof f.inventory_complete !== 'boolean'
       || !Array.isArray(f.holdings) || f.holdings.some((h: { ticker: unknown; shares: unknown }) => !h || typeof h.ticker !== 'string' || typeof h.shares !== 'string');
-  }) || new Set(value.map(r => r.id)).size !== value.length) throw new Error('演示存储格式无效，请先清除本地演示记录');
+  }) || new Set(value.map(r => r.id)).size !== value.length) throw new Error('试填存储格式无效，请先清除本地试填记录');
   return value as DemoRecord[];
 }
 export function appendRecord(records: DemoRecord[], record: DemoRecord): DemoRecord[] {
   if (records.some(r => r.id === record.id)) return records;
-  if (records.length >= 200) throw new Error('演示记录已达 200 条，请先清除或导出');
+  if (records.length >= 200) throw new Error('试填记录已达 200 条，请先清除或导出');
   return [...records, record];
 }
