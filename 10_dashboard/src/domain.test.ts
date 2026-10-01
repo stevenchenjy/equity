@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { appendRecord, defaults, initialFeedback, matchesHistory, validStoredFeedback, planReference, expired, makeDemoRecord, parseRecords, validateFeedback } from './domain.ts';
+import { appendRecord, defaults, editableFeedback, initialFeedback, matchesHistory, validStoredFeedback, planReference, expired, makeDemoRecord, parseRecords, validateFeedback } from './domain.ts';
 import type { Plan, Snapshot, FormalRecord } from './domain.ts';
 
 const at = new Date('2026-09-30T14:00:00-04:00');
@@ -77,6 +77,13 @@ test('Parseable corrupted pending form never becomes renderable feedback',()=>{
   assert.equal(validStoredFeedback({...defaults(),holdings:[{ticker:'SPY',shares:{}}]}),false);
   assert.equal(validStoredFeedback({...defaults(),status:'unexpected'}),false);
   assert.equal(validStoredFeedback(defaults()),true);
+});
+test('Earlier sparse CLI fills remain searchable and editable without inventing confirmation',()=>{
+  const r={id:'legacy-cli',stage:'applied',feedback:{ticker:'SPY',status:'filled',side:'buy',date:'2026-09-30',shares:'1',amount:'764',fee_status:'unknown'}} as FormalRecord;
+  assert.equal(matchesHistory(r,'spy 2026-09-30','all','all'),true);
+  assert.equal(matchesHistory(r,'rbrk','all','all'),false);
+  const f=editableFeedback(r.feedback);assert.equal(validStoredFeedback(f),true);
+  assert.equal(f.not_in_account,false);assert.equal(f.fee_status,'unknown');assert.deepEqual(f.holdings,[]);
 });
 
 test('A new holding without a versioned plan does not create an invalid plan reference', () => {

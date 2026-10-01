@@ -75,11 +75,15 @@ export function initialFeedback(data:Snapshot|null,ticker:string,status:Feedback
   return status==='account' ? {...f,status,cash:data?String(data.account.cash_available):'',
     holdings:data?.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)}))??[],account_observed:false} : {...f,status};
 }
+export function editableFeedback(feedback:Feedback):Feedback {
+  // Earlier CLI records omit fields unrelated to the reported operation.
+  return {...defaults(feedback.ticker),...feedback,holdings:feedback.holdings??[],not_in_account:false};
+}
 export function matchesHistory(record:Pick<FormalRecord,'id'|'feedback'|'stage'|'correction'>,query:string,status:string,stage:string):boolean {
   if(status!=='all'&&record.feedback.status!==status || stage!=='all'&&record.stage!==stage)return false;
   const f=record.feedback;
   const haystack=[record.id,f.ticker,f.date,f.time,f.notes,statusNames[f.status],f.side==='buy'?'买入':'卖出',
-    ...f.holdings.map(h=>h.ticker),record.correction?.reason??''].join(' ').toLocaleLowerCase();
+    ...(f.holdings??[]).map(h=>h.ticker),record.correction?.reason??''].join(' ').toLocaleLowerCase();
   return query.trim().toLocaleLowerCase().split(/\s+/).every(word=>haystack.includes(word));
 }
 export function easternDate(now = Date.now()): string {

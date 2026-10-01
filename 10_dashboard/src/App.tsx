@@ -1,7 +1,7 @@
 import { cloneElement, useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactElement, ReactNode } from 'react';
 import { AlertCircle, ArrowLeft, ArrowUpRight, CheckCircle2, ClipboardList, Clock3, FileText, PencilLine, Plus, RefreshCw, Trash2, Wallet, X } from 'lucide-react';
-import { appendRecord, defaults, initialFeedback, matchesHistory, validStoredFeedback, planReference, easternDate, expired, makeDemoRecord, money, parseRecords, statusNames, STORAGE_KEY, timeLabel, validateFeedback } from './domain';
+import { appendRecord, defaults, editableFeedback, initialFeedback, matchesHistory, validStoredFeedback, planReference, easternDate, expired, makeDemoRecord, money, parseRecords, statusNames, STORAGE_KEY, timeLabel, validateFeedback } from './domain';
 import type { DemoRecord, Feedback, FeedbackStatus, FormalRecord, Plan, ReviewRequest, Snapshot } from './domain';
 import PriceChart from './PriceChart';
 
@@ -99,7 +99,7 @@ function Field({ label, error, children, className = '' }: { label: string; erro
 }
 
 function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, emailVersion, wide = false, storageError, initialStatus='filled', correction, onDirty }: { data: Snapshot | null; ticker: string; onSaved: (record: DemoRecord) => void; onFormalSaved:()=>void; editing?:FormalRecord|null; emailVersion?:string|null; wide?: boolean; storageError: string; initialStatus?:FeedbackStatus; correction?:FormalRecord|null; onDirty:(dirty:boolean)=>void }) {
-  const [form, setForm] = useState<Feedback>(() => editing ? {...editing.feedback,not_in_account:false} : initialFeedback(data,ticker,initialStatus));
+  const [form, setForm] = useState<Feedback>(() => editing ? editableFeedback(editing.feedback) : initialFeedback(data,ticker,initialStatus));
   const [demo,setDemo]=useState(false), [busy,setBusy]=useState(false), [preview,setPreview]=useState<Preview|null>(null), [formalReceipt,setFormalReceipt]=useState<FormalRecord|null>(null);
   const [unconfirmed,setUnconfirmed]=useState<RequestPayload|null>(null);
   const base=useRef<Snapshot|null>(data), pending=useRef<RequestPayload|null>(null);
@@ -111,7 +111,7 @@ function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, emailVers
   const savedSignature = useRef<string | null>(null);
   useEffect(()=>{if(!base.current&&data)base.current=data},[data]);
   useEffect(()=>{try {const raw=localStorage.getItem(PENDING_REQUEST);if(raw){const p=JSON.parse(raw) as RequestPayload;if(typeof p.request_id==='string'&&/^[0-9a-f-]{36}$/.test(p.request_id)&&validStoredFeedback(p.feedback)&&(!p.correction||(typeof p.correction.record_id==='string'&&typeof p.correction.reason==='string'&&p.correction.reason.length<=1500))&&typeof p.account_version==='string'&&/^[0-9a-f]{64}$/.test(p.account_version)){pending.current=p;setUnconfirmed(p);setForm(p.feedback);setCorrectionReason(p.correction?.reason??'')}else throw new Error('invalid pending form')}}catch{setErrors({save:'未确认的请求无法读取，请先核对正式历史。'})}},[]);
-  useEffect(() => { if(!pending.current){setForm(editing?{...editing.feedback,not_in_account:false}:initialFeedback(data,ticker,initialStatus));setReceipt(null);setFormalReceipt(null);setPreview(null);base.current=data;} }, [ticker,editing,initialStatus,correction]);
+  useEffect(() => { if(!pending.current){setForm(editing?editableFeedback(editing.feedback):initialFeedback(data,ticker,initialStatus));setReceipt(null);setFormalReceipt(null);setPreview(null);base.current=data;} }, [ticker,editing,initialStatus,correction]);
   const set = <K extends keyof Feedback>(key: K, value: Feedback[K]) => { onDirty(true); savedSignature.current = null;pending.current=null; setForm(f => ({ ...f, [key]: value })); setErrors({}); setReceipt(null); setFormalReceipt(null);setPreview(null); };
   const filled = form.status === 'filled' || form.status === 'partial';
   const today = data ? easternDate(Date.parse(data.server_now)) : easternDate();
