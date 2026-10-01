@@ -1248,7 +1248,7 @@ def main() -> int:
     args = parser.parse_args()
 
     held_tickers, all_tickers = researched_tickers()
-    if not held_tickers:
+    if not held_tickers and (not POSITIONS_PATH.is_file() or read_csv(POSITIONS_PATH)):
         raise RuntimeError("no held tickers found")
     if args.check:
         print(

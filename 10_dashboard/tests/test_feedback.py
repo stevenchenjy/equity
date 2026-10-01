@@ -175,5 +175,13 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(self.store.history()[0]['research_status'],'failed')
         self.assertEqual(before,{p:(self.root/p).read_bytes() for p in before})
 
+    def test_all_cash_keeps_public_watchlist_research_without_invented_holdings(self):
+        import refresh_daily_evidence as evidence
+        self.put(POSITIONS,'ticker,shares_optional\n')
+        with patch.multiple(evidence,POSITIONS_PATH=self.root/POSITIONS,researched_tickers=lambda:([],['SPY','XYZ'])),patch('sys.argv',['refresh_daily_evidence.py','--check']):
+            self.assertEqual(evidence.main(),0)
+            self.put(POSITIONS,'ticker,shares_optional\n,1\n')
+            with self.assertRaisesRegex(RuntimeError,'no held tickers found'):evidence.main()
+
 
 if __name__=='__main__': unittest.main()
