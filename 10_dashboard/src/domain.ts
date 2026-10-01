@@ -1,4 +1,5 @@
 export type FeedbackStatus = 'skipped' | 'pending' | 'partial' | 'filled' | 'cancelled' | 'account';
+export type SummaryPoint = {label: string; text: string};
 export type Plan = {
   ticker: string; plan_id: string; version: number; record_hash: string; action: string;
   status: 'expired' | 'pending' | 'current' | 'unverified'; expires_at: string | null;
@@ -6,6 +7,7 @@ export type Plan = {
   purpose: Record<string, unknown>; sources: { path: string; sha256: string }[];
   draft: Record<string, unknown> | null; historical_draft: Record<string, unknown> | null;
   eligible_quantity: number;
+  display_summary?: {reason: SummaryPoint[]; counterargument: SummaryPoint[]; conditions: SummaryPoint[]} | null;
 };
 export type Snapshot = {
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;

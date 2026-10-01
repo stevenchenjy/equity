@@ -115,7 +115,7 @@ class PrivateRoutesTests(unittest.TestCase):
 
     def test_owner_inventory_observation_has_real_immutable_hash(self):
         order=self.fixture.submit(self.fixture.payload(status='pending',shares='2',order_price='100'))
-        p=self.fixture.payload(status='account',date=datetime.now().astimezone().date().isoformat(),cash='1000',account_observed=True,
+        p=self.fixture.payload(status='account',date=datetime.now().astimezone().date().isoformat(), time='',cash='1000',account_observed=True,
              holdings=[{'ticker':'ABC','shares':'2','entry_price':'100'}],inventory_complete=True,
              orders_match=True,observed_order_ids=[order['order_id']])
         self.assertEqual(self.fixture.submit(p)['stage'],'applied')

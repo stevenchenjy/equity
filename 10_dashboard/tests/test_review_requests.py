@@ -27,7 +27,7 @@ class ReviewAndCorrectionTests(unittest.TestCase):
         return payload
 
     def correction(self, original, **changes):
-        p = self.fixture.payload(status='account', date=datetime.now().astimezone().date().isoformat(),
+        p = self.fixture.payload(status='account', date=datetime.now().astimezone().date().isoformat(), time='',
                                  cash='1000', holdings=[{'ticker': 'ABC', 'shares': '2', 'entry_price': '100'}],
                                  account_observed=True)
         p.update(correction={'record_id': original['id'], 'reason': 'Corrected against a complete current owner observation.'})

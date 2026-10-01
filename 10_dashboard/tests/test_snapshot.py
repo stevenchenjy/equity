@@ -14,6 +14,31 @@ from server import ACCOUNT, CORE_INPUTS, DECISION, MARKET, ORDERS, PLANS, POSITI
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_presentation_summary_matches_source_without_changing_research_facts(self):
+        from plan_summary import SCHEMA, SUMMARY_PATH, source_hash
+        p=self.decision['plan_continuity']['plans'][0]
+        p.update(reason='Reviewed prior close.',counterargument='No current quote.',purpose={'exit_rule':'No automatic sell.'},record_hash='a'*64)
+        self.publish()
+        sections={k:[{'label':'要点','text':'仅供复审。'}] for k in ('reason','counterargument','conditions')}
+        entry={**{k:p[k] for k in ('ticker','plan_id','version','record_hash')},'source_sha256':source_hash(p),'sections':sections}
+        self.put(SUMMARY_PATH,{'schema_version':SCHEMA,'entries':[entry]})
+        raw=(self.root/DECISION).read_bytes()
+        result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['plans'][0]['display_summary'],sections)
+        self.assertEqual((self.root/DECISION).read_bytes(),raw)
+        p['reason']='New evidence.';self.publish()
+        result=read_snapshot(self.root,self.now)
+        self.assertIsNone(result['plans'][0]['display_summary'])
+        self.assertEqual(result['plans'][0]['reason'],'New evidence.')
+        self.assertEqual(result['plans'][0]['eligible_quantity'],2)
+
+    def test_broken_or_symlinked_presentation_notes_do_not_break_snapshot(self):
+        from plan_summary import SUMMARY_PATH
+        self.put(SUMMARY_PATH,'{broken')
+        self.assertIsNone(read_snapshot(self.root,self.now)['plans'][0]['display_summary'])
+        path=self.root/SUMMARY_PATH;path.unlink();path.symlink_to(self.root/DECISION)
+        self.assertIsNone(read_snapshot(self.root,self.now)['plans'][0]['display_summary'])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)

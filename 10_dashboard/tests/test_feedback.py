@@ -86,7 +86,7 @@ class FeedbackTests(unittest.TestCase):
         self.assertIn('NEW',{r['ticker'] for r in rows((self.root/POSITIONS).read_bytes())})
 
     def test_all_cash_owner_snapshot_preserves_contribution_history(self):
-        r=self.submit(self.payload(status='account',date=datetime.now().astimezone().date().isoformat(),cash='1200',holdings=[],account_observed=True,inventory_complete=True,no_open_orders=True))
+        r=self.submit(self.payload(status='account',date=datetime.now().astimezone().date().isoformat(), time='',cash='1200',holdings=[],account_observed=True,inventory_complete=True,no_open_orders=True))
         self.assertEqual(r['stage'],'applied'); self.assertEqual(rows((self.root/POSITIONS).read_bytes()),[])
         self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['prior_account_value'],1200)
 

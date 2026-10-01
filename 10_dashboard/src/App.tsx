@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft, ArrowUpRight, CheckCircle2, ClipboardList, Cloc
 import { appendRecord, defaults, editableFeedback, initialFeedback, matchesHistory, validStoredFeedback, planReference, easternDate, expired, makeDemoRecord, money, parseRecords, statusNames, STORAGE_KEY, timeLabel, validateFeedback } from './domain';
 import type { DemoRecord, Feedback, FeedbackStatus, FormalRecord, Plan, ReviewRequest, Snapshot } from './domain';
 import PriceChart from './PriceChart';
+import ResearchSection from './ResearchSection';
 
 type Page = 'today' | 'account' | 'feedback' | 'history' | 'detail';
 const pages = [
@@ -242,9 +243,15 @@ function PlanDetail({ plan, now, offline, revision }: { plan: Plan; now: number;
     <PriceChart ticker={plan.ticker} plan={plan} now={now} offline={offline} revision={revision}/>
     {!outdated && plan.status==='current' && plan.draft?<div className="detail-section"><h3>当前结构化条件</h3><div className="condition-grid">{Object.entries({quantity:'股数',limit_price:'委托限价',stop_price:'触发价',order_type:'订单类型',time_in_force:'有效期',session_date:'适用交易日',expiration_date:'截止日期'}).map(([key,label])=>plan.draft?.[key]!=null?<p key={key}><span>{label}</span><strong>{String(plan.draft[key])}</strong></p>:null)}</div></div>:null}
     <div className="detail-section"><h3>{outdated ? '历史研究依据' : '当前研究依据'}</h3><p>{plan.instruction}</p></div>
-    {plan.reason ? <div className="detail-section"><h3>判断理由</h3><p>{plan.reason}</p></div> : null}
-    {plan.counterargument ? <div className="detail-section"><h3>主要反对理由</h3><p>{plan.counterargument}</p></div> : null}
-    <div className="detail-section"><h3>{outdated?'历史条件与退出依据':'条件与退出依据'}</h3>{outdated?<p className="form-hint">以下价格和数量属于旧方案，请等待新复审。</p>:null}{['entry_validity', 'failure_condition', 'exit_rule'].map(key => typeof plan.purpose[key] === 'string' ? <p key={key}>{plan.purpose[key] as string}</p> : null)}</div>
+    <div className="research-summary-grid">
+      <ResearchSection title="判断理由" points={plan.display_summary?.reason} originals={[{text:plan.reason}]}/>
+      <ResearchSection title="主要反对理由" points={plan.display_summary?.counterargument} originals={[{text:plan.counterargument}]}/>
+      <ResearchSection title={outdated?'历史条件与退出依据':'条件与退出依据'} points={plan.display_summary?.conditions} historical={outdated} wide originals={[
+        {label:'买入条件',text:typeof plan.purpose.entry_validity==='string'?plan.purpose.entry_validity:''},
+        {label:'复审触发',text:typeof plan.purpose.failure_condition==='string'?plan.purpose.failure_condition:''},
+        {label:'退出规则',text:typeof plan.purpose.exit_rule==='string'?plan.purpose.exit_rule:''},
+      ]}/>
+    </div>
     {plan.blockers.length ? <div className="detail-section"><h3>待核对条件</h3><ul>{plan.blockers.map(b => <li key={b}>{blockerNames[b] ?? b.replaceAll('_', ' ')}</li>)}</ul></div> : null}
     <details className="source-details"><summary>来源与版本记录（{plan.sources.length}）</summary>{plan.sources.map(s => <p key={s.path}>{s.path}<small>{s.sha256}</small></p>)}<small>计划哈希 {plan.record_hash}</small></details>
     <p className="detail-footer">条件来自已维护的研究计划。真实交易和订单状态由你报告。</p>

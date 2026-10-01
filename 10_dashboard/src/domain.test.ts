@@ -2,8 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { appendRecord, defaults, editableFeedback, initialFeedback, matchesHistory, validStoredFeedback, planReference, expired, makeDemoRecord, parseRecords, validateFeedback } from './domain.ts';
 import type { Plan, Snapshot, FormalRecord } from './domain.ts';
+import { originalPoints } from './ResearchSection.tsx';
 
 const at = new Date('2026-09-30T14:00:00-04:00');
+test('Unsummarized source preserves every sentence, decimal prices and condition labels',()=>{
+  const first='Close $764.20 is below $766.03. No automatic sell is implied.';
+  const second='Review by September 30 15:30 ET; no DAY renewal.';
+  const points=originalPoints([{label:'复审触发',text:first},{label:'退出规则',text:second}]);
+  assert.deepEqual(points,[{label:'复审触发',text:'Close $764.20 is below $766.03.'},{label:'',text:'No automatic sell is implied.'},{label:'退出规则',text:second}]);
+  assert.equal(originalPoints([{text:'  '}]).length,0);
+});
 test('Unknown fee stays unknown and creates an incomplete demo, even for a net amount', () => {
   const f = { ...defaults('ABC', '2026-09-30'), shares: '2', amount: '200', amount_mode: 'net' as const, time: '13:45' };
   const record = makeDemoRecord(f, null, 'event-1', at);

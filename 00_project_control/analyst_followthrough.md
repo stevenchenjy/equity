@@ -70,6 +70,18 @@ thesis, valuation and publication validators. It is research, not execution.
    the mail sender; the existing scheduled sender owns normal delivery and
    its meaningful-change policy. A recurring wake is not a new explicit
    owner-review email request.
+8. Maintain the dashboard's reading summaries after a validated plan change
+   and final recomposition. Use production `10_dashboard/plan_summary.py
+   --template` to obtain exact plan/source bindings, then author a private
+   proposal with 3–4 concise Chinese labelled points for each of `reason`,
+   `counterargument` and `conditions`. Preserve negations, uncertainty,
+   quantities, historical dates, entry gates and separate exit decisions.
+   Validate with `--input PRIVATE_JSON`; add `--apply` only after checking
+   fidelity against the full source. Run from the production checkout with
+   an explicit `--runtime-root /Users/messssi/LocalRuntime/equity`.
+   This writes presentation notes only; it neither amends a plan nor sends
+   mail. Changed plan identity or source text suppresses stale summaries and
+   leaves complete source points visible until new notes are accepted.
 
 ## Dashboard request receipts
 

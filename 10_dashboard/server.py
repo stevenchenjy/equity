@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 from feedback import Store, FeedbackError, version, PENDING, CONFIRMED, RECONCILED
 from tactical_review import _validated_bars
 from dashboard_publication import publication_id
+from plan_summary import SUMMARY_PATH, catalog, matching_summary
 
 ET = ZoneInfo("America/New_York")
 DEFAULT_ROOT = Path("/Users/messssi/LocalRuntime/equity")
@@ -127,6 +128,10 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                 or number(market.get("last_price")) != number(row.get("current_price"))):
             raise SnapshotError("decision_price_snapshot_mismatch")
     stale = d.get("cycle_date") != now.date().isoformat()
+    try:
+        summaries = catalog(safe_read(root, SUMMARY_PATH))
+    except (SnapshotError, OSError):
+        summaries = []
     plans = []
     for p in d.get("plan_continuity", {}).get("plans", []):
         deadlines = [v for k in ("review_at", "valid_until", "time_exit_at") if (v := stamp(p.get(k)))]
@@ -141,6 +146,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
             "review_at": p.get("review_at"), "blockers": p.get("blockers", []),
             "instruction": p.get("instruction", ""), "reason": p.get("reason", ""),
             "counterargument": p.get("counterargument", ""), "purpose": p.get("purpose", {}),
+            "display_summary": matching_summary(p, summaries),
             "sources": [{"path": s.get("path"), "sha256": s.get("sha256")} for s in p.get("sources", [])],
             "draft": p.get("order_draft") if status == "current" else None,
             "historical_draft": p.get("historical_order_draft", p.get("order_draft")),
