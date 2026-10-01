@@ -138,8 +138,8 @@ export function validateFeedback(f: Feedback, today = easternDate()): { errors: 
     const seen = new Set<string>();
     f.holdings.forEach((row, i) => {
       const t = row.ticker.trim().toUpperCase();
-      if (!symbol.test(t) || seen.has(t)) errors[`holding-${i}`] = '股票代码须有效且不重复';
-      if (!numeric(row.shares) || Number(row.shares) <= 0 || !Number.isSafeInteger(Number(row.shares))) errors[`holding-${i}`] = '持仓须为正整数股数；清仓请移除此行';
+      if (!symbol.test(t) || seen.has(t)) errors[`holding-${i}-ticker`] = '股票代码须有效且不重复';
+      if (!numeric(row.shares) || Number(row.shares) <= 0 || !Number.isSafeInteger(Number(row.shares))) errors[`holding-${i}-shares`] = '持仓须为正整数股数；清仓请移除此行';
       seen.add(t);
     });
     if (!f.inventory_complete) missing.push('完整挂单核对');

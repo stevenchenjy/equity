@@ -35,7 +35,9 @@ test('Changing a fill to a pending order strips old fill amounts instead of pres
 test('An empty complete account snapshot represents an all-cash account in the demo', () => {
   const f = { ...defaults('ABC', '2026-09-30'), status: 'account' as const, cash: '1200', holdings: [], inventory_complete: true };
   assert.equal(makeDemoRecord(f, null, 'event-1', at).stage, 'demo_complete');
-  assert.ok(validateFeedback({ ...f, holdings: [{ ticker: 'ABC', shares: '1' }, { ticker: 'ABC', shares: '2' }] }, '2026-09-30').errors['holding-1']);
+  assert.ok(validateFeedback({ ...f, holdings: [{ ticker: 'ABC', shares: '1' }, { ticker: 'ABC', shares: '2' }] }, '2026-09-30').errors['holding-1-ticker']);
+  const errors=validateFeedback({...f,holdings:[{ticker:'ABC',shares:'1.5'}]},'2026-09-30').errors;
+  assert.ok(errors['holding-0-shares']);assert.equal(errors['holding-0-ticker'],undefined);
 });
 test('Invalid dates and future feedback are rejected', () => {
   const f = { ...defaults('ABC', '2026-09-30'), status: 'skipped' as const };
