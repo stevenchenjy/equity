@@ -6,7 +6,7 @@ type Bar = {session_date: string; open: number; high: number; low: number; close
 type Fill = {id:string; date:string; time:string; side:string; shares:string; price:number};
 type Chart = {bars:Bar[]; fills:Fill[]; market_session:string; source:string; source_url:string; adjusted:boolean};
 
-export default function PriceChart({ ticker, plan, now, offline }: {ticker:string; plan?:Plan; now:number; offline:boolean}) {
+export default function PriceChart({ ticker, plan, now, offline, revision }: {ticker:string; plan?:Plan; now:number; offline:boolean; revision:string}) {
   const [chart,setChart]=useState<Chart|null>(null), [error,setError]=useState(''), [index,setIndex]=useState<number|null>(null);
   const id=useId();
   useEffect(()=>{
@@ -16,7 +16,7 @@ export default function PriceChart({ ticker, plan, now, offline }: {ticker:strin
       setChart(r);
     }).catch(e=>{if(e.name!=='AbortError')setError(e.message)});
     return ()=>controller.abort();
-  },[ticker]);
+  },[ticker,revision]);
   if(!chart) return <div className="chart-loading" role="status">{error || '正在读取已校验日线…'}</div>;
   const bars=chart.bars.map(b=>({...b,open:Number(b.open),high:Number(b.high),low:Number(b.low),close:Number(b.close),volume:Number(b.volume)}));
   const draft=plan && !expired(plan,now) && plan.status==='current' && !offline ? plan.draft : null;

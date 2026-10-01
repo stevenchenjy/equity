@@ -70,7 +70,9 @@ class PrivateRoutesTests(unittest.TestCase):
         bind_dashboard_link(d,self.root)
         raw=encoded(d);key=hashlib.sha256(raw).hexdigest()
         self.fixture.put('07_automation/email_delivery/sent_decisions.local/'+key+'.json',raw.decode())
-        self.fixture.put('07_automation/email_delivery/daily_delivery_ledger.csv','timestamp,status,decision_sha256\n2026-09-30T14:01:00-04:00,sent,'+key+'\n')
+        text=b'Original sent body; historical price and conditions.';text_hash=hashlib.sha256(text).hexdigest()
+        self.fixture.put('07_automation/email_delivery/sent_decisions.local/'+text_hash+'.txt',text.decode())
+        self.fixture.put('07_automation/email_delivery/daily_delivery_ledger.csv','timestamp,status,decision_sha256,brief_text_sha256\n2026-09-30T14:01:00-04:00,sent,'+key+','+text_hash+'\n')
         return d,key
 
     def test_mail_link_resolves_exact_sent_archive_and_rejects_tampering(self):
@@ -78,6 +80,7 @@ class PrivateRoutesTests(unittest.TestCase):
         d,key=self.archive()
         code,view=self.request('GET','/api/email-publication?id='+publication_id(d))
         self.assertEqual((code,view['id'],view['headline']),(200,key,'Original email'))
+        self.assertTrue(view['body_archive_verified']);self.assertIn('historical price and conditions',view['original_text'])
         p=self.fixture.payload();p['email_version_id']=key
         self.assertEqual(self.fixture.submit(p)['email_version_id'],key)
         self.fixture.put('07_automation/email_delivery/sent_decisions.local/'+key+'.json',{'tampered':True})
@@ -98,6 +101,17 @@ class PrivateRoutesTests(unittest.TestCase):
             self.assertEqual(render_email(d)[1],plain)
             d['dashboard_link']['url']='https://evil.example/?publication='+token
             self.assertEqual(render_email(d),('Subject','Body','<body>Body</body>'))
+
+    def test_sent_body_is_read_from_archive_and_never_rebuilt_with_current_template(self):
+        d,key=self.archive()
+        text_hash=hashlib.sha256(b'Original sent body; historical price and conditions.').hexdigest()
+        path='07_automation/email_delivery/sent_decisions.local/'+text_hash+'.txt'
+        with patch('email_brief.render_email',side_effect=AssertionError('must not rerender an old email')):
+            self.assertTrue(email_version(self.root,key)['body_archive_verified'])
+            self.fixture.put(path,'tampered')
+            with self.assertRaisesRegex(ValueError,'body_archive_hash_mismatch'):email_version(self.root,key)
+            (self.root/path).unlink()
+            self.assertFalse(email_version(self.root,key)['body_archive_verified'])
 
     def test_owner_inventory_observation_has_real_immutable_hash(self):
         order=self.fixture.submit(self.fixture.payload(status='pending',shares='2',order_price='100'))

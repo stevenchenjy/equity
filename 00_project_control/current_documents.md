@@ -22,7 +22,7 @@ does not freeze balances, test counts, call counts, or open-item counts.
 
 ## Dashboard implementation and remaining phases
 
-- [Dashboard phased build plan](dashboard_build_plan.md): Phase 0/1 delivered; Phase 2 formal feedback and no-send recomposition implemented and under production acceptance. Phase 3 charts/history ready; private HTTPS and real phone acceptance require Tailscale login.
+- [Dashboard phased build plan](dashboard_build_plan.md): Phase 0/1 delivered; Phase 2 formal feedback deployed; isolated acceptance and production no-send recomposition verified. Phase 3 charts/history ready; private HTTPS and real phone acceptance require Tailscale login.
 - [Phase 0/1 contract](dashboard_phase01_contract.md): retained initial read-only and demo boundaries.
 - [Dashboard application](../10_dashboard/README.md): shared formal forms, preview/apply receipts, incomplete-record completion, private service setup and operational recovery.
 

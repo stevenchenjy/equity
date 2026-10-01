@@ -33,3 +33,5 @@
 .historical-email { border-left: 3px solid #c49845; padding: 20px; background: #fcfaf5; margin-top: 20px; line-height: 1.7; }
 .history-content small, .source-details { overflow-wrap: anywhere; }
 @media(max-width:600px) { .condition-grid {grid-template-columns:repeat(2,minmax(0,1fr))} .price-chart{padding-top:18px} .chart-values{gap:7px 12px} .form-mode{font-size:14px} .price-chart svg text{font-size:20px} }
+
+.email-original{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:13px;line-height:1.8;color:#42584b;margin:14px 0;}

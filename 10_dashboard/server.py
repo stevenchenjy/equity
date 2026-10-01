@@ -253,8 +253,21 @@ def email_version(root, key):
     raw=safe_read(root,'07_automation/email_delivery/sent_decisions.local/'+key+'.json')
     if digest(raw)!=key: raise SnapshotError('email_archive_hash_mismatch')
     d=json.loads(raw)
+    sent=rows_for_mail(root,key)
+    text_hash=sent.get('brief_text_sha256','')
+    original=None
+    if re.fullmatch('[0-9a-f]{64}',text_hash) and (root/('07_automation/email_delivery/sent_decisions.local/'+text_hash+'.txt')).exists():
+        body=safe_read(root,'07_automation/email_delivery/sent_decisions.local/'+text_hash+'.txt')
+        if digest(body)!=text_hash: raise SnapshotError('email_body_archive_hash_mismatch')
+        original=body.decode()
     return dict(id=key,generated_at=d.get('generated_at'),cycle_date=d.get('cycle_date'),headline=d.get('headline'),
-        advice=d.get('decisive_advice'),plans=d.get('plan_continuity',{}).get('plans',[]),historical=True)
+        advice=d.get('decisive_advice'),plans=d.get('plan_continuity',{}).get('plans',[]),historical=True,
+        original_text=original,body_archive_verified=original is not None)
+
+
+def rows_for_mail(root,key):
+    data=list(csv.DictReader(io.StringIO(safe_read(root,'07_automation/email_delivery/daily_delivery_ledger.csv').decode())))
+    return next(r for r in reversed(data) if r.get('decision_sha256')==key and r.get('status','').endswith('sent'))
 
 
 class Handler(BaseHTTPRequestHandler):
