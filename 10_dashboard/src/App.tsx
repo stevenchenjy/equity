@@ -89,7 +89,7 @@ function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, emailVers
         if(!pending.current){
           const plan=base.current.plans.find(p=>p.ticker===form.ticker.toUpperCase());
           const payload:RequestPayload={request_id:crypto.randomUUID(),feedback:form,account_version:base.current.account_version,snapshot_id:base.current.snapshot_id,
-            plan:planReference(plan),email_version_id:editing?.email_version_id??emailVersion??null,...(editing?{record_id:editing.id,revision:editing.revision}:{})};
+            plan:planReference(plan),email_version_id:editing?(editing.email_version_id??null):(emailVersion??null),...(editing?{record_id:editing.id,revision:editing.revision}:{})};
           const result=await post('/api/feedback/preview',payload) as Preview;
           payload.preview_hash=result.preview_hash; pending.current=payload; setPreview(result); return;
         }
@@ -255,7 +255,7 @@ export default function App() {
   };
   const clear = () => { try { localStorage.removeItem(STORAGE_KEY); setRecords([]); setStorageError(''); setConfirmClear(false); } catch { setStorageError('浏览器拒绝清除演示记录。'); } };
   const openDetail = (ticker: string) => { setSelected(ticker); setPage('detail'); window.scrollTo({ top: 0 }); };
-  const navigate = (next: Page) => { setPage(next);setEditing(null); window.scrollTo({ top: 0 }); };
+  const navigate = (next: Page) => { setPage(next);setEditing(null);setEmailContext(null); window.scrollTo({ top: 0 }); };
   const plan = data?.plans.find(p => p.ticker === selected);
   const watched = data?.candidates.filter(c => !data.positions.some(p => p.ticker === c.ticker)) ?? [];
   const additions = data?.candidates.filter(c => c.quantity > 0 && !error && !data.stale && data.plans.some(p => p.ticker === c.ticker && !expired(p, now))) ?? [];
