@@ -1478,6 +1478,28 @@ def _run_main(args: argparse.Namespace) -> int:
                 "tickers": tactical_history,
             })
 
+        # Keep forward evidence for retired names in unfinished experiments.
+        # This separate cache never expands canonical rows or new captures.
+        from momentum_price_coverage import collect_outcome_prices, PATH as outcome_path
+        def fetch_outcome_ticker(ticker):
+            series = {}
+            rows, _, passed, reason, _ = retrieve_full_universe(
+                [ticker], now, client=client, current=refresh_time, history_out=series)
+            if passed and rows[0].get('data_quality_label') == 'ok' and ticker in series:
+                return rows[0], series[ticker], 'none'
+            return None, None, reason if reason != 'none' else 'massive_market_row_validation_failed'
+        try:
+            outcome_receipt = collect_outcome_prices(SNAPSHOT_PATH.parents[2], tickers, refresh_time, fetch_outcome_ticker)
+            append_audit('momentum_outcome_price_coverage', str(outcome_path), str(outcome_path),
+                'complete' if not outcome_receipt['missing'] else 'partial',
+                f"outcomes_only=yes; canonical_scope_unchanged=yes; requested={len(outcome_receipt['requested_tickers'])}; "
+                f"missing={len(outcome_receipt['missing'])}")
+        except (ValueError, KeyError, TypeError, OSError):
+            # An independent experimental coverage failure never substitutes
+            # prices or invalidates the verified canonical market batch.
+            append_audit('momentum_outcome_price_coverage', str(outcome_path), str(outcome_path),
+                         'failed', 'outcomes_only=yes; prior_cache_preserved=yes; no_evidence_fabricated=yes')
+
     write_decision(
         smoke_rows,
         smoke_passed,

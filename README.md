@@ -74,7 +74,7 @@ The daily pipeline builds a fundamentals-led research queue alongside the existi
 
 Market context changes the confirmation pace for new-capital research: two confirmed broad stress closes require three distinct confirmation closes; three normal closes restore the usual two. It never changes approved caps, reserves or strategic targets, and does not independently generate exits.
 
-Official issuer news for IOT, RBRK and NVDA is checked at 08:15, 11:15, 16:45 and 20:15 ET through the existing serialized refresh scheduler. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
+Official issuer news uses the feeds in [the configured source manifest](01_policies/official_news_sources.json) and the check times in [the serialized news scheduler](09_scripts/equity_research/news_schedule.py). These sources describe bounded news coverage, not the research or trading universe; [the runtime coverage status](03_source_data/equity_research/official_news_status.local.json) records the actual checks and failures. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
 
 Current additional reports in the runtime clone:
 
@@ -91,6 +91,9 @@ experimental, with zero actionable quantities, frozen policy versions and
 cost-sensitive outcome cohorts. Current reports live at
 `08_reviews/momentum_experiment.local/report.md`; current status shows failures
 separately from the main strategy. Approved risk and allocation are unchanged.
+The [reproducibility protocol](00_project_control/momentum_reproducibility.md)
+defines immutable execution, retained inputs, experiment version admission,
+and outcome-only price coverage for retired names.
 
 - No live trading.
 - No brokerage API integration.

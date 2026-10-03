@@ -9,7 +9,18 @@
         "tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
         "investment_plans.py": "c65aab6efc27cf7cf517528c01e423b9b62ceea253bcb1af3cb45efed086d23f",
         "daily_common.py": "c8dd3288bc0a80ee4a1f44a31fff0efd3e0df77de41bf6ad4bdf27aa6de4d9cb"
-      }
+      },
+      "runtime_files": {
+        "01_policies/equity_display_names.json": "d1ebc81c33a66634f683d84431b4187503ad3b6c01cdeeb46da589e2b9f29622",
+        "01_policies/momentum_experiment.json": "b18ccc811baf320e953e8bf73ad866dc96844f9a7757937ed6bcccfc9a620bc3",
+        "09_scripts/equity_research/daily_common.py": "c8dd3288bc0a80ee4a1f44a31fff0efd3e0df77de41bf6ad4bdf27aa6de4d9cb",
+        "09_scripts/equity_research/equity_naming.py": "4985a0d5ed7d21c5e90d548d954f910bfedfa982fd209e456f2c20eb66f59a51",
+        "09_scripts/equity_research/investment_plans.py": "c65aab6efc27cf7cf517528c01e423b9b62ceea253bcb1af3cb45efed086d23f",
+        "09_scripts/equity_research/momentum_experiment.py": "b5dd1c48878a179fa5fdde0c1d039e1023a4b1f54f4ec9e20df2616c4a8dcfee",
+        "09_scripts/equity_research/tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
+        "09_scripts/equity_research/workflow_evaluation.py": "3f372fbdf65cf0b386a59d487564c66ebb0871324b48df9531fcf73ccf5c2fc8"
+      },
+      "runtime_sha256": "dd93b6105ff117e91f9389aab9507de966fb7823aced462e91522a47dc059d92"
     },
     {
       "experiment_version": "eod-breakout-v2-20260927",
@@ -19,7 +30,18 @@
         "tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
         "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
         "daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06"
-      }
+      },
+      "runtime_files": {
+        "01_policies/equity_display_names.json": "d1ebc81c33a66634f683d84431b4187503ad3b6c01cdeeb46da589e2b9f29622",
+        "01_policies/momentum_experiment.json": "95ed4b68accb5814cd5dfa8d80052931f4947b76e9f5975c790751211dd8211f",
+        "09_scripts/equity_research/daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06",
+        "09_scripts/equity_research/equity_naming.py": "4985a0d5ed7d21c5e90d548d954f910bfedfa982fd209e456f2c20eb66f59a51",
+        "09_scripts/equity_research/investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "09_scripts/equity_research/momentum_experiment.py": "b5dd1c48878a179fa5fdde0c1d039e1023a4b1f54f4ec9e20df2616c4a8dcfee",
+        "09_scripts/equity_research/tactical_review.py": "c5212bb8dade69b8f049debbc39ee57e8fe36fb9089c9119e689d296b85b8c27",
+        "09_scripts/equity_research/workflow_evaluation.py": "3f372fbdf65cf0b386a59d487564c66ebb0871324b48df9531fcf73ccf5c2fc8"
+      },
+      "runtime_sha256": "b75a08cb2f0f4cf2fb13f139b3587b73a9709f6e4d44f5cd32fe64bb03eeaefa"
     },
     {
       "experiment_version": "eod-breakout-v3-20260928",
@@ -30,7 +52,43 @@
         "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
         "momentum_experiment.py": "e632adb1a3c530f54e481cb8903ea8cf4f5a777e20ca2703e0d32564bd3c631a",
         "tactical_review.py": "e730a276e670638056c546d9bd7a7daf32cc713fa875dfdc1284efc2c642c131"
-      }
+      },
+      "runtime_files": {
+        "01_policies/equity_display_names.json": "d1ebc81c33a66634f683d84431b4187503ad3b6c01cdeeb46da589e2b9f29622",
+        "01_policies/momentum_experiment.json": "0c00ea8df9372d826d7c2d2a1679a914d2a65a020e358d40397ff7cc20f5cc41",
+        "09_scripts/equity_research/archived_momentum.py": "48c056269f6d2b80b60c10a193fef983a0a6cd327129f7e24ceaf3a45ed95e42",
+        "09_scripts/equity_research/daily_common.py": "2407fca892879cf84433a21acc3ad45243ab8c40522decdeb5c59b479cac8b06",
+        "09_scripts/equity_research/equity_naming.py": "4985a0d5ed7d21c5e90d548d954f910bfedfa982fd209e456f2c20eb66f59a51",
+        "09_scripts/equity_research/investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "09_scripts/equity_research/momentum_experiment.py": "e632adb1a3c530f54e481cb8903ea8cf4f5a777e20ca2703e0d32564bd3c631a",
+        "09_scripts/equity_research/tactical_review.py": "e730a276e670638056c546d9bd7a7daf32cc713fa875dfdc1284efc2c642c131",
+        "09_scripts/equity_research/workflow_evaluation.py": "3f372fbdf65cf0b386a59d487564c66ebb0871324b48df9531fcf73ccf5c2fc8"
+      },
+      "runtime_sha256": "b2fe84c1d73557b001b80cfdc2b5990dac61bc5869ebc0cc4e09018e32641ed7"
+    },
+    {
+      "experiment_version": "eod-breakout-v4-20260928",
+      "git_commit": "ad5b57e4d68d5cc1f1ffd57f1a06e5d424bee0c9",
+      "implementation_files": {
+        "momentum_experiment.py": "e9de01aed71a7e27500230fc3985bb3b2a92e0b4ee0824185a940c649b963637",
+        "tactical_review.py": "e730a276e670638056c546d9bd7a7daf32cc713fa875dfdc1284efc2c642c131",
+        "investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "daily_common.py": "4dfb89d660aa345f1cdadaace96e8d981c9b95af9103e8d45bf169f52c897edd",
+        "archived_momentum.py": "ef724733c50873b2b1c3d03d54baafd215038a6499742e91b93e9513a2396488"
+      },
+      "runtime_files": {
+        "01_policies/equity_display_names.json": "d1ebc81c33a66634f683d84431b4187503ad3b6c01cdeeb46da589e2b9f29622",
+        "01_policies/momentum_experiment.json": "07d9125c7093c02b38820b043105d109b66d60010a8805f75a7d06e42e4c2a44",
+        "09_scripts/equity_research/archived_momentum.py": "ef724733c50873b2b1c3d03d54baafd215038a6499742e91b93e9513a2396488",
+        "09_scripts/equity_research/daily_common.py": "4dfb89d660aa345f1cdadaace96e8d981c9b95af9103e8d45bf169f52c897edd",
+        "09_scripts/equity_research/equity_naming.py": "4985a0d5ed7d21c5e90d548d954f910bfedfa982fd209e456f2c20eb66f59a51",
+        "09_scripts/equity_research/investment_plans.py": "1d03ea4ea2b62f57daecb9767b67b6769945f21c50f0a133ad9b67a7d2f31875",
+        "09_scripts/equity_research/momentum_experiment.py": "e9de01aed71a7e27500230fc3985bb3b2a92e0b4ee0824185a940c649b963637",
+        "09_scripts/equity_research/portfolio_archive.py": "35cebcced056f3d77b1adef5fc1b29cc3eb03002604eb138f0074225f93d8f47",
+        "09_scripts/equity_research/tactical_review.py": "e730a276e670638056c546d9bd7a7daf32cc713fa875dfdc1284efc2c642c131",
+        "09_scripts/equity_research/workflow_evaluation.py": "3f372fbdf65cf0b386a59d487564c66ebb0871324b48df9531fcf73ccf5c2fc8"
+      },
+      "runtime_sha256": "1b6d8830dbe0937c26aae95714f44ad40883f3042a89ef3dcc5de2fa029c0174"
     }
   ]
 }

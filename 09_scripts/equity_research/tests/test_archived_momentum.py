@@ -13,7 +13,7 @@ from archived_momentum import evaluate_archived
 
 
 class ArchivedMomentumTests(unittest.TestCase):
-    def inputs(self, archive_index=-1):
+    def inputs(self, archive_index=2):
         root = SCRIPT_DIR.parents[1]
         config = json.loads((root / '01_policies/momentum_implementation_archives.json').read_text())
         archive = config['archives'][archive_index]

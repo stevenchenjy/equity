@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import csv
+import hashlib
 import json
 import tempfile
 import unittest
@@ -30,6 +32,22 @@ def fixture():
         "decision": {"generated_at": current.isoformat(), "market_gate": {"expected_market_session": "2026-09-22"}},
         "market": [{"ticker": "TEST", "last_price": 103, "market_session_date": "2026-09-22", "data_quality_label": "ok", "data_timestamp": current.isoformat()}],
         "news": {"events": []}, "inputs": {"market_sha256": "a" * 64}}
+
+
+def write_fixture(root, values):
+    """Bind real fixture bytes, so isolated frozen execution sees the same inputs."""
+    (root / m.SNAPSHOT).parent.mkdir(parents=True, exist_ok=True)
+    with (root / m.SNAPSHOT).open('w') as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(values['market'][0]))
+        writer.writeheader()
+        writer.writerows(values['market'])
+    values['history']['snapshot_sha256'] = hashlib.sha256((root / m.SNAPSHOT).read_bytes()).hexdigest()
+    for path, payload in ((m.POLICY, values['policy']), (m.HISTORY, values['history']),
+                          (m.DECISION, values['decision']), (m.NEWS, values['news'])):
+        (root / path).parent.mkdir(parents=True, exist_ok=True)
+        (root / path).write_text(json.dumps(payload))
+    registry = Path('01_policies/momentum_implementation_archives.json')
+    (root / registry).write_bytes((SCRIPT_DIR.parents[1] / registry).read_bytes())
 
 
 class MomentumExperimentTests(unittest.TestCase):
@@ -202,10 +220,8 @@ class MomentumExperimentTests(unittest.TestCase):
         values = fixture()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            for path, payload in ((m.POLICY, values["policy"]), (m.HISTORY, values["history"]), (m.DECISION, values["decision"]), (m.NEWS, values["news"])):
-                (root / path).parent.mkdir(parents=True, exist_ok=True)
-                (root / path).write_text(json.dumps(payload))
-            with patch.object(m, "read_csv", return_value=values["market"]), patch.object(m, "sha256_file", return_value="a" * 64):
+            write_fixture(root, values)
+            with patch.object(m, "sha256_file", return_value="a" * 64):
                 report = m.run(root, values["current"])
                 ledger = root / m.OUTPUT / "ledger.jsonl"
                 original = ledger.read_bytes()
@@ -219,7 +235,8 @@ class MomentumExperimentTests(unittest.TestCase):
                 self.assertEqual(report["summary"]["observations"], 1)
                 self.assertEqual(report["summary"]["outcomes"], 0)
                 self.assertFalse(report["summary"]["incremental_value_established"])
-                with patch.object(m, "sha256_file", side_effect=lambda path: "b" * 64 if path.name == "momentum_experiment.py" else "a" * 64):
-                    with self.assertRaisesRegex(ValueError, "implementation_changed_without_new_version"):
-                        m.run(root, values["current"].replace(hour=15))
+                # Live helper edits must not change the pinned experiment's identity.
+                with patch.object(m, "sha256_file", return_value="b" * 64):
+                    continued = m.run(root, values["current"].replace(hour=15))
+                    self.assertEqual(continued['current_observations'], report['current_observations'])
                 self.assertEqual(ledger.read_bytes(), original)

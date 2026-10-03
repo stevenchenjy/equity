@@ -34,6 +34,13 @@ RUN_REASONS = frozenset({"completed", "started", "file_missing", "io_error", "in
     "experiment_price_session_stale_or_future", "experiment_history_timestamp_invalid",
     "duplicate_market_ticker", "experiment_decision_not_current", "experiment_input_changed_during_read",
     "experiment_implementation_changed_without_new_version",
+    "experiment_version_unregistered", "archive_config_invalid",
+    "archive_config_duplicate_or_invalid_version", "archive_implementation_mismatch",
+    "archive_runtime_dependency_missing", "archive_policy_mismatch",
+    "archive_evaluation_failed", "frozen_experiment_evaluation_failed",
+    "archive_entrypoint_invalid", "archive_entrypoint_is_dispatcher",
+    "frozen_experiment_report_mismatch", "experiment_retained_input_mismatch",
+    "experiment_outcome_coverage_invalid", "experiment_outcome_coverage_scope_invalid",
     "experiment_ledger_hash_chain_invalid_preserve_evidence", "experiment_duplicate_or_invalid_record",
     "experiment_policy_changed_without_new_version", "experiment_ledger_chronology_invalid",
     "experiment_outcome_observation_mismatch", "experiment_comparison_evidence_mismatch"})
@@ -432,7 +439,7 @@ def comparison_markdown(summary):
     return lines
 
 
-def _run(root: Path, current: datetime, output: Path):
+def _run_engine(root: Path, current: datetime, output: Path):
     implementation = {name: sha256_file(Path(__file__).parent / name) for name in
         ("momentum_experiment.py", "tactical_review.py", "investment_plans.py", "daily_common.py", "archived_momentum.py")}
     implementation_hash = canonical_sha256(implementation)
@@ -520,6 +527,13 @@ def _run(root: Path, current: datetime, output: Path):
         lines.extend(["", "Policy versions are frozen after first capture; no automatic retuning or promotion. No minimum winning streak authorizes a change. See 00_project_control/momentum_integration_20260927.md for source distinctions and promotion requirements."])
         atomic_write_text(output / "report.md", "\n".join(lines) + "\n")
     return report
+
+
+
+def _run(root: Path, current: datetime, output: Path):
+    from frozen_momentum_runtime import run_frozen
+    return run_frozen(root, current, output, validate_chain=validate_chain,
+                      source_paths=[POLICY, SNAPSHOT, HISTORY, DECISION, NEWS])
 
 
 def _run_with_attempt_history(root: Path, current: datetime, output: Path):
