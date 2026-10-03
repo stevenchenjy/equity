@@ -57,6 +57,13 @@ Codex may prepare research, calculate risk, screen a local watchlist, summarize 
 
 ## Completion evidence for pipeline changes
 
+- Before using an audit, status summary, plan, handoff, or generated report to
+  make a current decision, verify its dated claims against the current branch
+  and HEAD, working tree, relevant files, runtime timestamps and relevant
+  checks. Treat older reports as snapshots; use `00_project_control/current_documents.md`
+  to locate maintained guidance and current runtime outputs. File modification
+  time alone does not establish freshness.
+
 - Verify a reported fault across its real path: retained input, derived decision,
   final text/HTML, deployment commit and delivery receipt when relevant. A
   passing suite or successful refresh alone does not establish factual accuracy.

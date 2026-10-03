@@ -29,11 +29,13 @@ for the synchronization, lock, failure, and operator procedures.
 The active workflow is `daily_decision` and the only active email pipeline is
 `phase5r_daily`.
 
-- Public market and SEC evidence refreshes run in the next-day Basic EOD
-  publication window, with bounded retries from 11:15 through 12:45 ET.
-- One decisive brief is eligible after 13:30 America/New_York only for a
-  material change. The Friday-close weekly summary is delivered on Saturday,
-  after that close is published. Unchanged ordinary email is suppressed.
+- Public market and SEC evidence refreshes are attempted at 08:00 ET, with
+  bounded morning recovery at 08:30, 09:00 and 09:45, and independently at
+  13:30 with 14:00 recovery. An attempted slot does not prove source availability.
+- Materially changed ordinary briefs are eligible in morning 09:30–10:30 and
+  afternoon 14:30–15:05 ET windows after each window's required passed refresh.
+  The Friday-close weekly summary is evaluated after that close is published;
+  unchanged ordinary email is suppressed. See the current delivery policy.
 - Newly added research tickers retain their complete SEC backfill, but only
   newly discovered material filings dated within seven calendar days can
   trigger an event alert; historical backlog never creates an email burst.
