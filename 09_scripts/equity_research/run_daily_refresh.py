@@ -55,9 +55,11 @@ STEP_SPECS = [
         "refresh_sec_filing_artifacts.py",
         True,
     ),
+    ("research_opportunity_intake", "create_research_opportunities.py", True),
     # Bounded objective work uses retained official receipts before the normal
     # incorporation and valuation gates. It cannot author an investment thesis.
     ("research_backlog", "create_research_backlog.py", True),
+    ("research_opportunity_objective", "create_research_opportunities.py", True),
     ("earnings_incorporation", "create_earnings_incorporation.py", False),
     (
         "current_research_baseline",
@@ -98,7 +100,8 @@ STEP_SPECS = [
     ("momentum_experiment", "create_momentum_experiment.py", True),
     ("momentum_experiment_review", "create_momentum_experiment_review.py", True),
 ]
-ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review"}
+ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review",
+    "research_opportunity_intake", "research_opportunity_objective"}
 CURRENT_STATUS_SPEC = (
     "current_status",
     "generate_current_status.py",
@@ -107,6 +110,10 @@ CURRENT_STATUS_SPEC = (
 
 
 def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
+    if result["name"] in {"research_opportunity_intake", "research_opportunity_objective"}:
+        stage = "intake" if result["name"].endswith("intake") else "objective"
+        atomic_write_json(ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json"), {
+            "stage": stage, **{key: result[key] for key in ("started_at", "completed_at", "exit_code")}})
     if result["name"] == "research_backlog":
         # Persist before composing the decision, including a killed child that
         # could not replace its own previous success report.
@@ -135,6 +142,9 @@ def run_step(
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     extra_arguments = (
+        ["--stage", "objective", *(["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])]
+        if name == "research_opportunity_objective"
+        else
         ["--apply-objective-updates"]
         if name == "research_backlog"
         else ["--reuse-validated-snapshot"]

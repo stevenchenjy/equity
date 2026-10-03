@@ -20,8 +20,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/verify_active_state_guard.py": {
-    "mtime": 1790813977.935484,
-    "ast_hash": "d6f91fe8ac545ff89d0b44eeec08fee1",
+    "mtime": 1791049406.1364095,
+    "ast_hash": "cd9a1406c314578551a1ed04f804a4bf",
     "semantic_hash": ""
   },
   ".codex/skills/graphify/SKILL.md": {
@@ -240,8 +240,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/create_daily_decision_and_brief.py": {
-    "mtime": 1790815513.8413622,
-    "ast_hash": "a3db5e7b0fc986b6e69bcbb1dfa7422b",
+    "mtime": 1791047911.363159,
+    "ast_hash": "569b3b56ccb46ccfe02929eb5a0bba44",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/daily_common.py": {
@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_daily_refresh.py": {
-    "mtime": 1790643458.6093433,
-    "ast_hash": "3bc949a72f417ca5663ff8972092f4e6",
+    "mtime": 1791049406.1337492,
+    "ast_hash": "073d4c60d2de260ae4b10540906bf1c5",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_daily_refresh_scheduler.py": {
@@ -520,8 +520,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/generate_current_status.py": {
-    "mtime": 1790623539.7497725,
-    "ast_hash": "f880d3475ed52123adee3a5e20e05473",
+    "mtime": 1791047911.3646252,
+    "ast_hash": "af9570750c014c8cffa3fa1e0e541953",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/active_config.py": {
@@ -730,8 +730,8 @@
     "semantic_hash": ""
   },
   "00_project_control/current_documents.md": {
-    "mtime": 1790816768.6135073,
-    "ast_hash": "2c78bf64215a657045a7598c0586ed58",
+    "mtime": 1791051031.582548,
+    "ast_hash": "8cfa76f33a8f76ccb652d51e749bbb27",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/email_brief.py": {
@@ -1250,8 +1250,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/research_backlog.py": {
-    "mtime": 1790623800.8239055,
-    "ast_hash": "c11ba487da6fac51fcf84b0854f6d01e",
+    "mtime": 1791049121.6709392,
+    "ast_hash": "49f8486eb628fa4949c64272d8c4e996",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_blocker_scopes.py": {
@@ -1380,8 +1380,8 @@
     "semantic_hash": ""
   },
   "00_project_control/analyst_followthrough.md": {
-    "mtime": 1790854710.3198636,
-    "ast_hash": "e03e35e5b8d4c06642a10ec6474b2545",
+    "mtime": 1791051555.122768,
+    "ast_hash": "ea1805d3c041f8d3d23f2c06a253a98a",
     "semantic_hash": ""
   },
   "00_project_control/objective_research_budget_20260928.md": {
@@ -1657,6 +1657,61 @@
   "00_project_control/momentum_reproducibility.md": {
     "mtime": 1791038444.7427337,
     "ast_hash": "3f848813059ea8f7f9036b517fe57b77",
+    "semantic_hash": ""
+  },
+  "01_policies/research_opportunity_policy.json": {
+    "mtime": 1791046723.9109132,
+    "ast_hash": "67bdfbf3ac084d6a819860535665cfc3",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/create_research_opportunities.py": {
+    "mtime": 1791051734.199809,
+    "ast_hash": "4d67473fca0e1aa5687a6c22e5b15b3e",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/opportunity_contract.py": {
+    "mtime": 1791052006.5447261,
+    "ast_hash": "45dcb3bffadcf6f6d10ebd8c09fc856d",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/opportunity_evidence.py": {
+    "mtime": 1791051555.1243265,
+    "ast_hash": "42346c40bcf0bfa39203d00a7ca3b006",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/opportunity_measurement.py": {
+    "mtime": 1791051622.712947,
+    "ast_hash": "06e40a980df66b2a03807685360f68e1",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/opportunity_triggers.py": {
+    "mtime": 1791052104.8268714,
+    "ast_hash": "ed443e3f2239a21cc30f527ccc14a0fc",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/research_opportunities.py": {
+    "mtime": 1791052006.5456781,
+    "ast_hash": "45a54470751a6e49efcb1df4d1d45412",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/tests/test_research_opportunities.py": {
+    "mtime": 1791052104.8282373,
+    "ast_hash": "939034bf96598ee7b72c6fb1a4e41a76",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/update_experiment_research_approval.py": {
+    "mtime": 1791047683.8112626,
+    "ast_hash": "80125697d45ff7001a26bb4876060e8d",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/update_research_assessment.py": {
+    "mtime": 1791050247.4856575,
+    "ast_hash": "71d39474ee9d02d73b46d3f484c77cf9",
+    "semantic_hash": ""
+  },
+  "00_project_control/research_opportunity_architecture.md": {
+    "mtime": 1791052006.5465355,
+    "ast_hash": "3e82193cc032d2793693ce2d8415e4b7",
     "semantic_hash": ""
   }
 }

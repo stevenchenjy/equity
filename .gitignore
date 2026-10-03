@@ -17,6 +17,11 @@ gmail_tokens/
 graphify-out/cache/
 graphify-out/20??-??-??/
 graphify-out/graph.html
+graphify-out/.rebuild.lock
+
+# Durable research attention, primary receipts, assessments and forward studies.
+04_research/company_research/opportunities.local/
+08_reviews/current/research_opportunities.local.md
 
 07_automation/email_delivery/email_config.local.json
 05_risk_and_positions/current_positions.local.csv

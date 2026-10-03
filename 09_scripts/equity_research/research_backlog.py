@@ -221,24 +221,39 @@ def complete_objective_data(*, root: Path, ticker: str, row: dict, current: date
 
 
 def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: dict,
-        dossiers: dict, current: datetime, previous: dict | None = None, max_tickers: int = 3) -> dict:
+        dossiers: dict, current: datetime, previous: dict | None = None, max_tickers: int = 3,
+        opportunities: list | None = None) -> dict:
     previous = previous or {}
     old_items = {r["gap_id"]: r for r in previous.get("items", [])}
     held = {r.get("ticker") for r in positions
         if (numeric(r.get("shares_optional", r.get("current_shares", r.get("shares")))) or 0) > 0}
     rows = {r["ticker"]: r for r in fundamentals if _ticker(r.get("ticker"))}
+    observed_rows = dict(rows)
+    attention = {r["ticker"]: r for r in opportunities or [] if _ticker(r.get("ticker"))}
     companies = research.get("companies", {})
     rank = {r["ticker"]: i for i, r in enumerate(research.get("candidate_queue", []))}
     items, groups = [], []
-    for ticker in sorted(set(rows) | {t for t in companies if _ticker(t)} | {t for t in held if _ticker(t)}):
+    for ticker in sorted(set(rows) | set(attention) | {t for t in companies if _ticker(t)} | {t for t in held if _ticker(t)}):
         row, company, dossier = rows.get(ticker, {}), companies.get(ticker, {}), dossiers.get(ticker, {})
+        opportunity = attention.get(ticker, {})
+        # Source-bound research-only facts can complete research gaps without
+        # becoming rows in the canonical table or changing its authority.
+        if not row and opportunity.get("objective_status") == "source_bound":
+            row = {"ticker": ticker, **{k: v.get("value") for k, v in opportunity.get("research_objective_facts", {}).items()},
+                "fetched_at": opportunity.get("objective_completed_at", "")}
+            observed_rows[ticker] = row
         # Positions are current account evidence; a retained research memo's
         # held flag can describe a position that has since been closed.
         held_ticker = ticker in held
         reopen = company.get("maintained_view", {}).get("reopen_reasons", [])
         material_reopen = bool([v for v in reopen if v != "company_review_not_recorded"])
         gaps = [("objective_attachment", "auditable_numeric_dossier", "automatic_official_cache")]
-        gaps += [("financial", k, "automatic_official_cache_then_scope_review") for k in REQUIRED_FIELDS if numeric(row.get(k)) is None]
+        if opportunity.get("instrument_kind") == "etf" and not row:
+            gaps.append(("reasoning", "issuer_structure_prospectus_and_portfolio_role", "analyst_research_required"))
+        else:
+            gaps += [("financial", k, "automatic_official_cache_then_scope_review") for k in REQUIRED_FIELDS if numeric(row.get(k)) is None]
+        if opportunity:
+            gaps.append(("reasoning", "recorded_opportunity_business_case_and_economics", "analyst_research_required"))
         gaps += [("reasoning", str(v), "analyst_research_required") for v in company.get("missing_evidence", [])
             if not str(v).startswith("unresolved_financial_evidence:") and str(v) not in REQUIRED_FIELDS]
         if "valuation_pending" in company.get("readiness", ""):
@@ -246,7 +261,7 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
         ticker_items = []
         for kind, code, mode in dict.fromkeys(gaps):
             gap_id = canonical_sha256({"ticker": ticker, "kind": kind, "reason_code": code})
-            completed = (kind == "objective_attachment" and dossier.get("status") == "objective_dossier_completed")
+            completed = (kind == "objective_attachment" and (dossier.get("status") == "objective_dossier_completed" or opportunity.get("objective_status") == "source_bound"))
             state = "resolved_objective" if completed else "pending_research" if kind == "reasoning" else "pending_objective"
             if kind != "reasoning" and dossier.get("status") == "unverified":
                 state = "unverified"
@@ -272,19 +287,26 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
             reasons.append("existing_fundamental_research_candidate")
         reasons.append("objective_data_and_reasoning_gaps_kept_separate")
         tier = 0 if held_ticker else 1 if material_reopen else 2 if "valuation_pending" in company.get("readiness", "") else 3
+        if opportunity:
+            reasons += ["durable_early_research_opportunity", "first_trigger:"+opportunity["first_observation"]["trigger"]]
+            from research_opportunities import priority
+            tier = min(tier, priority(opportunity, held)[0])
         groups.append({"ticker": ticker, "held": held_ticker, "priority_reasons": reasons,
             "gap_ids": [r["gap_id"] for r in outstanding], "status": "pending_research" if outstanding else "objective_portion_complete",
             "objective_gap_count": sum(r["kind"] != "reasoning" for r in outstanding),
             "manual_gap_count": sum(r["kind"] == "reasoning" for r in outstanding),
             "financial_gaps_remaining": [k for k in REQUIRED_FIELDS if numeric(row.get(k)) is None],
-            "priority_key": [tier, rank.get(ticker, 999), ticker]})
+            "priority_key": [tier, rank.get(ticker, 999), ticker],
+            **({"attention_state": opportunity["state"], "attention_first_seen_at": opportunity["first_seen_at"],
+                "attention_queue_age_hours": opportunity.get("queue_age_hours"),
+                "attention_blockers": opportunity["blockers"], "evidence_scope": "canonical" if ticker in rows else "research_only_no_canonical_admission"} if opportunity else {})})
     # Previously open numeric fields disappear from the current missing set
     # only when canonical data now supplies them; retain their resolution record.
     existing_ids = {r["gap_id"] for r in items}
     for gap_id, old in old_items.items():
         if gap_id in existing_ids:
             continue
-        resolved = (old["kind"] == "financial" and numeric(rows.get(old["ticker"], {}).get(old["reason_code"])) is not None)
+        resolved = (old["kind"] == "financial" and numeric(observed_rows.get(old["ticker"], {}).get(old["reason_code"])) is not None)
         items.append({**old, "status": "resolved_objective" if resolved else "unverified",
             "last_checked_at": current.isoformat(), "next_step": "Canonical official numeric evidence now present." if resolved else "Coverage changed; historical gap preserved without assumed resolution."})
     groups.sort(key=lambda r: tuple(r["priority_key"]))
@@ -293,9 +315,39 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
     return {"schema_version": "equity_research_backlog_v1", "generated_at": current.isoformat(), "status": "ready",
         "automatic_action_allowed": False, "work_budget_tickers": max_tickers,
         "priority_basis": "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking.",
-        "priority_queue": [r for r in groups if r["gap_ids"]][:max_tickers], "issuer_queue": groups, "items": items,
+        "priority_queue": [r for r in groups if r["gap_ids"] and (r["ticker"] in rows or r.get("attention_state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"})][:max_tickers], "issuer_queue": groups, "items": items,
         "counts": dict(Counter(r["status"] for r in items)), "network_requests": 0,
         "analyst_reviews_completed": 0, "valuation_assumptions_created": 0}
+
+
+def attention_rows(root: Path, current: datetime) -> list:
+    if not (root / "04_research/company_research/opportunities.local/report.json").exists():
+        return []  # Compatibility: no attention store exists before migration.
+    from research_opportunities import read_report
+    try:
+        return read_report(root, current=current)["opportunities"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return []  # Optional research failure never changes canonical authority.
+
+
+def refresh_attention_view(root: Path, current: datetime) -> None:
+    """Refresh derived backlog visibility after intake evidence; no extra work."""
+    with ExclusiveFileLock(root / DOSSIER_REL / "backlog.lock"):
+        report = read_json(root / REPORT_REL, {})
+        if not report:
+            return
+        validate_report(report, root=root)
+        fundamentals = read_csv(root / FUNDAMENTALS_REL)
+        dossiers = {r["ticker"]: read_json(root / DOSSIER_REL / (r["ticker"]+".json"), {}) for r in fundamentals}
+        view = build_backlog(fundamentals=fundamentals, positions=read_csv(root / POSITIONS_REL),
+            research=read_json(root / LONG_HORIZON_REL, {}), dossiers=dossiers,
+            current=current, previous=report, max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current))
+        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts")})
+        report["attention_view_updated_at"] = current.isoformat()
+        report["report_hash"] = canonical_sha256({k: v for k, v in report.items() if k != "report_hash"})
+        validate_report(report)
+        atomic_write_json(root / REPORT_REL, report)
+        atomic_write_text(root / MARKDOWN_REL, render_report(report))
 
 
 def _append_history(path: Path, records: list, row: dict):
@@ -434,7 +486,8 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
                 # History is immutable; only this run's view reopens stale work.
                 dossiers[ticker] = {**dossier, "status": "unverified", "reason_code": "source_set_changed_requires_reassessment"}
         initial = build_backlog(fundamentals=fundamentals, positions=positions, research=research,
-            dossiers=dossiers, current=current, previous=previous, max_tickers=max_tickers)
+            dossiers=dossiers, current=current, previous=previous, max_tickers=max_tickers,
+            opportunities=attention_rows(input_root, current))
         by_ticker = {r["ticker"]: r for r in fundamentals}
         attempts, receipts, pending = [], [], []
         run_id = canonical_sha256({"started_at": current.isoformat(), "previous_hash": records[-1]["record_hash"] if records else "",
@@ -443,6 +496,10 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             "recorded_at": current.isoformat(), "automatic_action_allowed": False})
         for group in initial["issuer_queue"]:
             ticker = group["ticker"]
+            if ticker not in by_ticker and group.get("evidence_scope") == "research_only_no_canonical_admission" and not group["held"]:
+                # Outside discoveries use the isolated objective issuer path;
+                # empty canonical rows must not consume canonical work slots.
+                continue
             row = by_ticker.get(ticker, {})
             fingerprint = fingerprints.get(ticker) or _source_fingerprint(input_root, ticker, row, current)
             applicable = apply_objective_updates and dossiers.get(ticker, {}).get("canonical_update") == "verified_patch_available_explicit_apply_flag_required"
@@ -496,7 +553,8 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
                 "automatic_action_allowed": False})
             raise
         report = build_backlog(fundamentals=list(by_ticker.values()), positions=positions, research=research,
-            dossiers=dossiers, current=current, previous=initial, max_tickers=max_tickers)
+            dossiers=dossiers, current=current, previous=initial, max_tickers=max_tickers,
+            opportunities=attention_rows(input_root, current))
         old = {r["gap_id"]: r for r in previous.get("items", [])}
         for item in report["items"]:
             prior = old.get(item["gap_id"], {})

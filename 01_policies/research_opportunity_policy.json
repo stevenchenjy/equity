@@ -1,0 +1,17 @@
+{
+  "schema_version": "equity_research_opportunity_policy_v1",
+  "version": "research_attention_v1",
+  "active_capacity": 24,
+  "new_opportunities_per_run": 6,
+  "discovery_stock_limit": 10,
+  "discovery_etf_limit": 3,
+  "external_issuers_per_fetch": 2,
+  "research_source_max_age_hours": 48,
+  "stale_after_market_sessions": 5,
+  "approval_store": "04_research/company_research/opportunities.local/experiment_approvals.json",
+  "requests_store": "04_research/company_research/opportunities.local/owner_requests.json",
+  "capital_authority": false,
+  "automatic_action_allowed": false,
+  "canonical_admission": false,
+  "purpose": "Bound research workload and preserve early evidence; no new investment thresholds or eligibility authority"
+}

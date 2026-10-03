@@ -355,6 +355,8 @@ def main() -> int:
     experiment_review = momentum_review_health(experiment_review, refresh, current=current,
                                                expected_session=expected_session)
     backlog = read_backlog_summary(ROOT, current=current, refresh=refresh)
+    from research_opportunities import summary as opportunity_summary
+    opportunities = opportunity_summary(ROOT, current=current)
     work_queue = work_health(decision.get("capital_work_queue"), refresh,
                              current=current, step="daily_decision")
     health = workflow_health(decision, long_report, incorporation, evaluation, refresh,
@@ -471,6 +473,7 @@ def main() -> int:
         "shadow_evaluation": shadow_health,
         "momentum_experiment_review": experiment_review,
         "research_backlog": backlog,
+        "research_opportunities": opportunities,
         "capital_work_queue": work_queue,
         "workflow_blocker_scopes": {key: decision.get("workflow_integrity", {}).get(key, {})
             for key in ("global_blockers", "ticker_blockers", "strategy_blockers")},
@@ -504,6 +507,7 @@ def main() -> int:
         f"- Momentum experiment: `{momentum.get('status', 'missing')}`; evidence freshness `{momentum['freshness']}`; frozen observations `{momentum.get('observations', 'unknown')}`, forward outcomes `{momentum.get('outcomes', 'unknown')}`. No demonstrated incremental value or actionable quantities; see `08_reviews/momentum_experiment.local/report.md`. Advisory failure does not suppress existing risk reporting.",
         f"- First-cohort manual review: `{experiment_review.get('status', 'missing')}`; evidence freshness `{experiment_review['freshness']}`; active version ready `{experiment_review['ready_for_owner_review']}`; retained earlier-version review ready `{experiment_review['historical_ready_for_owner_review']}`. One complete five-session cohort permits review without an additional sample-count or profitability requirement; earlier versions remain separate and do not validate the active version. No strategy promotion. See `08_reviews/momentum_experiment_review.local/report.md`.",
         f"- Recurring objective research: `{backlog.get('status', 'missing')}`; freshness `{backlog['freshness']}`; see `08_reviews/current/research_backlog.local.md`. Source-derived numerical completion does not approve a thesis or valuation.",
+        f"- Early research opportunities: `{opportunities['status']}`; see `08_reviews/current/research_opportunities.local.md`. First-seen evidence, research timing and blockers are separate from capital eligibility.",
         f"- Cash and reassessment queue: `{work_queue.get('status', 'missing')}`; freshness `{work_queue['freshness']}`; active items `{work_queue.get('active_item_count', 'unknown')}`; see `08_reviews/capital_work_queue.local/report.md`.",
         f"- Account-wide workflow blockers: `{', '.join(decision.get('workflow_integrity', {}).get('global_blockers', [])) or 'none'}`; ticker-specific issues: `{', '.join(decision.get('workflow_integrity', {}).get('blocked_tickers', [])) or 'none'}`. Local research work is not an account-wide capital freeze.",
         f"- Deployment: `{deployment['status']}`; latest sync action `{deployment.get('latest_sync_action', '')}`; public collection fallback observed `{deployment.get('public_collection_fallback_observed', False)}`; last verified online `{deployment.get('verified_at', '')}`.",

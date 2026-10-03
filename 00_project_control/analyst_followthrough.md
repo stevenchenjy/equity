@@ -272,6 +272,22 @@ late email or a renewed expired DAY draft. The existing sender checks every
 materially changed report. Machine/app availability and task runtime remain
 external dependencies.
 
+## Early research opportunities
+
+Read the validated opportunity view and its source-bound journal described in
+`research_opportunity_architecture.md` alongside the existing backlog. Held and
+urgent adverse work still comes first. Prioritize the most decision-relevant
+new primary evidence and closed opportunities with changed evidence; do not
+repeat unchanged attachments to consume a quota. Outside-universe dossiers are
+research-only and do not grant canonical admission. Recorded hypotheses,
+support/counterevidence, confidence distinct from conviction and next review can
+advance through `update_research_assessment.py`'s check-then-apply writer under
+the existing runtime/pipeline locks. It acquires its own opportunity store lock;
+do not hold that lock while invoking its CLI. Preserve the original first-seen
+receipt and rejection/expiry. A research assessment cannot change a position's
+purpose or replace the existing plan, thesis or valuation writers. After accepted
+work, use the documented full no-send recomposition and verify current views.
+
 ## Authority
 
 Preserve the approved capital basis, zero mandatory internal reserve,

@@ -1092,6 +1092,8 @@ def main() -> int:
     # renew a plan or modify the approved capital/risk policy.
     work_current = now_et()
     decision["research_backlog"] = read_backlog_summary(ROOT, current=work_current)
+    from research_opportunities import summary as opportunity_summary
+    decision["research_opportunities"] = opportunity_summary(ROOT, current=work_current)
     decision["capital_work_queue"] = refresh_capital_work_queue(decision, root=ROOT, current=work_current)
     # Owner-assumed completion is presentation-only, never an account, order,
     # strategy or eligibility input. The receipt/content binding is rechecked
