@@ -3,6 +3,7 @@ import copy
 from datetime import date, datetime
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import Mock
@@ -15,6 +16,13 @@ import momentum_price_coverage as coverage
 
 
 class OutcomeCoverageTests(unittest.TestCase):
+    def test_generated_outcome_receipt_is_ignored_by_actual_repository_rules(self):
+        # Missing this rule blocks the next safe production synchronization,
+        # even when all experiment and provider tests pass.
+        check = subprocess.run(['git', 'check-ignore', '--quiet', '--', str(coverage.PATH)],
+                               cwd=SCRIPT_DIR.parents[1], check=False)
+        self.assertEqual(check.returncode, 0)
+
     def matured_fixture(self, root):
         values = fixture(); write_fixture(root, values)
         first = experiment.run(root, values['current'])
