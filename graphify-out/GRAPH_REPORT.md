@@ -1,7 +1,7 @@
 # Graph Report - equity  (2026-10-03)
 
 ## Corpus Check
-- 334 files · ~313,082 words
+- 334 files · ~313,112 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `371987eb`
+- Built from commit: `954c9010`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -345,8 +345,8 @@ Cohesion: 0.13
 Nodes (18): classify_nonzero_exit(), cli_reported_token_usage(), CodexCliProvider, executable_sha256(), FixtureProvider, minimal_codex_environment(), ProviderResult, Any (+10 more)
 
 ### Community 30 - "shadow_llm_contract.py"
-Cohesion: 0.10
-Nodes (36): append_run_log(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), is_core_allocation_ticker(), load_account_state(), load_active_inhibit() (+28 more)
+Cohesion: 0.11
+Nodes (35): append_run_log(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), is_core_allocation_ticker(), load_account_state(), load_active_inhibit() (+27 more)
 
 ### Community 34 - "ShadowLlmTests"
 Cohesion: 0.12
@@ -493,8 +493,8 @@ Cohesion: 0.23
 Nodes (3): archive(), decision(), FollowthroughTests
 
 ### Community 74 - "score_candidates.py"
-Cohesion: 0.11
-Nodes (27): acceptance_map(), fetch(), main(), Path, easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session() (+19 more)
+Cohesion: 0.20
+Nodes (18): easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session(), last_weekday(), latest_published_market_session(), nth_weekday(), observed() (+10 more)
 
 ### Community 75 - "_run_identity"
 Cohesion: 0.17
@@ -637,8 +637,8 @@ Cohesion: 0.15
 Nodes (3): PacketMarketObservationTests, Path, write_csv()
 
 ### Community 125 - "Equity Research — Core Allocation Policy"
-Cohesion: 0.29
-Nodes (10): _execute_frozen(), _execute_outcomes(), load_registry(), _module_imports(), Run an explicitly registered experiment from immutable, verified Git bytes.  Liv, Import-time dependencies; function-local imports stay outside the entry API., Validate all version bindings, stage a frozen run, then publish its append., run_frozen() (+2 more)
+Cohesion: 0.13
+Nodes (19): acceptance_map(), fetch(), main(), Path, _execute_frozen(), _execute_outcomes(), load_registry(), _module_imports() (+11 more)
 
 ### Community 126 - "graphify reference: query, path, explain"
 Cohesion: 0.22
@@ -709,8 +709,8 @@ Cohesion: 0.40
 Nodes (5): Immutable execution and admission, Interpreting progress, Introducing another experiment version, Momentum experiment reproducibility, Retired names and missing evidence
 
 ### Community 152 - "ResearchRiskLimitsTests"
-Cohesion: 0.12
-Nodes (7): core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count., ActiveProductionTests
+Cohesion: 0.11
+Nodes (8): valuation_trim_review_required(), core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count., ActiveProductionTests
 
 ### Community 153 - "Equity Research — AI operating decision"
 Cohesion: 0.54
@@ -800,7 +800,7 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `canonical_sha256()` connect `AST` to `market_data_adapter.py`, `send_c6_weekly_email.py`, `test_active_production.py`, `main`, `main`, `PacketMarketObservationTests`, `verify_c6_weekly_email_boundary.py`, `llm_contract.py`, `research_working_agreement.md`, `PacketMarketObservationTests`, `compare_policies`, `evaluate_shadow_llm_incremental_value.py`, `applied_reconciliation_matches_current_state`, `ResearchRiskLimitsTests`, `_DocumentPeriod`, `HeldCorePositionTests`, `test_manual_valuation_bootstrap.py`, `Early Public Equity Lab`, `Owner-requested research reviews`, `portfolio_construction.py`, `test_refresh_cadence.py`, `AcceptanceReconciliationError`, `OfficialNewsScheduleTests`, `test_owner_snapshot.py`, `score_candidates.py`, `main`, `__init__.py`, `SecAcceptanceReconciliationTests`, `Equity Research 命名与归档规则`, `OwnerSnapshotTests`, `MaintainedThesisTests`, `delivery_meaning_key`, `test_thesis_evidence.py`, `Equity Research — Core Allocation Policy`?**
+- **Why does `canonical_sha256()` connect `AST` to `market_data_adapter.py`, `send_c6_weekly_email.py`, `test_active_production.py`, `main`, `main`, `PacketMarketObservationTests`, `verify_c6_weekly_email_boundary.py`, `llm_contract.py`, `research_working_agreement.md`, `PacketMarketObservationTests`, `compare_policies`, `evaluate_shadow_llm_incremental_value.py`, `applied_reconciliation_matches_current_state`, `ResearchRiskLimitsTests`, `_DocumentPeriod`, `HeldCorePositionTests`, `test_manual_valuation_bootstrap.py`, `Early Public Equity Lab`, `Owner-requested research reviews`, `portfolio_construction.py`, `test_refresh_cadence.py`, `AcceptanceReconciliationError`, `OfficialNewsScheduleTests`, `test_owner_snapshot.py`, `main`, `__init__.py`, `SecAcceptanceReconciliationTests`, `Equity Research 命名与归档规则`, `OwnerSnapshotTests`, `MaintainedThesisTests`, `delivery_meaning_key`, `test_thesis_evidence.py`, `Equity Research — Core Allocation Policy`?**
   _High betweenness centrality (0.118) - this node is a cross-community bridge._
 - **Why does `ExclusiveFileLock` connect `score_b_candidates.py` to `market_data_adapter.py`, `test_active_production.py`, `main`, `PacketMarketObservationTests`, `verify_c6_weekly_email_boundary.py`, `research_working_agreement.md`, `PacketMarketObservationTests`, `_DocumentPeriod`, `main`, `Owner-requested research reviews`, `test_refresh_cadence.py`, `AcceptanceReconciliationError`, `OfficialNewsScheduleTests`, `risk_profile_activation_20260914.md`, `test_owner_snapshot.py`, `Early Public Equity Research`, `main`, `Equity Research 命名与归档规则`, `OwnerSnapshotTests`, `RuntimePreflightAlertTests`, `Equity Research — Core Allocation Policy`?**
   _High betweenness centrality (0.039) - this node is a cross-community bridge._

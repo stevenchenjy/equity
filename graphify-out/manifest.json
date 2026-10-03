@@ -1695,8 +1695,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_research_opportunities.py": {
-    "mtime": 1791052104.8282373,
-    "ast_hash": "939034bf96598ee7b72c6fb1a4e41a76",
+    "mtime": 1791053286.16939,
+    "ast_hash": "91f5fcf1ecc454a5c7e60e42924de1c7",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/update_experiment_research_approval.py": {

@@ -269,12 +269,15 @@ class OpportunityTests(unittest.TestCase):
         self.assertFalse(paths[0]["capital_authority"])
 
     def test_fetch_stage_only_and_refresh_pipeline_has_no_sender(self):
-        with patch.object(refresh.subprocess, "run") as run:
+        # Exercise the real marker writer inside the fixture, never the
+        # authoring or production checkout used to run this test suite.
+        with patch.object(refresh, "ROOT", self.root), patch.object(refresh.subprocess, "run") as run:
             run.return_value.returncode = 0
             refresh.run_step("research_opportunity_objective", "create_research_opportunities.py", True, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE)
             self.assertNotIn("--refresh", run.call_args.args[0])
             refresh.run_step("research_opportunity_objective", "create_research_opportunities.py", True, market_snapshot_mode=refresh.MARKET_SNAPSHOT_FETCH)
             self.assertIn("--refresh", run.call_args.args[0])
+        self.assertTrue((self.root / BASE_REL / "last_objective_run.json").exists())
         self.assertFalse(any("send" in spec[1] for spec in refresh.STEP_SPECS))
 
     def test_projection_hash_and_clock_are_verified(self):
