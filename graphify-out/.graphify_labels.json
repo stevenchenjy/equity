@@ -207,5 +207,7 @@
   "205": "Pipeline completion evidence",
   "206": "Manual execution and human trade approval",
   "207": "Daily decision workflow",
-  "208": "Isolated SHADOW_LLM evaluation"
+  "208": "Isolated SHADOW_LLM evaluation",
+  "209": "VisibleText",
+  "210": "run_stage"
 }
