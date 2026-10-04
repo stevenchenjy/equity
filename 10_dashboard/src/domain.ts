@@ -9,6 +9,17 @@ export type Plan = {
   eligible_quantity: number;
   display_summary?: {reason: SummaryPoint[]; counterargument: SummaryPoint[]; conditions: SummaryPoint[]} | null;
 };
+export type CapitalDecision = {
+  action:string; generated_at:string; market_data_timestamp:string; planning_cash:number; mandatory_reserve:number;
+  global_blockers:string[];
+  dependencies?:{category:string;code:string;scope:string;evidence_required:string}[];
+  decisions:{ticker:string;decision:string;shares:number;estimated_notional:number;reasons:string[];blockers:string[];thesis_summary:string;
+    dependencies:{category:string;code:string;evidence_required:string}[];
+    order_draft:null|{side?:string;exit_price?:number;entry_order_type:string;entry_limit:number|null;entry_window:{starts_at:string;ends_at:string};time_in_force:string;
+      invalidation_price:number|null;invalidation_rule:string;planned_total_loss:number;planned_account_risk_pct:number;risk_model:string;
+      initial_reassessment_price:number|null;reassessment_rule:string;portfolio_weight_before:number;portfolio_weight_after:number;
+      cash_before:number;estimated_cash_after:number;trigger_rule:string;cancel_conditions:string[];cost_assumption:string};}[];
+};
 export type Snapshot = {
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;
   market_session: string; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
@@ -20,6 +31,7 @@ export type Snapshot = {
     quantity: number; maximum_review_price: number | null; blockers: string; invalidation: string; valuation_source: string | null }[];
   orders: { as_of: string; complete: boolean; fresh: boolean; rows: Record<string, unknown>[] };
   global_blockers: string[];
+  capital_decision?:CapitalDecision|null; capital_decision_status?:string;
 };
 export type Feedback = {
   ticker: string; side: 'buy' | 'sell'; status: FeedbackStatus; shares: string;

@@ -63,3 +63,5 @@ manual-planning references. Do not confuse their historical examples with
 current account truth or executable thresholds. No archived command should be
 run as an active workflow. Nothing in this cleanup grants model production
 influence, broker access, trade execution, or new risk tolerance.
+
+- [Capital decision and manual execution contract](capital_decision_contract.md) — common exact drafts, dependency routing and versioned strategy admission.

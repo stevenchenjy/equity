@@ -112,6 +112,44 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
     html_text = html_module.unescape(re.sub(r"<[^>]+>", "", html))
     def displayed(exact: str) -> bool:
         return exact in text and " ".join(exact.split()) in " ".join(html_text.split())
+    if prior.get("capital_decision") is not None:
+        # New publications have one authoritative draft. Never fall back to a
+        # legacy ceiling when the archived capital contract is invalid/omitted.
+        from capital_decision import validate
+        from capital_presentation import action_lines
+        try:
+            contract = prior["capital_decision"]
+            validate(contract, current=sent_at)
+            for row in contract["decisions"]:
+                draft = row.get("order_draft")
+                if not draft:
+                    continue
+                ticker, qty = row["ticker"], _positive(row["shares"])
+                side = draft["side"]
+                label = {"ACTIONABLE_BUY": "BUY", "ACTIONABLE_ADD": "ADD",
+                         "REDUCE_REVIEW": "REDUCE REVIEW", "EXIT_REVIEW": "EXIT REVIEW"}[row["decision"]]
+                if (not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,14}", ticker)
+                        or side not in {"buy", "sell"} or qty != qty.to_integral_value()
+                        or not displayed(f"{label} — {ticker}")
+                        or not all(displayed(line) for line in action_lines(row))):
+                    incomplete = True
+                    continue
+                holding = next((h for h in prior.get("held_positions", []) if h.get("ticker") == ticker), {})
+                held = Decimal(str(holding.get("current_shares", 0)))
+                if not held.is_finite() or held < 0 or held != held.to_integral_value() or (side == "sell" and qty > held):
+                    incomplete = True
+                    continue
+                actions.append({"ticker": ticker, "side": side, "quantity": int(qty),
+                    "order_type": draft["entry_order_type"], "session_date": draft["entry_window"]["session"],
+                    "review_at": draft["entry_window"]["ends_at"],
+                    "time_exit_at": (regular_close(row["position_purpose"]["time_exit_session"]).isoformat()
+                                     if row.get("position_purpose", {}).get("time_exit_session") else None),
+                    "draft_sha256": canonical_sha256(draft), "held_before": int(held),
+                    "assumed_fill_price": str(_positive(draft["exit_price"] if side == "sell" else draft["entry_limit"])),
+                    "source": "exact_displayed_capital_draft"})
+        except (KeyError, TypeError, ValueError, InvalidOperation):
+            return [], True
+        return actions, incomplete or len({a["ticker"] for a in actions}) != len(actions)
     for plan in prior.get("plan_continuity", {}).get("plans", []):
         draft = plan.get("historical_order_draft")
         if plan.get("status") != "maintained" or not draft:
@@ -319,7 +357,14 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
     current_plans = {plan.get("ticker"): plan for plan in decision.get("plan_continuity", {}).get("plans", [])}
     for action in actions:
         plan = current_plans.get(action["ticker"], {})
-        if action["source"] == "exact_displayed_eligible_tactical_draft":
+        awaiting_actual_execution = False
+        if action["source"] == "exact_displayed_capital_draft":
+            current_row = next((row for row in decision.get("capital_decision", {}).get("decisions", [])
+                                if row.get("ticker") == action["ticker"]), {})
+            current_draft = current_row.get("order_draft")
+            same = current_draft is not None and canonical_sha256(current_draft) == action["draft_sha256"]
+            awaiting_actual_execution = current_draft is None
+        elif action["source"] == "exact_displayed_eligible_tactical_draft":
             current_draft = next((draft for draft in decision.get("tactical_review", {}).get("drafts", [])
                                   if draft.get("ticker") == action["ticker"]), {})
             same = canonical_sha256(current_draft) == action["draft_sha256"]
@@ -336,7 +381,8 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
             expired = expired or current >= _stamp(action["time_exit_at"])
         from investment_plans import regular_close
         expired = expired or current >= regular_close(action["session_date"])
-        action["continuation"] = "expired_reconcile" if expired else "same_plan_do_not_repeat" if same else "changed_plan_reconcile"
+        action["continuation"] = ("expired_reconcile" if expired else "same_plan_do_not_repeat" if same else
+                                  "execution_reconciliation_required" if awaiting_actual_execution else "changed_plan_reconcile")
         action["assumed_remaining_shares"] = action["held_before"] + action["quantity"] * (1 if action["side"] == "buy" else -1)
     cash_after = None
     try:
@@ -394,7 +440,9 @@ def continuation_lines(context: dict[str, Any]) -> list[str]:
             lines.append(f"{ticker}: if the earlier {action['quantity']}-share {action['side']} fully filled during its original validity, "
                 f"the assumed remaining holding is {action['assumed_remaining_shares']} shares. Do not repeat that {'sale' if action['side'] == 'sell' else 'purchase'}. "
                 "Placing a stop or limit does not establish a fill; if pending, partial, unsubmitted or unknown, reconcile actual remaining shares and orders first.")
-            if action["continuation"] != "same_plan_do_not_repeat":
+            if action["continuation"] == "execution_reconciliation_required":
+                lines.append(f"{ticker}: confirm current holdings, remaining orders and execution funds before any additional draft; the earlier level is retained only for this labelled scenario.")
+            elif action["continuation"] != "same_plan_do_not_repeat":
                 lines.append(f"{ticker}: the earlier draft has expired or the maintained plan changed. Reconcile before considering a replacement or opposite action; no renewed price, deadline or additional quantity is supplied here.")
         if context.get("assumed_cash_after_at_stated_levels_before_fees") is not None:
             from email_brief import money

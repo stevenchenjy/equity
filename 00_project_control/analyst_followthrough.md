@@ -23,6 +23,15 @@ thesis, valuation and publication validators. It is research, not execution.
    Unexpected code changes block mutation until resolved. A routine analyst
    wake does not deploy source code, and a completed data refresh need not leave
    the tracked evidence tree clean.
+   Also read `08_reviews/decision_resolution.local/queue.json` and the common
+   `daily_decision.capital_decision` when present. Use the A/B/C/D/E dependency
+   classes in `capital_decision_contract.md`: A/B route to bounded factual/public
+   workers, C needs owner account observations, D belongs to your sourced synthesis,
+   and E preserves strategy/execution requirements. A missing queue is explicit,
+   not evidence of completion. Prioritize held risks and the investment gaps most
+   likely to change a numerical decision; do not ask the owner to calculate a size
+   or synthesize the company case. Write through the existing validated stores,
+   never edit the generated capital contract or promote an experiment.
 2. Prioritize overdue held-position risk and purpose reviews, then the most
    decision-relevant research gaps and otherwise-qualified core opportunities.
    A broker-dependent blocked item must not monopolize the run: record the

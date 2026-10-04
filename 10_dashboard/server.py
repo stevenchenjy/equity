@@ -173,6 +173,16 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
             "blockers": r.get("gate_blockers", ""), "invalidation": r.get("invalidation", ""),
             "valuation_source": r.get("valuation_source"),
         })
+    capital = d.get("capital_decision")
+    capital_status = "legacy_unavailable"
+    if capital:
+        from capital_decision import validate as validate_capital
+        try:
+            validate_capital(capital, root=root, current=now)
+            capital_status = "current"
+        except (ValueError, KeyError, TypeError):
+            capital = None
+            capital_status = "recompose_required"
     observed = stamp(orders_raw.get("as_of"))
     return {
         "schema_version": "equity_dashboard_snapshot_v1", "mode": "read_only_preview",
@@ -190,6 +200,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                    "rows": [{k: r.get(k) for k in ("ticker", "side", "quantity", "remaining_quantity", "status", "order_id", "limit_price", "stop_price", "record_scope")}
                             for r in orders_raw.get("orders", [])]},
         "global_blockers": d.get("workflow_integrity", {}).get("global_blockers", []),
+        "capital_decision": capital, "capital_decision_status": capital_status,
     }
 
 

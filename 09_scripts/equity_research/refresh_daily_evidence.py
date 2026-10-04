@@ -1206,6 +1206,7 @@ def write_acceptance_index_failure_status(
     held_tickers: list[str],
     reason: str,
     unindexed_accession_count: int = 0,
+    diagnostic: str | None = None,
 ) -> None:
     """Durably close the evidence gate without persisting uncommitted SEC data."""
 
@@ -1230,6 +1231,8 @@ def write_acceptance_index_failure_status(
         "new_material_event_count": 0,
         "new_material_accessions": [],
         "unindexed_accession_count": unindexed_accession_count,
+        "unindexed_count_basis": "relative_to_immutable_index_before_extension_admission_not_remaining_unresolved_count",
+        "failure_diagnostic": diagnostic,
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)
@@ -1303,6 +1306,7 @@ def main() -> int:
             state=state,
             held_tickers=held_tickers,
             reason=reason,
+            diagnostic=str(exc),
         )
         print(f"scan_status=failed reason={reason}")
         return 1
@@ -1382,6 +1386,7 @@ def main() -> int:
                 state=state,
                 held_tickers=held_tickers,
                 reason=reason,
+                diagnostic=str(exc),
             )
             print(f"scan_status=failed reason={reason}")
             return 1
@@ -1566,6 +1571,7 @@ def main() -> int:
             state=state,
             held_tickers=held_tickers,
             reason=reason,
+            diagnostic=str(exc),
             unindexed_accession_count=historical_unindexed_accession_count,
         )
         print(f"scan_status=failed reason={reason}")
@@ -1650,6 +1656,7 @@ def main() -> int:
         "sec_acceptance_extension_version_count": len(extension_artifacts),
         "sec_acceptance_extension_admission_count": extension_admission_count,
         "unindexed_accession_count": unindexed_accession_count,
+        "unindexed_count_basis": "remaining_after_extension_admission",
         "network_used": True,
     }
     atomic_write_json(EVIDENCE_STATUS_PATH, status)

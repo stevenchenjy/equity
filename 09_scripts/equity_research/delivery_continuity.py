@@ -91,6 +91,22 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
         "prior_action_not_structured", "multiple_deliveries_require_reconciliation"}
     meaning = {"recommendation": recommendation_notification_fingerprint(value),
                "shares": quantities, "cash": facts}
+    if decision.get("capital_decision") is not None:
+        # The published exact draft, not an older 'up to' ceiling, is the
+        # delivery baseline. Unqualified research churn and raw input hashes
+        # remain in the report and do not cause repeat action emails.
+        contract = decision["capital_decision"]
+        held = {ticker for ticker, _ in quantities}
+        projection = []
+        for row in contract.get("decisions", []):
+            if not row.get("order_draft") and row.get("ticker") not in held:
+                continue
+            item = {k: row.get(k) for k in ("ticker", "decision", "shares", "estimated_notional",
+                    "order_draft", "reasons", "strategy_source", "thesis_summary", "key_evidence")}
+            item["blockers"] = [b for b in row.get("blockers", []) if b not in CLOCK_BLOCKERS]
+            projection.append(item)
+        meaning["capital"] = {"decisions": projection, "global_blockers": sorted(
+            b for b in contract.get("global_blockers", []) if b not in CLOCK_BLOCKERS)}
     if ambiguous_prior_action:
         meaning["ambiguous_prior_action_needs_reconciliation"] = True
     return MARKER + canonical_sha256(meaning)

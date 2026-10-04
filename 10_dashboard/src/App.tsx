@@ -1,3 +1,4 @@
+import { CapitalActions } from './CapitalActions';
 import { cloneElement, useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent, ReactElement, ReactNode } from 'react';
 import { AlertCircle, ArrowLeft, ArrowUpRight, CheckCircle2, ClipboardList, Clock3, FileText, PencilLine, Plus, RefreshCw, Trash2, Wallet, X } from 'lucide-react';
@@ -341,6 +342,7 @@ export default function App() {
       {storageError ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>试填记录存储异常</strong><p>{storageError}。可以在记录历史中清除损坏的试填存储。</p></div></div> : null}
       {data?.stale ? <div className="error-banner"><Clock3 size={19} /><p>这份研究生成于 {timeLabel(data.generated_at)}，并非今日研究。方案需重新复审。</p></div> : null}
       {page === 'today' ? <>
+        {data ? <CapitalActions data={data} /> : null}
         {data ? <Summary data={data} /> : <div className="empty">{loading ? '正在读取生产研究快照…' : '当前没有可展示的完整研究快照。'}</div>}
         <div className="workspace"><section className="plan-column"><h2>当前方案</h2>
           {data?.plans.length ? data.plans.map(p => { const old = expired(p, now) || Boolean(error); return <article className="plan-row" key={`${p.ticker}:${p.plan_id??'unversioned'}`}><div className="plan-symbol"><button onClick={() => openDetail(p.ticker)}>{p.ticker}</button><span>{p.ticker === 'SPY' ? '宽基配置' : actionNames[p.action] ?? '持仓研究'}</span><small>{data.positions.find(v => v.ticker === p.ticker)?.shares ?? '—'} 股已记录</small></div><div className="plan-state"><span className={`status ${old ? 'amber' : ''}`}>{old ? '需复审' : p.status === 'pending' ? '条件待核对' : p.status === 'unverified' ? '依据待核对' : '当前计划'}</span><p>{old ? '计划已到复审时间' : p.blockers.length ? '先核对价格、剩余股数与挂单' : actionNames[p.action] ?? '以当前研究依据为准'}</p><small>复审 {timeLabel(p.expires_at)}</small></div><button className="secondary" onClick={() => openDetail(p.ticker)}>查看依据</button></article>; }) : <p className="empty compact">没有可展示的维护计划。</p>}

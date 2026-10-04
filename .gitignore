@@ -183,3 +183,7 @@ graphify-out/reflections/
 06_execution_records/dashboard_feedback.local/
 06_execution_records/dashboard_feedback_pending.local.json
 07_automation/dashboard.local/
+
+# Source-bound private capital decisions and resolution receipts
+08_reviews/current/capital_decision.local.json
+08_reviews/decision_resolution.local/

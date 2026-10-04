@@ -356,6 +356,9 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
 
 
 def validate_published_workflow(decision: dict[str, Any], *, root: Path, current: datetime) -> None:
+    if decision.get("capital_decision"):
+        from capital_decision import validate as validate_capital_decision
+        validate_capital_decision(decision["capital_decision"], root=root, current=current)
     contract = decision.get("workflow_integrity")
     if contract is None:
         return  # Dated legacy artifacts retain their original validation path.
@@ -398,6 +401,9 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
 def record_decision_history(decision: dict[str, Any], *, root: Path) -> None:
     path = root / "00_project_control/run_logs/decision_history.local.jsonl"
     snapshot = workflow_meaning(decision)
+    if decision.get("capital_decision"):
+        from capital_decision import meaning as capital_meaning
+        snapshot["capital_decision"] = capital_meaning(decision["capital_decision"])
     fingerprint = canonical_sha256(snapshot)
     with ExclusiveFileLock(path.with_suffix(".lock")):
         prior = []

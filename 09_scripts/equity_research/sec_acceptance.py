@@ -524,7 +524,7 @@ def reconcile_current_acceptance_records(
             )
         if any(historical[field] != current[field] for field in IDENTITY_FIELDS):
             raise AcceptanceReconciliationError(
-                "SEC acceptance identity fields differ for existing accession"
+                f"SEC acceptance identity fields differ for existing accession {accession}"
             )
         if historical == current:
             continue
@@ -537,7 +537,7 @@ def reconcile_current_acceptance_records(
             decision = "eastern_wall_clock_representation_equivalent"
         else:
             raise AcceptanceReconciliationError(
-                "SEC acceptance timestamp is not a permitted representation difference"
+                f"SEC acceptance timestamp is not a permitted representation difference: accession={accession} historical={historical['accepted_at']} current={current['accepted_at']}"
             )
         rows.append(
             _make_reconciliation_row(

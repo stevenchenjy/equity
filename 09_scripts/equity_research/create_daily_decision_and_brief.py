@@ -1095,10 +1095,25 @@ def main() -> int:
     from research_opportunities import summary as opportunity_summary
     decision["research_opportunities"] = opportunity_summary(ROOT, current=work_current)
     decision["capital_work_queue"] = refresh_capital_work_queue(decision, root=ROOT, current=work_current)
+    from delivery_followthrough import build_followthrough
+    # Observe prior delivered instructions before sizing. Only the need for a
+    # real execution reconciliation is a gate; hypothetical shares/cash are not
+    # sizing inputs. Rebind the presentation below to the completed contract.
+    decision["delivery_followthrough"] = build_followthrough(decision, root=ROOT, current=now_et())
+    # The sole final capital contract reuses reviewed policy and existing gates.
+    from capital_decision import build as build_capital_decision, publish as publish_capital_decision, meaning as capital_meaning
+    from decision_dependencies import publish as publish_dependencies
+    decision["capital_decision"] = build_capital_decision(decision, root=ROOT, current=current)
+    publish_capital_decision(ROOT, decision["capital_decision"])
+    publish_dependencies(ROOT, decision["capital_decision"])
+    decision["decision_fingerprint"] = canonical_sha256({"workflow": decision["decision_fingerprint"],
+        "capital": capital_meaning(decision["capital_decision"])})
+    decision_fingerprint = decision["decision_fingerprint"]
+    decision_changed = bool(prior_fingerprint) and decision_fingerprint != prior_fingerprint
+    decision["decision_changed"] = decision_changed
     # Owner-assumed completion is presentation-only, never an account, order,
     # strategy or eligibility input. The receipt/content binding is rechecked
     # before delivery; renderers never read mutable delivery files.
-    from delivery_followthrough import build_followthrough
     decision["delivery_followthrough"] = build_followthrough(decision, root=ROOT, current=now_et())
     notification_mode = active_config["notifications"].get("regular_delivery_mode", LEGACY_NOTIFICATION_MODE)
     if "regular_delivery_mode" in active_config["notifications"]:
@@ -1235,6 +1250,8 @@ def main() -> int:
 - order_code_created=no
 - trade_placed=no
 """
+    from capital_presentation import markdown as capital_markdown
+    report = "# Equity Research — capital decision\n\n" + capital_markdown(decision) + "\n\n---\n\n## Full research diagnostics\n\n" + report
     atomic_write_text(DAILY_DECISION_REPORT_PATH, report)
 
     subject, plain, html_body = render_email(decision)

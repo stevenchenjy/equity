@@ -110,6 +110,9 @@ CURRENT_STATUS_SPEC = (
 
 
 def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
+    if "dependency_before" in result:
+        from decision_dependencies import record_attempt
+        record_attempt(ROOT, result, result.pop("dependency_before"))
     if result["name"] in {"research_opportunity_intake", "research_opportunity_objective"}:
         stage = "intake" if result["name"].endswith("intake") else "objective"
         atomic_write_json(ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json"), {
@@ -133,6 +136,8 @@ def run_step(
 ) -> dict[str, Any]:
     started_at = iso_now()
     start_clock = time.monotonic()
+    from decision_dependencies import observe
+    dependency_before = observe(ROOT, name)
     timeout_seconds = (
         EOD_MARKET_REFRESH_TIMEOUT_SECONDS
         if name == "market_refresh"
@@ -176,6 +181,7 @@ def run_step(
             "started_at": started_at, "completed_at": iso_now(),
             "duration_seconds": round(time.monotonic() - start_clock, 3),
             "name": name,
+            "dependency_before": dependency_before,
             "script": script_name,
             "exit_code": 124,
             "allowed_to_fail": allowed_to_fail,
@@ -186,6 +192,7 @@ def run_step(
         "started_at": started_at, "completed_at": iso_now(),
         "duration_seconds": round(time.monotonic() - start_clock, 3),
         "name": name,
+            "dependency_before": dependency_before,
         "script": script_name,
         "exit_code": completed.returncode,
         "allowed_to_fail": allowed_to_fail,

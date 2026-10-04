@@ -173,6 +173,26 @@ class OpportunityTests(unittest.TestCase):
         objective(self.root, current=NOW+timedelta(minutes=5))
         self.assertEqual(before, (self.root / STORE_REL).read_bytes())
 
+    def test_real_automatic_objective_progress_flows_into_explicit_final_dependency(self):
+        intake(self.root, current=NOW)
+        before = objective(self.root, current=NOW)
+        self.assertEqual(next(i for i in before["opportunities"] if i["ticker"] == "SYN")["state"], "data_blocked")
+        self.evidence()
+        report = objective(self.root, current=NOW)
+        item = next(i for i in report["opportunities"] if i["ticker"] == "SYN")
+        self.assertEqual(item["state"], "evidence_attached")
+        from capital_decision import build
+        from active_config import load_active_config
+        decision = {"account": {"account_total_value":10000,"cash_available":8000,"cash_reserved":0,"cash_basis":"owner_confirmed","last_updated":NOW.isoformat()},
+            "market_gate":{"passed":True,"expected_market_session":"2026-10-02"},"evidence_gate":{"passed":True},"fundamental_gate":{"passed":True},
+            "workflow_integrity":{"global_blockers":[],"ticker_blockers":{}},"held_positions":[],"watch_candidates":[],
+            "research_opportunities":{"priority_queue":[{"ticker":"SYN","state":item["state"],"blockers":["company_specific_valuation"]}]}}
+        orders={"schema_version":"phase5r_open_orders_v1","as_of":NOW.isoformat(),"complete":True,"orders":[]}
+        final=build(decision,root=self.root,current=NOW,config=load_active_config(),orders=orders)["decisions"][0]
+        self.assertEqual(final["decision"],"BLOCKED");self.assertEqual(final["shares"],0)
+        self.assertEqual(final["dependencies"][0]["resolver"],"recurring_analyst")
+        self.assertFalse(report["capital_authority"])
+
     def test_backlog_routes_outside_and_keeps_research_scope(self):
         opportunities = intake(self.root, current=NOW)["opportunities"]
         backlog = build_backlog(fundamentals=[], positions=[], research={}, dossiers={}, current=NOW, opportunities=opportunities)

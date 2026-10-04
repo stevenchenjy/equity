@@ -73,6 +73,21 @@ class SnapshotTests(unittest.TestCase):
     def publish(self):
         self.put(DECISION, self.decision)
 
+    def test_admitted_capital_contract_is_projected_and_changed_binding_suppresses_it(self):
+        from capital_decision import binding, SCHEMA
+        from daily_common import canonical_sha256
+        c=dict(schema_version=SCHEMA,generated_at=self.decision['generated_at'],decisions=[],action='NO_NEW_POSITION',
+            source_bindings=binding(self.root),automatic_action_allowed=False,broker_connected=False,order_placed=False)
+        c['content_sha256']=canonical_sha256(c)
+        self.decision['capital_decision']=c;self.publish()
+        result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['capital_decision_status'],'current')
+        self.assertEqual(result['capital_decision']['action'],'NO_NEW_POSITION')
+        self.put('01_policies/production_strategies.json',{'changed':'policy'})
+        result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['capital_decision_status'],'recompose_required')
+        self.assertIsNone(result['capital_decision'])
+
     def test_current_snapshot_preserves_quantity_and_does_not_change_inputs(self):
         before = {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()}
         result = read_snapshot(self.root, self.now)

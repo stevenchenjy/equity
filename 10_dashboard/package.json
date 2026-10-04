@@ -7,7 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "start": "python3 server.py",
-    "test": "python3 -m unittest discover -s tests -v && tsx --test src/domain.test.ts"
+    "test": "python3 -m unittest discover -s tests -v && tsx --test src/domain.test.ts src/CapitalActions.test.tsx"
   },
   "dependencies": {
     "lucide-react": "1.49.0",
