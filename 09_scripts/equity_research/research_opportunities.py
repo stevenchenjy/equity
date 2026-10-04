@@ -268,6 +268,9 @@ def summary(root: Path, *, current: datetime) -> dict:
         return {"status": "ready", "generated_at": report["generated_at"], "report_path": str(MARKDOWN_REL),
             "store_sha256": report["store_sha256"], "metrics": report["metrics"],
             "priority_queue": [{k: i[k] for k in ("ticker", "state", "first_seen_at", "queue_age_hours", "reason_code", "blockers", "owner")} for i in report["priority_queue"][:10]],
+            # Work priority is bounded; final decision coverage is not limited
+            # to the next ten research jobs. Keep every active candidate visible.
+            "decision_candidates": [{k: i[k] for k in ("ticker", "state", "reason_code", "blockers", "owner")} for i in report["priority_queue"]],
             "reassessment_queue": [{k: i[k] for k in ("ticker", "state", "last_evidence_at", "reason_code")} for i in report["reassessment_queue"]], **AUTHORITY}
     except (OSError, ValueError, KeyError, TypeError):
         return {"status": "unverified", "reason": "research_opportunity_current_store_or_report_unverified", "report_path": str(MARKDOWN_REL), **AUTHORITY}

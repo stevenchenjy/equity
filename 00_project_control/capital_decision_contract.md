@@ -6,6 +6,9 @@ eligibility, maintained thesis/plan reconciliation, portfolio sizing and observe
 price-risk review. It is the common input to the action-first email and dashboard.
 Renderers do not calculate a second recommendation. The engine does not connect
 to a broker, handle credentials, submit orders or invoke a sender.
+Adjacent dashboard widgets cannot restore old ceiling quantities or withheld
+drafts. Historical plan levels remain available as historical evidence. Entry
+validity ends at the earliest strategy/maintained-plan review or DAY close.
 
 ## Decision work versus execution
 
@@ -68,6 +71,9 @@ The analyst carries conclusions and valuation inputs into durable validated stor
 then performs the full no-send recompose. Opportunity support, a processed dossier,
 new numerical field, reviewed thesis, complete valuation and actionable draft are
 separate transitions. Negative, missed, failed, expired and unresolved work remains.
+The bounded ten-item work priority is separate from decision coverage: all active
+research opportunities receive a final outcome, including supported cases outside
+the next work batch. This adds no research quota or canonical admission authority.
 No production model API or service purchase is enabled by this change.
 
 ## Strategy lifecycle

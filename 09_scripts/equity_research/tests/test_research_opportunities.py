@@ -97,6 +97,16 @@ class OpportunityTests(unittest.TestCase):
         self.assertEqual({i["ticker"] for i in report["priority_queue"]}, {"SYN", "NEW", "OTH"})
         self.assertFalse((self.root / "03_source_data/equity_research/universe_seed.csv").exists())
         self.assertTrue(all(i["capital_authority"] is False for i in report["opportunities"]))
+    def test_decision_coverage_does_not_truncate_to_work_priority_budget(self):
+        tickers=['SYN'+chr(65+i) for i in range(12)]
+        for offset in (0,6):
+            self.discovery(tickers[offset:offset+6])
+            report=intake(self.root,current=NOW+timedelta(minutes=offset//6))
+        view=summary(self.root,current=NOW+timedelta(minutes=1))
+        self.assertEqual(len(view['priority_queue']),10)
+        self.assertEqual(len(view['decision_candidates']),len(report['priority_queue']))
+        self.assertGreater(len(view['decision_candidates']),10)
+        self.assertFalse(view['capital_authority'])
 
     def test_duplicate_restart_preserves_exact_journal_and_first_seen(self):
         intake(self.root, current=NOW)

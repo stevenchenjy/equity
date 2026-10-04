@@ -183,6 +183,21 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         except (ValueError, KeyError, TypeError):
             capital = None
             capital_status = "recompose_required"
+    if d.get("capital_decision") is not None:
+        # Adjacent legacy widgets must not resurrect a canonical 'up to'
+        # ceiling, a withheld duplicate, or an invalidated current draft.
+        # The complete capital action card is the sole order presentation.
+        for plan in plans:
+            plan["draft"] = None
+            plan["eligible_quantity"] = 0
+        actions = {r["ticker"]: r for r in capital.get("decisions", [])} if capital else {}
+        for candidate in candidates:
+            action = actions.get(candidate["ticker"], {})
+            draft = action.get("order_draft") or {}
+            eligible = action.get("decision") in {"ACTIONABLE_BUY", "ACTIONABLE_ADD"} and draft.get("side") == "buy"
+            candidate.update(quantity=action["shares"] if eligible else 0,
+                             maximum_review_price=draft.get("entry_limit") if eligible else None,
+                             status="review" if eligible else "watch")
     observed = stamp(orders_raw.get("as_of"))
     return {
         "schema_version": "equity_dashboard_snapshot_v1", "mode": "read_only_preview",
@@ -199,7 +214,8 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                    "fresh": bool(observed and 0 <= (now - observed).total_seconds() <= 86400),
                    "rows": [{k: r.get(k) for k in ("ticker", "side", "quantity", "remaining_quantity", "status", "order_id", "limit_price", "stop_price", "record_scope")}
                             for r in orders_raw.get("orders", [])]},
-        "global_blockers": d.get("workflow_integrity", {}).get("global_blockers", []),
+        "global_blockers": (capital.get("global_blockers", []) if capital else
+                            d.get("workflow_integrity", {}).get("global_blockers", [])),
         "capital_decision": capital, "capital_decision_status": capital_status,
     }
 

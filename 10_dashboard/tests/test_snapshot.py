@@ -83,10 +83,16 @@ class SnapshotTests(unittest.TestCase):
         result=read_snapshot(self.root,self.now)
         self.assertEqual(result['capital_decision_status'],'current')
         self.assertEqual(result['capital_decision']['action'],'NO_NEW_POSITION')
+        self.assertEqual(result['plans'][0]['eligible_quantity'],0)
+        self.assertIsNone(result['plans'][0]['draft'])
+        self.assertEqual(result['plans'][0]['historical_draft']['quantity'],2)
+        self.assertEqual(result['candidates'][0]['quantity'],0)
         self.put('01_policies/production_strategies.json',{'changed':'policy'})
         result=read_snapshot(self.root,self.now)
         self.assertEqual(result['capital_decision_status'],'recompose_required')
         self.assertIsNone(result['capital_decision'])
+        self.assertEqual(result['candidates'][0]['quantity'],0)
+        self.assertIsNone(result['plans'][0]['draft'])
 
     def test_current_snapshot_preserves_quantity_and_does_not_change_inputs(self):
         before = {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()}

@@ -31,7 +31,7 @@ def classify(code: str, *, ticker: str | None = None, scope='ticker') -> dict[st
         category, worker, needed = 'C', 'approved_manual_account_record', 'Dated complete current holdings and account-wide pending/partial orders (remaining quantity, price/stop, TIF and status), plus available execution funds and settlement/buying-power confirmation.'
         if code == 'earlier_instruction_execution_unreconciled':
             needed = 'A complete owner-recorded holdings/cash snapshot and sourced complete account-wide order observation recorded after the earlier email; an assumed fill or a later status email cannot supply this evidence.'
-    elif any(w in code for w in ('strategy', 'adoption', 'experiment', 'policy_invalid', 'policy_changed', 'contract', 'liquidity', 'spread', 'halt', 'fresh_quote')):
+    elif any(w in code for w in ('strategy', 'adoption', 'experiment', 'policy_invalid', 'policy_changed', 'contract', 'liquidity', 'spread', 'halt', 'fresh_quote', 'canonical_market_admission')):
         category, worker, needed = 'E', 'strategy_or_execution_gate', 'The exact reviewed strategy/adoption or current execution evidence identified by this code; no gate bypass.'
     elif any(w in code for w in ('unreconciled', 'source_conflict', 'identity_conflict')):
         category, worker, needed = 'B', 'official_evidence', 'Matching dated SEC primary identity and acceptance-time evidence that passes the existing immutable-index reconciliation; retained conflicts cannot be overwritten.'

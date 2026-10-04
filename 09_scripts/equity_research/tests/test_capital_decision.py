@@ -91,6 +91,26 @@ class CapitalDecisionTests(unittest.TestCase):
         self.d['eligible_new_position_review_candidates']=[];self.d['watch_candidates']=[]
         self.d['research_opportunities']={'priority_queue':[{'ticker':'MXL','state':'research_supported','blockers':['company_specific_valuation']}]}
         r=self.build()['decisions'][0];self.assertEqual(r['decision'],'BLOCKED');self.assertEqual(r['shares'],0)
+    def test_core_addition_expires_at_earlier_maintained_review_without_invented_stop(self):
+        self._session_decision()
+        self.d['account']['cash_basis']='owner_recorded';self.v['open_orders']['cash_confirmed']=True
+        self.d['market_gate']['bar_state']='complete_close'
+        self.d['eligible_new_position_review_candidates']=['SPY']
+        self.d['held_positions']=[dict(ticker='SPY',current_shares=1,current_price=50,asset_role='core_allocation')]
+        self.d['watch_candidates']=[dict(ticker='SPY',action='core_allocation_tranche_review',suggested_whole_shares=1,maximum_review_price=50,human_confirmation_required='yes',valuation_applicability='not_applicable_broad_market_etf',stability_distinct_closes=2,required_distinct_closes=2)]
+        self.d['plan_continuity']={'plans':[dict(ticker='SPY',status='maintained',role='broad_core',action='hold',review_at='2026-09-23T10:00:00-04:00',reason='Existing reviewed core rationale',purpose={'exit_rule':'Reassess allocation and material fund evidence; no tactical price stop.'})]}
+        c=self.build();r=c['decisions'][0];p=r['order_draft']
+        self.assertEqual(r['decision'],'ACTIONABLE_ADD');self.assertEqual(p['entry_window']['ends_at'],'2026-09-23T10:00:00-04:00')
+        self.assertIsNone(p['invalidation_price']);self.assertEqual(p['planned_total_loss'],50)
+        with self.assertRaisesRegex(ValueError,'expired'):engine.validate(c,current=self.v['current'].replace(hour=10,minute=0))
+        self.d['plan_continuity']['plans'][0]['review_at']='2026-09-23T09:25:00-04:00'
+        self.assertEqual(self.build()['decisions'][0]['shares'],0) # no usable regular-session window
+    def test_final_decisions_include_supported_candidates_beyond_bounded_work_priority(self):
+        self.d['research_opportunities']={'priority_queue':[], 'decision_candidates':[{'ticker':'OUTSIDE','state':'research_supported','blockers':['company_specific_valuation','canonical_market_admission']},{'ticker':'QUEUED','state':'queued','blockers':[]}]}
+        rows={r['ticker']:r for r in self.build()['decisions']}
+        self.assertEqual(rows['OUTSIDE']['decision'],'BLOCKED');self.assertEqual(rows['OUTSIDE']['shares'],0)
+        self.assertEqual({d['category'] for d in rows['OUTSIDE']['dependencies']},{'D','E'})
+        self.assertEqual(rows['QUEUED']['decision'],'BLOCKED');self.assertIn('maintained_company_research_incomplete',rows['QUEUED']['blockers'])
     def test_classifications_not_all_research_is_owner_work(self):
         for code,kind in [('debt_latest','A'),('cash_latest','A'),('planning_cash_unverified','C'),('order_inventory_unverified_cannot_bound_buy_commitments','C'),('sec_acceptance_timestamp_unreconciled','B'),('company_specific_valuation','D'),('strategy_not_production_adopted','E')]:
             self.assertEqual(classify(code)['category'],kind)

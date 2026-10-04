@@ -31,6 +31,10 @@ INPUTS = {
  '03_source_data/equity_research/market_data_snapshot.csv',
  '07_automation/email_delivery/daily_delivery_ledger.csv',
  '05_risk_and_positions/manual_account_snapshot.local.json',
+ '04_research/company_research/opportunities.local/store.json',
+ '03_source_data/equity_research/daily_fundamentals.csv',
+ '03_source_data/equity_research/daily_evidence_status.json',
+ '03_source_data/equity_research/sec_filing_artifact_index.json',
 }
 # These are observed failures of reviewed numerical conditions, not absent facts.
 CONDITION_FAILURES = {'score','confidence','upside','reward_to_risk','entry','portfolio_fit','whole_share_target_gap',
@@ -75,7 +79,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     held={r['ticker']:r for r in decision.get('held_positions',[])}
     watch={r['ticker']:r for r in decision.get('watch_candidates',[])}
     plans={r['ticker']:r for r in decision.get('plan_continuity',{}).get('plans',[])}
-    opportunities={r['ticker']:r for r in decision.get('research_opportunities',{}).get('priority_queue',[]) if r.get('ticker')}
+    opportunity_context=decision.get('research_opportunities',{})
+    opportunities={r['ticker']:r for r in opportunity_context.get('decision_candidates',opportunity_context.get('priority_queue',[])) if r.get('ticker')}
     gates=decision.get('workflow_integrity',{})
     global_codes=list(gates.get('global_blockers', gates.get('blockers',[])))
     from delivery_followthrough import continuation_requires_reconciliation
@@ -187,7 +192,14 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     before_qty=num(h.get('current_shares',0)); before_value=before_qty*num(h.get('current_price',entry))
                     qty=int(draft['quantity']); session=draft['session_date']
                     close=regular_close(session)
-                    if current>=close or qty<=0 or entry<=0:raise ValueError('draft_invalid_or_expired')
+                    deadlines=[close]
+                    if core:deadlines.append(datetime.fromisoformat(draft['review_at']))
+                    if h:
+                        deadlines.extend(datetime.fromisoformat(p[k]) for k in ('review_at','valid_until','time_exit_at') if p.get(k))
+                    if any(t.tzinfo is None for t in deadlines):raise ValueError('draft_review_clock_invalid')
+                    valid_end=min(deadlines)
+                    starts_at=datetime.fromisoformat(session+'T09:30:00').replace(tzinfo=current.tzinfo)
+                    if current>=valid_end or valid_end<=starts_at or qty<=0 or entry<=0:raise ValueError('draft_invalid_or_expired')
                     if not core and (draft.get('hypothetical_quantity') or draft.get('time_in_force')!='DAY'):raise ValueError('hypothetical_or_undated_draft')
                     cap=num(cfg['core_target_pct'] if core else min(cfg['single_stock_hard_cap_pct'],decision['tactical_review']['risk_policy']['max_position_pct']))
                     limit_value=total*cap/100-before_value
@@ -203,7 +215,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         if not core:numeric_reasons.append(f'Planned loss per share ${per_loss:.2f}; remaining combined risk ${risk_remaining:.2f}; per-trade budget ${num(draft["risk_limit_usd"]):.2f}.')
                     else:
                         amount=entry*qty; loss=per_loss*qty
-                        window={'session':session,'starts_at':datetime.fromisoformat(session+'T09:30:00').replace(tzinfo=current.tzinfo).isoformat(),'ends_at':close.isoformat()}
+                        window={'session':session,'starts_at':starts_at.isoformat(),'ends_at':valid_end.isoformat()}
                         proposed=dict(side='buy',entry_order_type='LIMIT',entry_limit=money(entry),entry_window=window,time_in_force='DAY',
                           invalidation_price=None if core else draft['stop_price'],planned_loss_per_share=money(per_loss),planned_total_loss=money(loss),
                           planned_account_risk_pct=round(float(loss/total*100),4),risk_model='unlevered_principal_exposure_no_price_stop' if core else 'observed_price_invalidation',
@@ -215,7 +227,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                           cancel_conditions=['Skip if current holdings, complete order inventory or execution funds differ from the recorded inputs.',
                           'Skip if the current executable quote or estimated all-in cost exceeds the limit/budget; no chasing.',
                           'Skip on material adverse evidence or any failed strategy/data/risk gate.',
-                          'Do not use after '+close.isoformat()+'; DAY expiry never renews this draft.',
+                          'Do not use after '+valid_end.isoformat()+'; DAY expiry never renews this draft.',
                           'Entry requires a live quote/spread/market-status check by the owner; no real-time evidence is claimed.'],
                           trigger_rule='Only while quote is at or below the limit and all dated core conditions hold.' if core else draft['entry_rule'],
                           cost_assumption='Commission and regulatory/execution costs not independently observed here; estimated notional excludes fees. Any positive cost must fit confirmed funds and risk budget.',
@@ -234,7 +246,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                 missing=[c for c in issues if c not in CONDITION_FAILURES]
                 row.update(decision='BLOCKED' if missing else 'NO_ACTION',shares=0,estimated_notional=0,order_draft=None,blockers=sorted(set(issues)) if missing else [],reasons=numeric_reasons or (['No complete admissible capital draft under the existing rules.'] if missing else ['Observed conditions do not permit a new position: '+', '.join(sorted(set(issues)))]))
         elif not h:
-            observed=sorted(set(local+entry_codes)-set(global_codes)) or codes(opportunities.get(ticker,{}).get('blockers')) or ['not_in_canonical_eligible_set']
+            observed=sorted(set(local+entry_codes)-set(global_codes)) or codes(opportunities.get(ticker,{}).get('blockers')) or (['maintained_company_research_incomplete'] if ticker in opportunities else ['not_in_canonical_eligible_set'])
             # A supported research opportunity still needs its investment case; never promote it here.
             missing=[c for c in observed if c not in CONDITION_FAILURES]
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
