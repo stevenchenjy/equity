@@ -181,6 +181,7 @@ to `LocalRuntime`. Phase5R Python runtime paths derive `ROOT` from the checked
 out script location and therefore work in both authoring and runtime clones.
 Older `dailybrief`, `weeklyconviction`, `weeklycatchup`, and standalone
 `llmshadow` plist templates are under
-`11_archive/phase5r_retired_20260831/07_automation/scheduler/`. Those jobs are
+the recovery tag, at original paths listed in
+`11_archive/phase5r_retired_20260831/recovery_manifest.csv`. Those jobs are
 retired/uninstalled, are rejected by the active status guards, and are not
 production entrypoints.

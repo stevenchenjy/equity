@@ -7,6 +7,8 @@ Display names and report branding come from [the shared display configuration](0
 
 ## Repository Paths
 
+See [the repository layout contract](00_project_control/repository_layout.md) for the numbered directory map, runtime namespaces, path owners and archive recovery.
+
 The iCloud authoring/reference path is:
 
 ```text
@@ -69,14 +71,14 @@ The active workflow is `daily_decision` and the only active email pipeline is
 
 ## Long-horizon workflow upgrade (2026-09-20)
 
-The implementation plan is [the four-standard improvement plan](00_project_control/workflow_improvement_plan_20260920.md).
+The historical implementation plan is [the four-standard improvement plan](11_archive/project_control_history/workflow_improvement_plan_20260920.md). Current guidance is indexed in [current documents](00_project_control/current_documents.md).
 Low technical scores request research instead of independently proposing a full exit. A sourced, reviewed thesis break or the existing concentration rules governs action review. An unassessed material filing receives neutral catalyst credit. Candidate stability is tracked per ticker and counts distinct valid closes; ordinary quote updates do not reset it.
 
 The daily pipeline builds a fundamentals-led research queue alongside the existing price-based queue, source-bound company research, explicit 3-/5-year equity cash-flow sensitivities and 2x/3x hurdle arithmetic. Conditional sensitivities are not forecasts or canonical price targets. Unresolved business evidence is labeled pending research.
 
 Market context changes the confirmation pace for new-capital research: two confirmed broad stress closes require three distinct confirmation closes; three normal closes restore the usual two. It never changes approved caps, reserves or strategic targets, and does not independently generate exits.
 
-Official issuer news uses the feeds in [the configured source manifest](01_policies/official_news_sources.json) and the check times in [the serialized news scheduler](09_scripts/equity_research/news_schedule.py). These sources describe bounded news coverage, not the research or trading universe; [the runtime coverage status](03_source_data/equity_research/official_news_status.local.json) records the actual checks and failures. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
+Official issuer news uses the feeds in [the configured source manifest](01_policies/official_news_sources.json) and the check times in [the serialized news scheduler](09_scripts/equity_research/news_schedule.py). These sources describe bounded news coverage, not the research or trading universe; [the runtime coverage status](/Users/messssi/LocalRuntime/equity/03_source_data/equity_research/official_news_status.local.json) records the actual checks and failures. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
 
 Current additional reports in the runtime clone:
 

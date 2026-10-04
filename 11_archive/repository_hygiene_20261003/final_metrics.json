@@ -1,0 +1,16 @@
+{
+  "baseline_commit": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+  "before_archive_files": 556,
+  "before_archive_bytes": 6833981,
+  "after_archive_files": 52,
+  "after_archive_bytes": 598619,
+  "archive_file_reduction_pct": 90.65,
+  "archive_byte_reduction_pct": 91.24,
+  "before_repository_tracked_files": 942,
+  "after_candidate_source_files": 436,
+  "removed_duplicate_files": 520,
+  "removed_duplicate_bytes": 6662389,
+  "includes_new_manifests_and_audit": true,
+  "source_changes_committed": false,
+  "production_deployed": false
+}

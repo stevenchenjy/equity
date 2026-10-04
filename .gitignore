@@ -18,6 +18,7 @@ graphify-out/cache/
 graphify-out/20??-??-??/
 graphify-out/graph.html
 graphify-out/.rebuild.lock
+graphify-out/reflections/
 
 # Durable research attention, primary receipts, assessments and forward studies.
 04_research/company_research/opportunities.local/
@@ -76,7 +77,7 @@ graphify-out/.rebuild.lock
 00_project_control/run_logs/shadow_llm.lock
 00_project_control/run_logs/shadow_llm.run.lock
 
-# Phase 5R active-runtime artifacts. These files remain on the authoritative
+# Active workflow runtime artifacts. These files remain on the authoritative
 # runtime machine, but scheduled refreshes must not dirty the source checkout.
 # Immutable/versioned SEC acceptance extensions, their admission audit, the
 # official evidence ledger, and curated Graphify outputs intentionally remain
@@ -108,7 +109,6 @@ graphify-out/.rebuild.lock
 04_research/company_research/daily_decision.md
 04_research/company_research/daily_verification_report.md
 04_research/company_research/*.csv
-04_research/company_research/*.md
 04_research/company_research/*.md
 
 05_risk_and_positions/*.csv

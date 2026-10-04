@@ -4,7 +4,7 @@
 
 ## “5R”的来源与结论
 
-历史 [Phase 0C reframe plan](../11_archive/phase5r_retired_20260831/00_project_control/audit_reports/phase0c/phase0c_reframe_plan.md) 用 Phase 5R 标识一次实时选股流程重整。后续 B2、C9、C9B 等后缀是交付阶段号。现存材料没有给出 `R` 的正式定义，也没有统一的阶段递增规则。它不表示投资表现、风险等级、当前功能或系统成熟度，因此不再用于现行文件名、目录名或用户展示名。原始历史证据保留原名以便追溯。
+历史 [Phase 0C reframe plan](../11_archive/phase5r_retired_20260831/README.md) 用 Phase 5R 标识一次实时选股流程重整。后续 B2、C9、C9B 等后缀是交付阶段号。现存材料没有给出 `R` 的正式定义，也没有统一的阶段递增规则。它不表示投资表现、风险等级、当前功能或系统成熟度，因此不再用于现行文件名、目录名或用户展示名。原始历史证据保留原名以便追溯。
 
 截图中的 `Phase 5R Equity Bri…` 源于旧本地邮件配置的 `sender_name = Phase 5R Equity Brief`；省略号是界面截断。2026-09-20 已将实际发件人、主题和当前报告显示名统一到 [equity_display_names.json](../01_policies/equity_display_names.json)。旧配置字段仅用于兼容校验，不再决定显示名。
 
@@ -20,7 +20,7 @@
 | 协议版本 | 格式兼容性真正需要时才使用 `v1`、`v2` | `news_events_v1` |
 | 部署版本 | 使用 Git commit，不创建新 Phase 号 | `git rev-parse HEAD` |
 
-当前入口为 [current_documents.md](current_documents.md)、[active_production_config.json](active_production_config.json)、[allowed_active_inputs.csv](allowed_active_inputs.csv) 和 [09_scripts/equity_research](../09_scripts/equity_research/)。完整旧路径到新路径见 [迁移清单](naming_migration_manifest_20260923.csv)。一次性日期审计报告放在 [dated_reviews_20260923](../11_archive/dated_reviews_20260923/)；先前已归档的实现和证据保持原始名称。
+当前入口为 [current_documents.md](current_documents.md)、[active_production_config.json](active_production_config.json)、[allowed_active_inputs.csv](allowed_active_inputs.csv) 和 [09_scripts/equity_research](../09_scripts/equity_research/)。退休材料的原始路径由归档恢复清单映射到 Git tag。完整旧路径到新路径见 [迁移清单](naming_migration_manifest_20260923.csv)。一次性日期审计报告放在 [dated_reviews_20260923](../11_archive/dated_reviews_20260923/)；先前已归档的实现和证据保持原始名称。
 
 ## 兼容边界
 

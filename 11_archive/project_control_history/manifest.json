@@ -1,0 +1,23 @@
+[
+  {
+    "original_path": "00_project_control/workflow_improvement_plan_20260920.md",
+    "archived_path": "11_archive/project_control_history/workflow_improvement_plan_20260920.md",
+    "source_commit": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+    "sha256": "e05d16e2d3a84a07cd745a9aa890d898cd1cffebab677382e50fefcdd82cea7b",
+    "bytes": 3120
+  },
+  {
+    "original_path": "00_project_control/pipeline_repair_20260928.md",
+    "archived_path": "11_archive/project_control_history/pipeline_repair_20260928.md",
+    "source_commit": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+    "sha256": "ae3a9d433f69751beb182d4bb5f20dec6178df8a5db35553c43d88ccd44f6a7b",
+    "bytes": 4080
+  },
+  {
+    "original_path": "00_project_control/collector_timing_20260928.md",
+    "archived_path": "11_archive/project_control_history/collector_timing_20260928.md",
+    "source_commit": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+    "sha256": "2f81648147f745af97808450d31177df1851f960e434e9e29be3b9e9aa758569",
+    "bytes": 4218
+  }
+]

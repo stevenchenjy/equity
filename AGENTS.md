@@ -39,13 +39,35 @@ Codex may prepare research, calculate risk, screen a local watchlist, summarize 
 - Each explicit request to redo/recheck includes standing authorization to send that completed review once to the existing configured recipient, even if the scheduled report is unchanged. Use the audited owner-review delivery mode; never falsify normal send eligibility or claim inbox delivery from SMTP acceptance alone.
 - The owner uses the Chase app. Give dated, broker-appropriate, conditional human-review order drafts with quantities, prices, order type, time in force, invalidation and rationale; do not place orders or treat a draft as execution authorization.
 
-## File Conventions
+## File Conventions and Checkout Boundaries
 
-- Store filing downloads or filing summaries in `02_filings/`.
-- Store manually maintained data in `04_data/`.
-- Store company memos in `03_research/`.
-- Store paper and real trade logs in `06_trading/`.
-- Store weekly and monthly reviews in `07_reviews/`.
+- Author code in `/Users/messssi/Desktop/equity`; production runs from
+  `/Users/messssi/LocalRuntime/equity`. `Documents/equity` holds audit artifacts.
+  Verify branch, HEAD, dirty state and runtime timestamps before using a report.
+- Read `00_project_control/current_documents.md` for current authority and
+  `00_project_control/repository_layout.md` for directory roles and path owners.
+- Active Python source/tests: `09_scripts/equity_research/`; dashboard:
+  `10_dashboard/`. Keep the established wrappers; do not create `03_research/`,
+  `06_trading/`, `07_reviews/` or `05_scripts/` compatibility directories.
+- Tracked configuration: `00_project_control/active_*`, registries and
+  `01_policies/`. Tracked source evidence: `02_filings/issuer_filings/` and
+  admitted ledgers/acceptance extensions in `03_source_data/equity_research/`.
+- Private valuation inputs: `04_data/equity_research/`; maintained dossiers and
+  generated company decisions: `04_research/company_research/`. Account truth
+  and plans: `05_risk_and_positions/`; manual execution evidence:
+  `06_execution_records/`. Examples/templates never establish account truth.
+- Runtime reports: `08_reviews/`; briefs/delivery evidence: `07_automation/`;
+  locks/logs: `00_project_control/run_logs/`. Sparse Git directories are
+  intentional runtime namespaces. Check `.gitignore` before adding artifacts;
+  private history and retained source receipts are not disposable caches.
+- Dated implementation records belong in `11_archive/`; keep maintained policy
+  in the current-document index. Git-recoverable retired code uses a pointer
+  and verified recovery manifest. Never execute archived commands as current.
+- Frozen momentum versions use `01_policies/momentum_implementation_archives.json`
+  and their registered Git commits. Preserve private observations, inputs,
+  hashes and version identity; do not refactor frozen dependencies for aesthetics.
+- Retain Graphify navigation artifacts; query before architecture searches and
+  run `graphify update .` after changes. Do not hand-edit graph relationships.
 
 ## Script Safety
 

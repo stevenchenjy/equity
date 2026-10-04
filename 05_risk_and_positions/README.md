@@ -1,7 +1,7 @@
 # Current portfolio files
 
 Start with [the daily decision](../04_research/company_research/daily_decision.md)
-and [the maintained plans](../08_reviews/current/maintained_plans.local.md).
+and [the maintained plans](/Users/messssi/LocalRuntime/equity/08_reviews/current/maintained_plans.local.md).
 These are research views; no file authorizes an automatic trade.
 
 The root of this folder contains private current inputs: positions, account

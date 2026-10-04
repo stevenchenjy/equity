@@ -7,6 +7,8 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Repository layout and path ownership](repository_layout.md): source/runtime/generated boundaries, archive recovery and retained compatibility paths.
+
 - [Equity Research naming decision and migration plan](equity_naming_policy.md): fixed user-facing name and functional naming rules; display names are centralized; legacy technical identifiers remain compatible.
 - [Active production configuration](active_production_config.json): active paths and deterministic production controls.
 - [Momentum integration decision](momentum_integration_20260927.md), [experimental parameters](../01_policies/momentum_experiment.json) and [position-purpose reassessment](position_purpose_reassessment.md): autonomous research without changing allocation, risk caps or trade authority.
@@ -16,7 +18,6 @@ relevant checks before relying on any linked claim.
 - [Discovery and research attention architecture](research_opportunity_architecture.md): durable first-seen opportunities, bounded official evidence, research assessments and the explicit experiment-to-research boundary; production capital contracts remain separate.
 - [Account-state policy](account_state_policy.md), [action thresholds](action_threshold_policy.md), and [core-allocation policy](core_allocation_policy.md): deterministic account and portfolio constraints.
 - [Delivery policy](daily_delivery_policy.md): notification eligibility is deterministic; SHADOW cannot alter it.
-- [Four-standard workflow improvement plan](workflow_improvement_plan_20260920.md): September 20 implementation scope and acceptance criteria, retained as a historical plan. Its $500 reserve and news times are superseded; verify current policy and configuration.
 - [September 20 implementation and acceptance record](../11_archive/dated_reviews_20260923/workflow_implementation_20260920.md): completed changes, production verification, preserved evidence and remaining research gaps.
 - [Long-horizon research policy](long_horizon_research_policy.md) and [executable sensitivity parameters](../01_policies/long_horizon_research_policy.json): fundamental candidate discovery, company-specific unresolved theses, source-bound observations, equity P/FCF sensitivities, and conditional 2×/3× hurdles. The high-conviction tier remains reserved; arithmetic alone does not establish a company forecast.
 - [Market-regime policy](../01_policies/market_regime_policy.json): bounded new-capital confirmation and research pacing; hard concentration caps, reserve, strategic targets and execution authority do not change.
@@ -49,6 +50,9 @@ in the authoring clone. Missing local reports are not assumed complete.
 - [Momentum experiment reproducibility](momentum_reproducibility.md): frozen experiment versions, source-bound replay and admission checks; historical observation batches do not promote candidates automatically.
 
 ## Historical material — retained, not current instructions
+
+- [Dated project-control records](../11_archive/project_control_history/README.md): September 20 plan, September 28 repair and collector timing evidence; byte-preserved original context.
+- [October 3 repository hygiene diagnosis](../11_archive/repository_hygiene_20261003/README.md): dated inventory and cleanup decisions; not a live status report.
 
 - [September 4 documentation archive](../11_archive/phase5r_docs_superseded_20260904/README.md): pre-SHADOW proposal, August 31 verification/inventory, and obsolete duplicate Phase 0/1 skill packages.
 - [August 31 retirement archive](../11_archive/phase5r_retired_20260831/README.md): prior implementation and experiments, never production inputs.

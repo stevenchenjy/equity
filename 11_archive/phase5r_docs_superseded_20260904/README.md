@@ -26,5 +26,5 @@ account context and were not added to Git. Their old authoring locations now
 point to runtime reports instead of displaying stale balances or FAIL status.
 Current runtime reports were not moved.
 
-Use [current document entrypoints](../../00_project_control/phase5r_current_documents.md)
+Use [current document entrypoints](../../00_project_control/current_documents.md)
 for current policy and runtime state.

@@ -26,7 +26,7 @@ for independent broad screening, without changing B2's evidence contract.
   publication guarantee in the verified documentation. The former 11:15
   boundary was inferred from [S3 day aggregate files](https://massive.com/docs/flat-files/stocks/day-aggregates),
   a different product that is not included in Basic. It is retired as a REST
-  availability assumption; see [collector timing evidence](collector_timing_20260928.md).
+  availability assumption; see [collector timing evidence](../11_archive/project_control_history/collector_timing_20260928.md).
 - The expected date is the most recent U.S. market session on or before the
   previous Eastern calendar day. This is the date requested and validated,
   not a claim that the provider has already published it. Missing expected

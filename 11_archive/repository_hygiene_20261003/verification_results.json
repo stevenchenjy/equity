@@ -1,0 +1,72 @@
+{
+  "recovery_files_verified": 520,
+  "moved_documents_verified": 3,
+  "active_links_checked": 70,
+  "changed_navigation_broken_links": [],
+  "preexisting_other_broken_links": [],
+  "unchanged_code_scheduler_policy_files": 253,
+  "active_state_only_historical_pointer_changed": true,
+  "candidate_decision_code": "data_gate_hold",
+  "candidate_visible_html_chars": 2307,
+  "candidate_plain_text_chars": 2492,
+  "candidate_smtp_config_present": false,
+  "production_deployed": false,
+  "source_authoring_suite": {
+    "tests": 924,
+    "failures": 1,
+    "errors": 6,
+    "causes": [
+      "Missing runtime-only portfolio and email generated outputs in authoring",
+      "Six git archive timeouts against iCloud Git objects"
+    ]
+  },
+  "candidate_active_suite": {
+    "tests": 924,
+    "failures": 0,
+    "errors": 0
+  },
+  "focused_path_scheduler_frozen_suite": {
+    "tests": 83,
+    "failures": 0,
+    "errors": 0
+  },
+  "dashboard_python_suite": {
+    "tests": 54,
+    "failures": 0,
+    "errors": 0
+  },
+  "dashboard_domain_suite": {
+    "tests": 14,
+    "failures": 0
+  },
+  "scheduler_source_safe_checks": "passed",
+  "scheduler_production_safe_checks": "passed",
+  "installed_launchd_status": "passed: two active jobs match templates; legacy jobs unloaded",
+  "no_send_recomposition": "portfolio, price-aware plan, decision and text/HTML composer + artifact check passed in isolated clone; current data gate remains hold",
+  "graphify_code_update": "passed in isolated candidate; direct source attempt stopped on stalled ignored iCloud AST cache read",
+  "graphify_semantic_update": "passed using Graphify extraction subagent, cache and build_merge APIs; nine changed documents; no hand-edited graph relationships",
+  "graph": {
+    "nodes": 3674,
+    "edges": 9800,
+    "communities": 178,
+    "missing_endpoints": 0,
+    "dangling_endpoints": 0,
+    "self_loops": 0
+  },
+  "graphify_warning": "49 source files (chiefly JSON configuration/templates) produced no AST nodes; graph does not claim full config coverage",
+  "semantic_token_metering": "unavailable from agent tool; reported zero placeholders are not zero usage",
+  "graph_display_check": "passed without repair; identities and edges unchanged by display check",
+  "npm_launcher_attempt": "system npm failed to load Homebrew libsimdutf; domain tests passed using installed Node v20.20.2 and local tsx directly",
+  "published": false,
+  "runtime_head": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+  "runtime_fast_forward_rehearsal": {
+    "candidate_commit": "50e8724f1b704170063dc14e8ae5459e1213e7ea",
+    "production_deployed": false,
+    "published": false,
+    "fast_forward_rehearsal_passed": true,
+    "ignored_private_files_preserved": 4134,
+    "new_tracked_ignored_collisions": [],
+    "actual_runtime_head": "5b314a1d43c6dde7691a3d0eec24d011facb8fd7",
+    "candidate_source_files_verified": 436
+  }
+}

@@ -1,0 +1,68 @@
+[
+  {
+    "source": "00_project_control",
+    "target": "05_risk_and_positions",
+    "relation": "references",
+    "count": 1
+  },
+  {
+    "source": "00_project_control",
+    "target": "10_dashboard",
+    "relation": "references",
+    "count": 2
+  },
+  {
+    "source": "01_policies",
+    "target": "00_project_control",
+    "relation": "references",
+    "count": 2
+  },
+  {
+    "source": "08_reviews",
+    "target": "00_project_control",
+    "relation": "references",
+    "count": 1
+  },
+  {
+    "source": "09_scripts",
+    "target": "10_dashboard",
+    "relation": "calls",
+    "count": 1
+  },
+  {
+    "source": "09_scripts",
+    "target": "10_dashboard",
+    "relation": "indirect_call",
+    "count": 9
+  },
+  {
+    "source": "10_dashboard",
+    "target": "09_scripts",
+    "relation": "calls",
+    "count": 11
+  },
+  {
+    "source": "10_dashboard",
+    "target": "09_scripts",
+    "relation": "imports_from",
+    "count": 9
+  },
+  {
+    "source": "10_dashboard",
+    "target": "09_scripts",
+    "relation": "indirect_call",
+    "count": 2
+  },
+  {
+    "source": "README.md",
+    "target": "00_project_control",
+    "relation": "references",
+    "count": 7
+  },
+  {
+    "source": "README.md",
+    "target": "08_reviews",
+    "relation": "references",
+    "count": 1
+  }
+]
