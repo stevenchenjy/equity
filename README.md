@@ -1,6 +1,55 @@
 # Equity Research
 
-Educational research workspace for a small cash-account portfolio currently operating at approximately the $3,000 scale. Current value is never hard-coded: production derives it from manually maintained cash and shares valued at the canonical public close.
+Equity Research is a personal software project for studying public companies
+and keeping financial research accountable. It brings public filings, market
+data, valuation assumptions, risk checks, and a research journal into one
+workflow, with a clear record of the evidence behind a conclusion and the
+questions that still need work.
+
+The system prepares research for human review. It does not connect to a
+brokerage or execute trades. The public repository contains code, policies,
+and test fixtures; private account records and generated operational reports
+are separate from the source.
+
+## What to explore
+
+- **Evidence before conclusions.** Public SEC filings and market observations
+  feed source-bound research. Missing or stale evidence stays visible instead
+  of being filled in with an unsupported conclusion.
+- **Risk and uncertainty.** Scenario calculations, position constraints, and
+  research queues make assumptions explicit. Conditional arithmetic is not a
+  forecast, and a research candidate is not approval to trade.
+- **A reviewable workspace.** The [dashboard](10_dashboard/README.md) combines
+  research, price history, and previewed manual records with retained audit
+  trails. It requires the owner's separate private runtime inputs.
+- **Experiments with clear boundaries.** Momentum observations and
+  [SHADOW LLM evaluation](08_reviews/shadow_llm/README.md) are separate research
+  surfaces. AI is excluded from active production decisions.
+
+For a closer look, start with the [research implementation](09_scripts/equity_research/),
+[dashboard source](10_dashboard/src/), or [repository map](00_project_control/repository_layout.md).
+The [current-document index](00_project_control/current_documents.md) distinguishes
+maintained guidance from historical records.
+
+## Developer entry point
+
+The active Python test runner is:
+
+```bash
+python3 09_scripts/equity_research/run_active_tests.py
+```
+
+Dashboard build and test commands are documented in its
+[package definition](10_dashboard/package.json) and [guide](10_dashboard/README.md).
+This is a custom educational workspace, rather than a ready-to-run public
+investing service. A fresh clone does not contain the private account inputs or
+generated reports needed by the operational dashboard.
+
+<details>
+<summary>Detailed workflow, safety boundaries, and maintainer commands</summary>
+
+Current account value is never hard-coded: the runtime derives it from manually
+maintained cash and shares valued at the canonical public close.
 
 Display names and report branding come from [the shared display configuration](01_policies/equity_display_names.json).
 [The naming policy](00_project_control/equity_naming_policy.md) uses stable functional names; existing `phase5r` paths and schemas remain compatibility identifiers.
@@ -78,7 +127,7 @@ The daily pipeline builds a fundamentals-led research queue alongside the existi
 
 Market context changes the confirmation pace for new-capital research: two confirmed broad stress closes require three distinct confirmation closes; three normal closes restore the usual two. It never changes approved caps, reserves or strategic targets, and does not independently generate exits.
 
-Official issuer news uses the feeds in [the configured source manifest](01_policies/official_news_sources.json) and the check times in [the serialized news scheduler](09_scripts/equity_research/news_schedule.py). These sources describe bounded news coverage, not the research or trading universe; [the runtime coverage status](/Users/messssi/LocalRuntime/equity/03_source_data/equity_research/official_news_status.local.json) records the actual checks and failures. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
+Official issuer news uses the feeds in [the configured source manifest](01_policies/official_news_sources.json) and the check times in [the serialized news scheduler](09_scripts/equity_research/news_schedule.py). These sources describe bounded news coverage, not the research or trading universe; the private runtime coverage file `03_source_data/equity_research/official_news_status.local.json` records the actual checks and failures. This cadence is independent of EOD completion. Public RSS failures preserve prior events while showing failed/stale coverage; no news event is assumed positive. Existing change-only delivery preferences remain in force; a raw announcement alone is not an instruction or a new email entitlement. Runtime status reports transport health, research gaps and news coverage separately.
 
 Current additional reports in the runtime clone:
 
@@ -177,3 +226,7 @@ python3 09_scripts/equity_research/update_manual_account.py --help
 
 Use `--preview` with confirmed inputs and `--apply` only after checking the
 aggregates. This command reads no broker and creates no order.
+
+</details>
+
+More writing and projects: [Steven Chen](https://stevenchenjy.github.io/).
