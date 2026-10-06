@@ -34,6 +34,8 @@ graphify-out/reflections/
 03_source_data/equity_research/market_discovery.local/
 05_risk_and_positions/manual_account_snapshot.local.json
 05_risk_and_positions/manual_snapshots.local/
+/05_risk_and_positions/allocation_policy.local.lock
+/05_risk_and_positions/allocation_policy_migrations.local/
 07_automation/scheduler/maintenance_inhibit.local.json
 06_execution_records/manual_executions.local.csv
 03_source_data/equity_research/sec_ticker_map.local.json

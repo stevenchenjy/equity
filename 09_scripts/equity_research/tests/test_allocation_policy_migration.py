@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -205,6 +206,25 @@ class DurablePolicyMigrationTests(unittest.TestCase):
                    "confirmed_execution_sha256": sha256_file(root / migration.CONFIRMED)}
         (root / migration.MANUAL).write_text(json.dumps(receipt))
         return {rel: (root / rel).read_bytes() for rel in (*values, migration.POSITIONS, migration.CONFIRMED, migration.MANUAL)}
+
+    def test_private_migration_receipt_and_lock_are_ignored_by_repository(self):
+        # These real writer products must not dirty production or expose the
+        # private account audit trail when the next safe sync runs.
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "equity"
+            self.fixture(root, matching_snapshot=False)
+            result = migration.migrate(root, apply=True, request_reference="Owner allocation instruction 2026-10-06")
+            receipt = Path(result["receipt_path"])
+            lock = root / "05_risk_and_positions/allocation_policy.local.lock"
+            for artifact in (receipt, lock):
+                self.assertTrue(artifact.is_file())
+                relative = artifact.resolve().relative_to(root.resolve())
+                with self.subTest(path=str(relative)):
+                    check = subprocess.run(
+                        ["git", "check-ignore", "--quiet", "--", str(relative)],
+                        cwd=SCRIPT_DIR.parents[1], check=False,
+                    )
+                    self.assertEqual(check.returncode, 0)
 
     def test_preview_then_apply_preserves_facts_orders_and_stale_snapshot(self):
         with tempfile.TemporaryDirectory() as folder:
