@@ -72,14 +72,23 @@ def current_manual_snapshot_matches(positions_hash: str, account_hash: str, *, r
         return False
     try:
         receipt = read_json(snapshot_path, {})
-        return (receipt.get("schema_version") == "phase5r_owner_snapshot_v1"
+        matches = (receipt.get("schema_version") == "phase5r_owner_snapshot_v1"
                 and len(positions_hash) == 64 and len(account_hash) == 64
                 and receipt.get("positions_sha256_after") == positions_hash
                 and receipt.get("account_sha256_after") == account_hash
                 and receipt.get("confirmed_execution_sha256") == sha256_file(confirmed_path)
                 and receipt.get("owner_snapshot") is True
                 and bool(receipt.get("source_note")))
-    except (OSError, ValueError, TypeError, AttributeError):
+        if matches and "allocation_policy_rebind" in receipt:
+            from execution_common import allocation_policy_migration_equivalence
+            actual_root = root or snapshot_path.parents[1]
+            current_account = read_json(actual_root / "05_risk_and_positions/current_account_state.local.json", {})
+            return allocation_policy_migration_equivalence(actual_root,
+                expected_account_sha256=receipt["allocation_policy_rebind"]["prior_account_sha256"],
+                current_account_sha256=account_hash, current_positions_sha256=positions_hash,
+                current_account_last_updated=current_account.get("last_updated")) is True
+        return matches
+    except (OSError, ValueError, TypeError, AttributeError, KeyError):
         return False
 
 

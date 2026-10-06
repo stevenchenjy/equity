@@ -98,7 +98,9 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
         if price is None or shares is None or price <= 0 or shares < 0:
             continue
         core = row.get("asset_role") == "core_allocation"
-        target = number(account.get("core_allocation_target_pct" if core else "single_stock_default_cap_pct"))
+        core_floor = core and "core_minimum_pct" in account
+        target = number(account.get("core_minimum_pct" if core_floor else
+                                    "core_allocation_target_pct" if core else "single_stock_default_cap_pct"))
         hard = None if core else number(account.get("single_stock_hard_cap_pct"))
         value = shares * price
         results.append({
@@ -110,12 +112,34 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
             "plus_one_share_weight_pct": round((shares + 1) * price / total * 100, 4),
             "one_share_reduction_fraction_pct": round(min(1, 1 / shares) * 100, 4) if shares else None,
             "target_pct": target, "hard_cap_pct": hard,
-            "above_target_dollars": round(max(0, value - total * target / 100), 2) if target is not None else None,
-            "additional_capital_to_reach_target_without_share_change": round(max(0, value / (target / 100) - total), 2) if target and target > 0 else None,
+            "allocation_status": ("minimum_satisfied" if value + 1e-9 >= total * target / 100 else "below_minimum") if core_floor and target is not None else "reference_only",
+            "remaining_core_minimum_value": round(max(0, total * target / 100 - value), 2) if core_floor and target is not None else None,
+            "above_target_dollars": round(max(0, value - total * target / 100), 2) if target is not None and not core_floor else None,
+            "additional_capital_to_reach_target_without_share_change": round(max(0, value / (target / 100) - total), 2) if target and target > 0 and not core_floor else None,
             "cash_can_fund_one_share": deployable >= price if deployable is not None else None,
             "not_a_trade_plan": True,
         })
     return results
+
+
+def render_whole_share_diagnostics(diagnostics: list[dict[str, Any]]) -> list[str]:
+    lines = ["## 整股约束的研究情景", "",
+        "以下±1股只展示离散粒度，不是建议动作。广基核心最低配置是下限；达到或超过下限不触发减仓，也不要求补入资金摊薄权重。", "",
+        "| 标的 | 当前权重 | 减1股权重 | 加1股权重 | 最低配置/研究参考 | 硬上限 | 配置状态 |",
+        "| --- | --- | --- | --- | --- | --- | --- |"]
+    for row in diagnostics:
+        core_floor = row["target_kind"] == "core_minimum"
+        target = (("≥" if core_floor else "") + f"{row['target_pct']}%") if row['target_pct'] is not None else "按公司证据单独确定"
+        cap = ("不适用（广基核心）" if row["target_kind"].startswith("core_") else
+               f"{row['hard_cap_pct']}%" if row['hard_cap_pct'] is not None else "无固定单股上限（组合约束仍有效）")
+        if core_floor:
+            status = ("最低配置已满足；高于下限不需减仓" if row["allocation_status"] == "minimum_satisfied"
+                      else f"最低配置未满足，市值缺口 ${row['remaining_core_minimum_value']:.2f}；仍需合格计划及整股资金")
+        else:
+            status = f"超出旧参考线 ${row['above_target_dollars']}（仅诊断）" if row['above_target_dollars'] is not None else "按公司专属计划与组合约束评估"
+        lines.append(f"| {row['ticker']} | {row['current_weight_pct']}% | {row['minus_one_share_weight_pct']}% | {row['plus_one_share_weight_pct']}% | {target} | {cap} | {status} |")
+    lines.extend(["", "配置不足、换手、资金贡献和适用风险预算分别评估；本报告不授权交易。", ""])
+    return lines
 
 
 def main() -> int:
@@ -178,14 +202,7 @@ def main() -> int:
         else:
             lines.append("价格隐含预期：输入不足或不适用，未计算；不补零、不编造前瞻假设。")
         lines.extend(["", "下一条验证证据：下次官方定期披露；已知数值变化不能自动证明或推翻全部商业假设。", ""])
-    lines.extend(["## 整股约束的研究情景", "", "以下±1股只展示离散粒度，不是建议动作；核心目标不是自动授权的超额容忍带。", "", "| 标的 | 当前权重 | 减1股权重 | 加1股权重 | 目标/默认线 | 硬上限 | 超过目标金额 |", "| --- | --- | --- | --- | --- | --- | --- |"])
-    for row in diagnostics:
-        target = f"{row['target_pct']}%" if row['target_pct'] is not None else "按公司证据单独确定"
-        cap = ("不适用（广基核心）" if row["target_kind"].startswith("core_") else
-               f"{row['hard_cap_pct']}%" if row['hard_cap_pct'] is not None else "无固定单股上限（组合约束仍有效）")
-        excess = f"${row['above_target_dollars']}" if row['above_target_dollars'] is not None else "不适用"
-        lines.append(f"| {row['ticker']} | {row['current_weight_pct']}% | {row['minus_one_share_weight_pct']}% | {row['plus_one_share_weight_pct']}% | {target} | {cap} | {excess} |")
-    lines.extend(["", "目标偏离、换手、资金贡献与硬风险分别比较。软容忍带或技术择时政策未作修改。", ""])
+    lines.extend(render_whole_share_diagnostics(diagnostics))
     atomic_write_text(REPORT, "\n".join(lines))
     print(f"research_questions_updated=true companies={len(companies)} model_calls=0 canonical_effect=false")
     return 0

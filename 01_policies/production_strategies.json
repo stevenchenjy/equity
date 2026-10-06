@@ -36,7 +36,7 @@
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "93d54041fe8a468da86818da1e4b41011081b9e2781731e5043109301da2f633",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/workflow_integrity.py": "27e5cb634fad41447083450cfcd0d124a29c7e82627cae8a8dd622398044383e",
+        "09_scripts/equity_research/workflow_integrity.py": "9456252f57f14dbef27d07c0ab58d5ef86451f6ce12a53d000db9e02d31f1a83",
         "09_scripts/equity_research/capital_decision.py": "0c8a7b9bc08e520b6297f30bc527a3b87c2cb215b2dcc0f20d5d572e892f1936",
         "09_scripts/equity_research/reviewed_allocation.py": "cc58b564b07d7ee10cbac02e6bad5e61ce67f807e5a597a1cd4c2c9f4f48b885",
         "09_scripts/equity_research/investment_plans.py": "32baa898e62a4485250c1758f0f3bf71dffa81e6e1c112d1add9e801b05538a8",

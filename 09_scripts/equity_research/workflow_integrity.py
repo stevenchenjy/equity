@@ -13,6 +13,7 @@ from earnings_incorporation import read_earnings_incorporation_status
 from thesis_evidence import STORE_REL, evaluate_thesis, evidence_context, stable_news_event, substantive_news, apply_issuer_news_review
 from official_news import read_official_news_status
 from issuer_news_queue import QUEUE_REL, merge_news_context, record_review_states
+from execution_common import allocation_policy_proof_hashes
 
 WORKFLOW_INPUTS = {
     "05_risk_and_positions/investment_plans.local.json", "05_risk_and_positions/current_positions.local.csv",
@@ -336,6 +337,7 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         "strategy_blockers": strategy_blockers,
         "new_capital_allowed": not blockers, "current_instruction_authority": "versioned_plans_reconciled_with_observed_facts",
         "input_hashes": {path: sha256_file(root / path) if (root / path).exists() else None for path in sorted(WORKFLOW_INPUTS)},
+        "allocation_policy_proof_hashes": allocation_policy_proof_hashes(root),
         "historical_baseline_is_current_instruction": False, "automatic_action_allowed": False}
     if retained_new and not blockers and baseline_code == "fundamental_weakening_review" and weakening:
         decision["decision_code"] = "action_review_candidate"
@@ -366,6 +368,8 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         raise ValueError("workflow_integrity_schema_invalid")
     if set(contract.get("input_hashes", {})) != WORKFLOW_INPUTS:
         raise ValueError("workflow_input_bindings_incomplete")
+    if contract.get("allocation_policy_proof_hashes", {}) != allocation_policy_proof_hashes(root):
+        raise ValueError("workflow_allocation_policy_proof_changed_recompose_required")
     for path, digest in contract.get("input_hashes", {}).items():
         candidate = Path(path)
         if candidate.is_absolute() or ".." in candidate.parts:

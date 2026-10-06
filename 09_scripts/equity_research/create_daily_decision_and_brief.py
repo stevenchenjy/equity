@@ -224,7 +224,7 @@ def execution_conflicts() -> list[str]:
     # state.  Older confirmed rows remain historical evidence and are never
     # rewritten merely because a later fill occurred.
     latest = latest_applied_execution(confirmed_rows)
-    if latest and not current_manual_snapshot_matches(current_positions_hash, current_account_hash):
+    if latest and not current_manual_snapshot_matches(current_positions_hash, current_account_hash, root=ROOT):
         latest_id = latest.get("execution_id", "").strip()
         reconciliation = reconciliations.get(latest_id)
         if not reconciliation:
@@ -240,6 +240,7 @@ def execution_conflicts() -> list[str]:
                 current_positions_sha256=current_positions_hash,
                 current_account_sha256=current_account_hash,
                 current_account_last_updated=current_account["last_updated"],
+                root=ROOT,
             ):
                 conflicts.append(f"account_hash_mismatch:{latest_id}")
     return sorted(set(conflicts))

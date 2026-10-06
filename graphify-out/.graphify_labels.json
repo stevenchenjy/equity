@@ -208,5 +208,18 @@
   "206": "Manual execution and human trade approval",
   "207": "Daily decision workflow",
   "208": "Isolated SHADOW_LLM evaluation",
-  "209": "main"
+  "209": "main",
+  "210": "LongHorizonDecisionDisciplineTests",
+  "211": "FrozenRuntimeTests",
+  "212": "iso_now",
+  "213": "MarketCoverageRecompositionTests",
+  "214": "Handler",
+  "215": "build_current_research_baseline.py",
+  "216": "write_acceptance_index",
+  "217": "_event_input_preflight",
+  "218": "OutcomeCoverageTests",
+  "219": "create_capital_allocation_validation.py",
+  "220": "OwnerSnapshotTests",
+  "221": "NamingCompatibilityTests",
+  "222": "event_window_material"
 }

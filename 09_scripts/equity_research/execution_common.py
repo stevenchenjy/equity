@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
 import math
 import os
 import re
@@ -91,6 +92,7 @@ _APPLIED_RECONCILIATION_ACCEPTED_STATES = frozenset(
     {
         "historical_account_hash_match",
         "owner_account_snapshot_after_reconciliation",
+        "verified_allocation_policy_only_migration",
     }
 )
 
@@ -103,12 +105,186 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def allocation_policy_proof_hashes(root: Path) -> dict[str, str | None]:
+    """Bind private policy proofs for publication, never substitute old facts."""
+    from migrate_allocation_policy import ACCOUNT, CONFIG, POSITIONS, MANUAL, CONFIRMED, ORDERS
+    root = root.resolve()
+    directory = root / "05_risk_and_positions/allocation_policy_migrations.local"
+    if not directory.exists() and not directory.is_symlink():
+        return {}
+    if directory.is_symlink() or not directory.is_dir():
+        raise ValueError("allocation_policy_proof_directory_invalid")
+    receipts = sorted(directory.glob("*.json"))
+    if not receipts:
+        return {}
+    paths = {root / rel for rel in (ACCOUNT, CONFIG, POSITIONS, MANUAL, CONFIRMED, ORDERS)} | set(receipts)
+    for receipt in receipts:
+        if receipt.is_symlink() or not receipt.is_file():
+            raise ValueError("allocation_policy_proof_file_invalid")
+        try:
+            bindings = json.loads(receipt.read_bytes()).get("source_bindings", {})
+            for rel in (ACCOUNT, MANUAL):
+                digest = bindings.get(rel)
+                if isinstance(digest, str) and _SHA256_PATTERN.fullmatch(digest):
+                    paths.add(root / "11_archive/portfolio_versions.local" / Path(rel).name / digest)
+        except (ValueError, TypeError, AttributeError):
+            pass  # Malformed bytes remain bound and cannot grant equivalence.
+    result = {}
+    for path in sorted(paths):
+        if path.is_symlink() or path.resolve() != path or (path.exists() and not path.is_file()):
+            raise ValueError("allocation_policy_proof_file_invalid")
+        result[str(path.relative_to(root))] = sha256(path) if path.exists() else None
+    return result
+
+
+def allocation_policy_migration_equivalence(
+    root: Path, *, expected_account_sha256: str, current_account_sha256: str,
+    current_positions_sha256: str, current_account_last_updated: object,
+) -> bool | None:
+    """Prove one applied metadata-only transition; None means no such claim.
+
+    Historical bytes are used only to prove financial identity to a reconciled
+    account. They cannot supply current holdings, orders, cash or freshness.
+    """
+    from active_config import load_active_config, validate_allocation_targets, validate_research_risk_limits
+    from account_common import validate_account_state
+    from migrate_allocation_policy import ACCOUNT, CONFIG, POSITIONS, MANUAL, CONFIRMED, ORDERS, POLICY_FIELDS, _bytes, _sha
+    root = root.resolve()
+    directory = root / "05_risk_and_positions/allocation_policy_migrations.local"
+    expected_archive = root / "11_archive/portfolio_versions.local" / Path(ACCOUNT).name / expected_account_sha256
+    def later_owner_observation() -> bool:
+        from update_manual_account import current_manual_snapshot_matches
+        try:
+            snapshot = json.loads((root / MANUAL).read_bytes())
+            if "allocation_policy_rebind" in snapshot:
+                return False
+            if not current_manual_snapshot_matches(current_positions_sha256, current_account_sha256, root=root):
+                return False
+            if sha256(root / ACCOUNT) != current_account_sha256 or sha256(expected_archive) != expected_account_sha256:
+                return False
+            old = validate_account_state(json.loads(expected_archive.read_bytes()))
+            current = validate_account_state(json.loads((root / ACCOUNT).read_bytes()))
+            old_time = datetime.fromisoformat(old["last_updated"])
+            new_time = datetime.fromisoformat(current["last_updated"])
+            observed_time = datetime.fromisoformat(snapshot["recorded_at"])
+            return (current["last_updated"] == current_account_last_updated
+                    and all(value.tzinfo is not None for value in (old_time, new_time, observed_time))
+                    and old_time < new_time <= observed_time)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
+            return False
+    if later_owner_observation():
+        # A separate, newly bound owner observation has its own authority.
+        # Its ordinary timestamp checks still run in the calling classifier.
+        return None
+    def missing_proof() -> bool | None:
+        # A removed journal must not turn a metadata-only edit into a later
+        # owner observation through the legacy timestamp compatibility path.
+        try:
+            if expected_archive.is_file() and sha256(expected_archive) == expected_account_sha256:
+                old = json.loads(expected_archive.read_bytes())
+                current = json.loads((root / ACCOUNT).read_bytes())
+                if ({k: v for k, v in old.items() if k not in POLICY_FIELDS}
+                        == {k: v for k, v in current.items() if k not in POLICY_FIELDS}):
+                    return False
+        except (OSError, ValueError, TypeError, AttributeError):
+            return False
+        return None
+    if not directory.exists() and not directory.is_symlink():
+        return missing_proof()
+    try:
+        proof_hashes = allocation_policy_proof_hashes(root)
+        candidates = []
+        for path in sorted(directory.glob("*.json")):
+            receipt = json.loads(path.read_bytes())
+            bindings = receipt.get("source_bindings", {})
+            if bindings.get(ACCOUNT) == expected_account_sha256 or receipt.get("account_sha256_after") == current_account_sha256:
+                candidates.append((path, receipt))
+        if not candidates:
+            return missing_proof()
+        if len(candidates) != 1:
+            return False
+        path, receipt = candidates[0]
+        bindings = receipt["source_bindings"]
+        if (receipt.get("schema_version") != "equity_allocation_policy_migration_v1"
+                or receipt.get("status") != "applied" or receipt.get("applied") is not True
+                or any(receipt.get(key) is not False for key in
+                       ("broker_evidence_updated", "financial_facts_changed", "owner_snapshot_created",
+                        "broker_read", "email_sent", "trade_placed"))
+                or not str(receipt.get("request_reference", "")).strip()
+                or set(bindings) != {ACCOUNT, CONFIG, POSITIONS, MANUAL, CONFIRMED, ORDERS}
+                or bindings[ACCOUNT] != expected_account_sha256
+                or receipt.get("account_sha256_after") != current_account_sha256
+                or bindings[POSITIONS] != current_positions_sha256):
+            return False
+        receipt_id = _sha(_bytes({"bindings": bindings, "after": current_account_sha256,
+                                  "request_reference": receipt["request_reference"]}))
+        if path.name != f"{receipt_id}.json":
+            return False
+        # The historical config digest stays in the immutable receipt ID.
+        # Live configuration may change unrelated notification/data settings;
+        # current approved policy fields are compared explicitly below, and
+        # publication separately binds the current config bytes.
+        for rel in (POSITIONS, CONFIRMED, ORDERS):
+            if proof_hashes.get(rel) != bindings[rel]:
+                return False
+        archive = root / "11_archive/portfolio_versions.local" / Path(ACCOUNT).name / expected_account_sha256
+        if (Path(receipt["predecessor_archives"][ACCOUNT]).resolve() != archive
+                or proof_hashes.get(str(archive.relative_to(root))) != expected_account_sha256
+                or proof_hashes.get(ACCOUNT) != current_account_sha256):
+            return False
+        before = validate_account_state(json.loads(archive.read_bytes()))
+        after = validate_account_state(json.loads((root / ACCOUNT).read_bytes()))
+        if (before != receipt["account_before"] or after != receipt["account_after"]
+                or _sha(_bytes(after)) != current_account_sha256
+                or {k: v for k, v in before.items() if k not in POLICY_FIELDS}
+                   != {k: v for k, v in after.items() if k not in POLICY_FIELDS}
+                or after["last_updated"] != current_account_last_updated
+                or receipt.get("observation_time_preserved") != before["last_updated"]):
+            return False
+        policy = load_active_config(root / CONFIG)["account"]
+        targets = validate_allocation_targets(policy)
+        approved = {**validate_research_risk_limits(policy.get("research_risk_limits")),
+                    "core_allocation_target_pct": targets["core_target_pct"],
+                    "core_minimum_pct": targets["core_minimum_pct"],
+                    "active_stock_target_pct": targets["active_target_pct"],
+                    "cash_target_pct": targets["cash_target_pct"]}
+        if {k: after[k] for k in POLICY_FIELDS} != approved:
+            return False
+        changes = {key: {"before": before.get(key), "after": after.get(key)} for key in sorted(POLICY_FIELDS)
+                   if key not in before or before.get(key) != after.get(key)}
+        if not changes or receipt.get("changes") != changes:
+            return False
+        manual_hash = bindings[MANUAL]
+        if manual_hash is None:
+            if proof_hashes.get(MANUAL) is not None or receipt.get("manual_snapshot_rebound") is not False:
+                return False
+        else:
+            manual_archive = root / "11_archive/portfolio_versions.local" / Path(MANUAL).name / manual_hash
+            if (Path(receipt["predecessor_archives"][MANUAL]).resolve() != manual_archive
+                    or proof_hashes.get(str(manual_archive.relative_to(root))) != manual_hash):
+                return False
+            if receipt.get("manual_snapshot_rebound") is True:
+                manual_before = json.loads(manual_archive.read_bytes())
+                manual_after = {**manual_before, "account_sha256_after": current_account_sha256,
+                    "allocation_policy_rebind": {"policy_only": True, "receipt_path": str(path.relative_to(root)),
+                        "prior_account_sha256": expected_account_sha256, "new_account_sha256": current_account_sha256,
+                        "broker_evidence_updated": False}}
+                if json.loads((root / MANUAL).read_bytes()) != manual_after:
+                    return False
+            elif receipt.get("manual_snapshot_rebound") is not False or proof_hashes.get(MANUAL) != manual_hash:
+                return False
+        return True
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return False
+
+
 def applied_reconciliation_current_state_status(
     reconciliation: Mapping[str, object],
     *,
     current_positions_sha256: str,
     current_account_sha256: str,
     current_account_last_updated: object,
+    root: Path | None = None,
 ) -> str:
     """Classify whether a current C9 state remains consistent with one fill.
 
@@ -135,6 +311,14 @@ def applied_reconciliation_current_state_status(
     if current_account_sha256 == expected_account:
         return "historical_account_hash_match"
 
+    if root is not None:
+        equivalent = allocation_policy_migration_equivalence(root,
+            expected_account_sha256=expected_account, current_account_sha256=current_account_sha256,
+            current_positions_sha256=current_positions_sha256,
+            current_account_last_updated=current_account_last_updated)
+        if equivalent is not None:
+            return "verified_allocation_policy_only_migration" if equivalent else "allocation_policy_migration_proof_invalid"
+
     reference_timestamp = str(
         reconciliation.get("reference_price_timestamp", "")
     ).strip()
@@ -158,6 +342,7 @@ def applied_reconciliation_matches_current_state(
     current_positions_sha256: str,
     current_account_sha256: str,
     current_account_last_updated: object,
+    root: Path | None = None,
 ) -> bool:
     """Return the closed accepted subset of reconciliation-state statuses."""
 
@@ -167,6 +352,7 @@ def applied_reconciliation_matches_current_state(
             current_positions_sha256=current_positions_sha256,
             current_account_sha256=current_account_sha256,
             current_account_last_updated=current_account_last_updated,
+            root=root,
         )
         in _APPLIED_RECONCILIATION_ACCEPTED_STATES
     )

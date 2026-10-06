@@ -356,6 +356,7 @@ def main() -> None:
                     current_positions_sha256=sha256(CURRENT_POSITIONS),
                     current_account_sha256=sha256(ACCOUNT_STATE),
                     current_account_last_updated=account["last_updated"],
+                    root=ACCOUNT_STATE.parents[1],
                 )
             ):
                 raise ValueError("canonical shares match shares_after but no verified applied reconciliation exists")

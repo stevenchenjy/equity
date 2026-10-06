@@ -77,6 +77,7 @@ OPTIONAL_ACTIVE_INPUTS = {
 }
 OPTIONAL_ACTIVE_PATTERNS = {
     "04_research/company_research/objective_evidence.local/*.json": "optional_generated_research",
+    "05_risk_and_positions/allocation_policy_migrations.local/*.json": "optional_private_reconciliation_proof",
 }
 # Static source validation must not depend on private/generated runtime state.
 # This is a closed path/kind list, not a registry-supplied freshness exemption.

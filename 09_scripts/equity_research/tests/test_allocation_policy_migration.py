@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+from contextlib import ExitStack
+from datetime import datetime
 import json
 from pathlib import Path
 import subprocess
@@ -18,6 +20,10 @@ from return_objective import return_objective_payload
 import migrate_allocation_policy as migration
 import create_cash_deployment_plan as cash_plan
 from daily_common import sha256_file
+from execution_common import applied_reconciliation_current_state_status, allocation_policy_proof_hashes
+from update_manual_account import current_manual_snapshot_matches
+import create_daily_decision_and_brief as decision_composer
+from workflow_integrity import WORKFLOW_INPUTS, validate_published_workflow, _account_blockers
 
 
 def policy() -> dict:
@@ -35,14 +41,14 @@ def policy() -> dict:
 def recorded_account() -> dict:
     return {
         "account_total_value": 4000, "prior_account_value": 1000,
-        "new_external_cash": 1500, "cash_available": 2468.82,
+        "new_external_cash": 1500, "cash_available": 2375.50,
         "cash_reserved": 0, "investment_horizon_years": 1,
         "cash_needed_within_three_years": "no", "cash_basis": "ledger_estimate",
         "planning_capital_min": 4000, "planning_capital_max": 4000,
         "core_allocation_target_pct": 40, "active_stock_target_pct": 50,
         "active_stock_hard_cap_pct": 50, "cash_target_pct": 10,
         "single_stock_default_cap_pct": 15, "single_stock_hard_cap_pct": 15,
-        "last_updated": "2026-10-01T20:30:05-04:00",
+        "last_updated": "2026-08-12T11:20:00-04:00",
     }
 
 
@@ -275,6 +281,145 @@ class DurablePolicyMigrationTests(unittest.TestCase):
                 migration.migrate(root, apply=True, request_reference="Owner allocation instruction 2026-10-06")
             self.assertEqual((root / migration.ACCOUNT).read_bytes(), before[migration.ACCOUNT])
             self.assertEqual((root / migration.MANUAL).read_bytes(), before[migration.MANUAL])
+
+    def reconciliation_fixture(self, root, *, matching_snapshot=False):
+        self.fixture(root, matching_snapshot=matching_snapshot)
+        confirmed = root / migration.CONFIRMED
+        confirmed.write_text("execution_id,order_status,canonical_state_applied,fill_date\nfill-1,filled,yes,2026-10-01\n")
+        manual = json.loads((root / migration.MANUAL).read_text())
+        manual["confirmed_execution_sha256"] = sha256_file(confirmed)
+        (root / migration.MANUAL).write_text(json.dumps(manual))
+        prior = dict(execution_id="fill-1", canonical_state_applied="yes", reconciliation_status="applied",
+                     positions_sha256_after=sha256_file(root / migration.POSITIONS),
+                     account_sha256_after=sha256_file(root / migration.ACCOUNT),
+                     reference_price_timestamp=recorded_account()["last_updated"])
+        result = migration.migrate(root, apply=True, request_reference="Owner allocation instruction 2026-10-06")
+        return prior, result
+
+    def status(self, root, prior):
+        return applied_reconciliation_current_state_status(prior, root=root,
+            current_positions_sha256=sha256_file(root / migration.POSITIONS),
+            current_account_sha256=sha256_file(root / migration.ACCOUNT),
+            current_account_last_updated=json.loads((root / migration.ACCOUNT).read_bytes())["last_updated"])
+
+    def test_real_migration_remains_reconciled_without_freshness_or_cash_waiver(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "equity"
+            prior, result = self.reconciliation_fixture(root)
+            before_time = recorded_account()["last_updated"]
+            self.assertEqual(self.status(root, prior), "verified_allocation_policy_only_migration")
+            raw = account.validate_account_state(json.loads((root / migration.ACCOUNT).read_bytes()))
+            self.assertEqual(raw["last_updated"], before_time)
+            self.assertIn("planning_cash_unverified", _account_blockers({"account": raw}))
+            reconciliation = root / "06_execution_records/reconciliation_report.csv"
+            reconciliation.write_text(",".join(prior) + "\n" + ",".join(prior.values()) + "\n")
+            with ExitStack() as stack:
+                for field, value in {"ROOT": root, "ACCOUNT_STATE_PATH": root / migration.ACCOUNT,
+                    "CONFIRMED_EXECUTION_PATH": root / migration.CONFIRMED, "RECONCILIATION_PATH": reconciliation,
+                    "PENDING_EXECUTION_PATH": root / "06_execution_records/pending_execution_report.csv"}.items():
+                    stack.enter_context(patch.object(decision_composer, field, value))
+                stack.enter_context(patch.object(decision_composer, "load_account_state", return_value=raw))
+                self.assertEqual(decision_composer.execution_conflicts(), [])
+                pending = root / "06_execution_records/pending_execution_report.csv"
+                pending.write_text("execution_id\nunverified-order\n")
+                self.assertEqual(decision_composer.execution_conflicts(), ["pending_execution:unverified-order"])
+
+    def test_migration_proof_tampering_is_rejected_without_timestamp_fallback(self):
+        for fault in ("cash", "clock", "receipt", "archive", "config", "orders", "confirmed", "manual",
+                      "missing_receipt", "source_binding", "rename_receipt"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder) / "equity"
+                prior, result = self.reconciliation_fixture(root)
+                # Even a legacy timestamp-compatible observation cannot waive
+                # a detected invalid metadata migration proof.
+                prior["reference_price_timestamp"] = "2026-08-11T10:00:00-04:00"
+                receipt_path = Path(result["receipt_path"])
+                if fault in {"cash", "clock"}:
+                    path = root / migration.ACCOUNT
+                    value = json.loads(path.read_text())
+                    value["cash_available" if fault == "cash" else "last_updated"] = 2400 if fault == "cash" else "2026-10-02T10:00:00-04:00"
+                    path.write_text(json.dumps(value))
+                elif fault in {"receipt", "source_binding"}:
+                    value = json.loads(receipt_path.read_text())
+                    if fault == "receipt": value["financial_facts_changed"] = True
+                    else: value["source_bindings"][migration.ORDERS] = "0" * 64
+                    receipt_path.write_text(json.dumps(value))
+                elif fault == "archive":
+                    Path(result["predecessor_archives"][migration.ACCOUNT]).write_text("{}")
+                elif fault == "config":
+                    path = root / migration.CONFIG
+                    value = json.loads(path.read_text())
+                    value["account"].update(core_target_pct=35, core_minimum_pct=35, active_target_pct=65)
+                    value["account"]["research_risk_limits"]["active_stock_hard_cap_pct"] = 65
+                    path.write_text(json.dumps(value))
+                elif fault in {"orders", "confirmed", "manual"}:
+                    rel = {"orders": migration.ORDERS,
+                           "confirmed": migration.CONFIRMED, "manual": migration.MANUAL}[fault]
+                    with (root / rel).open("a") as handle: handle.write("\n")
+                elif fault == "missing_receipt": receipt_path.unlink()
+                else: receipt_path.rename(receipt_path.with_name("wrong-receipt.json"))
+                self.assertEqual(self.status(root, prior), "allocation_policy_migration_proof_invalid")
+
+    def test_unrelated_live_config_change_requires_republication_but_keeps_equivalence(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "equity"
+            prior, result = self.reconciliation_fixture(root)
+            receipt_before = Path(result["receipt_path"]).read_bytes()
+            old_proof = allocation_policy_proof_hashes(root)
+            path = root / migration.CONFIG
+            value = json.loads(path.read_text())
+            value["workflow"]["objective_research_max_tickers"] = 9
+            path.write_text(json.dumps(value))
+            self.assertEqual(self.status(root, prior), "verified_allocation_policy_only_migration")
+            self.assertNotEqual(allocation_policy_proof_hashes(root), old_proof)
+            self.assertEqual(Path(result["receipt_path"]).read_bytes(), receipt_before)
+
+    def test_rebound_manual_snapshot_requires_the_same_valid_policy_proof(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "equity"
+            prior, result = self.reconciliation_fixture(root, matching_snapshot=True)
+            positions = sha256_file(root / migration.POSITIONS)
+            current = sha256_file(root / migration.ACCOUNT)
+            self.assertTrue(current_manual_snapshot_matches(positions, current, root=root))
+            Path(result["receipt_path"]).unlink()
+            self.assertFalse(current_manual_snapshot_matches(positions, current, root=root))
+            self.assertEqual(self.status(root, prior), "allocation_policy_migration_proof_invalid")
+
+    def test_later_real_owner_snapshot_is_not_poisoned_by_historical_policy_receipt(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder) / "equity"
+            prior, result = self.reconciliation_fixture(root)
+            original_receipt = Path(result["receipt_path"]).read_bytes()
+            current = json.loads((root / migration.ACCOUNT).read_bytes())
+            current.update(cash_available=2400, last_updated="2026-10-07T10:00:00-04:00")
+            (root / migration.ACCOUNT).write_text(json.dumps(current))
+            self.assertEqual(self.status(root, prior), "allocation_policy_migration_proof_invalid")
+            snapshot = {"schema_version": "phase5r_owner_snapshot_v1", "owner_snapshot": True,
+                "recorded_at": "2026-10-07T10:00:01-04:00", "source_note": "New owner balance observation",
+                "positions_sha256_after": sha256_file(root / migration.POSITIONS),
+                "account_sha256_after": sha256_file(root / migration.ACCOUNT),
+                "confirmed_execution_sha256": sha256_file(root / migration.CONFIRMED)}
+            (root / migration.MANUAL).write_text(json.dumps(snapshot))
+            self.assertEqual(self.status(root, prior), "owner_account_snapshot_after_reconciliation")
+            self.assertEqual(Path(result["receipt_path"]).read_bytes(), original_receipt)
+
+    def test_published_workflow_binds_receipt_and_archive_bytes(self):
+        for fault in ("receipt", "archive", "missing_receipt", "orders"):
+            with self.subTest(fault=fault), tempfile.TemporaryDirectory() as folder:
+                root = Path(folder) / "equity"
+                prior, result = self.reconciliation_fixture(root)
+                self.assertEqual(self.status(root, prior), "verified_allocation_policy_only_migration")
+                contract = {"schema_version": "equity_workflow_integrity_v1",
+                    "input_hashes": {rel: sha256_file(root / rel) if (root / rel).exists() else None for rel in WORKFLOW_INPUTS},
+                    "allocation_policy_proof_hashes": allocation_policy_proof_hashes(root)}
+                path = Path(result["receipt_path"]) if "receipt" in fault else (
+                    Path(result["predecessor_archives"][migration.ACCOUNT]) if fault == "archive" else root / migration.ORDERS)
+                if fault == "missing_receipt": path.unlink()
+                else:
+                    with path.open("a") as handle: handle.write("\n")
+                with self.assertRaisesRegex(ValueError, "workflow_allocation_policy_proof_changed"):
+                    validate_published_workflow({"workflow_integrity": contract}, root=root,
+                        current=datetime.fromisoformat("2026-10-06T16:00:00-04:00"))
 
 
 if __name__ == "__main__":
