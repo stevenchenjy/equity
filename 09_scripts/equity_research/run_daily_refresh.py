@@ -285,6 +285,24 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     }
     # Keep the research-completion boundary stable while final reporting runs.
     state["research_completed_at"] = state["completed_at"]
+    # A failed official scan still fails research and retains bounded recovery.
+    # A separate, exact zero-order handoff can preserve useful status/held-plan
+    # communication. Never relabel this run as passed or borrow an older draft.
+    if outcome == "degraded_decision_created" and soft_failures == ["official_evidence"] and not hard_failures:
+        from refresh_handoff import make_limited_handoff
+        try:
+            state["limited_status_handoff"] = make_limited_handoff(state, root=ROOT, current=now_et())
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            state["limited_status_handoff_unavailable"] = True
+            # Preserve only our finite validation codes, never a remote source
+            # fragment or filesystem exception in a launchd-readable receipt.
+            known = {"limited_status_decision_not_from_current_refresh", "limited_status_market_not_validated",
+                     "limited_status_missing_failed_evidence_gate", "limited_status_current_contract_required",
+                     "limited_status_evidence_blocker_missing", "limited_status_execution_boundary_invalid",
+                     "limited_status_positive_order_not_allowed", "limited_status_brief_mismatch",
+                     "limited_status_artifact_changed_during_validation"}
+            state["limited_status_handoff_reason"] = (str(exc) if str(exc) in known
+                                                       else "limited_status_source_or_contract_validation_failed")
     atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
     from workflow_evaluation import record_refresh
     record_refresh(state)
@@ -323,9 +341,8 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         f"hard_failures={','.join(hard_failures) or 'none'} "
         f"soft_failures={','.join(soft_failures) or 'none'}"
     )
-    # A degraded decision remains a useful fail-closed research artifact, but
-    # it is not scheduler success and can never authorize email. Returning
-    # nonzero lets bounded later slots recover transient provider failures.
+    # Limited-status delivery is independently validated; this is still not
+    # scheduler research success. Retain bounded retries and failed-stage facts.
     return 0 if outcome == "passed" else 1
 
 

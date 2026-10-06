@@ -13,8 +13,11 @@ net total-return objective of `12%–15%`.
 - A `15%–20%` calendar-year return is an excellent-year outcome, not a result
   that must be repeated every year.
 - Monthly returns may be reported, but they are not monthly hurdles.
-- The objective cannot override evidence, concentration, cash-reserve,
-  freshness, thesis-break, or manual-execution gates.
+- The objective cannot override evidence, the current owner-approved aggregate
+  allocation and strategy-specific risk controls, actual cash availability,
+  freshness, thesis-break, or manual-execution gates. Allocation follows
+  [the current owner policy](allocation_policy.md); there is no fixed name cap
+  or mandatory internal cash reserve.
 - No report, simulation, or research classification may describe the objective
   as guaranteed.
 

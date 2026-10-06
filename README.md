@@ -31,6 +31,12 @@ For a closer look, start with the [research implementation](09_scripts/equity_re
 The [current-document index](00_project_control/current_documents.md) distinguishes
 maintained guidance from historical records.
 
+The [current owner-approved allocation](00_project_control/allocation_policy.md)
+uses a broad-core minimum of 30%, an individual-stock target and aggregate
+limit of 70%, and no fixed single-stock cap or cash reserve. Concentrated
+positions require company-specific research. Cash-account and strategy-specific
+risk controls and human-only execution remain.
+
 ## Developer entry point
 
 The active Python test runner is:
@@ -111,9 +117,10 @@ The active workflow is `daily_decision` and the only active email pipeline is
   snapshots are tracked from a subsequent observed close over 1, 5, 20, and
   60 market sessions against SPY and QQQ; overlapping rows are not independent
   samples and price returns are not dividend-adjusted total returns.
-- A held stock above the default single-stock cap can open a human trim review
-  only when complete valuation is adverse on all three scenarios, expected
-  upside is nonpositive, and reward/risk is below one. This never executes.
+- A large single-stock weight alone does not open a name-cap trim review: the
+  fixed name cap is disabled. Sourced adverse valuation, thesis invalidation or
+  applicable aggregate/strategy risk can still support a reduction review.
+  This never executes.
 - HOLD, WATCH, and NO NEW POSITION need no manual confirmation. Any proposed
   portfolio change remains research for independent human review and can never
   execute automatically.
@@ -121,7 +128,7 @@ The active workflow is `daily_decision` and the only active email pipeline is
 ## Long-horizon workflow upgrade (2026-09-20)
 
 The historical implementation plan is [the four-standard improvement plan](11_archive/project_control_history/workflow_improvement_plan_20260920.md). Current guidance is indexed in [current documents](00_project_control/current_documents.md).
-Low technical scores request research instead of independently proposing a full exit. A sourced, reviewed thesis break or the existing concentration rules governs action review. An unassessed material filing receives neutral catalyst credit. Candidate stability is tracked per ticker and counts distinct valid closes; ordinary quote updates do not reset it.
+Low technical scores request research instead of independently proposing a full exit. A sourced, reviewed thesis break or the current aggregate/strategy-specific risk rules governs action review. An unassessed material filing receives neutral catalyst credit. Candidate stability is tracked per ticker and counts distinct valid closes; ordinary quote updates do not reset it.
 
 The daily pipeline builds a fundamentals-led research queue alongside the existing price-based queue, source-bound company research, explicit 3-/5-year equity cash-flow sensitivities and 2x/3x hurdle arithmetic. Conditional sensitivities are not forecasts or canonical price targets. Unresolved business evidence is labeled pending research.
 

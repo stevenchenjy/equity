@@ -259,6 +259,8 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
         if not isinstance(row["setup_status"], str) or row["setup_status"] not in {"active", "failed", "expired", "unverified"}:
             raise ValueError("plan_setup_status_invalid")
         _required_text(row, ("setup_status_reason",), "plan_setup_status")
+    from reviewed_allocation import validate_allocation
+    validate_allocation(row)
     _validate_purpose(row)
     _validate_reassessment(row)
 
@@ -468,7 +470,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         linked = next((x for x in observations if str(x.get("order_id", x.get("id", ""))) == str(row.get("broker_order_id", "__none__"))), None)
         status = "maintained"
         reasons: list[str] = []
-        if not quantity:
+        if not quantity and not (row['expected_shares'] == 0 and (row.get('reviewed_allocation') or row.get('strategy_horizon') == 'broad_core')):
             # Absence of a holding alone never proves an execution.
             try:
                 observed_at = stamp(open_orders.get("as_of"))
@@ -514,7 +516,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
             orders_fresh = False
         if not orders_fresh:
             reasons.append("order_snapshot_requires_recheck")
-        if row["action"] != "hold":
+        if row["action"] not in {"hold", "watch"} or (row["action"] == "watch" and not row.get("reviewed_allocation")):
             reasons.append("fresh_quote_and_available_shares_required")
         if row["role"] == "tactical":
             reasons.extend(base["strategy_blockers"].get("tactical", []))
@@ -535,7 +537,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
             instruction += "；仅为未提交的研究计划，先核验报价、订单和剩余股数。"
         if row.get("time_exit_at") and quantity:
             instruction += " 原定时间退出/复核：" + row["time_exit_at"] + "。"
-        effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources", "strategy_horizon", "purpose", "setup_status", "setup_status_reason", "reassessment")}
+        effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "recorded_at", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources", "strategy_horizon", "purpose", "setup_status", "setup_status_reason", "reassessment", "reviewed_allocation", "valid_until")}
         effective.update(status=status, action=row["action"] if status == "maintained" else "reconcile_plan",
                          instruction=instruction, historical_instruction=row["instruction"],
                          current_shares=quantity, eligible_quantity=0, proposed_change_shares=row["proposed_change_shares"],

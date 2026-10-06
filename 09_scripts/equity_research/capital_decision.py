@@ -38,7 +38,7 @@ INPUTS = {
 }
 # These are observed failures of reviewed numerical conditions, not absent facts.
 CONDITION_FAILURES = {'score','confidence','upside','reward_to_risk','entry','portfolio_fit','whole_share_target_gap',
- 'canonical_buy_not_eligible','observed_target_has_no_upside','reward_to_risk_below_minimum','entry_above_canonical_maximum',
+ 'shared_capital_or_allocation_budget_below_one_share','canonical_buy_not_eligible','observed_target_has_no_upside','reward_to_risk_below_minimum','entry_above_canonical_maximum',
  'cash_or_risk_budget_below_one_share','cash_concentration_or_risk_budget_below_one_share','not_in_canonical_eligible_set'}
 
 
@@ -170,20 +170,46 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                 row['blockers']=sorted(set(exit_issues))
             elif status != 'maintained' or local:
                 row.update(decision='BLOCKED',blockers=sorted(set(local or ['current_held_plan_reassessment_required'])),
-                           reasons=['No fresh bounded holding instruction; the scheduled analyst must reassess the original purpose. Expiry does not prove a sale.'])
+                           reasons=([p.get('instruction') or 'The current maintained holding plan remains recorded.', 'Current verification checks remain; the purpose review is complete.'] if status == 'maintained' else ['No fresh bounded holding instruction; the scheduled analyst must reassess the original purpose. Expiry does not prove a sale.']),
+                           thesis_summary=p.get('reason',''), review_at=p.get('review_at'))
             else:
                 row.update(decision='HOLD',reasons=[p.get('instruction') or 'No supported change in the existing position purpose.'])
         if ticker in eligible:
             core=w.get('valuation_applicability')=='not_applicable_broad_market_etf' or h.get('asset_role')=='core_allocation'
-            adapter='core_tranche' if core else 'reviewed_tactical'
+            growth=not core and p.get('role')=='long_term_growth'
+            adapter='core_tranche' if core else ('reviewed_company' if growth else 'reviewed_tactical')
             strategy,errors=select(root,adapter,strategies)
             issues=global_codes+local+entry_codes+errors
             numeric_reasons=[]
             if ticker in order_review['active_tickers']:issues.append('existing_order_requires_reconciliation')
-            if h and not core and p.get('role')!='tactical':issues.append('position_purpose_change_requires_recorded_reassessment')
+            if h and not core and not growth and p.get('role')!='tactical':issues.append('position_purpose_change_requires_recorded_reassessment')
             if not core and not reviewed_candidate_ready(decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{}))):
                 issues.append('maintained_company_research_incomplete')
             draft=eligible_core_tranche(decision,w) if core else tactical.get(ticker)
+            if growth:
+                draft=None
+                try:
+                    from reviewed_allocation import validate_allocation
+                    validate_allocation(p)
+                    allocation=p['reviewed_allocation']
+                    if p.get('status')!='maintained' or p.get('strategy_horizon')!='long_term_growth':
+                        raise ValueError('growth_plan_not_current')
+                    proposed_entry=num(allocation['maximum_entry_price'])
+                    canonical_max=num(w['maximum_review_price'])
+                    if canonical_max <= 0 or proposed_entry > canonical_max:
+                        issues.append('entry_above_canonical_maximum')
+                    reward=num(allocation['reassessment_price'])-proposed_entry
+                    loss=proposed_entry-num(allocation['invalidation_price'])
+                    minimum_rr=min(num(band['minimum_reward_to_risk']) for band in cfg['candidate_sizing_tiers'])
+                    if loss <= 0 or reward/loss < minimum_rr:
+                        issues.append('reward_to_risk_below_minimum')
+                    draft=dict(eligible=True,entry_price=allocation['maximum_entry_price'],stop_price=allocation['invalidation_price'],
+                        target_price=allocation['reassessment_price'],quantity=int(w['suggested_whole_shares']),
+                        session_date=current.date().isoformat(),review_at=p['review_at'],time_in_force='DAY',
+                        entry_rule=p['purpose']['entry_validity'],invalidation_rule=p['purpose']['failure_condition'],
+                        time_exit_session=None,hypothetical_quantity=0)
+                except (KeyError,TypeError,ValueError):
+                    issues.append('source_bound_allocation_review_required')
             if not draft or (not core and draft.get('eligible') is not True):
                 issues+=codes((draft or {}).get('blockers')) or ['strategy_entry_and_risk_contract_unavailable']
             if not issues:
@@ -193,7 +219,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     qty=int(draft['quantity']); session=draft['session_date']
                     close=regular_close(session)
                     deadlines=[close]
-                    if core:deadlines.append(datetime.fromisoformat(draft['review_at']))
+                    if core or growth:deadlines.append(datetime.fromisoformat(draft['review_at']))
+                    if growth and p.get('valid_until'):deadlines.append(datetime.fromisoformat(p['valid_until']))
                     if h:
                         deadlines.extend(datetime.fromisoformat(p[k]) for k in ('review_at','valid_until','time_exit_at') if p.get(k))
                     if any(t.tzinfo is None for t in deadlines):raise ValueError('draft_review_clock_invalid')
@@ -201,26 +228,47 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     starts_at=datetime.fromisoformat(session+'T09:30:00').replace(tzinfo=current.tzinfo)
                     if current>=valid_end or valid_end<=starts_at or qty<=0 or entry<=0:raise ValueError('draft_invalid_or_expired')
                     if not core and (draft.get('hypothetical_quantity') or draft.get('time_in_force')!='DAY'):raise ValueError('hypothetical_or_undated_draft')
-                    cap=num(cfg['core_target_pct'] if core else min(cfg['single_stock_hard_cap_pct'],decision['tactical_review']['risk_policy']['max_position_pct']))
-                    limit_value=total*cap/100-before_value
-                    role_room=total*num(cfg['core_target_pct'] if core else cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-(core_value if core else active_value)
+                    # Core is a minimum; permit the whole share that crosses the floor.
+                    if core:
+                        gap=max(Decimal(0),total*num(cfg.get('core_minimum_pct',cfg['core_target_pct']))/100-core_value)
+                        from decimal import ROUND_CEILING
+                        core_shares=int((gap/entry).to_integral_value(rounding=ROUND_CEILING if cfg.get('core_minimum_pct') is not None else ROUND_FLOOR))
+                        limit_value=role_room=entry*core_shares
+                    else:
+                        cap=cfg.get('single_stock_hard_cap_pct')
+                        limit_value=max(Decimal(0),total*num(cap)/100-before_value) if cap is not None else cash_remaining
+                        if growth:
+                            limit_value=min(limit_value,max(Decimal(0),total*num(p['reviewed_allocation']['target_position_pct'])/100-before_value))
+                        else:
+                            limit_value=min(limit_value,max(Decimal(0),total*num(decision['tactical_review']['risk_policy']['max_position_pct'])/100-before_value))
+                        role_room=total*num(cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-active_value
+                        core_gap=max(Decimal(0),total*num(cfg.get('core_minimum_pct',0))/100-core_value)
+                        if core_gap:
+                            core_row=held.get('SPY') or watch.get('SPY') or {}
+                            core_price=num(core_row.get('current_price',0))
+                            if core_price > 0:
+                                from decimal import ROUND_CEILING
+                                core_gap=(core_gap/core_price).to_integral_value(rounding=ROUND_CEILING)*core_price
+                            elif growth:
+                                raise ValueError('core_floor_price_unverified')
+                        role_room=min(role_room,max(Decimal(0),cash_remaining-core_gap))
                     per_loss=entry if core else entry-num(draft['stop_price'])
                     if per_loss<=0:raise ValueError('price_invalidation_invalid')
                     ceilings=[qty,int((cash_remaining/entry).to_integral_value(rounding=ROUND_FLOOR)),int((max(Decimal(0),min(limit_value,role_room))/entry).to_integral_value(rounding=ROUND_FLOOR))]
-                    if not core:ceilings.extend([int((risk_remaining/per_loss).to_integral_value(rounding=ROUND_FLOOR)),int((num(draft['risk_limit_usd'])/per_loss).to_integral_value(rounding=ROUND_FLOOR))])
+                    if not core and not growth:ceilings.extend([int((risk_remaining/per_loss).to_integral_value(rounding=ROUND_FLOOR)),int((num(draft['risk_limit_usd'])/per_loss).to_integral_value(rounding=ROUND_FLOOR))])
                     qty=max(0,min(ceilings))
                     if qty==0:
                         issues.append('cash_concentration_or_risk_budget_below_one_share')
-                        numeric_reasons.append(f'0 shares: limit ${entry:.2f}; uncommitted cash ${cash_remaining:.2f}; name/role headroom ${max(Decimal(0),min(limit_value,role_room)):.2f}; whole-share ceilings {ceilings} (canonical, cash, concentration'+(', combined risk, per-trade risk' if not core else '')+').')
-                        if not core:numeric_reasons.append(f'Planned loss per share ${per_loss:.2f}; remaining combined risk ${risk_remaining:.2f}; per-trade budget ${num(draft["risk_limit_usd"]):.2f}.')
+                        numeric_reasons.append(f'0 shares: limit ${entry:.2f}; uncommitted cash ${cash_remaining:.2f}; name/role headroom ${max(Decimal(0),min(limit_value,role_room)):.2f}; whole-share ceilings {ceilings} (canonical, cash, concentration'+(', combined risk, per-trade risk' if not core and not growth else '')+').')
+                        if not core and not growth:numeric_reasons.append(f'Planned loss per share ${per_loss:.2f}; remaining combined risk ${risk_remaining:.2f}; per-trade budget ${num(draft["risk_limit_usd"]):.2f}.')
                     else:
                         amount=entry*qty; loss=per_loss*qty
                         window={'session':session,'starts_at':starts_at.isoformat(),'ends_at':valid_end.isoformat()}
                         proposed=dict(side='buy',entry_order_type='LIMIT',entry_limit=money(entry),entry_window=window,time_in_force='DAY',
                           invalidation_price=None if core else draft['stop_price'],planned_loss_per_share=money(per_loss),planned_total_loss=money(loss),
-                          planned_account_risk_pct=round(float(loss/total*100),4),risk_model='unlevered_principal_exposure_no_price_stop' if core else 'observed_price_invalidation',
+                          planned_account_risk_pct=round(float(loss/total*100),4),risk_model='unlevered_principal_exposure_no_price_stop' if core else ('reviewed_thesis_invalidation' if growth else 'observed_price_invalidation'),
                           initial_reassessment_price=None if core else draft['target_price'],
-                          reassessment_rule=p.get('purpose',{}).get('exit_rule','') if core else 'Review at the observed target; exit/reassess no later than '+draft['time_exit_session']+' close. No purpose conversion.',
+                          reassessment_rule=p.get('purpose',{}).get('exit_rule','') if core or growth else 'Review at the observed target; exit/reassess no later than '+draft['time_exit_session']+' close. No purpose conversion.',
                           invalidation_rule=p.get('purpose',{}).get('invalidation','Core case/material fund evidence or allocation policy failure requires reassessment; no tactical price stop is prescribed.') if core else draft['invalidation_rule'],
                           portfolio_weight_before=round(float(before_value/total*100),4),portfolio_weight_after=round(float((before_value+amount)/total*100),4),
                           cash_before=money(cash_remaining),estimated_cash_after=money(cash_remaining-amount),account_value=money(total),
@@ -231,16 +279,18 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                           'Entry requires a live quote/spread/market-status check by the owner; no real-time evidence is claimed.'],
                           trigger_rule='Only while quote is at or below the limit and all dated core conditions hold.' if core else draft['entry_rule'],
                           cost_assumption='Commission and regulatory/execution costs not independently observed here; estimated notional excludes fees. Any positive cost must fit confirmed funds and risk budget.',
-                          price_basis='Completed market publication; not a live quote.',automatic_action_allowed=False)
+                          price_basis='Source-bound analyst entry, invalidation and reassessment judgments; not observed live levels.' if growth else 'Completed market publication; not a live quote.',automatic_action_allowed=False)
                         row.update(decision='ACTIONABLE_ADD' if before_qty else 'ACTIONABLE_BUY',shares=qty,estimated_notional=money(amount),order_draft=proposed,
                                    strategy_source={'strategy_id':strategy['strategy_id'],'version':strategy['version'],'adapter':adapter,'authority':strategy['authority']},
-                                   position_purpose={'role':'broad_core' if core else 'tactical','strategy_horizon':'core_investment' if core else 'multi_day_trend','time_exit_session':None if core else draft['time_exit_session']},
-                                   thesis_summary=p.get('reason') if core else w.get('strongest_positive_evidence','Reviewed canonical company case and source-bound observed tactical plan.'),
+                                   position_purpose={'role':'broad_core' if core else ('long_term_growth' if growth else 'tactical'),'strategy_horizon':'core_investment' if core else ('long_term_growth' if growth else 'multi_day_trend'),'time_exit_session':None if core or growth else draft['time_exit_session']},
+                                   thesis_summary=p.get('reason') if core or growth else w.get('strongest_positive_evidence','Reviewed canonical company case and source-bound observed tactical plan.'),
                                    key_evidence=[str(w.get('strongest_positive_evidence') or 'Validated strategy-specific evidence'),str(w.get('strongest_negative_evidence') or 'Recorded counterevidence remains relevant')],
                                    reasons=['All existing eligibility gates passed; exact size is capped by shared cash, portfolio headroom and strategy risk.'])
                         cash_remaining-=amount
                         if core:core_value+=amount
-                        else:active_value+=amount;risk_remaining-=loss
+                        else:
+                            active_value+=amount
+                            if not growth:risk_remaining-=loss
                 except (KeyError,ValueError,TypeError,InvalidOperation):issues.append('strategy_numeric_entry_or_risk_contract_invalid')
             if issues:
                 missing=[c for c in issues if c not in CONDITION_FAILURES]
@@ -278,7 +328,7 @@ def validate(value: dict, *, current: datetime, root: Path | None=None) -> None:
         p=row['order_draft']
         if p.get('automatic_action_allowed') is not False or p.get('side') != ('buy' if row['decision'] in BUY else 'sell'):
             raise ValueError('capital_draft_execution_authority_invalid')
-        if p.get('risk_model') not in {'observed_price_invalidation','unlevered_principal_exposure_no_price_stop','conditional_exit_stop','conditional_exit_limit_no_downside_protection'}:raise ValueError('capital_draft_risk_model_invalid')
+        if p.get('risk_model') not in {'observed_price_invalidation','reviewed_thesis_invalidation','unlevered_principal_exposure_no_price_stop','conditional_exit_stop','conditional_exit_limit_no_downside_protection'}:raise ValueError('capital_draft_risk_model_invalid')
         required={'entry_order_type','entry_limit','entry_window','time_in_force','invalidation_price','planned_loss_per_share','planned_total_loss','planned_account_risk_pct','initial_reassessment_price','reassessment_rule','portfolio_weight_before','portfolio_weight_after','cash_before','estimated_cash_after','cancel_conditions','risk_model','account_value','trigger_rule'}
         if not required.issubset(p) or row.get('blockers') or not row.get('strategy_source') or not row.get('thesis_summary') or not row.get('key_evidence') or not p['cancel_conditions'] or not p['reassessment_rule']:raise ValueError('capital_draft_required_fields_missing')
         if root is not None:
@@ -290,7 +340,7 @@ def validate(value: dict, *, current: datetime, root: Path | None=None) -> None:
         if qty<=0 or qty!=qty.to_integral_value() or min(entry,total)<=0 or loss<0 or (not selling and loss==0) or p['time_in_force']!='DAY' or p['entry_order_type'] not in ({'LIMIT','MARKETABLE_LIMIT','STOP'} if selling else {'LIMIT'}):raise ValueError('capital_draft_numeric_invalid')
         if money(qty*entry)!=row['estimated_notional'] or money(qty*loss)!=p['planned_total_loss'] or money(num(p['cash_before'])+qty*entry*(1 if selling else -1))!=p['estimated_cash_after'] or num(p['estimated_cash_after'])<0:raise ValueError('capital_draft_arithmetic_invalid')
         if abs(num(p['planned_account_risk_pct'])-num(p['planned_total_loss'])/total*100)>Decimal('0.0001'):raise ValueError('capital_draft_risk_invalid')
-        if p['risk_model']=='observed_price_invalidation' and (not 0<num(p['invalidation_price'])<entry<num(p['initial_reassessment_price']) or money(entry-num(p['invalidation_price']))!=money(loss)):raise ValueError('capital_draft_invalidation_invalid')
+        if p['risk_model'] in {'observed_price_invalidation','reviewed_thesis_invalidation'} and (not 0<num(p['invalidation_price'])<entry<num(p['initial_reassessment_price']) or money(entry-num(p['invalidation_price']))!=money(loss)):raise ValueError('capital_draft_invalidation_invalid')
         if p['risk_model']=='unlevered_principal_exposure_no_price_stop' and (p['invalidation_price'] is not None or entry!=loss):raise ValueError('core_risk_model_invalid')
         end=datetime.fromisoformat(p['entry_window']['ends_at']);start=datetime.fromisoformat(p['entry_window']['starts_at'])
         if end.tzinfo is None or start.tzinfo is None or end<=start or current>=end:raise ValueError('capital_draft_expired')

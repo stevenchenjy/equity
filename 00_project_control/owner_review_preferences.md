@@ -1,5 +1,20 @@
 # Owner-requested research reviews
 
+## Current allocation authority (2026-10-06)
+
+The owner explicitly replaced prior allocation targets with broad core at least
+30% (30% baseline target), individual stocks up to 70%, zero cash target and
+mandatory internal reserve, and no fixed single-stock cap. The owner also
+replaced fixed 3%/5%/6% starting sizes with company-specific source-bound sizing
+and requested research supporting concentrated higher-risk growth when the
+investment evidence justifies it. See [the maintained allocation contract](allocation_policy.md).
+Old asset-type targets and the economic-purpose split below are historical,
+not additional current constraints. Unused cash is not a reserve requirement,
+and a core holding above 30% is not automatically trimmed. Tactical strategy
+loss/initial-exposure budgets, account evidence, experimental status and human
+execution remain. Higher volatility alone does not establish higher expected
+return or justify an unsupported concentration.
+
 ## Action-first regular email (2026-09-29)
 
 September 30 clarification: put BUY and SELL in prominent, separate leading
@@ -26,8 +41,9 @@ prior-email continuity and human-only execution in the concise email.
 
 High cash is unallocated investment capital, not a recommendation to retain
 that percentage or a mandatory reserve. The approved owner planning basis remains unchanged, with zero mandatory
-internal reserve; targets, caps and entry evidence
-stay unchanged. This presentation correction authorizes no resend, new trade,
+internal reserve. Current targets and sizing follow the October 6 allocation
+contract above; this earlier presentation correction did not itself change
+entry evidence or strategy authority. This presentation correction authorizes no resend, new trade,
 experimental promotion or invented price. A new numeric draft still requires
 its own current source-bound plan and existing eligibility checks.
 
@@ -97,7 +113,10 @@ broker access, automatic trading, new recipients, or extra scheduled sends.
 The owner's later risk-policy direction is recorded separately below; email
 delivery authorization itself never changes risk limits.
 
-## Risk-policy direction (2026-09-14 evening)
+## Historical risk-policy direction (2026-09-14 evening)
+
+The numerical profile recorded in this section was superseded on October 6.
+It is retained to explain prior decisions, not to provide current sizing inputs.
 
 - The owner explicitly requested less defensive research and permitted
   relaxing configurable risk thresholds. Interpret this as reducing
@@ -163,8 +182,10 @@ delivery authorization itself never changes risk limits.
   identify its dated source or analyst-selected basis and say whether it is
   only a review trigger, not a submitted order or automatic buy signal.
 - Positive proposed share counts require complete evidence and portfolio
-  checks, including tier-specific whole-share exceptions, single-stock caps,
-  total active-stock allocation, confirmed cash and reserves. A hypothetical
+  checks, including the admitted company-specific size, whole-share feasibility,
+  aggregate stock allocation, the broad-core floor, actual available cash and
+  strategy-specific budgets. No removed fixed name cap or initial-size tier
+  may return as an implicit constraint. A hypothetical
   later quantity must be labelled separately from today's recommendation.
   Do not force a daily buy recommendation merely to provide a nonzero count.
 - Lead with a clear analyst preference and its tradeoffs, not only “range
@@ -214,9 +235,11 @@ delivery authorization itself never changes risk limits.
 
 ## Boundaries
 
-These preferences improve specificity and delivery. They do not certify an
-incomplete valuation, promote a watchlist name to an eligible buy, change
-whole-share or portfolio caps, connect to Chase, or submit any trade.
+The presentation and delivery preferences do not certify an incomplete
+valuation, promote a watchlist name to an eligible buy, waive whole-share
+constraints, connect to Chase, or submit a trade. Only the explicit allocation
+authorization at the top of this document replaces the earlier portfolio
+settings; routine email wording cannot change them.
 
 
 ## One-year evaluation and tactical orders (2026-09-22)
@@ -243,14 +266,16 @@ is permitted. The owner asked to apply the four rules to existing regular emails
    a core holding when the business thesis remains intact rather than selling
    everything on a guessed pullback. Never chase or automatically average down.
 
-The planning profile is 60% economic core, up to 30% tactical capacity and 10%
-cash. In this codebase's different asset-type taxonomy it is represented as
-40% broad ETFs, 50% individual stocks and 10% cash. The economic core includes
-20 percentage points of individual stocks. This is a destination for staged
-research, not an instruction to fully deploy cash or relax stock/ETF evidence
-gates. The existing 50% aggregate-stock and 15% single-stock hard caps remain.
-The precise cash reserve and current account values remain in ignored local
-account records; the published configuration's reserve is a default only.
+Historical allocation context, superseded on 2026-10-06: this September plan
+used 60% economic core, up to 30% tactical capacity and 10% cash, expressed as
+40% broad ETFs / 50% individual stocks / 10% cash with 20 percentage points of
+individual stocks inside economic core and fixed aggregate/name caps. None of
+those former numerical destinations or fixed name caps remains active. The
+current allocation contract at the top of this document fully replaces them;
+there is no separate mandatory economic-purpose split. Individual positions
+still require a supported purpose and applicable strategy risk budget. The
+mandatory internal reserve and cash target are both zero. Private current
+account facts remain authoritative for actual funds and holdings.
 
 Use the owner's directed total Cash & Sweep assumption for scenario planning,
 not an amount added on top of the displayed broker balance. This is an owner
@@ -264,7 +289,8 @@ Regular delivery now follows the owner's September 28 attention windows:
 09:30–10:30 and 14:30–15:05 ET on exchange sessions, with at most one materially
 changed email per window and cross-window unknown-send protection. These are
 chosen around the owner's 09:45–10:45 and 14:45–15:20 availability. Morning and
-afternoon each require a fresh complete research handoff; unchanged checks stay
+afternoon require a fresh complete research handoff or the narrowly validated
+zero-order limited-status handoff in `daily_delivery_policy.md`; unchanged checks stay
 open for later meaningful updates within the window. Do not send filler or
 late catch-up instructions. The exact former 13:30 policy is archived.
 

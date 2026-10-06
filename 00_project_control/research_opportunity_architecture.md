@@ -82,7 +82,10 @@ execution authority. Mature experiment ≠ automatic promotion. Missing coverage
 is unknown, not a negative observation. Every production recommendation still
 requires the existing evidence, account, order, capital, risk, sizing, price and
 human-execution contracts. The approved planning basis, zero mandatory internal
-reserve, allocation targets and all risk caps remain unchanged.
+reserve and allocation/risk settings remain governed by the current
+[owner-approved allocation policy](allocation_policy.md), rather than frozen
+by this architecture. The October 6 policy supersedes earlier numerical targets
+and fixed name caps without granting the research queue trading authority.
 
 ## State transitions and blockers
 

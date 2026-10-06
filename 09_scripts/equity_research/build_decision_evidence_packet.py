@@ -1222,6 +1222,7 @@ def build_packet(
             "account_size_band": "under_10k",
             "investment_horizon_years": account.get("investment_horizon_years"),
             "core_allocation_target_pct": account.get("core_allocation_target_pct"),
+            "core_minimum_pct": account.get("core_minimum_pct"),
             "active_stock_target_pct": account.get("active_stock_target_pct"),
             "active_stock_hard_cap_pct": account.get("active_stock_hard_cap_pct"),
             "single_stock_default_cap_pct": account.get(

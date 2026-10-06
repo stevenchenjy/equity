@@ -8,7 +8,10 @@ authority, or the experimental status of the momentum adaptation.
 Subsequent explicit owner approval on the same date removes the mandatory
 internal cash reserve. See `account_state_policy.md`: the reserve floor is
 zero, no additional reserve asset is recorded, and existing allocation targets
-and position risk limits remain unchanged.
+and position risk limits remained unchanged by that September reserve change.
+The subsequent [October 6 allocation policy](allocation_policy.md) supersedes
+the earlier asset targets and fixed name cap; this workflow follows the current
+approved policy rather than preserving the old numerical profile.
 
 ## Blocker scope
 

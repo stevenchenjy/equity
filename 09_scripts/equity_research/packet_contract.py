@@ -224,6 +224,123 @@ def _expected_verified_close_session(
         raise ContractError("packet: as_of_et must include a timezone")
     return latest_published_market_session(as_of).isoformat()
 
+def validate_portfolio_constraints(constraints: dict[str, Any]) -> None:
+    """Validate effective policy without treating null name limits as numbers."""
+    required_constraint_fields = {
+        "account_size_band",
+        "active_stock_hard_cap_pct",
+        "active_stock_target_pct",
+        "cash_target_pct",
+        "core_allocation_target_pct",
+        "investment_horizon_years",
+        "manual_execution_only",
+        "return_objective",
+        "single_stock_default_cap_pct",
+        "single_stock_hard_cap_pct",
+    }
+    if (
+        not isinstance(constraints, dict)
+        or not required_constraint_fields <= set(constraints)
+        or set(constraints) - required_constraint_fields - {"core_minimum_pct"}
+    ):
+        raise ContractError(
+            "packet: portfolio constraint fields do not match policy"
+        )
+    if (
+        not isinstance(constraints["account_size_band"], str)
+        or not constraints["account_size_band"].strip()
+    ):
+        raise ContractError(
+            "packet: account size band must be non-empty"
+        )
+    horizon = constraints["investment_horizon_years"]
+    if (
+        not isinstance(horizon, int)
+        or isinstance(horizon, bool)
+        or not 1 <= horizon <= 30
+    ):
+        raise ContractError(
+            "packet: investment horizon must be 1..30 years"
+        )
+    if constraints["manual_execution_only"] is not True:
+        raise ContractError(
+            "packet: portfolio execution must remain manual"
+        )
+    percentage_fields = (
+        "active_stock_hard_cap_pct",
+        "active_stock_target_pct",
+        "cash_target_pct",
+        "core_allocation_target_pct",
+        "single_stock_default_cap_pct",
+        "single_stock_hard_cap_pct",
+    )
+    parsed_percentages: dict[str, Decimal | None] = {}
+    for field in percentage_fields:
+        raw = constraints[field]
+        if raw is None and field in {"single_stock_default_cap_pct", "single_stock_hard_cap_pct"}:
+            parsed_percentages[field] = None
+            continue
+        if isinstance(raw, bool):
+            raise ContractError(
+                f"packet: portfolio constraint {field} is invalid"
+            )
+        try:
+            parsed = Decimal(str(raw))
+        except (InvalidOperation, ValueError) as exc:
+            raise ContractError(
+                f"packet: portfolio constraint {field} is invalid"
+            ) from exc
+        if not parsed.is_finite() or not Decimal("0") <= parsed <= Decimal("100"):
+            raise ContractError(
+                f"packet: portfolio constraint {field} is out of range"
+            )
+        parsed_percentages[field] = parsed
+    hard = parsed_percentages["single_stock_hard_cap_pct"]
+    default = parsed_percentages["single_stock_default_cap_pct"]
+    if (
+        parsed_percentages["active_stock_hard_cap_pct"] <= 0
+        or parsed_percentages["active_stock_target_pct"]
+        > parsed_percentages["active_stock_hard_cap_pct"]
+        or (hard is None) != (default is None)
+        or (hard is not None and default is not None and
+            not 0 < default <= hard <= parsed_percentages["active_stock_hard_cap_pct"])
+    ):
+        raise ContractError(
+            "packet: portfolio cap ordering or positive-cap policy failed"
+        )
+    target_total = sum(
+        (
+            parsed_percentages["core_allocation_target_pct"],
+            parsed_percentages["active_stock_target_pct"],
+            parsed_percentages["cash_target_pct"],
+        ),
+        Decimal("0"),
+    )
+    if target_total != Decimal("100"):
+        raise ContractError(
+            "packet: core, active, and cash targets must sum to 100"
+        )
+    if "core_minimum_pct" in constraints:
+        raw_minimum = constraints["core_minimum_pct"]
+        try:
+            minimum = Decimal(str(raw_minimum))
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise ContractError("packet: core minimum must be a finite percentage") from exc
+        if (isinstance(raw_minimum, bool) or not minimum.is_finite()
+                or not 0 <= minimum <= parsed_percentages["core_allocation_target_pct"]
+                or minimum + parsed_percentages["active_stock_hard_cap_pct"] > 100):
+            raise ContractError("packet: core minimum and aggregate stock cap conflict")
+    try:
+        validate_return_objective_payload(
+            constraints.get("return_objective")
+        )
+    except ValueError as exc:
+        raise ContractError(
+            "packet: return objective must remain a non-guaranteed "
+            "long-horizon objective with no risk-gate override"
+        ) from exc
+
+
 def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
     required = {
         "schema_version",
@@ -357,107 +474,7 @@ def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
             raise ContractError(
                 f"packet.entities[{index}]: role must be held or candidate"
             )
-    constraints = packet["portfolio_constraints"]
-    required_constraint_fields = {
-        "account_size_band",
-        "active_stock_hard_cap_pct",
-        "active_stock_target_pct",
-        "cash_target_pct",
-        "core_allocation_target_pct",
-        "investment_horizon_years",
-        "manual_execution_only",
-        "return_objective",
-        "single_stock_default_cap_pct",
-        "single_stock_hard_cap_pct",
-    }
-    if (
-        not isinstance(constraints, dict)
-        or set(constraints) != required_constraint_fields
-    ):
-        raise ContractError(
-            "packet: portfolio constraint fields do not match policy"
-        )
-    if (
-        not isinstance(constraints["account_size_band"], str)
-        or not constraints["account_size_band"].strip()
-    ):
-        raise ContractError(
-            "packet: account size band must be non-empty"
-        )
-    horizon = constraints["investment_horizon_years"]
-    if (
-        not isinstance(horizon, int)
-        or isinstance(horizon, bool)
-        or not 1 <= horizon <= 30
-    ):
-        raise ContractError(
-            "packet: investment horizon must be 1..30 years"
-        )
-    if constraints["manual_execution_only"] is not True:
-        raise ContractError(
-            "packet: portfolio execution must remain manual"
-        )
-    percentage_fields = (
-        "active_stock_hard_cap_pct",
-        "active_stock_target_pct",
-        "cash_target_pct",
-        "core_allocation_target_pct",
-        "single_stock_default_cap_pct",
-        "single_stock_hard_cap_pct",
-    )
-    parsed_percentages: dict[str, Decimal] = {}
-    for field in percentage_fields:
-        raw = constraints[field]
-        if isinstance(raw, bool):
-            raise ContractError(
-                f"packet: portfolio constraint {field} is invalid"
-            )
-        try:
-            parsed = Decimal(str(raw))
-        except (InvalidOperation, ValueError) as exc:
-            raise ContractError(
-                f"packet: portfolio constraint {field} is invalid"
-            ) from exc
-        if not parsed.is_finite() or not Decimal("0") <= parsed <= Decimal("100"):
-            raise ContractError(
-                f"packet: portfolio constraint {field} is out of range"
-            )
-        parsed_percentages[field] = parsed
-    if (
-        parsed_percentages["active_stock_hard_cap_pct"] <= 0
-        or parsed_percentages["single_stock_hard_cap_pct"] <= 0
-        or parsed_percentages["single_stock_default_cap_pct"] <= 0
-        or parsed_percentages["active_stock_target_pct"]
-        > parsed_percentages["active_stock_hard_cap_pct"]
-        or parsed_percentages["single_stock_default_cap_pct"]
-        > parsed_percentages["single_stock_hard_cap_pct"]
-        or parsed_percentages["single_stock_hard_cap_pct"]
-        > parsed_percentages["active_stock_hard_cap_pct"]
-    ):
-        raise ContractError(
-            "packet: portfolio cap ordering or positive-cap policy failed"
-        )
-    target_total = sum(
-        (
-            parsed_percentages["core_allocation_target_pct"],
-            parsed_percentages["active_stock_target_pct"],
-            parsed_percentages["cash_target_pct"],
-        ),
-        Decimal("0"),
-    )
-    if target_total != Decimal("100"):
-        raise ContractError(
-            "packet: core, active, and cash targets must sum to 100"
-        )
-    try:
-        validate_return_objective_payload(
-            constraints.get("return_objective")
-        )
-    except ValueError as exc:
-        raise ContractError(
-            "packet: return objective must remain a non-guaranteed "
-            "long-horizon objective with no risk-gate override"
-        ) from exc
+    validate_portfolio_constraints(packet["portfolio_constraints"])
     gates = packet["gates"]
     allowed_classifications_by_ticker = gates.get(
         "allowed_classifications_by_ticker"

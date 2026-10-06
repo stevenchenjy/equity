@@ -102,7 +102,8 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
         hard = None if core else number(account.get("single_stock_hard_cap_pct"))
         value = shares * price
         results.append({
-            "ticker": row.get("ticker"), "target_kind": "core_target" if core else "default_position_limit",
+            "ticker": row.get("ticker"), "target_kind": ("core_minimum" if "core_minimum_pct" in account else "core_target") if core else (
+                "company_specific_allocation_required" if target is None else "default_position_limit"),
             "current_weight_pct": round(value / total * 100, 4),
             "one_share_weight_pct": round(price / total * 100, 4),
             "minus_one_share_weight_pct": round(max(0, shares - 1) * price / total * 100, 4),
@@ -178,7 +179,12 @@ def main() -> int:
             lines.append("价格隐含预期：输入不足或不适用，未计算；不补零、不编造前瞻假设。")
         lines.extend(["", "下一条验证证据：下次官方定期披露；已知数值变化不能自动证明或推翻全部商业假设。", ""])
     lines.extend(["## 整股约束的研究情景", "", "以下±1股只展示离散粒度，不是建议动作；核心目标不是自动授权的超额容忍带。", "", "| 标的 | 当前权重 | 减1股权重 | 加1股权重 | 目标/默认线 | 硬上限 | 超过目标金额 |", "| --- | --- | --- | --- | --- | --- | --- |"])
-    lines.extend(f"| {row['ticker']} | {row['current_weight_pct']}% | {row['minus_one_share_weight_pct']}% | {row['plus_one_share_weight_pct']}% | {row['target_pct']}% | {row['hard_cap_pct'] if row['hard_cap_pct'] is not None else '未定义，不作假设'} | ${row['above_target_dollars']} |" for row in diagnostics)
+    for row in diagnostics:
+        target = f"{row['target_pct']}%" if row['target_pct'] is not None else "按公司证据单独确定"
+        cap = ("不适用（广基核心）" if row["target_kind"].startswith("core_") else
+               f"{row['hard_cap_pct']}%" if row['hard_cap_pct'] is not None else "无固定单股上限（组合约束仍有效）")
+        excess = f"${row['above_target_dollars']}" if row['above_target_dollars'] is not None else "不适用"
+        lines.append(f"| {row['ticker']} | {row['current_weight_pct']}% | {row['minus_one_share_weight_pct']}% | {row['plus_one_share_weight_pct']}% | {target} | {cap} | {excess} |")
     lines.extend(["", "目标偏离、换手、资金贡献与硬风险分别比较。软容忍带或技术择时政策未作修改。", ""])
     atomic_write_text(REPORT, "\n".join(lines))
     print(f"research_questions_updated=true companies={len(companies)} model_calls=0 canonical_effect=false")

@@ -1,5 +1,10 @@
 # Momentum integration decision — 2026-09-27
 
+Current allocation authority is the [October 6 owner policy](allocation_policy.md).
+The September audit below retains dated findings; its former allocation numbers
+do not govern current recommendations. The experiment remains separate, with
+its original versioned observations and no automatic capital authority.
+
 ## Owner-approved first-cohort review timing — September 27 follow-up
 
 The owner selected manual review as soon as the first complete five-trading-session
@@ -44,7 +49,7 @@ Code, active configuration, launchd state, execution logs and generated artifact
 
 Actual cash is manually recorded and its planning basis is an estimate. Settled spendable funds, current orders and total tactical downside risk are not independently verified by this audit. Account type is a local cash-account assumption, not a new broker confirmation. No account read was performed. Existing held plans include due or unresolved reviews; this upgrade never assumes an old ticket filled or that a failed tactical position became a growth investment.
 
-Allocation targets remain 40% broad core / 50% active / 10% cash, with the current 50% active and 15% single-name hard caps. The actual account-specific reserve remains unchanged; the active configuration's fallback is not permission to rewrite it. Existing tactical limits remain 0.5% ordinary risk, 0.25% event risk, 2% aggregate planned risk, 5% name size and a five-session maximum. Stops may gap and are not guaranteed loss limits. No short winning or losing streak changes these controls.
+Historical allocation snapshot (superseded on October 6): the September audit used 40% broad core / 50% active / 10% cash, a 50% aggregate stock cap and 15% single-name cap. These are retained historical context, not current limits. The current allocation and zero-reserve contract is linked above. Tactical strategy limits remain 0.5% ordinary planned risk, 0.25% event risk, 2% aggregate planned risk, 5% initial tactical name size and a five-session maximum. Stops may gap and are not guaranteed loss limits. No short winning or losing streak changes those controls.
 
 The separate AI shadow evaluator is installed but its latest observed run failed archived evidence-contract validation. It is outside canonical decision and email authority. Older prose saying it is not installed is stale. Its repair is outside this momentum change; evidence validation is not bypassed. Current portfolio evidence has one actual NAV observation and no usable return interval. Operational reliability and recommendation price paths do not establish actual investment performance.
 

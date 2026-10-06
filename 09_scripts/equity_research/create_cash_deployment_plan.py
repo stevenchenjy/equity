@@ -103,6 +103,9 @@ def main() -> None:
     )
     current_core = as_float(summary["current_core_value"], "current_core_value")
     core_target = as_float(account["core_allocation_target_pct"], "core_target")
+    core_minimum = account.get("core_minimum_pct")
+    core_threshold = as_float(core_minimum, "core_minimum_pct") if core_minimum is not None else core_target
+    core_threshold_met = current_core + 1e-9 >= account_total * core_threshold / 100.0
     active_target = as_float(account["active_stock_target_pct"], "active_target")
     cash_target = as_float(account["cash_target_pct"], "cash_target")
     review_date = (
@@ -125,6 +128,8 @@ def main() -> None:
     shares = int(core["suggested_whole_shares"])
     planned_amount = shares * spy_price
     core_status = (
+        "minimum_satisfied" if core_minimum is not None and core_threshold_met else
+        "target_satisfied" if core_threshold_met else
         "selected_review" if core["selected"] else
         "blocked_maintenance" if core["blocked_only_by_maintenance"] else
         "not_selected"
@@ -156,9 +161,14 @@ def main() -> None:
             "core_weight_after": f"{current_core / account_total * 100.0:.4f}",
             "active_stock_weight_after": f"{active_weight:.4f}",
             "fifty_two_week_range_percentile": f"{core['fifty_two_week_range_percentile']:.2f}",
-            "status": "fallback_option" if core["selected"] else "selected_cash_retention",
+            "status": "available_for_qualified_opportunities" if core_threshold_met else
+                      "fallback_option" if core["selected"] else "selected_cash_retention",
             "cash_rationale": cash_rationale,
             "reason": (
+                f"Broad core already meets the {core_threshold:.0f}% "
+                f"{'minimum' if core_minimum is not None else 'target'}. Remaining cash is available for "
+                "independently qualified opportunities; no extra cash reserve is imposed by this status."
+            ) if core_threshold_met else (
                 "Fail-closed cash alternative. It becomes the selected conclusion whenever refreshed "
                 f"core gates fail (current failed gates: {failed_text})."
             ),
@@ -178,6 +188,10 @@ def main() -> None:
             "fifty_two_week_range_percentile": f"{core['fifty_two_week_range_percentile']:.2f}",
             "status": core_status, "cash_rationale": cash_rationale,
             "reason": (
+                f"Current core weight {current_core / account_total * 100.0:.4f}% meets the "
+                f"{core_threshold:.0f}% {'minimum' if core_minimum is not None else 'target'}. "
+                "No additional core tranche is proposed; exceeding a core minimum is not a trim instruction."
+            ) if core_threshold_met else (
                 f"Current policy permits {shares} whole-share(s), {core_pct:.2f}% of the dynamic account. "
                 f"Cash can fund {core['cash_affordable_shares']} share(s); the remaining target gap "
                 f"can contain {core['target_gap_whole_shares']} whole-share(s). "
@@ -241,7 +255,10 @@ def main() -> None:
             "target_weight_pct": f"{core_target:.2f}",
             "target_value": f"{account_total * core_target / 100.0:.2f}",
             "allocation_gap_value": f"{account_total * core_target / 100.0 - current_core:.2f}",
-            "policy_status": "below_target_starter_review" if core["selected"] else "below_target_unfunded",
+            "policy_status": ("minimum_satisfied" if core_minimum is not None else "target_satisfied") if core_threshold_met else
+                             "below_minimum_starter_review" if core_minimum is not None and core["selected"] else
+                             "below_minimum_unfunded" if core_minimum is not None else
+                             "below_target_starter_review" if core["selected"] else "below_target_unfunded",
             "calculation_basis": "dynamic effective total; whole-share core review is staged and never automatic",
         },
         {

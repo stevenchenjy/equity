@@ -28,8 +28,10 @@ valuation sensitivities hold net debt and shares fixed, do not include interim
 distributions, and are not forecasts, DCFs, expected total returns, or trading
 instructions. Existing revenue-multiple gates remain an explicit heuristic.
 
-Whole-share diagnostics separate cash affordability, target headroom, default
-position limits, hard caps and turnover. Alternative ±1-share weights are
+Whole-share diagnostics separate cash affordability, target headroom, applicable
+aggregate/strategy limits and turnover. Fixed single-stock allocation caps are
+disabled under the [current owner policy](allocation_policy.md); old thresholds
+must not survive as indirect sizing deductions or concentration-only exits. Alternative ±1-share weights are
 research scenarios only. No tolerance band, risk line, core timing policy or
 notification eligibility changes merely to make a candidate pass.
 

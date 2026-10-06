@@ -1,7 +1,7 @@
 {
   "schema_version": "phase5r_active_production_config_v1",
-  "effective_from": "2026-09-22",
-  "review_by": "2026-09-30",
+  "effective_from": "2026-10-06",
+  "review_by": "2026-11-06",
   "authority": "active production configuration; historical Phase 5R pilot policies are non-authoritative",
   "workflow": {
     "baseline": "deterministic_public_evidence",
@@ -14,15 +14,15 @@
   },
   "account": {
     "investment_horizon_years": 1,
-    "core_target_pct": 40.0,
-    "active_target_pct": 50.0,
-    "cash_target_pct": 10.0,
-    "single_stock_default_cap_pct": 15.0,
-    "single_stock_hard_cap_pct": 15.0,
+    "core_target_pct": 30.0,
+    "active_target_pct": 70.0,
+    "cash_target_pct": 0.0,
+    "single_stock_default_cap_pct": null,
+    "single_stock_hard_cap_pct": null,
     "research_risk_limits": {
-      "active_stock_hard_cap_pct": 50.0,
-      "single_stock_default_cap_pct": 15.0,
-      "single_stock_hard_cap_pct": 15.0
+      "active_stock_hard_cap_pct": 70.0,
+      "single_stock_default_cap_pct": null,
+      "single_stock_hard_cap_pct": null
     },
     "cash_reserved_usd": 0.0,
     "underdeployment_review_invested_pct_below": 25.0,
@@ -30,7 +30,6 @@
     "candidate_sizing_tiers": [
       {
         "name": "high_conviction_allocation",
-        "target_position_pct": 6.0,
         "minimum_score": 8.25,
         "allowed_confidence": [
           "high"
@@ -42,7 +41,6 @@
       },
       {
         "name": "normal_allocation",
-        "target_position_pct": 5.0,
         "minimum_score": 7.5,
         "allowed_confidence": [
           "medium_high",
@@ -55,7 +53,6 @@
       },
       {
         "name": "starter_allocation",
-        "target_position_pct": 3.0,
         "minimum_score": 7.0,
         "allowed_confidence": [
           "medium_high",
@@ -73,7 +70,10 @@
       "maximum_whole_shares_per_review": 1
     },
     "state_source": "05_risk_and_positions/current_account_state.local.json",
-    "positions_source": "05_risk_and_positions/current_positions.local.csv"
+    "positions_source": "05_risk_and_positions/current_positions.local.csv",
+    "core_minimum_pct": 30.0,
+    "sizing_method": "source_bound_company_allocation",
+    "allocation_policy_version": "owner-concentrated-growth-20261006"
   },
   "notifications": {
     "event_driven": true,

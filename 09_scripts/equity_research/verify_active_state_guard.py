@@ -78,6 +78,31 @@ OPTIONAL_ACTIVE_INPUTS = {
 OPTIONAL_ACTIVE_PATTERNS = {
     "04_research/company_research/objective_evidence.local/*.json": "optional_generated_research",
 }
+# Static source validation must not depend on private/generated runtime state.
+# This is a closed path/kind list, not a registry-supplied freshness exemption.
+# Runtime validation (the default) still requires every one of these inputs.
+RUNTIME_REQUIRED_PATHS = {
+    ("exact", path) for path in (
+        "05_risk_and_positions/current_account_state.local.json",
+        "05_risk_and_positions/current_positions.local.csv",
+        "06_execution_records/manual_executions.local.csv",
+        "06_execution_records/pending_execution_report.csv",
+        "06_execution_records/reconciliation_report.csv",
+        "03_source_data/equity_research/market_data_snapshot.csv",
+        "03_source_data/equity_research/market_data_quality_report.csv",
+        "03_source_data/equity_research/candidates_with_market_data.csv",
+        "03_source_data/equity_research/signal_scores.csv",
+        "03_source_data/equity_research/daily_evidence_status.json",
+        "03_source_data/equity_research/daily_fundamentals.csv",
+        "04_research/company_research/daily_decision.json",
+        "07_automation/email_briefs/daily_email_brief.txt",
+        "07_automation/email_briefs/daily_email_brief.html",
+        "07_automation/email_delivery/daily_delivery_ledger.csv",
+    )
+} | {
+    ("pattern", "04_research/company_research/*.csv"),
+    ("pattern", "05_risk_and_positions/generated/current/*.csv"),
+}
 SMTP_CONFIG_PATH = (
     ROOT
     / "07_automation"
@@ -198,6 +223,7 @@ def _smtp_stat() -> tuple[int, int, int] | str:
 
 def _registry_paths(
     rows: list[dict[str, str]],
+    *, include_runtime: bool = True,
 ) -> tuple[list[str], list[str]]:
     missing: list[str] = []
     forbidden: list[str] = []
@@ -234,6 +260,8 @@ def _registry_paths(
             forbidden.append(
                 f"{row.get('registry_id', '')}:{path_spec}"
             )
+        if not include_runtime and (path_kind, path_spec) in RUNTIME_REQUIRED_PATHS:
+            continue  # All registry permission/forbidden checks above still run.
         if path_kind == "exact":
             target = ROOT / path_spec
             absent_optional = optional and not target.exists() and not target.is_symlink()
@@ -380,12 +408,13 @@ def collect_checks(*, include_runtime: bool) -> list[Check]:
     )
 
     allowed_rows = _read_csv(ALLOWED_PATH)
-    missing, forbidden = _registry_paths(allowed_rows)
+    missing, forbidden = _registry_paths(allowed_rows, include_runtime=include_runtime)
     checks.append(
         Check(
             "active_input_registry.daily_only",
             bool(allowed_rows) and not missing and not forbidden,
             (
+                f"scope={'runtime' if include_runtime else 'static_source'};"
                 f"rows={len(allowed_rows)};missing={missing};"
                 f"forbidden={forbidden}"
             ),
@@ -503,7 +532,7 @@ def main() -> int:
     parser.add_argument(
         "--static-only",
         action="store_true",
-        help="skip host launchd state and verify repository state only",
+        help="verify source policy/registry rules; skip runtime artifact presence and host launchd state",
     )
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()

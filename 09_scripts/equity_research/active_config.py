@@ -36,16 +36,53 @@ RESEARCH_RISK_LIMIT_KEYS = {
 }
 
 
-def validate_research_risk_limits(value: Any) -> dict[str, float]:
+def validate_research_risk_limits(value: Any) -> dict[str, float | None]:
     """Validate an optional research overlay without accepting financial data."""
     if not isinstance(value, dict) or set(value) != RESEARCH_RISK_LIMIT_KEYS:
         raise ActiveConfigError("research risk limits must contain exactly the three allowed cap fields")
-    if any(type(item) not in {int, float} or not math.isfinite(item) for item in value.values()):
-        raise ActiveConfigError("research risk limits must be finite numbers")
-    limits = {key: float(item) for key, item in value.items()}
-    if not 0 < limits["single_stock_default_cap_pct"] <= limits["single_stock_hard_cap_pct"] <= limits["active_stock_hard_cap_pct"] <= 100:
-        raise ActiveConfigError("research risk limits require 0 < default <= single hard <= active hard <= 100")
+    active = value["active_stock_hard_cap_pct"]
+    if type(active) not in {int, float} or not math.isfinite(active) or not 0 < active <= 100:
+        raise ActiveConfigError("active-stock hard cap must be a finite percentage in (0, 100]")
+    name_caps = (value["single_stock_default_cap_pct"], value["single_stock_hard_cap_pct"])
+    # JSON null explicitly removes the independent name limit. It is not a
+    # disguised 70/100% cap; the aggregate sleeve and available funds still bind.
+    if name_caps != (None, None):
+        if any(type(item) not in {int, float} or not math.isfinite(item) for item in name_caps):
+            raise ActiveConfigError("single-stock caps must both be null or finite numbers")
+        if not 0 < name_caps[0] <= name_caps[1] <= active:
+            raise ActiveConfigError("numeric caps require 0 < default <= single hard <= active hard <= 100")
+    limits = {key: None if item is None else float(item) for key, item in value.items()}
     return limits
+
+
+def validate_allocation_targets(account: dict[str, Any]) -> dict[str, float]:
+    """Validate an explicitly configured target set and its broad-core floor.
+
+    Empty legacy account sections have no overlay. A partial set is invalid,
+    because combining new targets with stale account percentages is ambiguous.
+    """
+    if not isinstance(account, dict):
+        raise ActiveConfigError("account configuration must be an object")
+    names = ("core_target_pct", "active_target_pct", "cash_target_pct")
+    if account.get("sizing_method") == "source_bound_company_allocation" and not all(
+            name in account for name in (*names, "core_minimum_pct")):
+        raise ActiveConfigError("source-bound sizing requires all three allocation targets and the core minimum")
+    if not any(name in account for name in (*names, "core_minimum_pct")):
+        return {}
+    if not all(name in account for name in names):
+        raise ActiveConfigError("all three allocation targets must be configured together")
+    raw = {name: account[name] for name in names}
+    if any(type(value) not in {int, float} or not math.isfinite(value) or not 0 <= value <= 100 for value in raw.values()):
+        raise ActiveConfigError("allocation targets must be finite percentages")
+    if not math.isclose(sum(raw.values()), 100, abs_tol=0.01):
+        raise ActiveConfigError("allocation targets must sum to 100")
+    result = {key: float(value) for key, value in raw.items()}
+    if "core_minimum_pct" in account:
+        minimum = account["core_minimum_pct"]
+        if type(minimum) not in {int, float} or not math.isfinite(minimum) or not 0 <= minimum <= result["core_target_pct"]:
+            raise ActiveConfigError("core minimum must be finite and no greater than the planning core target")
+        result["core_minimum_pct"] = float(minimum)
+    return result
 
 
 def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
@@ -62,11 +99,19 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     if review_by < effective:
         raise ActiveConfigError("review_by cannot precede effective_from")
     account = config.get("account", {})
+    targets = validate_allocation_targets(account)
     research_budget = config.get("workflow", {}).get("objective_research_max_tickers", 3)
     if type(research_budget) is not int or not 1 <= research_budget <= 10:
         raise ActiveConfigError("objective research budget must be an integer from 1 to 10")
     if "research_risk_limits" in account:
-        validate_research_risk_limits(account["research_risk_limits"])
+        limits = validate_research_risk_limits(account["research_risk_limits"])
+        if targets and targets["active_target_pct"] > limits["active_stock_hard_cap_pct"]:
+            raise ActiveConfigError("active target cannot exceed the aggregate stock cap")
+        if targets.get("core_minimum_pct", 0) + limits["active_stock_hard_cap_pct"] > 100:
+            raise ActiveConfigError("core minimum plus aggregate stock cap cannot exceed 100")
+        for name in ("single_stock_default_cap_pct", "single_stock_hard_cap_pct"):
+            if name in account and account[name] != limits[name]:
+                raise ActiveConfigError("top-level name caps must agree with the research policy")
     boundaries = config.get("boundaries", {})
     if boundaries.get("research_only") is not True:
         raise ActiveConfigError("research_only must remain true")

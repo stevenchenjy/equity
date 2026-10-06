@@ -800,6 +800,8 @@ def email_subject(
         return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
     prefix = subject_prefix(correction=correction)
     if decision.get("workflow_integrity"):
+        if decision.get("capital_decision") and decision.get("evidence_gate", {}).get("passed") is False:
+            return f"{prefix} Limited evidence update | {view['cycle']}"
         return f"{prefix} Action plan | {view['cycle']}"
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
@@ -876,7 +878,9 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
     verified = decision.get('market_gate', {}).get('passed') is True
-    return _render_cards(email_subject(decision), cards(decision, view), title="Your action plan",
+    title = ("Limited evidence update" if decision.get("capital_decision")
+             and decision.get("evidence_gate", {}).get("passed") is False else "Your action plan")
+    return _render_cards(email_subject(decision), cards(decision, view), title=title,
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
         footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
                 + ("This system has placed or changed no orders; owner execution is verified only through account records."

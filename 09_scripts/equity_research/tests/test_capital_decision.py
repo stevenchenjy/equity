@@ -51,6 +51,7 @@ class CapitalDecisionTests(unittest.TestCase):
         d2=copy.deepcopy(self.d['watch_candidates'][0]);d2['ticker']='TWO';self.d['watch_candidates'].append(d2);self.d['eligible_new_position_review_candidates'].append('TWO');self.d['long_horizon_research']['candidate_views']['TWO']=copy.deepcopy(self.d['long_horizon_research']['candidate_views']['TEST'])
         t2=copy.deepcopy(self.d['tactical_review']['drafts'][0]);t2['ticker']='TWO';self.d['tactical_review']['drafts'].append(t2)
         self.d['account']['cash_available']=250
+        self.config['account']['core_minimum_pct']=0 # isolate shared-cash behavior; floor covered separately
         rows=self.build()['decisions'];amount=sum(r['estimated_notional'] for r in rows)
         self.assertLessEqual(amount,150) # existing mandatory reserve 100 retained
         self.assertEqual(sum(r['shares'] for r in rows),1)
@@ -105,6 +106,18 @@ class CapitalDecisionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'expired'):engine.validate(c,current=self.v['current'].replace(hour=10,minute=0))
         self.d['plan_continuity']['plans'][0]['review_at']='2026-09-23T09:25:00-04:00'
         self.assertEqual(self.build()['decisions'][0]['shares'],0) # no usable regular-session window
+    def test_first_core_purchase_uses_reviewed_zero_share_plan(self):
+        self._session_decision()
+        self.d['account']['cash_basis']='owner_recorded';self.v['open_orders']['cash_confirmed']=True
+        self.d['market_gate']['bar_state']='complete_close'
+        self.d['eligible_new_position_review_candidates']=['SPY'];self.d['held_positions']=[]
+        self.d['watch_candidates']=[dict(ticker='SPY',action='core_allocation_tranche_review',suggested_whole_shares=1,maximum_review_price=3100,human_confirmation_required='yes',valuation_applicability='not_applicable_broad_market_etf',stability_distinct_closes=2,required_distinct_closes=2)]
+        self.d['plan_continuity']={'plans':[dict(ticker='SPY',status='maintained',role='broad_core',action='hold',current_shares=0,review_at='2026-09-23T10:00:00-04:00',reason='Current source-bound initial core rationale',purpose={'exit_rule':'Review fund evidence and policy.'})]}
+        r=self.build()['decisions'][0]
+        self.assertEqual((r['decision'],r['shares']),('ACTIONABLE_BUY',1))
+        self.assertEqual(r['order_draft']['portfolio_weight_after'],31)
+        self.d['plan_continuity']={'plans':[]};self.assertEqual(self.build()['decisions'][0]['shares'],0)
+
     def test_final_decisions_include_supported_candidates_beyond_bounded_work_priority(self):
         self.d['research_opportunities']={'priority_queue':[], 'decision_candidates':[{'ticker':'OUTSIDE','state':'research_supported','blockers':['company_specific_valuation','canonical_market_admission']},{'ticker':'QUEUED','state':'queued','blockers':[]}]}
         rows={r['ticker']:r for r in self.build()['decisions']}

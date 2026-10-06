@@ -37,22 +37,32 @@ Reported cash plus current holdings may differ from the last reported total beca
 
 If the local account file is absent, production fails closed. It never creates a dated example balance or silently invents a current account total.
 
-## Optional research-only risk limits
+## Effective research allocation and risk limits
 
 Owner-approved reserve rule, 2026-09-27: there is no mandatory internal
 cash reserve. The canonical account `cash_reserved` and configuration reserve
 metadata are zero. No additional external reserve amount is recorded or added
 to investment capital. This supersedes earlier reserve requirements; historical
 snapshots retain their original values. Cash is still limited by actual funds,
-order commitments, evidence and position limits. Allocation targets remain
-unchanged; a cash allocation target is not a minimum-cash reserve requirement.
+order commitments, evidence and position limits. Allocation targets are
+subject to the subsequent [October 6 allocation policy](allocation_policy.md):
+30% broad-core minimum/baseline target, 70% aggregate stock target/maximum,
+zero cash target and no fixed single-stock cap. A target is not a direction to
+buy without evidence or a statement of current broker funds.
 
-`account.research_risk_limits` in the active production configuration may
-override exactly `active_stock_hard_cap_pct`, `single_stock_default_cap_pct`
-and `single_stock_hard_cap_pct` for research consumers. It is optional and is
-not activated merely by installing its supporting code. The three values must
-be finite numeric percentages with `0 < default <= single hard <= active hard
-<= 100`; the active hard cap cannot be below the recorded active target.
+`account.research_risk_limits` supplies the effective research limits. Under
+the October 6 policy, `active_stock_hard_cap_pct` is 70, while
+`single_stock_default_cap_pct` and `single_stock_hard_cap_pct` are both `null`:
+null explicitly disables a fixed name limit; it is never coerced to zero or
+replaced by an archived cap. The configured core minimum and baseline target
+are 30, individual-stock target is 70, and cash target is zero. A non-null
+supported limit must be finite and internally consistent; an absent or invalid
+required policy is not permission to invent a permissive fallback.
+
+Private financial records retain their actual historical values and timestamps.
+Effective policy overrides apply to research consumers without making those
+records a fresh account observation. Controlled migration of policy metadata
+must preserve cash, shares, orders, fills, source evidence and predecessor history.
 
 Research weights, exact-action plans, cash plans, candidate sizing, research
 questions and evidence packets use `load_research_account_state()`. Raw

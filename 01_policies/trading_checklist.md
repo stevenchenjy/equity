@@ -32,13 +32,20 @@ Use this checklist before any paper trade plan or real trade plan. A real trade 
 
 - Account value entered into the risk calculator.
 - Risk percentage chosen before position sizing.
-- Real trade risk is no more than 1% of account value.
+- The applicable strategy risk budget is checked: tactical ordinary/event
+  planned loss at most 0.5%/0.25%, combined tactical planned loss at most 2%,
+  and initial tactical exposure at most 5% per name. A sourced growth plan
+  uses its stated downside and current allocation contract; it does not
+  inherit a historical generic one-trade percentage.
 - Entry price and stop price defined.
 - Target price, holding period plan, and exit rule defined.
-- Position size calculated.
+- Company-specific desired size and rationale are recorded in the maintained
+  plan; whole shares, broad-core floor, aggregate stock ceiling and actual
+  funds are checked. No removed fixed name cap or size tier is reintroduced.
 - Trade size fits a cash account.
 - Planned order type is limit order only.
-- Weekly and monthly loss limits checked.
+- Current strategy-specific loss limits and reassessment dates checked;
+  archived generic monthly/weekly examples are not active risk settings.
 - No margin, options, shorting, live order automation, or brokerage API use.
 - No averaging down unless a separate written thesis update has manual approval.
 

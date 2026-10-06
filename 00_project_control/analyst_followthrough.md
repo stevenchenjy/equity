@@ -300,13 +300,28 @@ work, use the documented full no-send recomposition and verify current views.
 ## Authority
 
 Preserve the approved capital basis, zero mandatory internal reserve,
-allocation targets, name/aggregate/tactical risk limits, evidence thresholds
-and human-only execution. Do not promote experimental momentum observations,
+the current [owner-approved allocation policy](allocation_policy.md), aggregate
+and strategy-specific tactical limits, evidence thresholds and human-only
+execution. The October 6 standard uses a 30% broad-core floor/baseline target,
+70% aggregate stock target/maximum, zero cash target and no fixed single-stock
+cap. Do not restore superseded name limits from old heartbeat wording, account
+snapshots or historical reviews. Do not promote experimental momentum observations,
 retune after a streak, purchase services, enable leverage, access the broker
 unattended, invent broker facts or clear a genuine account-wide blocker.
-Never force a positive share count to reduce cash. Research can conclude that
-no opportunity qualifies, but must distinguish an adverse investment conclusion
-from unfinished analysis or a missing execution prerequisite.
+For otherwise supported growth opportunities, complete the company-specific
+maintained plan's optional `reviewed_allocation` using the existing plan writer:
+`target_position_pct`, `maximum_entry_price`, `invalidation_price`,
+`reassessment_price`, `rationale`, `downside_case`, `portfolio_overlap`,
+`alternatives`, `reviewed_at` and retained `sources`. It is admitted only for
+`long_term_growth` and stays subject to the plan's source/hash, date and
+purpose checks. A zero-share entry plan is research for an unheld opportunity,
+not proof of a past sale or current fill. These inputs state the desired
+position and current price/risk case; the capital engine still bounds the final
+quantity by aggregate allocation, core-floor room and actual available funds. Fixed initial-size tiers do not
+replace this work. Do not silently convert a tactical purpose to obtain a larger
+allocation. Never force a positive share count to reduce cash. Research can
+conclude that no opportunity qualifies, but must distinguish an adverse
+investment conclusion from unfinished analysis or a missing execution prerequisite.
 
 The deterministic engine remains the eligibility authority. The chat worker
 provides auditable analyst inputs through existing validators; it does not

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Consume one fully passed daily refresh and optionally send its decision."""
+"""Consume a passed refresh or an exact zero-order limited-status handoff."""
 
 from __future__ import annotations
 
@@ -62,12 +62,16 @@ def refresh_readiness(scheduled_slot: str | None = None) -> tuple[bool, str]:
         return False, "refresh_state_unavailable"
     if not isinstance(state, dict):
         return False, "refresh_state_invalid"
+    limited = (state.get("outcome") == "degraded_decision_created"
+               and state.get("soft_failures") == ["official_evidence"]
+               and not state.get("hard_failures")
+               and isinstance(state.get("limited_status_handoff"), dict))
     if (
         state.get("schema_version") != "phase5r_daily_refresh_state_v1"
-        or state.get("outcome") != "passed"
+        or (state.get("outcome") != "passed" and not limited)
         or state.get("decision_created") is not True
         or state.get("hard_failures")
-        or state.get("soft_failures")
+        or (state.get("soft_failures") and not limited)
     ):
         return False, "daily_refresh_not_fully_passed"
     required_cycle = cycle_date()
@@ -92,6 +96,13 @@ def refresh_readiness(scheduled_slot: str | None = None) -> tuple[bool, str]:
         cutoff = datetime.fromisoformat(required_cycle + "T" + window["refresh_not_before"]).replace(tzinfo=ET)
         if state_started.astimezone(ET) < cutoff:
             return False, "daily_refresh_before_delivery_window_checkpoint"
+    if limited:
+        from refresh_handoff import validate_limited_handoff
+        try:
+            validate_limited_handoff(state, root=ROOT, current=current)
+        except (OSError, ValueError, KeyError, TypeError):
+            return False, "daily_refresh_limited_status_invalid"
+        return True, "daily_refresh_limited_status_ready"
     return True, "daily_refresh_ready"
 
 
@@ -167,14 +178,16 @@ def execute(send: bool, scheduled_slot: str | None = None) -> int:
                 component="daily_pipeline",
                 run_mode="protected_no_send",
                 outcome="passed",
-                reason="daily_refresh_and_decision_complete",
+                reason=readiness_reason,
             )
             print(
-                "daily_pipeline_outcome=passed mode=no_send "
+                f"daily_pipeline_outcome=passed mode=no_send handoff={readiness_reason} "
                 "email_attempted=false email_sent=false"
             )
             return 0
         sender_arguments = [sys.executable, str(SENDER_SCRIPT), "--send"]
+        if readiness_reason == "daily_refresh_limited_status_ready":
+            sender_arguments.append("--limited-status")
         if scheduled_slot is not None:
             sender_arguments += ["--delivery-window", scheduled_slot]
         sender = run_command(sender_arguments, timeout=90)

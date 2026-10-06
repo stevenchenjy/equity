@@ -669,10 +669,20 @@ def send_once(
     correction: bool = False,
     owner_review_request_id: str | None = None,
     scheduled_slot: str | None = None,
+    limited_status: bool = False,
 ) -> int:
     owner_review = owner_review_request_id is not None
     if (correction and owner_review) or (scheduled_slot is not None and (correction or owner_review)):
         raise ValueError("delivery_modes_mutually_exclusive")
+    if limited_status and (correction or owner_review or scheduled_slot is None):
+        raise ValueError("limited_status_requires_scheduled_window")
+
+    def check_limited_handoff():
+        if limited_status:
+            from run_daily_decision_pipeline import refresh_readiness
+            ready, reason = refresh_readiness(scheduled_slot)
+            if not ready or reason != "daily_refresh_limited_status_ready":
+                raise ValueError("limited_status_handoff_not_current")
     run_mode = ("explicit_owner_review" if owner_review
                 else "explicit_correction_resend" if correction else "send")
     enabled, guard_reason, _, _ = delivery_guard()
@@ -694,6 +704,7 @@ def send_once(
         return 2
 
     try:
+        check_limited_handoff()
         decision = (validate_decision(owner_review_request_id=owner_review_request_id)
                     if owner_review else validate_decision(correction=correction))
     except (OSError, ValueError) as exc:
@@ -759,6 +770,7 @@ def send_once(
             return 0
 
         try:
+            check_limited_handoff()
             revalidated = validate_decision(correction=correction, owner_review_request_id=owner_review_request_id,
                 snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
             if revalidated != decision:
@@ -805,7 +817,10 @@ def send_once(
         request_suffix += ";" + delivery_meaning_key(decision)
         if scheduled_slot is not None:
             request_suffix += ";scheduled_slot=" + scheduled_slot
+        if limited_status:
+            request_suffix += ";refresh_handoff=limited_status_only"
         try:
+            check_limited_handoff()
             if decision.get("workflow_integrity") is not None:
                 from workflow_integrity import validate_published_workflow
                 validate_published_workflow(decision, root=ROOT, current=now_et())
@@ -909,9 +924,13 @@ def main() -> int:
     mode.add_argument("--check", action="store_true")
     parser.add_argument("--delivery-window", choices=("morning", "afternoon", "legacy_daily"),
                         help="Stable ordinary delivery purpose; never an arbitrary retry ID")
+    parser.add_argument("--limited-status", action="store_true",
+                        help="Internal: require exact current zero-order soft-failure handoff")
     args = parser.parse_args()
     if args.delivery_window and not args.send:
         parser.error("--delivery-window requires --send")
+    if args.limited_status and not args.send:
+        parser.error("--limited-status requires --send")
     if args.check:
         enabled, reason, _, _ = delivery_guard()
         print(
@@ -927,7 +946,7 @@ def main() -> int:
             return 2
         slot = window["id"]
     return send_once(correction=args.resend_correction, owner_review_request_id=args.send_owner_review,
-                     scheduled_slot=slot)
+                     scheduled_slot=slot, limited_status=args.limited_status)
 
 
 if __name__ == "__main__":

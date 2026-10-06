@@ -16,6 +16,25 @@ def _passed_confidence(value: str, allowed: list[str]) -> bool:
     return value.strip().lower() in {item.lower() for item in allowed}
 
 
+def remaining_core_floor_cost(*, account_total: float, current_core_value: float,
+                              core_minimum_pct: float, core_unit_price: float | None = None) -> float:
+    """Capital needed to reach the core floor at the canonical whole-share mark.
+
+    The cash remains undeployed planning capacity, not a mandatory cash reserve.
+    A missing unit price is retained only for legacy callers' dollar-gap math;
+    production passes the validated SPY mark explicitly.
+    """
+    if any(not math.isfinite(value) or value < 0 for value in
+           (account_total, current_core_value, core_minimum_pct)):
+        raise ValueError("core_floor_inputs_invalid")
+    gap = max(0.0, account_total * core_minimum_pct / 100.0 - current_core_value)
+    if core_unit_price is None:
+        return gap
+    if type(core_unit_price) not in (int, float) or not math.isfinite(core_unit_price) or core_unit_price <= 0:
+        raise ValueError("core_unit_price_invalid")
+    return max(0, math.ceil(gap / core_unit_price - 1e-12)) * core_unit_price
+
+
 def individual_sizing_decision(
     *,
     policy: dict[str, Any],
@@ -31,7 +50,11 @@ def individual_sizing_decision(
     deployable_cash: float,
     active_weight_pct: float,
     active_hard_cap_pct: float,
-    single_stock_default_cap_pct: float,
+    single_stock_default_cap_pct: float | None,
+    reviewed_target_pct: float | None = None,
+    current_position_value: float = 0.0,
+    current_core_value: float | None = None,
+    core_unit_price: float | None = None,
 ) -> dict[str, Any]:
     """Return the highest supported sizing tier and a feasible share count."""
 
@@ -79,18 +102,29 @@ def individual_sizing_decision(
             "gate_results": gate_results,
         }
 
-    tier_pct = min(
-        float(selected["target_position_pct"]),
-        single_stock_default_cap_pct,
-    )
+    sourced = policy.get("sizing_method") == "source_bound_company_allocation"
+    if sourced and reviewed_target_pct is None:
+        return {"sizing_tier": "no_allocation", "target_position_pct": 0.0,
+                "suggested_whole_shares": 0, "suggested_position_pct": 0.0,
+                "maximum_position_value": 0.0, "small_account_exception_used": False,
+                "concentration_limited": False, "failed_gates": ["source_bound_allocation_review_required"],
+                "gate_results": {**gate_results, "allocation_review": False}}
+    requested_pct = float(reviewed_target_pct if sourced else selected["target_position_pct"])
+    if not math.isfinite(requested_pct) or not 0 < requested_pct <= 100:
+        raise ValueError("reviewed_allocation_target_invalid")
+    tier_pct = min(requested_pct, single_stock_default_cap_pct) if single_stock_default_cap_pct is not None else requested_pct
     active_headroom_value = max(
         0.0, account_total * (active_hard_cap_pct - active_weight_pct) / 100.0
     )
-    maximum_position_value = min(
-        deployable_cash,
-        account_total * tier_pct / 100.0,
+    core_gap = remaining_core_floor_cost(account_total=account_total,
+        current_core_value=float(current_core_value or 0),
+        core_minimum_pct=float(policy.get("core_minimum_pct", 0)),
+        core_unit_price=core_unit_price) if sourced else 0.0
+    maximum_position_value = max(0.0, min(
+        max(0.0, deployable_cash - core_gap),
+        max(0.0, account_total * tier_pct / 100.0 - current_position_value),
         active_headroom_value,
-    )
+    ))
     shares = (
         math.floor(maximum_position_value / current_price + 1e-12)
         if current_price > 0
@@ -106,11 +140,12 @@ def individual_sizing_decision(
         policy["small_account_whole_share_exception_max_overshoot_pct"]
     )
     if (
-        shares == 0
+        not sourced
+        and shares == 0
         and current_price > 0
         and current_price <= deployable_cash + 1e-9
         and current_price <= active_headroom_value + 1e-9
-        and one_share_pct <= single_stock_default_cap_pct + 1e-9
+        and (single_stock_default_cap_pct is None or one_share_pct <= single_stock_default_cap_pct + 1e-9)
         and one_share_pct <= tier_pct + exception_overshoot + 1e-9
     ):
         shares = 1
@@ -125,10 +160,10 @@ def individual_sizing_decision(
         failed = ["whole_share_affordability"]
     concentration_limited = (
         active_headroom_value + 1e-9 < account_total * tier_pct / 100.0
-        or tier_pct + 1e-9 < float(selected["target_position_pct"])
+        or tier_pct + 1e-9 < requested_pct
     )
     return {
-        "sizing_tier": selected["name"] if shares else "no_allocation",
+        "sizing_tier": ("source_bound_company_allocation" if sourced else selected["name"]) if shares else "no_allocation",
         "target_position_pct": tier_pct if shares else 0.0,
         "suggested_whole_shares": shares,
         "suggested_position_pct": resulting_pct,
@@ -171,7 +206,7 @@ def core_starter_decision(
         else 0
     )
     target_gap_shares = (
-        math.floor(allocation_gap / current_price + 1e-12)
+        (math.ceil(allocation_gap / current_price - 1e-12) if policy.get("core_minimum_pct") is not None else math.floor(allocation_gap / current_price + 1e-12))
         if current_price > 0
         else 0
     )
@@ -220,4 +255,4 @@ def core_starter_decision(
     }
 
 
-__all__ = ["core_starter_decision", "individual_sizing_decision"]
+__all__ = ["core_starter_decision", "individual_sizing_decision", "remaining_core_floor_cost"]

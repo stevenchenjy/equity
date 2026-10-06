@@ -184,10 +184,7 @@
   "182": "HistoricalOrderEmailTests",
   "183": "Equity Research",
   "184": "Equity Research — MacBook → GitHub → Mac mini workflow",
-  "185": "OwnerSnapshotTests",
-  "186": "_DocumentPeriod",
   "187": "Equity Research — AI operating decision",
-  "188": "Equity Research — current document entrypoints",
   "189": "Equity Research 命名与归档规则",
   "190": "main",
   "191": "SecPayload",
@@ -207,7 +204,5 @@
   "205": "Pipeline completion evidence",
   "206": "Manual execution and human trade approval",
   "207": "Daily decision workflow",
-  "208": "Isolated SHADOW_LLM evaluation",
-  "209": "VisibleText",
-  "210": "run_stage"
+  "208": "Isolated SHADOW_LLM evaluation"
 }

@@ -232,7 +232,14 @@ def cards(decision: dict[str, Any], view: dict[str, Any]) -> list[dict[str, Any]
     """
     if decision.get("capital_decision"):
         from capital_presentation import cards as capital_cards
-        return capital_cards(decision, view)
+        result = capital_cards(decision, view)
+        if decision.get("evidence_gate", {}).get("passed") is False:
+            result.insert(0, {"title": "Limited evidence update", "kind": "status", "group": "context",
+                "body": "Official-source validation is incomplete. This update approves no new order. "
+                "Current dated HOLD/review instructions remain visible below; expired prices and DAY drafts are not renewed. "
+                "Account, order and funding checks still apply. The failed research stage continues through bounded recovery.",
+                "sources": []})
+        return result
     from email_brief import money, shares, _safe_source, _RESEARCH_HOSTS
     from delivery_followthrough import continuation_requires_reconciliation
     from investment_plans import regular_close

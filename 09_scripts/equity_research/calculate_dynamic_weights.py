@@ -15,6 +15,8 @@ from account_common import (
     ROOT,
     append_run_log,
     as_float,
+    optional_cap,
+    format_cap,
     concentration_status,
     dynamic_position_fit,
     is_core_allocation_ticker,
@@ -107,12 +109,12 @@ def confirmed_thesis_break(
 
 
 def held_recommendation_label(
-    *, is_core: bool, current_weight: float, hard_cap: float,
+    *, is_core: bool, current_weight: float, hard_cap: float | None,
     score: float, thesis_break_confirmed: bool,
 ) -> str:
     if is_core:
         return "hold_existing"
-    if current_weight > hard_cap + 1e-9:
+    if hard_cap is not None and current_weight > hard_cap + 1e-9:
         return "trim_review"
     if thesis_break_confirmed:
         return "exit_review"
@@ -193,8 +195,8 @@ def main() -> None:
     account_total = cash + estimated_holdings_value
     if account_total <= 0:
         raise ValueError("cash plus current holdings must be positive")
-    default_cap = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
-    hard_cap = as_float(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
+    default_cap = optional_cap(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    hard_cap = optional_cap(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
 
     dynamic_rows: list[dict[str, str]] = []
     for position in positions:
@@ -227,8 +229,8 @@ def main() -> None:
                 "current_weight_pct": f"{current_weight:.4f}",
                 "stored_historical_position_pct": f"{historical_weight:.2f}",
                 "weight_difference_pct": f"{current_weight - historical_weight:.4f}",
-                "single_stock_default_cap_pct": f"{default_cap:.2f}",
-                "single_stock_hard_cap_pct": f"{hard_cap:.2f}",
+                "single_stock_default_cap_pct": format_cap(default_cap),
+                "single_stock_hard_cap_pct": format_cap(hard_cap),
                 "concentration_status": status,
                 "current_research_score": f"{score:.2f}",
                 "current_recommendation_label": label,

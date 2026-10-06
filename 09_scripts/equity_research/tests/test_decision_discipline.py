@@ -50,7 +50,8 @@ class LongHorizonDecisionDisciplineTests(unittest.TestCase):
         self.assertEqual(result["human_confirmation_required"], "no")
 
     def exact_action(self, label: str, *, score: float = 5.2, weight: float = 7.2,
-                     assessment: dict[str, object] | None = None) -> dict[str, str]:
+                     assessment: dict[str, object] | None = None,
+                     name_cap: float | None = 15) -> dict[str, str]:
         position = {"ticker": "RBRK", "horizon_class": "long_term_research",
                     "invalidation_rule": self.assessment()["invalidation_rule"]}
         rows = [{"ticker": "RBRK", "asset_role": "active_stock", "current_shares": "2",
@@ -68,7 +69,7 @@ class LongHorizonDecisionDisciplineTests(unittest.TestCase):
                 patch.object(action_plan, "VALUATION_POLICY_PATH", policy),
                 patch.object(action_plan, "load_active_inhibit", return_value={"active": False}),
                 patch.object(action_plan, "load_research_account_state", return_value={
-                    "single_stock_default_cap_pct": 15, "single_stock_hard_cap_pct": 15}),
+                    "single_stock_default_cap_pct": name_cap, "single_stock_hard_cap_pct": name_cap}),
                 patch.object(action_plan, "load_positions", return_value=[position]),
                 patch.object(action_plan, "load_packets", return_value={"RBRK": {"recommendation_confidence": "medium_high"}}),
                 patch.object(action_plan, "load_thesis_reviews", return_value={"RBRK": assessment} if assessment else {}),
@@ -112,6 +113,29 @@ class LongHorizonDecisionDisciplineTests(unittest.TestCase):
         result = self.exact_action("hold_pending_research", weight=18)
         self.assertEqual(result["recommended_action"], "trim_specific_shares_review")
         self.assertEqual(result["whole_shares_to_change"], "1")
+
+    def test_removed_name_cap_does_not_reappear_as_a_held_trim(self) -> None:
+        label = weights.held_recommendation_label(
+            is_core=False, current_weight=55, hard_cap=None, score=8,
+            thesis_break_confirmed=False,
+        )
+        self.assertEqual(label, "hold_existing")
+        result = self.exact_action(label, score=8, weight=55, name_cap=None)
+        self.assertEqual(result["recommended_action"], "hold")
+        self.assertEqual(result["whole_shares_to_change"], "0")
+        self.assertIn("No fixed single-stock", result["reason"])
+        self.assertNotIn("15.00%", result["reason"])
+
+    def test_removed_name_cap_still_requires_primary_thesis_exit(self) -> None:
+        label = weights.held_recommendation_label(
+            is_core=False, current_weight=55, hard_cap=None, score=8,
+            thesis_break_confirmed=True,
+        )
+        self.assertEqual(label, "exit_review")
+        result = self.exact_action(label, score=8, weight=55, name_cap=None,
+                                   assessment=self.assessment())
+        self.assertEqual(result["recommended_action"], "exit_review")
+        self.assertEqual(result["whole_shares_to_change"], "2")
 
     def test_pending_long_horizon_research_never_replaces_a_confirmed_exit(self) -> None:
         held = [

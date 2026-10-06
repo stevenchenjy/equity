@@ -35,7 +35,9 @@ Daily analysis does not imply daily action.
 - Missing long-horizon thesis evidence is labeled `hold_pending_research`;
   unchanged shares do not establish that the long-term thesis is complete.
 - TRIM and EXIT research proposals may escalate immediately when C9 identifies
-  a concentration or invalidation condition.
+  an applicable aggregate/strategy-specific risk or invalidation condition. A
+  removed fixed name cap cannot create a concentration-only trim; see the
+  [current allocation policy](allocation_policy.md).
 - Every action proposal has `automatic_action_allowed=no`.
 
 ## Current-State Authority

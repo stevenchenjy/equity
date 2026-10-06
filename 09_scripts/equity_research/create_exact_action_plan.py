@@ -16,6 +16,7 @@ from account_common import (
     ROOT,
     append_run_log,
     as_float,
+    optional_cap,
     load_research_account_state,
     load_active_inhibit,
     load_packets,
@@ -141,13 +142,13 @@ def main() -> None:
     held_review_policy = valuation_policy["held_position_review"]
     summary = load_portfolio_summary()
     account_total = as_float(summary["account_total_value"], "account_total_value")
-    default_cap = as_float(
+    default_cap = optional_cap(
         account["single_stock_default_cap_pct"],
         "single_stock_default_cap_pct",
     )
-    hard_cap = as_float(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
-    default_cap_value = account_total * default_cap / 100.0
-    cap_value = account_total * hard_cap / 100.0
+    hard_cap = optional_cap(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
+    default_cap_value = account_total * default_cap / 100.0 if default_cap is not None else None
+    cap_value = account_total * hard_cap / 100.0 if hard_cap is not None else None
 
     actions: list[dict[str, str]] = []
     reviews: list[dict[str, str]] = []
@@ -194,7 +195,7 @@ def main() -> None:
                 "This is an exit research proposal; no automatic transaction is allowed."
             )
             trim_condition = "Exit review only if the documented thesis or evidence is materially impaired and a human confirms."
-        elif weight > hard_cap + 1e-9:
+        elif hard_cap is not None and weight > hard_cap + 1e-9:
             maximum_whole_shares = max(0, math.floor(cap_value / price + 1e-12))
             change = max(0, math.ceil(shares - maximum_whole_shares - 1e-9))
             target_shares = max(0.0, shares - change)
@@ -212,7 +213,7 @@ def main() -> None:
                 f"at ${price:.2f}, the minimum whole-share scenario reduces {change} share(s)."
             )
         elif (
-            weight > default_cap + 1e-9
+            default_cap is not None and weight > default_cap + 1e-9
             and valuation_trim_review_required(
                 valuation,
                 price,
@@ -265,6 +266,9 @@ def main() -> None:
                 "Research score or an unverified prior exit label requires further evidence review; "
                 "no source-bound thesis invalidation is confirmed. Keep shares unchanged."
             ) if pending_research else (
+                "No fixed single-stock percentage cap applies. No concentration-only trim is recommended; "
+                "any add requires a company-specific supported allocation and its independent current gates."
+            ) if hard_cap is None else (
                 f"Dynamic weight {weight:.4f}% is at or below the {hard_cap:.2f}% hard cap; "
                 "no concentration-only trim is recommended, and no add is recommended today."
             )
@@ -272,6 +276,9 @@ def main() -> None:
                 "Review the documented thesis against dated primary evidence before proposing an exit; "
                 "a daily price or technical-score change alone is insufficient."
             ) if pending_research else (
+                "Reassess on adverse thesis or valuation evidence, a maintained plan's exit condition, "
+                "or an aggregate allocation constraint; weight above the retired name cap is not a sell trigger."
+            ) if hard_cap is None else (
                 f"Reopen trim review only if refreshed weight rises above {hard_cap:.2f}% or independent research evidence weakens."
             )
 

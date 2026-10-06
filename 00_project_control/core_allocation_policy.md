@@ -7,7 +7,15 @@ The broad-market core sleeve is separate from individual-stock research. SPY is 
 Targets come from the validated current account state. Dollar amounts are
 calculated from that state at runtime; this policy does not preserve a dated
 account total or a fixed deployment amount. The active production configuration
-currently defines the percentage targets and concentration caps.
+defines the effective percentage targets and aggregate allocation controls.
+The [October 6 owner allocation policy](allocation_policy.md) sets a 30%
+broad-core minimum and baseline target, up to 70% individual stocks, zero cash
+target/reserve, and no fixed single-stock cap. Core above its baseline is
+permitted; it must not produce a ceiling-based trim. New stock sizing preserves
+room for the core minimum. Whole-share rounding may cross above the baseline
+target to meet the floor when the remaining evidence, cash and aggregate checks
+pass; an already-above-floor core holding is not forced down to 30%. Historical
+target fields never override this policy.
 
 Targets are planning constraints, not automatic purchase instructions.
 

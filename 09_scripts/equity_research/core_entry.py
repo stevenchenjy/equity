@@ -37,8 +37,8 @@ def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any]) -> dict
         qty = Decimal(str(row["suggested_whole_shares"]))
         cap = Decimal(str(row["maximum_review_price"]))
         planning_cash = Decimal(str(decision["account"]["cash_available"]))
-        held = next(p for p in decision["held_positions"] if p["ticker"] == ticker)
-        held_before = Decimal(str(held["current_shares"]))
+        held = next((p for p in decision["held_positions"] if p["ticker"] == ticker), {})
+        held_before = Decimal(str(held.get("current_shares", 0)))
         maintained = next(p for p in decision["plan_continuity"]["plans"] if p["ticker"] == ticker)
         review = datetime.fromisoformat(maintained["review_at"])
         if (generated.tzinfo is None or generated.date().isoformat() != session

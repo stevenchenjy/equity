@@ -29,3 +29,22 @@ python3 09_scripts/equity_research/archive_portfolio_state.py
 ```
 
 Archived files are never read as a fallback for missing current inputs.
+
+For an explicitly approved allocation-policy change, use the metadata-only
+writer after deploying the matching configuration:
+
+```sh
+python3 09_scripts/equity_research/migrate_allocation_policy.py --root /Users/messssi/LocalRuntime/equity --check
+python3 09_scripts/equity_research/migrate_allocation_policy.py --root /Users/messssi/LocalRuntime/equity --apply --request-reference "Owner allocation instruction 2026-10-06"
+```
+
+It acquires runtime, pipeline and policy-writer locks itself; do not invoke it
+while already holding those locks in a parent process. It changes allocation
+metadata only, preserving cash, holdings, orders, planning capital and the
+original account `last_updated`. Exact predecessors and a private receipt are
+retained under `allocation_policy_migrations.local/`. An already matching
+manual snapshot may have its account hash rebound with an explicit policy-only
+receipt; its original observation time is retained. A stale snapshot is never
+made current. Migration receipts are audit outputs, not active evidence of
+broker cash, holdings, fills or orders. Run the existing full no-send refresh
+after the writer releases locks to recompose downstream policy consumers.

@@ -17,21 +17,26 @@ for the current local state.
 
 ## Concentration and Sleeve Rules
 
-The active research overlay was set on 2026-09-14 to a 50% active-stock
-hard cap and 15% default/hard single-stock caps. Use effective configured
-values throughout these comparisons; the local financial record's inherited
-30%/6%/8% fields are not the current research limits.
+The [October 6 owner allocation policy](allocation_policy.md) is authoritative:
+broad core has a 30% minimum and baseline target, aggregate individual stocks
+have a 70% target and maximum, and cash target/reserve are zero. Fixed default
+and hard single-stock caps are disabled. Historical account-record percentages
+and archived policy values must not become fallback active limits.
 
-- Above `15%`: `above_hard_cap`.
-- Above default through hard: `above_default_cap` (empty band while both are 15%).
-- At or below `15%`: `within_default_cap`.
-- Combined active-stock sleeve at or below `20%`: `within_target`.
-- Above `20%` through `50%`: `above_target_within_hard_cap`.
-- Above `50%`: `above_hard_cap`.
+- A held stock has no allocation-cap breach merely because its own weight is
+  large. Report its current weight, loss exposure and evidence separately;
+  do not manufacture a name-cap trim or concentration-only score penalty.
+- Combined individual-stock weight at or below 70% is within its aggregate
+  target/cap. Above 70% remains an aggregate breach and blocks additions.
+- Broad-core weight below 30% is an allocation shortfall to address through
+  qualified research. At or above 30% satisfies the floor; being above the
+  baseline target is not an automatic reduction condition.
+- Strategy-specific tactical exposure and planned-loss budgets still apply.
 
-Current positions are recalculated independently. A position at or below the
-effective single-stock hard cap cannot receive a concentration-only trim label.
+Current positions are recalculated independently from validated account facts.
 A combined sleeve within its effective cap cannot be described as above it.
+Research may still recommend a reduction or exit for sourced business, valuation
+or strategy-specific risk reasons; removal of a name cap is not a permanent hold.
 
 ## Price Quality
 

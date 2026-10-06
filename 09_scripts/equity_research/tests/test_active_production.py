@@ -146,7 +146,7 @@ class ActiveProductionTests(unittest.TestCase):
     def test_hold_email_does_not_invent_an_action_scenario(self) -> None:
         self.assertEqual(action_review_display({"action": "hold"}), "")
 
-    def test_uncertainty_maps_to_smaller_whole_share_sizing(self) -> None:
+    def test_evidence_tier_uses_company_reviewed_allocation_not_fixed_small_target(self) -> None:
         policy = load_active_config()["account"]
         decision = individual_sizing_decision(
             policy=policy,
@@ -161,12 +161,15 @@ class ActiveProductionTests(unittest.TestCase):
             account_total=3000.0,
             deployable_cash=2000.0,
             active_weight_pct=10.0,
-            active_hard_cap_pct=30.0,
-            single_stock_default_cap_pct=6.0,
+            active_hard_cap_pct=70.0,
+            single_stock_default_cap_pct=None,
+            reviewed_target_pct=30.0,
+            current_core_value=1000.0,
         )
-        self.assertEqual(decision["sizing_tier"], "starter_allocation")
-        self.assertEqual(decision["suggested_whole_shares"], 1)
-        self.assertTrue(decision["small_account_exception_used"])
+        self.assertEqual(decision["sizing_tier"], "source_bound_company_allocation")
+        self.assertEqual(decision["suggested_whole_shares"], 6)
+        self.assertEqual(decision["target_position_pct"], 30.0)
+        self.assertFalse(decision["small_account_exception_used"])
 
         adverse = individual_sizing_decision(
             policy=policy,
@@ -181,8 +184,10 @@ class ActiveProductionTests(unittest.TestCase):
             account_total=3000.0,
             deployable_cash=2000.0,
             active_weight_pct=10.0,
-            active_hard_cap_pct=30.0,
-            single_stock_default_cap_pct=6.0,
+            active_hard_cap_pct=70.0,
+            single_stock_default_cap_pct=None,
+            reviewed_target_pct=30.0,
+            current_core_value=1000.0,
         )
         self.assertEqual(adverse["sizing_tier"], "no_allocation")
         self.assertIn("upside", adverse["failed_gates"])

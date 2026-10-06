@@ -1,5 +1,31 @@
 # Equity Research — Daily Delivery Policy
 
+## Limited status continuity after source failure (2026-10-06)
+
+A failed full refresh remains failed and keeps its existing bounded recovery
+attempts. It no longer necessarily suppresses useful, current held-plan status
+for the entire attention window. The narrowly admitted fallback applies only
+when `official_evidence` is the sole non-advisory soft failure, every required
+canonical stage passed, and the current window's exact required market close
+was validated. All other soft failures, hard failures, missing/stale market
+data and corrupt or changed artifacts still block this fallback.
+
+The refresh may seal a `limited_status_handoff` over the newly composed decision,
+text and HTML bytes. The ordinary scheduler and sender independently validate
+its current cycle/window, complete stage identities, source-bound workflow and
+capital contracts, failed evidence gate and retained evidence blocker. It must
+contain no eligible new/action candidate, positive execution quantity or order
+draft. Existing same-purpose HOLD/review context can remain visible; source,
+account, order and funding blockers stay intact. Expired plans remain expired.
+No previous successful decision, price, DAY draft or stale quantity is reused.
+
+The email labels this a **Limited evidence update**, separate from the action
+cards. It grants no new order authority and does not claim the research passed.
+The sender rechecks the handoff before credentials and again before a durable
+send claim. Existing meaningful-change filtering, one-message-per-window
+deduplication, unknown-send fences and final clock checks still apply. This is
+not an automatic resend or permission to send outside the owner's windows.
+
 ## Same-day continuation under the owner's full-fill assumption (2026-09-28)
 
 For a later report on the same ET date, use the owner's explicitly approved
@@ -50,11 +76,12 @@ all original meaning and are not relabelled as missed new windows.
 The owner normally has time 09:45–10:45 and 14:45–15:20 ET. On exchange sessions:
 
 - Morning delivery may begin at 09:30 and must pass its final preclaim clock
-  check by 10:30. It requires a fully passed current-cycle refresh started at
-  or after 08:00, with the exact required previous-session REST data validated.
+  check by 10:30. It requires a fully passed current-cycle refresh, or the
+  narrowly validated limited-status handoff above, started at or after 08:00,
+  with the exact required previous-session REST data validated.
 - Afternoon delivery may begin at 14:30 and must pass the final clock check by
-  15:05. It requires its own passed refresh started at or after 13:30; a morning
-  handoff alone cannot satisfy this checkpoint.
+  15:05. It requires its own passed refresh or limited-status handoff started
+  at or after 13:30; a morning handoff alone cannot satisfy this checkpoint.
 - Each stable window can send at most one materially changed ordinary email.
   Unchanged evaluations consume no send-attempt budget and remain eligible for
   later meaningful analyst updates inside that same window. A quiet window
@@ -247,6 +274,7 @@ that this system is a regulated adviser or has obtained regulatory approval.
 
 - Only the existing Keychain-backed dailyrefresh launcher supplies market and
   SEC identities. Dailydecision consumes the current complete validated handoff
+  or the explicitly limited, zero-order status handoff described above,
   and requires its window-specific refresh checkpoint before composing/sending.
 - The required REST session is a calendar target, not a provider publication
   promise. Data must pass the existing complete one-year session, OHLCV, source,

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import copy
+import csv
 import hashlib
 import json
 import tempfile
 import unittest
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
+import build_decision_evidence_packet as packet_builder
 from build_decision_evidence_packet import build_packet
-from daily_common import iso_now
+from sec_acceptance import acceptance_map, build_acceptance_index
+from sec_acceptance_extensions import load_extension_artifacts
 from valuation_input_bundle import (
     ValuationInputBundleError,
     load_valuation_input_bundle,
@@ -297,9 +301,55 @@ class ValuationInputBundleTests(unittest.TestCase):
                 )
 
     def test_packet_builder_imports_receipt_but_market_gate_stays_closed(self) -> None:
-        packet_as_of = iso_now()
+        packet_as_of = "2026-07-28T13:00:00Z"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
+            ticker = "TST"
+            # Exercise the real packet/bundle validators using an isolated
+            # synthetic account, decision and CSV inputs. A clean source
+            # checkout intentionally has no current private decision artifact.
+            original_root = packet_builder.ROOT
+            path_names = ("DAILY_DECISION_JSON_PATH", "ACCOUNT_STATE_PATH", "EVIDENCE_STATUS_PATH",
+                "POSITIONS_PATH", "POSITION_RECOMMENDATION_PATH", "NEW_CANDIDATE_PATH", "FUNDAMENTALS_PATH",
+                "MARKET_QUALITY_PATH", "MARKET_SNAPSHOT_PATH", "EVIDENCE_LEDGER_PATH", "C5_PACKET_PATH",
+                "C9_SCORE_PATH", "ARTIFACT_INDEX_PATH", "SEC_ACCEPTANCE_INDEX_PATH")
+            paths = {name: root / getattr(packet_builder, name).relative_to(original_root) for name in path_names}
+            for name, path in paths.items():
+                path.parent.mkdir(parents=True, exist_ok=True)
+                if path.suffix == ".csv":
+                    path.write_text("ticker\n", encoding="utf-8")
+            def write_rows(name, rows):
+                with paths[name].open("w", newline="", encoding="utf-8") as handle:
+                    writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+                    writer.writeheader()
+                    writer.writerows(rows)
+            paths["DAILY_DECISION_JSON_PATH"].write_text(json.dumps({
+                "cycle_date": "2026-07-28", "generated_at": packet_as_of,
+                "decision_fingerprint": "synthetic-test-decision", "material_events": [],
+                "market_gate": {"passed": True, "complete_close_verified": True,
+                                "expected_market_session": "2026-07-27"},
+                "held_positions": [{"ticker": ticker, "action": "hold"}],
+                "eligible_action_review_candidates": []}), encoding="utf-8")
+            paths["ACCOUNT_STATE_PATH"].write_text(json.dumps({
+                "account_total_value": 4000, "prior_account_value": 4000, "new_external_cash": 0,
+                "cash_available": 3000, "cash_reserved": 0, "investment_horizon_years": 1,
+                "cash_needed_within_three_years": "no", "core_allocation_target_pct": 30,
+                "active_stock_target_pct": 70, "active_stock_hard_cap_pct": 70, "cash_target_pct": 0,
+                "single_stock_default_cap_pct": None, "single_stock_hard_cap_pct": None,
+                "last_updated": AVAILABLE_AT}), encoding="utf-8")
+            write_rows("POSITIONS_PATH", [{"ticker": ticker, "shares": "100", "horizon_class": "long_term",
+                                           "thesis": "Synthetic test company", "invalidation_rule": "evidence review"}])
+            write_rows("POSITION_RECOMMENDATION_PATH", [{"ticker": ticker, "current_weight_pct": "25",
+                                                         "recommended_action": "hold"}])
+            write_rows("MARKET_SNAPSHOT_PATH", [{"ticker": ticker, "last_price": "10", "previous_close": "9.9",
+                "intraday_change_pct": "1.01", "relative_volume": "1", "fifty_two_week_high": "11",
+                "fifty_two_week_low": "8", "market_session_date": "2026-07-27",
+                "data_timestamp": AVAILABLE_AT, "data_source": "synthetic_public_context",
+                "data_quality_label": "ok"}])
+            write_rows("MARKET_QUALITY_PATH", [{"ticker": ticker, "usable_for_scoring": "yes"}])
+            paths["ARTIFACT_INDEX_PATH"].write_text(json.dumps({"artifacts": []}), encoding="utf-8")
+            paths["SEC_ACCEPTANCE_INDEX_PATH"].write_text(json.dumps(
+                build_acceptance_index(generated_at=AVAILABLE_AT)), encoding="utf-8")
             evidence_status_path = (
                 root / "03_source_data/equity_research/daily_evidence_status.json"
             )
@@ -317,17 +367,20 @@ class ValuationInputBundleTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            with patch(
-                "build_decision_evidence_packet.EVIDENCE_STATUS_PATH",
-                evidence_status_path,
-            ):
+            with ExitStack() as stack:
+                for name, path in paths.items():
+                    stack.enter_context(patch.object(packet_builder, name, path))
+                stack.enter_context(patch.object(packet_builder, "ROOT", root))
+                stack.enter_context(patch("account_common.ACCOUNT_STATE", paths["ACCOUNT_STATE_PATH"]))
+                stack.enter_context(patch.object(packet_builder, "acceptance_map",
+                    side_effect=lambda: acceptance_map(paths["SEC_ACCEPTANCE_INDEX_PATH"])))
+                stack.enter_context(patch.object(packet_builder, "load_extension_artifacts",
+                    side_effect=lambda **kwargs: load_extension_artifacts(directory=root / "extensions", **kwargs)))
                 baseline = build_packet(
-                    packet_as_of,
-                    valuation_bundle_path=Path(
-                        "/definitely/absent/valuation.json"
-                    ),
+                    packet_as_of, valuation_bundle_path=root / "absent-valuation.json",
+                    valuation_source_root=root,
                 )
-                ticker = baseline["entities"][0]["ticker"]
+                self.assertEqual([row["ticker"] for row in baseline["entities"]], [ticker])
                 bundle_path = (
                     root
                     / "04_data/equity_research/valuation_inputs.local.json"

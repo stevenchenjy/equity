@@ -2,13 +2,18 @@
 
 ## Current Positions
 
-The active research-risk overlay uses a 15% single-stock cap from 2026-09-14.
-Use the effective cap consistently in labels, score inputs, share arithmetic
-and report wording; never reuse the archived 8% account-record cap.
+The [October 6 owner allocation policy](allocation_policy.md) removes fixed
+single-stock default and hard caps. All labels, score inputs, share arithmetic
+and report wording must use that effective policy, never archived percentages.
 
-- If dynamic weight is above the effective 15% cap, generate a whole-share `trim_specific_shares_review` scenario unless an independent thesis break requires `exit_review`.
-- The trim count is the minimum whole-share reduction whose resulting current-price weight is at or below the cap; it is recalculated every run.
-- If dynamic weight is at or below the cap and research remains adequate, use `hold`; do not produce a concentration-only trim.
+- A large individual weight alone cannot generate `trim_specific_shares_review`
+  or a concentration-only score penalty when the fixed name cap is disabled.
+- A supported thesis break, adverse company evidence, aggregate stock breach
+  or strategy-specific risk condition may still support a reduction/exit review.
+- Whole-share reduction quantities must name the actual current condition that
+  justifies them; never calculate shares needed to meet a removed name limit.
+- If research supports holding and no applicable condition requires reduction,
+  use `hold`. A maintained plan remains subject to its own evidence and deadline.
 - A current holding receives no add proposal unless the current deterministic
   evidence and every portfolio gate independently support it.
 
@@ -28,21 +33,33 @@ Routine HOLD/WATCH rows set `human_confirmation_required=no` and still set
 
 Maximum buy price is blank when no purchase review is selected. Conditional core plans use the latest quality-`ok` SPY reference price as a do-not-pay-above ceiling and also require a cleared maintenance state, valid current account state, compliant post-allocation weights, and a fresh human confirmation.
 
-Trim conditions state the refreshed dynamic-weight threshold and current minimum whole-share scenario. Research evidence can still cause hold, trim, or exit review independently of concentration.
+Trim conditions identify the applicable aggregate, strategy-specific or sourced investment condition and current whole-share scenario. There is no fixed single-name allocation threshold. Research evidence can still cause hold, trim, or exit review.
 
 ## New Individual-Stock Eligibility
 
 An individual stock always requires a controlled packet, complete source-bound
 valuation, passing portfolio fit, feasible whole-share sizing, and resulting
-weights within caps. Evidence then maps to the highest supported tier:
+weights within the aggregate stock maximum while preserving the broad-core
+minimum. Evidence eligibility retains these quality thresholds:
 
-- starter: score `7.0`, expected upside `10%`, reward/risk `1.25`, entry `5.5`, target `3%`;
-- normal: score `7.5`, expected upside `15%`, reward/risk `2.0`, entry `6.0`, target `5%`;
-- high conviction: score `8.25`, expected upside `25%`, reward/risk `2.5`, entry `6.5`, target `6%`.
+- starter: score `7.0`, expected upside `10%`, reward/risk `1.25`, entry `5.5`;
+- normal: score `7.5`, expected upside `15%`, reward/risk `2.0`, entry `6.0`;
+- high conviction: score `8.25`, expected upside `25%`, reward/risk `2.5`, entry `6.5`.
 
 All tiers require `medium_high` or `high` confidence except high conviction,
-which requires `high`. A small-account one-share exception may overshoot the
-tier target by at most two percentage points, but never the default
-single-stock cap or active-sleeve hard cap.
+which requires `high`. They are evidence classifications, not fixed size tiers.
+The owner replaced the former 3%/5%/6% initial-size ceilings with company-specific
+source-bound sizing. A growth proposal requires a current maintained plan that
+states desired allocation, investment rationale, downside/countercase,
+invalidation and retained sources in its validated `reviewed_allocation`.
+Its source-bound entry ceiling and reassessment/invalidation levels remain
+conditional review inputs, never assumed broker orders or guaranteed fills. Missing size justification leaves the proposed
+size unresolved; it is not filled with an equal-weight default or the entire
+remaining sleeve. The final whole-share amount remains bounded by that admitted
+plan, aggregate stock room, the core-floor reservation, actual available cash
+and any applicable strategy-specific budget. Rounding does not waive those
+constraints. Core whole-share rounding can exceed its baseline target because
+the core percentage is a floor; it cannot justify a forced reduction of an
+existing core holding.
 
 Missing upside or reward-to-risk evidence is never invented. The candidate becomes `wait_for_more_evidence` or `watch_only`, not `eligible_buy_review`.

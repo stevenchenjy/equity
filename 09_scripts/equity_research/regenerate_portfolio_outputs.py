@@ -3,6 +3,7 @@ from __future__ import annotations
 from equity_naming import report_heading
 
 import json
+import math
 import subprocess
 import sys
 from pathlib import Path
@@ -29,6 +30,7 @@ from account_common import (
     WEEKLY_DECISION_SUMMARY,
     append_run_log,
     as_float,
+    optional_cap,
     dynamic_candidate_fit,
     load_research_account_state,
     load_active_inhibit,
@@ -39,11 +41,11 @@ from account_common import (
     write_csv,
     write_text,
 )
-from portfolio_construction import individual_sizing_decision
+from portfolio_construction import individual_sizing_decision, remaining_core_floor_cost
 from build_current_research_baseline import (
     PRICE_UNVERIFIED_ROLE, requested_coverage_tickers, requested_only_price_unverified,
 )
-from daily_common import latest_published_market_session, now_et
+from daily_common import canonical_sha256, latest_published_market_session, now_et
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parent
@@ -137,6 +139,9 @@ NEW_FIELDS = [
     "suggested_whole_shares",
     "suggested_position_pct",
     "sizing_tier",
+    "reviewed_allocation",
+    "reviewed_allocation_semantic_sha256",
+    "capital_budget_basis",
     "small_account_exception_used",
     "gate_blockers",
     "holding_horizon",
@@ -179,6 +184,63 @@ def price_unverified_recommendation(ticker, packet):
     return row
 
 
+def reviewed_allocation_semantics(plan: dict) -> dict:
+    """Retain investment meaning, excluding clock-only plan renewals."""
+    allocation = plan.get("reviewed_allocation") or {}
+    if not allocation:
+        return {}
+    return {"role": plan.get("role"), "strategy_horizon": plan.get("strategy_horizon"),
+            "purpose": plan.get("purpose"),
+            "reviewed_allocation": {key: value for key, value in allocation.items()
+                                    if key != "reviewed_at"}}
+
+
+def rank_candidate_budget_rows(rows: list[dict]) -> list[dict]:
+    """Allocate new capital by evidence score, without a held-name preference."""
+    def key(row: dict) -> tuple:
+        try:
+            score = float(row.get("account_aware_conviction_score", ""))
+            if not math.isfinite(score):
+                raise ValueError("nonfinite_candidate_score")
+        except (TypeError, ValueError):
+            return (True, 0.0, row.get("ticker", ""))
+        return (False, -score, row.get("ticker", ""))
+    return sorted(rows, key=key)
+
+
+def shared_candidate_budget(*, policy: dict, core_plan: dict, account_total: float,
+                            deployable_cash: float, active_weight_pct: float,
+                            current_core_value: float, stock_committed_value: float,
+                            core_unit_price: float | None = None) -> dict:
+    """Reserve actual eligible core whole shares and prior ranked research buys.
+
+    This is a shared proposal budget, not a cash reserve or an assumed fill.
+    An ineligible core plan contributes no commitment; the strategic core floor
+    still protects remaining capital independently of whether a draft qualifies.
+    """
+    core_commitment = (float(core_plan.get("planned_amount", 0) or 0)
+                       if core_plan.get("status") == "selected_review" else 0.0)
+    values = (account_total, deployable_cash, active_weight_pct, current_core_value,
+              stock_committed_value, core_commitment)
+    if (not all(math.isfinite(value) for value in values) or core_commitment < 0
+            or account_total <= 0 or min(deployable_cash, current_core_value, stock_committed_value) < 0
+            or core_commitment + stock_committed_value > deployable_cash + 1e-8):
+        raise ValueError("shared_candidate_budget_invalid")
+    remaining = max(0.0, deployable_cash - core_commitment - stock_committed_value)
+    effective_core = current_core_value + core_commitment
+    core_gap = remaining_core_floor_cost(account_total=account_total,
+        current_core_value=effective_core, core_minimum_pct=float(policy.get("core_minimum_pct", 0)),
+        core_unit_price=core_unit_price)
+    return {"deployable_cash": remaining,
+            "active_weight_pct": active_weight_pct + stock_committed_value / account_total * 100,
+            "current_core_value": effective_core,
+            "core_tranche_budget": core_commitment,
+            "stock_committed_value": stock_committed_value,
+            "core_unit_price": core_unit_price,
+            "remaining_core_floor_cost": core_gap,
+            "spendable_after_core_floor": max(0.0, remaining - core_gap)}
+
+
 def run_children() -> None:
     for script in CHILD_SCRIPTS:
         result = subprocess.run(
@@ -198,6 +260,8 @@ def main() -> None:
     run_children()
     account = load_research_account_state()
     construction_policy = load_active_config()["account"]
+    from reviewed_allocation import current_allocations
+    allocation_reviews = current_allocations(ROOT, now_et())
     valuation_payload = json.loads(VALUATION_SCENARIO_PATH.read_text(encoding="utf-8"))
     valuation_by_ticker = {
         row["ticker"]: row for row in valuation_payload.get("records", [])
@@ -345,19 +409,18 @@ def main() -> None:
     write_csv(C9_POSITION_RECOMMENDATIONS, position_rows, POSITION_FIELDS)
 
     new_rows: list[dict[str, str]] = []
-    individual_eligible_used = False
+    stock_committed_value = 0.0
     deployable_cash = as_float(summary["deployable_cash"], "deployable_cash")
     account_total = as_float(summary["account_total_value"], "account_total_value")
-    default_cap_pct = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    default_cap_pct = optional_cap(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
     active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
-    for score in scored:
+    core_unit_price = as_float(market_by_ticker["SPY"]["last_price"], "SPY.core_floor_unit_price")
+    for score in rank_candidate_budget_rows(scored):
         ticker = score["ticker"]
         if ticker in price_unverified:
             new_rows.append(price_unverified_recommendation(ticker, packets[ticker]))
             continue
         is_core = ticker == "SPY"
-        if score["asset_role"] == "current_position" and not is_core:
-            continue
         packet = packets[ticker]
         valuation = valuation_by_ticker.get(ticker, {})
         prices = valuation.get("scenario_prices", {}) if valuation.get("status") == "complete" else {}
@@ -370,6 +433,19 @@ def main() -> None:
         reward_to_risk = as_float(str(valuation.get("reward_to_risk", 0) or 0), f"{ticker}.reward_to_risk")
         base_price = as_float(str(prices.get("base", 0) or 0), f"{ticker}.base_price")
         entry_score = as_float(packet["technical_entry_discipline_score"], f"{ticker}.technical")
+        allocation_plan = allocation_reviews.get(ticker, {})
+        allocation_review = allocation_plan.get("reviewed_allocation", {})
+        allocation_semantics = reviewed_allocation_semantics(allocation_plan)
+        budget = shared_candidate_budget(
+            policy=construction_policy, core_plan=core_plan, account_total=account_total,
+            deployable_cash=deployable_cash, active_weight_pct=active_weight,
+            current_core_value=float(summary.get("current_core_value", 0) or 0),
+            stock_committed_value=stock_committed_value,
+            core_unit_price=core_unit_price,
+        )
+        # Both the close-based projection and a higher admitted entry ceiling
+        # must fit. The final adapter separately validates the actual entry.
+        sizing_price = max(current_price, float(allocation_review.get("maximum_entry_price", 0) or 0))
         sizing = individual_sizing_decision(
             policy=construction_policy,
             valuation_complete=valuation.get("status") == "complete",
@@ -379,12 +455,16 @@ def main() -> None:
             reward_to_risk=reward_to_risk,
             entry_score=entry_score,
             portfolio_fit_score=float(score["portfolio_fit_score"]),
-            current_price=current_price,
+            current_price=sizing_price,
             account_total=account_total,
-            deployable_cash=deployable_cash,
-            active_weight_pct=active_weight,
+            deployable_cash=budget["deployable_cash"],
+            active_weight_pct=budget["active_weight_pct"],
             active_hard_cap_pct=active_hard_pct,
             single_stock_default_cap_pct=default_cap_pct,
+            reviewed_target_pct=allocation_review.get("target_position_pct"),
+            current_position_value=float(weights.get(ticker, {}).get("current_value", 0) or 0),
+            current_core_value=budget["current_core_value"],
+            core_unit_price=core_unit_price,
         )
         gate_results = sizing["gate_results"]
         weekly_pass = bool(gate_results["score"])
@@ -394,7 +474,7 @@ def main() -> None:
         expected_upside_pass = bool(gate_results["upside"])
         reward_to_risk_pass = bool(gate_results["reward_to_risk"])
         suggested_whole_shares = int(sizing["suggested_whole_shares"])
-        suggested_position_pct = float(sizing["suggested_position_pct"])
+        suggested_position_pct = suggested_whole_shares * current_price / account_total * 100
         caps_pass = suggested_whole_shares >= 1
         sizing_tier = str(sizing["sizing_tier"])
         maximum_review_price = (
@@ -437,14 +517,16 @@ def main() -> None:
                 if part.strip() and part.strip() != "none"
             )
             valuation_applicability = "not_applicable_broad_market_etf"
-        elif suggested_whole_shares >= 1 and not individual_eligible_used:
-            individual_eligible_used = True
+        elif suggested_whole_shares >= 1:
+            stock_committed_value += suggested_whole_shares * sizing_price
             eligibility_label = "eligible_buy_review"
             action = "eligible_buy_review"
             reason = (
                 f"The {sizing_tier} gates pass: expected upside {expected_upside:.2f}%, "
                 f"reward/risk {reward_to_risk:.2f}, and a {suggested_whole_shares}-share scenario is "
-                f"{suggested_position_pct:.4f}% of the account. Independent human review is required."
+                f"{suggested_position_pct:.4f}% of the account. The proposal shares a bounded budget "
+                "with the eligible core tranche and higher-ranked stock proposals; "
+                "this is no cash reserve or assumed fill. Independent human review is required."
             )
             resulting_caps_pass = "yes"
             gate_blockers = ""
@@ -453,9 +535,11 @@ def main() -> None:
             eligibility_label = "wait_for_more_evidence"
             action = "watch_only"
             failed = list(sizing["failed_gates"])
-            if suggested_whole_shares >= 1 and individual_eligible_used:
-                failed.append("one_candidate_attention_limit")
-            reason = "Deterministic purchase-review gates not all satisfied: " + ",".join(failed or ["valuation_incomplete"])
+            if failed == ["whole_share_affordability"] and all(gate_results.values()):
+                failed = ["shared_capital_or_allocation_budget_below_one_share"]
+            reason = ("Current evidence passed but the reviewed target/shared capital budget cannot fund another whole share: "
+                      if failed == ["shared_capital_or_allocation_budget_below_one_share"] else
+                      "Deterministic purchase-review gates not all satisfied: ") + ",".join(failed or ["valuation_incomplete"])
             resulting_caps_pass = "yes" if caps_pass else "no"
             gate_blockers = ",".join(failed)
             valuation_applicability = "applicable_company_ev_to_revenue"
@@ -496,6 +580,9 @@ def main() -> None:
                 "suggested_whole_shares": str(suggested_whole_shares) if suggested_whole_shares else "0",
                 "suggested_position_pct": f"{suggested_position_pct:.4f}",
                 "sizing_tier": sizing_tier,
+                "reviewed_allocation": json.dumps(allocation_review, sort_keys=True) if allocation_review else "",
+                "reviewed_allocation_semantic_sha256": canonical_sha256(allocation_semantics) if allocation_semantics else "",
+                "capital_budget_basis": json.dumps(budget, sort_keys=True),
                 "small_account_exception_used": (
                     "yes" if sizing.get("small_account_exception_used") else "no"
                 ),
@@ -512,7 +599,7 @@ def main() -> None:
     eligible_individual = [
         row
         for row in new_rows
-        if row["asset_role"] == "individual_stock_candidate" and row["eligibility_label"] == "eligible_buy_review"
+        if row["asset_role"] != "core_allocation_candidate" and row["eligibility_label"] == "eligible_buy_review"
     ]
     review_date = cash_plans[0]["planned_review_date"]
     core_recommendation = next(
@@ -570,8 +657,8 @@ def main() -> None:
         "",
         "## New Individual Stocks",
         "",
-        f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. At most one candidate is surfaced per refresh; every scenario remains research-only and requires independent human confirmation.",
-        "Uncertainty now maps to starter, normal, or high-conviction sizing. Negative/incomplete valuation, inadequate reward/risk, or infeasible whole-share concentration still produces zero allocation.",
+        f"Eligible individual-stock purchase reviews: `{len(eligible_individual)}`. All candidates remain visible; qualified proposals compete by descending evidence score and ticker tie-break, without a held-name preference, for shared cash and aggregate stock room. Every scenario remains research-only and requires independent human confirmation.",
+        "Evidence thresholds do not assign fixed position sizes. Current company-specific reviewed allocations determine desired sizes; shared capital and the core floor bound whole shares. Incomplete valuation, inadequate reward/risk, missing size rationale or exhausted capital can still produce zero allocation.",
         "",
         "## Hypothetical Baseline Portfolio",
         "",
@@ -608,9 +695,9 @@ def main() -> None:
         [
             "",
             (
-                "The 60% core target is a planning target, not a forced deployment rule. "
+                "The broad-core minimum is a planning floor, not a ceiling or a forced purchase. "
                 f"Current whole-share core status is `{core_plan.get('status', 'not_selected')}`; "
-                "the reserve, freshness, entry, and human-confirmation gates remain binding."
+                "the zero-reserve policy, actual cash, freshness, entry, and human-confirmation gates remain binding."
             ),
         ]
     )

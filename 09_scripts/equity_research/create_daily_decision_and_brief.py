@@ -345,7 +345,7 @@ def candidate_proposal_fingerprint(row: dict[str, Any]) -> str:
         except InvalidOperation:
             return ""
 
-    return canonical_sha256({
+    meaning = {
         "ticker": str(row.get("ticker", "")).strip().upper(),
         "action": row.get("recommended_action", ""),
         "eligibility": row.get("eligibility_label", ""),
@@ -360,7 +360,10 @@ def candidate_proposal_fingerprint(row: dict[str, Any]) -> str:
         "valuation_evidence_id": row.get("valuation_evidence_id", ""),
         "invalidation_condition": row.get("invalidation_condition", ""),
         "holding_horizon": row.get("holding_horizon", ""),
-    })
+    }
+    if row.get("reviewed_allocation_semantic_sha256"):
+        meaning["reviewed_allocation_semantic_sha256"] = row["reviewed_allocation_semantic_sha256"]
+    return canonical_sha256(meaning)
 
 
 def candidate_stability(
@@ -585,6 +588,51 @@ def held_position_summary(row: dict[str, Any]) -> str:
         f"最强正面：{row['strongest_positive_evidence'] or 'n/a'}；最强负面：{row['strongest_negative_evidence'] or 'n/a'}；"
         f"人工确认={row['human_confirmation_required']}。"
     )
+
+
+def build_watch_rows(candidate_recommendations: list[dict[str, Any]], *,
+                     pending_candidate_tickers: set[str], eligible_candidate_tickers: set[str],
+                     candidate_counts: dict[str, int], required_distinct_closes: int) -> list[dict[str, Any]]:
+    """Publish every candidate; display shortlist limits cannot remove authority."""
+    watch_rows = []
+    for row in candidate_recommendations:
+        ticker = row.get("ticker", "")
+        displayed_action = row.get("recommended_action", "")
+        if ticker in pending_candidate_tickers:
+            displayed_action = "pending_second_distinct_close"
+        watch_rows.append(
+            {
+                "ticker": ticker,
+                "asset_role": row.get("asset_role", ""),
+                "label": row.get("eligibility_label", ""),
+                "action": displayed_action,
+                "score": row.get("account_aware_conviction_score", ""),
+                "confidence": row.get("recommendation_confidence", ""),
+                "human_confirmation_required": "yes" if ticker in eligible_candidate_tickers else "no",
+                "current_price": row.get("current_price", ""),
+                "valuation_applicability": row.get("valuation_applicability", ""),
+                "valuation_bear_price": row.get("valuation_bear_price", ""),
+                "valuation_base_price": row.get("valuation_base_price", ""),
+                "valuation_bull_price": row.get("valuation_bull_price", ""),
+                "maximum_review_price": row.get("maximum_review_price", ""),
+                "suggested_whole_shares": row.get("suggested_whole_shares", ""),
+                "suggested_position_pct": row.get("suggested_position_pct", ""),
+                "sizing_tier": row.get("sizing_tier", ""),
+                "reviewed_allocation": row.get("reviewed_allocation", ""),
+                "reviewed_allocation_semantic_sha256": row.get("reviewed_allocation_semantic_sha256", ""),
+                "capital_budget_basis": row.get("capital_budget_basis", ""),
+                "stability_distinct_closes": candidate_counts.get(ticker.upper(), 0),
+                "required_distinct_closes": required_distinct_closes,
+                "gate_blockers": row.get("gate_blockers", ""),
+                "holding_horizon": row.get("holding_horizon", ""),
+                "invalidation": row.get("invalidation_condition", ""),
+                "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),
+                "strongest_negative_evidence": row.get("strongest_negative_evidence", ""),
+                "valuation_source": row.get("valuation_source", ""),
+            }
+        )
+
+    return watch_rows
 
 
 def main() -> int:
@@ -857,45 +905,17 @@ def main() -> int:
         review_reasons.append("long_term_fundamental_weakening")
     human_review_required = bool(review_reasons)
 
-    watch_rows = []
     pending_candidate_tickers = {
         row.get("ticker", "") for row in pending_new_candidates
     }
     eligible_candidate_tickers = {
         row.get("ticker", "") for row in eligible_new_candidates
     }
-    for row in candidate_recommendations[:5]:
-        ticker = row.get("ticker", "")
-        displayed_action = row.get("recommended_action", "")
-        if ticker in pending_candidate_tickers:
-            displayed_action = "pending_second_distinct_close"
-        watch_rows.append(
-            {
-                "ticker": ticker,
-                "label": row.get("eligibility_label", ""),
-                "action": displayed_action,
-                "score": row.get("account_aware_conviction_score", ""),
-                "confidence": row.get("recommendation_confidence", ""),
-                "human_confirmation_required": "yes" if ticker in eligible_candidate_tickers else "no",
-                "current_price": row.get("current_price", ""),
-                "valuation_applicability": row.get("valuation_applicability", ""),
-                "valuation_bear_price": row.get("valuation_bear_price", ""),
-                "valuation_base_price": row.get("valuation_base_price", ""),
-                "valuation_bull_price": row.get("valuation_bull_price", ""),
-                "maximum_review_price": row.get("maximum_review_price", ""),
-                "suggested_whole_shares": row.get("suggested_whole_shares", ""),
-                "suggested_position_pct": row.get("suggested_position_pct", ""),
-                "sizing_tier": row.get("sizing_tier", ""),
-                "stability_distinct_closes": candidate_counts.get(ticker.upper(), 0),
-                "required_distinct_closes": required_distinct_closes,
-                "gate_blockers": row.get("gate_blockers", ""),
-                "holding_horizon": row.get("holding_horizon", ""),
-                "invalidation": row.get("invalidation_condition", ""),
-                "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),
-                "strongest_negative_evidence": row.get("strongest_negative_evidence", ""),
-                "valuation_source": row.get("valuation_source", ""),
-            }
-        )
+    watch_rows = build_watch_rows(
+        candidate_recommendations, pending_candidate_tickers=pending_candidate_tickers,
+        eligible_candidate_tickers=eligible_candidate_tickers, candidate_counts=candidate_counts,
+        required_distinct_closes=required_distinct_closes,
+    )
 
     days_to_friday = (4 - current.weekday()) % 7
     if days_to_friday == 0:

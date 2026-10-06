@@ -61,8 +61,9 @@ ACCOUNT_FIELDS = {
     "single_stock_hard_cap_pct",
     "last_updated",
 }
-NUMERIC_ACCOUNT_FIELDS = ACCOUNT_FIELDS - {"cash_needed_within_three_years", "last_updated"}
-OPTIONAL_ACCOUNT_FIELDS = {"cash_basis", "planning_capital_min", "planning_capital_max"}
+NULLABLE_CAP_FIELDS = {"single_stock_default_cap_pct", "single_stock_hard_cap_pct"}
+NUMERIC_ACCOUNT_FIELDS = ACCOUNT_FIELDS - {"cash_needed_within_three_years", "last_updated"} - NULLABLE_CAP_FIELDS
+OPTIONAL_ACCOUNT_FIELDS = {"cash_basis", "planning_capital_min", "planning_capital_max", "core_minimum_pct"}
 POSITION_REQUIRED_FIELDS = {
     "ticker",
     "entry_date",
@@ -144,6 +145,23 @@ def as_float(value: object, field: str) -> float:
     return number
 
 
+def optional_cap(value: object, field: str) -> float | None:
+    """A null cap means deliberately absent, never zero or an arbitrary ceiling."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise ValueError(f"{field} must be null or a finite positive percentage")
+    cap = as_float(value, field)
+    if not 0 < cap <= 100:
+        raise ValueError(f"{field} must be null or a finite positive percentage")
+    return cap
+
+
+def format_cap(value: float | None) -> str:
+    """CSV has no null type: empty is paired with explicit no-fixed-cap status."""
+    return "" if value is None else f"{value:.2f}"
+
+
 def load_account_state() -> dict[str, object]:
     if not ACCOUNT_STATE.exists():
         raise FileNotFoundError("current_account_state.local.json is required")
@@ -190,10 +208,18 @@ def validate_account_state(state: dict[str, object]) -> dict[str, object]:
         state["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct"
     ):
         raise ValueError("active-stock target cannot exceed its hard cap")
-    if as_float(state["single_stock_default_cap_pct"], "single_stock_default_cap_pct") > as_float(
-        state["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct"
-    ):
-        raise ValueError("single-stock default cap cannot exceed its hard cap")
+    default = optional_cap(state["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    hard = optional_cap(state["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
+    if (default is None) != (hard is None):
+        raise ValueError("single-stock caps must both be null or numeric")
+    if default is not None and (default > hard or hard > as_float(state["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")):
+        raise ValueError("single-stock caps must be ordered within the aggregate stock cap")
+    if "core_minimum_pct" in state:
+        minimum = as_float(state["core_minimum_pct"], "core_minimum_pct")
+        if isinstance(state["core_minimum_pct"], bool) or not 0 <= minimum <= as_float(state["core_allocation_target_pct"], "core_allocation_target_pct"):
+            raise ValueError("core minimum must be within the planning core target")
+        if minimum + as_float(state["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct") > 100:
+            raise ValueError("core minimum plus aggregate stock cap cannot exceed 100")
     if state["cash_needed_within_three_years"] != "no":
         raise ValueError("C9 requires cash_needed_within_three_years=no for this confirmed state")
     updated = state["last_updated"]
@@ -209,22 +235,26 @@ def validate_account_state(state: dict[str, object]) -> dict[str, object]:
 
 
 def load_research_account_state() -> dict[str, object]:
-    """Overlay explicit research caps while preserving raw financial truth.
+    """Overlay approved allocation policy while preserving raw financial truth.
 
     Financial validators, snapshot writers and fill reconciliation must keep
     using load_account_state(), because some persist the returned dictionary.
     This function never modifies the account file, timestamps, cash or shares.
     """
-    from active_config import load_active_config, validate_research_risk_limits
+    from active_config import load_active_config, validate_allocation_targets, validate_research_risk_limits
 
     state = load_account_state()
     policy = load_active_config()["account"]
-    if "research_risk_limits" not in policy:
-        return dict(state)
-    limits = validate_research_risk_limits(policy["research_risk_limits"])
-    if limits["active_stock_hard_cap_pct"] < as_float(state["active_stock_target_pct"], "active_stock_target_pct"):
+    result = dict(state)
+    targets = validate_allocation_targets(policy)
+    mapping = {"core_target_pct": "core_allocation_target_pct", "active_target_pct": "active_stock_target_pct",
+               "cash_target_pct": "cash_target_pct", "core_minimum_pct": "core_minimum_pct"}
+    result.update({mapping[key]: value for key, value in targets.items()})
+    limits = validate_research_risk_limits(policy["research_risk_limits"]) if "research_risk_limits" in policy else {}
+    result.update(limits)
+    if as_float(result["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct") < as_float(result["active_stock_target_pct"], "active_stock_target_pct"):
         raise ValueError("research active-stock hard cap cannot be below the recorded active-stock target")
-    return {**state, **limits}
+    return validate_account_state(result)
 
 
 def load_portfolio_summary() -> dict[str, str]:
@@ -339,8 +369,12 @@ def load_active_inhibit() -> dict[str, object]:
 
 
 def concentration_status(weight: float, account: dict[str, object]) -> str:
-    hard = as_float(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
-    default = as_float(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    hard = optional_cap(account["single_stock_hard_cap_pct"], "single_stock_hard_cap_pct")
+    default = optional_cap(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
+    if hard is None and default is None:
+        return "no_fixed_single_stock_cap"
+    if hard is None or default is None:
+        raise ValueError("single-stock caps must both be null or numeric")
     if weight > hard + 1e-9:
         return "above_hard_cap"
     if weight > default + 1e-9:
@@ -350,7 +384,8 @@ def concentration_status(weight: float, account: dict[str, object]) -> str:
 
 def dynamic_position_fit(weight: float, account: dict[str, object]) -> float:
     status = concentration_status(weight, account)
-    return {"above_hard_cap": 2.0, "above_default_cap": 6.0, "within_default_cap": 8.0}[status]
+    return {"above_hard_cap": 2.0, "above_default_cap": 6.0, "within_default_cap": 8.0,
+            "no_fixed_single_stock_cap": 8.0}[status]
 
 
 def dynamic_candidate_fit(theme: str, active_weight: float, account: dict[str, object]) -> float:

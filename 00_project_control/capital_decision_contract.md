@@ -32,7 +32,10 @@ The approved account record and active-production configuration remain authorita
 Existing `portfolio_construction` computes canonical whole-share ceilings; the final
 adapter cannot increase them. Existing `tactical_review` provides observed entry,
 invalidation, target and loss budgets. Final proposals share remaining cash and risk,
-and respect name and aggregate headroom. Current account evidence must include its
+and respect the current aggregate stock ceiling, broad-core floor and applicable
+strategy-specific budgets. The [October 6 allocation policy](allocation_policy.md)
+removes the fixed single-stock ceiling; legacy name-cap headroom cannot remain
+a hidden sizing restriction. Current account evidence must include its
 observation time, current complete orders and execution-funds confirmation. A stale
 or estimated balance cannot acquire numerical capital authority through a renderer.
 
