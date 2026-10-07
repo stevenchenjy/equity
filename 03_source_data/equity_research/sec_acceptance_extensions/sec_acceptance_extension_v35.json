@@ -1,0 +1,66 @@
+{
+  "admitted_at": "2026-10-07T16:26:22.000-04:00",
+  "artifact_sha256": "5461f1e4e776ca13b7385f2d620f0125c2103e468621ad2d355edd166d578ac9",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v35",
+  "prior_extension_set_sha256": "3b110f039951cff6fa82dc952760faa014bf4ba3a35d9c461305fe266e34b930",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-06T15:12:38.000+00:00",
+      "accession_number": "0001193125-26-414921",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-07T16:26:22.000-04:00",
+      "cik": "1297996",
+      "entity_name": "DIGITAL REALTY TRUST, INC.",
+      "extension_record_sha256": "175f117e0c93fae65882a8350c5ae0239aed3b00d7e9880a88ed676baa2d8876",
+      "extension_version": "v35",
+      "filing_date": "2026-10-06",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "378d5d16a2579f47cf77381c78945fa3047f2802f463e68c636ed9ef80a1ddd0",
+      "source_url": "https://data.sec.gov/submissions/CIK0001297996.json",
+      "ticker": "DLR"
+    },
+    {
+      "accepted_at": "2026-10-07T01:18:39.000+00:00",
+      "accession_number": "0001193125-26-415814",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-07T16:26:22.000-04:00",
+      "cik": "1297996",
+      "entity_name": "DIGITAL REALTY TRUST, INC.",
+      "extension_record_sha256": "fb5c1b5789473a2f9cefac561a93fe50c43680e043589a3b20ca5311a6268173",
+      "extension_version": "v35",
+      "filing_date": "2026-10-06",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "55c21004e963e33dc0f92f0ef6469b82c601ee3454c41f94074b9e08a94155e6",
+      "source_url": "https://data.sec.gov/submissions/CIK0001297996.json",
+      "ticker": "DLR"
+    },
+    {
+      "accepted_at": "2026-10-07T01:19:48.000+00:00",
+      "accession_number": "0001193125-26-415815",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-07T16:26:22.000-04:00",
+      "cik": "1297996",
+      "entity_name": "DIGITAL REALTY TRUST, INC.",
+      "extension_record_sha256": "5d7eef3cd6a6c0259e6aff9faeb3f8108cf992fd2e2bc87592878e1f972783ba",
+      "extension_version": "v35",
+      "filing_date": "2026-10-06",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "ba6782e348a51b3eb7da2f7cfdbf8be19f259bcf34ccc2cf287c0bb67eeeb25a",
+      "source_url": "https://data.sec.gov/submissions/CIK0001297996.json",
+      "ticker": "DLR"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
