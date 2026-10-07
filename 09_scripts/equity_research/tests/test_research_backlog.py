@@ -35,6 +35,25 @@ def inline(*facts, dimension=False, unit="USD"):
 
 
 class ResearchBacklogTests(unittest.TestCase):
+    def test_negative_analyst_assessment_defers_canonical_priority_without_completing_gaps(self):
+        from test_capital_work_queue import negative_opportunity, WHEN
+        opportunity = negative_opportunity("ABC")
+        research = {"market_session_date": "2026-09-25", "companies": {"ABC": {
+            "readiness": "reviewed_thesis_valuation_pending", "missing_evidence": ["valuation_assumptions"]}}}
+        def build(positions=None, report=None, item=None, current=WHEN):
+            return build_backlog(fundamentals=[{"ticker": "ABC"}], positions=positions or [],
+                research=report or research, dossiers={}, current=current, opportunities=[item or opportunity])
+        result = build()
+        self.assertEqual(result["priority_queue"], [])
+        self.assertTrue(result["issuer_queue"][0]["assessment_waiting_for_change"])
+        self.assertTrue(result["issuer_queue"][0]["gap_ids"])
+        self.assertTrue(any(r["status"] == "pending_objective" for r in result["items"]))
+        self.assertTrue(build(positions=[{"ticker": "ABC", "current_shares": "1"}])["priority_queue"])
+        newer = copy.deepcopy(opportunity); newer["last_evidence_at"] = "2026-09-27T13:40:00-04:00"
+        self.assertTrue(build(item=newer)["priority_queue"])
+        self.assertTrue(build(report={**research, "market_session_date": "2026-09-28"})["priority_queue"])
+        self.assertTrue(build(current=datetime.fromisoformat("2026-09-28T13:45:00-04:00"))["priority_queue"])
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
@@ -97,6 +116,23 @@ class ResearchBacklogTests(unittest.TestCase):
         self.assertEqual(repeated["canonical_numeric_updates"], 0)
         self.assertTrue((self.root / HISTORY_REL).read_bytes().startswith(first_history))
         validate_report(repeated, root=self.root, current=NOW)
+
+    def test_current_issuer_rejection_cannot_reuse_prior_fresh_selection(self):
+        self.execute()
+        status = self.root / "03_source_data/equity_research/daily_evidence_status.json"
+        atomic_write_json(status, {"submission_failed_tickers": ["ABC"],
+            "ticker_blockers": {"ABC": ["sec_acceptance_reconciliation_failed"]}})
+        result = self.complete()
+        self.assertEqual(result["reason_code"], "issuer_evidence_quarantined")
+        self.assertEqual(result["fields_completed"], [])
+        refreshed = self.execute()
+        self.assertIn("ABC", refreshed["selected_tickers"])
+        self.assertEqual(read_json(self.root / DOSSIER_REL / "ABC.json")["reason_code"], "issuer_evidence_quarantined")
+        atomic_write_json(status, {"submission_failed_tickers": ["OTHER"],
+            "ticker_blockers": {"ABC": ["company_fundamentals_incomplete"], "OTHER": ["conflict"]}})
+        result = self.complete()
+        self.assertNotEqual(result["reason_code"], "issuer_evidence_quarantined")
+        self.assertIn("debt_latest", result["fields_completed"])
 
     def test_read_only_dossier_completes_values_without_mutating_input_and_apply_later(self):
         before = sha256_file(self.root / FUNDAMENTALS_REL)

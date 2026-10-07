@@ -47,6 +47,14 @@ class CapitalDecisionTests(unittest.TestCase):
     def test_global_data_gate_cannot_be_bypassed_by_old_draft(self):
         self.d['evidence_gate']['passed']=False
         r=self.build()['decisions'][0];self.assertEqual(r['shares'],0);self.assertIn('evidence_gate_failed',r['blockers'])
+    def test_issuer_quarantine_blocks_only_its_own_capital(self):
+        self.d['evidence_gate'].update(passed=True, status='partial', ticker_blockers={'PANW':['sec_acceptance_reconciliation_failed']})
+        self.assertEqual(self.build()['decisions'][0]['decision'],'ACTIONABLE_BUY')
+        self.d['evidence_gate']['ticker_blockers']['TEST']=['sec_acceptance_reconciliation_failed']
+        r=self.build()['decisions'][0]
+        self.assertEqual(r['shares'],0)
+        self.assertIn('sec_acceptance_reconciliation_failed',r['blockers'])
+        self.assertNotIn('evidence_gate_failed',self.build()['global_blockers'])
     def test_joint_budget_never_double_spends(self):
         d2=copy.deepcopy(self.d['watch_candidates'][0]);d2['ticker']='TWO';self.d['watch_candidates'].append(d2);self.d['eligible_new_position_review_candidates'].append('TWO');self.d['long_horizon_research']['candidate_views']['TWO']=copy.deepcopy(self.d['long_horizon_research']['candidate_views']['TEST'])
         t2=copy.deepcopy(self.d['tactical_review']['drafts'][0]);t2['ticker']='TWO';self.d['tactical_review']['drafts'].append(t2)

@@ -31,6 +31,15 @@ def decision():
         "eligible_new_position_review_candidates":[]}
 
 
+def negative_opportunity(ticker="NVDA"):
+    return {"ticker": ticker, "state": "economics_failed", "reason_code": "recorded_assessment:"+"a"*64,
+        "last_evidence_at": "2026-09-25T13:00:00-04:00", "first_seen_at": "2026-09-25T13:00:00-04:00",
+        "first_observation": {"trigger": "company_business_review"}, "observations": [], "blockers": ["canonical_valuation_pending"],
+        "assessment": {"assessed_at": "2026-09-27T13:30:00-04:00", "next_review_at": "2026-09-28T13:45:00-04:00",
+            "valuation_status": "reviewed", "conclusion": "economics_failed"},
+        "transitions": [{"owner": "analyst_assessment", "to_state": "economics_failed", "recorded_at": "2026-09-27T13:31:00-04:00"}]}
+
+
 def write_valid_backlog(root):
     import hashlib
     from capital_work_queue import BACKLOG_REL
@@ -124,6 +133,112 @@ class CapitalWorkQueueTests(unittest.TestCase):
         self.assertEqual(item["gap_ids"],["DDOG:debt"])
         self.assertEqual(item["review_owner"],"scheduled_research_then_owner_if_eligible")
         self.assertEqual(item["eligible_quantity"],0)
+
+    def core_context(self, *, shares="2", price="779.09"):
+        d = decision()
+        d["held_positions"] = [{"ticker": "SPY", "asset_role": "core_allocation",
+            "current_shares": shares, "current_price": price}]
+        d["watch_candidates"] += [{"ticker": ticker, "gate_blockers": "valuation"} for ticker in ("APP", "NVDA")]
+        return d, {"account": {"core_minimum_pct": 30, "core_target_pct": 30}}
+
+    def test_satisfied_core_retains_monitoring_history_without_company_research_slot(self):
+        d, config = self.core_context()
+        result = self.build(d, config=config)
+        self.assertEqual({r["ticker"] for r in result["top_opportunities"]}, {"APP", "DDOG", "NVDA"})
+        spy = next(r for r in result["items"] if r["item_id"] == "opportunity:SPY")
+        self.assertEqual(spy["state"], "monitoring")
+        self.assertEqual(spy["core_coverage"]["remaining_minimum_value_usd"], 0)
+        self.assertIn("does not propose an add or a trim", spy["next_step"])
+        repeat = self.build(d, result, config=config)
+        self.assertEqual(result["events"], repeat["events"])
+        self.assertEqual(next(r for r in repeat["items"] if r["ticker"] == "SPY")["occurrence"], 1)
+        from capital_work_queue import render_report
+        self.assertIn("Core allocation already satisfied", render_report(result))
+        self.assertIn("no company-research slot assigned", render_report(result))
+
+    def test_below_floor_or_unverified_core_still_has_priority_and_held_risk_is_preserved(self):
+        for shares, price in (("1", "779.09"), ("2", "")):
+            with self.subTest(shares=shares, price=price):
+                d, config = self.core_context(shares=shares, price=price)
+                # Hypothetical additions must not satisfy the present minimum.
+                d["capital_allocation"]["post_review_core_value"] = "1600"
+                d["plan_continuity"]["plans"].append(plan("SPY", "review_due"))
+                result = self.build(d, config=config)
+                self.assertEqual(result["top_opportunities"][0]["ticker"], "SPY")
+                self.assertEqual(result["top_opportunities"][0]["priority"], 3)
+                self.assertIn("SPY", {r["ticker"] for r in result["plan_reassessment_queue"]})
+                self.assertTrue(all(r["priority"] < 3 for r in result["plan_reassessment_queue"]))
+
+    def test_satisfied_core_still_allows_real_evidence_gap_or_eligible_research(self):
+        for reason in ("gap", "held_review", "eligible"):
+            d, config = self.core_context()
+            kwargs = {}
+            if reason == "gap":
+                kwargs["research_backlog"] = {"priority_queue": [{"ticker": "SPY", "priority_rank": 1, "gap_ids": ["fund-gap"]}],
+                    "items": [{"gap_id": "fund-gap", "status": "pending_research", "next_step": "Review changed fund mandate."}]}
+            elif reason == "held_review":
+                d["held_positions"][0]["research_review_required"] = True
+            else:
+                d["eligible_new_position_review_candidates"] = ["SPY"]
+            result = self.build(d, config=config, **kwargs)
+            spy = next(r for r in result["items"] if r["item_id"] == "opportunity:SPY")
+            self.assertIn(spy["state"], {"blocked", "research_ready"})
+            self.assertEqual(spy["priority"], 4)
+            self.assertEqual(spy["eligible_quantity"], 0)
+
+    def test_satisfied_core_reopens_on_shortfall_without_erasing_prior_due_or_history(self):
+        d, config = self.core_context(shares="1")
+        first = self.build(d, config=config)
+        d["held_positions"][0]["current_shares"] = "2"
+        satisfied = self.build(d, first, config=config)
+        d["held_positions"][0]["current_shares"] = "1"
+        reopened = self.build(d, satisfied, config=config)
+        spy = next(r for r in reopened["items"] if r["item_id"] == "opportunity:SPY")
+        self.assertEqual(spy["state"], "blocked")
+        self.assertEqual(spy["occurrence"], 2)
+        self.assertEqual(reopened["events"][:len(first["events"])], first["events"])
+        self.assertEqual(spy["first_seen_at"], first["generated_at"])
+
+    def test_overdue_report_keeps_due_date_and_separates_next_scheduled_check(self):
+        from capital_work_queue import render_report
+        first = self.build()
+        d = decision(); d["generated_at"] = "2026-09-29T13:00:00-04:00"
+        result = self.build(d, first, current=datetime.fromisoformat("2026-09-29T14:00:00-04:00"))
+        text = render_report(result)
+        self.assertIn("Overdue since: 2026-09-28T09:45:00-04:00", text)
+        self.assertIn("Next automatic research review: 2026-09-30T08:00:00-04:00", text)
+        self.assertNotIn("Next review:", text)
+
+    def test_recorded_negative_case_waits_without_removing_canonical_gaps(self):
+        d, config = self.core_context()
+        d["market_gate"] = {"complete_close_verified": True, "expected_market_session": "2026-09-25"}
+        report = {"opportunities": [negative_opportunity()]}
+        first = self.build(d, config=config, opportunity_report=report)
+        nvda = next(r for r in first["items"] if r["ticker"] == "NVDA")
+        self.assertEqual(nvda["state"], "assessed_waiting_reassessment")
+        self.assertEqual(nvda["blockers"], ["valuation"])
+        self.assertNotIn("NVDA", [r["ticker"] for r in first["top_opportunities"]])
+        self.assertEqual(self.build(d, first, config=config, opportunity_report=report)["events"], first["events"])
+        from capital_work_queue import render_report
+        self.assertIn("Completed negative research awaiting changed evidence", render_report(first))
+        for change in ("new_source", "new_close", "review_due", "held", "missing_view"):
+            altered, view = copy.deepcopy(d), copy.deepcopy(report)
+            current = WHEN
+            if change == "new_source":
+                view["opportunities"][0]["last_evidence_at"] = "2026-09-27T13:40:00-04:00"
+            elif change == "new_close":
+                altered["market_gate"]["expected_market_session"] = "2026-09-28"
+            elif change == "review_due":
+                current = datetime.fromisoformat("2026-09-28T14:00:00-04:00")
+                altered["generated_at"] = current.isoformat()
+            elif change == "held":
+                altered["held_positions"].append({"ticker": "NVDA", "asset_role": "active_stock", "current_shares": "1", "current_price": "239.24"})
+            else:
+                view = None
+            with self.subTest(change=change):
+                second = self.build(altered, first, config=config, current=current, opportunity_report=view)
+                self.assertEqual(next(r for r in second["items"] if r["ticker"] == "NVDA")["state"], "blocked")
+                self.assertEqual(second["events"][:len(first["events"])], first["events"])
 
     def test_state_and_hash_chain_tampering_rejected(self):
         first=self.build(); validate_state(first)

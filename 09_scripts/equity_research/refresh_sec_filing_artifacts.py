@@ -46,7 +46,8 @@ INDEX_PATH = (
 INDEX_SCHEMA_VERSION = "phase5r_sec_filing_artifact_index_v1"
 PARSER_ID = "phase5r_sec_text_normalizer"
 PARSER_VERSION = "1.0.0"
-SELECTION_POLICY = "latest_filing_date_plus_event_anchored_material_v3"
+SELECTION_POLICY = "latest_filing_and_periodic_plus_event_anchored_material_v4"
+PERIODIC_FORMS = frozenset({"10-K", "10-Q", "20-F", "40-F"})
 ALLOWED_SEC_HOSTS = frozenset({"sec.gov", "www.sec.gov"})
 ALLOWED_CONTENT_TYPES = frozenset(
     {
@@ -478,15 +479,24 @@ def select_filing_rows(
         raise ArtifactError("SEC evidence ledger has no selectable filings")
 
     latest_dates: dict[str, str] = {}
+    latest_periodic_dates: dict[tuple[str, str], str] = {}
     for row in deduplicated.values():
         latest_dates[row["ticker"]] = max(
             row["filing_date"], latest_dates.get(row["ticker"], "")
         )
+        # An unrelated event must not evict the latest annual/quarterly
+        # report needed for financial and thesis admission. Keep the latest
+        # original of each periodic type; amendments remain event-selected
+        # and cannot replace their complete underlying report.
+        if row["form"] in PERIODIC_FORMS:
+            key = (row["ticker"], row["form"])
+            latest_periodic_dates[key] = max(row["filing_date"], latest_periodic_dates.get(key, ""))
     selected: list[dict[str, str]] = []
     for row in deduplicated.values():
         if (
             row["filing_date"] == latest_dates[row["ticker"]]
             or event_window_material(row, latest_dates[row["ticker"]], material_lookback_days)
+            or row["filing_date"] == latest_periodic_dates.get((row["ticker"], row["form"]))
         ):
             selected.append(row)
     return sorted(

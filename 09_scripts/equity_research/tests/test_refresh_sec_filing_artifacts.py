@@ -283,6 +283,19 @@ class SelectionAndValidationTests(unittest.TestCase):
             ["0001234567-26-000001"],
         )
 
+    def test_later_event_does_not_evict_latest_periodic_reports(self) -> None:
+        rows = [ledger_row(form=form, filing_date=day, accession=f"0001234567-26-{i:06d}")
+                for i, (form, day) in enumerate([
+                    ("10-K", "2026-02-01"), ("10-Q", "2026-05-26"),
+                    ("10-Q", "2026-08-26"), ("8-K", "2026-09-03"),
+                    ("10-Q", "2026-11-26"), ("10-Q/A", "2026-09-04")], 1)]
+        selected = artifacts.select_filing_rows(rows, as_of=date(2026, 10, 7))
+        self.assertEqual({r["accession"] for r in selected}, {
+            "0001234567-26-000001", "0001234567-26-000003", "0001234567-26-000006"})
+        # Newer amendments do not silently replace original financial bytes;
+        # older superseded quarters and future reports are not selected.
+        self.assertEqual(artifacts.select_filing_rows(rows, as_of=date(2026, 10, 8)), selected)
+
     def test_sec_host_and_path_are_fail_closed(self) -> None:
         valid = ledger_row()
         artifacts.normalize_ledger_row(valid)

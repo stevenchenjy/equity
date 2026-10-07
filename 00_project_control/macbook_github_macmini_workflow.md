@@ -33,7 +33,7 @@ LaunchAgent invokes the shared wrapper:
 ```
 
 The wrapper obtains
-`/Users/messssi/LocalRuntime/.locks/equity-equity_research-runtime.lock` before it
+`/Users/messssi/LocalRuntime/.locks/equity-research-runtime.lock` before it
 inspects Git. The same advisory `flock` remains open through the scheduler
 process, including any normal child pipeline. This serializes both schedulers
 and prevents a later scheduled invocation from changing checked-out code

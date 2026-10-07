@@ -509,13 +509,13 @@ def load_extension_audit(
     return indexed
 
 
-def write_extension_admission_audit(
+def validate_extension_admission_audit(
     artifacts: Iterable[dict[str, Any]],
     *,
     path: Path = SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH,
     directory: Path = SEC_ACCEPTANCE_EXTENSION_DIR,
-) -> None:
-    """Append any missing artifact-bound admission entries, never rewrites."""
+) -> list[dict[str, str]]:
+    """Validate retained audit history and return missing rows without writing."""
 
     existing = load_extension_audit(path)
     expected: dict[str, dict[str, str]] = {}
@@ -533,12 +533,25 @@ def write_extension_admission_audit(
             expected[row["audit_id"]] = row
     if set(existing) - set(expected):
         raise ExtensionValidationError("SEC acceptance extension audit has unknown entry")
+    missing: list[dict[str, str]] = []
     for audit_id, row in expected.items():
         previous = existing.get(audit_id)
         if previous is not None:
             if previous != row:
                 raise ExtensionValidationError("SEC acceptance extension audit conflicts")
             continue
+        missing.append(row)
+    return missing
+
+
+def write_extension_admission_audit(
+    artifacts: Iterable[dict[str, Any]],
+    *,
+    path: Path = SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH,
+    directory: Path = SEC_ACCEPTANCE_EXTENSION_DIR,
+) -> None:
+    """Append missing artifact-bound admission entries; preserve prior bytes."""
+    for row in validate_extension_admission_audit(artifacts, path=path, directory=directory):
         append_csv_durable(path, EXTENSION_AUDIT_FIELDS, row)
 
 

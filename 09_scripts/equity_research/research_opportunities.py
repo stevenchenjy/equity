@@ -9,7 +9,7 @@ import time
 
 from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_text,
     canonical_sha256, is_us_market_session_date, latest_published_market_session,
-    read_csv, read_json, sha256_file)
+    read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, publish_store,
     retain_input, validate_policy, require)
@@ -38,6 +38,35 @@ def priority(item: dict, held: set[str]) -> tuple:
     tier = 0 if item["ticker"] in held or adverse else 1 if "catalyst" in families else 2 if families & {"business", "request"} else 3
     rank = min((p["evidence"].get("metrics", {}).get("rank", 999) for p in observations), default=999)
     return (tier, rank, item.get("first_seen_at", item.get("detected_at", "")), item["ticker"])
+
+
+def negative_assessment_wait(item: dict, *, current: datetime, market_session_date: str | None) -> bool:
+    """Defer duplicate research only from an already validated attention view.
+
+    A negative analyst assessment never completes canonical gaps or authorizes a
+    trade. A newer observed source, completed close, or its recorded review date
+    puts the work back in the queue; unknown context cannot suppress research.
+    """
+    assessment = item.get("assessment", {})
+    if (item.get("state") not in {"rejected", "economics_failed"}
+            or assessment.get("conclusion") != item.get("state")
+            or assessment.get("valuation_status") not in {"reviewed", "failed"}):
+        return False
+    try:
+        assessed = aware(assessment["assessed_at"])
+        terminal = item["transitions"][-1]
+        if (terminal.get("owner") != "analyst_assessment" or terminal.get("to_state") != item["state"]
+                or not assessed <= aware(terminal["recorded_at"]) <= current
+                or aware(item["last_evidence_at"]) > aware(terminal["recorded_at"])
+                or current >= aware(assessment["next_review_at"])):
+            return False
+        # The caller supplies an actual canonical close, not an expected
+        # provider availability date or a newly timestamped old snapshot.
+        session = date.fromisoformat(str(market_session_date))
+        close = datetime.combine(session, datetime.min.time().replace(hour=16), ET)
+        return close <= assessed
+    except (ValueError, TypeError, KeyError, IndexError):
+        return False
 
 
 def elapsed_sessions(start: str, current: datetime) -> int:

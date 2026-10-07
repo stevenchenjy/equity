@@ -10,67 +10,67 @@
   ],
   "strategies": [
     {
-      "strategy_id": "reviewed-core-v2",
-      "version": 2,
+      "strategy_id": "reviewed-core-v3",
+      "version": 3,
       "adapter": "core_tranche",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "93d54041fe8a468da86818da1e4b41011081b9e2781731e5043109301da2f633",
         "09_scripts/equity_research/core_entry.py": "23faa35242206ec170c65194965c7d894c8a8f99548f8251cd575a266fcafc5f",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/capital_decision.py": "0c8a7b9bc08e520b6297f30bc527a3b87c2cb215b2dcc0f20d5d572e892f1936",
+        "09_scripts/equity_research/capital_decision.py": "07e6a172e476c75470e2e9c251a992fdea348de1d7a1f1d29412fd8ccfc4860b",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761"
       }
     },
     {
-      "strategy_id": "reviewed-company-v2",
-      "version": 2,
+      "strategy_id": "reviewed-company-v3",
+      "version": 3,
       "adapter": "reviewed_company",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "93d54041fe8a468da86818da1e4b41011081b9e2781731e5043109301da2f633",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/workflow_integrity.py": "9456252f57f14dbef27d07c0ab58d5ef86451f6ce12a53d000db9e02d31f1a83",
-        "09_scripts/equity_research/capital_decision.py": "0c8a7b9bc08e520b6297f30bc527a3b87c2cb215b2dcc0f20d5d572e892f1936",
+        "09_scripts/equity_research/workflow_integrity.py": "dbc65a69baf43b45acc659c186073c9c4f80d7bfe352eafdb945ce1203bd7479",
+        "09_scripts/equity_research/capital_decision.py": "07e6a172e476c75470e2e9c251a992fdea348de1d7a1f1d29412fd8ccfc4860b",
         "09_scripts/equity_research/reviewed_allocation.py": "cc58b564b07d7ee10cbac02e6bad5e61ce67f807e5a597a1cd4c2c9f4f48b885",
         "09_scripts/equity_research/investment_plans.py": "32baa898e62a4485250c1758f0f3bf71dffa81e6e1c112d1add9e801b05538a8",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761"
       }
     },
     {
-      "strategy_id": "reviewed-tactical-v2",
-      "version": 2,
+      "strategy_id": "reviewed-tactical-v3",
+      "version": 3,
       "adapter": "reviewed_tactical",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change.",
       "policy_bindings": {
         "01_policies/tactical_trade_policy.json": "468e5e81ecd8d98bb09802007cad299316965160978c7ef9b1a5e92bd8b8b1ff",
         "00_project_control/active_production_config.json": "93d54041fe8a468da86818da1e4b41011081b9e2781731e5043109301da2f633",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
         "09_scripts/equity_research/tactical_review.py": "6e5faa38781e83894f1fc133bc2336b04bf985c6d67c2fa68deee415447e8206",
-        "09_scripts/equity_research/capital_decision.py": "0c8a7b9bc08e520b6297f30bc527a3b87c2cb215b2dcc0f20d5d572e892f1936",
+        "09_scripts/equity_research/capital_decision.py": "07e6a172e476c75470e2e9c251a992fdea348de1d7a1f1d29412fd8ccfc4860b",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761"
       }
     },
     {
-      "strategy_id": "maintained-exit-v2",
-      "version": 2,
+      "strategy_id": "maintained-exit-v3",
+      "version": 3,
       "adapter": "maintained_exit",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "93d54041fe8a468da86818da1e4b41011081b9e2781731e5043109301da2f633",
         "09_scripts/equity_research/investment_plans.py": "32baa898e62a4485250c1758f0f3bf71dffa81e6e1c112d1add9e801b05538a8",
-        "09_scripts/equity_research/capital_decision.py": "0c8a7b9bc08e520b6297f30bc527a3b87c2cb215b2dcc0f20d5d572e892f1936",
+        "09_scripts/equity_research/capital_decision.py": "07e6a172e476c75470e2e9c251a992fdea348de1d7a1f1d29412fd8ccfc4860b",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761"
       }
     }

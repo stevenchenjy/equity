@@ -35,9 +35,9 @@ def classify(code: str, *, ticker: str | None = None, scope='ticker') -> dict[st
         category, worker, needed = 'E', 'strategy_or_execution_gate', 'The exact reviewed strategy/adoption or current execution evidence identified by this code; no gate bypass.'
     elif any(w in code for w in ('unreconciled', 'source_conflict', 'identity_conflict')):
         category, worker, needed = 'B', 'official_evidence', 'Matching dated SEC primary identity and acceptance-time evidence that passes the existing immutable-index reconciliation; retained conflicts cannot be overwritten.'
-    elif any(w in code for w in ('price_history', 'market_data', 'market_gate', 'stale_market', 'complete_close', 'latest_completed', 'calendar', 'news_coverage', 'network_refresh')):
+    elif any(w in code for w in ('price_history', 'market_data', 'market_gate', 'stale_market', 'complete_close', 'latest_completed', 'calendar', 'news_coverage', 'network_refresh', 'sec_submissions_request', 'sec_ticker_mapping', 'current_issuer_scan_missing')):
         category, worker, needed = 'B', 'approved_public_refresh', 'Next available approved source publication or current public evidence with the required coverage, timestamp and source binding.'
-    elif any(w in code for w in ('incorporation', 'sec_acceptance', 'financial', 'objective', 'debt_latest', 'cash_latest', 'ttm_', 'dilution', 'valuation_recomposition', 'baseline_data', 'data_gate_hold', 'evidence_gate_failed', 'fundamental_gate_failed')):
+    elif any(w in code for w in ('incorporation', 'sec_acceptance', 'financial', 'company_fundamentals', 'objective', 'debt_latest', 'cash_latest', 'ttm_', 'dilution', 'valuation_recomposition', 'baseline_data', 'data_gate_hold', 'evidence_gate_failed', 'fundamental_gate_failed')):
         category, worker, needed = 'A', 'bounded_full_refresh', 'Run the existing SEC reconciliation/objective admission, earnings incorporation, valuation and dependent decision stages; retain failures and distinguish fields admitted from dossiers processed.'
     elif any(w in code for w in ('expired', 'plan', 'reassessment', 'maintained_company', 'thesis', 'valuation', 'durability', 'counterevidence', 'review')):
         worker = 'recurring_analyst'

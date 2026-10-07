@@ -55,6 +55,29 @@ checks; estimated notional is not guaranteed execution cost or settled buying po
 
 ## Research and automatic resolution
 
+An official-evidence scan can complete with issuer quarantines. The collector
+validates the shared immutable acceptance index and retained audit chain first,
+then admits each issuer independently. `scan_status=partial` is usable only with
+the explicit `global_integrity_passed`, empty `global_blockers`, admitted issuer
+list and named `ticker_blockers` contract. It does not mean all companies passed.
+Rejected submissions preserve their old selection/history without refreshing
+their dates; successful issuers publish new receipts and continue objective work.
+An admitted issuer's numerical gaps remain available to the objective worker.
+Shared configuration, history corruption, lock or publication failures remain
+global. The decision, packet, per-ticker stability and capital adapter preserve
+the rejected company's blockers while evaluating unrelated companies normally.
+Current account, complete orders and usable-funds checks remain independent.
+
+The artifact collector retains the latest original annual and quarterly report
+of each periodic form as well as current event-window material. A later 8-K
+cannot age the financial report out of the admission index. Preserving a report
+does not claim that newer earnings have already been incorporated.
+
+Recurring capital research uses actual recorded holdings to assess the core
+floor. Satisfied core exposure stays in monitoring unless a specific new gap or
+eligible case warrants work; below-floor core and held-risk reassessments retain
+their priority. Monitoring does not create an add, trim or broker observation.
+
 The existing full refresh already performs objective research, SEC acceptance
 reconciliation, earnings incorporation, valuation recomposition and dependent
 portfolio/decision stages. Its bounded workers now retain source/output hashes,

@@ -46,6 +46,7 @@ from sec_acceptance import (
     AcceptanceReconciliationError,
     SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
     SEC_ACCEPTANCE_INDEX_PATH,
+    load_acceptance_reconciliation_log,
     load_immutable_acceptance_index,
     make_acceptance_record,
     normalize_acceptance_timestamp,
@@ -61,6 +62,7 @@ from sec_acceptance_extensions import (
     load_extension_artifacts,
     plan_unindexed_current_records,
     raw_file_sha256,
+    validate_extension_admission_audit,
     write_extension_admission_audit,
     write_extension_artifact,
 )
@@ -1129,6 +1131,12 @@ def write_early_evidence_failure_status(
         "last_success_at": state.get("last_success_at", ""),
         "scan_status": "failed",
         "reason": reason,
+        "global_integrity_passed": False,
+        "failure_scope": "global",
+        "global_blockers": [reason],
+        "failed_tickers": [],
+        "ticker_blockers": {},
+        "admitted_tickers": [],
         "held_tickers": held_tickers,
         "held_coverage_complete": False,
         "new_material_event_count": 0,
@@ -1216,12 +1224,18 @@ def write_acceptance_index_failure_status(
         "last_success_at": state.get("last_success_at", ""),
         "scan_status": "failed",
         "reason": reason,
+        "global_integrity_passed": False,
+        "failure_scope": "global",
+        "global_blockers": [reason],
+        "failed_tickers": [],
+        "ticker_blockers": {},
+        "admitted_tickers": [],
         "held_tickers": held_tickers,
         "scanned_tickers": [],
         "held_coverage_complete": False,
         "held_failures": held_tickers,
         "held_fundamental_coverage_complete": False,
-        "held_fundamental_failures": held_tickers,
+        "held_fundamental_failures": [ticker for ticker in held_tickers if company_fundamentals_required(ticker)],
         "optional_missing_tickers": [],
         "request_errors": [reason],
         "fundamental_request_errors": [],
@@ -1242,6 +1256,63 @@ def write_acceptance_index_failure_status(
         outcome="failed",
         reason=reason,
     )
+
+
+def plan_issuer_admissions(
+    *,
+    historical_records: list[dict[str, str]],
+    retained_extensions: list[dict[str, Any]],
+    records_by_ticker: dict[str, list[dict[str, str]]],
+    forms_by_accession: dict[str, str],
+    ticker_map: dict[str, int],
+    entity_by_ticker: dict[str, str],
+    historical_index_sha256: str,
+    admitted_at: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]], list[str], dict[str, list[str]], int, dict[str, list[str]]]:
+    """Stage independent issuers against one validated immutable history.
+
+    A current issuer response can be rejected without discarding unrelated
+    issuers. Shared historical corruption is checked outside the issuer catch;
+    no timestamp tolerance or acceptance-history rewrite is introduced here.
+    This function performs no writes. A rejected issuer's proposed extension
+    is discarded along with its reconciliation rows.
+    """
+    reconcile_current_acceptance_records(
+        historical_records=[*historical_records, *extension_acceptance_records(retained_extensions)],
+        current_records=[], reconciled_at=admitted_at,
+    )
+    planned = list(retained_extensions)
+    reconciliations: list[dict[str, str]] = []
+    admitted: list[str] = []
+    rejected: dict[str, list[str]] = {}
+    diagnostics: dict[str, list[str]] = {}
+    admitted_count = 0
+    for ticker, current in sorted(records_by_ticker.items()):
+        try:
+            candidate, count = plan_unindexed_current_records(
+                historical_records=historical_records,
+                extension_artifacts=planned,
+                current_records=current,
+                forms_by_accession=forms_by_accession,
+                expected_cik_by_ticker={name: str(cik) for name, cik in ticker_map.items()},
+                expected_entity_by_ticker=entity_by_ticker,
+                permitted_forms=RELEVANT_FORMS,
+                historical_index_sha256=historical_index_sha256,
+                admitted_at=admitted_at,
+            )
+            issuer_reconciliations = reconcile_current_acceptance_records(
+                historical_records=[*historical_records, *extension_acceptance_records(candidate)],
+                current_records=current, reconciled_at=admitted_at,
+            )
+        except AcceptanceIndexError as exc:
+            rejected[ticker] = [acceptance_index_failure_reason(exc)]
+            diagnostics[ticker] = [str(exc)]
+            continue
+        planned = candidate
+        admitted_count += count
+        reconciliations.extend(issuer_reconciliations)
+        admitted.append(ticker)
+    return planned, reconciliations, admitted, rejected, admitted_count, diagnostics
 
 
 def main() -> int:
@@ -1286,6 +1357,9 @@ def main() -> int:
         state.get("seen_accessions", {}),
         read_csv(EVIDENCE_LEDGER_PATH),
     )
+    prior_seen_by_ticker = {ticker: set(values) for ticker, values in seen_by_ticker.items()}
+    ticker_blockers: dict[str, list[str]] = {}
+    ticker_failure_diagnostics: dict[str, list[str]] = {}
     errors: list[str] = []
     fundamental_errors: list[str] = []
     fundamental_rows: list[dict[str, str]] = []
@@ -1321,10 +1395,10 @@ def main() -> int:
         print(f"scan_status=failed reason={reason}")
         return 1
     new_acceptance_records: list[dict[str, str]] = []
+    records_by_ticker: dict[str, list[dict[str, str]]] = {}
     forms_by_accession: dict[str, str] = {}
     entity_by_ticker: dict[str, str] = {}
     pending_ledger_rows: list[dict[str, str]] = []
-    filings_recorded = 0
 
     try:
         ticker_map = load_ticker_map(user_agent, args.force_ticker_map)
@@ -1339,16 +1413,23 @@ def main() -> int:
         print(f"scan_status=failed reason=sec_ticker_map_unavailable type={type(exc).__name__}")
         return 1
 
+    not_applicable_tickers = sorted(ticker for ticker in all_tickers if not company_fundamentals_required(ticker))
     for ticker in all_tickers:
+        if ticker in not_applicable_tickers:
+            # Benchmark ETF coverage comes from its separate market/core
+            # evidence; the absence of company SEC submissions is not a gap.
+            continue
         cik = ticker_map.get(ticker)
         if not cik:
             missing_tickers.append(ticker)
+            ticker_blockers[ticker] = ["sec_ticker_mapping_missing"]
             continue
         try:
             payload = request_json(SEC_SUBMISSIONS_URL.format(cik=cik), user_agent)
             time.sleep(0.20)
         except (OSError, ValueError, urllib.error.URLError) as exc:
             errors.append(f"{ticker}:{type(exc).__name__}")
+            ticker_blockers[ticker] = ["sec_submissions_request_failed"]
             continue
 
         try:
@@ -1362,6 +1443,8 @@ def main() -> int:
                 ticker=ticker,
                 cik=cik,
             )
+            issuer_records: list[dict[str, str]] = []
+            issuer_forms: dict[str, str] = {}
             for filing in filings:
                 acceptance_record = make_acceptance_record(
                     accession_number=filing["accession_number"],
@@ -1371,25 +1454,24 @@ def main() -> int:
                     accepted_at=filing["accepted_at"],
                     source_url=submission_url,
                 )
-                new_acceptance_records.append(acceptance_record)
+                issuer_records.append(acceptance_record)
                 accession = acceptance_record["accession_number"]
                 prior_form = forms_by_accession.get(accession)
                 if prior_form is not None and prior_form != filing["form"]:
                     raise ExtensionValidationError(
                         "SEC acceptance extension filing form identity conflict"
                     )
-                forms_by_accession[accession] = filing["form"]
-        except AcceptanceIndexError as exc:
-            reason = acceptance_index_failure_reason(exc)
-            write_acceptance_index_failure_status(
-                attempt_at=attempt_at,
-                state=state,
-                held_tickers=held_tickers,
-                reason=reason,
-                diagnostic=str(exc),
-            )
-            print(f"scan_status=failed reason={reason}")
-            return 1
+                issuer_forms[accession] = filing["form"]
+        except (AcceptanceIndexError, TypeError, AttributeError, ValueError) as exc:
+            reason = (acceptance_index_failure_reason(exc) if isinstance(exc, AcceptanceIndexError)
+                      else "sec_submissions_metadata_invalid")
+            ticker_blockers[ticker] = [reason]
+            ticker_failure_diagnostics[ticker] = [str(exc)]
+            errors.append(f"{ticker}:{reason}")
+            continue
+        records_by_ticker[ticker] = issuer_records
+        new_acceptance_records.extend(issuer_records)
+        forms_by_accession.update(issuer_forms)
 
         existing = seen_by_ticker.setdefault(ticker, set())
         for filing in filings:
@@ -1429,11 +1511,9 @@ def main() -> int:
                 "material_event": material_event if is_new else "no",
                 "review_required": review_required if is_new else "no",
             }
-            # Do not append an uncommitted filing row.  The acceptance index
-            # is validated as one merged snapshot below before any current
-            # evidence artifact is allowed to advance.
+            # Stage until this issuer passes against the shared immutable
+            # acceptance history. Rejected issuers never advance their ledger.
             pending_ledger_rows.append(row)
-            filings_recorded += 1
             existing.add(accession)
             if is_new and row["material_event"] == "yes":
                 new_material_events.append(row)
@@ -1476,18 +1556,6 @@ def main() -> int:
             except (OSError, ValueError, urllib.error.URLError) as exc:
                 fundamental_errors.append(f"{ticker}:{type(exc).__name__}")
 
-    held_failures = sorted(
-        ticker
-        for ticker in held_tickers
-        if ticker in missing_tickers or any(item.startswith(f"{ticker}:") for item in errors)
-    )
-    fundamental_by_ticker = {row["ticker"]: row for row in fundamental_rows}
-    held_fundamental_failures = sorted(
-        ticker
-        for ticker in held_tickers
-        if company_fundamentals_required(ticker)
-        and fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
-    )
     # Validate current official records against the effective acceptance set
     # before mutating current fundamentals or the filing ledger. The effective
     # set is the immutable historical index plus fully validated, separately
@@ -1516,46 +1584,49 @@ def main() -> int:
                 historical_index_sha256=prior_immutable_index_sha256,
                 directory=SEC_ACCEPTANCE_EXTENSION_DIR,
             )
-            planned_extensions, extension_admission_count = plan_unindexed_current_records(
+            # Corrupt shared journals are global failures, even when every
+            # current issuer would otherwise validate independently.
+            load_acceptance_reconciliation_log(SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH)
+            validate_extension_admission_audit(
+                retained_extensions, path=SEC_ACCEPTANCE_EXTENSION_AUDIT_PATH,
+                directory=SEC_ACCEPTANCE_EXTENSION_DIR,
+            )
+            (planned_extensions, reconciliations, admitted_tickers,
+             rejected_tickers, extension_admission_count, rejected_diagnostics) = plan_issuer_admissions(
                 historical_records=prior_acceptance_index["records"],
-                extension_artifacts=retained_extensions,
-                current_records=new_acceptance_records,
+                retained_extensions=retained_extensions,
+                records_by_ticker=records_by_ticker,
                 forms_by_accession=forms_by_accession,
-                expected_cik_by_ticker={
-                    ticker: str(cik) for ticker, cik in ticker_map.items()
-                },
-                expected_entity_by_ticker=entity_by_ticker,
-                permitted_forms=RELEVANT_FORMS,
+                ticker_map=ticker_map,
+                entity_by_ticker=entity_by_ticker,
                 historical_index_sha256=prior_immutable_index_sha256,
                 admitted_at=iso_now(),
             )
+            ticker_blockers.update(rejected_tickers)
+            ticker_failure_diagnostics.update(rejected_diagnostics)
+            errors.extend(f"{ticker}:{reason}" for ticker, reasons in rejected_tickers.items() for reason in reasons)
             effective_acceptance_records = [
                 *prior_acceptance_index["records"],
                 *extension_acceptance_records(planned_extensions),
             ]
             unindexed_accession_count = count_unindexed_acceptance_accessions(
                 historical_records=effective_acceptance_records,
-                current_records=new_acceptance_records,
+                current_records=[record for ticker in admitted_tickers for record in records_by_ticker[ticker]],
             )
             if unindexed_accession_count:
                 raise ExtensionValidationError(
                     "SEC acceptance extension left an unindexed accession"
                 )
-            reconciliations = reconcile_current_acceptance_records(
-                historical_records=effective_acceptance_records,
-                current_records=new_acceptance_records,
-                reconciled_at=iso_now(),
-            )
-            # All validation precedes persistence. The timestamp audit is
-            # append-only; the extension and its raw-byte-bound admission
-            # audit are written only after the whole source batch reconciles.
+            # Shared history validated before issuer isolation. All admitted
+            # issuers validate before any persistence; quarantine is never an
+            # excuse to overlook shared audit corruption or failed writes.
             write_acceptance_reconciliation_log(
                 reconciliations,
                 path=SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
             )
-            if extension_admission_count:
+            for artifact in planned_extensions[len(retained_extensions):]:
                 write_extension_artifact(
-                    planned_extensions[-1],
+                    artifact,
                     directory=SEC_ACCEPTANCE_EXTENSION_DIR,
                 )
             write_extension_admission_audit(
@@ -1599,71 +1670,120 @@ def main() -> int:
         print(f"scan_status=failed reason={reason}")
         return 1
 
-    # Reconciliation-log persistence occurs before any current ledger or
-    # fundamentals write so a log failure cannot advance either artifact.
-    for row in pending_ledger_rows:
-        append_csv_durable(EVIDENCE_LEDGER_PATH, LEDGER_FIELDS, row)
-    atomic_write_csv(FUNDAMENTALS_PATH, FUNDAMENTAL_FIELDS, fundamental_rows)
-    for receipt in pending_selection_receipts:
-        write_selection_receipt(**receipt, root=ROOT)
-    success_at = iso_now()
-    state.update(
-        {
+    admitted_set = set(admitted_tickers)
+    submission_failed_tickers = sorted(set(all_tickers) - admitted_set - set(not_applicable_tickers))
+    pending_ledger_rows = [row for row in pending_ledger_rows if row["ticker"] in admitted_set]
+    new_material_events = [row for row in new_material_events if row["ticker"] in admitted_set]
+    fundamental_rows = [row for row in fundamental_rows if row["ticker"] in admitted_set]
+    pending_selection_receipts = [row for row in pending_selection_receipts if row["ticker"] in admitted_set]
+    fundamental_by_ticker = {row["ticker"]: row for row in fundamental_rows}
+    for ticker in all_tickers:
+        if company_fundamentals_required(ticker) and fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok":
+            ticker_blockers.setdefault(ticker, []).append("company_fundamentals_incomplete")
+    for error in fundamental_errors:
+        ticker = error.split(":", 1)[0]
+        if fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok":
+            ticker_blockers.setdefault(ticker, []).append("company_fundamentals_request_failed")
+    ticker_blockers = {ticker: sorted(set(reasons)) for ticker, reasons in sorted(ticker_blockers.items())}
+    held_failures = sorted(set(held_tickers) & set(submission_failed_tickers))
+    held_fundamental_failures = sorted(
+        ticker for ticker in held_tickers if company_fundamentals_required(ticker)
+        and fundamental_by_ticker.get(ticker, {}).get("data_quality") != "ok"
+    )
+    try:
+        # Reconciliation-log persistence occurs before current ledger/fundamentals.
+        # Never relabel rejected issuer rows or their selection receipts as fresh.
+        for row in pending_ledger_rows:
+            append_csv_durable(EVIDENCE_LEDGER_PATH, LEDGER_FIELDS, row)
+        if fundamental_rows:
+            retained_rows = [row for row in read_csv(FUNDAMENTALS_PATH)
+                             if row.get("ticker") not in fundamental_by_ticker]
+            atomic_write_csv(FUNDAMENTALS_PATH, FUNDAMENTAL_FIELDS, [*retained_rows, *fundamental_rows])
+        for receipt in pending_selection_receipts:
+            write_selection_receipt(**receipt, root=ROOT)
+        success_at = iso_now()
+        scan_status = "partial" if ticker_blockers else "ok"
+        next_state = {
+            **state,
             "schema_version": "phase5r_daily_evidence_v1",
             "initialized": True,
             "last_attempt_at": attempt_at,
-            "last_success_at": success_at if not held_failures else state.get("last_success_at", ""),
+            "last_success_at": success_at if scan_status == "ok" else state.get("last_success_at", ""),
             "seen_accessions": {
                 ticker: sorted(accessions)[-500:]
-                for ticker, accessions in sorted(seen_by_ticker.items())
+                for ticker, accessions in sorted({
+                    **prior_seen_by_ticker,
+                    **{ticker: seen_by_ticker[ticker] for ticker in admitted_tickers},
+                }.items())
             },
         }
-    )
-    atomic_write_json(EVIDENCE_STATE_PATH, state)
-
-    scan_status = "ok" if not held_failures else "held_coverage_failed"
-    status = {
-        "schema_version": "phase5r_daily_evidence_status_v1",
-        "last_attempt_at": attempt_at,
-        "last_success_at": success_at if scan_status == "ok" else state.get("last_success_at", ""),
-        "scan_status": scan_status,
-        "reason": "complete" if scan_status == "ok" else "held_ticker_sec_scan_failed",
-        "held_tickers": held_tickers,
-        "scanned_tickers": sorted(
-            set(all_tickers) - set(missing_tickers) - {item.split(":", 1)[0] for item in errors}
-        ),
-        "held_coverage_complete": not held_failures,
-        "held_failures": held_failures,
-        "held_fundamental_coverage_complete": not held_fundamental_failures,
-        "held_fundamental_failures": held_fundamental_failures,
-        "optional_missing_tickers": sorted(set(missing_tickers) - set(held_tickers)),
-        "request_errors": errors,
-        "fundamental_request_errors": fundamental_errors,
-        "fundamental_rows": len(fundamental_rows),
-        "filings_recorded": filings_recorded,
-        "baseline_mode": not initialized,
-        "new_material_event_count": len(new_material_events),
-        "new_material_accessions": [
-            row["accession_number"] for row in new_material_events
-        ],
-        "sec_acceptance_historical_record_count": prior_acceptance_index["record_count"],
-        "sec_acceptance_record_count": (
-            prior_acceptance_index["record_count"]
-            + len(extension_acceptance_records(extension_artifacts))
-        ),
-        "sec_acceptance_source": prior_acceptance_index["source_authority"],
-        "sec_acceptance_reconciliation_count": len(reconciliations),
-        "sec_acceptance_extension_version_count": len(extension_artifacts),
-        "sec_acceptance_extension_admission_count": extension_admission_count,
-        "unindexed_accession_count": unindexed_accession_count,
-        "unindexed_count_basis": "remaining_after_extension_admission",
-        "network_used": True,
-    }
-    atomic_write_json(EVIDENCE_STATUS_PATH, status)
+        if admitted_tickers:
+            atomic_write_json(EVIDENCE_STATE_PATH, next_state)
+        status = {
+            "schema_version": "phase5r_daily_evidence_status_v1",
+            "last_attempt_at": attempt_at,
+            "last_completed_at": success_at,
+            "last_success_at": success_at if scan_status == "ok" else state.get("last_success_at", ""),
+            "scan_status": scan_status,
+            "reason": "complete" if scan_status == "ok" else "issuer_evidence_quarantined",
+            "global_integrity_passed": True,
+            "failure_scope": "none" if scan_status == "ok" else "ticker",
+            "global_blockers": [],
+            "failed_tickers": sorted(ticker_blockers),
+            "ticker_blockers": ticker_blockers,
+            "ticker_failure_diagnostics": ticker_failure_diagnostics,
+            "admitted_tickers": admitted_tickers,
+            "not_applicable_tickers": not_applicable_tickers,
+            "submission_failed_tickers": submission_failed_tickers,
+            "held_tickers": held_tickers,
+            "scanned_tickers": admitted_tickers,
+            "held_coverage_complete": not held_failures,
+            "held_failures": held_failures,
+            "held_fundamental_coverage_complete": not held_fundamental_failures,
+            "held_fundamental_failures": held_fundamental_failures,
+            "optional_missing_tickers": sorted(set(missing_tickers) - set(held_tickers)),
+            "request_errors": errors,
+            "fundamental_request_errors": fundamental_errors,
+            "fundamental_rows": len(fundamental_rows),
+            "filings_recorded": len(pending_ledger_rows),
+            "baseline_mode": not initialized,
+            "new_material_event_count": len(new_material_events),
+            "new_material_accessions": [
+                row["accession_number"] for row in new_material_events
+            ],
+            "sec_acceptance_historical_record_count": prior_acceptance_index["record_count"],
+            "sec_acceptance_record_count": (
+                prior_acceptance_index["record_count"]
+                + len(extension_acceptance_records(extension_artifacts))
+            ),
+            "sec_acceptance_source": prior_acceptance_index["source_authority"],
+            "sec_acceptance_reconciliation_count": len(reconciliations),
+            "sec_acceptance_extension_version_count": len(extension_artifacts),
+            "sec_acceptance_extension_admission_count": extension_admission_count,
+            "unindexed_accession_count": unindexed_accession_count,
+            "unindexed_count_basis": "remaining_for_admitted_issuers_after_extension_admission",
+            "network_used": True,
+        }
+        atomic_write_json(EVIDENCE_STATUS_PATH, status)
+    except (OSError, ValueError, UnicodeError, csv.Error):
+        # A partly published admitted prefix is retained for the next refresh.
+        # It never inherits a previous passing envelope or authorizes capital.
+        reason = "sec_evidence_publication_failed"
+        try:
+            write_acceptance_index_failure_status(
+                attempt_at=attempt_at, state=state, held_tickers=held_tickers,
+                reason=reason,
+            )
+        except (OSError, ValueError, UnicodeError, csv.Error):
+            # The enclosing pipeline still sees a failed stage if even the
+            # failure receipt cannot be persisted (for example a full disk).
+            print("failure_status_persisted=false reason=sec_evidence_publication_failed")
+        print(f"scan_status=failed reason={reason}")
+        return 1
     log_daily_run(
         component="evidence_refresh",
         run_mode="live_public_read",
-        outcome="passed" if scan_status == "ok" else "failed",
+        outcome="passed" if scan_status == "ok" else "partial",
         reason=status["reason"],
     )
     print(
@@ -1671,7 +1791,9 @@ def main() -> int:
         f"{str(not held_failures).lower()} new_material_events={len(new_material_events)} "
         f"baseline_mode={str(not initialized).lower()}"
     )
-    return 0 if scan_status == "ok" else 1
+    # The pipeline completed with explicit issuer quarantines; downstream
+    # gates must consume the scoped status rather than treating it as all clear.
+    return 0
 
 
 if __name__ == "__main__":

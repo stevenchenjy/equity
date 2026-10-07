@@ -75,7 +75,7 @@ def render_report(report: dict) -> str:
             item = ranges.get(hurdle)
             cells.append(f"{item['minimum_required_revenue_cagr_pct']:.2f}%–{item['maximum_required_revenue_cagr_pct']:.2f}%" if item else "证据不足，未计算")
         lines.append(f"| {ticker} | {display(diagnostic['historical_ttm_growth_pct'])}% | {' | '.join(cells)} | 尚未由公司经营证据证明 |")
-    lines += ["", "high 信心 / 6% 高确信度层级保留，当前不会因数据完整而自动启用。", "", "## 基本面研究候选队列", "", "此顺序仅分配研究注意力，与单日涨跌和成交量无关；不代表买入排序。", ""]
+    lines += ["", "高确信度需要独立审阅的证据；仓位由公司特定估值、下行情景和组合比较形成，不再使用固定百分比档位。数据完整不自动产生配置或交易授权。", "", "## 基本面研究候选队列", "", "此顺序仅分配研究注意力，与单日涨跌和成交量无关；不代表买入排序。", ""]
     for row in report["candidate_queue"]:
         lines.append(f"- {row['ticker']}：观察增速 {display(row['observed_growth_pct'])}%；FCF 率 {display(row['observed_fcf_margin_pct'])}%；稀释 {display(row['observed_dilution_pct'])}%；期间 {row['financial_period_end']}。")
     coverage = report["coverage"]

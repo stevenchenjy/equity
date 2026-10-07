@@ -45,8 +45,9 @@ from packet_contract import (
 )
 from active_config import load_active_config
 from account_common import load_research_account_state
-from refresh_sec_filing_artifacts import event_window_material
+from refresh_sec_filing_artifacts import event_window_material, PERIODIC_FORMS
 from evidence_freshness import build_evidence_freshness_receipt
+from evidence_scope import ticker_scan_complete
 from return_objective import return_objective_payload
 from sec_acceptance import SEC_ACCEPTANCE_INDEX_PATH, acceptance_map
 from sec_acceptance_extensions import (
@@ -237,12 +238,13 @@ def _evidence_freshness_receipts(
                 sec_scan={
                     "status_artifact_sha256": status_digest,
                     "completed_through_utc": _utc_text(
-                        evidence_status.get("last_success_at", "")
+                        evidence_status.get("last_completed_at", "")
+                        if "global_integrity_passed" in evidence_status
+                        else evidence_status.get("last_success_at", "")
                     ),
                     "ticker_scanned": ticker in scanned_tickers,
                     "complete": (
-                        evidence_status.get("scan_status") == "ok"
-                        and ticker in scanned_tickers
+                        ticker_scan_complete(evidence_status, ticker)
                     ),
                 },
                 market={
@@ -485,10 +487,15 @@ def _selected_filing_rows(
     selected_accessions = {
         row.get("accession_number", "") for row in selected
     }
+    latest_periodic = {}
+    for row in ordered:
+        if row.get("form") in PERIODIC_FORMS:
+            latest_periodic.setdefault(row["form"], row.get("filing_date", ""))
     selected.extend(
         row
         for row in ordered[2:]
-        if event_window_material(row, ordered[0]["filing_date"], lookback)
+        if (event_window_material(row, ordered[0]["filing_date"], lookback)
+            or row.get("filing_date") == latest_periodic.get(row.get("form")))
         and row.get("accession_number", "") not in selected_accessions
     )
     return selected

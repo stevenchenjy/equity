@@ -218,8 +218,6 @@
   "216": "write_acceptance_index",
   "217": "_event_input_preflight",
   "218": "OutcomeCoverageTests",
-  "219": "create_capital_allocation_validation.py",
   "220": "OwnerSnapshotTests",
-  "221": "NamingCompatibilityTests",
-  "222": "event_window_material"
+  "221": "NamingCompatibilityTests"
 }

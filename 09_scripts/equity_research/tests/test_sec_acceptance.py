@@ -334,6 +334,7 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 raise AssertionError(f"unexpected public-source URL: {url}")
 
             with (
+                mock.patch.object(daily_evidence, "ROOT", root),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATE_PATH", state_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATUS_PATH", status_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_LEDGER_PATH", ledger_path),
@@ -394,7 +395,7 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 ),
                 mock.patch.object(sys, "argv", ["refresh_daily_evidence.py"]),
             ):
-                self.assertEqual(daily_evidence.main(), 1)
+                self.assertEqual(daily_evidence.main(), 0)
 
             self.assertEqual(fundamentals_path.read_bytes(), before_fundamentals)
             self.assertEqual(acceptance_path.read_bytes(), before_acceptance)
@@ -404,15 +405,18 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             log_daily_run.assert_called_once_with(
                 component="evidence_refresh",
                 run_mode="live_public_read",
-                outcome="failed",
-                reason=expected_reason,
+                outcome="partial",
+                reason="issuer_evidence_quarantined",
             )
             status = json.loads(status_path.read_text(encoding="utf-8"))
-            self.assertEqual(status["scan_status"], "failed")
-            self.assertEqual(status["reason"], expected_reason)
+            self.assertEqual(status["scan_status"], "partial")
+            self.assertEqual(status["failure_scope"], "ticker")
+            self.assertTrue(status["global_integrity_passed"])
+            self.assertEqual(status["admitted_tickers"], [])
+            self.assertIn(expected_reason, status["ticker_blockers"]["TST"])
             self.assertFalse(status["held_coverage_complete"])
             self.assertFalse(status["held_fundamental_coverage_complete"])
-            self.assertEqual(status["request_errors"], [expected_reason])
+            self.assertEqual(status["request_errors"], [f"TST:{expected_reason}"])
             self.assertEqual(
                 status["unindexed_accession_count"],
                 expected_unindexed_accession_count,
@@ -472,6 +476,7 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 raise AssertionError(f"unexpected public-source URL: {url}")
 
             with (
+                mock.patch.object(daily_evidence, "ROOT", root),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATE_PATH", state_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATUS_PATH", status_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_LEDGER_PATH", ledger_path),
@@ -539,14 +544,16 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             )
             self.assertTrue(extension_audit_path.exists())
             status = json.loads(status_path.read_text(encoding="utf-8"))
-            self.assertEqual(status["scan_status"], "ok")
+            self.assertEqual(status["scan_status"], "partial")
+            self.assertEqual(status["admitted_tickers"], ["TST"])
+            self.assertEqual(status["ticker_blockers"], {"TST": ["company_fundamentals_incomplete"]})
             self.assertEqual(status["sec_acceptance_extension_admission_count"], 1)
             self.assertEqual(status["unindexed_accession_count"], 0)
             log_daily_run.assert_called_once_with(
                 component="evidence_refresh",
                 run_mode="live_public_read",
-                outcome="passed",
-                reason="complete",
+                outcome="partial",
+                reason="issuer_evidence_quarantined",
             )
 
     def test_valid_reconciliation_releases_staged_ledger_without_index_mutation(self) -> None:
@@ -603,6 +610,7 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
                 raise AssertionError(f"unexpected public-source URL: {url}")
 
             with (
+                mock.patch.object(daily_evidence, "ROOT", root),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATE_PATH", state_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_STATUS_PATH", status_path),
                 mock.patch.object(daily_evidence, "EVIDENCE_LEDGER_PATH", ledger_path),
@@ -673,8 +681,8 @@ class SecAcceptanceRefreshFailureTests(unittest.TestCase):
             log_daily_run.assert_called_once_with(
                 component="evidence_refresh",
                 run_mode="live_public_read",
-                outcome="passed",
-                reason="complete",
+                outcome="partial",
+                reason="issuer_evidence_quarantined",
             )
             ledger_rows = daily_evidence.read_csv(ledger_path)
             self.assertEqual(len(ledger_rows), 2)

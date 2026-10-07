@@ -69,6 +69,7 @@ from investment_plans import render_plan_lines
 from capital_work_queue import refresh_capital_work_queue
 from work_queue_reporting import read_backlog_summary, report_section
 from delivery_continuity import delivery_notification_comparison
+from evidence_scope import current_shared_integrity_passed, ticker_blockers as evidence_ticker_blockers, required_issuer_blockers
 
 
 CONFIRMED_EXECUTION_PATH = (
@@ -369,7 +370,7 @@ def candidate_proposal_fingerprint(row: dict[str, Any]) -> str:
 
 def candidate_stability(
     state: dict[str, Any], proposals: list[dict[str, Any]], market_session: str,
-    *, valid_close: bool,
+    *, valid_close: bool, invalid_tickers: set[str] | None = None,
 ) -> dict[str, Any]:
     """Track each currently eligible proposal on distinct, ordered valid closes.
 
@@ -394,7 +395,7 @@ def candidate_stability(
             previous = {}
         count = 0
         observed_session = ""
-        if valid_close and market_session:
+        if valid_close and ticker not in (invalid_tickers or set()) and market_session:
             date.fromisoformat(market_session)
             observed_session = market_session
             count = 1
@@ -668,11 +669,8 @@ def main() -> int:
         read_json(LONG_HORIZON_PATH, {}), held_rows, market_gate["expected_market_session"],
     )
     evidence_status = read_json(EVIDENCE_STATUS_PATH, {})
-    evidence_gate_passed = (
-        evidence_status.get("scan_status") == "ok"
-        and bool(evidence_status.get("held_coverage_complete"))
-        and evidence_status.get("last_attempt_at", "")[:10] == cycle_date()
-    )
+    evidence_gate_passed = current_shared_integrity_passed(evidence_status, current)
+    scoped_evidence_blockers = evidence_ticker_blockers(evidence_status)
     fundamental_rows = {
         row.get("ticker", "").upper(): row for row in read_csv(FUNDAMENTALS_PATH)
     }
@@ -687,10 +685,13 @@ def main() -> int:
         )
         for ticker in held_company_tickers
     ]
-    fundamental_gate_passed = (
+    fundamental_gate_passed = evidence_gate_passed if "global_integrity_passed" in evidence_status else (
         evidence_status.get("held_fundamental_coverage_complete") is True
         and all(row.get("data_quality") == "ok" for row in held_fundamentals)
     )
+    for row in held_fundamentals:
+        if row.get("data_quality") != "ok":
+            scoped_evidence_blockers.setdefault(row["ticker"], []).append("company_fundamentals_unverified")
     weakening_tickers = [
         row.get("ticker", "")
         for row in held_fundamentals
@@ -699,6 +700,14 @@ def main() -> int:
     conflicts = execution_conflicts()
     material_events = material_events_for_cycle(active_config["notifications"])
     candidate_recommendations = read_csv(NEW_CANDIDATE_PATH)
+    if "global_integrity_passed" in evidence_status:
+        required = set(held_company_tickers) | {
+            row.get("ticker", "").upper() for row in candidate_recommendations
+            if not is_core_allocation_ticker(row.get("ticker", ""))
+            and row.get("valuation_applicability") != "not_applicable_broad_market_etf"
+        }
+        for ticker, codes in required_issuer_blockers(evidence_status, required).items():
+            scoped_evidence_blockers[ticker] = sorted(set(scoped_evidence_blockers.get(ticker, []) + codes))
     prior_state = read_json(DAILY_DECISION_STATE_PATH, {})
     prior_decision = read_json(DAILY_DECISION_JSON_PATH, {})
     market_session = (
@@ -722,6 +731,7 @@ def main() -> int:
                 and market_gate["passed"]
                 and evidence_gate_passed
                 and fundamental_gate_passed
+                and row["ticker"] not in scoped_evidence_blockers
             ):
                 eligible_transitions.append(row)
             else:
@@ -742,6 +752,7 @@ def main() -> int:
     ]
     new_candidate_state = candidate_stability(
         prior_state, proposed_new_candidates, market_session, valid_close=data_gate_passed,
+        invalid_tickers=set(scoped_evidence_blockers),
     )
     candidate_counts = {
         ticker: row["distinct_closes"]
@@ -756,6 +767,7 @@ def main() -> int:
     eligible_new_candidates = [
         row for row in proposed_new_candidates
         if data_gate_passed
+        and row.get("ticker", "").upper() not in scoped_evidence_blockers
         and candidate_counts.get(row.get("ticker", "").upper(), 0) >= required_distinct_closes
     ]
     pending_new_candidates = [row for row in proposed_new_candidates if row not in eligible_new_candidates]
@@ -979,6 +991,9 @@ def main() -> int:
             "status": evidence_status.get("scan_status", "missing"),
             "last_attempt_at": evidence_status.get("last_attempt_at", ""),
             "new_material_event_count": len(material_events),
+            "failure_scope": evidence_status.get("failure_scope", "legacy"),
+            "ticker_blockers": scoped_evidence_blockers,
+            "held_coverage_complete": evidence_status.get("held_coverage_complete", False),
         },
         "fundamental_gate": {
             "passed": fundamental_gate_passed,

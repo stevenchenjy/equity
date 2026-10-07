@@ -60,6 +60,18 @@ class WorkQueueReportingTests(unittest.TestCase):
         after['research_backlog'] = {'priority_queue': [{'ticker': 'NEW'}]}
         self.assertEqual(delivery_meaning_key(before), delivery_meaning_key(after))
 
+    def test_detailed_reassessment_report_distinguishes_overdue_from_future_due(self):
+        row = {"ticker": "SPY", "source_status": "review_due", "next_step": "Review sourced fund changes.",
+            "next_review_at": "2026-09-25T09:45:00-04:00", "original_review_at": "2026-09-24T10:00:00-04:00"}
+        decision = {"capital_work_queue": {"status": "current", "generated_at": NOW.isoformat(),
+            "plan_reassessment_queue": [row]}}
+        text = " ".join(research_lines(decision, detailed=True))
+        self.assertIn("Overdue since: 2026-09-25T09:45:00-04:00", text)
+        self.assertNotIn("Next review:", text)
+        self.assertEqual(row["next_review_at"], "2026-09-25T09:45:00-04:00")
+        row["next_review_at"] = "2026-09-28T09:45:00-04:00"
+        self.assertIn("Review due: 2026-09-28T09:45:00-04:00", " ".join(research_lines(decision, detailed=True)))
+
     def test_scoped_clock_aging_ignored_but_account_and_source_changes_notify(self):
         before = fixture(); after = copy.deepcopy(before)
         after['plan_continuity'].update(status='needs_reconciliation', ticker_blockers={'RBRK': ['review_due']})

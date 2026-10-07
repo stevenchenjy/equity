@@ -186,6 +186,16 @@ class LongHorizonResearchTests(unittest.TestCase):
         self.assertFalse(repeated["automatic_action_allowed"])
         self.assertEqual(repeated["confidence_policy"]["high_conviction_tier_status"], "reserved_not_emitted_by_current_deterministic_generator")
 
+    def test_rendered_research_uses_reviewed_allocation_not_retired_size_tiers(self):
+        from create_long_horizon_research import render_report
+        market = [{"ticker": "ABC", "market_session_date": "2026-09-18", "last_price": "10", "data_quality_label": "ok"}]
+        report = build_long_horizon_report([fundamental()], [{"ticker": "ABC"}], market, POLICY, AS_OF)
+        text = render_report(report)
+        self.assertIn("仓位由公司特定估值、下行情景和组合比较形成", text)
+        self.assertIn("数据完整不自动产生配置或交易授权", text)
+        self.assertNotIn("6% 高确信度", text)
+        self.assertNotIn("高确信度层级保留", text)
+
 
 if __name__ == "__main__":
     unittest.main()

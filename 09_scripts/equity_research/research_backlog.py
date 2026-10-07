@@ -21,6 +21,7 @@ from earnings_incorporation import (CACHE_REL, MAX_AGE_HOURS, _time, _verified_r
 from latest_report_facts import REPORT_FORMS, inline_report_facts, verified_artifact
 from refresh_daily_evidence import FUNDAMENTAL_FIELDS, approved_inline_tags, fundamental_row, recent_filings
 from workflow_evaluation import append_record, aware, read_jsonl
+from evidence_scope import ticker_blockers as evidence_ticker_blockers
 
 REPORT_REL = Path("04_research/company_research/research_backlog.local.json")
 MARKDOWN_REL = Path("08_reviews/current/research_backlog.local.md")
@@ -59,6 +60,7 @@ def _ticker(value):
 
 def _source_fingerprint(root: Path, ticker: str, row: dict, current: datetime) -> str:
     receipt = read_json(root / CACHE_REL / f"{ticker}.selection.json", {})
+    status = read_json(root / "03_source_data/equity_research/daily_evidence_status.json", {})
     artifacts = read_json(root / ARTIFACT_INDEX_REL, {}).get("artifacts", [])
     def actual_hash(locator):
         try:
@@ -72,6 +74,7 @@ def _source_fingerprint(root: Path, ticker: str, row: dict, current: datetime) -
     # Re-polling unchanged bytes is not new research. A freshness transition,
     # changed identity, or changed actual bytes does require reassessment.
     return canonical_sha256({"financial": {k: v for k, v in row.items() if k != "fetched_at"},
+        "submission_quarantined": ticker in status.get("submission_failed_tickers", []),
         "receipt_binding_valid": receipt.get("financial_selection_sha256") == canonical_sha256(row),
         "receipt_identity": [receipt.get("schema_version"), receipt.get("ticker"), receipt.get("cik")],
         "selection_time_valid": bool(_time(receipt.get("selected_at")) and _time(receipt.get("selected_at")) <= current
@@ -110,6 +113,11 @@ def complete_objective_data(*, root: Path, ticker: str, row: dict, current: date
         "analyst_review_completed": False, "valuation_assumptions_created": False}
     receipt = read_json(root / CACHE_REL / f"{ticker}.selection.json", {})
     result["source_provenance"] = _source_refs(receipt)
+    status = read_json(root / "03_source_data/equity_research/daily_evidence_status.json", {})
+    if ticker in status.get("submission_failed_tickers", []):
+        result.update(reason_code="issuer_evidence_quarantined",
+                      blocking_reasons=evidence_ticker_blockers(status).get(ticker, ["issuer_evidence_unverified"]))
+        return result
     if (receipt.get("schema_version") != "financial_selection_receipt_v1"
             or receipt.get("ticker") != ticker or receipt.get("financial_selection_sha256") != canonical_sha256(row)):
         return result
@@ -291,7 +299,13 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
             reasons += ["durable_early_research_opportunity", "first_trigger:"+opportunity["first_observation"]["trigger"]]
             from research_opportunities import priority
             tier = min(tier, priority(opportunity, held)[0])
+        from research_opportunities import negative_assessment_wait
+        negative_wait = (not held_ticker and not material_reopen and negative_assessment_wait(opportunity,
+            current=current, market_session_date=research.get("market_session_date")))
+        if negative_wait:
+            reasons.append("recorded_negative_assessment_waiting_for_changed_evidence_or_review_date")
         groups.append({"ticker": ticker, "held": held_ticker, "priority_reasons": reasons,
+            "assessment_waiting_for_change": negative_wait,
             "gap_ids": [r["gap_id"] for r in outstanding], "status": "pending_research" if outstanding else "objective_portion_complete",
             "objective_gap_count": sum(r["kind"] != "reasoning" for r in outstanding),
             "manual_gap_count": sum(r["kind"] == "reasoning" for r in outstanding),
@@ -315,7 +329,7 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
     return {"schema_version": "equity_research_backlog_v1", "generated_at": current.isoformat(), "status": "ready",
         "automatic_action_allowed": False, "work_budget_tickers": max_tickers,
         "priority_basis": "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking.",
-        "priority_queue": [r for r in groups if r["gap_ids"] and (r["ticker"] in rows or r.get("attention_state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"})][:max_tickers], "issuer_queue": groups, "items": items,
+        "priority_queue": [r for r in groups if r["gap_ids"] and not r["assessment_waiting_for_change"] and (r["ticker"] in rows or r.get("attention_state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"})][:max_tickers], "issuer_queue": groups, "items": items,
         "counts": dict(Counter(r["status"] for r in items)), "network_requests": 0,
         "analyst_reviews_completed": 0, "valuation_assumptions_created": 0}
 
@@ -496,6 +510,8 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             "recorded_at": current.isoformat(), "automatic_action_allowed": False})
         for group in initial["issuer_queue"]:
             ticker = group["ticker"]
+            if group.get("assessment_waiting_for_change"):
+                continue
             if ticker not in by_ticker and group.get("evidence_scope") == "research_only_no_canonical_admission" and not group["held"]:
                 # Outside discoveries use the isolated objective issuer path;
                 # empty canonical rows must not consume canonical work slots.

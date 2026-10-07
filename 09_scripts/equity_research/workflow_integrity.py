@@ -224,6 +224,12 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
     strategy_blockers = {strategy: list(codes) for strategy, codes in plans.get("strategy_blockers", {}).items()}
     def local(ticker: str, code: str) -> None:
         ticker_blockers.setdefault(ticker, []).append(code)
+    # Shared evidence gates exclude explicitly quarantined issuers. Their
+    # own blockers survive through the final capital adapter and publication.
+    for gate in ("evidence_gate", "fundamental_gate"):
+        for ticker, codes in decision.get(gate, {}).get("ticker_blockers", {}).items():
+            for code in codes:
+                local(ticker, code)
     baseline_code = decision.get("decision_code")
     weakening = decision.get("fundamental_gate", {}).get("weakening_tickers", [])
     if baseline_code in CRITICAL_CODES and (baseline_code != "fundamental_weakening_review" or not weakening):

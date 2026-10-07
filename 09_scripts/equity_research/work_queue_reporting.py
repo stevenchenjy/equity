@@ -130,8 +130,16 @@ def research_lines(decision: dict, *, detailed: bool = False) -> list[str]:
                          + ". Original purposes and deadlines remain recorded; expiry does not renew a plan.")
             if detailed:
                 for row in pending:
+                    label = "Recorded review due"
+                    try:
+                        due = datetime.fromisoformat(str(row["next_review_at"]))
+                        observed = datetime.fromisoformat(str(queue.get("generated_at") or decision.get("generated_at")))
+                        if due.tzinfo is not None and observed.tzinfo is not None:
+                            label = "Overdue since" if due <= observed else "Review due"
+                    except (ValueError, TypeError):
+                        pass
                     lines.append(f"- {row['ticker']} ({row['source_status']}): {row['next_step']} "
-                                 f"Next review: {row['next_review_at']}; original deadline: "
+                                 f"{label}: {row['next_review_at']}; original deadline: "
                                  f"{row.get('original_time_exit_at') or row.get('original_review_at') or 'unverified'}.")
     elif queue:
         lines.append("Recurring opportunity and reassessment queue is unverified; inspect the current status before relying on it.")

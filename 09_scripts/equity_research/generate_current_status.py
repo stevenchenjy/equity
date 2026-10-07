@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 from work_queue_reporting import read_backlog_summary, work_health
+from evidence_scope import current_shared_integrity_passed, ticker_blockers as evidence_ticker_blockers
 
 from active_config import ACTIVE_CONFIG_PATH, load_active_config
 from daily_common import (
@@ -286,7 +287,7 @@ def main() -> int:
         blockers.append("deterministic_refresh_not_fully_passed")
     if not valid_market:
         blockers.append("current_market_snapshot_invalid")
-    if evidence.get("scan_status") != "ok":
+    if not current_shared_integrity_passed(evidence, now_et()):
         blockers.append(str(evidence.get("reason") or "official_evidence_refresh_not_ok"))
     if automation_alert.get("active") is True:
         blockers.append(
@@ -416,6 +417,9 @@ def main() -> int:
             "reason": evidence.get("reason", ""),
             "held_coverage_complete": evidence.get("held_coverage_complete", False),
             "last_success_at": evidence.get("last_success_at", ""),
+            "failure_scope": evidence.get("failure_scope", "legacy"),
+            "ticker_blockers": evidence_ticker_blockers(evidence),
+            "admitted_tickers": evidence.get("admitted_tickers", []),
         },
         "decision": {
             "code": decision.get("decision_code", "missing"),

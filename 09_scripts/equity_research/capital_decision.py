@@ -125,6 +125,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
         h,w,p=held.get(ticker,{}),watch.get(ticker,{}),plans.get(ticker,{})
         entry_codes=codes(w.get('gate_blockers'))
         local=sorted(set(codes(gates.get('ticker_blockers',{}).get(ticker))+codes(p.get('blockers'))+codes(order_review.get('ticker_blockers',{}).get(ticker)))-set(global_codes))
+        local=sorted(set(local + [code for gate in ('evidence_gate','fundamental_gate')
+                                  for code in codes(decision.get(gate,{}).get('ticker_blockers',{}).get(ticker))]))
         row=dict(ticker=ticker,decision='NO_ACTION',decision_timestamp=current.isoformat(),market_data_timestamp=expected,
                  shares=0,estimated_notional=0,order_draft=None,blockers=[],reasons=[],confidence=w.get('confidence','unverified'),
                  thesis_summary='',key_evidence=[],strategy_source=None)

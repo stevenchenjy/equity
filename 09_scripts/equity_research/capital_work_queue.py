@@ -80,7 +80,7 @@ def _item_semantic(item: dict) -> dict:
     return {k: item.get(k) for k in ("item_id", "kind", "ticker", "state", "priority", "condition",
         "next_step", "source_status", "blockers", "plan_id", "plan_version", "plan_record_hash",
         "preserved_purpose", "original_review_at", "original_time_exit_at", "gap_ids", "closure_reason",
-        "canonical_classification", "maximum_review_price", "setup_outcome", "work_priority_rank", "review_owner", "evidence_status")}
+        "canonical_classification", "maximum_review_price", "setup_outcome", "work_priority_rank", "review_owner", "evidence_status", "research_disposition")}
 
 
 def validate_state(state: dict) -> None:
@@ -108,9 +108,34 @@ def _plan_needed(plan: dict) -> bool:
         or plan.get("setup_status") in {"failed", "expired", "missed"})
 
 
+def _core_coverage(decision: dict, config: dict | None) -> dict:
+    """Current marked holdings only; proposed core additions are not holdings."""
+    policy = (config or {}).get("account", {})
+    threshold = _money(policy.get("core_minimum_pct", policy.get("core_target_pct")))
+    total = _money(decision["account"].get("account_total_value"))
+    held = decision.get("held_positions")
+    if threshold is None or threshold > 100 or total is None or total <= 0 or not isinstance(held, list):
+        return {"status": "unverified"}
+    value = Decimal(0)
+    for row in held:
+        if not isinstance(row, dict) or not row.get("asset_role"):
+            return {"status": "unverified"}
+        if row["asset_role"] != "core_allocation":
+            continue
+        shares, price = _money(row.get("current_shares")), _money(row.get("current_price"))
+        if shares is None or price is None or (shares > 0 and price <= 0):
+            return {"status": "unverified"}
+        value += shares * price
+    gap = max(Decimal(0), total * threshold / 100 - value)
+    return {"status": "satisfied" if gap == 0 else "below_minimum", "threshold_pct": float(threshold),
+        "current_core_value_usd": _usd(value), "remaining_minimum_value_usd": _usd(gap),
+        "basis": "canonical_current_held_shares_times_prices; not broker verification or proposed allocation"}
+
+
 def build_capital_work_queue(decision: dict, previous: dict | None = None, *, current: datetime,
                              config: dict | None = None, research_backlog: dict | None = None,
-                             source_receipts: list[dict] | None = None, scheduler_state: dict | None = None) -> dict:
+                             source_receipts: list[dict] | None = None, scheduler_state: dict | None = None,
+                             opportunity_report: dict | None = None) -> dict:
     """Pure deterministic builder. Previous histories are preserved, not reconstructed."""
     current = _aware(current)
     now = current.isoformat()
@@ -171,25 +196,53 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
     eligible_tickers = {str(r.get("ticker")) if isinstance(r, dict) else str(r) for r in (decision.get("eligible_new_position_review_candidates") or [])}
     backlog_by = {str(row.get("ticker")): row for row in (research_backlog or {}).get("priority_queue", []) if isinstance(row, dict)}
     gap_by = {str(r.get("gap_id")): r for r in (research_backlog or {}).get("items", []) if isinstance(r, dict)}
+    core_coverage = _core_coverage(decision, config)
+    assessed_by = {r["ticker"]: r for r in (opportunity_report or {}).get("opportunities", [])}
+    held_tickers = {r.get("ticker") for r in decision.get("held_positions", [])
+        if isinstance(r, dict) and (_money(r.get("current_shares")) or 0) > 0}
+    market = decision.get("market_gate", {})
+    market_session = market.get("expected_market_session") if market.get("complete_close_verified") is True else None
     for ticker, row in candidates.items():
         blockers = _blockers(row)
         core = row.get("valuation_applicability") == "not_applicable_broad_market_etf" or "core" in str(row.get("action", ""))
         backlog = backlog_by.get(ticker, {})
         eligible = ticker in eligible_tickers
+        core_satisfied = core and core_coverage["status"] == "satisfied"
+        pending_gap_ids = [g for g in backlog.get("gap_ids", []) if g in gap_by
+            and gap_by[g].get("status") not in {"resolved_objective", "resolved", "completed"}]
+        # Meeting the core minimum is a completed allocation task, not a reason
+        # to spend one of three recurring company-research slots on an add.
+        # Preserve the ticket for changed evidence; actual held-plan risk work
+        # is independently queued above. Unknown coverage never proves success.
+        explicit_review = row.get("research_review_required") is True or any(
+            held.get("ticker") == ticker and held.get("research_review_required") is True
+            for held in (decision.get("held_positions") or []) if isinstance(held, dict))
+        monitoring_core = core_satisfied and not eligible and not pending_gap_ids and not explicit_review
+        from research_opportunities import negative_assessment_wait
+        assessment_item = assessed_by.get(ticker, {})
+        negative_wait = (ticker not in held_tickers and not eligible and not explicit_review
+            and negative_assessment_wait(assessment_item, current=current, market_session_date=market_session))
         identity = f"opportunity:{ticker}"
-        if core:
+        if negative_wait:
+            step = (f"{ticker} has a recorded {assessment_item['state']} assessment. Reassess after changed company evidence or a newer completed close, "
+                    f"or by {assessment_item['assessment']['next_review_at']}. Canonical evidence gaps remain recorded; no purchase is proposed.")
+        elif monitoring_core:
+            step = (f"{ticker}'s broad-core minimum is already satisfied by recorded holdings. Monitor changed fund or allocation evidence; "
+                    "this does not propose an add or a trim. Prioritize unfinished individual-company research.")
+        elif core:
             step = f"Recheck {ticker}'s existing core entry and whole-share rules after the next published close; review only within the unchanged core target and reserve."
         elif any("valuation" in b for b in blockers) or not row.get("valuation_base_price"):
             step = f"Complete {ticker}'s sourced debt/cash/dilution and company-specific valuation cases, then compare price, reward/risk and portfolio overlap."
         else:
             step = f"Recheck {ticker}'s observed entry, evidence validity and unchanged sizing gates after the next published close. Skip it if conditions fail."
         gap_steps = [str(gap_by[g]["next_step"]) for g in backlog.get("gap_ids", []) if g in gap_by and gap_by[g].get("next_step")]
-        if gap_steps:
+        if gap_steps and not negative_wait:
             step = f"{ticker}: " + " ".join(dict.fromkeys(gap_steps[:2])) + " Re-evaluate existing price and risk gates after the evidence changes."
         if eligible:
             step += " Canonical research eligibility still requires fresh execution checks and owner approval."
         desired[identity] = {"item_id": identity, "kind": "opportunity_research", "ticker": ticker,
-            "state": "research_ready" if eligible else "blocked", "priority": 3 if core else 4,
+            "state": "assessed_waiting_reassessment" if negative_wait else "monitoring" if monitoring_core else "research_ready" if eligible else "blocked",
+            "priority": 6 if monitoring_core or negative_wait else 3 if core and not core_satisfied else 4,
             "source_status": str(row.get("action", "watch_only")), "blockers": blockers,
             "condition": "Evidence and price must satisfy the existing strategy before capital can be proposed; cash does not create a deadline to invest.",
             "next_step": step, "next_review_at": research_check, "review_owner": "scheduled_research_then_owner_if_eligible",
@@ -198,6 +251,12 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
             "work_priority_rank": backlog.get("priority_rank") if isinstance(backlog.get("priority_rank"), int) else 999,
             "gap_ids": list(backlog.get("gap_ids", [])), "priority_reasons": list(backlog.get("priority_reasons", [])),
             "automatic_action_allowed": False, "eligible_quantity": 0, "evidence": source}
+        if core:
+            desired[identity]["core_coverage"] = copy.deepcopy(core_coverage)
+        if negative_wait:
+            desired[identity]["research_disposition"] = {"state": assessment_item["state"],
+                "reason_code": assessment_item["reason_code"], "assessed_at": assessment_item["assessment"]["assessed_at"],
+                "next_review_at": assessment_item["assessment"]["next_review_at"]}
     # A persistent recurring task keeps the system working even when no candidate qualifies.
     if remainder is not None and remainder > 0:
         desired["capital:recurring_review"] = {"item_id": "capital:recurring_review", "kind": "recurring_capital_review",
@@ -218,7 +277,7 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
                 # task or make its old source binding look newly verified.
                 row.update(state="unverified", evidence_status="unverified")
                 row["blockers"] = sorted(set(row.get("blockers", []) + ["plan_context_unverified"]))
-            elif row["state"] in ACTIVE_STATES:
+            elif row["state"] in ACTIVE_STATES | {"monitoring", "assessed_waiting_reassessment"}:
                 plan = terminal_plans.get(str(row.get("plan_id")))
                 newer = latest_plans.get(str(row.get("plan_id")))
                 row.update(state="resolved" if plan else "superseded" if newer and newer.get("version") != row.get("plan_version") else "not_observed",
@@ -226,9 +285,9 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
                     closed_at=now)
         else:
             row.update(first_seen_at=before.get("first_seen_at", now) if before else now,
-                       last_seen_at=now, occurrence=(before.get("occurrence", 1) + (before["state"] not in ACTIVE_STATES)) if before else 1)
+                       last_seen_at=now, occurrence=(before.get("occurrence", 1) + (before["state"] not in ACTIVE_STATES and row["state"] in ACTIVE_STATES)) if before else 1)
             # An overdue unresolved task stays overdue. A routine refresh cannot defer it.
-            if before and before["state"] in ACTIVE_STATES:
+            if before and before["state"] in ACTIVE_STATES and row["state"] in ACTIVE_STATES:
                 row["next_review_at"] = before["next_review_at"]
         if before is None or _item_semantic(row) != _item_semantic(before):
             event = {"item_id": identity, "recorded_at": now, "event": "created" if before is None else "changed",
@@ -308,18 +367,28 @@ def compact_summary(state: dict) -> dict:
 
 def render_report(state: dict) -> str:
     cash = state["cash_explanation"]
+    def due_label(row: dict) -> str:
+        return ("Overdue since" if _aware(row["next_review_at"]) <= _aware(state["generated_at"]) else "Review due") + f": {row['next_review_at']}"
     lines = ["# Cash and ongoing research work", "", f"As of {state['generated_at']}. Research only; no automatic allocation.", "",
         f"Planning cash: {cash['planning_cash_usd']}; retained reserve: {cash['strategic_reserve_usd']}; unallocated research cash: {cash['unallocated_research_cash_usd']}.",
         cash["explanation"], "", "## Dated plan reassessments", ""]
     if state.get("plan_reassessment_status") != "current":
         lines.append("Current plan reassessment coverage is unverified; restore the source-bound plan context. Any retained tasks below remain unresolved historical work, not freshly verified instructions.")
     for row in state["plan_reassessment_queue"]:
-        lines.append(f"- {row['ticker']} ({row['source_status']}; {row['plan_id']} v{row['plan_version']}): {row['next_step']} Review appointment: {row['next_review_at']}. Original deadline remains {row.get('original_time_exit_at') or row.get('original_review_at')}.")
+        lines.append(f"- {row['ticker']} ({row['source_status']}; {row['plan_id']} v{row['plan_version']}): {row['next_step']} {due_label(row)}. Original deadline remains {row.get('original_time_exit_at') or row.get('original_review_at')}.")
     if not state["plan_reassessment_queue"] and state.get("plan_reassessment_status") == "current":
         lines.append("No current source-bound reassessment item.")
     lines += ["", "## Opportunity research", ""]
     for row in state["top_opportunities"]:
-        lines.append(f"- {row['ticker']}: {row['next_step']} Next review: {row['next_review_at']}; unresolved: {', '.join(row['blockers']) or 'fresh execution checks and owner approval'}.")
+        lines.append(f"- {row['ticker']}: {row['next_step']} {due_label(row)}; unresolved: {', '.join(row['blockers']) or 'fresh execution checks and owner approval'}.")
+    monitoring = [row for row in state["items"] if row["state"] == "monitoring"]
+    if monitoring:
+        lines += ["", "## Core allocation already satisfied", ""]
+        lines += [f"- {row['ticker']}: {row['next_step']} Retained for monitoring; no company-research slot assigned." for row in monitoring]
+    concluded = [row for row in state["items"] if row["state"] == "assessed_waiting_reassessment"]
+    if concluded:
+        lines += ["", "## Completed negative research awaiting changed evidence", ""]
+        lines += [f"- {row['ticker']}: {row['next_step']} Retained canonical blockers: {', '.join(row['blockers']) or 'none recorded'}." for row in concluded]
     lines += ["", state["attention_policy"], f"Next automatic research review: {state['next_automatic_review_at']}.",
               f"History retained: {len(state['items'])} stable items and {len(state['events'])} changes; repeated refreshes do not duplicate tickets.", ""]
     return "\n".join(lines)
@@ -367,11 +436,21 @@ def refresh_capital_work_queue(decision: dict, *, root: Path, current: datetime,
             receipts = [{"path":str(config_path.relative_to(input_root)), "sha256":hashlib.sha256(config_path.read_bytes()).hexdigest()}] if config_path.exists() else []
             if backlog is not None:
                 receipts.append({"path":str(BACKLOG_REL), "sha256":hashlib.sha256(backlog_path.read_bytes()).hexdigest()})
+            opportunity_report, opportunity_status = None, "unavailable"
+            opportunity_path = input_root / "04_research/company_research/opportunities.local/report.json"
+            if opportunity_path.exists():
+                try:
+                    from research_opportunities import read_report
+                    opportunity_report = read_report(input_root, current=current)
+                    opportunity_status = "available"
+                    receipts.append({"path": str(opportunity_path.relative_to(input_root)), "sha256": hashlib.sha256(opportunity_path.read_bytes()).hexdigest()})
+                except (OSError, ValueError, TypeError, KeyError):
+                    opportunity_status = "unverified"
             scheduler_path = input_root / "00_project_control/run_logs/daily_scheduler_state.local.json"
             scheduler_state = json.loads(scheduler_path.read_text()) if scheduler_path.exists() else {}
             if not isinstance(scheduler_state, dict): raise ValueError("scheduler_state_invalid")
             state = build_capital_work_queue(decision, previous, current=current, config=config,
-                research_backlog=backlog, source_receipts=receipts, scheduler_state=scheduler_state)
+                research_backlog=backlog, source_receipts=receipts, scheduler_state=scheduler_state, opportunity_report=opportunity_report)
             phase = "queue_write_failed"
             atomic_write_json(path, state)
             # State is authoritative. A report-write failure must not pretend it vanished.
@@ -381,7 +460,7 @@ def refresh_capital_work_queue(decision: dict, *, root: Path, current: datetime,
             except OSError:
                 report_status = "write_failed"
             summary = compact_summary(state)
-            summary.update(backlog_status=backlog_status, report_status=report_status)
+            summary.update(backlog_status=backlog_status, opportunity_status=opportunity_status, report_status=report_status)
             return summary
     except (OSError, ValueError, TypeError, KeyError, RuntimeError, ArithmeticError):
         return {"schema_version":SCHEMA, "status":"unverified", "failure_code":phase,
