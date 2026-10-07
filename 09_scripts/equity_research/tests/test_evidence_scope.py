@@ -24,6 +24,13 @@ class EvidenceScopeTests(unittest.TestCase):
         self.assertNotIn("GOOD", codes)
         self.assertIn("current_issuer_scan_missing", codes["MISSING"])
         self.assertIn("sec_acceptance_reconciliation_failed", codes["BAD"])
+    def test_known_funds_do_not_require_company_admission_but_arbitrary_skip_does(self):
+        status = partial()
+        status["not_applicable_tickers"] = ["QQQM", "XLI", "UNVERIFIED"]
+        codes = required_issuer_blockers(status, {"SPY", "QQQM", "XLI", "UNVERIFIED"})
+        self.assertFalse({"SPY", "QQQM", "XLI"} & codes.keys())
+        self.assertIn("current_issuer_scan_missing", codes["UNVERIFIED"])
+
     def test_packet_keeps_periodic_source_after_multiple_newer_events(self):
         rows = [dict(form=f, filing_date=d, accession_number=str(i), material_event="no")
                 for i, (f, d) in enumerate([("10-K", "2026-02-01"), ("10-Q", "2026-05-01"),

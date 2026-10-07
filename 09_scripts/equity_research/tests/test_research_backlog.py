@@ -117,6 +117,44 @@ class ResearchBacklogTests(unittest.TestCase):
         self.assertTrue((self.root / HISTORY_REL).read_bytes().startswith(first_history))
         validate_report(repeated, root=self.root, current=NOW)
 
+    def test_final_view_rebinds_post_incorporation_inputs_without_repeating_objective_work(self):
+        from research_backlog import recompose_final_view
+        from work_queue_reporting import read_backlog_summary
+        original = self.execute()
+        original_text = (self.root / REPORT_REL).read_text()
+        original_history = (self.root / HISTORY_REL).read_bytes()
+        original_objective = (self.root / DOSSIER_REL / 'ABC.json').read_bytes()
+        # Reproduce the real stage boundary: earnings incorporation publishes
+        # a changed canonical selection after the bounded objective run.
+        changed = read_csv(self.root / FUNDAMENTALS_REL)
+        changed[0]['debt_latest'] = '50.00'
+        atomic_write_csv(self.root / FUNDAMENTALS_REL, FUNDAMENTAL_FIELDS, changed)
+        with self.assertRaisesRegex(ValueError, 'report_unverified'):
+            validate_report(original, root=self.root, current=NOW)
+        before_recompose = (self.root / FUNDAMENTALS_REL).read_bytes()
+        with patch('research_backlog.complete_objective_data', side_effect=AssertionError('No second objective budget')):
+            final = recompose_final_view(self.root, NOW+timedelta(minutes=1))
+        validate_report(final, root=self.root, current=NOW+timedelta(minutes=2))
+        self.assertEqual(read_backlog_summary(self.root, current=NOW+timedelta(minutes=2))['status'], 'ready')
+        for field in ('selected_tickers', 'attempts_latest_run', 'financial_fields_completed', 'canonical_numeric_updates', 'objective_dossiers_completed'):
+            self.assertEqual(final[field], original[field])
+        self.assertEqual(final['inputs']['fundamentals_sha256_at_objective_completion'], original['inputs']['fundamentals_sha256_after'])
+        self.assertNotEqual(final['inputs']['fundamentals_sha256_after'], original['inputs']['fundamentals_sha256_after'])
+        self.assertEqual((self.root / FUNDAMENTALS_REL).read_bytes(), before_recompose)
+        self.assertEqual((self.root / DOSSIER_REL / 'ABC.json').read_bytes(), original_objective)
+        self.assertTrue((self.root / HISTORY_REL).read_bytes().startswith(original_history))
+        self.assertEqual((self.root / DOSSIER_REL / 'view_history' / (original['report_hash']+'.json')).read_text(), original_text)
+        self.assertFalse(any(r['reason_code']=='debt_latest' and r['status']!='resolved_objective' for r in final['items']))
+        self.assertTrue(any(r['reason_code']=='auditable_numeric_dossier' and r['status']=='unverified' for r in final['items']))
+
+    def test_final_view_cannot_refresh_prior_day_objective_report(self):
+        from research_backlog import recompose_final_view
+        self.execute()
+        before = (self.root / REPORT_REL).read_bytes()
+        with self.assertRaisesRegex(ValueError, 'report_unverified'):
+            recompose_final_view(self.root, NOW+timedelta(days=1))
+        self.assertEqual((self.root / REPORT_REL).read_bytes(), before)
+
     def test_current_issuer_rejection_cannot_reuse_prior_fresh_selection(self):
         self.execute()
         status = self.root / "03_source_data/equity_research/daily_evidence_status.json"

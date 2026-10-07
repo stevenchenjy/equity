@@ -9,6 +9,9 @@ from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
 
+# These funds have no operating-company SEC fundamentals admission contract.
+NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI"})
+
 
 def shared_integrity_passed(status: dict[str, Any]) -> bool:
     if "global_integrity_passed" not in status:
@@ -48,7 +51,7 @@ def ticker_blockers(status: dict[str, Any]) -> dict[str, list[str]]:
 def required_issuer_blockers(status: dict[str, Any], required: set[str]) -> dict[str, list[str]]:
     local = ticker_blockers(status)
     if "global_integrity_passed" in status:
-        for ticker in required - set(status.get("admitted_tickers", [])):
+        for ticker in required - NONCOMPANY_BENCHMARKS - set(status.get("admitted_tickers", [])):
             if ticker:
                 local.setdefault(ticker, []).append("current_issuer_scan_missing")
     return local

@@ -218,6 +218,15 @@
   "216": "write_acceptance_index",
   "217": "_event_input_preflight",
   "218": "OutcomeCoverageTests",
+  "219": "run_daily_refresh.py",
   "220": "OwnerSnapshotTests",
-  "221": "NamingCompatibilityTests"
+  "221": "NamingCompatibilityTests",
+  "222": "research_opportunities.py",
+  "223": "RuntimeLockConcurrencyTests",
+  "224": "VerifiedDeploymentFallbackTests",
+  "225": "workflow_health",
+  "226": "shadow_evaluation_health",
+  "227": "run_stage",
+  "228": "SecPayload",
+  "229": "main"
 }

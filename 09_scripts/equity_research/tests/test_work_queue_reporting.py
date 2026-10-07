@@ -44,6 +44,19 @@ class WorkQueueReportingTests(unittest.TestCase):
                 self.assertEqual(result['status'], 'failed')
                 self.assertNotIn('This run', ' '.join(research_lines({'research_backlog':result})))
 
+    def test_failed_final_view_cannot_reuse_earlier_objective_success(self):
+        with tempfile.TemporaryDirectory() as temp, patch('research_backlog.validate_report'):
+            root = Path(temp)
+            path = root / BACKLOG_REL; path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({'schema_version':'equity_research_backlog_v1', 'status':'ready',
+                'generated_at':'2026-09-27T12:00:00-04:00', 'priority_queue':[], 'objective_dossiers_completed':3}))
+            with patch.object(refresh_pipeline, 'ROOT', root):
+                refresh_pipeline._record_work_step({'name':'research_backlog_view', 'exit_code':124,
+                    'started_at':'2026-09-27T13:00:00-04:00', 'completed_at':'2026-09-27T13:04:00-04:00'})
+            result = read_backlog_summary(root, current=NOW)
+            self.assertEqual(result['status'], 'failed')
+            self.assertEqual(result['failure_code'], 'latest_backlog_view_failed')
+
     def test_cash_report_separates_planning_reserve_and_execution(self):
         decision = {'workflow_integrity': {'global_blockers': ['order_inventory_unverified'], 'ticker_blockers': {'AAA': ['valuation']}},
             'capital_work_queue': {'status': 'current', 'cash_explanation': {'status': 'planning_only',
@@ -134,6 +147,14 @@ class WorkQueueReportingTests(unittest.TestCase):
         self.assertLess(names.index('sec_filing_artifacts'), names.index('research_backlog'))
         self.assertLess(names.index('research_backlog'), names.index('earnings_incorporation'))
         self.assertLess(names.index('earnings_incorporation'), names.index('daily_decision'))
+        self.assertLess(names.index('long_horizon_research'), names.index('research_backlog_view'))
+        self.assertLess(names.index('research_backlog_view'), names.index('daily_decision'))
+        with patch.object(refresh_pipeline.subprocess, 'run') as child, patch.object(refresh_pipeline, '_record_work_step', side_effect=lambda result: result):
+            child.return_value.returncode = 0
+            refresh_pipeline.run_step('research_backlog_view', 'create_research_backlog.py', True)
+            args = child.call_args.args[0]
+            self.assertIn('--recompose-only', args)
+            self.assertNotIn('--apply-objective-updates', args)
 
 
 if __name__ == '__main__': unittest.main()

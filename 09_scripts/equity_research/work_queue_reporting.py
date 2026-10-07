@@ -38,15 +38,18 @@ def read_backlog_summary(root: Path, *, current: datetime, refresh: dict | None 
         raw = json.loads((root / BACKLOG_REL).read_text())
         validate_report(raw, root=root, current=current)
         # Receipts and complete history stay in the private backlog artifact.
-        result = {k: raw[k] for k in ("schema_version", "status", "generated_at", "priority_queue",
+        result = {k: raw[k] for k in ("schema_version", "status", "generated_at", "view_recomposed_at", "priority_queue",
                   "selected_tickers", "completion_summary", "failure_code", "attempt_summary", "counts",
                   "attempts_latest_run", "objective_dossiers_completed", "financial_fields_completed",
                   "canonical_numeric_updates") if k in raw}
     except (OSError, ValueError, TypeError):
-        result = {"status": "missing_or_invalid"}
+        result = {"status": "missing_or_invalid", "failure_code": "backlog_report_inputs_unverified"}
     result = work_health(result, refresh or {}, current=current, step="research_backlog")
-    attempt_path = root / "08_reviews/research_backlog.local/last_run.json"
-    if attempt_path.exists():
+    result = work_health(result, refresh or {}, current=current, step="research_backlog_view")
+    for marker in ("last_run.json", "last_view_run.json"):
+        attempt_path = root / "08_reviews/research_backlog.local" / marker
+        if not attempt_path.exists():
+            continue
         try:
             attempt = json.loads(attempt_path.read_text())
             start = datetime.fromisoformat(attempt["started_at"])
@@ -55,11 +58,13 @@ def read_backlog_summary(root: Path, *, current: datetime, refresh: dict | None 
                     or start.tzinfo is None or end.tzinfo is None or not start <= end <= current
                     or type(attempt.get("exit_code")) is not int):
                 raise ValueError("invalid_attempt")
-            generated = datetime.fromisoformat(str(result.get("generated_at", "")))
-            if generated.tzinfo is None:
+            generation = result.get("generated_at")
+            generated = datetime.fromisoformat(str(generation)) if generation else None
+            if generated is not None and generated.tzinfo is None:
                 raise ValueError("invalid_generation")
-            if attempt["exit_code"] != 0 and end >= generated:
-                result.update(status="failed", failure_code="latest_backlog_attempt_failed", latest_attempt=attempt)
+            if attempt["exit_code"] != 0 and ((generated is not None and end >= generated)
+                    or (generated is None and end.astimezone(current.tzinfo).date() == current.date())):
+                result.update(status="failed", failure_code="latest_backlog_view_failed" if marker == "last_view_run.json" else "latest_backlog_attempt_failed", latest_attempt=attempt)
         except (OSError, ValueError, TypeError, KeyError):
             result.update(status="unverified", failure_code="backlog_attempt_receipt_invalid")
     return result

@@ -69,6 +69,7 @@ from sec_acceptance_extensions import (
 from sec_supplemental_facts import NVDA_PRINCIPAL_TAG, supplement_companyfacts
 from earnings_incorporation import SecPayload, retain_sec_response, write_selection_receipt
 from latest_report_facts import supplement_cached_latest_report
+from evidence_scope import NONCOMPANY_BENCHMARKS
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -242,7 +243,6 @@ SEPARATE_SOFTWARE_CAPEX_ISSUERS = {"RBRK"}
 # reported FCF also deducts financed-asset principal; absence is not zero.
 # Official definition: SEC 0001045810-25-000207/q2fy26cfocommentary.htm.
 PRODUCTIVE_ASSET_CAPEX_ISSUERS = {"NVDA"}
-NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI"})
 
 
 

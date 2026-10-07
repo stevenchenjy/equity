@@ -72,6 +72,9 @@ STEP_SPECS = [
         False,
     ),
     ("long_horizon_research", "create_long_horizon_research.py", False),
+    # Earnings incorporation can replace financial selections after objective
+    # work. Bind the final attention view without consuming its budget twice.
+    ("research_backlog_view", "create_research_backlog.py", True),
     ("market_regime", "create_market_regime.py", False),
     # portfolio_outputs owns the account/weight/action/cash child sequence.
     # Running those children here as well duplicated C9 work and widened the
@@ -117,10 +120,11 @@ def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
         stage = "intake" if result["name"].endswith("intake") else "objective"
         atomic_write_json(ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json"), {
             "stage": stage, **{key: result[key] for key in ("started_at", "completed_at", "exit_code")}})
-    if result["name"] == "research_backlog":
+    if result["name"] in {"research_backlog", "research_backlog_view"}:
         # Persist before composing the decision, including a killed child that
         # could not replace its own previous success report.
-        atomic_write_json(ROOT / "08_reviews/research_backlog.local/last_run.json", {
+        marker = "last_view_run.json" if result["name"] == "research_backlog_view" else "last_run.json"
+        atomic_write_json(ROOT / "08_reviews/research_backlog.local" / marker, {
             "schema_version": "equity_research_backlog_run_v1",
             **{key: result[key] for key in ("started_at", "completed_at", "exit_code")},
         })
@@ -152,6 +156,8 @@ def run_step(
         else
         ["--apply-objective-updates"]
         if name == "research_backlog"
+        else ["--recompose-only"]
+        if name == "research_backlog_view"
         else ["--reuse-validated-snapshot"]
         if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
         else

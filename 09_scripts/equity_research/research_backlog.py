@@ -364,6 +364,60 @@ def refresh_attention_view(root: Path, current: datetime) -> None:
         atomic_write_text(root / MARKDOWN_REL, render_report(report))
 
 
+def recompose_final_view(root: Path, current: datetime) -> dict:
+    """Rebuild attention after final financial/analyst inputs, without research.
+
+    Later earnings incorporation can legitimately replace the financial CSV.
+    Preserve the original objective-run receipt and counts rather than rerun its
+    budget or silently rebind its historical claim to different input bytes.
+    """
+    with ExclusiveFileLock(root / DOSSIER_REL / "backlog.lock"):
+        path = root / REPORT_REL
+        original_text = path.read_text()
+        report = json.loads(original_text)
+        validate_report(report, current=current)
+        records = _history(root / HISTORY_REL)
+        count = report["history_records"]
+        if count > len(records) or (records[count-1]["record_hash"] if count else "") != report["history_head_hash"]:
+            raise ValueError("research_backlog_report_history_mismatch")
+        fundamentals = read_csv(root / FUNDAMENTALS_REL)
+        research = read_json(root / LONG_HORIZON_REL, {})
+        dossiers = {}
+        for row in fundamentals:
+            ticker = row.get("ticker")
+            if not _ticker(ticker):
+                continue
+            dossier = read_json(root / DOSSIER_REL / f"{ticker}.json", {})
+            if dossier and dossier.get("source_fingerprint") != _source_fingerprint(root, ticker, row, current):
+                dossier = {**dossier, "status": "unverified", "reason_code": "final_source_set_changed_requires_reassessment"}
+            dossiers[ticker] = dossier
+        view = build_backlog(fundamentals=fundamentals, positions=read_csv(root / POSITIONS_REL),
+            research=research, dossiers=dossiers, current=current, previous=report,
+            max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current))
+        prior_hash, final_hash = report["report_hash"], sha256_file(root / FUNDAMENTALS_REL)
+        history_path = root / DOSSIER_REL / "view_history" / f"{prior_hash}.json"
+        if history_path.exists():
+            if history_path.read_text() != original_text:
+                raise ValueError("research_backlog_view_history_conflict")
+        else:
+            atomic_write_text(history_path, original_text)
+        _append_history(root / HISTORY_REL, records, {"kind": "view_recomposed", "recorded_at": current.isoformat(),
+            "prior_report_hash": prior_hash, "prior_report_path": str(history_path.relative_to(root)),
+            "fundamentals_sha256_before": report["inputs"]["fundamentals_sha256_after"],
+            "fundamentals_sha256_after": final_hash, "objective_attempt_count": 0,
+            "canonical_numeric_updates": 0, "automatic_action_allowed": False})
+        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts")})
+        report["inputs"].setdefault("fundamentals_sha256_at_objective_completion", report["inputs"]["fundamentals_sha256_after"])
+        report["inputs"]["fundamentals_sha256_after"] = final_hash
+        report.update(view_recomposed_at=current.isoformat(), source_as_of=research.get("generated_at", ""),
+            history_records=len(records), history_head_hash=records[-1]["record_hash"])
+        report["report_hash"] = canonical_sha256({k: v for k, v in report.items() if k != "report_hash"})
+        validate_report(report, root=root, current=current)
+        atomic_write_json(path, report)
+        atomic_write_text(root / MARKDOWN_REL, render_report(report))
+        return report
+
+
 def _append_history(path: Path, records: list, row: dict):
     previous = records[-1]["record_hash"] if records else ""
     row = {**row, "previous_hash": previous}
@@ -376,7 +430,7 @@ def _history(path: Path):
     for row in rows:
         if row.get("previous_hash") != previous or canonical_sha256({k: v for k, v in row.items() if k != "record_hash"}) != row.get("record_hash"):
             raise ValueError("research_backlog_history_invalid_preserve_records")
-        if row.get("kind") not in {"run_started", "run_finished", "objective_attempt_started", "objective_attempt", "gap_progress"}:
+        if row.get("kind") not in {"run_started", "run_finished", "objective_attempt_started", "objective_attempt", "gap_progress", "view_recomposed"}:
             raise ValueError("research_backlog_history_invalid_preserve_records")
         aware(row.get("recorded_at"))
         previous = row["record_hash"]
@@ -444,6 +498,8 @@ def render_report(report: dict) -> str:
         "This queue assigns research work. It does not rank purchases, authorize trades, complete analyst judgments, or create valuation assumptions.",
         f"Automatic workload: at most {report['work_budget_tickers']} issuers per run; cached official sources only; {report['network_requests']} network requests.", "",
         "| Priority | Issuer | Objective gaps | Reasoning gaps | Why now |", "|---:|---|---:|---:|---|"]
+    if report.get("view_recomposed_at"):
+        lines[3:3] = [f"Final input view recomposed: {report['view_recomposed_at']}; no additional objective attempts or canonical writes. The original objective-run counts below are retained.", ""]
     for row in report["priority_queue"]:
         lines.append(f"| {row['priority_rank']} | {row['ticker']} | {row['objective_gap_count']} | {row['manual_gap_count']} | {', '.join(row['priority_reasons'])} |")
     lines += ["", "## Objective work completed this run", ""]
