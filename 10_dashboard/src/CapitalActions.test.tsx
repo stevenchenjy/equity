@@ -42,6 +42,34 @@ test('account-blocked escalation remains visible without a valid contract and ne
  const html=renderToStaticMarkup(<CapitalActions data={{...data,capital_decision:null,capital_deployment_escalation:blocked}}/>);
  assert.match(html,/暂无当前有效的完整交易草案/);assert.match(html,/账户完整性门槛未通过/);assert.match(html,/账户完整性 · account_snapshot_stale/);assert.match(html,/Confirm current account cash and complete order inventory/);assert.doesNotMatch(html,/999 股|99,999|BUY LIMIT/);
 });
+test('global gates copied per ticker display once while the full disclosure preserves attributed ticker gates',()=>{
+ const globalGates:DeploymentGate[]=[
+  {category:'account',code:'account_snapshot_stale',scope:'global',evidence_required:'Confirm the latest complete account snapshot',resolver:'owner'},
+  {category:'account',code:'order_inventory_incomplete',scope:'global',evidence_required:'Confirm every current open order',resolver:'owner'},
+  {category:'evidence',code:'shared_snapshot_unverified',scope:'global',evidence_required:'Rebuild the shared source snapshot',resolver:'system'},
+ ];
+ const copiedUses=uses.map(use=>({...use,gates:[...globalGates.map(gate=>({...gate,ticker:use.ticker})),...use.gates],blockers:[...globalGates.map(gate=>gate.code),...use.blockers]}));
+ const repeated={...escalation,status:'account_integrity_blocked',triggered:false,account_integrity_blockers:globalGates.filter(gate=>gate.category==='account').map(gate=>gate.code),gates:[...copiedUses.flatMap(use=>use.gates),...globalGates,...gates],ranked_capital_uses:copiedUses,closest_candidate:copiedUses[0],research_requests:[]} as CapitalDeploymentEscalation;
+ const beforeRender=JSON.stringify(repeated);
+ const html=renderToStaticMarkup(<CapitalActions data={{...data,capital_decision:null,capital_deployment_escalation:repeated}}/>);
+ const comparisonIndex=html.indexOf('<h4>三类资金用途比较');
+ const disclosureIndex=html.indexOf('<details><summary>完整现金保留门槛');
+ assert.ok(comparisonIndex>0&&disclosureIndex>comparisonIndex);
+ const globals=html.slice(0,comparisonIndex),candidates=html.slice(comparisonIndex,disclosureIndex),disclosure=html.slice(disclosureIndex);
+ for(const gate of globalGates){
+  assert.equal(globals.split(gate.evidence_required).length-1,1);
+  assert.equal(globals.split(gate.code).length-1,1);
+  assert.ok(!candidates.includes(gate.evidence_required));
+  assert.ok(!candidates.includes(gate.code));
+  assert.equal(disclosure.split(gate.code).length-1,1);
+  assert.ok(disclosure.includes(`全局 · ${gate.category==='account'?'账户完整性':'证据'} · ${gate.code}`));
+ }
+ for(const gate of gates){
+  assert.equal(disclosure.split(gate.code).length-1,1);
+  assert.ok(disclosure.includes(`${gate.ticker} · ${gate.category==='valuation'?'估值':gate.category==='price'?'价格':'政策'} · ${gate.code}`));
+ }
+ assert.equal(JSON.stringify(repeated),beforeRender);
+});
 test('unverified history and an eligible summary cannot substitute for a current complete order contract',()=>{
  const eligible={...uses[0],eligible:true,gates:[],blockers:[]};
  const unverified={...escalation,status:'history_unverified',triggered:false,consecutive_no_action_sessions:null,ranked_capital_uses:[eligible],closest_candidate:eligible} as CapitalDeploymentEscalation;
