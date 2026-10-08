@@ -10,7 +10,12 @@
     "objective_research_max_tickers": 10,
     "portfolio_execution": "manual only",
     "broker_connectivity_allowed": false,
-    "automatic_orders_allowed": false
+    "automatic_orders_allowed": false,
+    "capital_deployment_escalation": {
+      "required_sessions": 2,
+      "material_excess_cash_pct": 5.0,
+      "meaning": "Research/decision escalation above approved cash target; does not relax investment gates or risk limits."
+    }
   },
   "account": {
     "investment_horizon_years": 1,

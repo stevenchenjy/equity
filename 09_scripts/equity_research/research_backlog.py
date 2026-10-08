@@ -230,7 +230,7 @@ def complete_objective_data(*, root: Path, ticker: str, row: dict, current: date
 
 def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: dict,
         dossiers: dict, current: datetime, previous: dict | None = None, max_tickers: int = 3,
-        opportunities: list | None = None) -> dict:
+        opportunities: list | None = None, escalation_priorities: list[str] | None = None) -> dict:
     previous = previous or {}
     old_items = {r["gap_id"]: r for r in previous.get("items", [])}
     held = {r.get("ticker") for r in positions
@@ -323,12 +323,19 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
         resolved = (old["kind"] == "financial" and numeric(observed_rows.get(old["ticker"], {}).get(old["reason_code"])) is not None)
         items.append({**old, "status": "resolved_objective" if resolved else "unverified",
             "last_checked_at": current.isoformat(), "next_step": "Canonical official numeric evidence now present." if resolved else "Coverage changed; historical gap preserved without assumed resolution."})
-    groups.sort(key=lambda r: tuple(r["priority_key"]))
+    escalation_rank = {ticker: i for i, ticker in enumerate(escalation_priorities or [])}
+    for group in groups:
+        if group["ticker"] in escalation_rank:
+            group["priority_reasons"].append("two_session_capital_escalation_research_priority")
+    # This same issuer_queue drives the objective loop. Escalation changes the
+    # order of existing work, never its evidence admission or processing budget.
+    groups.sort(key=lambda r: (escalation_rank.get(r["ticker"], len(escalation_rank)), *r["priority_key"]))
     for i, row in enumerate(groups, 1):
         row["priority_rank"] = i
     return {"schema_version": "equity_research_backlog_v1", "generated_at": current.isoformat(), "status": "ready",
         "automatic_action_allowed": False, "work_budget_tickers": max_tickers,
-        "priority_basis": "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking.",
+        "priority_basis": ("Active two-session escalation candidates first, then held/reopened research and the existing fundamental queue; workload order does not admit a trade."
+            if escalation_rank else "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking."),
         "priority_queue": [r for r in groups if r["gap_ids"] and not r["assessment_waiting_for_change"] and (r["ticker"] in rows or r.get("attention_state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"})][:max_tickers], "issuer_queue": groups, "items": items,
         "counts": dict(Counter(r["status"] for r in items)), "network_requests": 0,
         "analyst_reviews_completed": 0, "valuation_assumptions_created": 0}
@@ -353,10 +360,12 @@ def refresh_attention_view(root: Path, current: datetime) -> None:
         validate_report(report, root=root)
         fundamentals = read_csv(root / FUNDAMENTALS_REL)
         dossiers = {r["ticker"]: read_json(root / DOSSIER_REL / (r["ticker"]+".json"), {}) for r in fundamentals}
+        from capital_escalation import research_priorities
         view = build_backlog(fundamentals=fundamentals, positions=read_csv(root / POSITIONS_REL),
             research=read_json(root / LONG_HORIZON_REL, {}), dossiers=dossiers,
-            current=current, previous=report, max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current))
-        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts")})
+            current=current, previous=report, max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current),
+            escalation_priorities=research_priorities(root, current))
+        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts", "priority_basis")})
         report["attention_view_updated_at"] = current.isoformat()
         report["report_hash"] = canonical_sha256({k: v for k, v in report.items() if k != "report_hash"})
         validate_report(report)
@@ -391,9 +400,11 @@ def recompose_final_view(root: Path, current: datetime) -> dict:
             if dossier and dossier.get("source_fingerprint") != _source_fingerprint(root, ticker, row, current):
                 dossier = {**dossier, "status": "unverified", "reason_code": "final_source_set_changed_requires_reassessment"}
             dossiers[ticker] = dossier
+        from capital_escalation import research_priorities
         view = build_backlog(fundamentals=fundamentals, positions=read_csv(root / POSITIONS_REL),
             research=research, dossiers=dossiers, current=current, previous=report,
-            max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current))
+            max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current),
+            escalation_priorities=research_priorities(root, current))
         prior_hash, final_hash = report["report_hash"], sha256_file(root / FUNDAMENTALS_REL)
         history_path = root / DOSSIER_REL / "view_history" / f"{prior_hash}.json"
         if history_path.exists():
@@ -406,7 +417,7 @@ def recompose_final_view(root: Path, current: datetime) -> dict:
             "fundamentals_sha256_before": report["inputs"]["fundamentals_sha256_after"],
             "fundamentals_sha256_after": final_hash, "objective_attempt_count": 0,
             "canonical_numeric_updates": 0, "automatic_action_allowed": False})
-        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts")})
+        report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts", "priority_basis")})
         report["inputs"].setdefault("fundamentals_sha256_at_objective_completion", report["inputs"]["fundamentals_sha256_after"])
         report["inputs"]["fundamentals_sha256_after"] = final_hash
         report.update(view_recomposed_at=current.isoformat(), source_as_of=research.get("generated_at", ""),
@@ -555,9 +566,11 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             if dossier and dossier.get("source_fingerprint") != fingerprints.get(ticker):
                 # History is immutable; only this run's view reopens stale work.
                 dossiers[ticker] = {**dossier, "status": "unverified", "reason_code": "source_set_changed_requires_reassessment"}
+        from capital_escalation import research_priorities
+        escalation_priorities = research_priorities(input_root, current)
         initial = build_backlog(fundamentals=fundamentals, positions=positions, research=research,
             dossiers=dossiers, current=current, previous=previous, max_tickers=max_tickers,
-            opportunities=attention_rows(input_root, current))
+            opportunities=attention_rows(input_root, current), escalation_priorities=escalation_priorities)
         by_ticker = {r["ticker"]: r for r in fundamentals}
         attempts, receipts, pending = [], [], []
         run_id = canonical_sha256({"started_at": current.isoformat(), "previous_hash": records[-1]["record_hash"] if records else "",
@@ -626,7 +639,7 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             raise
         report = build_backlog(fundamentals=list(by_ticker.values()), positions=positions, research=research,
             dossiers=dossiers, current=current, previous=initial, max_tickers=max_tickers,
-            opportunities=attention_rows(input_root, current))
+            opportunities=attention_rows(input_root, current), escalation_priorities=escalation_priorities)
         old = {r["gap_id"]: r for r in previous.get("items", [])}
         for item in report["items"]:
             prior = old.get(item["gap_id"], {})

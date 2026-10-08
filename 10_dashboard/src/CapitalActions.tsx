@@ -1,8 +1,35 @@
-import { money, timeLabel, type Snapshot } from './domain';
+import { money, timeLabel, type CapitalDeploymentEscalation, type DeploymentGate, type Snapshot } from './domain';
 const labels:Record<string,string>={ACTIONABLE_BUY:'买入',ACTIONABLE_ADD:'加仓',HOLD:'持有',REDUCE_REVIEW:'减仓复核',EXIT_REVIEW:'退出复核',NO_ACTION:'不操作',BLOCKED:'暂不可给出新交易'};
+const routeLabels:Record<string,string>={existing_quality_holding:'加仓现有高质量持仓',researched_growth_candidate:'新建研究最充分的成长仓位',diversified_core_growth:'增加分散的核心 / 成长配置'};
+const gateLabels:Record<DeploymentGate['category'],string>={evidence:'证据',valuation:'估值',price:'价格',risk:'风险',policy:'政策',account:'账户完整性'};
+const escalationLabels:Record<CapitalDeploymentEscalation['status'],string>={active:'已触发：立即复核最佳资金用途',monitoring:'继续监测连续交易日与现金',actionable_available:'已有符合条件的资金部署草案',account_integrity_blocked:'账户完整性门槛未通过',cash_target_met:'现金未达到显著超额触发标准',history_unverified:'连续交易日记录尚未核实',session_unverified:'当前交易日证据尚未核实'};
+function DeploymentGates({gates}:{gates:DeploymentGate[]}) {
+  return gates.length?<ul>{gates.map((gate,i)=><li key={gate.code+i}><strong>{gateLabels[gate.category]} · {gate.code}</strong>：{gate.evidence_required}{gate.resolver?`（处理方：${gate.resolver}）`:''}</li>)}</ul>:null;
+}
+function DeploymentEscalation({summary,draftTickers=[]}:{summary:CapitalDeploymentEscalation;draftTickers?:string[]}) {
+  const ranked=summary.ranked_capital_uses.slice(0,3);
+  const globalGates=summary.gates.filter(gate=>gate.scope==='global'||!gate.ticker);
+  const pendingResearch=summary.research_requests.filter(request=>!request.completed);
+  const closest=summary.closest_candidate;
+  return <section className="capital-action" aria-label="连续两日资金部署升级"><h3>连续两日资金部署升级</h3>
+    <p><strong>{escalationLabels[summary.status]??summary.status}</strong></p>
+    <p>连续无买入 / 加仓草案：{summary.consecutive_no_action_sessions===null?'尚未核实':`${summary.consecutive_no_action_sessions} 个交易日`} · 触发要求 {summary.required_sessions} 个交易日。{summary.observation_session?` 本次交易日 ${summary.observation_session}。`:''}</p>
+    <p>未分配现金 {money(summary.cash.uncommitted_cash_usd)} · 批准现金目标 {summary.cash.cash_target_pct===null?'待核实':`${summary.cash.cash_target_pct}%`}（{money(summary.cash.cash_target_usd)}） · 超出目标 {money(summary.cash.excess_cash_usd)}。{summary.cash.material_excess_cash_pct===null?' 显著超额标准待核实。':` 显著超额标准：账户价值的 ${summary.cash.material_excess_cash_pct}%。`}</p>
+    <p>{summary.explanation}</p>
+    {summary.session_history_reason?<p>交易日记录：{summary.session_history_reason}</p>:null}
+    {summary.account_integrity_blockers.length?<p><strong>账户完整性阻挡：</strong>{summary.account_integrity_blockers.join('；')}</p>:null}
+    <DeploymentGates gates={globalGates}/>
+    <h4>三类资金用途比较</h4><ul>{summary.routes.map(route=><li key={route.route}><strong>{routeLabels[route.route]??route.label}</strong>：{route.closest_candidate?`${route.closest_candidate.ticker} · ${route.closest_candidate.eligible?'通过部署门槛':'尚未通过部署门槛'}`:'暂无纳入的候选'}{route.blockers.length?`；${route.blockers.join('；')}`:''}</li>)}</ul>
+    {ranked.length?<><h4>当前优先顺序</h4><ol>{ranked.map(candidate=><li key={candidate.route+candidate.ticker}><strong>{candidate.ticker} · {routeLabels[candidate.route]??candidate.route}</strong> — {candidate.eligible?draftTickers.includes(candidate.ticker)?'通过部署门槛，完整条件草案见行动区':'通过部署门槛；等待当前有效的完整草案':'暂不部署'}<DeploymentGates gates={candidate.gates}/>{!candidate.gates.length&&candidate.blockers.length?<p>{candidate.blockers.join('；')}</p>:null}</li>)}</ol></>:null}
+    {closest?<p><strong>最接近部署条件：</strong>{closest.ticker} · {routeLabels[closest.route]??closest.route}；{closest.eligible?'已通过部署门槛。':closest.gates.length?closest.gates.map(gate=>`${gateLabels[gate.category]}：${gate.evidence_required}`).join('；'):closest.blockers.join('；')}</p>:null}
+    {pendingResearch.length?<><h4>待完成研究{summary.triggered?'（立即）':''}</h4><p>优先候选：{summary.research_priority_tickers.join('、')}。以下工作仍待完成；研究排队不代表结论已得到验证。</p>{pendingResearch.map(request=><div key={request.ticker}><strong>{request.ticker} · {request.urgency==='immediate'?'立即处理':'常规处理'}</strong><DeploymentGates gates={request.required_work}/>{!request.required_work.length?<p>{request.blockers.join('；')}</p>:null}</div>)}</>:null}
+    {summary.gates.length>globalGates.length?<details><summary>完整现金保留门槛（证据 / 估值 / 价格 / 风险 / 政策 / 账户）</summary><DeploymentGates gates={summary.gates}/></details>:null}
+  </section>;
+}
 export function CapitalActions({data}:{data:Snapshot}) {
   const c=data.capital_decision;
-  if(!c)return <section className="capital-actions"><h2>今天做什么</h2><strong>暂无当前有效的完整交易草案</strong><p>等待完整决策重算；不要沿用历史数量或过期 DAY 委托。</p></section>;
+  const escalation=data.capital_deployment_escalation;
+  if(!c)return <section className="capital-actions"><h2>今天做什么</h2><strong>暂无当前有效的完整交易草案</strong><p>等待完整决策重算；不要沿用历史数量或过期 DAY 委托。</p>{escalation?<DeploymentEscalation summary={escalation}/>:null}</section>;
   const actionable=c.decisions.filter(r=>r.order_draft);
   const held=new Set(data.positions.map(r=>r.ticker));
   const primary=c.decisions.filter(r=>r.order_draft||held.has(r.ticker));
@@ -13,6 +40,7 @@ export function CapitalActions({data}:{data:Snapshot}) {
     {accountCheck?<p>你现在需要做的：更新账户记录中的现金、持仓、完整挂单及可执行资金。若已有本日邮件，须核对其后实际成交或未成交的状态；假设成交不能作为第二次下单的资金依据。</p>:null}
     {publicCheck?<p>系统正在等待或处理所需公开数据，完整刷新后自动重算；不需要你手算研究结论。</p>:null}
     {dependencies.length?<details><summary>具体缺少什么、由谁处理</summary><ul>{dependencies.map((d,i)=><li key={d.code+i}>{d.category} · {d.evidence_required}</li>)}</ul></details>:null}
+    {!actionable.length&&escalation?<DeploymentEscalation summary={escalation}/>:null}
     {primary.map(r=><article key={r.ticker} className={'capital-action '+(r.order_draft?r.order_draft.side==='sell'?'capital-sell':'capital-buy':'')}><h3>{labels[r.decision]??r.decision} · {r.ticker}</h3>{r.order_draft?<>
       <p className="capital-headline">{r.shares} 股 · 约 {money(r.estimated_notional)}</p>
       <dl className="condition-grid"><div><dt>委托条件</dt><dd>{r.order_draft.side==='sell'?'SELL':'BUY'} {r.order_draft.entry_order_type} {r.order_draft.side==='sell'&&r.order_draft.entry_order_type!=='STOP'?'≥':'≤'} {money(r.order_draft.side==='sell'?r.order_draft.exit_price:r.order_draft.entry_limit)} · {r.order_draft.time_in_force}</dd></div><div><dt>有效时间</dt><dd>{timeLabel(r.order_draft.entry_window.starts_at)} — {timeLabel(r.order_draft.entry_window.ends_at)}</dd></div>
@@ -21,6 +49,7 @@ export function CapitalActions({data}:{data:Snapshot}) {
       <p>{r.order_draft.trigger_rule}</p><p>复核：{r.order_draft.initial_reassessment_price===null?'':money(r.order_draft.initial_reassessment_price)+' · '}{r.order_draft.reassessment_rule}</p>
       <ul>{r.order_draft.cancel_conditions.map(v=><li key={v}>{v}</li>)}</ul><p>{r.thesis_summary}</p><small>{r.order_draft.cost_assumption}</small>
     </>:<><p>{r.reasons.join('；')}</p>{r.dependencies.length?<details><summary>缺少的具体证据与处理方</summary><ul>{r.dependencies.map((v,i)=><li key={v.code+i}>{v.category} · {v.evidence_required}</li>)}</ul></details>:null}</>}</article>)}
+    {actionable.length&&escalation?<DeploymentEscalation summary={escalation} draftTickers={actionable.map(row=>row.ticker)}/>:null}
     <p className="form-hint">参考行情 {c.market_data_timestamp}，非实时。系统不连接券商或下单。请阅读完整草案后自行在 Chase 执行；条件不符就跳过。</p>
     <details><summary>研究背景与其余候选（与行动分开）</summary>{c.decisions.filter(r=>!primary.includes(r)).map(r=><p key={r.ticker}><strong>{r.ticker} · {labels[r.decision]??r.decision}</strong><br/>{[...r.reasons,...r.blockers].join('；')}</p>)}</details>
   </section>;

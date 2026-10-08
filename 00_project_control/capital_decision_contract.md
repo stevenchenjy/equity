@@ -1,5 +1,43 @@
 # Capital decision and manual execution contract
 
+## Two-session capital deployment escalation
+
+The October 8 owner instruction adds an escalation of research and capital-use
+comparison. Two consecutive verified market sessions with no `ACTIONABLE_BUY`
+or `ACTIONABLE_ADD`, uncommitted cash materially above the approved cash target,
+and no account-wide integrity blocker activate it. The review materiality is
+five percentage points of portfolio value above the approved target, configured
+in `workflow.capital_deployment_escalation`; it changes no allocation or risk
+limit. Repeated morning/afternoon refreshes count once per observed session.
+Weekends and holidays do not count; missing session evidence stays unknown.
+Any admitted buy/add in a session breaks its no-action classification, even if
+a later draft expires. Validated historical final decisions may seed the ledger.
+
+`daily_decision.json:capital_deployment_escalation` compares adding to an existing
+quality holding, opening the strongest researched growth case, and a diversified
+core/growth allocation. It ranks reviewed readiness and exact unsatisfied gates,
+not past price performance. An unavailable route is explained. Existing admitted
+eligibility, purpose, price, allocation and shared-cash owners still determine
+every positive conditional draft. An above-floor core addition requires its own
+approved sizing contract; the escalation does not invent one. Completed negative
+economic assessments remain negative, rather than becoming unfinished research.
+
+Retained cash has exact categorized evidence, valuation, price, risk, policy or
+account gates and a named closest candidate where one can be compared. Account
+integrity blockers suspend deployment escalation and are displayed explicitly;
+ticker-only quarantine cannot suspend unrelated research. The closest candidate
+is a readiness comparison, not approval or a claim of investment quality. Final
+text/HTML and the dashboard consume the same summary.
+
+Private state/report and bounded attempt receipts live under
+`08_reviews/capital_escalation.local/`. A triggered full refresh immediately runs
+one source-bound objective batch for priority candidates and recomposes valuation,
+portfolio and final decisions, retaining unsuccessful stages and remaining gates.
+Existing issuer/network limits and unchanged-evidence skips remain in force.
+The analyst completes remaining reasoning through maintained writers; successful
+collection does not prove that analysis occurred. Repeated refreshes cannot run
+the same escalation batch again that session. No sender or broker is invoked.
+
 The final capital decision is `daily_decision.json:capital_decision`, mirrored at
 `08_reviews/current/capital_decision.local.json`. It is produced after canonical
 eligibility, maintained thesis/plan reconciliation, portfolio sizing and observed

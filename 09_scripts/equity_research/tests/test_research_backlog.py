@@ -94,6 +94,52 @@ class ResearchBacklogTests(unittest.TestCase):
         with patch("earnings_incorporation.iso_now", return_value=kwargs.get("current", NOW).isoformat()):
             return run(input_root=self.root, output_root=kwargs.pop("output_root", self.root), current=kwargs.pop("current", NOW), **kwargs)
 
+    def priority_rows(self):
+        atomic_write_csv(self.root / FUNDAMENTALS_REL, FUNDAMENTAL_FIELDS,
+            [{**self.row, "ticker": ticker} for ticker in ("ABC", "BBB", "CCC")])
+        atomic_write_json(self.root / LONG_HORIZON_REL, {"generated_at": NOW.isoformat(),
+            "market_session_date": "2026-09-25", "candidate_queue": [{"ticker": ticker}
+                for ticker in ("ABC", "BBB", "CCC")], "companies": {}})
+
+    def test_escalation_changes_actual_objective_order_without_increasing_budget(self):
+        self.priority_rows()
+        with patch("capital_escalation.research_priorities", return_value=["CCC", "BBB"]):
+            report = self.execute(max_tickers=2)
+        self.assertEqual(report["selected_tickers"], ["CCC", "BBB"])
+        self.assertEqual([r["ticker"] for r in report["issuer_queue"]], ["CCC", "BBB", "ABC"])
+        self.assertEqual(report["work_budget_tickers"], 2)
+        self.assertEqual(report["network_requests"], 0)
+        self.assertFalse(report["automatic_action_allowed"])
+
+    def test_no_escalation_preserves_actual_held_and_research_order(self):
+        self.priority_rows()
+        with patch("capital_escalation.research_priorities", return_value=[]):
+            report = self.execute(max_tickers=2)
+        self.assertEqual(report["selected_tickers"], ["ABC", "BBB"])
+        self.assertNotIn("two_session_capital_escalation_research_priority",
+            report["issuer_queue"][0]["priority_reasons"])
+
+    def test_escalation_does_not_repeat_unchanged_objective_cache_work(self):
+        self.priority_rows()
+        with patch("capital_escalation.research_priorities", return_value=["CCC", "BBB"]):
+            first = self.execute(max_tickers=1)
+            second = self.execute(max_tickers=1, current=NOW+timedelta(minutes=1))
+            third = self.execute(max_tickers=1, current=NOW+timedelta(minutes=2))
+            last = self.execute(max_tickers=1, current=NOW+timedelta(minutes=3))
+        self.assertEqual(first["selected_tickers"], ["CCC"])
+        self.assertEqual(second["selected_tickers"], ["BBB"])
+        self.assertEqual(third["selected_tickers"], ["ABC"])
+        self.assertEqual(last["selected_tickers"], [])
+
+    def test_escalation_keeps_completed_negative_assessment_wait(self):
+        from test_capital_work_queue import negative_opportunity, WHEN
+        self.priority_rows()
+        with patch("capital_escalation.research_priorities", return_value=["CCC", "BBB"]), \
+                patch("research_backlog.attention_rows", return_value=[negative_opportunity("CCC")]):
+            report = self.execute(max_tickers=1, current=WHEN)
+        self.assertEqual(report["selected_tickers"], ["BBB"])
+        self.assertTrue(next(r for r in report["issuer_queue"] if r["ticker"] == "CCC")["assessment_waiting_for_change"])
+
     def test_safe_same_period_debt_patch_and_receipt_then_idempotent_rerun(self):
         before = copy.deepcopy(self.row)
         result = self.execute(apply_objective_updates=True)

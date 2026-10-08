@@ -45,6 +45,7 @@ EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 # Daily reference pagination plus one new grouped day is paced at 13 seconds.
 # Cold 21-session bootstrap uses the separate no-send 900-second entrypoint.
 MARKET_DISCOVERY_TIMEOUT_SECONDS = 360
+CAPITAL_ESCALATION_TIMEOUT_SECONDS = 900
 STEP_SPECS = [
     ("market_refresh", "run_full_universe_market_data.py", False),
     ("market_discovery", "market_discovery.py", True),
@@ -86,6 +87,7 @@ STEP_SPECS = [
         "create_daily_decision_and_brief.py",
         False,
     ),
+    ("capital_deployment_escalation", "run_capital_escalation.py", True),
     (
         "outcome_tracking",
         "track_recommendation_outcomes.py",
@@ -104,7 +106,7 @@ STEP_SPECS = [
     ("momentum_experiment_review", "create_momentum_experiment_review.py", True),
 ]
 ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review",
-    "research_opportunity_intake", "research_opportunity_objective"}
+    "research_opportunity_intake", "research_opportunity_objective", "capital_deployment_escalation"}
 CURRENT_STATUS_SPEC = (
     "current_status",
     "generate_current_status.py",
@@ -148,6 +150,8 @@ def run_step(
         and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
         else MARKET_DISCOVERY_TIMEOUT_SECONDS
         if name == "market_discovery"
+        else CAPITAL_ESCALATION_TIMEOUT_SECONDS
+        if name == "capital_deployment_escalation"
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     extra_arguments = (

@@ -20,6 +20,32 @@ export type CapitalDecision = {
       initial_reassessment_price:number|null;reassessment_rule:string;portfolio_weight_before:number;portfolio_weight_after:number;
       cash_before:number;estimated_cash_after:number;trigger_rule:string;cancel_conditions:string[];cost_assumption:string};}[];
 };
+export type DeploymentGate = {
+  code:string; category:'evidence'|'valuation'|'price'|'risk'|'policy'|'account';
+  scope:string; ticker?:string|null; evidence_required:string; resolver:string;
+};
+export type CapitalUse = {
+  rank:number; ticker:string; route:string; decision:string; eligible:boolean;
+  blockers:string[]; gates:DeploymentGate[]; research_ready:boolean; canonical_score:number|null;
+  order_draft:CapitalDecision['decisions'][number]['order_draft']; shares:number; estimated_notional:number;
+};
+export type CapitalDeploymentEscalation = {
+  schema_version:string; generated_at:string;
+  status:'active'|'monitoring'|'actionable_available'|'account_integrity_blocked'|'cash_target_met'|'history_unverified'|'session_unverified';
+  triggered:boolean; required_sessions:number; consecutive_no_action_sessions:number|null;
+  session_history_status:string; session_history_reason:string; observation_session:string|null;
+  cash:{uncommitted_cash_usd:number|null;account_value_usd:number|null;cash_target_pct:number|null;
+    cash_target_usd:number|null;excess_cash_usd:number|null;excess_cash_pct:number|null;
+    material_excess_cash_pct:number|null;materially_above_target:boolean};
+  account_integrity_blockers:string[]; gates:DeploymentGate[]; ranked_capital_uses:CapitalUse[];
+  routes:{route:string;label:string;status:'available'|'unavailable';closest_candidate:CapitalUse|null;blockers:string[]}[];
+  closest_candidate:CapitalUse|null; admitted_order_drafts:{ticker:string;decision:string;shares:number;
+    estimated_notional:number;order_draft:CapitalDecision['decisions'][number]['order_draft']}[];
+  research_priority_tickers:string[];
+  research_requests:{ticker:string;priority:number;urgency:'immediate'|'normal';blockers:string[];
+    required_work:DeploymentGate[];completed:boolean}[];
+  explanation:string; automatic_action_allowed:false;
+};
 export type Snapshot = {
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;
   market_session: string; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
@@ -32,6 +58,7 @@ export type Snapshot = {
   orders: { as_of: string; complete: boolean; fresh: boolean; rows: Record<string, unknown>[] };
   global_blockers: string[];
   capital_decision?:CapitalDecision|null; capital_decision_status?:string;
+  capital_deployment_escalation?:CapitalDeploymentEscalation|null;
 };
 export type Feedback = {
   ticker: string; side: 'buy' | 'sell'; status: FeedbackStatus; shares: string;

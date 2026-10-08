@@ -166,7 +166,10 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         market_session = latest_published_market_session(current).isoformat()
         held = held_tickers(root)
         prior_report = read_json(root / REPORT_REL, {})
-        for item in sorted(replay(store).values(), key=lambda i: priority(i, held)):
+        from capital_escalation import research_priorities
+        escalation_rank = {ticker: i for i, ticker in enumerate(research_priorities(root, current))}
+        for item in sorted(replay(store).values(), key=lambda i:
+                (escalation_rank.get(i["ticker"], len(escalation_rank)), *priority(i, held))):
             if item["state"] in TERMINAL | {"deferred_capacity"}:
                 continue
             if metrics["objective_items_processed"] >= remaining:
@@ -299,7 +302,11 @@ def summary(root: Path, *, current: datetime) -> dict:
             "priority_queue": [{k: i[k] for k in ("ticker", "state", "first_seen_at", "queue_age_hours", "reason_code", "blockers", "owner")} for i in report["priority_queue"][:10]],
             # Work priority is bounded; final decision coverage is not limited
             # to the next ten research jobs. Keep every active candidate visible.
-            "decision_candidates": [{k: i[k] for k in ("ticker", "state", "reason_code", "blockers", "owner")} for i in report["priority_queue"]],
+            "decision_candidates": [{**{k: i[k] for k in ("ticker", "state", "reason_code", "blockers", "owner")},
+                "instrument_kind": i.get("first_observation", {}).get("instrument_kind"),
+                "company_name": i.get("first_observation", {}).get("evidence", {}).get("metrics", {}).get("name"),
+                "identity_source_observation": i.get("first_observation", {}).get("observation_id")}
+                for i in report["priority_queue"]],
             "reassessment_queue": [{k: i[k] for k in ("ticker", "state", "last_evidence_at", "reason_code")} for i in report["reassessment_queue"]], **AUTHORITY}
     except (OSError, ValueError, KeyError, TypeError):
         return {"status": "unverified", "reason": "research_opportunity_current_store_or_report_unverified", "report_path": str(MARKDOWN_REL), **AUTHORITY}

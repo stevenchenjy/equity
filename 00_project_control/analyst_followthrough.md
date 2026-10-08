@@ -1,5 +1,19 @@
 # Recurring analyst follow-through
 
+For an active `daily_decision.json:capital_deployment_escalation`, immediately
+prioritize its `research_priority_tickers` and exact evidence/valuation gates.
+Compare quality holding additions, the strongest researched growth case and
+diversified core/growth under the unchanged deployment criteria. Complete the
+missing sourced business, valuation, countercase and maintained-plan work in the
+same analyst run where the evidence permits it; retain the precise missing source
+or failed gate when it does not. Publish a positive conditional draft through the
+existing validators whenever a candidate qualifies. Do not leave cash merely
+because the normal shortlist failed: record each candidate's evidence, valuation,
+price, risk or policy gate and the closest candidate to eligibility. Objective
+batch success alone does not complete this analyst duty. Account-wide integrity
+blockers remain mandatory; this escalation cannot invent account facts or a new
+above-floor ETF sizing policy. See [the capital contract](capital_decision_contract.md).
+
 The September 28 pipeline audit found that the deterministic refresh collects
 facts and queues work, but cannot itself author a reasoned valuation or plan
 reassessment. The owner requested that this gap be fixed. A scheduled follow-up

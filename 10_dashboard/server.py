@@ -217,7 +217,35 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         "global_blockers": (capital.get("global_blockers", []) if capital else
                             d.get("workflow_integrity", {}).get("global_blockers", [])),
         "capital_decision": capital, "capital_decision_status": capital_status,
+        "capital_deployment_escalation": escalation_view(d, current_contract=capital_status == "current"),
     }
+
+
+def escalation_view(decision, *, current_contract):
+    """Retain explanations during recomposition without restoring draft authority."""
+    value = decision.get('capital_deployment_escalation')
+    if not value:
+        return None
+    from daily_common import canonical_sha256
+    if value.get('content_sha256') != canonical_sha256({k:v for k,v in value.items() if k != 'content_sha256'}):
+        return None
+    result = json.loads(json.dumps(value))
+    if current_contract:
+        return result
+    result.update(status='session_unverified', triggered=False,
+        session_history_reason='Current capital contract requires recomposition.',
+        explanation='Retained candidate gates require current recomposition. No order draft or immediate deployment priority is valid.',
+        admitted_order_drafts=[], research_priority_tickers=[])
+    result['cash'].update(excess_cash_usd=None, excess_cash_pct=None, materially_above_target=False)
+    for row in result['ranked_capital_uses']:
+        row.update(eligible=False, shares=0, estimated_notional=0, order_draft=None)
+    for route in result['routes']:
+        row=route.get('closest_candidate')
+        if row:row.update(eligible=False, shares=0, estimated_notional=0, order_draft=None)
+    if result.get('closest_candidate'):
+        result['closest_candidate'].update(eligible=False, shares=0, estimated_notional=0, order_draft=None)
+    for request in result['research_requests']:request['urgency']='normal'
+    return result
 
 
 def current_snapshot(root):
@@ -242,7 +270,8 @@ def current_snapshot(root):
             account=dict(account_total_value=total,cash_available=a['cash_available'],invested_capital=invested,last_updated=a['last_updated'],cash_basis=a.get('cash_basis'),settled_cash_verified=False),
             positions=[dict(ticker=r['ticker'],shares=float(r['shares_optional']),price=number(market.get(r['ticker'],{}).get('last_price')) if market.get(r['ticker'],{}).get('data_quality_label')=='ok' else None,
                 weight=float(r['shares_optional'])*float(market[r['ticker']]['last_price'])/total*100 if known and total else None,role='待研究') for r in positions],
-            plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'])
+            plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'],
+            capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False))
     result['mode'] = 'formal_feedback'
     return result
 

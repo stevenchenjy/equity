@@ -617,6 +617,8 @@ def build_watch_rows(candidate_recommendations: list[dict[str, Any]], *,
                 "valuation_base_price": row.get("valuation_base_price", ""),
                 "valuation_bull_price": row.get("valuation_bull_price", ""),
                 "maximum_review_price": row.get("maximum_review_price", ""),
+                "expected_upside_pct": row.get("expected_upside_pct", ""),
+                "reward_to_risk_estimate": row.get("reward_to_risk_estimate", ""),
                 "suggested_whole_shares": row.get("suggested_whole_shares", ""),
                 "suggested_position_pct": row.get("suggested_position_pct", ""),
                 "sizing_tier": row.get("sizing_tier", ""),
@@ -1140,10 +1142,24 @@ def main() -> int:
     from capital_decision import build as build_capital_decision, publish as publish_capital_decision, meaning as capital_meaning
     from decision_dependencies import publish as publish_dependencies
     decision["capital_decision"] = build_capital_decision(decision, root=ROOT, current=current)
+    from capital_escalation import refresh as refresh_capital_escalation
+    decision["capital_deployment_escalation"] = refresh_capital_escalation(
+        ROOT, decision, decision["capital_decision"], current=current)
+    if decision["capital_deployment_escalation"].get("triggered"):
+        # Compare admitted routes before assigning their shared cash budget.
+        # The same owners still enforce every eligibility and sizing gate.
+        priority = [r["ticker"] for r in decision["capital_deployment_escalation"]["ranked_capital_uses"]]
+        decision["capital_decision"] = build_capital_decision(
+            decision, root=ROOT, current=current, priority_tickers=priority)
+        decision["capital_deployment_escalation"] = refresh_capital_escalation(
+            ROOT, decision, decision["capital_decision"], current=current)
     publish_capital_decision(ROOT, decision["capital_decision"])
     publish_dependencies(ROOT, decision["capital_decision"])
+    escalation_meaning = {key: decision["capital_deployment_escalation"].get(key) for key in (
+        "status", "triggered", "consecutive_no_action_sessions", "cash", "routes",
+        "ranked_capital_uses", "closest_candidate", "research_priority_tickers", "account_integrity_blockers")}
     decision["decision_fingerprint"] = canonical_sha256({"workflow": decision["decision_fingerprint"],
-        "capital": capital_meaning(decision["capital_decision"])})
+        "capital": capital_meaning(decision["capital_decision"]), "deployment_escalation": escalation_meaning})
     decision_fingerprint = decision["decision_fingerprint"]
     decision_changed = bool(prior_fingerprint) and decision_fingerprint != prior_fingerprint
     decision["decision_changed"] = decision_changed

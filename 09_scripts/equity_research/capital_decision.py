@@ -72,7 +72,7 @@ def meaning(contract: dict) -> dict:
 
 
 def build(decision: dict, *, root: Path, current: datetime, strategies: dict | None=None,
-          config: dict | None=None, orders: dict | None=None) -> dict:
+          config: dict | None=None, orders: dict | None=None, priority_tickers: list[str] | None=None) -> dict:
     current=current.astimezone(ZoneInfo('America/New_York'))
     config=config or read_json(root/'00_project_control/active_production_config.json')
     account=decision.get('account',{})
@@ -121,7 +121,9 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     cfg=config['account']; rows=[]; dependencies=[]
     for code in global_codes: dependencies.append(classify(code,scope='global'))
     eligible=set(decision.get('eligible_new_position_review_candidates',[]))|set(decision.get('eligible_action_review_candidates',[]))
-    for ticker in dict.fromkeys([*held,*watch,*opportunities]):
+    candidates = dict.fromkeys([*held,*watch,*opportunities])
+    ordered = dict.fromkeys([*(t for t in (priority_tickers or []) if t in candidates), *candidates])
+    for ticker in ordered:
         h,w,p=held.get(ticker,{}),watch.get(ticker,{}),plans.get(ticker,{})
         entry_codes=codes(w.get('gate_blockers'))
         local=sorted(set(codes(gates.get('ticker_blockers',{}).get(ticker))+codes(p.get('blockers'))+codes(order_review.get('ticker_blockers',{}).get(ticker)))-set(global_codes))

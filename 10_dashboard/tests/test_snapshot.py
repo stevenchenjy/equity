@@ -14,6 +14,28 @@ from server import ACCOUNT, CORE_INPUTS, DECISION, MARKET, ORDERS, PLANS, POSITI
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_recomposition_fallback_keeps_exact_gates_and_withholds_drafts(self):
+        from daily_common import canonical_sha256
+        from server import current_snapshot
+        row={'ticker':'ABC','eligible':True,'shares':2,'estimated_notional':200,'order_draft':{'side':'buy'},'gates':[{'code':'company_specific_valuation','category':'valuation'}]}
+        e={'status':'active','triggered':True,'cash':{'excess_cash_usd':1000},'ranked_capital_uses':[row],
+           'closest_candidate':row,'routes':[{'closest_candidate':row}],'research_requests':[{'ticker':'ABC','urgency':'immediate'}]}
+        e['content_sha256']=canonical_sha256(e)
+        self.decision['capital_deployment_escalation']=e;self.publish()
+        self.put(MARKET,'ticker,last_price,market_session_date,data_quality_label\nABC,100,2026-09-28,ok\n')
+        result=current_snapshot(self.root)
+        summary=result['capital_deployment_escalation']
+        self.assertFalse(summary['triggered'])
+        self.assertEqual(summary['status'],'session_unverified')
+        self.assertEqual(summary['ranked_capital_uses'][0]['gates'][0]['code'],'company_specific_valuation')
+        self.assertIsNone(summary['ranked_capital_uses'][0]['order_draft'])
+        self.assertEqual(summary['ranked_capital_uses'][0]['shares'],0)
+        self.assertIsNone(result['capital_decision'])
+        self.assertIsNone(summary['cash']['excess_cash_usd'])
+
+    def test_unbound_escalation_summary_is_not_displayed(self):
+        from server import escalation_view
+        self.assertIsNone(escalation_view({'capital_deployment_escalation':{'status':'active','content_sha256':'bad'}},current_contract=True))
     def test_presentation_summary_matches_source_without_changing_research_facts(self):
         from plan_summary import SCHEMA, SUMMARY_PATH, source_hash
         p=self.decision['plan_continuity']['plans'][0]

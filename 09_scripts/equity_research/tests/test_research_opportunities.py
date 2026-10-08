@@ -173,6 +173,34 @@ class OpportunityTests(unittest.TestCase):
         self.assertEqual(report["metrics"]["network_requests"], 0)
         self.assertEqual(report["metrics"]["canonical_fields_admitted"], 0)
 
+    def test_escalation_changes_actual_objective_order_with_shared_remaining_budget(self):
+        intake(self.root, current=NOW)
+        atomic_write_json(self.root / "00_project_control/active_production_config.json",
+            {"workflow": {"objective_research_max_tickers": 2}})
+        atomic_write_json(self.root / "04_research/company_research/research_backlog.local.json",
+            {"generated_at": NOW.isoformat(), "selected_tickers": ["ALREADY"]})
+        with patch("capital_escalation.research_priorities", return_value=["OTH", "NEW"]), \
+                patch("research_backlog.refresh_attention_view"), \
+                patch("urllib.request.OpenerDirector.open", side_effect=AssertionError("network forbidden")):
+            report = objective(self.root, current=NOW)
+        self.assertEqual([r["ticker"] for r in report["metrics"]["attempts"]], ["OTH"])
+        self.assertEqual(report["metrics"]["canonical_issuers_attempted_before_intake"], 1)
+        self.assertEqual(report["metrics"]["shared_objective_work_budget"], 2)
+        self.assertEqual(report["metrics"]["network_requests"], 0)
+        self.assertFalse(report["capital_authority"])
+
+    def test_no_escalation_preserves_objective_order_and_unchanged_attempt_is_skipped(self):
+        intake(self.root, current=NOW)
+        atomic_write_json(self.root / "00_project_control/active_production_config.json",
+            {"workflow": {"objective_research_max_tickers": 1}})
+        with patch("capital_escalation.research_priorities", return_value=[]):
+            first = objective(self.root, current=NOW)
+        self.assertEqual([r["ticker"] for r in first["metrics"]["attempts"]], ["SYN"])
+        with patch("capital_escalation.research_priorities", return_value=["SYN", "OTH"]):
+            second = objective(self.root, current=NOW+timedelta(minutes=1))
+        self.assertEqual([r["ticker"] for r in second["metrics"]["attempts"]], ["OTH"])
+        self.assertEqual(second["metrics"]["unchanged_items_skipped"], 1)
+
     def test_cached_primary_research_progresses_and_repeat_does_not_republish(self):
         intake(self.root, current=NOW)
         self.evidence()

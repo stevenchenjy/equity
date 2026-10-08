@@ -45,6 +45,23 @@ def cards(decision, view=None):
         tasks={d['category']:d['evidence_required'] for d in checks}
         labels={'A':'System next step','B':'Await public evidence','C':'Your next step before any trade','D':'Analyst next step','E':'Strategy/execution requirement'}
         result.append(dict(title='WHY NO NEW CAPITAL / NEXT STEP',group='action',kind='inactive',headline='',body='\n'.join(labels[k]+': '+v for k,v in tasks.items()),sources=[]))
+    escalation=decision.get('capital_deployment_escalation')
+    if escalation:
+        cash=escalation['cash']
+        lines=[escalation['explanation'],
+               f"Status: {escalation['status']}; consecutive verified no-buy/add sessions: {escalation['consecutive_no_action_sessions']}; history: {escalation['session_history_reason']}.",
+               f"Cash above approved target: ${cash['excess_cash_usd']:.2f}; material review trigger: {cash['material_excess_cash_pct']} percentage points of portfolio value." if cash['excess_cash_usd'] is not None else 'Cash excess is unverified.']
+        for route in escalation['routes']:
+            nearest=route.get('closest_candidate')
+            lines.append(route['label']+': '+(nearest['ticker'] if nearest else 'unavailable')+'; '+route['status']+'.')
+            if not nearest:lines.extend('Policy gate: '+code for code in route['blockers'])
+            elif nearest['gates']:
+                lines.extend(f"{nearest['ticker']} / {g['category']}: {g['code']} — {g['evidence_required']}" for g in nearest['gates'])
+        nearest=escalation.get('closest_candidate')
+        if nearest:lines.append('Closest to eligibility: '+nearest['ticker']+'; readiness comparison only, subject to every gate above.')
+        immediate=[r['ticker'] for r in escalation['research_requests'] if r['urgency']=='immediate']
+        lines.append('Immediate priority research: '+(', '.join(immediate) or 'No active escalation request; account/data checks or normal research remain.')+' Queued work is not completed analysis.')
+        result.append(dict(title='CAPITAL DEPLOYMENT ESCALATION',group='action',kind='inactive',headline='',body='\n'.join(lines),sources=[]))
     for row in c['decisions']:
         if row['decision'] in {'NO_ACTION','BLOCKED'} and row['ticker'] in {r['ticker'] for r in decision.get('held_positions',[])}:
             result.append(dict(title=f"{row['decision']} — {row['ticker']}",group='action',kind='inactive',headline='0 new shares; no renewed expired order',body='\n'.join(action_lines(row)),sources=[]))

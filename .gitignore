@@ -189,3 +189,4 @@ graphify-out/reflections/
 # Source-bound private capital decisions and resolution receipts
 08_reviews/current/capital_decision.local.json
 08_reviews/decision_resolution.local/
+08_reviews/capital_escalation.local/
