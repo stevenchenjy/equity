@@ -1843,5 +1843,10 @@
     "mtime": 1791461094.8101163,
     "ast_hash": "6e343591e22fdbe23ded25db44a8cb83",
     "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v36.json": {
+    "mtime": 1791461772.9395766,
+    "ast_hash": "85d5d1f4abcb79c3bf47dfe7485014ca",
+    "semantic_hash": ""
   }
 }
