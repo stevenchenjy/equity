@@ -54,6 +54,41 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['plans'][0]['reason'],'New evidence.')
         self.assertEqual(result['plans'][0]['eligible_quantity'],2)
 
+    def test_shared_publication_inputs_accept_bound_local_approval_and_detect_changes(self):
+        from account_authority import POLICY_REL
+        from workflow_inputs import WORKFLOW_INPUTS
+        from server import ALLOWED_INPUTS
+        self.assertEqual(ALLOWED_INPUTS, WORKFLOW_INPUTS)
+        from account_authority import SCHEMA as AUTHORITY_SCHEMA, load_authority
+        from daily_common import canonical_sha256
+        from capital_decision import binding, SCHEMA as CAPITAL_SCHEMA
+        approval = {'schema_version': AUTHORITY_SCHEMA, 'mode': 'owner_local_ledger',
+                    'approved_at': '2026-09-30T13:00:00-04:00', 'owner_instruction': 'Use local records for conditional plans',
+                    'automatic_execution': False, 'broker_observation_claimed': False}
+        approval['content_sha256'] = canonical_sha256(approval)
+        self.put(POLICY_REL, approval)
+        self.put(ORDERS, {'as_of':'2026-09-15T13:00:00-04:00', 'complete':False, 'orders':[], 'cash_confirmed':False})
+        self.decision['account']['cash_basis'] = 'ledger_estimate'
+        c = dict(schema_version=CAPITAL_SCHEMA, generated_at=self.decision['generated_at'], decisions=[], action='NO_NEW_POSITION',
+                 source_bindings=binding(self.root), account_authority=load_authority(self.root,self.now),
+                 automatic_action_allowed=False, broker_connected=False, order_placed=False)
+        c['content_sha256'] = canonical_sha256(c)
+        self.decision['capital_decision'] = c
+        self.decision['workflow_integrity']['input_hashes'] = {
+            p: hashlib.sha256((self.root / p).read_bytes()).hexdigest() if (self.root / p).exists() else None
+            for p in WORKFLOW_INPUTS}
+        self.publish()
+        result = read_snapshot(self.root, self.now)
+        self.assertEqual(result['positions'][0]['shares'], 2)
+        self.assertEqual(result['capital_decision_status'], 'current')
+        self.assertTrue(result['capital_decision']['account_authority']['local_planning_enabled'])
+        self.assertFalse(result['capital_decision']['account_authority']['broker_observation_claimed'])
+        self.assertFalse(result['orders']['complete'])
+        self.assertFalse(result['account']['settled_cash_verified'])
+        self.put(POLICY_REL, {'mode': 'changed'})
+        with self.assertRaisesRegex(SnapshotError, 'research_inputs_changed'):
+            read_snapshot(self.root, self.now)
+
     def test_broken_or_symlinked_presentation_notes_do_not_break_snapshot(self):
         from plan_summary import SUMMARY_PATH
         self.put(SUMMARY_PATH,'{broken')
@@ -98,8 +133,9 @@ class SnapshotTests(unittest.TestCase):
     def test_admitted_capital_contract_is_projected_and_changed_binding_suppresses_it(self):
         from capital_decision import binding, SCHEMA
         from daily_common import canonical_sha256
+        from account_authority import load_authority
         c=dict(schema_version=SCHEMA,generated_at=self.decision['generated_at'],decisions=[],action='NO_NEW_POSITION',
-            source_bindings=binding(self.root),automatic_action_allowed=False,broker_connected=False,order_placed=False)
+            account_authority=load_authority(self.root,self.now),source_bindings=binding(self.root),automatic_action_allowed=False,broker_connected=False,order_placed=False)
         c['content_sha256']=canonical_sha256(c)
         self.decision['capital_decision']=c;self.publish()
         result=read_snapshot(self.root,self.now)

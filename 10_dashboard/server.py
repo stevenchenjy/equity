@@ -20,6 +20,7 @@ from zoneinfo import ZoneInfo
 from feedback import Store, FeedbackError, version, PENDING, CONFIRMED, RECONCILED
 from tactical_review import _validated_bars
 from dashboard_publication import publication_id
+from workflow_inputs import WORKFLOW_INPUTS
 from plan_summary import SUMMARY_PATH, catalog, matching_summary
 
 ET = ZoneInfo("America/New_York")
@@ -32,13 +33,8 @@ POSITIONS = "05_risk_and_positions/current_positions.local.csv"
 PLANS = "05_risk_and_positions/investment_plans.local.json"
 ORDERS = "05_risk_and_positions/current_open_orders.local.json"
 MARKET = "03_source_data/equity_research/market_data_snapshot.csv"
-EXTRA_INPUTS = {
-    "04_research/company_research/thesis_dossiers.local.json",
-    "04_research/company_research/issuer_news_review_queue.local.jsonl",
-}
 CORE_INPUTS = {ACCOUNT, POSITIONS, PLANS, ORDERS}
-ALLOWED_INPUTS = CORE_INPUTS | EXTRA_INPUTS
-ALLOWED_INPUTS.add(PENDING)
+ALLOWED_INPUTS = set(WORKFLOW_INPUTS)
 
 
 class SnapshotError(ValueError):

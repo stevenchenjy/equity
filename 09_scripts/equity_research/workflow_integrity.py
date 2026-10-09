@@ -14,15 +14,10 @@ from thesis_evidence import STORE_REL, evaluate_thesis, evidence_context, stable
 from official_news import read_official_news_status
 from issuer_news_queue import QUEUE_REL, merge_news_context, record_review_states
 from execution_common import allocation_policy_proof_hashes
-from account_authority import POLICY_REL, load_authority
+from account_authority import load_authority
 
-WORKFLOW_INPUTS = {
-    POLICY_REL,
-    "05_risk_and_positions/investment_plans.local.json", "05_risk_and_positions/current_positions.local.csv",
-    "05_risk_and_positions/current_open_orders.local.json", "05_risk_and_positions/current_account_state.local.json",
-    str(STORE_REL), str(QUEUE_REL),
-    "06_execution_records/dashboard_feedback_pending.local.json",
-}
+from workflow_inputs import WORKFLOW_INPUTS
+
 CRITICAL_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 
 

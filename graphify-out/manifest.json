@@ -1120,8 +1120,8 @@
     "semantic_hash": "f03ef1ddba9d8e459fcae07288cb8411"
   },
   "09_scripts/equity_research/workflow_integrity.py": {
-    "mtime": 1791569410.1932547,
-    "ast_hash": "8291c8ef5b8086e2913f8d0098b8f3ed",
+    "mtime": 1791570402.1008885,
+    "ast_hash": "bdbde2dff38d24c23f09808e34905753",
     "semantic_hash": ""
   },
   "00_project_control/maintained_investment_workflow.md": {
@@ -1485,8 +1485,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/server.py": {
-    "mtime": 1791568404.5720541,
-    "ast_hash": "7434ad6720aa485e29b9213f34a31bf4",
+    "mtime": 1791570402.1013503,
+    "ast_hash": "caf05b29dfa86aff827f3bac883f6eb1",
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": "355db2bc23f7aba8d89dc945b6cdbc45"
   },
   "10_dashboard/tests/test_snapshot.py": {
-    "mtime": 1791568404.5799212,
-    "ast_hash": "fc597a09127fa98aa8a47022b9374b6b",
+    "mtime": 1791570508.6394038,
+    "ast_hash": "9c977caaf03671cc26afe75630b724b1",
     "semantic_hash": ""
   },
   "10_dashboard/tsconfig.json": {
@@ -1705,8 +1705,8 @@
     "semantic_hash": "13cb84203d3339b1700e3b16228ba277"
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1791569783.4225543,
-    "ast_hash": "d8db83cf2a506329a43a6067c1bbc3e2",
+    "mtime": 1791570402.1094754,
+    "ast_hash": "69980402b6b4796d26cb3fa472386a12",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -1860,8 +1860,8 @@
     "semantic_hash": ""
   },
   "00_project_control/account_record_authority.md": {
-    "mtime": 1791569410.1590455,
-    "ast_hash": "ce21503cfb50e66ae7b8c979a987d1be",
+    "mtime": 1791570402.1084673,
+    "ast_hash": "3c6ad9abaf3d574779e1ed654ee822e6",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v37.json": {
@@ -1872,6 +1872,11 @@
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v38.json": {
     "mtime": 1791569700.2246385,
     "ast_hash": "9d626a306db272bac218dc852e9ae5ce",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/workflow_inputs.py": {
+    "mtime": 1791570402.1002746,
+    "ast_hash": "0aa4e7f82e07d85b696ae672a3ec16c0",
     "semantic_hash": ""
   }
 }

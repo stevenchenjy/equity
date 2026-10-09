@@ -43,3 +43,5 @@ this local-record policy cannot manufacture that outcome or finance duplicate
 orders from a hypothetical fill. Frozen momentum cohorts keep their original
 implementation, input authority and version identity; this is not experiment
 promotion or a retune of historical results.
+
+The composer and dashboard share `workflow_inputs.WORKFLOW_INPUTS`. Bound private approval inputs must be accepted by both paths; arbitrary or changed publication inputs remain rejected. Verify the rendered production page after every input-contract migration.
