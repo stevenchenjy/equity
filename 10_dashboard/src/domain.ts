@@ -12,6 +12,7 @@ export type Plan = {
 export type CapitalDecision = {
   action:string; generated_at:string; market_data_timestamp:string; planning_cash:number; mandatory_reserve:number;
   global_blockers:string[];
+  account_authority?:{mode:string;local_planning_enabled:boolean;execution_checks?:string[]};
   dependencies?:{category:string;code:string;scope:string;evidence_required:string}[];
   decisions:{ticker:string;decision:string;shares:number;estimated_notional:number;reasons:string[];blockers:string[];thesis_summary:string;
     dependencies:{category:string;code:string;evidence_required:string}[];

@@ -18,12 +18,14 @@ from tactical_review import review_open_orders
 from investment_plans import regular_close
 from workflow_integrity import reviewed_candidate_ready
 from core_entry import eligible_core_tranche
+from account_authority import POLICY_REL, load_authority
 
 SCHEMA = 'equity_capital_decision_v1'
 OUTCOMES = {'ACTIONABLE_BUY','ACTIONABLE_ADD','HOLD','REDUCE_REVIEW','EXIT_REVIEW','NO_ACTION','BLOCKED'}
 BUY = {'ACTIONABLE_BUY','ACTIONABLE_ADD'}
 EXITS = {'REDUCE_REVIEW','EXIT_REVIEW'}
 INPUTS = {
+ POLICY_REL,
  REGISTRY, '00_project_control/active_production_config.json', '01_policies/tactical_trade_policy.json',
  '05_risk_and_positions/current_account_state.local.json','05_risk_and_positions/current_positions.local.csv',
  '05_risk_and_positions/current_open_orders.local.json','05_risk_and_positions/investment_plans.local.json',
@@ -75,6 +77,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
           config: dict | None=None, orders: dict | None=None, priority_tickers: list[str] | None=None) -> dict:
     current=current.astimezone(ZoneInfo('America/New_York'))
     config=config or read_json(root/'00_project_control/active_production_config.json')
+    authority=load_authority(root,current)
+    local_authority=authority['local_planning_enabled']
     account=decision.get('account',{})
     held={r['ticker']:r for r in decision.get('held_positions',[])}
     watch={r['ticker']:r for r in decision.get('watch_candidates',[])}
@@ -93,19 +97,21 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     expected=decision.get('market_gate',{}).get('expected_market_session')
     if expected != last_completed_market_session(current).isoformat():global_codes.append('latest_completed_session_missing')
     orders=orders if orders is not None else read_json(root/'05_risk_and_positions/current_open_orders.local.json',{})
-    order_review=review_open_orders(orders,current,current.date(),list(held.values()))
-    # Fresh orders are checked here for every capital action, even when no plan exists.
+    order_review=review_open_orders(orders,current,current.date(),list(held.values()),local_authority=local_authority)
+    # Known order commitments are checked for every capital action, even when no plan exists.
     global_codes.extend(order_review['global_blockers'])
     try:
         total,cash,reserve=(num(account[k]) for k in ('account_total_value','cash_available','cash_reserved'))
         if not total>0 or not 0<=reserve<=cash<=total:raise ValueError('invalid_account_arithmetic')
         confirmed=(account.get('cash_basis') in {'owner_confirmed','broker_confirmed'} or
                    account.get('cash_basis')=='owner_recorded' and orders.get('cash_confirmed') is True and order_review['complete'])
-        if not confirmed:global_codes.append('planning_cash_unverified')
+        if not confirmed and not local_authority:global_codes.append('planning_cash_unverified')
         try:
             updated=datetime.fromisoformat(account['last_updated'])
             completed_close=regular_close(last_completed_market_session(current).isoformat())
-            if updated.tzinfo is None or not 0 <= (current-updated).total_seconds() <= 86400 or updated < completed_close:
+            if updated.tzinfo is None or updated > current:
+                global_codes.append('current_account_snapshot_time_unverified')
+            elif not local_authority and (not 0 <= (current-updated).total_seconds() <= 86400 or updated < completed_close):
                 global_codes.append('current_account_snapshot_stale')
         except (KeyError,TypeError,ValueError):global_codes.append('current_account_snapshot_time_unverified')
     except (KeyError,ValueError,TypeError,InvalidOperation):
@@ -309,7 +315,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
         dependencies.extend(row['dependencies']);rows.append(row)
     result=dict(schema_version=SCHEMA,generated_at=current.isoformat(),market_data_timestamp=expected,
                 action='EXACT_CONDITIONAL_DRAFTS' if any(r['decision'] in BUY for r in rows) else 'NO_NEW_POSITION',
-                decisions=rows,global_blockers=global_codes,dependencies=dependencies,
+                decisions=rows,global_blockers=global_codes,dependencies=dependencies,account_authority=authority,
                 planning_cash=money(cash),mandatory_reserve=money(reserve),estimated_uncommitted_cash_after=money(cash_remaining),
                 source_bindings=binding(root),automatic_action_allowed=False,broker_connected=False,order_placed=False,
                 execution='Owner reads the complete conditional draft and manually enters any real order in Chase.')
@@ -322,6 +328,7 @@ def validate(value: dict, *, current: datetime, root: Path | None=None) -> None:
     if value.get('schema_version')!=SCHEMA or value.get('content_sha256')!=canonical_sha256({k:v for k,v in value.items() if k!='content_sha256'}):raise ValueError('capital_decision_content_invalid')
     if value.get('automatic_action_allowed') is not False or value.get('broker_connected') is not False or value.get('order_placed') is not False:raise ValueError('capital_decision_execution_authority_invalid')
     if root is not None and value.get('source_bindings')!=binding(root):raise ValueError('capital_decision_inputs_changed_recompose_required')
+    if root is not None and value.get('account_authority') != load_authority(root,current):raise ValueError('capital_decision_account_authority_invalid')
     for row in value.get('decisions',[]):
         if row.get('decision') not in OUTCOMES:raise ValueError('capital_decision_outcome_invalid')
         if type(row.get('shares')) is not int or row['shares'] < 0:raise ValueError('capital_decision_quantity_invalid')

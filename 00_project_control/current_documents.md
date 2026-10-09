@@ -69,3 +69,5 @@ run as an active workflow. Nothing in this cleanup grants model production
 influence, broker access, trade execution, or new risk tolerance.
 
 - [Capital decision and manual execution contract](capital_decision_contract.md) — common exact drafts, dependency routing, two-session deployment escalation and versioned strategy admission.
+
+- [Account record authority](account_record_authority.md): owner-approved local-ledger planning and separate manual execution checks.

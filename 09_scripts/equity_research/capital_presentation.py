@@ -71,6 +71,9 @@ def cards(decision, view=None):
     result.append(dict(title='Cash and research progress',group='background',kind='',body=f"Cash: ${c['planning_cash']:.2f}; mandatory reserve ${c['mandatory_reserve']:.2f}. Planning cash is not broker buying power.\n"+
                         f"Research queue: {decision.get('research_opportunities',{}).get('metrics',{}).get('research_queue_size','unverified')} retained opportunities.\n"+
                         'Automatic objective collectors, valuation recomposition and the source-bound analyst continue working. Successful source collection does not complete an investment case.',sources=[]))
+    authority=c.get('account_authority',{})
+    if authority.get('local_planning_enabled'):
+        result.append(dict(title='Account planning basis',group='background',kind='',body='Owner-approved local records govern conditional plans.\n'+'\n'.join(authority['execution_checks']),sources=[]))
     blocked=[r for r in c['decisions'] if r['decision'] in {'NO_ACTION','BLOCKED'}]
     result.append(dict(title='Candidate decisions — research detail',group='background',kind='',body='\n'.join(f"{r['ticker']} — {r['decision']}: "+'; '.join(r['reasons']+r['blockers']) for r in blocked) or 'No additional candidates.',sources=[]))
     return result

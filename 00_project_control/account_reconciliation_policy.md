@@ -1,5 +1,7 @@
 # Equity Research — Account Reconciliation Policy
 
+Account planning authority now follows [the October 9 owner-approved local-record policy](account_record_authority.md). When its private approval is active, use local cash, holdings and known order commitments for conditional manual plans. Do not request a fresh broker snapshot solely for age, completeness flags or estimated-cash labels; preserve those facts as execution checks. Actual arithmetic/order/feedback contradictions and company/strategy requirements remain effective.
+
 ## Preconditions
 
 Reconciliation can be applied only to one explicitly selected `filled` or `partial_fill` execution. The fill date, fill price, fees, share arithmetic, current canonical share count, active C9 maintenance inhibit, and public price quality must all validate. Pending or cancelled rows never mutate canonical state.

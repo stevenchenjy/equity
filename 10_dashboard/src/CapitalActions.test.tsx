@@ -83,3 +83,11 @@ test('escalation preserves a qualified full draft while adjacent candidate gates
  const html=renderToStaticMarkup(<CapitalActions data={snapshot}/>);
  assert.match(html,/4 股 · 约 \$408\.00/);assert.match(html,/BUY LIMIT ≤ \$102\.00/);assert.match(html,/Skip above the limit/);assert.match(html,/估值 · valuation_incomplete/);assert.match(html,/价格 · entry_above_review_price/);assert.ok(html.indexOf('BUY LIMIT')<html.indexOf('连续两日资金部署升级'));assert.ok(html.indexOf('BUY LIMIT')<html.indexOf('研究背景'));
 });
+test('approved local planning keeps metadata out of action blockers and labels its basis separately',()=>{
+ const snapshot={...data,capital_decision:{...data.capital_decision,global_blockers:[],account_authority:{mode:'owner_local_ledger',local_planning_enabled:true}}} as unknown as Snapshot;
+ const html=renderToStaticMarkup(<CapitalActions data={snapshot}/>);
+ assert.match(html,/按你批准的本地台账/);
+ assert.match(html,/券商实时状态未被确认/);
+ assert.doesNotMatch(html,/你现在需要做的：更新账户记录/);
+ assert.match(html,/Company valuation incomplete/);
+});

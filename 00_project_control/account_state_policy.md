@@ -1,5 +1,7 @@
 # Equity Research — Account-State Policy
 
+Account planning authority now follows [the October 9 owner-approved local-record policy](account_record_authority.md). When its private approval is active, use local cash, holdings and known order commitments for conditional manual plans. Do not request a fresh broker snapshot solely for age, completeness flags or estimated-cash labels; preserve those facts as execution checks. Actual arithmetic/order/feedback contradictions and company/strategy requirements remain effective.
+
 ## Canonical Inputs
 
 - Shares, entry date, entry price, thesis, horizon, and invalidation context: `05_risk_and_positions/current_positions.local.csv`.

@@ -311,7 +311,7 @@ def _observed_orders(open_orders: dict[str, Any], ticker: str) -> list[dict[str,
             and isinstance(row.get("status"), str) and isinstance(row.get("side", ""), str)]
 
 
-def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime) -> tuple[list[str], dict[str, list[str]], dict[str, list[str]]]:
+def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime, *, local_authority: bool = False, local_risk_zero: bool = False) -> tuple[list[str], dict[str, list[str]], dict[str, list[str]]]:
     """Bound shared cash/holdings separately from a named plan's execution work."""
     global_blockers: list[str] = []
     ticker_blockers: dict[str, list[str]] = {}
@@ -325,7 +325,7 @@ def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime) -> 
             fresh = fresh and observed >= regular_close(current.date().isoformat())
     except (ValueError, TypeError):
         fresh = False
-    if not fresh:
+    if not fresh and not local_authority:
         # A stale/incomplete whole inventory cannot exclude new BUY commitments.
         global_blockers.append("order_inventory_unverified_cannot_bound_buy_commitments")
     if open_orders.get("schema_version", "phase5r_open_orders_v1") != "phase5r_open_orders_v1":
@@ -377,7 +377,13 @@ def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime) -> 
         if side == "buy":
             # The canonical allocation does not net order reservations. Preserve
             # that shared-cash barrier instead of implicitly spending it twice.
-            global_blockers.append("pending_buy_commitments_require_cash_reconciliation")
+            try:
+                price = float(order.get("limit_price"))
+                bounded = math.isfinite(price) and price > 0
+            except (TypeError, ValueError):
+                bounded = False
+            if not local_authority or not bounded:
+                global_blockers.append("pending_buy_commitments_require_cash_reconciliation")
         else:
             reserved[ticker] = reserved.get(ticker, 0) + remaining
             ticker_blockers.setdefault(ticker, []).append("outstanding_sell_reserves_current_shares")
@@ -402,9 +408,9 @@ def _order_scopes(open_orders: Any, held: dict[str, int], current: datetime) -> 
                          and math.isfinite(risk) and risk >= 0)
     except (TypeError, ValueError):
         risk_verified = False
-    if not risk_verified:
+    if not risk_verified and not (local_authority and local_risk_zero):
         strategy_blockers.setdefault("tactical", []).append("existing_tactical_risk_unconfirmed")
-    if open_orders.get("cash_confirmed") is not True:
+    if open_orders.get("cash_confirmed") is not True and not local_authority:
         strategy_blockers.setdefault("tactical", []).append("cash_not_confirmed_for_tactical_execution")
     return sorted(set(global_blockers)), ticker_blockers, strategy_blockers
 
@@ -439,7 +445,12 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
     except (ValueError, KeyError, TypeError):
         base.update(status="invalid", conflicts=["positions_invalid"], block_new_capital=True, global_blockers=["position_inventory_integrity_invalid"])
         return base
-    base["global_blockers"], base["ticker_blockers"], base["strategy_blockers"] = _order_scopes(open_orders, held, current)
+    from account_authority import load_authority
+    local_authority = bool(root and load_authority(root, current)["local_planning_enabled"])
+    local_risk_zero = bool(isinstance(open_orders, dict) and open_orders.get("orders") == []
+        and all(latest.get(ticker, {}).get("role") == "broad_core" for ticker, qty in held.items() if qty > 0))
+    base["global_blockers"], base["ticker_blockers"], base["strategy_blockers"] = _order_scopes(
+        open_orders, held, current, local_authority=local_authority, local_risk_zero=local_risk_zero)
     if not isinstance(open_orders, dict) or not isinstance(open_orders.get("orders"), list):
         open_orders = {"orders": [], "complete": False}
     active: dict[str, list[dict[str, Any]]] = {}
@@ -514,7 +525,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
                 orders_fresh = orders_fresh and order_stamp >= regular_close(current.date().isoformat())
         except (ValueError, TypeError):
             orders_fresh = False
-        if not orders_fresh:
+        if not orders_fresh and not local_authority:
             reasons.append("order_snapshot_requires_recheck")
         if row["action"] not in {"hold", "watch"} or (row["action"] == "watch" and not row.get("reviewed_allocation")):
             reasons.append("fresh_quote_and_available_shares_required")

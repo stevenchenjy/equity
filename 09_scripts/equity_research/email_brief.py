@@ -571,7 +571,8 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
     estimated_cash = account.get("cash_basis") in _UNCONFIRMED_CASH_BASES
     global_block = bool(decision.get("account_conflicts")) or code in _BLOCKED_CODES
     gates_passed = all(decision.get(key, {}).get("passed") is True for key in ("market_gate", "evidence_gate", "fundamental_gate"))
-    global_block = global_block or not gates_passed or estimated_cash
+    local_authority = decision.get("account_authority", {}).get("local_planning_enabled") is True
+    global_block = global_block or not gates_passed or (estimated_cash and not local_authority)
     action_allowed = code == "action_review_candidate" and not global_block
     pending = set(decision.get("pending_stability_candidates", []))
     eligible = set(decision.get("eligible_action_review_candidates", [])) if action_allowed else set()
@@ -590,7 +591,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         names = "、".join(decision.get("fundamental_gate", {}).get("weakening_tickers", [])) or "相关持仓"
         tasks = [f"复核 {names} 的最新官方收入变化，以及它是否削弱原有持有理由。"]
         summary = "这是经营假设复核，不是自动减仓信号。"
-    elif estimated_cash:
+    elif estimated_cash and not local_authority:
         label, title = "资金区间研究", "持仓已更新，按资金范围评估"
         summary = "现金沿用账本估算或用户指定的规划假设；研究继续，暂不展示依赖精确现金的交易股数。"
         tasks = ["本次无需补交精确现金即可阅读研究；实际交易前核对券商可用资金和最终仓位比例。"]

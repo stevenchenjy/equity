@@ -1,5 +1,7 @@
 # Owner-requested research reviews
 
+Account planning authority now follows [the October 9 owner-approved local-record policy](account_record_authority.md). When its private approval is active, use local cash, holdings and known order commitments for conditional manual plans. Do not request a fresh broker snapshot solely for age, completeness flags or estimated-cash labels; preserve those facts as execution checks. Actual arithmetic/order/feedback contradictions and company/strategy requirements remain effective.
+
 ## Current allocation authority (2026-10-06)
 
 The owner explicitly replaced prior allocation targets with broad core at least
@@ -283,7 +285,7 @@ assumption, not confirmed settled cash or a newly verified deposit. Preserve
 cash_basis=ledger_estimate and source provenance in the audited local snapshot.
 Exact holdings, share counts, costs, cash, order IDs and account values belong
 only in ignored local files, never in the public source repository. Subsequent
-fills must be reconciled before a scenario becomes an eligible order draft.
+actual newly reported fills must be recorded before using their proceeds or changed shares. Local-ledger conditional plans follow account_record_authority.md.
 
 Regular delivery now follows the owner's September 28 attention windows:
 09:30–10:30 and 14:30–15:05 ET on exchange sessions, with at most one materially

@@ -73,9 +73,12 @@ invalidation, target and loss budgets. Final proposals share remaining cash and 
 and respect the current aggregate stock ceiling, broad-core floor and applicable
 strategy-specific budgets. The [October 6 allocation policy](allocation_policy.md)
 removes the fixed single-stock ceiling; legacy name-cap headroom cannot remain
-a hidden sizing restriction. Current account evidence must include its
-observation time, current complete orders and execution-funds confirmation. A stale
-or estimated balance cannot acquire numerical capital authority through a renderer.
+a hidden sizing restriction. Account authority follows the owner-approved
+[local-record policy](account_record_authority.md). With its private approval,
+local shares, recorded order commitments and ledger cash supply conditional
+planning quantities; observation age and completeness/cash labels are execution
+checks rather than global research gates. Broker flags and dates remain unchanged.
+Without that approval the verified-current-snapshot requirements still apply.
 
 A tactical draft explicitly records a multi-day tactical purpose, observed price
 invalidation, target and maximum five-session review/exit. Existing fundamental or
@@ -104,7 +107,7 @@ An admitted issuer's numerical gaps remain available to the objective worker.
 Shared configuration, history corruption, lock or publication failures remain
 global. The decision, packet, per-ticker stability and capital adapter preserve
 the rejected company's blockers while evaluating unrelated companies normally.
-Current account, complete orders and usable-funds checks remain independent.
+Local-account arithmetic, known commitments and usable-funds execution checks remain independent; see the owner-approved account-record authority.
 
 The artifact collector retains the latest original annual and quarterly report
 of each periodic form as well as current event-window material. A later 8-K
@@ -127,7 +130,7 @@ The final queue classifies dependencies:
 |---|---|
 | A | Existing bounded objective/admission/recomposition worker can resolve retained factual dependencies. It runs in the normal refresh. |
 | B | New approved public data, publication or a reconciled primary source is required. Bounded public attempts continue; conflict stays unresolved. |
-| C | Owner must record current account-wide holdings/orders/funds via the existing manual account mechanism. No unattended broker access. |
+| C | Resolve an actual local-account contradiction or unbounded known commitment. In owner-local-ledger mode, age/completeness/estimated-cash labels are manual execution checks, not a request for a new broker snapshot. No unattended broker access. |
 | D | Investment judgment or purpose reassessment requires source-bound analyst synthesis. The recurring Codex analyst performs that work and uses maintained writers. No positive conclusion is fabricated. |
 | E | Reviewed strategy adoption, policy validity or actual execution conditions are required. No bypass. |
 

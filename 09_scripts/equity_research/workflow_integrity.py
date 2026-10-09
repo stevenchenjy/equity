@@ -14,8 +14,10 @@ from thesis_evidence import STORE_REL, evaluate_thesis, evidence_context, stable
 from official_news import read_official_news_status
 from issuer_news_queue import QUEUE_REL, merge_news_context, record_review_states
 from execution_common import allocation_policy_proof_hashes
+from account_authority import POLICY_REL, load_authority
 
 WORKFLOW_INPUTS = {
+    POLICY_REL,
     "05_risk_and_positions/investment_plans.local.json", "05_risk_and_positions/current_positions.local.csv",
     "05_risk_and_positions/current_open_orders.local.json", "05_risk_and_positions/current_account_state.local.json",
     str(STORE_REL), str(QUEUE_REL),
@@ -43,7 +45,8 @@ def thesis_meaning(context: dict[str, Any]) -> dict[str, Any]:
 
 
 def workflow_meaning(decision: dict[str, Any]) -> dict[str, Any]:
-    return {"plans": semantic_state(decision.get("plan_continuity", {})),
+    return {"account_authority": decision.get("account_authority", {}),
+            "plans": semantic_state(decision.get("plan_continuity", {})),
             "incorporation": incorporation_meaning(decision.get("earnings_incorporation", {})),
             "theses": thesis_meaning(decision.get("long_horizon_research", {})),
             "news": news_meaning(decision.get("evidence_coverage", {}).get("official_news", {})),
@@ -52,7 +55,7 @@ def workflow_meaning(decision: dict[str, Any]) -> dict[str, Any]:
             "strategy_blockers": decision.get("workflow_integrity", {}).get("strategy_blockers", {})}
 
 
-def _account_blockers(decision: dict[str, Any]) -> list[str]:
+def _account_blockers(decision: dict[str, Any], *, local_authority: bool = False) -> list[str]:
     """Shared planning invariants; do not promote tactical execution assumptions."""
     blockers = []
     if decision.get("account_conflicts") or decision.get("pending_execution_summaries"):
@@ -64,7 +67,7 @@ def _account_blockers(decision: dict[str, Any]) -> list[str]:
                 or values["account_total_value"] <= 0 or values["cash_available"] < 0
                 or not 0 <= values["cash_reserved"] <= values["cash_available"] <= values["account_total_value"]):
             raise ValueError("account_values_invalid")
-        if account.get("cash_basis") == "ledger_estimate":
+        if account.get("cash_basis") == "ledger_estimate" and not local_authority:
             blockers.append("planning_cash_unverified")
     except (ValueError, TypeError, KeyError, InvalidOperation):
         blockers.append("shared_account_values_unverified")
@@ -216,7 +219,9 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         incorporation = {"schema_version": "earnings_incorporation_v1", "companies": {},
                          "held_pending_tickers": [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"],
                          "status": "invalid"}
-    blockers = _account_blockers(decision)
+    authority = load_authority(root, current)
+    decision["account_authority"] = authority
+    blockers = _account_blockers(decision, local_authority=authority["local_planning_enabled"])
     from account_feedback_gate import feedback_blocker
     feedback=feedback_blocker(root)
     if feedback: blockers.append(feedback)

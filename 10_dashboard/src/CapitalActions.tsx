@@ -74,6 +74,7 @@ export function CapitalActions({data}:{data:Snapshot}) {
       <ul>{r.order_draft.cancel_conditions.map(v=><li key={v}>{v}</li>)}</ul><p>{r.thesis_summary}</p><small>{r.order_draft.cost_assumption}</small>
     </>:<><p>{r.reasons.join('；')}</p>{r.dependencies.length?<details><summary>缺少的具体证据与处理方</summary><ul>{r.dependencies.map((v,i)=><li key={v.code+i}>{v.category} · {v.evidence_required}</li>)}</ul></details>:null}</>}</article>)}
     {actionable.length&&escalation?<DeploymentEscalation summary={escalation} draftTickers={actionable.map(row=>row.ticker)}/>:null}
+    {c.account_authority?.local_planning_enabled?<details><summary>账户计算依据</summary><p>按你批准的本地台账计算条件方案；记录日期与现金估算标签不拦截研究建议。下单时核对可执行资金及未记录的账户变化。券商实时状态未被确认。</p></details>:null}
     <p className="form-hint">参考行情 {c.market_data_timestamp}，非实时。系统不连接券商或下单。请阅读完整草案后自行在 Chase 执行；条件不符就跳过。</p>
     <details><summary>研究背景与其余候选（与行动分开）</summary>{c.decisions.filter(r=>!primary.includes(r)).map(r=><p key={r.ticker}><strong>{r.ticker} · {labels[r.decision]??r.decision}</strong><br/>{[...r.reasons,...r.blockers].join('；')}</p>)}</details>
   </section>;

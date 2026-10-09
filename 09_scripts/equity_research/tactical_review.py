@@ -91,7 +91,7 @@ def _money(value: Decimal | None) -> float | None:
 
 
 def review_open_orders(payload: dict[str, Any], current: datetime, session: date,
-                       held_positions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+                       held_positions: list[dict[str, Any]] | None = None, *, local_authority: bool = False) -> dict[str, Any]:
     """Verify current inventory separately from retained unresolved sell history.
 
     A fresh empty inventory does not prove an old ticket's terminal state. Its
@@ -110,7 +110,10 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
     inventory_verified = (payload.get("schema_version") == "phase5r_open_orders_v1"
                           and isinstance(payload.get("orders"), list)
                           and payload.get("complete") is True and fresh)
-    global_blockers = [] if inventory_verified else ["order_inventory_unverified_cannot_bound_buy_commitments"]
+    local_inventory = (payload.get("schema_version") == "phase5r_open_orders_v1"
+                       and isinstance(payload.get("orders"), list))
+    usable = inventory_verified or (local_authority and local_inventory)
+    global_blockers = [] if usable else ["order_inventory_unverified_cannot_bound_buy_commitments"]
     observation = payload.get("current_inventory_observation")
     observed_ids: set[str] = set()
     observed_by_id: dict[str, dict[str, Any]] = {}
@@ -120,7 +123,7 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
             observed_stamp = _stamp(observation.get("as_of"))
             observed_rows = observation.get("orders_shown")
             source = observation.get("source")
-            observation_verified = bool(inventory_verified and observed_stamp == stamp
+            observation_verified = bool(local_inventory and (inventory_verified or local_authority) and observed_stamp == stamp
                 and observation.get("complete") is True and isinstance(observed_rows, list)
                 and isinstance(source, dict) and isinstance(source.get("path"), str) and source["path"]
                 and re.fullmatch(r"[0-9a-f]{64}", str(source.get("sha256", ""))))
@@ -189,13 +192,18 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
                 row["review_status"] = "expired_pending_verification"
                 row["review_reason"] = "Named session/date has passed; verify terminal status and any fills before replacement."
                 if not scoped_sell:
-                    global_blockers.append("expired_order_terminal_status_unverified")
+                    if local_authority and well_formed and (side == "sell" or price is not None):
+                        ticker_blockers.setdefault(ticker, []).append("expired_order_terminal_status_unverified")
+                    else:
+                        global_blockers.append("expired_order_terminal_status_unverified")
             elif not well_formed:
                 row["review_status"] = "unknown_pending_verification"
             if historical or row.get("current_status_verified") is False:
                 if scoped_sell:
                     ticker_blockers.setdefault(ticker, []).extend([
                         "outstanding_sell_reserves_current_shares", "sell_order_terminal_status_unverified"])
+                elif local_authority and well_formed and (side == "sell" or price is not None):
+                    ticker_blockers.setdefault(ticker, []).append("historical_order_commitment_unverified")
                 else:
                     global_blockers.append("historical_order_commitment_unverified")
             if side == "sell" and remaining is not None and remaining > 0:
@@ -231,7 +239,9 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
             global_blockers.append("sell_reservations_exceed_observed_holdings")
     complete = not global_blockers
     return {"as_of": payload.get("as_of", ""), "source": payload.get("source", ""),
-            "complete": complete, "status": "verified_snapshot" if complete else "unconfirmed_snapshot",
+            "complete": complete, "planning_basis": "owner_local_ledger" if local_authority else "verified_snapshot",
+            "broker_inventory_verified": bool(inventory_verified and not global_blockers),
+            "status": "owner_local_inventory" if local_authority and complete else "verified_snapshot" if complete else "unconfirmed_snapshot",
             "inventory_status": "verified_current_inventory" if inventory_verified and not global_blockers else "unverified_current_inventory",
             "global_blockers": sorted(set(global_blockers)),
             "ticker_blockers": {ticker: sorted(set(codes)) for ticker, codes in sorted(ticker_blockers.items())},
@@ -278,7 +288,8 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
                           open_orders: dict[str, Any], snapshot_hash: str,
                           market_rows: list[dict[str, Any]],
                           exact_actions: list[dict[str, Any]],
-                          all_candidates: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+                          all_candidates: list[dict[str, Any]] | None = None,
+                          local_authority: bool = False) -> dict[str, Any]:
     """Build dated human-review records; canonical account/actions are never changed."""
     account = decision.get("account", {})
     market_gate = decision.get("market_gate", {})
@@ -312,13 +323,15 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
     cash_basis = str(account.get("cash_basis", "")).lower()
     cash_confirmed = (cash_basis in CASH_CONFIRMED_BASES or
                       (cash_basis == "owner_recorded" and open_orders.get("cash_confirmed") is True))
-    if not cash_confirmed:
+    if not cash_confirmed and not local_authority:
         blockers.append("cash_not_confirmed")
-    order_review = review_open_orders(open_orders, current, next_session, decision.get("held_positions", []))
+    order_review = review_open_orders(open_orders, current, next_session, decision.get("held_positions", []), local_authority=local_authority)
     if not order_review["complete"]:
         blockers.append("open_orders_unconfirmed")
-    existing_risk = _number(open_orders.get("existing_tactical_risk_usd"))
-    if (open_orders.get("existing_tactical_risk_confirmed") is not True
+    from account_authority import local_tactical_risk_is_zero
+    local_risk_zero = bool(local_authority and order_review["complete"] and local_tactical_risk_is_zero(decision, open_orders))
+    existing_risk = Decimal(0) if local_risk_zero else _number(open_orders.get("existing_tactical_risk_usd"))
+    if not local_risk_zero and (open_orders.get("existing_tactical_risk_confirmed") is not True
             or existing_risk is None or existing_risk < 0):
         blockers.append("existing_tactical_risk_unconfirmed")
         existing_risk = None
@@ -446,7 +459,8 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
             "global_gates_passed": not blockers, "blockers": sorted(set(blockers)), "cash_basis": account.get("cash_basis", "unknown"),
             "risk_policy": {key: float(value) for key, value in required_policy.items()},
             "risk_budget": {"account_value": _money(value), "ordinary_usd": _money(ordinary), "event_usd": _money(event_budget),
-                            "combined_usd": _money(combined), "open_risk_usd": _money(existing_risk)},
+                            "combined_usd": _money(combined), "open_risk_usd": _money(existing_risk),
+                            "open_risk_basis": "derived_local_core_only_inventory" if local_risk_zero else "reported_record"},
             "open_orders": order_review, "holdings": holdings, "drafts": drafts, "four_rules": FOUR_RULES,
             "performance_claim": "Risk discipline only; no tested profitability or guaranteed loss limit.",
             "research_only": True, "automatic_action_allowed": False}
@@ -461,7 +475,8 @@ def load_tactical_review(decision: dict[str, Any], *, current: datetime,
             return value if isinstance(value, dict) else {}
         except (ValueError, OSError):
             return {}
-    return build_tactical_review(decision, current=current, policy=safe_json(POLICY_PATH),
+    from account_authority import load_authority
+    return build_tactical_review(decision, current=current, local_authority=load_authority(ROOT, current)["local_planning_enabled"], policy=safe_json(POLICY_PATH),
                                  history=safe_json(HISTORY_PATH), open_orders=safe_json(ORDERS_PATH),
                                  snapshot_hash=sha256_file(MARKET_SNAPSHOT_PATH), market_rows=market_rows,
                                  exact_actions=exact_actions, all_candidates=all_candidates)

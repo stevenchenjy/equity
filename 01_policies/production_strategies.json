@@ -11,71 +11,79 @@
   "strategies": [
     {
       "strategy_id": "reviewed-core-v3",
-      "version": 4,
+      "version": 5,
       "adapter": "core_tranche",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
         "09_scripts/equity_research/core_entry.py": "23faa35242206ec170c65194965c7d894c8a8f99548f8251cd575a266fcafc5f",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/capital_decision.py": "89151808eceea39a242de9cc5bd64c8b359ad4f84bcf6e9d18d3b013b88d35f6",
+        "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
-        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2"
+        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
+        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
+        "00_project_control/account_record_authority.md": "e0cefeb79bc25e340a95d3fc8451e18707ddf368952a80f26ad5852cbb696f6b"
       }
     },
     {
       "strategy_id": "reviewed-company-v3",
-      "version": 4,
+      "version": 5,
       "adapter": "reviewed_company",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/workflow_integrity.py": "dbc65a69baf43b45acc659c186073c9c4f80d7bfe352eafdb945ce1203bd7479",
-        "09_scripts/equity_research/capital_decision.py": "89151808eceea39a242de9cc5bd64c8b359ad4f84bcf6e9d18d3b013b88d35f6",
+        "09_scripts/equity_research/workflow_integrity.py": "2df51e3b2231430db46bf321e3b02bbc88670a771ef9e86c8ea07063a0431fb9",
+        "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "09_scripts/equity_research/reviewed_allocation.py": "cc58b564b07d7ee10cbac02e6bad5e61ce67f807e5a597a1cd4c2c9f4f48b885",
-        "09_scripts/equity_research/investment_plans.py": "32baa898e62a4485250c1758f0f3bf71dffa81e6e1c112d1add9e801b05538a8",
+        "09_scripts/equity_research/investment_plans.py": "add370281017857f74279e43854e61156a9b0552d8c0b2973adf074bedd3ca63",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
-        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2"
+        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
+        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
+        "00_project_control/account_record_authority.md": "e0cefeb79bc25e340a95d3fc8451e18707ddf368952a80f26ad5852cbb696f6b"
       }
     },
     {
       "strategy_id": "reviewed-tactical-v3",
-      "version": 4,
+      "version": 5,
       "adapter": "reviewed_tactical",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed.",
       "policy_bindings": {
         "01_policies/tactical_trade_policy.json": "468e5e81ecd8d98bb09802007cad299316965160978c7ef9b1a5e92bd8b8b1ff",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
         "09_scripts/equity_research/portfolio_construction.py": "d04e23b19976e6f4c8c6db7888458099dfba42b21bf603398f7a615384ecd73a",
-        "09_scripts/equity_research/tactical_review.py": "6e5faa38781e83894f1fc133bc2336b04bf985c6d67c2fa68deee415447e8206",
-        "09_scripts/equity_research/capital_decision.py": "89151808eceea39a242de9cc5bd64c8b359ad4f84bcf6e9d18d3b013b88d35f6",
+        "09_scripts/equity_research/tactical_review.py": "64dd44854fbc5cef94b61ae145f0672c3c2f1d26cc7343749d763d6b3f3d5278",
+        "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
-        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2"
+        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
+        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
+        "00_project_control/account_record_authority.md": "e0cefeb79bc25e340a95d3fc8451e18707ddf368952a80f26ad5852cbb696f6b"
       }
     },
     {
       "strategy_id": "maintained-exit-v3",
-      "version": 4,
+      "version": 5,
       "adapter": "maintained_exit",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
-        "09_scripts/equity_research/investment_plans.py": "32baa898e62a4485250c1758f0f3bf71dffa81e6e1c112d1add9e801b05538a8",
-        "09_scripts/equity_research/capital_decision.py": "89151808eceea39a242de9cc5bd64c8b359ad4f84bcf6e9d18d3b013b88d35f6",
+        "09_scripts/equity_research/investment_plans.py": "add370281017857f74279e43854e61156a9b0552d8c0b2973adf074bedd3ca63",
+        "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
-        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2"
+        "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
+        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
+        "00_project_control/account_record_authority.md": "e0cefeb79bc25e340a95d3fc8451e18707ddf368952a80f26ad5852cbb696f6b"
       }
     }
   ]
