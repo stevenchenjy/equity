@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-10-09T08:49:09.000-04:00",
+  "artifact_sha256": "2db51d7e5b00d31c29a14ced26cacf58c71d811d27320010b74957423272ac7c",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v38",
+  "prior_extension_set_sha256": "38b47d2db47775fc13ae8859ae767140f0de420866a6b6214727cd5f9dc7d04d",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-09T12:21:00.000+00:00",
+      "accession_number": "0000723125-26-000023",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-09T08:49:09.000-04:00",
+      "cik": "723125",
+      "entity_name": "MICRON TECHNOLOGY INC",
+      "extension_record_sha256": "636c6d1eae7e3f85e2839e1974171c0d28bd58c56a866374414463923d162978",
+      "extension_version": "v38",
+      "filing_date": "2026-10-09",
+      "form": "10-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "7bc36632aefb4eca340bd3178612f7a1367b9cde3f053fcd280bcdeaf338b027",
+      "source_url": "https://data.sec.gov/submissions/CIK0000723125.json",
+      "ticker": "MU"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
