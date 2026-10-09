@@ -21,6 +21,10 @@ into a claim of verified current broker inventory. Execution checks appear in th
 complete conditional draft and in separate background information: the owner
 checks executable funds and unrecorded changes when manually submitting an order.
 The system does not request a new broker session simply because the record aged.
+Current opportunity and backlog views move the three explicitly superseded
+historical account-inventory/funding requirements into separate execution checks.
+The original assessment files and journal transitions remain unchanged; actual
+order contradictions and unbounded commitments are never filtered by this view.
 
 Known buy orders still reserve their bounded remaining cash; sell orders reserve
 shares. An expired unresolved bounded order stays on its ticker, with its funds or

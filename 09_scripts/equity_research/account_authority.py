@@ -9,6 +9,26 @@ from daily_common import canonical_sha256, read_json
 
 POLICY_REL = '05_risk_and_positions/account_record_policy.local.json'
 SCHEMA = 'equity_account_record_authority_v1'
+# Older analyst assessments recorded these as pre-entry research dependencies.
+# Keep the immutable assessment/journal; only their current planning projection
+# changes after the owner's explicit local-record authorization.
+LEGACY_ACCOUNT_RESEARCH_REQUIREMENTS = frozenset({
+    'current_account_order_funding_and_execution_contracts_before_any_future_trade',
+    'current_complete_account_order_inventory_and_usable_funds_before_entry',
+    'complete_current_account_order_inventory_usable_settled_funds',
+})
+
+
+def project_research_requirements(item: dict, authority: dict) -> None:
+    """Move exactly superseded metadata requirements out of current research gates."""
+    if not authority.get('local_planning_enabled'):
+        return
+    previous = item.get('blockers', [])
+    retained = [code for code in previous if code in LEGACY_ACCOUNT_RESEARCH_REQUIREMENTS]
+    item['blockers'] = [code for code in previous if code not in LEGACY_ACCOUNT_RESEARCH_REQUIREMENTS]
+    if retained:
+        item['retained_assessment_execution_requirements'] = retained
+        item['execution_checks'] = list(authority['execution_checks'])
 
 
 def load_authority(root: Path, current: datetime) -> dict:

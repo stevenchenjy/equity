@@ -15,7 +15,7 @@
       "adapter": "core_tranche",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged. Current research projections also separate superseded historical account metadata requirements from genuine company and order evidence; immutable assessments remain retained.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
@@ -24,9 +24,10 @@
         "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
         "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
-        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
-        "00_project_control/account_record_authority.md": "9f0634926208e6f3028c9006c77a709dd72ade1f3844cdc7165dab3dcf880688",
-        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e"
+        "09_scripts/equity_research/account_authority.py": "4e82e2dc56b30b6ce43452a4f2ace7477a2a44485ad062c583b59b1f77877a54",
+        "00_project_control/account_record_authority.md": "4a4138ebf9eff690d87af93e78bf32f55a8849550df2eb1b9e533cd34ac46e16",
+        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e",
+        "09_scripts/equity_research/research_opportunities.py": "9d9965e2c55b66076f41c060b85c7ebc4da9a5c5d28cd419e0e9f44dd410468b"
       }
     },
     {
@@ -35,7 +36,7 @@
       "adapter": "reviewed_company",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged. Current research projections also separate superseded historical account metadata requirements from genuine company and order evidence; immutable assessments remain retained.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
@@ -46,9 +47,10 @@
         "09_scripts/equity_research/investment_plans.py": "add370281017857f74279e43854e61156a9b0552d8c0b2973adf074bedd3ca63",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
         "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
-        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
-        "00_project_control/account_record_authority.md": "9f0634926208e6f3028c9006c77a709dd72ade1f3844cdc7165dab3dcf880688",
-        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e"
+        "09_scripts/equity_research/account_authority.py": "4e82e2dc56b30b6ce43452a4f2ace7477a2a44485ad062c583b59b1f77877a54",
+        "00_project_control/account_record_authority.md": "4a4138ebf9eff690d87af93e78bf32f55a8849550df2eb1b9e533cd34ac46e16",
+        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e",
+        "09_scripts/equity_research/research_opportunities.py": "9d9965e2c55b66076f41c060b85c7ebc4da9a5c5d28cd419e0e9f44dd410468b"
       }
     },
     {
@@ -57,7 +59,7 @@
       "adapter": "reviewed_tactical",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged. Current research projections also separate superseded historical account metadata requirements from genuine company and order evidence; immutable assessments remain retained.",
       "policy_bindings": {
         "01_policies/tactical_trade_policy.json": "468e5e81ecd8d98bb09802007cad299316965160978c7ef9b1a5e92bd8b8b1ff",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
@@ -66,9 +68,10 @@
         "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
         "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
-        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
-        "00_project_control/account_record_authority.md": "9f0634926208e6f3028c9006c77a709dd72ade1f3844cdc7165dab3dcf880688",
-        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e"
+        "09_scripts/equity_research/account_authority.py": "4e82e2dc56b30b6ce43452a4f2ace7477a2a44485ad062c583b59b1f77877a54",
+        "00_project_control/account_record_authority.md": "4a4138ebf9eff690d87af93e78bf32f55a8849550df2eb1b9e533cd34ac46e16",
+        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e",
+        "09_scripts/equity_research/research_opportunities.py": "9d9965e2c55b66076f41c060b85c7ebc4da9a5c5d28cd419e0e9f44dd410468b"
       }
     },
     {
@@ -77,7 +80,7 @@
       "adapter": "maintained_exit",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
-      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged.",
+      "authority": "Owner-approved October 6 allocation replacement: broad core >=30%, individual total <=70%, no fixed single-name cap; source-bound company sizing. Existing tactical loss discipline and experimental status remain unchanged. October 7 owner-requested issuer-isolation repair preserves each failed issuer evidence gate and shared account/strategy limits; no experiment adoption or numerical threshold change. October 8 owner-requested two-session capital deployment escalation adds research/route prioritization and explanations; existing account, eligibility, allocation and risk limits remain authoritative. October 9 owner authorization makes private approved local-ledger records authoritative for conditional manual plans: record age/completeness and cash-estimate metadata no longer block research recommendations; known commitments, actual contradictions, economic and strategy limits remain effective. No broker facts or experimental results are changed. Shared publication-input registry repairs dashboard admission of the same approved local-record input; strategy thresholds and economic logic are unchanged. Current research projections also separate superseded historical account metadata requirements from genuine company and order evidence; immutable assessments remain retained.",
       "policy_bindings": {
         "00_project_control/action_threshold_policy.md": "bfbec4225b785c66100862d6b9818a89c52bf6abeaef154f4dadc1d661d7a63f",
         "00_project_control/active_production_config.json": "4d3b0b2149c091f2a80a38bb13217c96da39d9491920392320058f148a0305a1",
@@ -85,9 +88,10 @@
         "09_scripts/equity_research/capital_decision.py": "2399f693e0408890a522b9b791b31a86371e011faea41bc3316548a90af3c051",
         "00_project_control/allocation_policy.md": "b1fda307276494552c0a2afb2daad9bcbb571598613cc8c29d3e02f953dc1761",
         "09_scripts/equity_research/capital_escalation.py": "8ecad1a8149262bfbf2f32a979fbaf1ba27d22f59c74d88f353b7f1f8b3b4af2",
-        "09_scripts/equity_research/account_authority.py": "4bbfc4e41a2cd8ebd8099f08f87a013d7e5f71e5f8800d4e7729ea47aabb9b10",
-        "00_project_control/account_record_authority.md": "9f0634926208e6f3028c9006c77a709dd72ade1f3844cdc7165dab3dcf880688",
-        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e"
+        "09_scripts/equity_research/account_authority.py": "4e82e2dc56b30b6ce43452a4f2ace7477a2a44485ad062c583b59b1f77877a54",
+        "00_project_control/account_record_authority.md": "4a4138ebf9eff690d87af93e78bf32f55a8849550df2eb1b9e533cd34ac46e16",
+        "09_scripts/equity_research/workflow_inputs.py": "5647fa5678b04748aa144825f67a3743fc9b7a938851d7edd2075b470ac54f1e",
+        "09_scripts/equity_research/research_opportunities.py": "9d9965e2c55b66076f41c060b85c7ebc4da9a5c5d28cd419e0e9f44dd410468b"
       }
     }
   ]

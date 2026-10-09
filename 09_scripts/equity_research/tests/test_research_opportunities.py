@@ -115,6 +115,30 @@ class OpportunityTests(unittest.TestCase):
         self.assertEqual(before, (self.root / STORE_REL).read_bytes())
         self.assertEqual(read_report(self.root, current=NOW+timedelta(minutes=10))["opportunities"][0]["first_seen_at"], NOW.isoformat())
 
+    def test_local_authority_projects_old_account_requirements_without_rewriting_assessment(self):
+        from account_authority import POLICY_REL as ACCOUNT_POLICY, SCHEMA, LEGACY_ACCOUNT_RESEARCH_REQUIREMENTS
+        from research_backlog import attention_rows
+        intake(self.root, current=NOW)
+        assessment = self.assessment('unresolved')
+        old_code = sorted(LEGACY_ACCOUNT_RESEARCH_REQUIREMENTS)[0]
+        assessment['missing_evidence'] = [old_code, 'valuation', 'buy_commitment_unbounded']
+        apply_assessment(self.root, assessment, current=NOW, apply=True)
+        journal = (self.root / STORE_REL).read_bytes()
+        self.assertIn(old_code, next(i for i in summary(self.root, current=NOW)['priority_queue'] if i['ticker']=='SYN')['blockers'])
+        approval = {'schema_version': SCHEMA, 'mode': 'owner_local_ledger', 'approved_at': NOW.isoformat(),
+            'owner_instruction': 'Use local records for research planning.', 'automatic_execution': False,
+            'broker_observation_claimed': False}
+        atomic_write_json(self.root / ACCOUNT_POLICY, {**approval, 'content_sha256': canonical_sha256(approval)})
+        with self.assertRaisesRegex(ValueError, 'account_authority_changed'):
+            read_report(self.root, current=NOW)
+        intake(self.root, current=NOW)
+        item = next(i for i in attention_rows(self.root, NOW) if i['ticker'] == 'SYN')
+        self.assertEqual(item['blockers'], ['valuation', 'buy_commitment_unbounded'])
+        self.assertEqual(item['retained_assessment_execution_requirements'], [old_code])
+        self.assertEqual(item['assessment'], assessment)
+        self.assertEqual((self.root / STORE_REL).read_bytes(), journal)
+        self.assertNotIn(old_code, next(i for i in summary(self.root, current=NOW)['priority_queue'] if i['ticker']=='SYN')['blockers'])
+
     def test_changed_discovery_retains_original_price_and_bytes(self):
         original = intake(self.root, current=NOW)["opportunities"][0]["first_observation"]
         self.data["top_stocks"][0]["close"] = 150

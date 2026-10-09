@@ -16,6 +16,7 @@ from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, PO
 from opportunity_triggers import collect_triggers
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
+from account_authority import load_authority, project_research_requirements
 
 
 def held_tickers(root: Path) -> set[str]:
@@ -223,6 +224,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
 
 def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, diagnostics: dict) -> dict:
     items = list(replay(store, root=root, current=current).values())
+    authority = load_authority(root, current)
     held = held_tickers(root)
     for item in items:
         families = {}
@@ -257,6 +259,7 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
             "detection_to_research": (aware(item["research_started_at"])-aware(item["first_seen_at"])).total_seconds() if item["research_started_at"] else None,
             "research_to_objective": (aware(item["objective_completed_at"])-aware(item["research_started_at"])).total_seconds() if item["objective_completed_at"] and item["research_started_at"] else None,
             "detection_to_assessment": (aware(item["assessment_at"])-aware(item["first_seen_at"])).total_seconds() if item["assessment_at"] else None}
+        project_research_requirements(item, authority)
     items.sort(key=lambda i: tuple(i["attention_priority_key"]))
     active = [i for i in items if i["state"] not in TERMINAL | {"deferred_capacity"}]
     reassess = [i for i in items if i["state"] in TERMINAL and i["transitions"]
@@ -264,6 +267,7 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
     report = {"schema_version": "equity_research_opportunity_report_v1", "generated_at": current.isoformat(),
         "store_sha256": sha256_file(root / STORE_REL), "journal_head": store["events"][-1]["record_hash"] if store["events"] else "",
         "opportunities": items, "priority_queue": active, "reassessment_queue": reassess[:3], "diagnostics": diagnostics,
+        "account_authority": authority,
         "metrics": {**metrics, "research_queue_size": len(active), "total_retained_opportunities": len(items),
             "average_queue_age_hours": round(sum(i["queue_age_hours"] for i in active)/len(active), 4) if active else 0,
             "states": dict(Counter(i["state"] for i in items)), "closed_new_evidence_reassessment_count": len(reassess),
@@ -285,6 +289,8 @@ def read_report(root: Path, *, current: datetime) -> dict:
     require(report["store_sha256"] == sha256_file(root / STORE_REL), "research_opportunity_report_stale_store")
     clock = aware(report["generated_at"])
     require(clock <= current and current-clock <= timedelta(hours=24), "research_opportunity_report_stale_clock")
+    require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
+        == load_authority(root, current), "research_opportunity_report_account_authority_changed")
     replay(read_json(root / STORE_REL), root=root, current=current)
     return report
 
