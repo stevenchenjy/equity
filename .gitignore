@@ -28,6 +28,7 @@ graphify-out/reflections/
 05_risk_and_positions/current_positions.local.csv
 05_risk_and_positions/current_account_state.local.json
 05_risk_and_positions/current_open_orders.local.json
+05_risk_and_positions/account_record_policy.local.json
 03_source_data/equity_research/tactical_price_history.local.json
 03_source_data/equity_research/momentum_outcome_prices.local.json
 03_source_data/equity_research/market_coverage_recompositions.local/

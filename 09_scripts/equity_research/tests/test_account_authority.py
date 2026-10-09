@@ -128,6 +128,11 @@ class LocalAccountAuthorityTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'account_authority_invalid'):
             capital_decision.validate(c, current=self.v['current'], root=self.root)
 
+    def test_private_approval_is_ignored_by_the_actual_repository(self):
+        import subprocess
+        result = subprocess.run(['git', 'check-ignore', '-q', POLICY_REL], cwd=ROOT)
+        self.assertEqual(result.returncode, 0)
+
     def test_policy_change_invalidates_published_capital_contract(self):
         c = self.build()
         self.policy['owner_instruction'] += ' changed'

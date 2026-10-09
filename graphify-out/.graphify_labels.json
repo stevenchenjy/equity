@@ -162,10 +162,10 @@
   "160": "OwnerSnapshotTests",
   "161": "_DocumentPeriod",
   "162": "graphify reference: query, path, explain",
+  "163": "order_options",
   "164": "Workflow reliability and performance evidence",
   "165": "Brokerage Boundary",
   "166": "Manual Approval Policy",
-  "167": "Risk Policy",
   "168": "main",
   "170": "feedback_blocker",
   "171": "NamingCompatibilityTests",
@@ -173,7 +173,6 @@
   "173": "graphify reference: commit hook and native CLAUDE.md integration",
   "174": "graphify reference: incremental update and cluster-only",
   "175": "Active decision state",
-  "176": "RecommendationNotificationTests",
   "177": "SecPayload",
   "178": "graphify reference: GitHub clone and cross-repo merge",
   "179": "graphify reference: transcribe video and audio",
@@ -248,7 +247,5 @@
   "249": "Valuation portfolio and final decision recomposition",
   "250": "Verified consecutive no-action sessions",
   "251": "Current production runtime output authority",
-  "252": "Equity Research — Long-Horizon Return Objective Policy",
-  "254": "OwnerSnapshotTests",
-  "255": "measure_paths"
+  "252": "Equity Research — Long-Horizon Return Objective Policy"
 }
