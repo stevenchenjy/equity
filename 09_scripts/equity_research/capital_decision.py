@@ -39,7 +39,7 @@ INPUTS = {
  '03_source_data/equity_research/sec_filing_artifact_index.json',
 }
 # These are observed failures of reviewed numerical conditions, not absent facts.
-CONDITION_FAILURES = {'score','confidence','upside','reward_to_risk','entry','portfolio_fit','whole_share_target_gap',
+CONDITION_FAILURES = {'score','confidence','upside','reward_to_risk','entry','portfolio_fit','whole_share_target_gap','reviewed_business_case_not_supported',
  'shared_capital_or_allocation_budget_below_one_share','canonical_buy_not_eligible','observed_target_has_no_upside','reward_to_risk_below_minimum','entry_above_canonical_maximum',
  'cash_or_risk_budget_below_one_share','cash_concentration_or_risk_budget_below_one_share','not_in_canonical_eligible_set'}
 
@@ -313,7 +313,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             reason=('Recorded company review remains visible; current evidence/entry requirements: '+', '.join(observed)
                     if view.get('review_record') else
                     'Fund mandate/overlap review and an adopted allocation route are required; no company earnings exercise applies.'
-                    if w.get('asset_role')=='etf_research_candidate' else
+                    if w.get('asset_role')=='etf_research_candidate' or opportunities.get(ticker,{}).get('instrument_kind')=='etf' else
                     'Research has not supplied a complete current investment case and entry contract.')
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
                        reasons=observed if not missing else [reason])

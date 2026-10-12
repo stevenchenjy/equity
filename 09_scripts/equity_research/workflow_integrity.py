@@ -169,6 +169,16 @@ def reviewed_candidate_ready(view: dict[str, Any]) -> bool:
         and news.get("status") == "current" and news.get("coverage_complete") is True)
 
 
+def company_review_complete(view: dict[str, Any]) -> bool:
+    """A current adverse conclusion is completed analysis, without buy authority."""
+    news = view.get("news_review", {})
+    return (view.get("status") in {"reviewed", "monitor"}
+        and view.get("business_case_status") in {"provisionally_supported", "mixed", "challenged", "rejected"}
+        and view.get("valuation_readiness") == "reviewed_scenarios"
+        and not view.get("validation_errors") and not view.get("reopen_reasons")
+        and news.get("status") == "current" and news.get("coverage_complete") is True)
+
+
 def current_news_context(decision: dict[str, Any], *, root: Path, current: datetime,
                          persist_queue: bool = False) -> dict[str, Any]:
     try:
@@ -281,11 +291,14 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         ticker = row.get("ticker", "")
         fund = row.get("valuation_applicability") in fund_valuations or row.get("asset_role") in fund_roles
         missing = not fund and companies.get(ticker, {}).get("positive_decision_eligible") is not True
-        review_missing = ticker in candidate_tickers and not reviewed_candidate_ready(candidate_views.get(ticker, {}))
+        view = candidate_views.get(ticker, {})
+        review_missing = ticker in candidate_tickers and not company_review_complete(view)
         if missing:
             local(ticker, "latest_earnings_pending_incorporation")
         if review_missing:
             local(ticker, "maintained_company_research_incomplete")
+        elif ticker in candidate_tickers and not reviewed_candidate_ready(view):
+            local(ticker, "reviewed_business_case_not_supported")
         strategy = _ticker_strategy(row, plans)
         if strategy:
             ticker_blockers.setdefault(ticker, []).extend(strategy_blockers.get(strategy, []))

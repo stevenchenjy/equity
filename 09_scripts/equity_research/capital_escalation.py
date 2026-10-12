@@ -211,7 +211,7 @@ def _gate(code: str, *, ticker: str | None = None, scope: str = "ticker") -> dic
 
 
 def _research_gate(code: str) -> bool:
-    if code in {"score", "upside", "reward_to_risk", "entry", "portfolio_fit", "whole_share_target_gap", "not_in_canonical_eligible_set", "canonical_buy_not_eligible", "confidence"}:
+    if code in {"score", "upside", "reward_to_risk", "entry", "portfolio_fit", "whole_share_target_gap", "not_in_canonical_eligible_set", "canonical_buy_not_eligible", "confidence", "reviewed_business_case_not_supported"}:
         return False
     return (any(w in code for w in ("thesis", "counterevidence", "maintained_company", "company_specific_valuation", "valuation_unverified", "valuation_missing", "financial", "fundamentals", "incorporation", "objective", "debt_latest", "cash_latest", "ttm_", "dilution", "business_case", "issuer_prospectus", "structure_review"))
             or classify(code)["category"] in {"A", "B"} and not any(w in code for w in ("market", "price_history", "calendar", "complete_close", "latest_completed")))

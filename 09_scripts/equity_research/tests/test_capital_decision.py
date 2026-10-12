@@ -29,6 +29,18 @@ class CapitalDecisionTests(unittest.TestCase):
         self.assertEqual(p['invalidation_price'],98);self.assertEqual(p['planned_total_loss'],16);self.assertEqual(p['planned_account_risk_pct'],.16)
         self.assertEqual(p['estimated_cash_after'],7492);self.assertEqual(p['time_in_force'],'DAY');self.assertEqual(p['entry_limit'],102)
         engine.validate(c,current=self.v['current'],root=ROOT)
+
+    def test_completed_adverse_company_case_is_no_action_not_missing_research(self):
+        self.d['eligible_new_position_review_candidates'] = []
+        self.d['eligible_action_review_candidates'] = []
+        self.d['workflow_integrity']['ticker_blockers'] = {'TEST': ['reviewed_business_case_not_supported']}
+        self.d['watch_candidates'][0]['gate_blockers'] = 'reward_to_risk,reviewed_business_case_not_supported'
+        r = self.build()['decisions'][0]
+        self.assertEqual(r['decision'], 'NO_ACTION')
+        self.assertEqual(r['shares'], 0)
+        self.assertIsNone(r['order_draft'])
+        self.assertEqual(r['blockers'], [])
+        self.assertIn('reviewed_business_case_not_supported', r['reasons'])
     def test_real_account_risk_change_resizes_without_symbolic_review(self):
         self.d['account']['account_total_value']=4000;self.d['account']['cash_available']=3000
         self.d['tactical_review']=tactical_review.build_tactical_review(**self.v)

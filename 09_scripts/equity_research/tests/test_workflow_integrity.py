@@ -13,7 +13,7 @@ from _support import SCRIPT_DIR  # noqa: F401
 from test_thesis_evidence import fixture, material_fixture, AS_OF, SCHEMA, ACCESSION, PERIOD
 from thesis_evidence import STORE_REL, stable_news_event, seal_review
 from daily_common import canonical_sha256
-from workflow_integrity import apply_workflow_integrity, validate_published_workflow, incorporation_meaning, workflow_meaning, reviewed_candidate_ready
+from workflow_integrity import apply_workflow_integrity, validate_published_workflow, incorporation_meaning, workflow_meaning, reviewed_candidate_ready, company_review_complete
 
 
 class WorkflowPublicationTests(unittest.TestCase):
@@ -134,6 +134,22 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertEqual(decision["long_horizon_research"]["candidate_views"], {})
         self.assertNotIn("latest_earnings_pending_incorporation", decision["watch_candidates"][0]["gate_blockers"])
         self.assertEqual(decision["eligible_new_position_review_candidates"], [])
+
+    def test_current_adverse_company_case_is_complete_without_positive_eligibility(self):
+        view = dict(status='reviewed', business_case_status='mixed', valuation_readiness='reviewed_scenarios',
+                    validation_errors=[], reopen_reasons=[], news_review=dict(status='current', coverage_complete=True))
+        self.assertTrue(company_review_complete(view))
+        self.assertFalse(reviewed_candidate_ready(view))
+        decision = self.decision(); decision['held_positions'] = []
+        decision['watch_candidates'] = [dict(ticker='ABC', suggested_whole_shares='0', action='watch_only', gate_blockers='reward_to_risk')]
+        with patch('workflow_integrity.current_thesis_views', return_value={'ABC': view}):
+            self.publish(decision)
+        codes = decision['watch_candidates'][0]['gate_blockers']
+        self.assertIn('reviewed_business_case_not_supported', codes)
+        self.assertNotIn('maintained_company_research_incomplete', codes)
+        self.assertFalse(decision['eligible_new_position_review_candidates'])
+        view['news_review']['coverage_complete'] = False
+        self.assertFalse(company_review_complete(view))
 
     def test_blocked_proposal_cannot_remain_in_post_review_cash_or_holdings(self):
         decision = self.decision("action_review_candidate")

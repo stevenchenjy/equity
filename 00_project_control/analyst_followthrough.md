@@ -33,6 +33,10 @@ because the policy comparator rejects its price. Retained manual valuation
 bundles remain research-only and do not replace canonical policy scenarios.
 Use their immutable assumptions for a labelled comparison at a verified current
 close; any amendment must still pass the existing source-bound writers.
+An otherwise current completed mixed/challenged/rejected case is a zero-share
+`NO_ACTION` conclusion, not missing company research. Expired reviews, invalid
+source bindings, unincorporated filings and unreviewed issuer news remain
+unfinished evidence. This distinction must never make an adverse case eligible.
 
 Fund candidates require a verified mandate, costs, holdings overlap and an
 adopted allocation route. Do not request company earnings, debt, dilution or

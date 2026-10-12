@@ -254,5 +254,10 @@
   "252": "Equity Research — Long-Horizon Return Objective Policy",
   "253": "run_stage",
   "254": "test_shadow_archive_isolation.py",
-  "256": "OwnerSnapshotTests"
+  "255": "HistoricalOrderEmailTests",
+  "256": "OwnerSnapshotTests",
+  "257": "maintained_plan",
+  "258": "create_long_horizon_research.py",
+  "259": "SecPayload",
+  "260": "main"
 }
