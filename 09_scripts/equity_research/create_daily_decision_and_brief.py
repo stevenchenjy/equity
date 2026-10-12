@@ -543,6 +543,8 @@ def plain_action(action: str) -> str:
 def valuation_display(row: dict[str, Any]) -> str:
     if row.get("valuation_applicability") == "not_applicable_broad_market_etf":
         return "不适用（宽基 ETF 使用核心配置口径）"
+    if row.get("valuation_applicability") == "not_applicable_etf":
+        return "不适用（ETF 待基金与配置策略审阅）"
     values = [
         row.get("valuation_bear_price", ""),
         row.get("valuation_base_price", ""),

@@ -111,6 +111,30 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertFalse(decision["workflow_integrity"]["new_capital_allowed"])
         self.assertFalse(decision["eligible_new_position_review_candidates"])
 
+    def test_rejected_numerical_candidate_keeps_source_bound_review_visible(self):
+        decision = self.decision()
+        decision["held_positions"] = []
+        decision["watch_candidates"] = [{"ticker": "ABC", "suggested_whole_shares": "0",
+            "action": "watch_only", "gate_blockers": "reward_to_risk"}]
+        self.publish(decision)
+        view = decision["long_horizon_research"]["candidate_views"]["ABC"]
+        self.assertEqual(view["business_case_status"], "provisionally_supported")
+        self.assertEqual(decision["watch_candidates"][0]["suggested_whole_shares"], "0")
+        self.assertIn("reward_to_risk", decision["watch_candidates"][0]["gate_blockers"])
+        self.assertEqual(decision["eligible_new_position_review_candidates"], [])
+        validate_published_workflow(decision, root=self.root, current=self.current)
+
+    def test_fund_research_does_not_require_company_earnings_or_thesis(self):
+        decision = self.decision()
+        decision["held_positions"] = []
+        decision["watch_candidates"] = [{"ticker": "XLI", "asset_role": "etf_research_candidate",
+            "valuation_applicability": "not_applicable_etf", "suggested_whole_shares": "0",
+            "action": "watch_only", "gate_blockers": "etf_allocation_strategy_review_required"}]
+        self.publish(decision)
+        self.assertEqual(decision["long_horizon_research"]["candidate_views"], {})
+        self.assertNotIn("latest_earnings_pending_incorporation", decision["watch_candidates"][0]["gate_blockers"])
+        self.assertEqual(decision["eligible_new_position_review_candidates"], [])
+
     def test_blocked_proposal_cannot_remain_in_post_review_cash_or_holdings(self):
         decision = self.decision("action_review_candidate")
         decision["account"] = {"account_total_value": "1000", "cash_available": "900",

@@ -255,9 +255,13 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
                 local(row["ticker"], "issuer_news_coverage_incomplete")
     decision.setdefault("long_horizon_research", {})["views"] = views
     eligible = set(decision.get("eligible_new_position_review_candidates", []))
-    candidate_tickers = {row["ticker"] for row in decision.get("watch_candidates", []) if row.get("ticker") in eligible
-        and row.get("valuation_applicability") != "not_applicable_broad_market_etf"
-        and row.get("asset_role") not in {"core_allocation", "core_allocation_candidate"}}
+    # A rejected numerical proposal still needs its maintained research and
+    # reassessment dependencies visible. Visibility cannot grant eligibility.
+    fund_roles = {"core_allocation", "core_allocation_candidate", "etf_research_candidate"}
+    fund_valuations = {"not_applicable_broad_market_etf", "not_applicable_etf"}
+    candidate_tickers = {row["ticker"] for row in decision.get("watch_candidates", [])
+        if row.get("valuation_applicability") not in fund_valuations
+        and row.get("asset_role") not in fund_roles}
     candidate_views = current_thesis_views(decision, root=root, current=current, incorporation=incorporation,
         news=news, candidate_tickers=candidate_tickers) if candidate_tickers else {}
     decision["long_horizon_research"]["candidate_views"] = candidate_views
@@ -275,8 +279,8 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
     retained_new = []
     for row in decision.get("watch_candidates", []):
         ticker = row.get("ticker", "")
-        core = row.get("valuation_applicability") == "not_applicable_broad_market_etf" or row.get("asset_role") in {"core_allocation", "core_allocation_candidate"}
-        missing = not core and companies.get(ticker, {}).get("positive_decision_eligible") is not True
+        fund = row.get("valuation_applicability") in fund_valuations or row.get("asset_role") in fund_roles
+        missing = not fund and companies.get(ticker, {}).get("positive_decision_eligible") is not True
         review_missing = ticker in candidate_tickers and not reviewed_candidate_ready(candidate_views.get(ticker, {}))
         if missing:
             local(ticker, "latest_earnings_pending_incorporation")

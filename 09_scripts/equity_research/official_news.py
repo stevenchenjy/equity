@@ -95,6 +95,9 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict[str, Any]:
                 or any(not isinstance(h, str) or not re.fullmatch(r"[a-z0-9.-]+\.[a-z]{2,}", h) for h in hosts)):
             raise NewsError("invalid_manifest_source")
         canonical_url(source["url"], hosts)
+        upgrade = source.get("https_upgrade_hosts", [])
+        if (not isinstance(upgrade, list) or any(host not in hosts for host in upgrade)):
+            raise NewsError("invalid_https_upgrade_hosts")
         ids.add(sid)
     return value
 
@@ -194,6 +197,16 @@ def parse_feed(payload: bytes, source: dict[str, Any], *, now: datetime) -> list
             title = entry.findtext("title") or ""
             url = entry.findtext("link") or ""
             published = entry.findtext("pubDate") or ""
+        # Some verified official feeds still emit HTTP article links. Upgrade
+        # only explicitly verified hosts; never fetch HTTP or broaden redirects.
+        link = unescape(url.strip())
+        if any(ord(ch) < 33 for ch in link):
+            raise NewsError("nonofficial_or_unsafe_url")
+        parts = urlsplit(link)
+        if parts.scheme == "http" and parts.hostname in source.get("https_upgrade_hosts", []):
+            if parts.username is not None or parts.password is not None or parts.port not in (None, 80):
+                raise NewsError("nonofficial_or_unsafe_url")
+            url = urlunsplit(("https", parts.hostname, parts.path, parts.query, parts.fragment))
         url = canonical_url(url, source["allowed_hosts"])
         published_at = timestamp(published)
         if published_at > now + timedelta(minutes=5):

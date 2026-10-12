@@ -195,6 +195,24 @@ def reviewed_allocation_semantics(plan: dict) -> dict:
                                     if key != "reviewed_at"}}
 
 
+def etf_research_recommendation(ticker, packet, score, market_row):
+    """A fund research route cannot inherit company earnings or stock sizing."""
+    row = {field: "" for field in NEW_FIELDS}
+    row.update(ticker=ticker, asset_role="etf_research_candidate", theme=packet["theme"],
+        weekly_rank=score["weekly_rank"], account_aware_conviction_score=score["account_aware_conviction_score"],
+        portfolio_fit_score=score["portfolio_fit_score"], recommendation_confidence="unverified",
+        controlled_research_packet_exists="yes", valuation_applicability="not_applicable_etf",
+        eligibility_label="wait_for_etf_strategy_review", recommended_action="watch_only",
+        reason="Fund research requires verified mandate, holdings overlap, fees and an adopted allocation route. Company EV/revenue, issuer earnings incorporation and stock sizing do not apply. No additional fund allocation is authorized.",
+        human_confirmation_required="no", automatic_action_allowed="no",
+        current_price=market_row.get("last_price", ""), suggested_whole_shares="0",
+        suggested_position_pct="0.0000", sizing_tier="no_allocation", small_account_exception_used="no",
+        gate_blockers="etf_allocation_strategy_review_required", holding_horizon="unverified",
+        invalidation_condition="No entry before a sourced fund review and an adopted allocation route.")
+    row.update({field: "no" for field in NEW_FIELDS if field.endswith("_pass")})
+    return row
+
+
 def rank_candidate_budget_rows(rows: list[dict]) -> list[dict]:
     """Allocate new capital by evidence score, without a held-name preference."""
     def key(row: dict) -> tuple:
@@ -323,7 +341,8 @@ def main() -> None:
             concentration = "separate_core_sleeve"
             rule = "separate_core_allocation_policy"
         else:
-            role = "individual_stock_candidate"
+            role = ("etf_research_candidate" if packet.get("research_role") == "etf_research_candidate"
+                    else "individual_stock_candidate")
             weight = "0.0000"
             fit = dynamic_candidate_fit(packet["theme"], active_weight, account)
             score = score_from_packet(packet, fit)
@@ -355,7 +374,8 @@ def main() -> None:
                 "score_formula": "0.25*business+0.20*earnings+0.15*valuation+0.15*catalyst+0.15*technical+0.10*dynamic_portfolio_fit",
             }
         )
-    role_order = {"current_position": 0, "core_allocation_candidate": 1, "individual_stock_candidate": 2}
+    role_order = {"current_position": 0, "core_allocation_candidate": 1, "individual_stock_candidate": 2,
+                  "etf_research_candidate": 3}
     scored.sort(key=lambda row: (3 if row["ticker"] in price_unverified else role_order[row["asset_role"]],
                                 -float(row["account_aware_conviction_score"]) if row["ticker"] not in price_unverified else 0,
                                 row["ticker"]))
@@ -419,6 +439,10 @@ def main() -> None:
         ticker = score["ticker"]
         if ticker in price_unverified:
             new_rows.append(price_unverified_recommendation(ticker, packets[ticker]))
+            continue
+        if packets[ticker].get("research_role") == "etf_research_candidate":
+            new_rows.append(etf_research_recommendation(ticker, packets[ticker], score,
+                                                      market_by_ticker.get(ticker, {})))
             continue
         is_core = ticker == "SPY"
         packet = packets[ticker]

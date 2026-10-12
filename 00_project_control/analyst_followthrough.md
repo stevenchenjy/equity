@@ -22,6 +22,26 @@ reassessment. The owner requested that this gap be fixed. A scheduled follow-up
 in the existing Codex chat supplies that analysis using the existing plan,
 thesis, valuation and publication validators. It is research, not execution.
 
+The October 11 passing-friction audit found that source-bound company reviews
+were hidden until numerical eligibility, ETF roles were lost downstream, and
+new research priorities lacked configured issuer-news coverage. Review the
+current `long_horizon_research.candidate_views` even when a candidate has zero
+eligible shares. A recorded review, a current review, an attractive observed
+price and an admitted allocation plan are separate states. Report the exact
+remaining state; do not describe an existing company case as absent merely
+because the policy comparator rejects its price. Retained manual valuation
+bundles remain research-only and do not replace canonical policy scenarios.
+Use their immutable assumptions for a labelled comparison at a verified current
+close; any amendment must still pass the existing source-bound writers.
+
+Fund candidates require a verified mandate, costs, holdings overlap and an
+adopted allocation route. Do not request company earnings, debt, dilution or
+EV/revenue completion for `etf_research_candidate` rows. An unadopted ETF route
+cannot authorize shares or consume the company objective-research quota.
+Official-news coverage remains limited to the verified manifest. Newly
+collected announcements require real impact review; a successful feed fetch
+does not acknowledge or incorporate its events.
+
 ## Each run
 
 1. Verify the production code commit and inspect current production status,

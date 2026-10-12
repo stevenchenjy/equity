@@ -1,7 +1,7 @@
 {
   "schema_version": "phase5r_official_news_sources_v1",
   "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
-  "verified_on": "2026-09-24",
+  "verified_on": "2026-10-11",
   "max_age_hours": 36,
   "event_lookback_days": 7,
   "retention_days": 180,
@@ -69,6 +69,45 @@
       "required": true,
       "verification_page": "https://www.semtech.com/rss",
       "verification_note": "Semtech official RSS directory explicitly links this EQS-hosted Latest Investor News feed."
+    },
+    {
+      "source_id": "broadcom_ir",
+      "ticker": "AVGO",
+      "url": "https://investors.broadcom.com/rss/news-releases.xml",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "investors.broadcom.com"
+      ],
+      "required": true,
+      "verification_page": "https://investors.broadcom.com/rss-feeds",
+      "verification_note": "Official RSS directory links Financial News; dated feed bytes and event parse verified October 11, 2026."
+    },
+    {
+      "source_id": "amd_ir",
+      "ticker": "AMD",
+      "url": "https://ir.amd.com/news-events/press-releases/rss",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "ir.amd.com"
+      ],
+      "required": true,
+      "verification_page": "https://ir.amd.com/news-events/press-releases",
+      "verification_note": "Official press release page links News RSS; dated feed bytes and event parse verified October 11, 2026."
+    },
+    {
+      "source_id": "micron_ir",
+      "ticker": "MU",
+      "url": "https://investors.micron.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "investors.micron.com"
+      ],
+      "required": true,
+      "verification_page": "https://investors.micron.com/news/default.aspx",
+      "verification_note": "Official issuer feed returns dated press releases; HTTP article links are upgraded only for investors.micron.com, whose corresponding HTTPS press release was verified October 11, 2026.",
+      "https_upgrade_hosts": [
+        "investors.micron.com"
+      ]
     }
   ]
 }

@@ -309,8 +309,14 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             observed=sorted(set(local+entry_codes)-set(global_codes)) or codes(opportunities.get(ticker,{}).get('blockers')) or (['maintained_company_research_incomplete'] if ticker in opportunities else ['not_in_canonical_eligible_set'])
             # A supported research opportunity still needs its investment case; never promote it here.
             missing=[c for c in observed if c not in CONDITION_FAILURES]
+            view=decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,{})
+            reason=('Recorded company review remains visible; current evidence/entry requirements: '+', '.join(observed)
+                    if view.get('review_record') else
+                    'Fund mandate/overlap review and an adopted allocation route are required; no company earnings exercise applies.'
+                    if w.get('asset_role')=='etf_research_candidate' else
+                    'Research has not supplied a complete current investment case and entry contract.')
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
-                       reasons=observed if not missing else ['Research has not supplied a complete current investment case and entry contract.'])
+                       reasons=observed if not missing else [reason])
         row['dependencies']=[classify(c,ticker=ticker) for c in row['blockers']]
         dependencies.extend(row['dependencies']);rows.append(row)
     result=dict(schema_version=SCHEMA,generated_at=current.isoformat(),market_data_timestamp=expected,

@@ -81,22 +81,26 @@ def _inside(root: Path, relative: str) -> Path:
 class _DocumentPeriod(HTMLParser):
     def __init__(self) -> None:
         super().__init__()
-        self.capture = False
+        self.depth = 0
         self.values: list[str] = []
         self.parts: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag == "ix:nonnumeric":
-            self.capture = dict(attrs).get("name", "").lower() == "dei:documentperiodenddate"
-            self.parts = []
+            if self.depth:
+                self.depth += 1
+            elif dict(attrs).get("name", "").lower() == "dei:documentperiodenddate":
+                self.depth = 1
+                self.parts = []
 
     def handle_data(self, data: str) -> None:
-        if self.capture:
+        if self.depth:
             self.parts.append(data)
 
     def handle_endtag(self, tag: str) -> None:
-        if tag == "ix:nonnumeric":
-            if self.capture:
+        if tag == "ix:nonnumeric" and self.depth:
+            self.depth -= 1
+            if not self.depth:
                 text = " ".join("".join(self.parts).split())
                 for fmt in ("%Y-%m-%d", "%B %d, %Y"):
                     try:
@@ -104,7 +108,6 @@ class _DocumentPeriod(HTMLParser):
                         break
                     except ValueError:
                         continue
-            self.capture = False
 
 
 def evidence_context(root: Path) -> dict[str, Any]:

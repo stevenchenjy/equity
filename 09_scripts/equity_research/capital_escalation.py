@@ -279,7 +279,10 @@ def order_options(decision: dict, contract: dict, config: dict | None = None) ->
         opportunity = opportunities.get(ticker, {})
         security_kind = str(w.get("security_type", w.get("asset_type", opportunity.get("instrument_kind", opportunity.get("security_type", opportunity.get("asset_type", "")))))).lower()
         issuer = str(opportunity.get("issuer_name", opportunity.get("company_name", opportunity.get("name", "")))).lower()
-        fund_prospect = security_kind in {"etf", "fund", "exchange_traded_fund"} or any(word in issuer.split() for word in ("etf", "fund"))
+        fund_prospect = (w.get("asset_role") == "etf_research_candidate"
+                        or w.get("valuation_applicability") == "not_applicable_etf"
+                        or security_kind in {"etf", "fund", "exchange_traded_fund"}
+                        or any(word in issuer.split() for word in ("etf", "fund")))
         core = (h.get("asset_role") == "core_allocation" or w.get("asset_role") in {"core_allocation", "core_allocation_candidate"}
                 or w.get("valuation_applicability") == "not_applicable_broad_market_etf"
                 or p.get("role") == "broad_core")

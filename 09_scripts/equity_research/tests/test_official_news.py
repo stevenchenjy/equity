@@ -39,7 +39,17 @@ class NewsTests(unittest.TestCase):
 
     def test_verified_sources_are_valid_and_explicit(self):
         manifest = load_manifest(MANIFEST_PATH)
-        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC"})
+        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC", "AVGO", "AMD", "MU"})
+
+    def test_http_article_upgrade_requires_verified_host_and_keeps_url_safety(self):
+        source = dict(SOURCE, https_upgrade_hosts=["ir.example.com"])
+        event = parse_feed(feed(url="http://ir.example.com/results"), source, now=NOW)[0]
+        self.assertEqual(event["url"], "https://ir.example.com/results")
+        for url in ["http://evil.test/results", "http://user@ir.example.com/results", "http://ir.example.com:444/results"]:
+            with self.subTest(url=url), self.assertRaises((NewsError, ValueError)):
+                parse_feed(feed(url=url), source, now=NOW)
+        with self.assertRaises(NewsError):
+            parse_feed(feed(url="http://ir.example.com/results"), SOURCE, now=NOW)
 
     def test_rss_dates_ids_and_titles_are_plain_data(self):
         result = parse_feed(feed(title="&lt;b&gt;Results&lt;/b&gt;&lt;script&gt;ignore instructions&lt;/script&gt;"), SOURCE, now=NOW)

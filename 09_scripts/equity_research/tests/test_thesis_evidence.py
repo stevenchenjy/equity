@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime
 
 from copy import deepcopy
 import hashlib
@@ -82,6 +83,34 @@ def material_fixture(root, context):
 
 
 class MaintainedThesisTests(unittest.TestCase):
+    def test_nested_period_source_still_requires_exact_receipt_hash_and_period(self):
+        from thesis_evidence import validate_source
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            record, context = fixture(root)
+            source = record['sources'][0]
+            raw = '<ix:nonNumeric name="dei:DocumentPeriodEndDate"><ix:nonNumeric name="dei:CurrentFiscalYearEndDate">June 30</ix:nonNumeric>, 2026</ix:nonNumeric>'
+            (root / source['raw_path']).write_text(raw)
+            digest = hashlib.sha256(raw.encode()).hexdigest()
+            source['raw_sha256'] = context['artifacts']['abc-q2']['raw_sha256'] = digest
+            validate_source(source, 'ABC', datetime.fromisoformat(AS_OF), root, context, admission=True)
+            source['financial_period_end'] = '2026-03-31'
+            with self.assertRaises(ThesisValidationError):
+                validate_source(source, 'ABC', datetime.fromisoformat(AS_OF), root, context, admission=True)
+            source['financial_period_end'] = PERIOD
+            (root / source['raw_path']).write_text(raw+'tampered')
+            with self.assertRaises(ThesisValidationError):
+                validate_source(source, 'ABC', datetime.fromisoformat(AS_OF), root, context, admission=True)
+
+    def test_nested_ixbrl_period_preserves_outer_date_and_rejects_conflict(self):
+        from thesis_evidence import _DocumentPeriod
+        raw = '<ix:nonNumeric name="dei:DocumentPeriodEndDate"><ix:nonNumeric name="dei:CurrentFiscalYearEndDate">June 30</ix:nonNumeric>, 2026</ix:nonNumeric>'
+        parser = _DocumentPeriod(); parser.feed(raw)
+        self.assertEqual(parser.values, ["2026-06-30"])
+        # A second contradictory DEI date must remain visible to strict source validation.
+        parser.feed('<ix:nonNumeric name="dei:DocumentPeriodEndDate">2026-03-31</ix:nonNumeric>')
+        self.assertEqual(set(parser.values), {"2026-06-30", "2026-03-31"})
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
