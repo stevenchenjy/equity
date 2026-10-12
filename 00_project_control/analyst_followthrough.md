@@ -99,8 +99,15 @@ does not acknowledge or incorporate its events.
    applying it. Use `update_investment_plan.py` for source-bound plan versions
    and `update_thesis_review.py` for company reviews. The valuation-input
    bundle validator admits research packet inputs with `canonical_effect=false`;
-   it is not a writer for canonical fundamental fields or a completed valuation.
-   Preserve
+   it is not a writer for canonical fundamental fields. For a current reviewed
+   company model, use `update_company_valuation.py` under the separately adopted
+   [company-model admission policy](company_valuation_admission.md). Do not
+   promote historical bundles merely by changing a flag. Complete the method,
+   three cases, countercase and allocation judgment; then give a source-bound
+   conditional entry/max price, invalidation, whole-share size and deadline, or
+   an explicit zero-share rejection. Model admission and a maintained allocation
+   plan are separate validated amendments. Count accepted cases and conclusions
+   separately from processed dossiers. Preserve
    previous hashes, expired/failed outcomes and accounting scope. If no
    admissible writer exists, save the sourced proposal as pending admission;
    do not edit an acceptance result or financial CSV to bypass validation.
@@ -216,7 +223,8 @@ never use it as the durable amendment target. The valuation generator preserves
 the analyst store unchanged, archives every observed version verbatim under
 `04_data/equity_research/valuation_input_history.local/`, and revalidates each
 manual record's sources and current financial/market period. A current generated
-ticker record takes precedence in the composed bundle; the manual record stays
+ticker comparator takes precedence unless a separate current company-model
+admission selects its reviewed original; the manual record stays
 historical with an explicit status. Invalid bindings or advanced reporting
 periods keep the original research but exclude it from the current packet.
 Legacy mixed bundles are captured verbatim into the durable store only if that
@@ -233,6 +241,13 @@ financial fields and complete valuations; the latter do not change through
 this store. Include the durable store's hash in protected-input checks and
 allow the derived composed bundle to change only through validated regeneration.
 
+The separate company-model writer can select an explicitly reviewed original
+model for production under `company_valuation_admission.md`. In that route,
+verify `company_valuation_admission_status.local.json` reports `admitted_current`
+and the derived packet uses that model plus the current actual close. This
+does not rewrite the research store or make its older record current. A failed
+or expired opted-in model cannot fall back to comparator-based buy eligibility.
+
 ## Locking and publication
 
 Acquire locks in this order:
@@ -243,12 +258,14 @@ Acquire locks in this order:
    `/Users/messssi/LocalRuntime/equity/05_risk_and_positions/investment_plans.local.lock`;
    company reviews use
    `/Users/messssi/LocalRuntime/equity/00_project_control/run_logs/thesis_dossiers.lock`.
+   Company-model admissions use
+   `/Users/messssi/LocalRuntime/equity/00_project_control/run_logs/company_valuation_admissions.lock`.
    The valuation-bundle CLI has no intrinsic lock, so coordinated publication
    must also use
    `/Users/messssi/LocalRuntime/equity/04_data/equity_research/valuation_inputs.local.lock`.
    For a batch, acquire the necessary writer locks in sorted absolute-path order.
 
-The plan and thesis CLIs acquire their own writer locks in both check and apply
+The plan, thesis and company-model CLIs acquire their own writer locks in both check and apply
 modes. **Do not hold one of those writer locks and then call its CLI**: the
 child would wait on a lock owned by its parent. Either let the CLI own its
 writer lock while the coordinator owns runtime and pipeline locks, or call the

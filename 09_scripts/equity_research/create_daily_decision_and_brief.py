@@ -302,6 +302,9 @@ def normalized_held_rows() -> list[dict[str, Any]]:
                 "strongest_positive_evidence": recommendation.get("strongest_positive_evidence", ""),
                 "strongest_negative_evidence": recommendation.get("strongest_negative_evidence", ""),
                 "valuation_source": recommendation.get("valuation_source", ""),
+                "company_valuation_admission": recommendation.get("company_valuation_admission", "{}"),
+                "valuation_method": recommendation.get("valuation_method", ""),
+                "valuation_horizon": recommendation.get("valuation_horizon", ""),
                 "human_confirmation_required": (
                     "yes" if is_action_transition(action) else "no"
                 ),
@@ -635,6 +638,9 @@ def build_watch_rows(candidate_recommendations: list[dict[str, Any]], *,
                 "strongest_positive_evidence": row.get("strongest_positive_evidence", ""),
                 "strongest_negative_evidence": row.get("strongest_negative_evidence", ""),
                 "valuation_source": row.get("valuation_source", ""),
+                "company_valuation_admission": row.get("company_valuation_admission", "{}"),
+                "valuation_method": row.get("valuation_method", ""),
+                "valuation_horizon": row.get("valuation_horizon", ""),
             }
         )
 

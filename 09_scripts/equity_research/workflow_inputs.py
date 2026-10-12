@@ -14,4 +14,7 @@ WORKFLOW_INPUTS = {
     "04_research/company_research/thesis_dossiers.local.json",
     "04_research/company_research/issuer_news_review_queue.local.jsonl",
     "06_execution_records/dashboard_feedback_pending.local.json",
+    "01_policies/company_valuation_admission.json",
+    "04_data/equity_research/company_valuation_admissions.local.json",
+    "04_data/equity_research/valuation_scenarios.local.json",
 }

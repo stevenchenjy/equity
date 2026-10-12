@@ -34,6 +34,11 @@ def cards(decision, view=None):
                        headline='EXACT CONDITIONAL ORDER DRAFTS' if actionable else 'NO NEW POSITION',
                        body='Review the complete drafts below, then manually enter any approved order in Chase.' if actionable else
                        'Buy/add 0 new shares in this cycle. The exact reasons and next steps follow.',sources=[]))
+    for side in ('buy', 'sell'):
+        if not any(r['order_draft'].get('side') == side for r in actionable):
+            result.append(dict(title=side.upper()+' — none', group='action', kind='inactive',
+                headline='0 shares · no current order price',
+                body='No complete current conditional '+side+' draft passes the required checks. No order is requested by this update.', sources=[]))
     for row in [*actionable,*[r for r in c['decisions'] if r['decision'] in {'REDUCE_REVIEW','EXIT_REVIEW','HOLD'} and not r['order_draft']]]:
         label={'ACTIONABLE_BUY':'BUY','ACTIONABLE_ADD':'ADD','REDUCE_REVIEW':'REDUCE REVIEW','EXIT_REVIEW':'EXIT REVIEW','HOLD':'HOLD'}[row['decision']]
         result.append(dict(title=f"{label} — {row['ticker']}",group='action',kind='buy' if row['decision'] in BUY else 'sell' if 'REVIEW' in row['decision'] else 'inactive',
@@ -61,7 +66,7 @@ def cards(decision, view=None):
         if nearest:lines.append('Closest to eligibility: '+nearest['ticker']+'; readiness comparison only, subject to every gate above.')
         immediate=[r['ticker'] for r in escalation['research_requests'] if r['urgency']=='immediate']
         lines.append('Immediate priority research: '+(', '.join(immediate) or 'No active escalation request; account/data checks or normal research remain.')+' Queued work is not completed analysis.')
-        result.append(dict(title='CAPITAL DEPLOYMENT ESCALATION',group='action',kind='inactive',headline='',body='\n'.join(lines),sources=[]))
+        result.append(dict(title='CAPITAL DEPLOYMENT ESCALATION',group='background',kind='inactive',headline='',body='\n'.join(lines),sources=[]))
     for row in c['decisions']:
         if row['decision'] in {'NO_ACTION','BLOCKED'} and row['ticker'] in {r['ticker'] for r in decision.get('held_positions',[])}:
             result.append(dict(title=f"{row['decision']} — {row['ticker']}",group='action',kind='inactive',headline='0 new shares; no renewed expired order',body='\n'.join(action_lines(row)),sources=[]))
@@ -71,12 +76,30 @@ def cards(decision, view=None):
     result.append(dict(title='Cash and research progress',group='background',kind='',body=f"Cash: ${c['planning_cash']:.2f}; mandatory reserve ${c['mandatory_reserve']:.2f}. Planning cash is not broker buying power.\n"+
                         f"Research queue: {decision.get('research_opportunities',{}).get('metrics',{}).get('research_queue_size','unverified')} retained opportunities.\n"+
                         'Automatic objective collectors, valuation recomposition and the source-bound analyst continue working. Successful source collection does not complete an investment case.',sources=[]))
+    import json
+    by_ticker = {r['ticker']: r for r in c['decisions']}
+    for watch in decision.get('watch_candidates', []):
+        if watch.get('valuation_method') != 'admitted_source_bound_company_model':
+            continue
+        try:
+            proof = json.loads(watch.get('company_valuation_admission', '{}'))
+            if not proof.get('record_sha256'):
+                continue
+        except (TypeError, ValueError):
+            continue
+        row = by_ticker.get(watch['ticker'], {})
+        result.append(dict(title='Company valuation — '+watch['ticker'], group='background', kind='', sources=[],
+            body=f"Admitted company model v{proof['version']}; horizon: {watch.get('valuation_horizon', 'unverified')}.\n"+
+                 f"Bear/base/bull scenarios: ${watch['valuation_bear_price']} / ${watch['valuation_base_price']} / ${watch['valuation_bull_price']}; analyst assumptions, not guaranteed prices.\n"+
+                 f"At the dated reference close ${watch['current_price']}: base-scenario gap {watch['expected_upside_pct']}%, scenario reward/risk {watch['reward_to_risk_estimate']}.\n"+
+                 f"Valuation-only review ceiling: ${watch['maximum_review_price'] or 'unverified'}; this is not a cleared buy limit. Company support, current evidence, a maintained allocation plan and all remaining gates still apply.\n"+
+                 f"Current decision: {row.get('decision', 'unverified')}; proposed shares {row.get('shares', 0)}. Allocation judgment and counterevidence remain in the retained company case."))
     authority=c.get('account_authority',{})
     if authority.get('local_planning_enabled'):
         result.append(dict(title='Account planning basis',group='background',kind='',body='Owner-approved local records govern conditional plans.\n'+'\n'.join(authority['execution_checks']),sources=[]))
     blocked=[r for r in c['decisions'] if r['decision'] in {'NO_ACTION','BLOCKED'}]
     result.append(dict(title='Candidate decisions — research detail',group='background',kind='',body='\n'.join(f"{r['ticker']} — {r['decision']}: "+'; '.join(r['reasons']+r['blockers']) for r in blocked) or 'No additional candidates.',sources=[]))
-    return result
+    return sorted(result, key=lambda item: item['group'] != 'action')
 
 
 def markdown(decision):

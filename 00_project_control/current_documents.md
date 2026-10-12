@@ -7,6 +7,8 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Company valuation admission](company_valuation_admission.md): owner-authorized October 12 bridge from individually reviewed immutable company cases to canonical decisions; current evidence and independent allocation/entry gates remain.
+
 - [Repository layout and path ownership](repository_layout.md): source/runtime/generated boundaries, archive recovery and retained compatibility paths.
 
 - [Equity Research naming decision and migration plan](equity_naming_policy.md): fixed user-facing name and functional naming rules; display names are centralized; legacy technical identifiers remain compatible.

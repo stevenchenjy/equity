@@ -27,6 +27,12 @@ It uses no model and is not read by the decision engine or sender. Reverse
 valuation sensitivities hold net debt and shares fixed, do not include interim
 distributions, and are not forecasts, DCFs, expected total returns, or trading
 instructions. Existing revenue-multiple gates remain an explicit heuristic.
+The owner adopted a separate [company-model production route](company_valuation_admission.md)
+on October 12, 2026. An explicitly admitted current company case replaces that
+issuer's heuristic comparator; this does not change the noncanonical research
+companion or turn every historical valuation bundle into a production input.
+Admission preserves original assumptions and evidence and requires a separate
+current allocation plan before a positive size can become eligible.
 
 Whole-share diagnostics separate cash affordability, target headroom, applicable
 aggregate/strategy limits and turnover. Fixed single-stock allocation caps are

@@ -41,7 +41,7 @@ def classify(code: str, *, ticker: str | None = None, scope='ticker') -> dict[st
         category, worker, needed = 'B', 'approved_public_refresh', 'Next available approved source publication or current public evidence with the required coverage, timestamp and source binding.'
     elif any(w in code for w in ('incorporation', 'sec_acceptance', 'financial', 'company_fundamentals', 'objective', 'debt_latest', 'cash_latest', 'ttm_', 'dilution', 'valuation_recomposition', 'baseline_data', 'data_gate_hold', 'evidence_gate_failed', 'fundamental_gate_failed')):
         category, worker, needed = 'A', 'bounded_full_refresh', 'Run the existing SEC reconciliation/objective admission, earnings incorporation, valuation and dependent decision stages; retain failures and distinguish fields admitted from dossiers processed.'
-    elif any(w in code for w in ('expired', 'plan', 'reassessment', 'maintained_company', 'thesis', 'valuation', 'durability', 'counterevidence', 'review')):
+    elif any(w in code for w in ('expired', 'plan', 'reassessment', 'maintained_company', 'company_model', 'thesis', 'valuation', 'durability', 'counterevidence', 'review')):
         worker = 'recurring_analyst'
         needed = 'A current source-bound amendment accepted by the maintained thesis/valuation/plan writer. The scheduled analyst must synthesize it; the owner is not asked to invent the investment case.'
     return dict(code=code, category=category, scope=scope, ticker=ticker, resolver=worker, evidence_required=needed,

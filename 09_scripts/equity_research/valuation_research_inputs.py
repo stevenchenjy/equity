@@ -2,7 +2,8 @@
 
 The maintained bundle is never rewritten by a refresh. Every observed version
 is preserved verbatim; failed bindings remain visible but cannot enter the
-current evidence packet. Generated canonical scenarios never consume this layer.
+current evidence packet. This store alone never grants production authority;
+the separate company-model route binds original model bytes explicitly.
 """
 
 from __future__ import annotations
@@ -47,6 +48,23 @@ def generated_record(record: Any) -> bool:
                and str(item.get("source_id", "")).startswith(contracts[item["source_type"]][0])
                and item.get("relative_path") == contracts[item["source_type"]][1]
                for item in sources)
+
+
+def company_projection_record(record: Any) -> bool:
+    """Recognize derived packet observations so they never become analyst input.
+
+    This is retention ownership only. Production admission still revalidates
+    the independent company ledger, original model and current company review.
+    """
+    if not isinstance(record, dict) or not isinstance(record.get('sources'), list):
+        return False
+    ticker = record.get('ticker')
+    markets = [s for s in record['sources'] if isinstance(s, dict)
+               and s.get('source_type') == 'public_market_valuation_observation']
+    return (len(markets) == 1
+            and str(markets[0].get('source_id', '')).startswith(f'company-valuation-market:{ticker}:')
+            and markets[0].get('relative_path') == '03_source_data/equity_research/market_data_snapshot.csv'
+            and any(isinstance(s, dict) and s.get('source_type') == 'human_valuation_scenario' for s in record['sources']))
 
 
 def _owned_directory(path: Path) -> None:
@@ -151,7 +169,8 @@ def compose_research_inputs(
         prior_bytes = _read_snapshot(derived_path)
         try:
             prior = _parse_snapshot(prior_bytes)
-            manual_present = any(not generated_record(record) for record in prior.get("records", []))
+            manual_present = any(not generated_record(record) and not company_projection_record(record)
+                                 for record in prior.get("records", []))
         except (ValuationInputBundleError, TypeError):
             manual_present = True
         if manual_present:
@@ -172,7 +191,7 @@ def compose_research_inputs(
         return generated, status
 
     generated_tickers = {item["ticker"] for item in generated["records"]}
-    manual_records = [item for item in raw["records"] if not generated_record(item)]
+    manual_records = [item for item in raw["records"] if not generated_record(item) and not company_projection_record(item)]
     counts: dict[str, int] = {}
     for record in manual_records:
         ticker = str(record.get("ticker", "")) if isinstance(record, dict) else ""

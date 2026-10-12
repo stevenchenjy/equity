@@ -106,6 +106,9 @@ POSITION_FIELDS = [
     "strongest_positive_evidence",
     "strongest_negative_evidence",
     "valuation_source",
+    "company_valuation_admission",
+    "valuation_method",
+    "valuation_horizon",
 ]
 NEW_FIELDS = [
     "weekly_rank",
@@ -149,6 +152,9 @@ NEW_FIELDS = [
     "strongest_positive_evidence",
     "strongest_negative_evidence",
     "valuation_source",
+    "company_valuation_admission",
+    "valuation_method",
+    "valuation_horizon",
 ]
 
 VALUATION_SCENARIO_PATH = (
@@ -424,6 +430,9 @@ def main() -> None:
                 "strongest_positive_evidence": valuation.get("strongest_positive_evidence", ""),
                 "strongest_negative_evidence": valuation.get("strongest_negative_evidence", ""),
                 "valuation_source": valuation.get("fundamental_source_url", ""),
+                "company_valuation_admission": json.dumps(valuation.get("company_model_admission", {}), sort_keys=True),
+                "valuation_method": valuation.get("metric_interpretation", {}).get("method_status", ""),
+                "valuation_horizon": valuation.get("metric_interpretation", {}).get("horizon", ""),
             }
         )
     write_csv(C9_POSITION_RECOMMENDATIONS, position_rows, POSITION_FIELDS)
@@ -507,6 +516,11 @@ def main() -> None:
             if base_price > 0
             else 0.0
         )
+        if valuation.get("company_model_admission"):
+            minimum_rr = min(float(t["minimum_reward_to_risk"]) for t in construction_policy["candidate_sizing_tiers"])
+            bear_price = as_float(str(prices.get("bear", 0)), f"{ticker}.bear_price")
+            maximum_review_price = min(maximum_review_price, (base_price + minimum_rr * bear_price)/(1 + minimum_rr))
+            maximum_review_price = math.floor(maximum_review_price * 100)/100
         if is_core:
             core_status = core_plan.get("status", "not_selected")
             suggested_whole_shares = int(core_plan.get("planned_shares", "0") or 0)
@@ -554,11 +568,13 @@ def main() -> None:
             )
             resulting_caps_pass = "yes"
             gate_blockers = ""
-            valuation_applicability = "applicable_company_ev_to_revenue"
+            valuation_applicability = "applicable_company_specific_valuation" if valuation.get("company_model_admission") else "applicable_company_ev_to_revenue"
         else:
             eligibility_label = "wait_for_more_evidence"
             action = "watch_only"
             failed = list(sizing["failed_gates"])
+            failed.extend(valuation.get("input_limitations", []) if any(str(x).startswith("company_model_admission_unverified:")
+                          for x in valuation.get("input_limitations", [])) else [])
             if failed == ["whole_share_affordability"] and all(gate_results.values()):
                 failed = ["shared_capital_or_allocation_budget_below_one_share"]
             reason = ("Current evidence passed but the reviewed target/shared capital budget cannot fund another whole share: "
@@ -566,7 +582,7 @@ def main() -> None:
                       "Deterministic purchase-review gates not all satisfied: ") + ",".join(failed or ["valuation_incomplete"])
             resulting_caps_pass = "yes" if caps_pass else "no"
             gate_blockers = ",".join(failed)
-            valuation_applicability = "applicable_company_ev_to_revenue"
+            valuation_applicability = "applicable_company_specific_valuation" if valuation.get("company_model_admission") else "applicable_company_ev_to_revenue"
         new_rows.append(
             {
                 "weekly_rank": score["weekly_rank"],
@@ -616,6 +632,9 @@ def main() -> None:
                 "strongest_positive_evidence": valuation.get("strongest_positive_evidence", ""),
                 "strongest_negative_evidence": valuation.get("strongest_negative_evidence", ""),
                 "valuation_source": valuation.get("fundamental_source_url", ""),
+                "company_valuation_admission": json.dumps(valuation.get("company_model_admission", {}), sort_keys=True),
+                "valuation_method": valuation.get("metric_interpretation", {}).get("method_status", ""),
+                "valuation_horizon": valuation.get("metric_interpretation", {}).get("horizon", ""),
             }
         )
     write_csv(C9_NEW_RECOMMENDATIONS, new_rows, NEW_FIELDS)

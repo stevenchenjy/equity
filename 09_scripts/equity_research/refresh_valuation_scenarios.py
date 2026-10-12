@@ -377,11 +377,15 @@ def main() -> int:
             inputs["prior_diluted_shares"] = valuation_input(prior_shares, "shares", "prior-year comparable quarter", accepted_sec, [sec_id])
         bundle_records.append({"ticker": ticker, "inputs": inputs, "sources": sources})
 
+    from company_valuation import apply_company_models, REPORT_REL as COMPANY_REPORT_REL
+    scenario_records, company_status = apply_company_models(root=ROOT, scenarios=scenario_records,
+        baseline=updated_rows, fundamentals=fundamentals, market=market, current=now_et())
     scenario_payload = {
         "schema_version": "phase5r_valuation_scenarios_v1",
         "generated_at": iso_now(),
         "policy": str(POLICY_PATH.relative_to(ROOT)),
         "records": scenario_records,
+        "company_valuation_admission": company_status,
         "boundaries": {
             "research_only": True, "automatic_action_allowed": False,
             "broker_connected": False, "order_code_created": False,
@@ -407,8 +411,12 @@ def main() -> int:
         fundamentals=fundamentals, market=market,
         active_tickers={row["ticker"].upper() for row in baseline},
     )
+    from company_valuation import compose_admitted_inputs, retain_observations
+    composed_bundle = compose_admitted_inputs(composed_bundle, scenario_records, root=ROOT, market=market)
+    retain_observations(root=ROOT, scenarios=scenario_records, report=company_status, current=now_et())
     atomic_write_csv(BASELINE_PATH, list(updated_rows[0].keys()), updated_rows)
     atomic_write_json(SCENARIO_PATH, scenario_payload)
+    atomic_write_json(ROOT / COMPANY_REPORT_REL, company_status)
     atomic_write_json(ROOT / "04_data/equity_research/valuation_research_status.local.json", research_status)
     atomic_write_json(DEFAULT_BUNDLE_PATH, composed_bundle)
     complete = sum(record["status"] == "complete" for record in scenario_records)

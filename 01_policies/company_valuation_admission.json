@@ -1,0 +1,16 @@
+{
+  "schema_version": "equity_company_valuation_policy_v1",
+  "version": 1,
+  "enabled": true,
+  "owner_authorized_on": "2026-10-12",
+  "authority": "Owner explicitly requested implementation and deployment of the company-specific valuation production bridge on October 12. This route admits individually reviewed source-bound cases, not historical models by default or experimental strategies.",
+  "selection": "explicit_current_admission_over_policy_comparator",
+  "invalid_admission": "ticker_local_zero_shares_no_comparator_fallback",
+  "quality_thresholds": "unchanged_active_action_threshold_policy",
+  "sizing": "separate_current_source_bound_reviewed_allocation_required",
+  "immutable_assumptions": true,
+  "performance_validation": "not_established_by_software_admission",
+  "automatic_action_allowed": false,
+  "broker_connected": false,
+  "trade_placed": false
+}

@@ -167,6 +167,27 @@ class CapitalDecisionTests(unittest.TestCase):
         buy=next(r for r in sections if r['title']=='BUY — TEST');self.assertIn('$102.00',buy['body']);self.assertIn('planned loss $16.00',buy['body'])
         _,text,html=render_email(self.d)
         self.assertLess(text.index('BUY — TEST'),text.index('Candidate decisions'));self.assertIn('data-action-kind="buy"',html)
+    def test_admitted_company_case_is_background_and_does_not_create_order(self):
+        self.d['eligible_new_position_review_candidates'] = []
+        self.d['eligible_action_review_candidates'] = []
+        self.d['watch_candidates'][0].update(suggested_whole_shares=0,
+            valuation_method='admitted_source_bound_company_model', valuation_horizon='Next four reported quarters',
+            company_valuation_admission=json.dumps({'record_sha256': 'a'*64, 'version': 1}),
+            valuation_bear_price='80.00', valuation_base_price='140.00', valuation_bull_price='180.00',
+            current_price='101.00', expected_upside_pct='38.61', reward_to_risk_estimate='1.86',
+            maximum_review_price='106.67', gate_blockers='reviewed_allocation_missing')
+        self.d['capital_decision'] = self.build()
+        rows = self.d['capital_decision']['decisions']
+        self.assertTrue(all(r['order_draft'] is None and r['shares'] == 0 for r in rows))
+        sections = cards(self.d)
+        self.assertEqual({r['title'] for r in sections if r['title'] in {'BUY — none', 'SELL — none'}}, {'BUY — none', 'SELL — none'})
+        case = next(r for r in sections if r['title'] == 'Company valuation — TEST')
+        self.assertEqual(case['group'], 'background')
+        self.assertIn('$80.00 / $140.00 / $180.00', case['body'])
+        _, text, html = render_email(self.d)
+        self.assertLess(text.index('SELL — none'), text.index('Company valuation — TEST'))
+        self.assertIn('not a cleared buy limit', text)
+        self.assertIn('Company valuation', html)
     def _session_decision(self):
         self.v['current']=self.v['current']+timedelta(hours=15,minutes=20)
         self.v['open_orders']['as_of']=self.v['current'].isoformat()
