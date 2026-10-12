@@ -312,7 +312,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_authority_local_tactical_risk_is_zero",
-      "community": 78,
+      "community": 136,
       "norm_label": "local_tactical_risk_is_zero()"
     },
     {
@@ -342,7 +342,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_authority_rationale_62",
-      "community": 78,
+      "community": 136,
       "norm_label": "a local ledger containing only core holdings and terminal/no orders has no tacti"
     },
     {
@@ -382,7 +382,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_py_path",
-      "community": 25,
+      "community": 13,
       "norm_label": "path"
     },
     {
@@ -402,7 +402,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_write_csv",
-      "community": 64,
+      "community": 13,
       "norm_label": "write_csv()"
     },
     {
@@ -492,7 +492,7 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_load_positions",
-      "community": 25,
+      "community": 13,
       "norm_label": "load_positions()"
     },
     {
@@ -712,7 +712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_active_config",
-      "community": 31,
+      "community": 44,
       "norm_label": "active_config.py"
     },
     {
@@ -842,7 +842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_archived_momentum",
-      "community": 44,
+      "community": 10,
       "norm_label": "archived_momentum.py"
     },
     {
@@ -862,7 +862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_archived_momentum_rationale_1",
-      "community": 44,
+      "community": 10,
       "norm_label": "evaluate retained observations with their exact archived implementation.  only e"
     },
     {
@@ -1472,7 +1472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision",
-      "community": 66,
+      "community": 108,
       "norm_label": "capital_decision.py"
     },
     {
@@ -1482,7 +1482,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_num",
-      "community": 66,
+      "community": 108,
       "norm_label": "num()"
     },
     {
@@ -1492,7 +1492,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_py_any",
-      "community": 66,
+      "community": 108,
       "norm_label": "any"
     },
     {
@@ -1502,7 +1502,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_py_decimal",
-      "community": 66,
+      "community": 108,
       "norm_label": "decimal"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_money",
-      "community": 66,
+      "community": 108,
       "norm_label": "money()"
     },
     {
@@ -1522,7 +1522,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_codes",
-      "community": 66,
+      "community": 108,
       "norm_label": "codes()"
     },
     {
@@ -1532,7 +1532,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_binding",
-      "community": 66,
+      "community": 108,
       "norm_label": "binding()"
     },
     {
@@ -1542,7 +1542,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_py_path",
-      "community": 66,
+      "community": 108,
       "norm_label": "path"
     },
     {
@@ -1552,7 +1552,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_meaning",
-      "community": 66,
+      "community": 108,
       "norm_label": "meaning()"
     },
     {
@@ -1562,7 +1562,7 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_build",
-      "community": 66,
+      "community": 108,
       "norm_label": "build()"
     },
     {
@@ -1572,7 +1572,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_py_datetime",
-      "community": 66,
+      "community": 108,
       "norm_label": "datetime"
     },
     {
@@ -1582,7 +1582,7 @@
       "source_location": "L334",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_validate",
-      "community": 66,
+      "community": 108,
       "norm_label": "validate()"
     },
     {
@@ -1592,7 +1592,7 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_publish",
-      "community": 66,
+      "community": 108,
       "norm_label": "publish()"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_decision_rationale_1",
-      "community": 66,
+      "community": 108,
       "norm_label": "single final capital-decision adapter over existing reviewed policy owners.  a c"
     },
     {
@@ -1952,7 +1952,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_presentation",
-      "community": 252,
+      "community": 108,
       "norm_label": "capital_presentation.py"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_presentation_action_lines",
-      "community": 252,
+      "community": 108,
       "norm_label": "action_lines()"
     },
     {
@@ -1972,7 +1972,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_presentation_cards",
-      "community": 252,
+      "community": 108,
       "norm_label": "cards()"
     },
     {
@@ -1982,7 +1982,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_presentation_markdown",
-      "community": 252,
+      "community": 108,
       "norm_label": "markdown()"
     },
     {
@@ -1992,7 +1992,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_capital_presentation_rationale_1",
-      "community": 252,
+      "community": 108,
       "norm_label": "action-first presentation of the admitted capital contract; no sizing logic."
     },
     {
@@ -2532,7 +2532,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_core_entry",
-      "community": 5,
+      "community": 108,
       "norm_label": "core_entry.py"
     },
     {
@@ -2542,7 +2542,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "09_scripts_equity_research_core_entry_eligible_core_tranche",
-      "community": 5,
+      "community": 108,
       "norm_label": "eligible_core_tranche()"
     },
     {
@@ -2552,7 +2552,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_core_entry_py_any",
-      "community": 5,
+      "community": 108,
       "norm_label": "any"
     },
     {
@@ -2562,7 +2562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_core_entry_rationale_1",
-      "community": 5,
+      "community": 108,
       "norm_label": "existing dated broad-core entry admission; shared by decision and legacy output."
     },
     {
@@ -2572,7 +2572,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "09_scripts_equity_research_core_entry_rationale_8",
-      "community": 5,
+      "community": 108,
       "norm_label": "a same-session, exact core review that can be displayed and continued.      this"
     },
     {
@@ -2612,7 +2612,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_capital_allocation_validation",
-      "community": 74,
+      "community": 91,
       "norm_label": "create_capital_allocation_validation.py"
     },
     {
@@ -2622,7 +2622,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_capital_allocation_validation_number",
-      "community": 74,
+      "community": 91,
       "norm_label": "_number()"
     },
     {
@@ -2632,7 +2632,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_capital_allocation_validation_jsonl",
-      "community": 74,
+      "community": 91,
       "norm_label": "_jsonl()"
     },
     {
@@ -2642,7 +2642,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_capital_allocation_validation_py_path",
-      "community": 74,
+      "community": 91,
       "norm_label": "path"
     },
     {
@@ -2652,7 +2652,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_capital_allocation_validation_main",
-      "community": 74,
+      "community": 91,
       "norm_label": "main()"
     },
     {
@@ -3092,7 +3092,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_market_regime",
-      "community": 74,
+      "community": 57,
       "norm_label": "create_market_regime.py"
     },
     {
@@ -3102,7 +3102,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_market_regime_main",
-      "community": 74,
+      "community": 57,
       "norm_label": "main()"
     },
     {
@@ -3152,7 +3152,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_price_aware_action_plan",
-      "community": 25,
+      "community": 74,
       "norm_label": "create_price_aware_action_plan.py"
     },
     {
@@ -3172,7 +3172,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_research_backlog",
-      "community": 31,
+      "community": 44,
       "norm_label": "create_research_backlog.py"
     },
     {
@@ -3192,7 +3192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_research_opportunities",
-      "community": 9,
+      "community": 136,
       "norm_label": "create_research_opportunities.py"
     },
     {
@@ -3202,7 +3202,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_research_opportunities_main",
-      "community": 9,
+      "community": 136,
       "norm_label": "main()"
     },
     {
@@ -3212,7 +3212,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_research_opportunities_run_stage",
-      "community": 9,
+      "community": 136,
       "norm_label": "run_stage()"
     },
     {
@@ -3222,7 +3222,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_research_opportunities_py_path",
-      "community": 9,
+      "community": 136,
       "norm_label": "path"
     },
     {
@@ -3382,7 +3382,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_iso_now",
-      "community": 82,
+      "community": 88,
       "norm_label": "iso_now()"
     },
     {
@@ -3512,7 +3512,7 @@
       "source_location": "L278",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_read_json",
-      "community": 146,
+      "community": 9,
       "norm_label": "read_json()"
     },
     {
@@ -3522,7 +3522,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_py_path",
-      "community": 96,
+      "community": 64,
       "norm_label": "path"
     },
     {
@@ -3682,7 +3682,7 @@
       "source_location": "L608",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_notification_delivery_policy",
-      "community": 141,
+      "community": 93,
       "norm_label": "notification_delivery_policy()"
     },
     {
@@ -3732,7 +3732,7 @@
       "source_location": "L751",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_exclusivefilelock",
-      "community": 96,
+      "community": 0,
       "norm_label": "exclusivefilelock"
     },
     {
@@ -3742,7 +3742,7 @@
       "source_location": "L754",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_exclusivefilelock_init",
-      "community": 96,
+      "community": 64,
       "norm_label": ".__init__()"
     },
     {
@@ -3752,7 +3752,7 @@
       "source_location": "L772",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_exclusivefilelock_enter",
-      "community": 96,
+      "community": 88,
       "norm_label": ".__enter__()"
     },
     {
@@ -3762,7 +3762,7 @@
       "source_location": "L828",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_exclusivefilelock_exit",
-      "community": 96,
+      "community": 82,
       "norm_label": ".__exit__()"
     },
     {
@@ -3832,7 +3832,7 @@
       "source_location": "L620",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_rationale_620",
-      "community": 141,
+      "community": 93,
       "norm_label": "return event-driven eligibility independently of scheduler time."
     },
     {
@@ -3872,7 +3872,7 @@
       "source_location": "L752",
       "_origin": "ast",
       "id": "09_scripts_equity_research_daily_common_rationale_752",
-      "community": 96,
+      "community": 0,
       "norm_label": "process lock using flock over a private, non-linked regular file."
     },
     {
@@ -4442,7 +4442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule",
-      "community": 82,
+      "community": 104,
       "norm_label": "delivery_schedule.py"
     },
     {
@@ -4452,7 +4452,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_configured_delivery_windows",
-      "community": 82,
+      "community": 104,
       "norm_label": "configured_delivery_windows()"
     },
     {
@@ -4462,7 +4462,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_py_any",
-      "community": 82,
+      "community": 104,
       "norm_label": "any"
     },
     {
@@ -4472,7 +4472,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_active_delivery_window",
-      "community": 82,
+      "community": 104,
       "norm_label": "active_delivery_window()"
     },
     {
@@ -4482,7 +4482,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_py_datetime",
-      "community": 82,
+      "community": 104,
       "norm_label": "datetime"
     },
     {
@@ -4492,7 +4492,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_delivery_window_by_id",
-      "community": 82,
+      "community": 104,
       "norm_label": "delivery_window_by_id()"
     },
     {
@@ -4502,7 +4502,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_rationale_1",
-      "community": 82,
+      "community": 104,
       "norm_label": "stable owner-attention windows; clocks never confer trading eligibility."
     },
     {
@@ -4512,7 +4512,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "09_scripts_equity_research_delivery_schedule_rationale_12",
-      "community": 82,
+      "community": 104,
       "norm_label": "return explicit windows, retaining one-window legacy configuration reads."
     },
     {
@@ -4532,7 +4532,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_equity_research_earnings_incorporation_secpayload",
-      "community": 255,
+      "community": 76,
       "norm_label": "secpayload"
     },
     {
@@ -4542,7 +4542,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "dict",
-      "community": 255,
+      "community": 76,
       "norm_label": "dict"
     },
     {
@@ -4682,7 +4682,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_equity_research_earnings_incorporation_rationale_27",
-      "community": 255,
+      "community": 76,
       "norm_label": "json object with out-of-band raw-byte receipt (never inserted in facts)."
     },
     {
@@ -4702,7 +4702,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_email_brief",
-      "community": 44,
+      "community": 34,
       "norm_label": "email_brief.py"
     },
     {
@@ -4762,7 +4762,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "09_scripts_equity_research_email_brief_shares",
-      "community": 34,
+      "community": 108,
       "norm_label": "shares()"
     },
     {
@@ -4882,7 +4882,7 @@
       "source_location": "L460",
       "_origin": "ast",
       "id": "09_scripts_equity_research_email_brief_build_discovery_view",
-      "community": 167,
+      "community": 34,
       "norm_label": "build_discovery_view()"
     },
     {
@@ -4972,7 +4972,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_email_brief_rationale_1",
-      "community": 44,
+      "community": 34,
       "norm_label": "deterministic, action-first email presentation; public display configuration onl"
     },
     {
@@ -5022,7 +5022,7 @@
       "source_location": "L461",
       "_origin": "ast",
       "id": "09_scripts_equity_research_email_brief_rationale_461",
-      "community": 167,
+      "community": 34,
       "norm_label": "describe independent price/volume discovery without granting trade status."
     },
     {
@@ -5792,7 +5792,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_execution_common_py_path",
-      "community": 134,
+      "community": 25,
       "norm_label": "path"
     },
     {
@@ -5802,7 +5802,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "09_scripts_equity_research_execution_common_allocation_policy_proof_hashes",
-      "community": 52,
+      "community": 25,
       "norm_label": "allocation_policy_proof_hashes()"
     },
     {
@@ -5812,7 +5812,7 @@
       "source_location": "L140",
       "_origin": "ast",
       "id": "09_scripts_equity_research_execution_common_allocation_policy_migration_equivalence",
-      "community": 134,
+      "community": 25,
       "norm_label": "allocation_policy_migration_equivalence()"
     },
     {
@@ -5942,7 +5942,7 @@
       "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_equity_research_execution_common_rationale_109",
-      "community": 52,
+      "community": 25,
       "norm_label": "bind private policy proofs for publication, never substitute old facts."
     },
     {
@@ -5952,7 +5952,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "09_scripts_equity_research_execution_common_rationale_144",
-      "community": 134,
+      "community": 25,
       "norm_label": "prove one applied metadata-only transition; none means no such claim.      histo"
     },
     {
@@ -6092,7 +6092,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status",
-      "community": 101,
+      "community": 103,
       "norm_label": "generate_current_status.py"
     },
     {
@@ -6102,7 +6102,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_shadow_evaluation_health",
-      "community": 101,
+      "community": 103,
       "norm_label": "shadow_evaluation_health()"
     },
     {
@@ -6112,7 +6112,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_py_any",
-      "community": 101,
+      "community": 103,
       "norm_label": "any"
     },
     {
@@ -6122,7 +6122,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_py_datetime",
-      "community": 101,
+      "community": 103,
       "norm_label": "datetime"
     },
     {
@@ -6132,7 +6132,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_momentum_review_health",
-      "community": 101,
+      "community": 103,
       "norm_label": "momentum_review_health()"
     },
     {
@@ -6142,7 +6142,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_momentum_health",
-      "community": 101,
+      "community": 103,
       "norm_label": "momentum_health()"
     },
     {
@@ -6152,7 +6152,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_workflow_health",
-      "community": 163,
+      "community": 103,
       "norm_label": "workflow_health()"
     },
     {
@@ -6162,7 +6162,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_deployment_health",
-      "community": 101,
+      "community": 103,
       "norm_label": "deployment_health()"
     },
     {
@@ -6172,7 +6172,7 @@
       "source_location": "L261",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_jsonl_count",
-      "community": 101,
+      "community": 103,
       "norm_label": "jsonl_count()"
     },
     {
@@ -6182,7 +6182,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_py_path",
-      "community": 101,
+      "community": 103,
       "norm_label": "path"
     },
     {
@@ -6192,7 +6192,7 @@
       "source_location": "L267",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_main",
-      "community": 101,
+      "community": 103,
       "norm_label": "main()"
     },
     {
@@ -6202,7 +6202,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_rationale_52",
-      "community": 101,
+      "community": 103,
       "norm_label": "report independent shadow health without altering canonical eligibility."
     },
     {
@@ -6212,7 +6212,7 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_rationale_90",
-      "community": 101,
+      "community": 103,
       "norm_label": "only a current, successful advisory packet can advertise owner readiness."
     },
     {
@@ -6222,7 +6222,7 @@
       "source_location": "L120",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_rationale_120",
-      "community": 101,
+      "community": 103,
       "norm_label": "an advisory file cannot break status rendering or hide a failed refresh."
     },
     {
@@ -6232,7 +6232,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "09_scripts_equity_research_generate_current_status_rationale_158",
-      "community": 163,
+      "community": 103,
       "norm_label": "keep operational completion, maintained views, and price readiness separate."
     },
     {
@@ -7262,7 +7262,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_equity_research_market_discovery_noredirect",
-      "community": 16,
+      "community": 114,
       "norm_label": "noredirect"
     },
     {
@@ -7272,7 +7272,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_market_discovery_py_httpredirecthandler",
-      "community": 16,
+      "community": 114,
       "norm_label": "httpredirecthandler"
     },
     {
@@ -7282,7 +7282,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "09_scripts_equity_research_market_discovery_noredirect_redirect_request",
-      "community": 16,
+      "community": 114,
       "norm_label": ".redirect_request()"
     },
     {
@@ -8222,7 +8222,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_news_schedule",
-      "community": 56,
+      "community": 99,
       "norm_label": "news_schedule.py"
     },
     {
@@ -8232,7 +8232,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_news_schedule_run_due_news_checks",
-      "community": 56,
+      "community": 99,
       "norm_label": "run_due_news_checks()"
     },
     {
@@ -8242,7 +8242,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_news_schedule_py_datetime",
-      "community": 56,
+      "community": 99,
       "norm_label": "datetime"
     },
     {
@@ -8252,7 +8252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_news_schedule_rationale_1",
-      "community": 56,
+      "community": 99,
       "norm_label": "independent official-news checks using the existing serialized scheduler.  no se"
     },
     {
@@ -8812,7 +8812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_opportunity_measurement",
-      "community": 42,
+      "community": 98,
       "norm_label": "opportunity_measurement.py"
     },
     {
@@ -8822,7 +8822,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_equity_research_opportunity_measurement_measure_paths",
-      "community": 42,
+      "community": 98,
       "norm_label": "measure_paths()"
     },
     {
@@ -8832,7 +8832,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_opportunity_measurement_py_path",
-      "community": 42,
+      "community": 98,
       "norm_label": "path"
     },
     {
@@ -8842,7 +8842,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_opportunity_measurement_py_datetime",
-      "community": 42,
+      "community": 98,
       "norm_label": "datetime"
     },
     {
@@ -8852,7 +8852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_opportunity_measurement_rationale_1",
-      "community": 42,
+      "community": 98,
       "norm_label": "prospective observation paths, including deferred/rejected names; no trades.  en"
     },
     {
@@ -9272,7 +9272,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction",
-      "community": 31,
+      "community": 44,
       "norm_label": "portfolio_construction.py"
     },
     {
@@ -9282,7 +9282,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_passed_confidence",
-      "community": 65,
+      "community": 31,
       "norm_label": "_passed_confidence()"
     },
     {
@@ -9302,7 +9302,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_individual_sizing_decision",
-      "community": 65,
+      "community": 31,
       "norm_label": "individual_sizing_decision()"
     },
     {
@@ -9312,7 +9312,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_py_any",
-      "community": 91,
+      "community": 31,
       "norm_label": "any"
     },
     {
@@ -9322,7 +9322,7 @@
       "source_location": "L178",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_core_starter_decision",
-      "community": 91,
+      "community": 31,
       "norm_label": "core_starter_decision()"
     },
     {
@@ -9342,7 +9342,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_rationale_59",
-      "community": 65,
+      "community": 31,
       "norm_label": "return the highest supported sizing tier and a feasible share count."
     },
     {
@@ -9352,7 +9352,7 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "09_scripts_equity_research_portfolio_construction_rationale_192",
-      "community": 91,
+      "community": 31,
       "norm_label": "size one staged broad-market core review without using stock valuation."
     },
     {
@@ -9362,7 +9362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies",
-      "community": 98,
+      "community": 108,
       "norm_label": "production_strategies.py"
     },
     {
@@ -9372,7 +9372,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_registry",
-      "community": 98,
+      "community": 108,
       "norm_label": "registry()"
     },
     {
@@ -9382,7 +9382,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_py_path",
-      "community": 98,
+      "community": 108,
       "norm_label": "path"
     },
     {
@@ -9392,7 +9392,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_admit",
-      "community": 98,
+      "community": 108,
       "norm_label": "admit()"
     },
     {
@@ -9402,7 +9402,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_py_any",
-      "community": 98,
+      "community": 108,
       "norm_label": "any"
     },
     {
@@ -9412,7 +9412,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_py_datetime",
-      "community": 98,
+      "community": 108,
       "norm_label": "datetime"
     },
     {
@@ -9422,7 +9422,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_select",
-      "community": 98,
+      "community": 108,
       "norm_label": "select()"
     },
     {
@@ -9432,7 +9432,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_production_strategies_rationale_1",
-      "community": 98,
+      "community": 108,
       "norm_label": "versioned admission of policy adapters; never experiment promotion by sampling."
     },
     {
@@ -9612,7 +9612,7 @@
       "source_location": "L354",
       "_origin": "ast",
       "id": "09_scripts_equity_research_refresh_daily_evidence_recent_filings",
-      "community": 15,
+      "community": 111,
       "norm_label": "recent_filings()"
     },
     {
@@ -10872,7 +10872,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs",
-      "community": 65,
+      "community": 74,
       "norm_label": "regenerate_portfolio_outputs.py"
     },
     {
@@ -10882,7 +10882,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_price_unverified_score",
-      "community": 65,
+      "community": 74,
       "norm_label": "price_unverified_score()"
     },
     {
@@ -10892,7 +10892,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_price_unverified_recommendation",
-      "community": 65,
+      "community": 74,
       "norm_label": "price_unverified_recommendation()"
     },
     {
@@ -10902,7 +10902,7 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_reviewed_allocation_semantics",
-      "community": 65,
+      "community": 74,
       "norm_label": "reviewed_allocation_semantics()"
     },
     {
@@ -10922,7 +10922,7 @@
       "source_location": "L222",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_rank_candidate_budget_rows",
-      "community": 65,
+      "community": 74,
       "norm_label": "rank_candidate_budget_rows()"
     },
     {
@@ -10942,7 +10942,7 @@
       "source_location": "L268",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_run_children",
-      "community": 65,
+      "community": 74,
       "norm_label": "run_children()"
     },
     {
@@ -10952,7 +10952,7 @@
       "source_location": "L281",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_main",
-      "community": 65,
+      "community": 74,
       "norm_label": "main()"
     },
     {
@@ -10962,7 +10962,7 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_rationale_194",
-      "community": 65,
+      "community": 74,
       "norm_label": "retain investment meaning, excluding clock-only plan renewals."
     },
     {
@@ -10982,7 +10982,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "09_scripts_equity_research_regenerate_portfolio_outputs_rationale_223",
-      "community": 65,
+      "community": 74,
       "norm_label": "allocate new capital by evidence score, without a held-name preference."
     },
     {
@@ -11302,7 +11302,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities",
-      "community": 9,
+      "community": 136,
       "norm_label": "research_opportunities.py"
     },
     {
@@ -11312,7 +11312,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_held_tickers",
-      "community": 9,
+      "community": 136,
       "norm_label": "held_tickers()"
     },
     {
@@ -11322,7 +11322,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_py_path",
-      "community": 9,
+      "community": 136,
       "norm_label": "path"
     },
     {
@@ -11332,7 +11332,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_priority",
-      "community": 9,
+      "community": 136,
       "norm_label": "priority()"
     },
     {
@@ -11342,7 +11342,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_negative_assessment_wait",
-      "community": 9,
+      "community": 136,
       "norm_label": "negative_assessment_wait()"
     },
     {
@@ -11352,7 +11352,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_py_datetime",
-      "community": 9,
+      "community": 136,
       "norm_label": "datetime"
     },
     {
@@ -11362,7 +11362,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_elapsed_sessions",
-      "community": 9,
+      "community": 136,
       "norm_label": "elapsed_sessions()"
     },
     {
@@ -11372,7 +11372,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_base_metrics",
-      "community": 9,
+      "community": 136,
       "norm_label": "_base_metrics()"
     },
     {
@@ -11392,7 +11392,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_objective",
-      "community": 9,
+      "community": 66,
       "norm_label": "objective()"
     },
     {
@@ -11402,7 +11402,7 @@
       "source_location": "L225",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_publish_view",
-      "community": 9,
+      "community": 136,
       "norm_label": "publish_view()"
     },
     {
@@ -11412,7 +11412,7 @@
       "source_location": "L284",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_read_report",
-      "community": 9,
+      "community": 66,
       "norm_label": "read_report()"
     },
     {
@@ -11432,7 +11432,7 @@
       "source_location": "L321",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_render_report",
-      "community": 9,
+      "community": 136,
       "norm_label": "render_report()"
     },
     {
@@ -11442,7 +11442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_rationale_1",
-      "community": 9,
+      "community": 136,
       "norm_label": "durable attention orchestration; existing decision/risk modules retain capital."
     },
     {
@@ -11452,7 +11452,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_rationale_35",
-      "community": 9,
+      "community": 136,
       "norm_label": "one authoritative attention priority used by intake and backlog adapter."
     },
     {
@@ -11462,7 +11462,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_equity_research_research_opportunities_rationale_45",
-      "community": 9,
+      "community": 136,
       "norm_label": "defer duplicate research only from an already validated attention view.      a n"
     },
     {
@@ -11802,7 +11802,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_capital_escalation",
-      "community": 104,
+      "community": 7,
       "norm_label": "run_capital_escalation.py"
     },
     {
@@ -11812,7 +11812,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_capital_escalation_run",
-      "community": 104,
+      "community": 7,
       "norm_label": "run()"
     },
     {
@@ -11822,7 +11822,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_capital_escalation_py_path",
-      "community": 104,
+      "community": 7,
       "norm_label": "path"
     },
     {
@@ -11832,7 +11832,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_capital_escalation_main",
-      "community": 104,
+      "community": 7,
       "norm_label": "main()"
     },
     {
@@ -11842,7 +11842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_decision_pipeline",
-      "community": 82,
+      "community": 104,
       "norm_label": "run_daily_decision_pipeline.py"
     },
     {
@@ -11862,7 +11862,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_decision_pipeline_parse_aware_timestamp",
-      "community": 82,
+      "community": 104,
       "norm_label": "_parse_aware_timestamp()"
     },
     {
@@ -11872,7 +11872,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_decision_pipeline_py_datetime",
-      "community": 82,
+      "community": 104,
       "norm_label": "datetime"
     },
     {
@@ -11882,7 +11882,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_decision_pipeline_refresh_readiness",
-      "community": 82,
+      "community": 104,
       "norm_label": "refresh_readiness()"
     },
     {
@@ -11942,7 +11942,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_decision_pipeline_rationale_57",
-      "community": 82,
+      "community": 104,
       "norm_label": "require today's complete, latest-published-session handoff before delivery."
     },
     {
@@ -11952,7 +11952,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh",
-      "community": 104,
+      "community": 44,
       "norm_label": "run_daily_refresh.py"
     },
     {
@@ -11962,7 +11962,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh_record_work_step",
-      "community": 104,
+      "community": 7,
       "norm_label": "_record_work_step()"
     },
     {
@@ -11972,7 +11972,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh_py_any",
-      "community": 104,
+      "community": 7,
       "norm_label": "any"
     },
     {
@@ -11982,7 +11982,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh_run_step",
-      "community": 104,
+      "community": 7,
       "norm_label": "run_step()"
     },
     {
@@ -11992,7 +11992,7 @@
       "source_location": "L216",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh_safe_check",
-      "community": 104,
+      "community": 82,
       "norm_label": "safe_check()"
     },
     {
@@ -12012,7 +12012,7 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_refresh_main",
-      "community": 104,
+      "community": 82,
       "norm_label": "main()"
     },
     {
@@ -12202,7 +12202,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_daily_scheduler",
-      "community": 82,
+      "community": 104,
       "norm_label": "run_daily_scheduler.py"
     },
     {
@@ -12232,7 +12232,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data",
-      "community": 89,
+      "community": 77,
       "norm_label": "run_full_universe_market_data.py"
     },
     {
@@ -12242,7 +12242,7 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_timestamp",
-      "community": 89,
+      "community": 253,
       "norm_label": "timestamp()"
     },
     {
@@ -12332,7 +12332,7 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_number",
-      "community": 89,
+      "community": 77,
       "norm_label": "number()"
     },
     {
@@ -12352,7 +12352,7 @@
       "source_location": "L160",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_quality_label",
-      "community": 89,
+      "community": 77,
       "norm_label": "quality_label()"
     },
     {
@@ -12362,7 +12362,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_source_failure_code",
-      "community": 77,
+      "community": 253,
       "norm_label": "source_failure_code()"
     },
     {
@@ -12372,7 +12372,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_py_exception",
-      "community": 77,
+      "community": 253,
       "norm_label": "exception"
     },
     {
@@ -12382,7 +12382,7 @@
       "source_location": "L176",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_smoke_failure_code",
-      "community": 89,
+      "community": 253,
       "norm_label": "smoke_failure_code()"
     },
     {
@@ -12512,7 +12512,7 @@
       "source_location": "L580",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_write_decision",
-      "community": 89,
+      "community": 253,
       "norm_label": "write_decision()"
     },
     {
@@ -12522,7 +12522,7 @@
       "source_location": "L645",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_write_data_report",
-      "community": 89,
+      "community": 253,
       "norm_label": "write_data_report()"
     },
     {
@@ -12542,7 +12542,7 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_finite_number",
-      "community": 89,
+      "community": 77,
       "norm_label": "finite_number()"
     },
     {
@@ -12562,7 +12562,7 @@
       "source_location": "L708",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_parse_iso_datetime",
-      "community": 89,
+      "community": 77,
       "norm_label": "parse_iso_datetime()"
     },
     {
@@ -12582,7 +12582,7 @@
       "source_location": "L882",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_full_universe_rows_are_committable",
-      "community": 89,
+      "community": 77,
       "norm_label": "full_universe_rows_are_committable()"
     },
     {
@@ -12622,7 +12622,7 @@
       "source_location": "L1176",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_massive_auth_probe_exit_code",
-      "community": 89,
+      "community": 253,
       "norm_label": "massive_auth_probe_exit_code()"
     },
     {
@@ -12632,7 +12632,7 @@
       "source_location": "L1190",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_main",
-      "community": 89,
+      "community": 253,
       "norm_label": "main()"
     },
     {
@@ -12642,7 +12642,7 @@
       "source_location": "L1219",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_run_main",
-      "community": 89,
+      "community": 253,
       "norm_label": "_run_main()"
     },
     {
@@ -12652,7 +12652,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_py_namespace",
-      "community": 89,
+      "community": 253,
       "norm_label": "namespace"
     },
     {
@@ -12662,7 +12662,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_rationale_169",
-      "community": 77,
+      "community": 253,
       "norm_label": "map source exceptions to finite, non-sensitive audit codes."
     },
     {
@@ -12722,7 +12722,7 @@
       "source_location": "L889",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_rationale_889",
-      "community": 89,
+      "community": 77,
       "norm_label": "accept a live b2 response only when every covered row is usable.      a successf"
     },
     {
@@ -12762,7 +12762,7 @@
       "source_location": "L1177",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_full_universe_market_data_rationale_1177",
-      "community": 89,
+      "community": 253,
       "norm_label": "construct the massive client without i/o and disclose only fixed status."
     },
     {
@@ -12932,7 +12932,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_runtime_scheduler_validate_runtime_evidence_chain",
-      "community": 0,
+      "community": 19,
       "norm_label": "_validate_runtime_evidence_chain()"
     },
     {
@@ -13142,7 +13142,7 @@
       "source_location": "L255",
       "_origin": "ast",
       "id": "09_scripts_equity_research_run_runtime_scheduler_rationale_255",
-      "community": 0,
+      "community": 19,
       "norm_label": "validate extension hashes, chain continuity, and audit bindings."
     },
     {
@@ -13722,7 +13722,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email",
-      "community": 5,
+      "community": 108,
       "norm_label": "scheduled_email.py"
     },
     {
@@ -13732,7 +13732,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_core_tranche_line",
-      "community": 5,
+      "community": 108,
       "norm_label": "core_tranche_line()"
     },
     {
@@ -13742,7 +13742,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_py_any",
-      "community": 5,
+      "community": 108,
       "norm_label": "any"
     },
     {
@@ -13752,7 +13752,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_owner_check_window",
-      "community": 5,
+      "community": 108,
       "norm_label": "owner_check_window()"
     },
     {
@@ -13762,7 +13762,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_core_tranche_steps",
-      "community": 5,
+      "community": 108,
       "norm_label": "core_tranche_steps()"
     },
     {
@@ -13772,7 +13772,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_current_tactical_drafts",
-      "community": 5,
+      "community": 108,
       "norm_label": "_current_tactical_drafts()"
     },
     {
@@ -13782,7 +13782,7 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_order_lines",
-      "community": 5,
+      "community": 108,
       "norm_label": "_order_lines()"
     },
     {
@@ -13792,7 +13792,7 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_cards",
-      "community": 5,
+      "community": 108,
       "norm_label": "cards()"
     },
     {
@@ -13802,7 +13802,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_rationale_1",
-      "community": 5,
+      "community": 108,
       "norm_label": "brief english cards for the maintained workflow, without raw diagnostics."
     },
     {
@@ -13812,7 +13812,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_rationale_49",
-      "community": 5,
+      "community": 108,
       "norm_label": "only complete, explicitly eligible current drafts may carry numbers."
     },
     {
@@ -13822,7 +13822,7 @@
       "source_location": "L228",
       "_origin": "ast",
       "id": "09_scripts_equity_research_scheduled_email_rationale_228",
-      "community": 5,
+      "community": 108,
       "norm_label": "owner actions only; full research and queue diagnostics stay local.      present"
     },
     {
@@ -13932,7 +13932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance",
-      "community": 12,
+      "community": 111,
       "norm_label": "sec_acceptance.py"
     },
     {
@@ -13972,7 +13972,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_normalize_acceptance_timestamp",
-      "community": 12,
+      "community": 111,
       "norm_label": "normalize_acceptance_timestamp()"
     },
     {
@@ -13982,7 +13982,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_py_any",
-      "community": 12,
+      "community": 111,
       "norm_label": "any"
     },
     {
@@ -13992,7 +13992,7 @@
       "source_location": "L115",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_normalize_generated_at",
-      "community": 12,
+      "community": 111,
       "norm_label": "_normalize_generated_at()"
     },
     {
@@ -14012,7 +14012,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_validate_acceptance_record",
-      "community": 12,
+      "community": 111,
       "norm_label": "validate_acceptance_record()"
     },
     {
@@ -14042,7 +14042,7 @@
       "source_location": "L246",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_load_acceptance_index",
-      "community": 12,
+      "community": 111,
       "norm_label": "load_acceptance_index()"
     },
     {
@@ -14052,7 +14052,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_py_path",
-      "community": 12,
+      "community": 111,
       "norm_label": "path"
     },
     {
@@ -14062,7 +14062,7 @@
       "source_location": "L254",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_load_immutable_acceptance_index",
-      "community": 12,
+      "community": 111,
       "norm_label": "load_immutable_acceptance_index()"
     },
     {
@@ -14072,7 +14072,7 @@
       "source_location": "L269",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_acceptance_map",
-      "community": 12,
+      "community": 111,
       "norm_label": "acceptance_map()"
     },
     {
@@ -14092,7 +14092,7 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_reconciliation_id",
-      "community": 12,
+      "community": 111,
       "norm_label": "_reconciliation_id()"
     },
     {
@@ -14102,7 +14102,7 @@
       "source_location": "L307",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_make_reconciliation_row",
-      "community": 12,
+      "community": 111,
       "norm_label": "_make_reconciliation_row()"
     },
     {
@@ -14112,7 +14112,7 @@
       "source_location": "L336",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_validate_reconciliation_row",
-      "community": 12,
+      "community": 111,
       "norm_label": "_validate_reconciliation_row()"
     },
     {
@@ -14152,7 +14152,7 @@
       "source_location": "L448",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_same_eastern_wall_clock_representation",
-      "community": 12,
+      "community": 111,
       "norm_label": "_same_eastern_wall_clock_representation()"
     },
     {
@@ -14162,7 +14162,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_py_datetime",
-      "community": 12,
+      "community": 111,
       "norm_label": "datetime"
     },
     {
@@ -14172,7 +14172,7 @@
       "source_location": "L484",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_reconcile_current_acceptance_records",
-      "community": 12,
+      "community": 111,
       "norm_label": "reconcile_current_acceptance_records()"
     },
     {
@@ -14202,7 +14202,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_100",
-      "community": 12,
+      "community": 111,
       "norm_label": "return one timezone-aware iso timestamp or fail closed."
     },
     {
@@ -14212,7 +14212,7 @@
       "source_location": "L257",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_257",
-      "community": 12,
+      "community": 111,
       "norm_label": "load the historical index only when the retained artifact exists.      the times"
     },
     {
@@ -14222,7 +14222,7 @@
       "source_location": "L294",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_294",
-      "community": 12,
+      "community": 111,
       "norm_label": "return a stable identifier for one timestamp-only reconciliation."
     },
     {
@@ -14232,7 +14232,7 @@
       "source_location": "L337",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_337",
-      "community": 12,
+      "community": 111,
       "norm_label": "validate one durable log row without mutating it."
     },
     {
@@ -14272,7 +14272,7 @@
       "source_location": "L452",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_452",
-      "community": 12,
+      "community": 111,
       "norm_label": "recognize only the documented utc-versus-us-eastern representation shift.      h"
     },
     {
@@ -14282,7 +14282,7 @@
       "source_location": "L490",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_rationale_490",
-      "community": 12,
+      "community": 111,
       "norm_label": "compare current official sec records to the immutable acceptance index.      acc"
     },
     {
@@ -14312,7 +14312,7 @@
       "source_location": "L104",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_extensions_raw_file_sha256",
-      "community": 111,
+      "community": 19,
       "norm_label": "raw_file_sha256()"
     },
     {
@@ -14562,7 +14562,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_equity_research_sec_acceptance_extensions_rationale_105",
-      "community": 111,
+      "community": 19,
       "norm_label": "bind an extension to exact immutable historical-index bytes."
     },
     {
@@ -14942,7 +14942,7 @@
       "source_location": "L156",
       "_origin": "ast",
       "id": "09_scripts_equity_research_send_daily_email_cycle_is_blocked",
-      "community": 93,
+      "community": 88,
       "norm_label": "cycle_is_blocked()"
     },
     {
@@ -16102,7 +16102,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_account_authority",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_account_authority.py"
     },
     {
@@ -16452,7 +16452,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_action_email_layout_actionemaillayouttests",
-      "community": 140,
+      "community": 32,
       "norm_label": "actionemaillayouttests"
     },
     {
@@ -16462,7 +16462,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_action_email_layout_actionemaillayouttests_test_current_sell_is_prominent_before_holdings_and_old_order_prices",
-      "community": 140,
+      "community": 32,
       "norm_label": ".test_current_sell_is_prominent_before_holdings_and_old_order_prices()"
     },
     {
@@ -16482,7 +16482,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_action_email_layout_actionemaillayouttests_test_expiry_and_unverified_order_inventory_never_gain_buy_price_from_layout",
-      "community": 140,
+      "community": 32,
       "norm_label": ".test_expiry_and_unverified_order_inventory_never_gain_buy_price_from_layout()"
     },
     {
@@ -16492,7 +16492,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_action_email_layout_actionemaillayouttests_test_afternoon_does_not_repeat_assumed_filled_orders_in_action_cards",
-      "community": 140,
+      "community": 32,
       "norm_label": ".test_afternoon_does_not_repeat_assumed_filled_orders_in_action_cards()"
     },
     {
@@ -16552,7 +16552,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production",
-      "community": 31,
+      "community": 44,
       "norm_label": "test_active_production.py"
     },
     {
@@ -16562,7 +16562,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests",
-      "community": 141,
+      "community": 31,
       "norm_label": "activeproductiontests"
     },
     {
@@ -16572,7 +16572,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_notification_policy_is_event_driven_and_clock_independent",
-      "community": 141,
+      "community": 93,
       "norm_label": ".test_notification_policy_is_event_driven_and_clock_independent()"
     },
     {
@@ -16582,7 +16582,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_active_configuration_holds_cost_and_execution_boundaries",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_active_configuration_holds_cost_and_execution_boundaries()"
     },
     {
@@ -16592,7 +16592,7 @@
       "source_location": "L103",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_recommendation_labels_are_explicit",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_recommendation_labels_are_explicit()"
     },
     {
@@ -16602,7 +16602,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_etf_valuation_is_explicitly_not_applicable",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_etf_valuation_is_explicitly_not_applicable()"
     },
     {
@@ -16622,7 +16622,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_hold_email_does_not_invent_an_action_scenario",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_hold_email_does_not_invent_an_action_scenario()"
     },
     {
@@ -16632,7 +16632,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_evidence_tier_uses_company_reviewed_allocation_not_fixed_small_target",
-      "community": 65,
+      "community": 31,
       "norm_label": ".test_evidence_tier_uses_company_reviewed_allocation_not_fixed_small_target()"
     },
     {
@@ -16642,7 +16642,7 @@
       "source_location": "L197",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_core_starter_is_whole_share_and_not_forced",
-      "community": 91,
+      "community": 31,
       "norm_label": ".test_core_starter_is_whole_share_and_not_forced()"
     },
     {
@@ -16652,7 +16652,7 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_growth_band_selection_is_deterministic",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_growth_band_selection_is_deterministic()"
     },
     {
@@ -16662,7 +16662,7 @@
       "source_location": "L243",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_deterministic_policy_is_an_allowed_valuation_source",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_deterministic_policy_is_an_allowed_valuation_source()"
     },
     {
@@ -16672,7 +16672,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_current_status_observes_the_just_persisted_refresh_outcome",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_current_status_observes_the_just_persisted_refresh_outcome()"
     },
     {
@@ -16682,7 +16682,7 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_degraded_refresh_returns_nonzero_for_scheduler_recovery",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_degraded_refresh_returns_nonzero_for_scheduler_recovery()"
     },
     {
@@ -16692,7 +16692,7 @@
       "source_location": "L317",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_historical_backfill_is_not_a_current_material_event",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_historical_backfill_is_not_a_current_material_event()"
     },
     {
@@ -16702,7 +16702,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_removed_model_surface_is_absent_from_scheduler",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_removed_model_surface_is_absent_from_scheduler()"
     },
     {
@@ -16712,7 +16712,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
-      "community": 141,
+      "community": 31,
       "norm_label": ".test_adverse_complete_valuation_opens_only_a_trim_review()"
     },
     {
@@ -16732,7 +16732,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_allocation_candidate_flow",
-      "community": 31,
+      "community": 44,
       "norm_label": "test_allocation_candidate_flow.py"
     },
     {
@@ -16882,7 +16882,7 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_allocation_candidate_flow_completecandidatepublicationtests",
-      "community": 31,
+      "community": 101,
       "norm_label": "completecandidatepublicationtests"
     },
     {
@@ -16892,7 +16892,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_allocation_candidate_flow_completecandidatepublicationtests_test_eligible_seventh_row_and_held_add_are_retained",
-      "community": 31,
+      "community": 101,
       "norm_label": ".test_eligible_seventh_row_and_held_add_are_retained()"
     },
     {
@@ -16902,7 +16902,7 @@
       "source_location": "L148",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_allocation_candidate_flow_completecandidatepublicationtests_test_material_allocation_change_resets_stability_even_when_shares_match",
-      "community": 31,
+      "community": 101,
       "norm_label": ".test_material_allocation_change_resets_stability_even_when_shares_match()"
     },
     {
@@ -16912,7 +16912,7 @@
       "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_allocation_candidate_flow_completecandidatepublicationtests_test_blank_allocation_metadata_preserves_legacy_core_fingerprint",
-      "community": 31,
+      "community": 101,
       "norm_label": ".test_blank_allocation_metadata_preserves_legacy_core_fingerprint()"
     },
     {
@@ -17312,7 +17312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_archived_momentum",
-      "community": 44,
+      "community": 10,
       "norm_label": "test_archived_momentum.py"
     },
     {
@@ -17932,7 +17932,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_capital_decision",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_capital_decision.py"
     },
     {
@@ -18672,7 +18672,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_capital_escalation_runner",
-      "community": 104,
+      "community": 44,
       "norm_label": "test_capital_escalation_runner.py"
     },
     {
@@ -19132,7 +19132,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_compact_email_compactreviewtests",
-      "community": 81,
+      "community": 32,
       "norm_label": "compactreviewtests"
     },
     {
@@ -19142,7 +19142,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_compact_email_compactreviewtests_test_compact_keeps_conditions_dates_and_escapes_without_second_report",
-      "community": 81,
+      "community": 32,
       "norm_label": ".test_compact_keeps_conditions_dates_and_escapes_without_second_report()"
     },
     {
@@ -19152,7 +19152,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_compact_email_compactreviewtests_test_new_research_does_not_claim_formatting_only",
-      "community": 81,
+      "community": 32,
       "norm_label": ".test_new_research_does_not_claim_formatting_only()"
     },
     {
@@ -19162,7 +19162,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_compact_email_compactreviewtests_test_compact_retains_source_validation",
-      "community": 81,
+      "community": 32,
       "norm_label": ".test_compact_retains_source_validation()"
     },
     {
@@ -19172,14 +19172,14 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation",
-      "community": 121,
+      "community": 18,
       "norm_label": "test_company_valuation.py"
     },
     {
       "label": "write_json()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L25",
+      "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_write_json",
       "community": 121,
@@ -19189,7 +19189,7 @@
       "label": "write_csv()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L31",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_write_csv",
       "community": 121,
@@ -19199,17 +19199,27 @@
       "label": "CompanyValuationTests",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L39",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "community": 121,
       "norm_label": "companyvaluationtests"
     },
     {
+      "label": ".test_new_private_namespace_does_not_dirty_runtime_preflight()",
+      "file_type": "code",
+      "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
+      "source_location": "L41",
+      "_origin": "ast",
+      "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_new_private_namespace_does_not_dirty_runtime_preflight",
+      "community": 121,
+      "norm_label": ".test_new_private_namespace_does_not_dirty_runtime_preflight()"
+    },
+    {
       "label": ".setUp()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L40",
+      "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "community": 121,
@@ -19219,7 +19229,7 @@
       "label": ".views()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L95",
+      "source_location": "L105",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
       "community": 121,
@@ -19229,7 +19239,7 @@
       "label": ".project()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L102",
+      "source_location": "L112",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
       "community": 121,
@@ -19239,7 +19249,7 @@
       "label": ".test_original_review_source_and_cases_are_admitted_over_generic_comparator()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L108",
+      "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_original_review_source_and_cases_are_admitted_over_generic_comparator",
       "community": 121,
@@ -19249,7 +19259,7 @@
       "label": ".test_no_opt_in_preserves_existing_behavior()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L118",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_no_opt_in_preserves_existing_behavior",
       "community": 121,
@@ -19259,7 +19269,7 @@
       "label": ".test_reprojection_changes_only_current_observation_and_preserves_original_bytes()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L123",
+      "source_location": "L133",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "community": 121,
@@ -19269,7 +19279,7 @@
       "label": ".test_expired_opt_in_never_falls_back_to_generic()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L142",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_expired_opt_in_never_falls_back_to_generic",
       "community": 121,
@@ -19279,7 +19289,7 @@
       "label": ".test_changed_model_bytes_keep_real_failure()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L149",
+      "source_location": "L159",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_model_bytes_keep_real_failure",
       "community": 121,
@@ -19289,7 +19299,7 @@
       "label": ".test_wrong_case_pointer_fails_even_with_resealed_record()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L155",
+      "source_location": "L165",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_wrong_case_pointer_fails_even_with_resealed_record",
       "community": 121,
@@ -19299,7 +19309,7 @@
       "label": ".test_missing_or_changed_financial_facts_do_not_get_completed_by_model()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L160",
+      "source_location": "L170",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_missing_or_changed_financial_facts_do_not_get_completed_by_model",
       "community": 121,
@@ -19309,7 +19319,7 @@
       "label": ".test_changed_thesis_or_unreviewed_news_reopens_only_issuer()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L167",
+      "source_location": "L177",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_thesis_or_unreviewed_news_reopens_only_issuer",
       "community": 121,
@@ -19319,7 +19329,7 @@
       "label": ".test_bad_issuer_does_not_block_other_baseline_research()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L174",
+      "source_location": "L184",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_bad_issuer_does_not_block_other_baseline_research",
       "community": 121,
@@ -19329,7 +19339,7 @@
       "label": ".test_disabled_missing_and_future_policy_cannot_admit()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L184",
+      "source_location": "L194",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_disabled_missing_and_future_policy_cannot_admit",
       "community": 121,
@@ -19339,7 +19349,7 @@
       "label": ".test_history_version_chain_and_failed_opt_in_packet_suppression()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L193",
+      "source_location": "L203",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_history_version_chain_and_failed_opt_in_packet_suppression",
       "community": 121,
@@ -19349,7 +19359,7 @@
       "label": ".test_admission_writer_rejects_fund_route()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L204",
+      "source_location": "L214",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_admission_writer_rejects_fund_route",
       "community": 121,
@@ -19359,7 +19369,7 @@
       "label": ".test_same_inputs_deduplicate_and_expired_observation_preserves_valid_case()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L209",
+      "source_location": "L219",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_same_inputs_deduplicate_and_expired_observation_preserves_valid_case",
       "community": 121,
@@ -19372,7 +19382,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_concentrated_allocation",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_concentrated_allocation.py"
     },
     {
@@ -19502,7 +19512,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_concentrated_allocation_rationale_1",
-      "community": 44,
+      "community": 18,
       "norm_label": "owner-approved allocation migration: source-bound size across final authority."
     },
     {
@@ -19622,7 +19632,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests",
-      "community": 163,
+      "community": 103,
       "norm_label": "currentworkflowstatustests"
     },
     {
@@ -19632,7 +19642,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_fixture",
-      "community": 163,
+      "community": 103,
       "norm_label": ".fixture()"
     },
     {
@@ -19642,7 +19652,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_reviewed_business_is_not_complete_valuation_and_missing_plan_visible",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_reviewed_business_is_not_complete_valuation_and_missing_plan_visible()"
     },
     {
@@ -19652,7 +19662,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_new_unincorporated_earnings_reopen_prior_conclusion_without_erasing_it",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_new_unincorporated_earnings_reopen_prior_conclusion_without_erasing_it()"
     },
     {
@@ -19662,7 +19672,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_prior_evaluation_or_failed_final_render_cannot_claim_current_run",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_prior_evaluation_or_failed_final_render_cannot_claim_current_run()"
     },
     {
@@ -19672,7 +19682,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_stale_and_conflicting_plans_preserve_instructions_as_unresolved",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_stale_and_conflicting_plans_preserve_instructions_as_unresolved()"
     },
     {
@@ -19682,7 +19692,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_deployment_fallback_is_not_reported_as_online_sync",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_deployment_fallback_is_not_reported_as_online_sync()"
     },
     {
@@ -19692,7 +19702,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_record_refresh_precedes_evaluation_rerender_then_status",
-      "community": 104,
+      "community": 7,
       "norm_label": ".test_record_refresh_precedes_evaluation_rerender_then_status()"
     },
     {
@@ -19702,7 +19712,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_sender_failure_does_not_erase_observed_collection_fallback",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_sender_failure_does_not_erase_observed_collection_fallback()"
     },
     {
@@ -19712,7 +19722,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_current_workflow_status_currentworkflowstatustests_test_prior_news_pending_is_visible_without_erasing_supported_business",
-      "community": 163,
+      "community": 103,
       "norm_label": ".test_prior_news_pending_is_visible_without_erasing_supported_business()"
     },
     {
@@ -20612,7 +20622,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration",
-      "community": 104,
+      "community": 44,
       "norm_label": "test_discovery_integration.py"
     },
     {
@@ -20622,7 +20632,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests",
-      "community": 7,
+      "community": 70,
       "norm_label": "independentdiscoveryintegrationtests"
     },
     {
@@ -20632,7 +20642,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_discovery_timeout_is_reported_without_suppressing_valid_account_review",
-      "community": 7,
+      "community": 70,
       "norm_label": ".test_discovery_timeout_is_reported_without_suppressing_valid_account_review()"
     },
     {
@@ -20642,7 +20652,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not",
-      "community": 7,
+      "community": 18,
       "norm_label": ".test_discovery_membership_changes_notify_but_prices_dates_and_rank_do_not()"
     },
     {
@@ -20652,7 +20662,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_candidate_fit_uses_actual_allocation_not_theme",
-      "community": 7,
+      "community": 70,
       "norm_label": ".test_candidate_fit_uses_actual_allocation_not_theme()"
     },
     {
@@ -20662,7 +20672,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_theme_labels_cannot_change_legacy_score",
-      "community": 7,
+      "community": 70,
       "norm_label": ".test_theme_labels_cannot_change_legacy_score()"
     },
     {
@@ -20672,7 +20682,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_only_fetch_cycle_requests_discovery_network",
-      "community": 7,
+      "community": 70,
       "norm_label": ".test_only_fetch_cycle_requests_discovery_network()"
     },
     {
@@ -20682,7 +20692,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_integration_independentdiscoveryintegrationtests_test_bootstrap_invokes_only_discovery",
-      "community": 7,
+      "community": 70,
       "norm_label": ".test_bootstrap_invokes_only_discovery()"
     },
     {
@@ -20692,7 +20702,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_discovery_reporting",
-      "community": 44,
+      "community": 167,
       "norm_label": "test_discovery_reporting.py"
     },
     {
@@ -20832,7 +20842,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_earnings_incorporation",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_earnings_incorporation.py"
     },
     {
@@ -20972,7 +20982,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_earnings_incorporation_incorporationtests_test_new_holding_without_financial_row_is_visible_unknown",
-      "community": 76,
+      "community": 105,
       "norm_label": ".test_new_holding_without_financial_row_is_visible_unknown()"
     },
     {
@@ -21212,7 +21222,7 @@
       "source_location": "L212",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_email_brief_emailpresentationtests_test_ineligible_add_cannot_be_presented_as_a_complete_plan",
-      "community": 34,
+      "community": 32,
       "norm_label": ".test_ineligible_add_cannot_be_presented_as_a_complete_plan()"
     },
     {
@@ -21322,7 +21332,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_email_brief_emailpresentationtests_test_unknown_status_fails_closed_without_inventing_hold",
-      "community": 34,
+      "community": 32,
       "norm_label": ".test_unknown_status_fails_closed_without_inventing_hold()"
     },
     {
@@ -21552,7 +21562,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_evidence_issuer_isolation",
-      "community": 12,
+      "community": 111,
       "norm_label": "test_evidence_issuer_isolation.py"
     },
     {
@@ -21752,7 +21762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_evidence_issuer_isolation_rationale_1",
-      "community": 12,
+      "community": 111,
       "norm_label": "offline publication regressions for scoped sec issuer admission."
     },
     {
@@ -22162,7 +22172,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_frozen_momentum_runtime",
-      "community": 44,
+      "community": 1,
       "norm_label": "test_frozen_momentum_runtime.py"
     },
     {
@@ -22282,7 +22292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_frozen_momentum_runtime_rationale_1",
-      "community": 44,
+      "community": 1,
       "norm_label": "reproducibility regressions: immutable capture, closure, atomic append, replay."
     },
     {
@@ -22432,7 +22442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email",
-      "community": 171,
+      "community": 108,
       "norm_label": "test_historical_order_email.py"
     },
     {
@@ -22442,7 +22452,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests",
-      "community": 171,
+      "community": 108,
       "norm_label": "historicalorderemailtests"
     },
     {
@@ -22452,7 +22462,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_render",
-      "community": 171,
+      "community": 108,
       "norm_label": ".render()"
     },
     {
@@ -22462,7 +22472,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_test_historical_reservation_is_not_presented_as_current_pending",
-      "community": 171,
+      "community": 108,
       "norm_label": ".test_historical_reservation_is_not_presented_as_current_pending()"
     },
     {
@@ -22472,7 +22482,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_test_expired_snapshot_never_implies_current_remaining_quantity",
-      "community": 171,
+      "community": 108,
       "norm_label": ".test_expired_snapshot_never_implies_current_remaining_quantity()"
     },
     {
@@ -22482,7 +22492,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_test_ordinary_pending_and_terminal_records_keep_their_distinction",
-      "community": 171,
+      "community": 108,
       "norm_label": ".test_ordinary_pending_and_terminal_records_keep_their_distinction()"
     },
     {
@@ -22492,7 +22502,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_test_recorded_empty_inventory_survives_without_any_historical_ticket",
-      "community": 171,
+      "community": 108,
       "norm_label": ".test_recorded_empty_inventory_survives_without_any_historical_ticket()"
     },
     {
@@ -22502,7 +22512,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_historical_order_email_historicalorderemailtests_test_after_close_draft_does_not_repeat_expired_quantity_or_owner_window",
-      "community": 171,
+      "community": 108,
       "norm_label": ".test_after_close_draft_does_not_repeat_expired_quantity_or_owner_window()"
     },
     {
@@ -22762,7 +22772,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_issuer_news_queue",
-      "community": 44,
+      "community": 48,
       "norm_label": "test_issuer_news_queue.py"
     },
     {
@@ -22782,7 +22792,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_issuer_news_queue_issuernewsqueuetests_setup",
-      "community": 48,
+      "community": 51,
       "norm_label": ".setup()"
     },
     {
@@ -23042,7 +23052,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email",
-      "community": 257,
+      "community": 108,
       "norm_label": "test_maintained_plan_email.py"
     },
     {
@@ -23052,7 +23062,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintained_plan",
-      "community": 257,
+      "community": 108,
       "norm_label": "maintained_plan()"
     },
     {
@@ -23062,7 +23072,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests",
-      "community": 257,
+      "community": 108,
       "norm_label": "maintainedplanemailtests"
     },
     {
@@ -23072,7 +23082,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests_render",
-      "community": 257,
+      "community": 108,
       "norm_label": ".render()"
     },
     {
@@ -23082,7 +23092,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests_test_current_maintained_protection_draft_survives_empty_new_eligibility",
-      "community": 257,
+      "community": 108,
       "norm_label": ".test_current_maintained_protection_draft_survives_empty_new_eligibility()"
     },
     {
@@ -23092,7 +23102,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests_test_expired_review_due_failed_or_hold_plan_cannot_renew_draft",
-      "community": 257,
+      "community": 108,
       "norm_label": ".test_expired_review_due_failed_or_hold_plan_cannot_renew_draft()"
     },
     {
@@ -23102,7 +23112,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests_test_malformed_or_unbound_drafts_are_withheld",
-      "community": 257,
+      "community": 108,
       "norm_label": ".test_malformed_or_unbound_drafts_are_withheld()"
     },
     {
@@ -23112,7 +23122,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_maintained_plan_email_maintainedplanemailtests_test_limit_exit_keeps_explicit_price_and_known_blocker",
-      "community": 257,
+      "community": 108,
       "norm_label": ".test_limit_exit_keeps_explicit_price_and_known_blocker()"
     },
     {
@@ -23182,7 +23192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition",
-      "community": 114,
+      "community": 14,
       "norm_label": "test_market_coverage_recomposition.py"
     },
     {
@@ -23192,7 +23202,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests",
-      "community": 114,
+      "community": 14,
       "norm_label": "marketcoveragerecompositiontests"
     },
     {
@@ -23202,7 +23212,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_fixture",
-      "community": 114,
+      "community": 14,
       "norm_label": "._fixture()"
     },
     {
@@ -23212,7 +23222,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_run",
-      "community": 114,
+      "community": 14,
       "norm_label": "._run()"
     },
     {
@@ -23222,7 +23232,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_receipts",
-      "community": 114,
+      "community": 14,
       "norm_label": "._receipts()"
     },
     {
@@ -23232,7 +23242,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_projection_archives_originals_and_preserves_every_retained_value",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_projection_archives_originals_and_preserves_every_retained_value()"
     },
     {
@@ -23242,7 +23252,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_rejects_missing_stale_duplicate_and_inconsistent_data_without_writes",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_rejects_missing_stale_duplicate_and_inconsistent_data_without_writes()"
     },
     {
@@ -23252,7 +23262,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_recomposition_cannot_admit_changed_candidates",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_recomposition_cannot_admit_changed_candidates()"
     },
     {
@@ -23262,7 +23272,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_only_valid_previously_bound_history_is_projected_and_rebound",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_only_valid_previously_bound_history_is_projected_and_rebound()"
     },
     {
@@ -23272,7 +23282,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_write_failure_restores_originals_and_retains_rollback_receipt",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_write_failure_restores_originals_and_retains_rollback_receipt()"
     },
     {
@@ -23282,7 +23292,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_coverage_recomposition_marketcoveragerecompositiontests_test_position_change_during_staging_aborts_before_market_writes",
-      "community": 114,
+      "community": 14,
       "norm_label": ".test_position_change_during_staging_aborts_before_market_writes()"
     },
     {
@@ -24042,7 +24052,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_market_regime",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_market_regime.py"
     },
     {
@@ -24172,7 +24182,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_experiment",
-      "community": 44,
+      "community": 1,
       "norm_label": "test_momentum_experiment.py"
     },
     {
@@ -24352,7 +24362,7 @@
       "source_location": "L219",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_experiment_momentumexperimenttests_test_replay_is_idempotent_and_never_overwrites_first_observation",
-      "community": 90,
+      "community": 1,
       "norm_label": ".test_replay_is_idempotent_and_never_overwrites_first_observation()"
     },
     {
@@ -24562,7 +24572,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_price_coverage",
-      "community": 44,
+      "community": 176,
       "norm_label": "test_momentum_price_coverage.py"
     },
     {
@@ -24642,7 +24652,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_price_coverage_rationale_1",
-      "community": 44,
+      "community": 176,
       "norm_label": "retired observations must retain forward evidence without universe drift."
     },
     {
@@ -24652,7 +24662,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status",
-      "community": 104,
+      "community": 44,
       "norm_label": "test_momentum_review_status.py"
     },
     {
@@ -24662,7 +24672,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests",
-      "community": 169,
+      "community": 103,
       "norm_label": "momentumreviewstatustests"
     },
     {
@@ -24672,7 +24682,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_setup",
-      "community": 169,
+      "community": 103,
       "norm_label": ".setup()"
     },
     {
@@ -24682,7 +24692,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_health",
-      "community": 169,
+      "community": 103,
       "norm_label": ".health()"
     },
     {
@@ -24692,7 +24702,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_test_current_success_only_authorizes_review",
-      "community": 169,
+      "community": 103,
       "norm_label": ".test_current_success_only_authorizes_review()"
     },
     {
@@ -24702,7 +24712,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_test_invalid_stale_or_future_packet_cannot_appear_ready",
-      "community": 169,
+      "community": 103,
       "norm_label": ".test_invalid_stale_or_future_packet_cannot_appear_ready()"
     },
     {
@@ -24712,7 +24722,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_test_current_failed_study_or_review_overrides_earlier_success",
-      "community": 169,
+      "community": 103,
       "norm_label": ".test_current_failed_study_or_review_overrides_earlier_success()"
     },
     {
@@ -24722,7 +24732,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_test_historical_readiness_is_separate_and_fails_closed_on_stale_or_failed_packet",
-      "community": 169,
+      "community": 103,
       "norm_label": ".test_historical_readiness_is_separate_and_fails_closed_on_stale_or_failed_packet()"
     },
     {
@@ -24732,7 +24742,7 @@
       "source_location": "L57",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_momentumreviewstatustests_test_review_failure_is_visible_but_not_canonical_refresh_failure",
-      "community": 169,
+      "community": 103,
       "norm_label": ".test_review_failure_is_visible_but_not_canonical_refresh_failure()"
     },
     {
@@ -24742,7 +24752,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_review_status_rationale_1",
-      "community": 104,
+      "community": 44,
       "norm_label": "a failed advisory review must not appear ready or inhibit canonical reporting."
     },
     {
@@ -24752,7 +24762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status",
-      "community": 210,
+      "community": 103,
       "norm_label": "test_momentum_status.py"
     },
     {
@@ -24762,7 +24772,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests",
-      "community": 210,
+      "community": 103,
       "norm_label": "momentumstatustests"
     },
     {
@@ -24772,7 +24782,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_setup",
-      "community": 210,
+      "community": 103,
       "norm_label": ".setup()"
     },
     {
@@ -24782,7 +24792,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_health",
-      "community": 210,
+      "community": 103,
       "norm_label": ".health()"
     },
     {
@@ -24792,7 +24802,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_test_malformed_optional_status_never_raises",
-      "community": 210,
+      "community": 103,
       "norm_label": ".test_malformed_optional_status_never_raises()"
     },
     {
@@ -24802,7 +24812,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_test_explicit_failure_is_preserved_even_without_market_session",
-      "community": 210,
+      "community": 103,
       "norm_label": ".test_explicit_failure_is_preserved_even_without_market_session()"
     },
     {
@@ -24812,7 +24822,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_test_current_refresh_timeout_overrides_prior_same_day_success",
-      "community": 210,
+      "community": 103,
       "norm_label": ".test_current_refresh_timeout_overrides_prior_same_day_success()"
     },
     {
@@ -24822,7 +24832,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_test_old_refresh_failure_does_not_override_current_success",
-      "community": 210,
+      "community": 103,
       "norm_label": ".test_old_refresh_failure_does_not_override_current_success()"
     },
     {
@@ -24832,7 +24842,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_momentumstatustests_test_stale_future_or_wrong_session_success_never_claims_current",
-      "community": 210,
+      "community": 103,
       "norm_label": ".test_stale_future_or_wrong_session_success_never_claims_current()"
     },
     {
@@ -24842,7 +24852,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_momentum_status_rationale_1",
-      "community": 210,
+      "community": 103,
       "norm_label": "advisory errors must stay visible without breaking the production status."
     },
     {
@@ -24852,7 +24862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_news_schedule",
-      "community": 56,
+      "community": 99,
       "norm_label": "test_news_schedule.py"
     },
     {
@@ -24892,7 +24902,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_news_schedule_py_datetime",
-      "community": 56,
+      "community": 99,
       "norm_label": "datetime"
     },
     {
@@ -25392,7 +25402,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_refresh_windows",
-      "community": 56,
+      "community": 159,
       "norm_label": "test_owner_refresh_windows.py"
     },
     {
@@ -25462,7 +25472,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_refresh_windows_rationale_1",
-      "community": 56,
+      "community": 159,
       "norm_label": "real scheduler state transitions with child/network calls isolated."
     },
     {
@@ -25652,7 +25662,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests",
-      "community": 44,
+      "community": 96,
       "norm_label": "ownersnapshottests"
     },
     {
@@ -25662,7 +25672,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests_test_snapshot_is_bound_to_positions_account_and_confirmed_ledger",
-      "community": 44,
+      "community": 96,
       "norm_label": ".test_snapshot_is_bound_to_positions_account_and_confirmed_ledger()"
     },
     {
@@ -25672,7 +25682,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests_test_symlink_snapshot_is_not_a_reconciliation_waiver",
-      "community": 44,
+      "community": 96,
       "norm_label": ".test_symlink_snapshot_is_not_a_reconciliation_waiver()"
     },
     {
@@ -25682,7 +25692,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests_test_optional_planning_range_preserves_cash_and_validates_strictly",
-      "community": 44,
+      "community": 96,
       "norm_label": ".test_optional_planning_range_preserves_cash_and_validates_strictly()"
     },
     {
@@ -25692,7 +25702,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests_test_nonfinite_position_input_is_rejected",
-      "community": 44,
+      "community": 96,
       "norm_label": ".test_nonfinite_position_input_is_rejected()"
     },
     {
@@ -25702,7 +25712,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_owner_snapshot_ownersnapshottests_test_snapshot_update_archives_history_without_fabricating_fill_fees",
-      "community": 44,
+      "community": 96,
       "norm_label": ".test_snapshot_update_archives_history_without_fabricating_fill_fees()"
     },
     {
@@ -26052,7 +26062,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_portfolio_archive",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_portfolio_archive.py"
     },
     {
@@ -26362,7 +26372,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_reassessment_reporting",
-      "community": 31,
+      "community": 44,
       "norm_label": "test_reassessment_reporting.py"
     },
     {
@@ -26382,7 +26392,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_reassessment_reporting_reassessmentreportingtests_test_cash_affordability_and_target_gap_are_separate",
-      "community": 91,
+      "community": 31,
       "norm_label": ".test_cash_affordability_and_target_gap_are_separate()"
     },
     {
@@ -27022,7 +27032,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_refresh_status_fallback",
-      "community": 104,
+      "community": 44,
       "norm_label": "test_refresh_status_fallback.py"
     },
     {
@@ -27182,7 +27192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_refresh_status_fallback_rationale_1",
-      "community": 104,
+      "community": 44,
       "norm_label": "soft source failure preserves communication, never stale trading authority."
     },
     {
@@ -27312,7 +27322,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_backlog",
-      "community": 44,
+      "community": 18,
       "norm_label": "test_research_backlog.py"
     },
     {
@@ -27572,7 +27582,7 @@
       "source_location": "L318",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_backlog_researchbacklogtests_test_canonical_position_shares_override_stale_research_held_flag",
-      "community": 40,
+      "community": 60,
       "norm_label": ".test_canonical_position_shares_override_stale_research_held_flag()"
     },
     {
@@ -27632,7 +27642,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities",
-      "community": 104,
+      "community": 141,
       "norm_label": "test_research_opportunities.py"
     },
     {
@@ -27642,7 +27652,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_row",
-      "community": 146,
+      "community": 141,
       "norm_label": "row()"
     },
     {
@@ -27692,7 +27702,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_evidence",
-      "community": 9,
+      "community": 66,
       "norm_label": ".evidence()"
     },
     {
@@ -27702,7 +27712,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_assessment",
-      "community": 9,
+      "community": 66,
       "norm_label": ".assessment()"
     },
     {
@@ -27742,7 +27752,7 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_local_authority_projects_old_account_requirements_without_rewriting_assessment",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_local_authority_projects_old_account_requirements_without_rewriting_assessment()"
     },
     {
@@ -27762,7 +27772,7 @@
       "source_location": "L152",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_capacity_and_per_run_bounds_keep_deferred_visible",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_capacity_and_per_run_bounds_keep_deferred_visible()"
     },
     {
@@ -27772,7 +27782,7 @@
       "source_location": "L164",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_held_work_has_reserved_priority_over_higher_market_rank",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_held_work_has_reserved_priority_over_higher_market_rank()"
     },
     {
@@ -27782,7 +27792,7 @@
       "source_location": "L171",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_adverse_event_gets_priority_without_inventing_direction",
-      "community": 9,
+      "community": 136,
       "norm_label": ".test_adverse_event_gets_priority_without_inventing_direction()"
     },
     {
@@ -27842,7 +27852,7 @@
       "source_location": "L228",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_cached_primary_research_progresses_and_repeat_does_not_republish",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_cached_primary_research_progresses_and_repeat_does_not_republish()"
     },
     {
@@ -27852,7 +27862,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_real_automatic_objective_progress_flows_into_explicit_final_dependency",
-      "community": 31,
+      "community": 66,
       "norm_label": ".test_real_automatic_objective_progress_flows_into_explicit_final_dependency()"
     },
     {
@@ -27882,7 +27892,7 @@
       "source_location": "L271",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_journal_tampering_is_not_repaired_by_overwriting_history",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_journal_tampering_is_not_repaired_by_overwriting_history()"
     },
     {
@@ -27912,7 +27922,7 @@
       "source_location": "L301",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_wrong_layer_cannot_advance_supported_research",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_wrong_layer_cannot_advance_supported_research()"
     },
     {
@@ -27932,7 +27942,7 @@
       "source_location": "L314",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_period_comparable_positive_acceleration_is_research_only",
-      "community": 146,
+      "community": 141,
       "norm_label": ".test_period_comparable_positive_acceleration_is_research_only()"
     },
     {
@@ -27942,7 +27952,7 @@
       "source_location": "L325",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_supported_assessment_stays_research_only_and_idempotent",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_supported_assessment_stays_research_only_and_idempotent()"
     },
     {
@@ -27952,7 +27962,7 @@
       "source_location": "L334",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_rejected_and_economic_failures_keep_observations",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_rejected_and_economic_failures_keep_observations()"
     },
     {
@@ -27962,7 +27972,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_mature_experiment_without_owner_approval_cannot_enter_research",
-      "community": 9,
+      "community": 42,
       "norm_label": ".test_mature_experiment_without_owner_approval_cannot_enter_research()"
     },
     {
@@ -27982,7 +27992,7 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_fetch_stage_only_and_refresh_pipeline_has_no_sender",
-      "community": 9,
+      "community": 7,
       "norm_label": ".test_fetch_stage_only_and_refresh_pipeline_has_no_sender()"
     },
     {
@@ -28012,7 +28022,7 @@
       "source_location": "L377",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_urgent_held_work_displaces_low_priority_without_deleting_history",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_urgent_held_work_displaces_low_priority_without_deleting_history()"
     },
     {
@@ -28022,7 +28032,7 @@
       "source_location": "L390",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_business_repoll_and_wrong_units_cannot_create_acceleration",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_business_repoll_and_wrong_units_cannot_create_acceleration()"
     },
     {
@@ -28042,7 +28052,7 @@
       "source_location": "L408",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_network_failure_is_reserved_once_per_issuer_session",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_network_failure_is_reserved_once_per_issuer_session()"
     },
     {
@@ -28052,7 +28062,7 @@
       "source_location": "L423",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_old_report_is_invalid_after_a_new_journal_publication",
-      "community": 256,
+      "community": 9,
       "norm_label": ".test_old_report_is_invalid_after_a_new_journal_publication()"
     },
     {
@@ -28062,7 +28072,7 @@
       "source_location": "L431",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_supported_research_requires_a_separate_valuation_before_handoff",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_supported_research_requires_a_separate_valuation_before_handoff()"
     },
     {
@@ -28082,7 +28092,7 @@
       "source_location": "L485",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_unchanged_high_priority_items_do_not_starve_new_objective_work",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_unchanged_high_priority_items_do_not_starve_new_objective_work()"
     },
     {
@@ -28092,7 +28102,7 @@
       "source_location": "L495",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_forward_outcomes_freeze_first_prices_and_keep_revisions_visible",
-      "community": 42,
+      "community": 9,
       "norm_label": ".test_forward_outcomes_freeze_first_prices_and_keep_revisions_visible()"
     },
     {
@@ -28102,7 +28112,7 @@
       "source_location": "L522",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_rejection_with_changed_evidence_needs_recorded_reassessment",
-      "community": 9,
+      "community": 66,
       "norm_label": ".test_rejection_with_changed_evidence_needs_recorded_reassessment()"
     },
     {
@@ -28122,7 +28132,7 @@
       "source_location": "L551",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_opportunities_opportunitytests_test_failed_second_request_keeps_successful_primary_receipt",
-      "community": 146,
+      "community": 9,
       "norm_label": ".test_failed_second_request_keeps_successful_primary_receipt()"
     },
     {
@@ -28132,7 +28142,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_risk_limits",
-      "community": 31,
+      "community": 44,
       "norm_label": "test_research_risk_limits.py"
     },
     {
@@ -28282,7 +28292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_work_budget",
-      "community": 31,
+      "community": 44,
       "norm_label": "test_research_work_budget.py"
     },
     {
@@ -29202,7 +29212,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancetests_test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched",
-      "community": 111,
+      "community": 43,
       "norm_label": ".test_companyfacts_ttm_and_split_adjusted_shares_are_period_matched()"
     },
     {
@@ -29292,7 +29302,7 @@
       "source_location": "L218",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancetests_test_submissions_parser_captures_exact_acceptance_time",
-      "community": 15,
+      "community": 111,
       "norm_label": ".test_submissions_parser_captures_exact_acceptance_time()"
     },
     {
@@ -29302,7 +29312,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_secacceptancetests_test_daily_parser_excludes_out_of_window_legacy_metadata",
-      "community": 15,
+      "community": 111,
       "norm_label": ".test_daily_parser_excludes_out_of_window_legacy_metadata()"
     },
     {
@@ -29442,7 +29452,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions",
-      "community": 111,
+      "community": 19,
       "norm_label": "test_sec_acceptance_extensions.py"
     },
     {
@@ -29452,7 +29462,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_acceptance_record",
-      "community": 111,
+      "community": 19,
       "norm_label": "acceptance_record()"
     },
     {
@@ -29462,7 +29472,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_secacceptanceextensiontests",
-      "community": 111,
+      "community": 19,
       "norm_label": "secacceptanceextensiontests"
     },
     {
@@ -29472,7 +29482,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_secacceptanceextensiontests_plan",
-      "community": 111,
+      "community": 19,
       "norm_label": "._plan()"
     },
     {
@@ -29482,7 +29492,7 @@
       "source_location": "L63",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_secacceptanceextensiontests_test_valid_extension_preserves_historical_bytes_and_is_audit_bound",
-      "community": 111,
+      "community": 19,
       "norm_label": ".test_valid_extension_preserves_historical_bytes_and_is_audit_bound()"
     },
     {
@@ -29502,7 +29512,7 @@
       "source_location": "L143",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_secacceptanceextensiontests_test_duplicate_or_identity_conflict_is_rejected_without_extension_write",
-      "community": 111,
+      "community": 19,
       "norm_label": ".test_duplicate_or_identity_conflict_is_rejected_without_extension_write()"
     },
     {
@@ -29512,7 +29522,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_extensions_secacceptanceextensiontests_test_audit_raw_byte_binding_detects_artifact_rewrite",
-      "community": 111,
+      "community": 19,
       "norm_label": ".test_audit_raw_byte_binding_detects_artifact_rewrite()"
     },
     {
@@ -29572,7 +29582,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_sec_acceptance_reconciliation_secacceptancereconciliationtests_test_winter_eastern_wall_clock_shift_requires_standard_offset",
-      "community": 12,
+      "community": 111,
       "norm_label": ".test_winter_eastern_wall_clock_shift_requires_standard_offset()"
     },
     {
@@ -29802,7 +29812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions",
-      "community": 96,
+      "community": 93,
       "norm_label": "test_security_regressions.py"
     },
     {
@@ -29812,7 +29822,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_canonicallockregressiontests",
-      "community": 96,
+      "community": 0,
       "norm_label": "canonicallockregressiontests"
     },
     {
@@ -29822,7 +29832,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_canonicallockregressiontests_test_exclusive_lock_refuses_symlink_without_touching_target",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_exclusive_lock_refuses_symlink_without_touching_target()"
     },
     {
@@ -29832,7 +29842,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_canonicallockregressiontests_test_exclusive_lock_refuses_hardlink_without_touching_target",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_exclusive_lock_refuses_hardlink_without_touching_target()"
     },
     {
@@ -29842,7 +29852,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests",
-      "community": 96,
+      "community": 0,
       "norm_label": "smtpconfigurationsecuritytests"
     },
     {
@@ -29852,7 +29862,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests_write_config",
-      "community": 96,
+      "community": 0,
       "norm_label": "._write_config()"
     },
     {
@@ -29862,7 +29872,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_py_path",
-      "community": 96,
+      "community": 0,
       "norm_label": "path"
     },
     {
@@ -29872,7 +29882,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests_test_owner_private_smtp_configuration_loads",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_owner_private_smtp_configuration_loads()"
     },
     {
@@ -29882,7 +29892,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests_test_explicit_correction_requires_changed_content_and_deduplicates_hashes",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_explicit_correction_requires_changed_content_and_deduplicates_hashes()"
     },
     {
@@ -29892,7 +29902,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests_test_group_or_world_readable_smtp_configuration_is_rejected",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_group_or_world_readable_smtp_configuration_is_rejected()"
     },
     {
@@ -29902,7 +29912,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_smtpconfigurationsecuritytests_test_explicit_correction_bypasses_only_the_ordinary_send_clock",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_explicit_correction_bypasses_only_the_ordinary_send_clock()"
     },
     {
@@ -29912,7 +29922,7 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_automationalerttests",
-      "community": 96,
+      "community": 0,
       "norm_label": "automationalerttests"
     },
     {
@@ -29922,7 +29932,7 @@
       "source_location": "L162",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_automationalerttests_test_same_terminal_alert_notifies_only_once",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_same_terminal_alert_notifies_only_once()"
     },
     {
@@ -29932,7 +29942,7 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_notificationpolicysecuritytests",
-      "community": 96,
+      "community": 0,
       "norm_label": "notificationpolicysecuritytests"
     },
     {
@@ -29942,7 +29952,7 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_security_regressions_notificationpolicysecuritytests_test_pre_send_decision_remains_valid_at_scheduler_send_time",
-      "community": 96,
+      "community": 0,
       "norm_label": ".test_pre_send_decision_remains_valid_at_scheduler_send_time()"
     },
     {
@@ -30752,7 +30762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health",
-      "community": 101,
+      "community": 103,
       "norm_label": "test_shadow_status_health.py"
     },
     {
@@ -30762,7 +30772,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health_shadowstatushealthtests",
-      "community": 101,
+      "community": 103,
       "norm_label": "shadowstatushealthtests"
     },
     {
@@ -30772,7 +30782,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health_shadowstatushealthtests_payload",
-      "community": 101,
+      "community": 103,
       "norm_label": ".payload()"
     },
     {
@@ -30782,7 +30792,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health_shadowstatushealthtests_test_current_failure_is_visible_as_advisory_without_granting_authority",
-      "community": 101,
+      "community": 103,
       "norm_label": ".test_current_failure_is_visible_as_advisory_without_granting_authority()"
     },
     {
@@ -30792,7 +30802,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health_shadowstatushealthtests_test_stale_or_future_health_cannot_appear_current",
-      "community": 101,
+      "community": 103,
       "norm_label": ".test_stale_or_future_health_cannot_appear_current()"
     },
     {
@@ -30802,7 +30812,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_shadow_status_health_shadowstatushealthtests_test_missing_malformed_or_contradictory_health_is_not_validated",
-      "community": 101,
+      "community": 103,
       "norm_label": ".test_missing_malformed_or_contradictory_health_is_not_validated()"
     },
     {
@@ -31652,7 +31662,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_valuation_input_bundle_valuationinputbundletests_test_digest_or_source_tampering_fails_closed",
-      "community": 131,
+      "community": 55,
       "norm_label": ".test_digest_or_source_tampering_fails_closed()"
     },
     {
@@ -31662,7 +31672,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_valuation_input_bundle_valuationinputbundletests_test_unsafe_source_and_active_boundary_are_rejected",
-      "community": 131,
+      "community": 55,
       "norm_label": ".test_unsafe_source_and_active_boundary_are_rejected()"
     },
     {
@@ -31762,7 +31772,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_valuation_research_retention",
-      "community": 61,
+      "community": 131,
       "norm_label": "test_valuation_research_retention.py"
     },
     {
@@ -32182,7 +32192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation",
-      "community": 24,
+      "community": 5,
       "norm_label": "test_workflow_evaluation.py"
     },
     {
@@ -32192,7 +32202,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_base",
-      "community": 24,
+      "community": 5,
       "norm_label": "base()"
     },
     {
@@ -32202,7 +32212,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_nav",
-      "community": 24,
+      "community": 5,
       "norm_label": "nav()"
     },
     {
@@ -32212,7 +32222,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_review",
-      "community": 24,
+      "community": 5,
       "norm_label": "review()"
     },
     {
@@ -32222,7 +32232,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_flow",
-      "community": 24,
+      "community": 5,
       "norm_label": "flow()"
     },
     {
@@ -32232,7 +32242,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests",
-      "community": 24,
+      "community": 5,
       "norm_label": "workflowevaluationtests"
     },
     {
@@ -32242,7 +32252,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_deposit_is_not_profit_and_time_weighting_is_explicit",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_deposit_is_not_profit_and_time_weighting_is_explicit()"
     },
     {
@@ -32252,7 +32262,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_missing_history_or_flow_attestation_blocks",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_missing_history_or_flow_attestation_blocks()"
     },
     {
@@ -32262,7 +32272,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_planning_cash_unconfirmed_flow_and_sweeps_rejected",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_planning_cash_unconfirmed_flow_and_sweeps_rejected()"
     },
     {
@@ -32272,7 +32282,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_exact_timestamps_and_total_return_basis_required_for_benchmark",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_exact_timestamps_and_total_return_basis_required_for_benchmark()"
     },
     {
@@ -32292,7 +32302,7 @@
       "source_location": "L93",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_duplicate_deposit_cannot_hide_behind_new_record_id",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_duplicate_deposit_cannot_hide_behind_new_record_id()"
     },
     {
@@ -32302,7 +32312,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_correction_preserves_history_and_invalidates_old_interval",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_correction_preserves_history_and_invalidates_old_interval()"
     },
     {
@@ -32312,7 +32322,7 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_forward_review_and_mixed_nav_basis_blocked",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_forward_review_and_mixed_nav_basis_blocked()"
     },
     {
@@ -32352,7 +32362,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_multiple_roles_and_horizons_do_not_inflate_observations_or_completed_reviews",
-      "community": 120,
+      "community": 5,
       "norm_label": ".test_multiple_roles_and_horizons_do_not_inflate_observations_or_completed_reviews()"
     },
     {
@@ -32362,7 +32372,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_missing_exchange_session_is_not_compressed_to_one_session",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_missing_exchange_session_is_not_compressed_to_one_session()"
     },
     {
@@ -32372,7 +32382,7 @@
       "source_location": "L172",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_expired_instruction_is_reconciliation_not_a_fresh_exit",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_expired_instruction_is_reconciliation_not_a_fresh_exit()"
     },
     {
@@ -32382,7 +32392,7 @@
       "source_location": "L179",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_new_candidate_thesis_is_linked_separately_from_held_views",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_new_candidate_thesis_is_linked_separately_from_held_views()"
     },
     {
@@ -32392,7 +32402,7 @@
       "source_location": "L182",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_evaluation_workflowevaluationtests_test_plan_and_thesis_versions_linked_without_retroactive_rewrite",
-      "community": 24,
+      "community": 5,
       "norm_label": ".test_plan_and_thesis_versions_linked_without_retroactive_rewrite()"
     },
     {
@@ -32472,7 +32482,7 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_workflow_integrity_workflowpublicationtests_test_publication_rehashes_nonperiodic_material_review",
-      "community": 51,
+      "community": 58,
       "norm_label": ".test_publication_rehashes_nonperiodic_material_review()"
     },
     {
@@ -33082,7 +33092,7 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "09_scripts_equity_research_thesis_evidence_substantive_news",
-      "community": 48,
+      "community": 26,
       "norm_label": "substantive_news()"
     },
     {
@@ -33242,7 +33252,7 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "09_scripts_equity_research_thesis_evidence_rationale_239",
-      "community": 48,
+      "community": 26,
       "norm_label": "conservative triage only, never a positive/negative business signal."
     },
     {
@@ -33542,7 +33552,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_investment_plan",
-      "community": 96,
+      "community": 71,
       "norm_label": "update_investment_plan.py"
     },
     {
@@ -33552,7 +33562,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_investment_plan_main",
-      "community": 96,
+      "community": 71,
       "norm_label": "main()"
     },
     {
@@ -33562,7 +33572,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account",
-      "community": 158,
+      "community": 52,
       "norm_label": "update_manual_account.py"
     },
     {
@@ -33572,7 +33582,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_read_ui_valuation",
-      "community": 158,
+      "community": 52,
       "norm_label": "read_ui_valuation()"
     },
     {
@@ -33582,7 +33592,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_py_path",
-      "community": 158,
+      "community": 52,
       "norm_label": "path"
     },
     {
@@ -33602,7 +33612,7 @@
       "source_location": "L95",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_parse_position",
-      "community": 158,
+      "community": 52,
       "norm_label": "parse_position()"
     },
     {
@@ -33612,7 +33622,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_main",
-      "community": 158,
+      "community": 52,
       "norm_label": "main()"
     },
     {
@@ -33622,7 +33632,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_manual_account_rationale_35",
-      "community": 158,
+      "community": 52,
       "norm_label": "read an auditable manual valuation reference, never a b2 market row."
     },
     {
@@ -33702,7 +33712,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_thesis_review",
-      "community": 96,
+      "community": 26,
       "norm_label": "update_thesis_review.py"
     },
     {
@@ -33712,7 +33722,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "09_scripts_equity_research_update_thesis_review_main",
-      "community": 96,
+      "community": 26,
       "norm_label": "main()"
     },
     {
@@ -34282,7 +34292,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_generated_record",
-      "community": 55,
+      "community": 61,
       "norm_label": "generated_record()"
     },
     {
@@ -34292,7 +34302,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_py_any",
-      "community": 55,
+      "community": 61,
       "norm_label": "any"
     },
     {
@@ -34302,7 +34312,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_company_projection_record",
-      "community": 55,
+      "community": 61,
       "norm_label": "company_projection_record()"
     },
     {
@@ -34372,7 +34382,7 @@
       "source_location": "L137",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_parse_snapshot",
-      "community": 55,
+      "community": 61,
       "norm_label": "_parse_snapshot()"
     },
     {
@@ -34382,7 +34392,7 @@
       "source_location": "L149",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_compose_research_inputs",
-      "community": 55,
+      "community": 61,
       "norm_label": "compose_research_inputs()"
     },
     {
@@ -34402,7 +34412,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_rationale_27",
-      "community": 55,
+      "community": 61,
       "norm_label": "recognize only the generator's complete three-source ownership contract."
     },
     {
@@ -34412,7 +34422,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_rationale_54",
-      "community": 55,
+      "community": 61,
       "norm_label": "recognize derived packet observations so they never become analyst input.      t"
     },
     {
@@ -34442,7 +34452,7 @@
       "source_location": "L154",
       "_origin": "ast",
       "id": "09_scripts_equity_research_valuation_research_inputs_rationale_154",
-      "community": 55,
+      "community": 61,
       "norm_label": "revalidate manual research without replacing generated observations."
     },
     {
@@ -34982,7 +34992,7 @@
       "source_location": "L303",
       "_origin": "ast",
       "id": "09_scripts_equity_research_workflow_evaluation_performance_summary",
-      "community": 24,
+      "community": 5,
       "norm_label": "performance_summary()"
     },
     {
@@ -35032,7 +35042,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_workflow_inputs",
-      "community": 70,
+      "community": 136,
       "norm_label": "workflow_inputs.py"
     },
     {
@@ -35042,7 +35052,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_workflow_inputs_rationale_1",
-      "community": 70,
+      "community": 136,
       "norm_label": "private publication inputs shared by the composer and read-only dashboard.  keep"
     },
     {
@@ -35102,7 +35112,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "09_scripts_equity_research_workflow_integrity_account_blockers",
-      "community": 38,
+      "community": 109,
       "norm_label": "_account_blockers()"
     },
     {
@@ -35242,7 +35252,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "09_scripts_equity_research_workflow_integrity_rationale_54",
-      "community": 38,
+      "community": 109,
       "norm_label": "shared planning invariants; do not promote tactical execution assumptions."
     },
     {
@@ -35352,7 +35362,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_feedback",
-      "community": 36,
+      "community": 80,
       "norm_label": "feedback.py"
     },
     {
@@ -35362,7 +35372,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "10_dashboard_feedback_feedbackerror",
-      "community": 36,
+      "community": 95,
       "norm_label": "feedbackerror"
     },
     {
@@ -35382,7 +35392,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "10_dashboard_feedback_feedbackerror_init",
-      "community": 36,
+      "community": 95,
       "norm_label": ".__init__()"
     },
     {
@@ -35412,7 +35422,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "10_dashboard_feedback_read",
-      "community": 36,
+      "community": 95,
       "norm_label": "read()"
     },
     {
@@ -35482,7 +35492,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "10_dashboard_feedback_atomic",
-      "community": 36,
+      "community": 80,
       "norm_label": "atomic()"
     },
     {
@@ -35632,7 +35642,7 @@
       "source_location": "L544",
       "_origin": "ast",
       "id": "10_dashboard_feedback_store_reviews",
-      "community": 36,
+      "community": 95,
       "norm_label": ".reviews()"
     },
     {
@@ -35712,7 +35722,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_feedback_rationale_1",
-      "community": 36,
+      "community": 80,
       "norm_label": "durable human feedback coordinator. canonical csv/json remain authoritative.  th"
     },
     {
@@ -35732,7 +35742,7 @@
       "source_location": "L545",
       "_origin": "ast",
       "id": "10_dashboard_feedback_rationale_545",
-      "community": 36,
+      "community": 95,
       "norm_label": "analyst work is a separate queue, never a deterministic refresh result."
     },
     {
@@ -36082,7 +36092,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback",
-      "community": 70,
+      "community": 80,
       "norm_label": "record_feedback.py"
     },
     {
@@ -36092,7 +36102,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback_main",
-      "community": 70,
+      "community": 80,
       "norm_label": "main()"
     },
     {
@@ -36102,7 +36112,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback_rationale_1",
-      "community": 70,
+      "community": 80,
       "norm_label": "same coordinator as the form, for explicit owner-reported facts in codex.  use -"
     },
     {
@@ -36112,7 +36122,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_server",
-      "community": 70,
+      "community": 30,
       "norm_label": "server.py"
     },
     {
@@ -36142,7 +36152,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "10_dashboard_server_digest",
-      "community": 70,
+      "community": 30,
       "norm_label": "digest()"
     },
     {
@@ -36152,7 +36162,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "10_dashboard_server_safe_read",
-      "community": 70,
+      "community": 30,
       "norm_label": "safe_read()"
     },
     {
@@ -36162,7 +36172,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "10_dashboard_server_py_path",
-      "community": 70,
+      "community": 30,
       "norm_label": "path"
     },
     {
@@ -36172,7 +36182,7 @@
       "source_location": "L62",
       "_origin": "ast",
       "id": "10_dashboard_server_stamp",
-      "community": 70,
+      "community": 30,
       "norm_label": "stamp()"
     },
     {
@@ -36182,7 +36192,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "10_dashboard_server_py_datetime",
-      "community": 70,
+      "community": 30,
       "norm_label": "datetime"
     },
     {
@@ -36192,7 +36202,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "10_dashboard_server_number",
-      "community": 70,
+      "community": 30,
       "norm_label": "number()"
     },
     {
@@ -36222,7 +36232,7 @@
       "source_location": "L247",
       "_origin": "ast",
       "id": "10_dashboard_server_current_snapshot",
-      "community": 70,
+      "community": 30,
       "norm_label": "current_snapshot()"
     },
     {
@@ -36232,7 +36242,7 @@
       "source_location": "L275",
       "_origin": "ast",
       "id": "10_dashboard_server_chart",
-      "community": 70,
+      "community": 30,
       "norm_label": "chart()"
     },
     {
@@ -36242,7 +36252,7 @@
       "source_location": "L297",
       "_origin": "ast",
       "id": "10_dashboard_server_email_versions",
-      "community": 70,
+      "community": 30,
       "norm_label": "email_versions()"
     },
     {
@@ -36252,7 +36262,7 @@
       "source_location": "L309",
       "_origin": "ast",
       "id": "10_dashboard_server_email_version",
-      "community": 70,
+      "community": 30,
       "norm_label": "email_version()"
     },
     {
@@ -36262,7 +36272,7 @@
       "source_location": "L326",
       "_origin": "ast",
       "id": "10_dashboard_server_rows_for_mail",
-      "community": 70,
+      "community": 30,
       "norm_label": "rows_for_mail()"
     },
     {
@@ -36272,7 +36282,7 @@
       "source_location": "L331",
       "_origin": "ast",
       "id": "10_dashboard_server_handler",
-      "community": 70,
+      "community": 50,
       "norm_label": "handler"
     },
     {
@@ -36282,7 +36292,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "basehttprequesthandler",
-      "community": 70,
+      "community": 50,
       "norm_label": "basehttprequesthandler"
     },
     {
@@ -36292,7 +36302,7 @@
       "source_location": "L332",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_log_message",
-      "community": 70,
+      "community": 50,
       "norm_label": ".log_message()"
     },
     {
@@ -36302,7 +36312,7 @@
       "source_location": "L335",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_respond",
-      "community": 70,
+      "community": 50,
       "norm_label": ".respond()"
     },
     {
@@ -36312,7 +36322,7 @@
       "source_location": "L346",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_error_json",
-      "community": 70,
+      "community": 50,
       "norm_label": ".error_json()"
     },
     {
@@ -36322,7 +36332,7 @@
       "source_location": "L349",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_permitted",
-      "community": 70,
+      "community": 50,
       "norm_label": ".permitted()"
     },
     {
@@ -36332,7 +36342,7 @@
       "source_location": "L359",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_do_get",
-      "community": 70,
+      "community": 30,
       "norm_label": ".do_get()"
     },
     {
@@ -36342,7 +36352,7 @@
       "source_location": "L415",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_do_post",
-      "community": 70,
+      "community": 50,
       "norm_label": ".do_post()"
     },
     {
@@ -36352,7 +36362,7 @@
       "source_location": "L437",
       "_origin": "ast",
       "id": "10_dashboard_server_handler_do_put",
-      "community": 70,
+      "community": 50,
       "norm_label": ".do_put()"
     },
     {
@@ -36362,7 +36372,7 @@
       "source_location": "L442",
       "_origin": "ast",
       "id": "10_dashboard_server_main",
-      "community": 70,
+      "community": 50,
       "norm_label": "main()"
     },
     {
@@ -36372,7 +36382,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_server_rationale_1",
-      "community": 70,
+      "community": 30,
       "norm_label": "private dashboard. loopback listener; optional owner-only tailscale serve."
     },
     {
@@ -36402,7 +36412,7 @@
       "source_location": "L248",
       "_origin": "ast",
       "id": "10_dashboard_server_rationale_248",
-      "community": 70,
+      "community": 30,
       "norm_label": "show accepted account facts while its former research is superseded."
     },
     {
@@ -37182,7 +37192,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_feedback",
-      "community": 36,
+      "community": 80,
       "norm_label": "test_feedback.py"
     },
     {
@@ -37472,7 +37482,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_private_routes",
-      "community": 36,
+      "community": 80,
       "norm_label": "test_private_routes.py"
     },
     {
@@ -37562,7 +37572,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_private_routes_privateroutestests_test_sent_body_is_read_from_archive_and_never_rebuilt_with_current_template",
-      "community": 70,
+      "community": 50,
       "norm_label": ".test_sent_body_is_read_from_archive_and_never_rebuilt_with_current_template()"
     },
     {
@@ -37632,7 +37642,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_review_requests",
-      "community": 36,
+      "community": 80,
       "norm_label": "test_review_requests.py"
     },
     {
@@ -37812,7 +37822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot",
-      "community": 70,
+      "community": 30,
       "norm_label": "test_snapshot.py"
     },
     {
@@ -51865,7 +51875,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L16",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_company_valuation",
@@ -56971,7 +56981,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L17",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_daily_common",
@@ -59762,7 +59772,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L68",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_daily_common_read_json"
@@ -59773,7 +59783,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L130",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "target": "09_scripts_equity_research_daily_common_read_json"
@@ -59784,7 +59794,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L96",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
       "target": "09_scripts_equity_research_daily_common_read_json"
@@ -61115,7 +61125,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L61",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_daily_common_sha256_file"
@@ -108451,7 +108461,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L13",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_support",
@@ -115994,7 +116004,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L39",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
@@ -116004,7 +116014,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_csv",
@@ -116014,7 +116024,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_json",
@@ -116025,7 +116035,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L15",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_test_thesis_evidence",
@@ -116036,7 +116046,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L14",
+      "source_location": "L15",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_tests_test_valuation_input_bundle",
@@ -116047,7 +116057,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L18",
+      "source_location": "L19",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_thesis_evidence",
@@ -116058,7 +116068,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L19",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_valuation_input_bundle",
@@ -116069,7 +116079,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation",
       "target": "09_scripts_equity_research_valuation_research_inputs",
@@ -116080,7 +116090,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L103",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_json",
@@ -116091,7 +116101,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L67",
+      "source_location": "L77",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_json",
@@ -116102,7 +116112,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L177",
+      "source_location": "L187",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_bad_issuer_does_not_block_other_baseline_research",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_json",
@@ -116113,7 +116123,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L186",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_disabled_missing_and_future_policy_cannot_admit",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_json",
@@ -116124,7 +116134,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L80",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_csv",
@@ -116135,7 +116145,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L205",
+      "source_location": "L215",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_admission_writer_rejects_fund_route",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_csv",
@@ -116146,7 +116156,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L126",
+      "source_location": "L136",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "target": "09_scripts_equity_research_tests_test_company_valuation_write_csv",
@@ -116156,7 +116166,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L102",
+      "source_location": "L112",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116166,7 +116176,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L40",
+      "source_location": "L50",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
@@ -116176,7 +116186,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L204",
+      "source_location": "L214",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_admission_writer_rejects_fund_route",
@@ -116186,7 +116196,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L174",
+      "source_location": "L184",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_bad_issuer_does_not_block_other_baseline_research",
@@ -116196,7 +116206,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L149",
+      "source_location": "L159",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_model_bytes_keep_real_failure",
@@ -116206,7 +116216,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L167",
+      "source_location": "L177",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_thesis_or_unreviewed_news_reopens_only_issuer",
@@ -116216,7 +116226,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L184",
+      "source_location": "L194",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_disabled_missing_and_future_policy_cannot_admit",
@@ -116226,7 +116236,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L142",
+      "source_location": "L152",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_expired_opt_in_never_falls_back_to_generic",
@@ -116236,7 +116246,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L193",
+      "source_location": "L203",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_history_version_chain_and_failed_opt_in_packet_suppression",
@@ -116246,7 +116256,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L160",
+      "source_location": "L170",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_missing_or_changed_financial_facts_do_not_get_completed_by_model",
@@ -116256,7 +116266,17 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L118",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
+      "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_new_private_namespace_does_not_dirty_runtime_preflight",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_no_opt_in_preserves_existing_behavior",
@@ -116266,7 +116286,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L108",
+      "source_location": "L118",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_original_review_source_and_cases_are_admitted_over_generic_comparator",
@@ -116276,7 +116296,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L123",
+      "source_location": "L133",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
@@ -116286,7 +116306,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L209",
+      "source_location": "L219",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_same_inputs_deduplicate_and_expired_observation_preserves_valid_case",
@@ -116296,7 +116316,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L155",
+      "source_location": "L165",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_wrong_case_pointer_fails_even_with_resealed_record",
@@ -116306,7 +116326,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L95",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
@@ -116318,7 +116338,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L44",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_tests_test_valuation_input_bundle_bundle"
@@ -116329,7 +116349,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L58",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_tests_test_valuation_input_bundle_write_bundle"
@@ -116340,7 +116360,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L65",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_thesis_evidence_seal_review"
@@ -116351,7 +116371,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L66",
+      "source_location": "L76",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_thesis_evidence_validate_review"
@@ -116362,7 +116382,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L56",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_setup",
       "target": "09_scripts_equity_research_valuation_input_bundle_seal_bundle"
@@ -116372,7 +116392,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L104",
+      "source_location": "L114",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
@@ -116383,7 +116403,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L178",
+      "source_location": "L188",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_bad_issuer_does_not_block_other_baseline_research",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
@@ -116394,7 +116414,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L169",
+      "source_location": "L179",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_thesis_or_unreviewed_news_reopens_only_issuer",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
@@ -116405,7 +116425,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L194",
+      "source_location": "L204",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_history_version_chain_and_failed_opt_in_packet_suppression",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
@@ -116417,7 +116437,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L97",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_views",
       "target": "09_scripts_equity_research_thesis_evidence_evaluate_thesis"
@@ -116427,7 +116447,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L151",
+      "source_location": "L161",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_model_bytes_keep_real_failure",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116438,7 +116458,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L170",
+      "source_location": "L180",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_changed_thesis_or_unreviewed_news_reopens_only_issuer",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116449,7 +116469,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L187",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_disabled_missing_and_future_policy_cannot_admit",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116460,7 +116480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L143",
+      "source_location": "L153",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_expired_opt_in_never_falls_back_to_generic",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116471,7 +116491,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L200",
+      "source_location": "L210",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_history_version_chain_and_failed_opt_in_packet_suppression",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116482,7 +116502,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L163",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_missing_or_changed_financial_facts_do_not_get_completed_by_model",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116493,7 +116513,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L109",
+      "source_location": "L119",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_original_review_source_and_cases_are_admitted_over_generic_comparator",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116504,7 +116524,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L127",
+      "source_location": "L137",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116515,7 +116535,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L210",
+      "source_location": "L220",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_same_inputs_deduplicate_and_expired_observation_preserves_valid_case",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116526,7 +116546,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L158",
+      "source_location": "L168",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_wrong_case_pointer_fails_even_with_resealed_record",
       "target": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_project",
@@ -116538,7 +116558,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L133",
+      "source_location": "L143",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "target": "09_scripts_equity_research_valuation_input_bundle_validate_and_materialize_bundle"
@@ -116549,7 +116569,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L139",
+      "source_location": "L149",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_reprojection_changes_only_current_observation_and_preserves_original_bytes",
       "target": "09_scripts_equity_research_valuation_research_inputs_company_projection_record"
@@ -116560,7 +116580,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_company_valuation.py",
-      "source_location": "L201",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_company_valuation_companyvaluationtests_test_history_version_chain_and_failed_opt_in_packet_suppression",
       "target": "09_scripts_equity_research_tests_test_valuation_input_bundle_bundle"
@@ -163500,5 +163520,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "150dc3db12c668368a668c1ada7acb160102dad2"
+  "built_at_commit": "b7d1b978b05edf08bbfac690aca52a031047baa2"
 }

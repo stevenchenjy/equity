@@ -57,6 +57,11 @@ graphify-out/reflections/
 04_data/equity_research/valuation_input_history.local/
 04_data/equity_research/valuation_source_*.local.*
 04_data/equity_research/valuation_scenarios.local.json
+04_data/equity_research/company_valuation_admissions.local.json
+04_data/equity_research/company_valuation_admission_status.local.json
+04_data/equity_research/company_valuation_admission_history.local/
+04_data/equity_research/company_valuation_observations.local/
+00_project_control/run_logs/company_valuation_admissions.lock
 04_research/company_research/current_research_baseline.csv
 04_research/company_research/recommendation_snapshots.local.jsonl
 04_research/company_research/recommendation_outcomes.local.csv

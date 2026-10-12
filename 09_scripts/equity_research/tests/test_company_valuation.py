@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
 from unittest.mock import patch
 
 from _support import PROJECT_ROOT, visible_html_text
@@ -37,6 +38,15 @@ def write_csv(root, relative, rows):
 
 
 class CompanyValuationTests(unittest.TestCase):
+    def test_new_private_namespace_does_not_dirty_runtime_preflight(self):
+        private = [models.STORE_REL, models.REPORT_REL,
+            '04_data/equity_research/company_valuation_admission_history.local/receipt.json',
+            models.OBSERVATIONS_REL+'/observation.json',
+            '00_project_control/run_logs/company_valuation_admissions.lock']
+        result = subprocess.run(['git', 'check-ignore', '--no-index', '--', *private],
+            cwd=PROJECT_ROOT, text=True, capture_output=True, check=True)
+        self.assertEqual(set(result.stdout.splitlines()), set(private))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
