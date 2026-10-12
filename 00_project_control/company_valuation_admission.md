@@ -17,6 +17,12 @@ from model admission: it also needs a supported business case, a current plan
 with `reviewed_allocation`, entry/invalidation/deadline, all numerical quality
 thresholds and shared capital/aggregate/core-floor checks.
 
+The October 12 verification also registered directly fetched and parsed
+official ORCL and META issuer feeds for the current individual-company queue.
+The verified manifest remains the coverage boundary. Successful collection
+does not acknowledge announcement impacts or complete a company review; newly
+covered companies still require actual primary-source analysis before admission.
+
 The default absent-admission path preserves the existing comparator. Once a
 ticker opts in, an expired/invalid model, changed review or new financial
 period yields an explicit ticker-local incomplete projection. It cannot fall

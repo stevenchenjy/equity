@@ -17,7 +17,7 @@ from daily_common import (ET, ExclusiveFileLock, atomic_write_json, atomic_write
                           canonical_sha256, is_us_market_session_date,
                           last_completed_market_session, latest_published_market_session, sha256_file)
 from decision_dependencies import classify
-from workflow_integrity import reviewed_candidate_ready
+from workflow_integrity import reviewed_candidate_ready, company_review_complete
 
 SCHEMA = "equity_capital_deployment_escalation_v1"
 STATE_SCHEMA = "equity_capital_escalation_state_v1"
@@ -231,7 +231,9 @@ def _observed_gate(gate: dict, watch: dict, config: dict, *, core_value: Decimal
     if code == "score" and score is not None and minimum_score is not None:
         gate["evidence_required"] = f"Canonical reviewed score {score:.2f}; the minimum approved evidence class requires {minimum_score:.2f}. Evidence classes do not impose fixed position sizes; escalation does not raise the score."
     elif code in {"entry", "entry_above_canonical_maximum"} and price is not None and cap is not None:
-        gate["evidence_required"] = f"Canonical completed price ${price:.2f}; maximum reviewed entry ${cap:.2f}. Entry must satisfy the existing dated price and validity rules."
+        gate["evidence_required"] = (f"Canonical completed price ${price:.2f}; valuation-only review ceiling ${cap:.2f}. This is not an approved order price: current company support, a maintained allocation plan and all entry/validity gates remain required."
+            if watch.get('valuation_method') == 'admitted_source_bound_company_model' else
+            f"Canonical completed price ${price:.2f}; maximum reviewed entry ${cap:.2f}. Entry must satisfy the existing dated price and validity rules.")
     elif code in {"upside", "observed_target_has_no_upside"}:
         value, low = _number(watch.get("expected_upside_pct")), minimum("minimum_expected_upside_pct")
         if low is not None:
@@ -291,6 +293,7 @@ def order_options(decision: dict, contract: dict, config: dict | None = None) ->
         route = "diversified_core_growth" if core or fund_prospect else "existing_quality_holding" if h else "researched_growth_candidate"
         view = views.get("candidate_views", {}).get(ticker, views.get("views", {}).get(ticker, {}))
         ready = core or reviewed_candidate_ready(view)
+        reviewed_no_action = not core and company_review_complete(view) and not reviewed_candidate_ready(view)
         admitted = row.get("decision") in BUY and not row.get("blockers") and not global_codes
         draft = row.get("order_draft") if admitted else None
         qty = _number(row.get("shares"))
@@ -317,7 +320,8 @@ def order_options(decision: dict, contract: dict, config: dict | None = None) ->
         ranked.append(dict(ticker=ticker, route=route, decision=row.get("decision"), eligible=admitted,
                            blockers=sorted(codes), gates=[_observed_gate(_gate(c, ticker=ticker, scope="global" if c in global_codes else "ticker"), w, config,
                                                                        core_value=core_value if core_known else None, total=total, floor=floor) for c in sorted(codes)],
-                           research_ready=ready, canonical_score=float(score) if score is not None else None,
+                           research_ready=ready, reviewed_no_action=reviewed_no_action,
+                           canonical_score=float(score) if score is not None else None,
                            shares=row.get("shares", 0) if admitted else 0,
                            estimated_notional=row.get("estimated_notional", 0) if admitted else 0,
                            order_draft=deepcopy(draft) if admitted else None,
@@ -327,7 +331,7 @@ def order_options(decision: dict, contract: dict, config: dict | None = None) ->
                            valuation_bull_price=w.get("valuation_bull_price"),
                            canonical_confidence=w.get("confidence"),
                            canonical_evidence_status="known" if score is not None else "unverified",
-                           route_available=not ({"core_minimum_satisfied_no_additional_tranche_authority", "etf_allocation_strategy_review_required"} & codes),
+                           route_available=not reviewed_no_action and not ({"core_minimum_satisfied_no_additional_tranche_authority", "etf_allocation_strategy_review_required"} & codes),
                            reasons=deepcopy(row.get("reasons", []))))
     ranked.sort(key=lambda r: (not r["eligible"], not r["route_available"], not r["research_ready"],
                                r["canonical_score"] is None, len(r["blockers"]),
@@ -422,13 +426,16 @@ def _build(decision: dict, contract: dict, previous: dict | None, config: dict |
     routes = []
     for route, label in ROUTES.items():
         choices = [r for r in ranked if r["route"] == route]
-        route_status = ("unavailable" if not any(r["route_available"] for r in choices)
+        route_status = ("reviewed_no_action" if choices and all(r['reviewed_no_action'] for r in choices)
+                        else "unavailable" if not any(r["route_available"] for r in choices)
                         else "available" if any(r["research_ready"] or r["eligible"] for r in choices) else "research_incomplete")
         routes.append(dict(route=route, label=label, status=route_status,
                            closest_candidate=deepcopy(choices[0]) if choices else None,
-                           blockers=(["core_minimum_satisfied_no_additional_tranche_authority"] if choices and not any(r["route_available"] for r in choices) else []) if choices else ["no_existing_company_holding" if route == "existing_quality_holding" else "no_final_capital_candidate_in_route"]))
+                           blockers=(sorted({code for r in choices for code in r['blockers'] if code in {'reviewed_business_case_not_supported','core_minimum_satisfied_no_additional_tranche_authority','etf_allocation_strategy_review_required'}}) if not any(r['route_available'] for r in choices) else []) if choices else ["no_existing_company_holding" if route == "existing_quality_holding" else "no_final_capital_candidate_in_route"]))
     requests = []
     for row in ranked:
+        if row['reviewed_no_action']:
+            continue  # Materially changed evidence reopens the current review first.
         research = [g for g in row["gates"] if _research_gate(g["code"])]
         if research and row["ticker"] not in {r["ticker"] for r in requests}:
             requests.append(dict(ticker=row["ticker"], priority=len(requests) + 1,
@@ -441,7 +448,7 @@ def _build(decision: dict, contract: dict, previous: dict | None, config: dict |
         unique_gates[("global", None, code)] = _gate(code, scope="global")
     if not policy_valid:
         unique_gates[("global", None, "capital_escalation_trigger_policy_invalid")] = _gate("capital_escalation_trigger_policy_invalid", scope="global")
-    closest = next((r for r in ranked if not r["eligible"]), None) if not admitted else ranked[0]
+    closest = next((r for r in ranked if not r["eligible"] and r['route_available']), None) if not admitted else ranked[0]
     if admitted:
         explanation = "Existing approved criteria produced a positive conditional manual order draft; retain its exact quantity, validity and gates."
     elif material:

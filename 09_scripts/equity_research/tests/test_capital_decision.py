@@ -173,7 +173,7 @@ class CapitalDecisionTests(unittest.TestCase):
         self.d['watch_candidates'][0].update(suggested_whole_shares=0,
             valuation_method='admitted_source_bound_company_model', valuation_horizon='Next four reported quarters',
             company_valuation_admission=json.dumps({'record_sha256': 'a'*64, 'version': 1}),
-            valuation_bear_price='80.00', valuation_base_price='140.00', valuation_bull_price='180.00',
+            valuation_bear_price='80.00', valuation_base_price='140.00', valuation_bull_price='180.00123456789',
             current_price='101.00', expected_upside_pct='38.61', reward_to_risk_estimate='1.86',
             maximum_review_price='106.67', gate_blockers='reviewed_allocation_missing')
         self.d['capital_decision'] = self.build()

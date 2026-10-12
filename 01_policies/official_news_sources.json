@@ -1,7 +1,7 @@
 {
   "schema_version": "phase5r_official_news_sources_v1",
   "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
-  "verified_on": "2026-10-11",
+  "verified_on": "2026-10-12",
   "max_age_hours": 36,
   "event_lookback_days": 7,
   "retention_days": 180,
@@ -108,6 +108,30 @@
       "https_upgrade_hosts": [
         "investors.micron.com"
       ]
+    },
+    {
+      "source_id": "orcl_ir",
+      "ticker": "ORCL",
+      "url": "https://investor.oracle.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "investor.oracle.com"
+      ],
+      "required": true,
+      "verification_page": "https://investor.oracle.com/investor-news/default.aspx",
+      "verification_note": "Official issuer-hosted feed fetched and parsed with the production RSS parser October 12, 2026; original response bytes and dated receipt retained in private company-valuation integration audit. The current investor-news directory was checked; feed identity and article links remain on investor.oracle.com."
+    },
+    {
+      "source_id": "meta_ir",
+      "ticker": "META",
+      "url": "https://investor.atmeta.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "investor.atmeta.com"
+      ],
+      "required": true,
+      "verification_page": "https://investor.atmeta.com/resources/email-alerts-and-rss/default.aspx",
+      "verification_note": "Official Email Alerts & RSS directory explicitly links this press-release feed; response bytes and production event parse verified October 12, 2026 and retained privately."
     }
   ]
 }

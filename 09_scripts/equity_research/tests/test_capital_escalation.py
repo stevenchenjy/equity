@@ -64,6 +64,29 @@ def actionable(contract, *, quantity=2):
 
 
 class CapitalEscalationTests(unittest.TestCase):
+    def test_completed_adverse_case_does_not_displace_unfinished_company_work(self):
+        d,c,cfg,now = fixture()
+        d['watch_candidates'].append({'ticker':'DONE','score':9,'gate_blockers':'reviewed_business_case_not_supported,entry',
+            'valuation_method':'admitted_source_bound_company_model','current_price':100,'maximum_review_price':90})
+        d['long_horizon_research']={'candidate_views':{'DONE':{'status':'monitor','business_case_status':'mixed',
+            'valuation_readiness':'reviewed_scenarios','validation_errors':[],'reopen_reasons':[],
+            'news_review':{'status':'current','coverage_complete':True}}}}
+        c['decisions'].append({'ticker':'DONE','decision':'NO_ACTION','shares':0,'estimated_notional':0,
+            'order_draft':None,'blockers':[],'reasons':['reviewed_business_case_not_supported']})
+        result=engine.evaluate(d,sealed(c),config=cfg,current=now)
+        self.assertEqual(result['closest_candidate']['ticker'],'GROW')
+        self.assertNotIn('DONE',[r['ticker'] for r in result['research_requests']])
+        done=next(r for r in result['ranked_capital_uses'] if r['ticker']=='DONE')
+        self.assertTrue(done['reviewed_no_action']);self.assertFalse(done['route_available'])
+        self.assertIn('not an approved order price',next(g for g in done['gates'] if g['code']=='entry')['evidence_required'])
+        d['watch_candidates']=[d['watch_candidates'][1]];c['decisions']=[c['decisions'][1]]
+        result=engine.evaluate(d,sealed(c),config=cfg,current=now)
+        self.assertIsNone(result['closest_candidate'])
+        self.assertEqual(next(r for r in result['routes'] if r['route']=='researched_growth_candidate')['status'],'reviewed_no_action')
+        d['long_horizon_research']['candidate_views']['DONE']['reopen_reasons']=['new_material_filing_not_reviewed']
+        result=engine.evaluate(d,sealed(c),config=cfg,current=now)
+        self.assertFalse(result['ranked_capital_uses'][0]['reviewed_no_action'])
+
     def two_sessions(self, root):
         first = fixture("2026-10-06", stamp("2026-10-07"))
         update(root, *first)

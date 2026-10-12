@@ -90,7 +90,7 @@ def cards(decision, view=None):
         row = by_ticker.get(watch['ticker'], {})
         result.append(dict(title='Company valuation — '+watch['ticker'], group='background', kind='', sources=[],
             body=f"Admitted company model v{proof['version']}; horizon: {watch.get('valuation_horizon', 'unverified')}.\n"+
-                 f"Bear/base/bull scenarios: ${watch['valuation_bear_price']} / ${watch['valuation_base_price']} / ${watch['valuation_bull_price']}; analyst assumptions, not guaranteed prices.\n"+
+                 'Bear/base/bull scenarios: ' + ' / '.join(f"${float(watch['valuation_'+case+'_price']):.2f}" for case in ('bear','base','bull')) + '; analyst assumptions, not guaranteed prices.\n'+
                  f"At the dated reference close ${watch['current_price']}: base-scenario gap {watch['expected_upside_pct']}%, scenario reward/risk {watch['reward_to_risk_estimate']}.\n"+
                  f"Valuation-only review ceiling: ${watch['maximum_review_price'] or 'unverified'}; this is not a cleared buy limit. Company support, current evidence, a maintained allocation plan and all remaining gates still apply.\n"+
                  f"Current decision: {row.get('decision', 'unverified')}; proposed shares {row.get('shares', 0)}. Allocation judgment and counterevidence remain in the retained company case."))

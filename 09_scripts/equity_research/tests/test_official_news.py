@@ -39,7 +39,7 @@ class NewsTests(unittest.TestCase):
 
     def test_verified_sources_are_valid_and_explicit(self):
         manifest = load_manifest(MANIFEST_PATH)
-        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC", "AVGO", "AMD", "MU"})
+        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC", "AVGO", "AMD", "MU", "ORCL", "META"})
 
     def test_http_article_upgrade_requires_verified_host_and_keeps_url_safety(self):
         source = dict(SOURCE, https_upgrade_hosts=["ir.example.com"])
