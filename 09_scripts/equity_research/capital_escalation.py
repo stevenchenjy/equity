@@ -229,20 +229,20 @@ def _observed_gate(gate: dict, watch: dict, config: dict, *, core_value: Decimal
     score, minimum_score = _number(watch.get("score")), minimum("minimum_score")
     price, cap = _number(watch.get("current_price")), _number(watch.get("maximum_review_price"))
     if code == "score" and score is not None and minimum_score is not None:
-        gate["evidence_required"] = f"Canonical reviewed score {score:.2f}; the lowest approved sizing tier requires {minimum_score:.2f}. A supported assessment must satisfy an existing tier; escalation does not raise the score."
+        gate["evidence_required"] = f"Canonical reviewed score {score:.2f}; the minimum approved evidence class requires {minimum_score:.2f}. Evidence classes do not impose fixed position sizes; escalation does not raise the score."
     elif code in {"entry", "entry_above_canonical_maximum"} and price is not None and cap is not None:
         gate["evidence_required"] = f"Canonical completed price ${price:.2f}; maximum reviewed entry ${cap:.2f}. Entry must satisfy the existing dated price and validity rules."
     elif code in {"upside", "observed_target_has_no_upside"}:
         value, low = _number(watch.get("expected_upside_pct")), minimum("minimum_expected_upside_pct")
         if low is not None:
             observed = f"Canonical expected upside {value:.2f}%; " if value is not None else "Canonical upside gate failed; "
-            gate["evidence_required"] = observed + f"the lowest approved sizing tier requires {low:.2f}%. A new sourced valuation or changed observed price must satisfy an existing tier."
+            gate["evidence_required"] = observed + f"the minimum approved evidence class requires {low:.2f}%. A new sourced valuation or changed observed price must satisfy the existing evidence threshold."
     elif code in {"reward_to_risk", "reward_to_risk_below_minimum"}:
         value = _number(watch.get("reward_to_risk_estimate", watch.get("reward_to_risk")))
         low = minimum("minimum_reward_to_risk")
         if low is not None:
             observed = f"Canonical reward-to-risk {value:.2f}; " if value is not None else "Canonical reward-to-risk gate failed; "
-            gate["evidence_required"] = observed + f"the lowest approved sizing tier requires {low:.2f}. Keep the reviewed entry, invalidation and reassessment criteria."
+            gate["evidence_required"] = observed + f"the minimum approved evidence class requires {low:.2f}. Keep the reviewed entry, invalidation and reassessment criteria."
     elif code in {"whole_share_target_gap", "core_minimum_satisfied_no_additional_tranche_authority"} and core_value is not None and total is not None and total > 0 and floor is not None:
         gate["evidence_required"] = f"Current held core weight {core_value / total * 100:.2f}% already covers the approved {floor:.2f}% minimum. The core-floor adapter has no additional whole-share authority; an above-floor diversified-growth allocation requires a separately reviewed adopted policy."
     return gate

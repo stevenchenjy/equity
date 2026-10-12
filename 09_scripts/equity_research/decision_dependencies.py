@@ -27,7 +27,9 @@ STAGE_OUTPUTS = {
 def classify(code: str, *, ticker: str | None = None, scope='ticker') -> dict[str, Any]:
     code = str(code)
     category, worker, needed = 'D', 'recurring_analyst', 'A sourced strategy-appropriate thesis, valuation and counterevidence conclusion; no positive conclusion is inferred from a screen.'
-    if any(w in code for w in ('account', 'planning_cash', 'cash_confirm', 'cash_not_confirmed', 'cash_basis', 'open_orders', 'order_inventory', 'order_snapshot', 'existing_order', 'remaining_shares', 'holdings', 'execution_conflict', 'execution_funds', 'buying_power', 'tactical_risk_unconfirmed', 'earlier_instruction_execution')):
+    if code == 'reviewed_business_case_not_supported':
+        needed = 'The current completed source-bound company review does not support a positive investment case. This is a reviewed rejection, not unfinished research; another unchanged dossier cannot clear it. Reassess only with materially changed evidence and an accepted source-bound amendment. The current outcome remains zero-share NO_ACTION.'
+    elif any(w in code for w in ('account', 'planning_cash', 'cash_confirm', 'cash_not_confirmed', 'cash_basis', 'open_orders', 'order_inventory', 'order_snapshot', 'existing_order', 'remaining_shares', 'holdings', 'execution_conflict', 'execution_funds', 'buying_power', 'tactical_risk_unconfirmed', 'earlier_instruction_execution')):
         category, worker, needed = 'C', 'approved_manual_account_record', 'Dated complete current holdings and account-wide pending/partial orders (remaining quantity, price/stop, TIF and status), plus available execution funds and settlement/buying-power confirmation.'
         if code == 'earlier_instruction_execution_unreconciled':
             needed = 'A complete owner-recorded holdings/cash snapshot and sourced complete account-wide order observation recorded after the earlier email; an assumed fill or a later status email cannot supply this evidence.'

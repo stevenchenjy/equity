@@ -4,6 +4,7 @@ import unittest
 from _support import SCRIPT_DIR  # noqa: F401
 from regenerate_portfolio_outputs import etf_research_recommendation
 from capital_escalation import _research_gate, order_options
+from decision_dependencies import classify
 from test_capital_escalation import fixture
 
 
@@ -40,6 +41,31 @@ class PassingFrictionTests(unittest.TestCase):
         self.assertTrue(_research_gate('latest_earnings_pending_incorporation'))
         self.assertTrue(_research_gate('maintained_company_research_incomplete'))
         self.assertFalse(_research_gate('reward_to_risk'))
+
+    def test_adverse_review_explanation_does_not_request_unchanged_missing_research(self):
+        code = 'reviewed_business_case_not_supported'
+        self.assertIn('reviewed rejection, not unfinished research', classify(code)['evidence_required'])
+        self.assertIn('zero-share NO_ACTION', classify(code)['evidence_required'])
+        self.assertFalse(_research_gate(code))
+        d, contract, config, now = fixture()
+        d['watch_candidates'][0]['gate_blockers'] = code
+        contract['decisions'][0].update(decision='NO_ACTION', blockers=[], reasons=[code])
+        row = order_options(d, contract, config)[0]
+        gate = next(g for g in row['gates'] if g['code'] == code)
+        self.assertIn('reviewed rejection, not unfinished research', gate['evidence_required'])
+        self.assertFalse(row['eligible'])
+        self.assertIn('scheduled analyst must synthesize', classify('maintained_company_research_incomplete')['evidence_required'])
+
+    def test_threshold_explanation_preserves_numbers_without_fixed_size_claim(self):
+        d, contract, config, now = fixture()
+        config['account']['candidate_sizing_tiers'] = [dict(minimum_score=7,
+            minimum_expected_upside_pct=10, minimum_reward_to_risk=1.25)]
+        d['watch_candidates'][0].update(score=6.2, expected_upside_pct=8,
+            reward_to_risk_estimate=.9, gate_blockers='score,upside,reward_to_risk')
+        gates = {g['code']: g['evidence_required'] for g in order_options(d, contract, config)[0]['gates']}
+        for code, number in [('score', '7.00'), ('upside', '10.00%'), ('reward_to_risk', '1.25')]:
+            self.assertIn(number, gates[code])
+            self.assertNotIn('sizing tier', gates[code])
 
 
 if __name__ == '__main__':
