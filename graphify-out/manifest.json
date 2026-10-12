@@ -1090,8 +1090,8 @@
     "semantic_hash": "7fc3732ae26ce823d87a2b91e703e782"
   },
   "09_scripts/equity_research/tests/test_workflow_integrity.py": {
-    "mtime": 1791773542.6953087,
-    "ast_hash": "88be585df4a5271b2b4b6025b0df466a",
+    "mtime": 1791808392.886101,
+    "ast_hash": "de743ef834ba6519a87f5d6559b4c372",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_workflow_publication.py": {
@@ -1120,8 +1120,8 @@
     "semantic_hash": "f03ef1ddba9d8e459fcae07288cb8411"
   },
   "09_scripts/equity_research/workflow_integrity.py": {
-    "mtime": 1791773542.6935027,
-    "ast_hash": "63d1b8f952d4b7d8edf6a5b7b0d4fa8c",
+    "mtime": 1791808299.6359582,
+    "ast_hash": "143675bbad60c05d40d6a7d1edb38162",
     "semantic_hash": ""
   },
   "00_project_control/maintained_investment_workflow.md": {
@@ -1705,8 +1705,8 @@
     "semantic_hash": "13cb84203d3339b1700e3b16228ba277"
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1791807637.7193916,
-    "ast_hash": "92611a4db01760771f755a2085d6143f",
+    "mtime": 1791808299.7097037,
+    "ast_hash": "c86e6d7001c980f83015b3d91d298b5a",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {

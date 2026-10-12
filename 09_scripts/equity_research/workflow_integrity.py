@@ -318,7 +318,11 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         if blockers or scoped:
             row["baseline_research_proposal"] = {key: row.get(key) for key in ("label", "action", "suggested_whole_shares", "maximum_review_price")}
             row["suggested_whole_shares"] = "0"
-            row["action"] = "research_prerequisites_unresolved"
+            # A current completed adverse case is a decision, not unfinished
+            # research. Retain zero shares and every numerical gate unchanged.
+            row["action"] = ("reviewed_no_action" if not blockers
+                and scoped == ["reviewed_business_case_not_supported"]
+                else "research_prerequisites_unresolved")
             row["label"] = "watchlist"
             row["gate_blockers"] = ",".join(filter(None, [str(row.get("gate_blockers", "")), *blockers, *scoped]))
         elif ticker in decision.get("eligible_new_position_review_candidates", []):

@@ -1,16 +1,16 @@
 # Graph Report - equity-passing-friction-20261011  (2026-10-12)
 
 ## Corpus Check
-- 374 files · ~351,313 words
+- 374 files · ~351,399 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4267 nodes · 11309 edges · 266 communities (177 shown, 89 thin omitted)
+- 4267 nodes · 11309 edges · 268 communities (178 shown, 90 thin omitted)
 - Extraction: 80% EXTRACTED · 20% INFERRED · 0% AMBIGUOUS · INFERRED: 2318 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0452a5cd`
+- Built from commit: `539ebdca`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -279,6 +279,8 @@
 - presentation_lines
 - next_thursday
 - ResearchWarningNotificationTests
+- Handler
+- test_research_opportunities.py
 
 ## God Nodes (most connected - your core abstractions)
 1. `canonical_sha256()` - 160 edges
@@ -307,7 +309,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (266 total, 89 thin omitted)
+## Communities (268 total, 90 thin omitted)
 
 ### Community 0 - "RuntimeSyncError"
 Cohesion: 0.05
@@ -346,8 +348,8 @@ Cohesion: 0.08
 Nodes (29): _aware(), _blockers(), build_capital_work_queue(), compact_summary(), _core_coverage(), _item_semantic(), _money(), _next_check() (+21 more)
 
 ### Community 9 - "read_json"
-Cohesion: 0.12
-Nodes (4): read_json(), intake(), summary(), OpportunityTests
+Cohesion: 0.13
+Nodes (3): read_json(), intake(), OpportunityTests
 
 ### Community 10 - "build_long_horizon_report"
 Cohesion: 0.08
@@ -470,7 +472,7 @@ Cohesion: 0.16
 Nodes (24): complete_inputs(), item(), ValuationEvidenceV1Tests, build_valuation_evidence_v1(), _calculation_receipt(), _InputSpec, _normalize_input(), _parse_decimal() (+16 more)
 
 ### Community 40 - "momentum_experiment.py"
-Cohesion: 0.14
+Cohesion: 0.15
 Nodes (4): atomic_write_csv(), negative_opportunity(), inline(), ResearchBacklogTests
 
 ### Community 41 - "investment_plans.py"
@@ -478,7 +480,7 @@ Cohesion: 0.20
 Nodes (29): apply_plan_context(), _bound_sources(), evaluate_plans(), _expired_at(), _finish_scopes(), load_plan_context(), _observed_orders(), _order_scopes() (+21 more)
 
 ### Community 42 - "ResearchBacklogTests"
-Cohesion: 0.18
+Cohesion: 0.21
 Nodes (16): Preserve exact bytes before a producer can overwrite its current output., retain_input(), collect_triggers(), packet(), positive_changes(), producer(), datetime, Path (+8 more)
 
 ### Community 43 - "FinancialPeriodIntegrityTests"
@@ -550,7 +552,7 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 60 - "ActiveProductionTests"
-Cohesion: 0.29
+Cohesion: 0.26
 Nodes (21): _append_history(), attention_rows(), build_backlog(), complete_objective_data(), _history(), numeric(), datetime, Path (+13 more)
 
 ### Community 61 - "compose_research_inputs"
@@ -574,8 +576,8 @@ Cohesion: 0.24
 Nodes (5): Capital needed to reach the core floor at the canonical whole-share mark.      T, remaining_core_floor_cost(), Reserve actual eligible core whole shares and prior ranked research buys.      T, shared_candidate_budget(), SharedCandidateBudgetTests
 
 ### Community 66 - "research_backlog.py"
-Cohesion: 0.32
-Nodes (6): read_report(), apply_assessment(), main(), datetime, Path, validate_assessment()
+Cohesion: 0.26
+Nodes (7): _base_metrics(), objective(), apply_assessment(), main(), datetime, Path, validate_assessment()
 
 ### Community 67 - "ledger_row"
 Cohesion: 0.15
@@ -810,8 +812,8 @@ Cohesion: 0.29
 Nodes (7): Equity Research 私人工作台, Tailscale 私人连接, 发布和服务, 日常使用, 日常登记与研究复审, 权威状态与后台, 验证和历史
 
 ### Community 136 - "Equity Research — Account-State Policy"
-Cohesion: 0.19
-Nodes (16): main(), Path, run_stage(), _base_metrics(), elapsed_sessions(), held_tickers(), negative_assessment_wait(), objective() (+8 more)
+Cohesion: 0.23
+Nodes (13): elapsed_sessions(), held_tickers(), negative_assessment_wait(), priority(), publish_view(), datetime, Path, Durable attention orchestration; existing decision/risk modules retain capital. (+5 more)
 
 ### Community 137 - "Equity Research — MacBook → GitHub → Mac mini workflow"
 Cohesion: 0.14
@@ -986,8 +988,8 @@ Cohesion: 0.67
 Nodes (3): main(), massive_auth_probe_exit_code(), Construct the Massive client without I/O and disclose only fixed status.
 
 ### Community 256 - "opportunity_contract.py"
-Cohesion: 0.28
-Nodes (15): append_event(), empty_store(), inside(), publish_store(), Any, datetime, Path, Authoritative research-only contracts, journal replay and transitions.  An atomi (+7 more)
+Cohesion: 0.33
+Nodes (14): append_event(), empty_store(), inside(), publish_store(), Any, datetime, Path, Authoritative research-only contracts, journal replay and transitions.  An atomi (+6 more)
 
 ### Community 257 - "test_cross_day_delivery.py"
 Cohesion: 0.44
@@ -1009,19 +1011,23 @@ Nodes (5): main(), parse_position(), Path, Read an auditable manual valuation re
 Cohesion: 0.67
 Nodes (3): presentation_lines(), Use the same exact gates in the private report and adjacent renderers., _text()
 
+### Community 266 - "Handler"
+Cohesion: 0.67
+Nodes (3): main(), Path, run_stage()
+
 ## Knowledge Gaps
 - **374 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+369 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **89 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **90 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `canonical_sha256()` connect `canonical_sha256` to `opportunity_contract.py`, `decision_dependencies.py`, `CapitalDecisionTests`, `is_us_market_session_date`, `CapitalWorkQueueTests`, `read_json`, `build_long_horizon_report`, `Equity Research — Account-State Policy`, `sec_acceptance.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `now_et`, `main`, `sec_acceptance_extensions.py`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `shadow_llm_contract.py`, `read_snapshot`, `frozen_momentum_runtime.py`, `build_decision_evidence_packet.py`, `apply_workflow_integrity`, `momentum_experiment.py`, `investment_plans.py`, `ResearchBacklogTests`, `evaluate_shadow_llm_incremental_value.py`, `merge_news_context`, `main`, `OutcomeCoverageTests`, `MaintainedThesisTests`, `sha256_file`, `ShadowLlmTests`, `ShadowProviderError`, `WorkflowPublicationTests`, `ActiveProductionTests`, `ledger`, `research_backlog.py`, `append_plan`, `validate_packet`, `track_recommendation_outcomes.py`, `earnings_incorporation.py`, `iso_now`, `payloads`, `economic_packet`, `frozen_momentum_runtime.py`, `send_once`, `run_daily_refresh.py`, `ValuationResearchRetentionTests`, `objective_research`, `test_allocation_policy_migration.py`, `write_acceptance_index`, `payloads`, `WorkflowBlockerScopeTests`, `classify`, `load_authority`?**
   _High betweenness centrality (0.160) - this node is a cross-community bridge._
-- **Why does `read_json()` connect `read_json` to `opportunity_contract.py`, `update_manual_account.py`, `Equity Research — Account-State Policy`, `build_long_horizon_report`, `sec_acceptance.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `now_et`, `main`, `sec_acceptance_extensions.py`, `aware`, `official_news.py`, `workflow_evaluation.py`, `thesis_evidence.py`, `build_decision_evidence_packet.py`, `apply_workflow_integrity`, `migrate`, `momentum_experiment.py`, `ResearchBacklogTests`, `main`, `sha256_file`, `main`, `equity_naming.py`, `ActiveProductionTests`, `atomic_write_text`, `research_backlog.py`, `ledger_row`, `earnings_incorporation.py`, `iso_now`, `payloads`, `verify_daily_upgrade.py`, `frozen_momentum_runtime.py`, `ConcentratedAllocationTests`, `supplement_cached_latest_report`, `LimitedRefreshTests`, `run_daily_refresh.py`, `work_queue_reporting.py`, `DeliveryWindowTests`, `objective_research`, `WorkflowBlockerScopeTests`, `classify`, `decision_dependencies.py`, `load_authority`, `ActionEmailLayoutTests`?**
+- **Why does `read_json()` connect `read_json` to `opportunity_contract.py`, `update_manual_account.py`, `Equity Research — Account-State Policy`, `build_long_horizon_report`, `test_research_opportunities.py`, `sec_acceptance.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `now_et`, `main`, `sec_acceptance_extensions.py`, `aware`, `official_news.py`, `workflow_evaluation.py`, `thesis_evidence.py`, `build_decision_evidence_packet.py`, `apply_workflow_integrity`, `migrate`, `momentum_experiment.py`, `ResearchBacklogTests`, `main`, `sha256_file`, `main`, `equity_naming.py`, `ActiveProductionTests`, `atomic_write_text`, `research_backlog.py`, `ledger_row`, `earnings_incorporation.py`, `iso_now`, `payloads`, `verify_daily_upgrade.py`, `frozen_momentum_runtime.py`, `ConcentratedAllocationTests`, `supplement_cached_latest_report`, `LimitedRefreshTests`, `run_daily_refresh.py`, `work_queue_reporting.py`, `DeliveryWindowTests`, `objective_research`, `WorkflowBlockerScopeTests`, `classify`, `decision_dependencies.py`, `load_authority`, `ActionEmailLayoutTests`?**
   _High betweenness centrality (0.044) - this node is a cross-community bridge._
-- **Why does `ExclusiveFileLock` connect `RuntimeSyncError` to `opportunity_contract.py`, `is_us_market_session_date`, `CapitalWorkQueueTests`, `Equity Research — Account-State Policy`, `read_json`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `now_et`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `frozen_momentum_runtime.py`, `apply_workflow_integrity`, `migrate`, `merge_news_context`, `ActiveProductionTests`, `atomic_write_text`, `research_backlog.py`, `append_plan`, `iso_now`, `payloads`, `verify_daily_upgrade.py`, `send_once`, `DeliveryWindowTests`, `payloads`, `WorkflowBlockerScopeTests`, `smoke_diagnostic_notes`?**
+- **Why does `ExclusiveFileLock` connect `RuntimeSyncError` to `is_us_market_session_date`, `CapitalWorkQueueTests`, `read_json`, `Handler`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `now_et`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `frozen_momentum_runtime.py`, `apply_workflow_integrity`, `migrate`, `ResearchBacklogTests`, `merge_news_context`, `ActiveProductionTests`, `atomic_write_text`, `research_backlog.py`, `append_plan`, `iso_now`, `payloads`, `verify_daily_upgrade.py`, `send_once`, `DeliveryWindowTests`, `payloads`, `WorkflowBlockerScopeTests`, `smoke_diagnostic_notes`?**
   _High betweenness centrality (0.033) - this node is a cross-community bridge._
 - **Are the 156 inferred relationships involving `canonical_sha256()` (e.g. with `load_authority()` and `evaluate_archived()`) actually correct?**
   _`canonical_sha256()` has 156 INFERRED edges - model-reasoned connections that need verification._

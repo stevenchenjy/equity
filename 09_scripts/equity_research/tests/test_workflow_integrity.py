@@ -141,15 +141,24 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertTrue(company_review_complete(view))
         self.assertFalse(reviewed_candidate_ready(view))
         decision = self.decision(); decision['held_positions'] = []
+        decision['account'] = dict(account_total_value='1000', cash_available='1000', cash_reserved='0', cash_basis='owner_recorded')
         decision['watch_candidates'] = [dict(ticker='ABC', suggested_whole_shares='0', action='watch_only', gate_blockers='reward_to_risk')]
         with patch('workflow_integrity.current_thesis_views', return_value={'ABC': view}):
             self.publish(decision)
         codes = decision['watch_candidates'][0]['gate_blockers']
         self.assertIn('reviewed_business_case_not_supported', codes)
         self.assertNotIn('maintained_company_research_incomplete', codes)
+        self.assertEqual(decision['watch_candidates'][0]['action'], 'reviewed_no_action')
         self.assertFalse(decision['eligible_new_position_review_candidates'])
         view['news_review']['coverage_complete'] = False
         self.assertFalse(company_review_complete(view))
+        reopened = self.decision(); reopened['held_positions'] = []
+        reopened['account'] = deepcopy(decision['account'])
+        reopened['watch_candidates'] = [dict(ticker='ABC', suggested_whole_shares='0', action='watch_only')]
+        with patch('workflow_integrity.current_thesis_views', return_value={'ABC': view}):
+            self.publish(reopened)
+        self.assertEqual(reopened['watch_candidates'][0]['action'], 'research_prerequisites_unresolved')
+        self.assertIn('maintained_company_research_incomplete', reopened['watch_candidates'][0]['gate_blockers'])
 
     def test_blocked_proposal_cannot_remain_in_post_review_cash_or_holdings(self):
         decision = self.decision("action_review_candidate")
