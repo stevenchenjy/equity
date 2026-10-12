@@ -16,7 +16,7 @@ from production_strategies import REGISTRY, select
 from decision_dependencies import classify
 from tactical_review import review_open_orders
 from investment_plans import regular_close
-from workflow_integrity import reviewed_candidate_ready
+from workflow_integrity import reviewed_candidate_ready, company_review_complete
 from core_entry import eligible_core_tranche
 from account_authority import POLICY_REL, load_authority
 
@@ -194,7 +194,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             if ticker in order_review['active_tickers']:issues.append('existing_order_requires_reconciliation')
             if h and not core and not growth and p.get('role')!='tactical':issues.append('position_purpose_change_requires_recorded_reassessment')
             if not core and not reviewed_candidate_ready(decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{}))):
-                issues.append('maintained_company_research_incomplete')
+                view=decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{}))
+                issues.append('reviewed_business_case_not_supported' if company_review_complete(view) else 'maintained_company_research_incomplete')
             draft=eligible_core_tranche(decision,w) if core else tactical.get(ticker)
             if growth:
                 draft=None

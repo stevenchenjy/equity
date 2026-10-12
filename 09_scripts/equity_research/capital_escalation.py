@@ -207,6 +207,8 @@ def _gate(code: str, *, ticker: str | None = None, scope: str = "ticker") -> dic
         result["evidence_required"] = "Current core holdings already cover the reviewed minimum, so the minimum-core adapter has no additional whole-share authority."
     if code == "core_minimum_satisfied_no_additional_tranche_authority":
         result["evidence_required"] = "A separately reviewed and adopted above-minimum diversified-growth allocation policy is required; the core floor alone cannot authorize another tranche."
+    if code == "etf_allocation_strategy_review_required":
+        result["evidence_required"] = "Verified fund mandate, fees and holdings overlap, plus a reviewed adopted allocation route. The current core-floor adapter does not authorize this ETF; company earnings or EV/revenue completion cannot clear this requirement."
     return result
 
 
@@ -325,7 +327,7 @@ def order_options(decision: dict, contract: dict, config: dict | None = None) ->
                            valuation_bull_price=w.get("valuation_bull_price"),
                            canonical_confidence=w.get("confidence"),
                            canonical_evidence_status="known" if score is not None else "unverified",
-                           route_available="core_minimum_satisfied_no_additional_tranche_authority" not in codes,
+                           route_available=not ({"core_minimum_satisfied_no_additional_tranche_authority", "etf_allocation_strategy_review_required"} & codes),
                            reasons=deepcopy(row.get("reasons", []))))
     ranked.sort(key=lambda r: (not r["eligible"], not r["route_available"], not r["research_ready"],
                                r["canonical_score"] is None, len(r["blockers"]),

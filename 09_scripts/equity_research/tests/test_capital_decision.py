@@ -41,6 +41,14 @@ class CapitalDecisionTests(unittest.TestCase):
         self.assertIsNone(r['order_draft'])
         self.assertEqual(r['blockers'], [])
         self.assertIn('reviewed_business_case_not_supported', r['reasons'])
+
+    def test_adverse_case_rejects_even_an_inconsistent_positive_upstream_candidate(self):
+        self.d['long_horizon_research']['candidate_views']['TEST']['business_case_status'] = 'mixed'
+        r = self.build()['decisions'][0]
+        self.assertEqual(r['decision'], 'NO_ACTION')
+        self.assertEqual(r['shares'], 0)
+        self.assertIsNone(r['order_draft'])
+        self.assertIn('reviewed_business_case_not_supported', ' '.join(r['reasons']))
     def test_real_account_risk_change_resizes_without_symbolic_review(self):
         self.d['account']['account_total_value']=4000;self.d['account']['cash_available']=3000
         self.d['tactical_review']=tactical_review.build_tactical_review(**self.v)

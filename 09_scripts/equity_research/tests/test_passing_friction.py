@@ -24,6 +24,17 @@ class PassingFrictionTests(unittest.TestCase):
             ranked = order_options(d, contract, config)
             self.assertEqual(ranked[0]['route'], 'diversified_core_growth')
             self.assertFalse(ranked[0]['eligible'])
+            self.assertFalse(ranked[0]['route_available'])
+
+    def test_unadopted_fund_route_cannot_outrank_company_work_as_closest_candidate(self):
+        d, contract, config, now = fixture()
+        d['watch_candidates'].append(dict(ticker='QQQM', asset_role='etf_research_candidate', score=9,
+            gate_blockers='etf_allocation_strategy_review_required', suggested_whole_shares=0))
+        contract['decisions'].append(dict(ticker='QQQM', decision='BLOCKED', shares=0,
+            blockers=['etf_allocation_strategy_review_required'], estimated_notional=0, order_draft=None, reasons=[]))
+        rows = order_options(d, contract, config)
+        self.assertEqual(rows[0]['ticker'], 'GROW')
+        self.assertFalse(rows[1]['route_available'])
 
     def test_company_financial_work_still_routes_to_research(self):
         self.assertTrue(_research_gate('latest_earnings_pending_incorporation'))
