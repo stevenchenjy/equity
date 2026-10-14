@@ -1,0 +1,624 @@
+{
+  "artifact_sha256": "bd554ef97cbc3e2f8f993280b59bc788daba816f5005df8c02e13ed52781a069",
+  "previous_artifact_sha256": "",
+  "records": [
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-03T20:10:23.000+00:00",
+        "accession_number": "0001628280-26-060438",
+        "cik": "1642896",
+        "filing_date": "2026-09-03",
+        "record_sha256": "c36ba081832c452872732ae4288fb2b18ed18128e84c895311b0c1c5cc8de173",
+        "source_url": "https://data.sec.gov/submissions/CIK0001642896.json",
+        "ticker": "IOT"
+      },
+      "correction_sha256": "0ef97d86368268b0b8a35cef20222fdeeb8e3b1e4fa38dad795be8c8f75952a4",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Samsara Inc.",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-04T00:10:23.000+00:00",
+        "accession_number": "0001628280-26-060438",
+        "cik": "1642896",
+        "filing_date": "2026-09-03",
+        "record_sha256": "d5c8d66b40df15942cdefb5b735b604dcfa50a4a71fe99e6a9aefe25ccafde83",
+        "source_url": "https://data.sec.gov/submissions/CIK0001642896.json",
+        "ticker": "IOT"
+      },
+      "original": {
+        "accepted_at": "2026-09-03T16:10:23.000+00:00",
+        "accession_number": "0001628280-26-060438",
+        "cik": "1642896",
+        "filing_date": "2026-09-03",
+        "record_sha256": "16760e35050eaaf147356d487a8e0f6e4511a4ad71b22689c23a7c96598dfeb6",
+        "source_url": "https://data.sec.gov/submissions/CIK0001642896.json",
+        "ticker": "IOT"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:23.997+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/6fd4befcff50d47fe678476d01a45b5017ca968cbfa7b8009d6abfaa1212d294.raw",
+          "raw_sha256": "6fd4befcff50d47fe678476d01a45b5017ca968cbfa7b8009d6abfaa1212d294",
+          "url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026060438/0001628280-26-060438-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:44.448+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/b1db0d468f1cf0d01d9e6891399e785e1f54c65ea398a43ace71f253826cfc96.raw",
+          "raw_sha256": "b1db0d468f1cf0d01d9e6891399e785e1f54c65ea398a43ace71f253826cfc96",
+          "url": "https://www.sec.gov/Archives/edgar/data/1642896/000162828026060438/0001628280-26-060438-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:43.058+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/031a51561863f5de2369d5ed91246644f5c5d575a2c0416eeb74da51fac7157c.raw",
+          "raw_sha256": "031a51561863f5de2369d5ed91246644f5c5d575a2c0416eeb74da51fac7157c",
+          "url": "https://data.sec.gov/submissions/CIK0001642896.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-30T20:02:22.000+00:00",
+        "accession_number": "0000723125-26-000018",
+        "cik": "723125",
+        "filing_date": "2026-09-30",
+        "record_sha256": "21ec08cf9dc7ff5dec10e5e9b8df0f127c36c3e90e3b9219b6405e5726c5d4d1",
+        "source_url": "https://data.sec.gov/submissions/CIK0000723125.json",
+        "ticker": "MU"
+      },
+      "correction_sha256": "712270f6be961c9c3cc6229d232afca4dc31983f5bad2754d4062a7b6e4ec26c",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "MICRON TECHNOLOGY INC",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-10-01T00:02:22.000+00:00",
+        "accession_number": "0000723125-26-000018",
+        "cik": "723125",
+        "filing_date": "2026-09-30",
+        "record_sha256": "0417677ae66de4761c272d51db2e8e342c2b9c653aadec0ab1051fdacbc99fc8",
+        "source_url": "https://data.sec.gov/submissions/CIK0000723125.json",
+        "ticker": "MU"
+      },
+      "original": {
+        "accepted_at": "2026-09-30T16:02:22.000+00:00",
+        "accession_number": "0000723125-26-000018",
+        "cik": "723125",
+        "filing_date": "2026-09-30",
+        "record_sha256": "86373f3f4154c681da9775c7a3237621bc9f9b04ebb083f0848832ee08c041b9",
+        "source_url": "https://data.sec.gov/submissions/CIK0000723125.json",
+        "ticker": "MU"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:24.536+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/0faebb1e93f878c5d1859dffb49ba306c17eb8ce7ca936ca54505e0edeeb0930.raw",
+          "raw_sha256": "0faebb1e93f878c5d1859dffb49ba306c17eb8ce7ca936ca54505e0edeeb0930",
+          "url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/0000723125-26-000018-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:49:26.293+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/bda394e8b8f41e492a0051b11b92a9469c2bdac5d280e273763b8946519861e4.raw",
+          "raw_sha256": "bda394e8b8f41e492a0051b11b92a9469c2bdac5d280e273763b8946519861e4",
+          "url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/0000723125-26-000018-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:49:25.170+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/a13c7228713fbf072005913ff5ec9f7cec98704564d073300aae38b8871e9a40.raw",
+          "raw_sha256": "a13c7228713fbf072005913ff5ec9f7cec98704564d073300aae38b8871e9a40",
+          "url": "https://data.sec.gov/submissions/CIK0000723125.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-03T12:03:56.000+00:00",
+        "accession_number": "0001045810-26-000078",
+        "cik": "1045810",
+        "filing_date": "2026-09-03",
+        "record_sha256": "217c1004f1d2605e1ccc64045ff357c9984b6f7343936ef18ed78fc32fd07b6d",
+        "source_url": "https://data.sec.gov/submissions/CIK0001045810.json",
+        "ticker": "NVDA"
+      },
+      "correction_sha256": "59295da868918aa04c12883142f52535823bfba74ce67a5b5c4e6337ab9c2b9f",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "NVIDIA CORP",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-03T16:03:56.000+00:00",
+        "accession_number": "0001045810-26-000078",
+        "cik": "1045810",
+        "filing_date": "2026-09-03",
+        "record_sha256": "a1389ed010a2f782add75734d151394bceaa9ee79ba45f484fbe9197d4bbcee7",
+        "source_url": "https://data.sec.gov/submissions/CIK0001045810.json",
+        "ticker": "NVDA"
+      },
+      "original": {
+        "accepted_at": "2026-09-03T08:03:56.000+00:00",
+        "accession_number": "0001045810-26-000078",
+        "cik": "1045810",
+        "filing_date": "2026-09-03",
+        "record_sha256": "f760630c507483ecab1c6de70539f2efe73e3b43dbf77160434db678047954e5",
+        "source_url": "https://data.sec.gov/submissions/CIK0001045810.json",
+        "ticker": "NVDA"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:24.928+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/074fe7f2e6737de5b09e12872cdae1ea2c97b69e4a252b1a8a17788824028a16.raw",
+          "raw_sha256": "074fe7f2e6737de5b09e12872cdae1ea2c97b69e4a252b1a8a17788824028a16",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/0001045810-26-000078-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:49:24.723+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/85d3a777ffe7d1c40a06ab61810f41cf215edf1c0d872843b573a7a077ecee65.raw",
+          "raw_sha256": "85d3a777ffe7d1c40a06ab61810f41cf215edf1c0d872843b573a7a077ecee65",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000078/0001045810-26-000078-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:49:23.932+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/682c49d59116ae49b317eb4adddf3ef9142dfd97f59c5d8e5a5acad7f9058ab4.raw",
+          "raw_sha256": "682c49d59116ae49b317eb4adddf3ef9142dfd97f59c5d8e5a5acad7f9058ab4",
+          "url": "https://data.sec.gov/submissions/CIK0001045810.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-08-21T20:15:18.000+00:00",
+        "accession_number": "0001193125-26-361122",
+        "cik": "1327567",
+        "filing_date": "2026-08-21",
+        "record_sha256": "c7a2b1bfbed19de934deb1b5f10acf99299dfba8021aad4f8f5663da1be484ab",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "correction_sha256": "dc7425990c9d78d8e45fc38f3d977a2df82e750364f14d4c44920713768e7ad6",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Palo Alto Networks Inc",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-08-22T00:15:18.000+00:00",
+        "accession_number": "0001193125-26-361122",
+        "cik": "1327567",
+        "filing_date": "2026-08-21",
+        "record_sha256": "21e6c598be8f65dcc2236ab9d963272cc417d329b3de7574d3e56fd3014e15e3",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "original": {
+        "accepted_at": "2026-08-21T16:15:18.000+00:00",
+        "accession_number": "0001193125-26-361122",
+        "cik": "1327567",
+        "filing_date": "2026-08-21",
+        "record_sha256": "136da441c3d3bf43fff1525e62398c52ca061f7da6fa14fd8e597068f1aa042f",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:25.617+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/0545d2c38685c5893ba482d2c6e9ccd2b2872f65a73b00901f975f83cd8b9f6e.raw",
+          "raw_sha256": "0545d2c38685c5893ba482d2c6e9ccd2b2872f65a73b00901f975f83cd8b9f6e",
+          "url": "https://www.sec.gov/Archives/edgar/data/1327567/000119312526361122/0001193125-26-361122-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:45.747+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/bd5dc164d6a3569e5f3c07edd099f163357cc32f238244de259956f4a633aa49.raw",
+          "raw_sha256": "bd5dc164d6a3569e5f3c07edd099f163357cc32f238244de259956f4a633aa49",
+          "url": "https://www.sec.gov/Archives/edgar/data/1327567/000119312526361122/0001193125-26-361122-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:44.746+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/676b119166f26eec4088eda0b469fa19f8386f5eec87e3651742fdd3893d1fb6.raw",
+          "raw_sha256": "676b119166f26eec4088eda0b469fa19f8386f5eec87e3651742fdd3893d1fb6",
+          "url": "https://data.sec.gov/submissions/CIK0001327567.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-08-31T23:06:47.000+00:00",
+        "accession_number": "0001943896-26-000060",
+        "cik": "1943896",
+        "filing_date": "2026-09-01",
+        "record_sha256": "47d46d795d478c580dc283f174903debb53b724318b59742813d57c08212358a",
+        "source_url": "https://data.sec.gov/submissions/CIK0001943896.json",
+        "ticker": "RBRK"
+      },
+      "correction_sha256": "abc9c6b10e631c1f47e9dd289eafc776cc5398fef5ae89e2a6af7a688d8b35a8",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Rubrik, Inc.",
+      "form": "10-Q",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-01T03:06:47.000+00:00",
+        "accession_number": "0001943896-26-000060",
+        "cik": "1943896",
+        "filing_date": "2026-09-01",
+        "record_sha256": "72d19cf500f3b8a838cf3cbb743a3514d276711070f1801b2ef398d6508968b6",
+        "source_url": "https://data.sec.gov/submissions/CIK0001943896.json",
+        "ticker": "RBRK"
+      },
+      "original": {
+        "accepted_at": "2026-08-31T19:06:47.000+00:00",
+        "accession_number": "0001943896-26-000060",
+        "cik": "1943896",
+        "filing_date": "2026-09-01",
+        "record_sha256": "611d85b93ddb17d8454d398320a7f92bab4fb13b0cd7a89e28953bd756af31ab",
+        "source_url": "https://data.sec.gov/submissions/CIK0001943896.json",
+        "ticker": "RBRK"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:26.095+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/01e39fa353f269ed72020697efed7d0ead2b0557e0782313a958019d2abf4c27.raw",
+          "raw_sha256": "01e39fa353f269ed72020697efed7d0ead2b0557e0782313a958019d2abf4c27",
+          "url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000060/0001943896-26-000060-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:47.551+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/ffccc3b207ac74c7a1e6e02f328f6e124fbe24c6de384f3343b8b3a6fa2eebb3.raw",
+          "raw_sha256": "ffccc3b207ac74c7a1e6e02f328f6e124fbe24c6de384f3343b8b3a6fa2eebb3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000060/0001943896-26-000060-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:46.186+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/2bfecf1e2747d99a4f3230babe28b8966a9b278ad837e0a007647eb1e3bbdda9.raw",
+          "raw_sha256": "2bfecf1e2747d99a4f3230babe28b8966a9b278ad837e0a007647eb1e3bbdda9",
+          "url": "https://data.sec.gov/submissions/CIK0001943896.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-04T20:06:23.000+00:00",
+        "accession_number": "0001640147-26-000037",
+        "cik": "1640147",
+        "filing_date": "2026-09-04",
+        "record_sha256": "dd8a70e0ba16748dd3e53e0f31ccf1f43ff7b8633099bd6c4e7bccccc80ec97d",
+        "source_url": "https://data.sec.gov/submissions/CIK0001640147.json",
+        "ticker": "SNOW"
+      },
+      "correction_sha256": "7e33a16825192c4fd1919415190b82b63656f385ac1c58811e3eb286e560926a",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Snowflake Inc.",
+      "form": "10-Q",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-05T00:06:23.000+00:00",
+        "accession_number": "0001640147-26-000037",
+        "cik": "1640147",
+        "filing_date": "2026-09-04",
+        "record_sha256": "77da723c5eb2e903e8fc4f2125ad72b03ee2871937e67d963cc221c01726c009",
+        "source_url": "https://data.sec.gov/submissions/CIK0001640147.json",
+        "ticker": "SNOW"
+      },
+      "original": {
+        "accepted_at": "2026-09-04T16:06:23.000+00:00",
+        "accession_number": "0001640147-26-000037",
+        "cik": "1640147",
+        "filing_date": "2026-09-04",
+        "record_sha256": "677894780981ac524059444483df2653b0c32ad4a4ee15b27b3f64831cd14c36",
+        "source_url": "https://data.sec.gov/submissions/CIK0001640147.json",
+        "ticker": "SNOW"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:26.671+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/f2954808113c2f40bdd78c59fa2d56f1f904a34b114708b8ab52db1340a52c7a.raw",
+          "raw_sha256": "f2954808113c2f40bdd78c59fa2d56f1f904a34b114708b8ab52db1340a52c7a",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640147/000164014726000037/0001640147-26-000037-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:49.299+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/51dcea2dfa3fe40adc4dccd4484372268d2ae7e3053b95d57e70160ed8afbb33.raw",
+          "raw_sha256": "51dcea2dfa3fe40adc4dccd4484372268d2ae7e3053b95d57e70160ed8afbb33",
+          "url": "https://www.sec.gov/Archives/edgar/data/1640147/000164014726000037/0001640147-26-000037-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:47.870+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/780cbbfb3e252169b2f8b089b1f1a00e5b15e8db5cd867dd2cd2b313883645db.raw",
+          "raw_sha256": "780cbbfb3e252169b2f8b089b1f1a00e5b15e8db5cd867dd2cd2b313883645db",
+          "url": "https://data.sec.gov/submissions/CIK0001640147.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-10T10:15:36.000+00:00",
+        "accession_number": "0001046179-26-000658",
+        "cik": "1046179",
+        "filing_date": "2026-09-10",
+        "record_sha256": "e66ec5fc5b567936da1cdee81bdd78e9abf57a048bf5c765560132b833ee1b1e",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "correction_sha256": "00ccb4b1820f6e37f90cd7d07b38fd7c2f93409ccfddb2ba4500f1b65f6c7bb4",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "form": "6-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-10T14:15:36.000+00:00",
+        "accession_number": "0001046179-26-000658",
+        "cik": "1046179",
+        "filing_date": "2026-09-10",
+        "record_sha256": "4ad9b9f69c86135c9d231dafdbecdfe873dad917525271232846149d723f1cca",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "original": {
+        "accepted_at": "2026-09-10T06:15:36.000+00:00",
+        "accession_number": "0001046179-26-000658",
+        "cik": "1046179",
+        "filing_date": "2026-09-10",
+        "record_sha256": "e42abbf09527cef06f7f460a34ac117b51118804714b37598de389c8cfbeaaca",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:27.142+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/0c54bc2aa57d583a51ef3a53214a03c3ac243325695fed90398c6d8fa61d8615.raw",
+          "raw_sha256": "0c54bc2aa57d583a51ef3a53214a03c3ac243325695fed90398c6d8fa61d8615",
+          "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000658/0001046179-26-000658-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:50.487+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/49b85a31fa5e351393f7f027c80b5aeb84d06f96284e41255b594da838bae91d.raw",
+          "raw_sha256": "49b85a31fa5e351393f7f027c80b5aeb84d06f96284e41255b594da838bae91d",
+          "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000658/0001046179-26-000658-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:49.709+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/bbd5e352ab8242e31212f1a50ceb004b50c46011854598fcbfcb97eadf0580da.raw",
+          "raw_sha256": "bbd5e352ab8242e31212f1a50ceb004b50c46011854598fcbfcb97eadf0580da",
+          "url": "https://data.sec.gov/submissions/CIK0001046179.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-24T10:38:08.000+00:00",
+        "accession_number": "0001628280-26-063311",
+        "cik": "1674101",
+        "filing_date": "2026-09-24",
+        "record_sha256": "6fe37e76c73de1303d9b7dd25c40d830562630ac16f6dbe421337eabb1128bdd",
+        "source_url": "https://data.sec.gov/submissions/CIK0001674101.json",
+        "ticker": "VRT"
+      },
+      "correction_sha256": "5004b2ac5af527552630dfbdd75f43ab60b6327764538cda1a91d4984d9e9f06",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Vertiv Holdings Co",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-24T14:38:08.000+00:00",
+        "accession_number": "0001628280-26-063311",
+        "cik": "1674101",
+        "filing_date": "2026-09-24",
+        "record_sha256": "6ea1a2cb064e7ffabb54b07dde8e0ddec95fa79f6a3b4fbe60ddff508bed8cf0",
+        "source_url": "https://data.sec.gov/submissions/CIK0001674101.json",
+        "ticker": "VRT"
+      },
+      "original": {
+        "accepted_at": "2026-09-24T06:38:08.000+00:00",
+        "accession_number": "0001628280-26-063311",
+        "cik": "1674101",
+        "filing_date": "2026-09-24",
+        "record_sha256": "b34edf5baec0f37f2e2a66b8ea5ec1c84c7d04b61769b210c058fbe120ffd11e",
+        "source_url": "https://data.sec.gov/submissions/CIK0001674101.json",
+        "ticker": "VRT"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:27.487+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/28392a1c467eb0c691514239d61ef1d91cda514fa793a91f2cbaeb53183f28c7.raw",
+          "raw_sha256": "28392a1c467eb0c691514239d61ef1d91cda514fa793a91f2cbaeb53183f28c7",
+          "url": "https://www.sec.gov/Archives/edgar/data/1674101/000162828026063311/0001628280-26-063311-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:52.007+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/9b2411e378af95c2cb40006a7e441caad2e7ccdcc66addc97b8cffe557bd29d3.raw",
+          "raw_sha256": "9b2411e378af95c2cb40006a7e441caad2e7ccdcc66addc97b8cffe557bd29d3",
+          "url": "https://www.sec.gov/Archives/edgar/data/1674101/000162828026063311/0001628280-26-063311-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:50.893+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/f9dfecfcd5a6b4a05770bbf388c287efd53146b4a475bb65561bdde39a72ad61.raw",
+          "raw_sha256": "f9dfecfcd5a6b4a05770bbf388c287efd53146b4a475bb65561bdde39a72ad61",
+          "url": "https://data.sec.gov/submissions/CIK0001674101.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-24T20:07:41.000+00:00",
+        "accession_number": "0001713683-26-000193",
+        "cik": "1713683",
+        "filing_date": "2026-09-24",
+        "record_sha256": "3c60b5181b798c25f279b3b6f49dc10ee40e67426b813aa5adca8f82dc0c4c9a",
+        "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+        "ticker": "ZS"
+      },
+      "correction_sha256": "ce9cde54cc8776621fc50718192c1fa9a8975cabdfa983eea691fbd8fd71505c",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Zscaler, Inc.",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-25T00:07:41.000+00:00",
+        "accession_number": "0001713683-26-000193",
+        "cik": "1713683",
+        "filing_date": "2026-09-24",
+        "record_sha256": "a12908c1e16c67204a8c3eab146124fcb937669c6549ddb7ec5e21a406fc1180",
+        "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+        "ticker": "ZS"
+      },
+      "original": {
+        "accepted_at": "2026-09-24T16:07:41.000+00:00",
+        "accession_number": "0001713683-26-000193",
+        "cik": "1713683",
+        "filing_date": "2026-09-24",
+        "record_sha256": "0a2f5e3f7dbf8d70d6c931f325ac9ecbd9ffd7ecc9c5af9bf59461834491c06a",
+        "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+        "ticker": "ZS"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T18:53:27.966+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/a4e1265543800594633f1f7d6da31e468c0b15e990303c93b1981456ff1ba4fb.raw",
+          "raw_sha256": "a4e1265543800594633f1f7d6da31e468c0b15e990303c93b1981456ff1ba4fb",
+          "url": "https://www.sec.gov/Archives/edgar/data/1713683/000171368326000193/0001713683-26-000193-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T18:51:54.443+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/1ffee19ba8e5a5101fd2daceef6742b705ba4056c345ad0682073fc1e27201a1.raw",
+          "raw_sha256": "1ffee19ba8e5a5101fd2daceef6742b705ba4056c345ad0682073fc1e27201a1",
+          "url": "https://www.sec.gov/Archives/edgar/data/1713683/000171368326000193/0001713683-26-000193-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:52.489+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/28c167ee45a0e6c6f24d9fa65bd25c0294c227ca1d4ce6fe6cd036680e446839.raw",
+          "raw_sha256": "28c167ee45a0e6c6f24d9fa65bd25c0294c227ca1d4ce6fe6cd036680e446839",
+          "url": "https://data.sec.gov/submissions/CIK0001713683.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-01T20:32:15.000+00:00",
+        "accession_number": "0001327567-26-000019",
+        "cik": "1327567",
+        "filing_date": "2026-09-01",
+        "record_sha256": "09233099fc8198fe4ec0181f5691cd9559b85d435e2a232b422731b41d6b6678",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "correction_sha256": "dd72fdb640a4f096bb2a67a3477ac9a05e47b20fec5a932b3f2ec243ee123128",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Palo Alto Networks Inc",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-02T00:32:15.000+00:00",
+        "accession_number": "0001327567-26-000019",
+        "cik": "1327567",
+        "filing_date": "2026-09-01",
+        "record_sha256": "77b5e0e50562578be7eb1cf8b36a5fd8c150ffe9131e6c3a1f64970ac8993288",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "original": {
+        "accepted_at": "2026-09-01T16:32:15.000+00:00",
+        "accession_number": "0001327567-26-000019",
+        "cik": "1327567",
+        "filing_date": "2026-09-01",
+        "record_sha256": "1e0b5f28a8aeb8eece66731c4c2b82c01c84afb3cee3489091814061b8e0ab00",
+        "source_url": "https://data.sec.gov/submissions/CIK0001327567.json",
+        "ticker": "PANW"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T19:05:22.536+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/7d493ff8321dadc4b0d4547cbfd59114931b495a48514ea7bb9809a981e9aa36.raw",
+          "raw_sha256": "7d493ff8321dadc4b0d4547cbfd59114931b495a48514ea7bb9809a981e9aa36",
+          "url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000019/0001327567-26-000019-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T19:05:23.031+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/50558c0e2b560ce9e341fa736c02ad81964a86277c61fa16a7c24675df35e99f.raw",
+          "raw_sha256": "50558c0e2b560ce9e341fa736c02ad81964a86277c61fa16a7c24675df35e99f",
+          "url": "https://www.sec.gov/Archives/edgar/data/1327567/000132756726000019/0001327567-26-000019-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:44.746+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/676b119166f26eec4088eda0b469fa19f8386f5eec87e3651742fdd3893d1fb6.raw",
+          "raw_sha256": "676b119166f26eec4088eda0b469fa19f8386f5eec87e3651742fdd3893d1fb6",
+          "url": "https://data.sec.gov/submissions/CIK0001327567.json"
+        }
+      }
+    },
+    {
+      "admitted_at": "2026-10-14T19:09:16.754+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-24T10:02:44.000+00:00",
+        "accession_number": "0001046179-26-000660",
+        "cik": "1046179",
+        "filing_date": "2026-09-24",
+        "record_sha256": "89c2c57d2dff151cd81f47d24f0cc81df11cc91f24fe4383359d54f76b023746",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "correction_sha256": "c18f045b0b42ae5110678af1bdcd19f640ee1c74095f3dc897e6cda640b112fe",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "form": "6-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-24T14:02:44.000+00:00",
+        "accession_number": "0001046179-26-000660",
+        "cik": "1046179",
+        "filing_date": "2026-09-24",
+        "record_sha256": "5112cdfa28ad69b94fbb241f3e8579658ca9bee953f42bbf707bb1e11d65aa9a",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "original": {
+        "accepted_at": "2026-09-24T06:02:44.000+00:00",
+        "accession_number": "0001046179-26-000660",
+        "cik": "1046179",
+        "filing_date": "2026-09-24",
+        "record_sha256": "695470cfc4f13203db9b39e47a15d291c39940139694f4815239230bae899219",
+        "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+        "ticker": "TSM"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-14T19:05:24.198+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/c77cbbc29f807ecc1957dbee28e588640419cc13f43f75c6a7bde65f16dfc5ad.raw",
+          "raw_sha256": "c77cbbc29f807ecc1957dbee28e588640419cc13f43f75c6a7bde65f16dfc5ad",
+          "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000660/0001046179-26-000660-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-14T19:05:24.524+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/f164f143ce0f0165ee3de4977a3e5f82588c541feface73016fcab770823b7f0.raw",
+          "raw_sha256": "f164f143ce0f0165ee3de4977a3e5f82588c541feface73016fcab770823b7f0",
+          "url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000660/0001046179-26-000660-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-14T18:51:49.709+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/bbd5e352ab8242e31212f1a50ceb004b50c46011854598fcbfcb97eadf0580da.raw",
+          "raw_sha256": "bbd5e352ab8242e31212f1a50ceb004b50c46011854598fcbfcb97eadf0580da",
+          "url": "https://data.sec.gov/submissions/CIK0001046179.json"
+        }
+      }
+    }
+  ],
+  "schema_version": "sec_acceptance_header_correction_v1",
+  "version": 1
+}

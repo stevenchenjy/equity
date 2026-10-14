@@ -118,6 +118,30 @@ class NormalizationTests(unittest.TestCase):
 
 
 class SelectionAndValidationTests(unittest.TestCase):
+    def test_mu_earnings_source_survives_nine_day_later_annual_report(self) -> None:
+        release=ledger_row(ticker='MU',cik='723125',form='8-K',filing_date='2026-09-30',
+            accession='0000723125-26-000018',document='mu-20260930.htm',material_event='yes')
+        release['items']='2.02,9.01'
+        annual=ledger_row(ticker='MU',cik='723125',form='10-K',filing_date='2026-10-09',
+            accession='0000723125-26-000023',document='mu-20260903.htm')
+        unrelated={**release,'accession_number':'0000723125-26-000019','items':'1.01',
+            'source_url':'https://www.sec.gov/Archives/edgar/data/723125/000072312526000019/mu-20260930.htm'}
+        old={**release,'filing_date':'2026-07-01','accession_number':'0000723125-26-000014',
+            'source_url':'https://www.sec.gov/Archives/edgar/data/723125/000072312526000014/mu-20260930.htm'}
+        rows=artifacts.select_filing_rows([release,annual,unrelated,old],as_of=date(2026,10,14))
+        self.assertEqual({r['accession'] for r in rows},{release['accession_number'],annual['accession_number']})
+        self.assertIn('2.02',next(r for r in rows if r['form']=='8-K')['items'])
+
+    def test_exhibit_number_in_separate_cell_binds_description_link_without_guessing(self) -> None:
+        row=artifacts.normalize_ledger_row(ledger_row(form='8-K'))
+        raw=b'''<table><tr><td>99.1</td><td></td><td><a href="changed-release.htm">Press Release</a></td></tr>
+          <tr><td>99.2</td><td><a href="a.htm">A</a><a href="b.htm">B</a></td></tr>
+          <tr><td>Item 99.3</td><td><a href="wrong.htm">Other document</a></td></tr>
+          <tr><td>99.4</td><td><a href="../escape.htm">Press Release</a></td></tr>
+          <tr><td>99.5</td><td><a href="https://example.com/foreign.htm">Press Release</a></td></tr></table>'''
+        children=artifacts.exhibit_rows(row,raw,'utf-8')
+        self.assertEqual([(r['exhibit_number'],r['primary_document']) for r in children],[('99.1','changed-release.htm')])
+        self.assertEqual(children[0]['parent_raw_sha256'],artifacts.sha256_bytes(raw))
     def test_research_selection_does_not_roll_with_notification_window(self) -> None:
         rows = [
             ledger_row(filing_date="2026-09-04", accession="0001234567-26-000003"),

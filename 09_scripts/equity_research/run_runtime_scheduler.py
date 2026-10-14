@@ -87,6 +87,13 @@ RUNTIME_MUTABLE_EXTENSION_PATTERN = re.compile(
     r"03_source_data/equity_research/sec_acceptance_extensions/"
     r"sec_acceptance_extension_v[1-9]\d*\.json"
 )
+RUNTIME_MUTABLE_CORRECTION_PATTERN = re.compile(
+    r"03_source_data/equity_research/sec_acceptance_corrections/"
+    r"sec_acceptance_correction_v[1-9]\d*\.json"
+)
+RUNTIME_MUTABLE_PROOF_PATTERN = re.compile(
+    r"02_filings/sec_acceptance_proofs/[0-9a-f]{64}\.raw"
+)
 RUNTIME_EVIDENCE_MAX_FILE_BYTES = 16 * 1024 * 1024
 
 SCHEDULER_SCRIPTS = {
@@ -295,6 +302,41 @@ def _validate_runtime_evidence_chain(root: Path) -> None:
         raise RuntimeSyncError("runtime_evidence_audit_binding_mismatch")
 
 
+def _validated_runtime_correction_proofs(root: Path) -> frozenset[str]:
+    """Admit only exact safe proof bytes bound to the validated correction chain."""
+
+    from sec_acceptance_corrections import CORRECTIONS_REL, current_corrections
+
+    try:
+        correction_paths = list((root / CORRECTIONS_REL).glob(
+            "sec_acceptance_correction_v*.json"
+        ))
+        for path in correction_paths:
+            if not path.resolve().is_relative_to(root.resolve()):
+                raise RuntimeSyncError("runtime_evidence_file_unsafe")
+            _validate_runtime_evidence_file(path)
+        corrections = current_corrections(root)
+        proofs = frozenset(
+            source["raw_path"]
+            for correction in corrections
+            for source in correction["sources"].values()
+        )
+        for relative in proofs:
+            if RUNTIME_MUTABLE_PROOF_PATTERN.fullmatch(relative) is None:
+                raise RuntimeSyncError("runtime_correction_proof_path_invalid")
+            path = root / relative
+            if not path.resolve().is_relative_to(root.resolve()):
+                raise RuntimeSyncError("runtime_evidence_file_unsafe")
+            _validate_runtime_evidence_file(path)
+        return proofs
+    except RuntimeSyncError:
+        raise
+    except Exception as exc:
+        raise RuntimeSyncError(
+            "runtime_correction_validation_failed", exc.__class__.__name__
+        ) from exc
+
+
 def _runtime_evidence_changes(root: Path) -> tuple[str, ...]:
     """Allow only validated SEC evidence appends in an otherwise clean tree."""
 
@@ -305,6 +347,7 @@ def _runtime_evidence_changes(root: Path) -> tuple[str, ...]:
     if status.returncode != 0:
         raise RuntimeSyncError("tracked_status_failed", status.stderr)
     evidence_changes: list[str] = []
+    new_proofs: set[str] = set()
     unexpected_tracked = 0
     unexpected_untracked = 0
     for entry in status.stdout.split("\0"):
@@ -324,10 +367,17 @@ def _runtime_evidence_changes(root: Path) -> tuple[str, ...]:
             continue
         if (
             status_code == "??"
-            and RUNTIME_MUTABLE_EXTENSION_PATTERN.fullmatch(relative_text)
-            is not None
+            and (
+                RUNTIME_MUTABLE_EXTENSION_PATTERN.fullmatch(relative_text)
+                or RUNTIME_MUTABLE_CORRECTION_PATTERN.fullmatch(relative_text)
+                or RUNTIME_MUTABLE_PROOF_PATTERN.fullmatch(relative_text)
+            )
         ):
+            if not (root / relative).resolve().is_relative_to(root.resolve()):
+                raise RuntimeSyncError("runtime_evidence_file_unsafe")
             _validate_runtime_evidence_file(root / relative)
+            if RUNTIME_MUTABLE_PROOF_PATTERN.fullmatch(relative_text):
+                new_proofs.add(relative_text)
             evidence_changes.append(relative_text)
             continue
         if status_code == "??":
@@ -344,6 +394,9 @@ def _runtime_evidence_changes(root: Path) -> tuple[str, ...]:
         )
     if evidence_changes:
         _validate_runtime_evidence_chain(root)
+        bound_proofs = _validated_runtime_correction_proofs(root)
+        if not new_proofs.issubset(bound_proofs):
+            raise RuntimeSyncError("runtime_correction_proof_unbound")
     return tuple(sorted(evidence_changes))
 
 

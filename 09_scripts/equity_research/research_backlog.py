@@ -136,6 +136,8 @@ def complete_objective_data(*, root: Path, ticker: str, row: dict, current: date
             result["reason_code"] = "source_receipt_stale_or_future"
             return result
         filings = recent_filings(sub, as_of=current.astimezone(ET).date())
+        from sec_acceptance_corrections import correct_filings
+        filings = correct_filings(filings, ticker=ticker, cik=cik, root=root, as_of=current)
         reports = [f for f in filings if f.get("form") in REPORT_FORMS and aware(f["accepted_at"]) <= current]
         latest = max(reports, key=lambda f: (f.get("report_date", ""), f["accepted_at"]), default={})
         if not latest or not latest.get("report_date"):
@@ -192,6 +194,16 @@ def complete_objective_data(*, root: Path, ticker: str, row: dict, current: date
         result["source_provenance"].append({"kind": "consolidated_inline_report", "source_url": expected_url,
             "raw_path": artifact["raw_path"], "raw_sha256": artifact["raw_sha256"],
             "retrieved_at": artifact["fetched_at"], "accepted_at": latest["accepted_at"], "cik": cik})
+        if (ticker, cik) in {('MSFT', 789019), ('MU', 723125)}:
+            from sec_earnings_tables import supplement_reported_shares
+            def offline_only(*args, **kwargs):
+                raise ValueError('earnings_exhibit_cache_required')
+            try:
+                merged = supplement_reported_shares(ticker, cik, merged, filings, '', as_of=current,
+                    cache_root=root/'02_filings/issuer_filings/financial_supplements.local',
+                    fetcher=offline_only, project_root=root)
+            except (OSError, ValueError):
+                pass  # Other verified gaps can still proceed; no fabricated shares.
         # Record this new selection at actual completion time. Original source
         # retrieval/acceptance times remain separately immutable in receipts.
         candidate = fundamental_row(ticker, cik, merged, current.isoformat(),

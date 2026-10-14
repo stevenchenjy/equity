@@ -58,8 +58,10 @@ While holding the lock, the wrapper verifies all of the following:
    GitHub origin are correct;
 3. code, configuration, and every non-evidence path are clean; the only
    permitted working-tree changes are append-only SEC ledger/audit/
-   reconciliation rows and strictly named versioned acceptance extensions
-   whose complete hash chain and audit bindings validate;
+   reconciliation rows, strictly named versioned acceptance extensions, and
+   source-bound acceptance corrections with their exact content-addressed raw
+   proofs; complete chains, audit bindings, issuer identity and raw hashes must
+   validate;
 4. `origin/main` can be fetched non-interactively, except for the bounded public-refresh-only verified-deployment fallback below;
 5. local and remote ancestry is safe.
 
@@ -101,8 +103,11 @@ The wrapper intentionally excludes Git-ignored files from its status check.
 That is what lets scheduler state, logs, market/evidence snapshots, decisions,
 email briefs, locks, and other mutable artifacts survive a fast-forward.
 Non-ignored untracked files are rejected except for the exact versioned SEC
-acceptance-extension filename pattern, and those extensions are accepted only
-after full chain and audit validation. If a future tracked path would overwrite
+acceptance-extension/correction filename patterns and content-addressed SEC
+proofs explicitly referenced by a fully validated correction chain. An unbound
+proof, a changed prior correction, or changed prior proof is rejected. Extensions
+still require full chain and audit validation. See
+[SEC acceptance corrections](sec_acceptance_corrections.md). If a future tracked path would overwrite
 a local ignored file, Git itself refuses the fast-forward and the wrapper fails
 closed.
 

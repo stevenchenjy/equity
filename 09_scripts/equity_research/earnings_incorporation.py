@@ -156,6 +156,8 @@ def assess_company(ticker: str, fundamental: dict[str, Any], receipt: dict[str, 
             if accepted and accepted <= now and (form in REPORT_FORMS or (form in {'8-K', '8-K/A'} and '2.02' in items)):
                 filings.append({'accession_number': accession, 'form': form, 'report_date': at('reportDate'),
                                 'accepted_at': accepted.isoformat(), 'filing_date': at('filingDate')})
+        from sec_acceptance_corrections import correct_filings
+        filings = correct_filings(filings, ticker=ticker, cik=int(sub['cik']), root=root, as_of=now)
     # A changed filing ledger cannot be hidden by a formerly valid source receipt.
     known_accessions = {r['accession_number'] for r in filings}
     latest_scan_day = (_time(sub_retrieved).date().isoformat() if _time(sub_retrieved) else '')
@@ -304,16 +306,18 @@ def reconcile_cached_financial_selections(*, root: Path = ROOT, now: datetime | 
             continue
         cik = int(row['cik'])
         filings = recent_filings(sub, as_of=now.date())
+        from sec_acceptance_corrections import correct_filings
+        filings = correct_filings(filings, ticker=ticker, cik=cik, root=root, as_of=now)
         merged, diagnostic = supplement_cached_latest_report(facts, ticker=ticker, cik=cik,
             filings=filings, root=root, as_of=as_of, allowed_tags=approved_inline_tags())
         if diagnostic.get('status') != 'verified_inline_report_supplement':
             continue
-        if ticker == 'MSFT' and cik == 789019:
-            from sec_earnings_tables import supplement_msft_shares
+        if (ticker, cik) in {('MSFT', 789019), ('MU', 723125)}:
+            from sec_earnings_tables import supplement_reported_shares
             def offline_only(*args, **kwargs):
                 raise ValueError('earnings_exhibit_cache_required')
             try:
-                merged = supplement_msft_shares(merged, filings, '', as_of=as_of,
+                merged = supplement_reported_shares(ticker, cik, merged, filings, '', as_of=as_of,
                     cache_root=root/'02_filings/issuer_filings/financial_supplements.local',
                     fetcher=offline_only, project_root=root)
             except (OSError, ValueError):

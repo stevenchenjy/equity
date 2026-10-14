@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-10-14T08:20:48.000-04:00",
+  "artifact_sha256": "3b39383b61b61ebf0f7bab76700a3605da324e9acc5d50a9e70a6de218e003c2",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v40",
+  "prior_extension_set_sha256": "7cbc165ef54555b230c08b12f32cfecb2d06886c638fbbb3301328d196c24f45",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-14T10:01:18.000+00:00",
+      "accession_number": "0001628280-26-065813",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-14T08:20:48.000-04:00",
+      "cik": "937966",
+      "entity_name": "ASML HOLDING NV",
+      "extension_record_sha256": "39fb5e8041eaedfcd9d05c1cdba152a47c1c55a7150596cfa375080d1a371352",
+      "extension_version": "v40",
+      "filing_date": "2026-10-14",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "e5a0aecd8ce1773dc36f3002b619267d00a28f0a3e85f45d19082871b8fbb06a",
+      "source_url": "https://data.sec.gov/submissions/CIK0000937966.json",
+      "ticker": "ASML"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

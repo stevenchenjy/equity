@@ -2,6 +2,7 @@ from __future__ import annotations
 import copy,json,tempfile,unittest
 from pathlib import Path
 from datetime import timedelta
+from unittest.mock import patch
 from _support import SCRIPT_DIR
 from test_tactical_review import fixture
 import capital_decision as engine
@@ -41,6 +42,35 @@ class CapitalDecisionTests(unittest.TestCase):
         self.assertIsNone(r['order_draft'])
         self.assertEqual(r['blockers'], [])
         self.assertIn('reviewed_business_case_not_supported', r['reasons'])
+
+    def test_partial_company_judgment_reaches_capital_and_final_email_without_entry_plan(self):
+        current=self.v['current']
+        self.d['eligible_new_position_review_candidates']=[]
+        self.d['eligible_action_review_candidates']=[]
+        self.d['watch_candidates'][0]['gate_blockers']='valuation'
+        record={'ticker':'TEST','review_id':'test-current-unresolved','version':1,'record_sha256':'a'*64,
+            'reviewed_at':current.isoformat(),'next_review_at':(current+timedelta(days=2)).isoformat(),
+            'conclusion':'当前不买入 TEST；目标仓位 0%，新增 0 股；并购后股数模型缺失。',
+            'valuation_model':None,'business_case':{'unresolved':[]},'per_share_economics':{'unresolved':[]},
+            'valuation':{'summary':'并购后公司特定估值需要完成。','unresolved':['Acquisition-adjusted shares and debt are required.']},
+            'portfolio_role_and_alternatives':{'unresolved':[]},'claims':[{'stance':'contradictory','statement':'稀释与债务尚需核验。'}],
+            'sources':[],'unresolved_questions':[],'invalidation_conditions':['Cash consumption changes require an earlier reassessment.']}
+        view=self.d['long_horizon_research']['candidate_views']['TEST']
+        view.update(review_record=record,conclusion=record['conclusion'],valuation_readiness='unresolved',validation_errors=[],reopen_reasons=[])
+        quote={'ticker':'TEST','last_price':'102','market_session_date':self.d['market_gate']['expected_market_session'],'data_quality_label':'ok'}
+        with patch.object(engine,'read_csv',return_value=[quote]):
+            contract=self.build()
+        row=contract['decisions'][0]
+        self.assertEqual(row['shares'],0)
+        self.assertIsNone(row['order_draft'])
+        self.assertIsNone(row['research_case']['scenario_prices'])
+        self.assertEqual(row['reasons'][0],record['conclusion'])
+        self.d['capital_decision']=contract
+        for rendered in render_email(self.d)[1:]:
+            self.assertIn('目标仓位 0%',rendered)
+            self.assertIn('Acquisition-adjusted shares and debt are required.',rendered)
+            self.assertIn(record['next_review_at'],rendered)
+            self.assertNotIn('BUY LIMIT',rendered)
 
     def test_adverse_case_rejects_even_an_inconsistent_positive_upstream_candidate(self):
         self.d['long_horizon_research']['candidate_views']['TEST']['business_case_status'] = 'mixed'

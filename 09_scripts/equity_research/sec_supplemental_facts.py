@@ -4,8 +4,8 @@ SEC companyfacts excludes custom taxonomy facts. NVIDIA's financed-asset
 principal is necessary for its disclosed FCF definition, so retain the exact
 consolidated duration, USD unit, accession, acceptance time and raw hash.
 No free-text inference and no missing-as-zero substitution are permitted.
-Microsoft quarterly diluted shares come from its actual furnished earnings
-exhibit; they are not the annual denominator in its otherwise current 10-K.
+Microsoft and Micron quarterly diluted shares come from actual furnished
+earnings exhibits, independently of their reported annual denominators.
 """
 from __future__ import annotations
 
@@ -163,9 +163,9 @@ def parse_principal_facts(raw: bytes, *, filing: dict[str, str], cik: int,
 def supplement_companyfacts(ticker: str, cik: int, payload: dict[str, Any],
         filings: list[dict[str, str]], user_agent: str, *, as_of: datetime,
         cache_root: Path = CACHE_ROOT, fetcher: Any = fetch_sec_document) -> dict[str, Any]:
-    if ticker == "MSFT" and cik == 789019:
-        from sec_earnings_tables import supplement_msft_shares
-        return supplement_msft_shares(payload, filings, user_agent, as_of=as_of,
+    if (ticker, cik) in {("MSFT", 789019), ("MU", 723125)}:
+        from sec_earnings_tables import supplement_reported_shares
+        return supplement_reported_shares(ticker, cik, payload, filings, user_agent, as_of=as_of,
             cache_root=cache_root, fetcher=fetcher)
     if ticker != "NVDA" or cik != 1045810:
         return payload

@@ -1,6 +1,6 @@
 # Equity Research — current document entrypoints
 
-Reviewed 2026-10-06 ET. This index locates maintained guidance and generated
+Reviewed 2026-10-14 ET. This index locates maintained guidance and generated
 outputs; it does not freeze balances, test counts, call counts, schedules, or
 open-item counts. Verify the current branch, files, runtime timestamps and
 relevant checks before relying on any linked claim.
@@ -8,6 +8,8 @@ relevant checks before relying on any linked claim.
 ## Authoritative policy and boundaries
 
 - [Company valuation admission](company_valuation_admission.md): owner-authorized October 12 bridge from individually reviewed immutable company cases to canonical decisions; current evidence and independent allocation/entry gates remain.
+
+- [SEC acceptance corrections](sec_acceptance_corrections.md): independent archive-header/index proof, canonical Eastern clock conversion and immutable observation history; no generic timezone tolerance or frozen-experiment rewriting.
 
 - [Repository layout and path ownership](repository_layout.md): source/runtime/generated boundaries, archive recovery and retained compatibility paths.
 

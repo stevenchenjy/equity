@@ -80,6 +80,8 @@ OPTIONAL_ACTIVE_INPUTS = {
 OPTIONAL_ACTIVE_PATTERNS = {
     "02_filings/issuer_filings/financial_supplements.local/*/*/*.raw": "optional_public_source_receipt",
     "02_filings/issuer_filings/financial_supplements.local/*/*/*.json": "optional_public_source_receipt",
+    "03_source_data/equity_research/sec_acceptance_corrections/sec_acceptance_correction_v*.json": "optional_public_source_correction",
+    "02_filings/sec_acceptance_proofs/*.raw": "optional_public_source_receipt",
     "04_data/equity_research/company_valuation_observations.local/*.json": "optional_private_research_history",
     "04_research/company_research/objective_evidence.local/*.json": "optional_generated_research",
     "05_risk_and_positions/allocation_policy_migrations.local/*.json": "optional_private_reconciliation_proof",

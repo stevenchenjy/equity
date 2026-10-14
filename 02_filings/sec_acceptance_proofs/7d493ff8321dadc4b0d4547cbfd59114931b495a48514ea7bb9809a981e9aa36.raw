@@ -1,0 +1,186 @@
+<HTML><HEAD><TITLE>SEC EDGAR Submission 0001327567-26-000019</TITLE>
+<!--
+<SEC-HEADER>0001327567-26-000019.hdr.sgml : 20260901
+<ACCEPTANCE-DATETIME>20260901163215
+<ACCESSION-NUMBER>0001327567-26-000019
+<TYPE>8-K
+<PUBLIC-DOCUMENT-COUNT>12
+<PERIOD>20260901
+<ITEMS>2.02
+<ITEMS>9.01
+<FILING-DATE>20260901
+<DATE-OF-FILING-DATE-CHANGE>20260901
+<FILER>
+<COMPANY-DATA>
+<CONFORMED-NAME>Palo Alto Networks Inc
+<CIK>0001327567
+<ASSIGNED-SIC>3577
+<ORGANIZATION-NAME>06 Technology
+<IRS-NUMBER>202530195
+<STATE-OF-INCORPORATION>DE
+<FISCAL-YEAR-END>0731
+</COMPANY-DATA>
+<FILING-VALUES>
+<FORM-TYPE>8-K
+<ACT>34
+<FILE-NUMBER>001-35594
+<FILM-NUMBER>261351278
+</FILING-VALUES>
+<BUSINESS-ADDRESS>
+<STREET1>3000 TANNERY WAY
+<CITY>SANTA CLARA
+<STATE>CA
+<ZIP>95054
+<PHONE>408-753-4000
+</BUSINESS-ADDRESS>
+<MAIL-ADDRESS>
+<STREET1>3000 TANNERY WAY
+<CITY>SANTA CLARA
+<STATE>CA
+<ZIP>95054
+</MAIL-ADDRESS>
+</FILER>
+</SEC-HEADER>
+-->
+</HEAD><BODY>
+<PRE>&lt;SEC-DOCUMENT&gt;0001327567-26-000019-index.html : 20260901
+&lt;SEC-HEADER&gt;0001327567-26-000019.hdr.sgml : 20260901
+&lt;ACCEPTANCE-DATETIME&gt;20260901163215
+ACCESSION NUMBER:		0001327567-26-000019
+CONFORMED SUBMISSION TYPE:	8-K
+PUBLIC DOCUMENT COUNT:		12
+CONFORMED PERIOD OF REPORT:	20260901
+ITEM INFORMATION:		Results of Operations and Financial Condition
+ITEM INFORMATION:		Financial Statements and Exhibits
+FILED AS OF DATE:		20260901
+DATE AS OF CHANGE:		20260901
+
+FILER:
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Palo Alto Networks Inc
+		CENTRAL INDEX KEY:			0001327567
+		STANDARD INDUSTRIAL CLASSIFICATION:	COMPUTER PERIPHERAL EQUIPMENT, NEC [3577]
+		ORGANIZATION NAME:           	06 Technology
+		EIN:				202530195
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			0731
+
+	FILING VALUES:
+		FORM TYPE:		8-K
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	001-35594
+		FILM NUMBER:		261351278
+
+	BUSINESS ADDRESS:	
+		STREET 1:		3000 TANNERY WAY
+		CITY:			SANTA CLARA
+		STATE:			CA
+		ZIP:			95054
+		BUSINESS PHONE:		408-753-4000
+
+	MAIL ADDRESS:	
+		STREET 1:		3000 TANNERY WAY
+		CITY:			SANTA CLARA
+		STATE:			CA
+		ZIP:			95054
+&lt;/SEC-HEADER&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;8-K
+&lt;SEQUENCE&gt;1
+&lt;FILENAME&gt;panw-20260901.htm
+&lt;DESCRIPTION&gt;8-K
+&lt;TEXT&gt;
+<a href="panw-20260901.htm">Document 1 - file: panw-20260901.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-99.1
+&lt;SEQUENCE&gt;2
+&lt;FILENAME&gt;ex991q426earningsrelease.htm
+&lt;DESCRIPTION&gt;EX-99.1
+&lt;TEXT&gt;
+<a href="ex991q426earningsrelease.htm">Document 2 - file: ex991q426earningsrelease.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.SCH
+&lt;SEQUENCE&gt;3
+&lt;FILENAME&gt;panw-20260901.xsd
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT
+&lt;TEXT&gt;
+<a href="panw-20260901.xsd">Document 3 - file: panw-20260901.xsd</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.LAB
+&lt;SEQUENCE&gt;4
+&lt;FILENAME&gt;panw-20260901_lab.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="panw-20260901_lab.xml">Document 4 - file: panw-20260901_lab.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.PRE
+&lt;SEQUENCE&gt;5
+&lt;FILENAME&gt;panw-20260901_pre.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="panw-20260901_pre.xml">Document 5 - file: panw-20260901_pre.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;7
+&lt;FILENAME&gt;R1.htm
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="R1.htm">Document 7 - file: R1.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;8
+&lt;FILENAME&gt;report.css
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="report.css">Document 8 - file: report.css</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;9
+&lt;FILENAME&gt;Show.js
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="Show.js">Document 9 - file: Show.js</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;11
+&lt;FILENAME&gt;FilingSummary.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/FilingSummary.xml">Document 11 - file: FilingSummary.html</a><br>
+<a href="FilingSummary.xml">Document 11 - RAW XML: FilingSummary.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;JSON
+&lt;SEQUENCE&gt;13
+&lt;FILENAME&gt;MetaLinks.json
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="MetaLinks.json">Document 13 - file: MetaLinks.json</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;ZIP
+&lt;SEQUENCE&gt;14
+&lt;FILENAME&gt;0001327567-26-000019-xbrl.zip
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="0001327567-26-000019-xbrl.zip">Document 14 - file: 0001327567-26-000019-xbrl.zip</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;15
+&lt;FILENAME&gt;panw-20260901_htm.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/panw-20260901_htm.xml">Document 15 - file: panw-20260901_htm.html</a><br>
+<a href="panw-20260901_htm.xml">Document 15 - RAW XML: panw-20260901_htm.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;/SEC-DOCUMENT&gt;</PRE><script type="text/javascript"  src="/RMOci/B/y8/Fsm2/wuMqMZFM/OthYpXf0tJJGNr/MmxYFhMB/FC/oLH14LR2Q"></script></BODY></HTML>

@@ -130,7 +130,31 @@ def selected_tickers() -> tuple[list[str], set[str]]:
     policy = read_json(ROOT / "01_policies/long_horizon_research_policy.json")
     fundamental_queue = fundamentals_candidate_queue(read_csv(FUNDAMENTALS_PATH), held, policy)
     fundamental_candidates = [row["ticker"] for row in fundamental_queue[:policy["candidate_limit"]]]
-    return sorted(held | requested_coverage_tickers() | {"SPY", *candidates, *fundamental_candidates}), held
+    requested = requested_coverage_tickers()
+    # A maintained company judgment is not a daily rank. Keep its ticker in
+    # the existing data scope so the next close can revalidate it, including
+    # expired/failed judgments that must retain their reassessment history.
+    # This does not admit a new market-data universe or grant any shares.
+    retained = retained_company_tickers(held | requested | set(APPROVED_CANDIDATE_TICKERS))
+    return sorted(held | requested | retained | {"SPY", *candidates, *fundamental_candidates}), held
+
+
+def retained_company_tickers(allowed: set[str]) -> set[str]:
+    from thesis_evidence import STORE_REL as THESIS_REL, validate_store as validate_theses
+    from company_valuation import STORE_REL as MODEL_REL, validate_store as validate_models
+    retained: set[str] = set()
+    for relative, validate in ((THESIS_REL, validate_theses), (MODEL_REL, validate_models)):
+        path = ROOT / relative
+        if not path.is_file():
+            continue
+        try:
+            retained.update(set(validate(read_json(path))) & allowed)
+        except (OSError, ValueError, TypeError, KeyError):
+            # Invalid shared history cannot supply trustworthy identities.
+            # Its downstream source/model validators retain the real failure;
+            # unrelated configured research must still be able to proceed.
+            continue
+    return retained
 
 
 def main() -> int:

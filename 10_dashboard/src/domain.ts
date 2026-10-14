@@ -2,10 +2,11 @@ export type FeedbackStatus = 'skipped' | 'pending' | 'partial' | 'filled' | 'can
 export type SummaryPoint = {label: string; text: string};
 export type CompanyResearchCase = {
   ticker:string; review_version:number; reviewed_at:string; next_review_at:string; conclusion:string;
+  review_status?:'current'|'reassessment_required'; valuation_readiness?:string;
   method:string; horizon:string; countercase:string; review_conditions:string[];
-  reference_price:number; reference_close:string; live_quote:false;
-  scenario_prices:{bear:number;base:number;bull?:number}; base_upside_pct:number;
-  scenario_reward_to_risk:number|null; minimum_reward_to_risk:number; valuation_only_review_ceiling:number;
+  reference_price:number|null; reference_close:string|null; live_quote:false;
+  scenario_prices:{bear:number;base:number;bull?:number}|null; base_upside_pct:number|null;
+  scenario_reward_to_risk:number|null; minimum_reward_to_risk:number; valuation_only_review_ceiling:number|null;
   review_ceiling_is_order_price:false; model_admission_status:string; pending_requirements:string[];
 };
 export type Plan = {

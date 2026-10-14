@@ -130,6 +130,29 @@ class CompanyValuationTests(unittest.TestCase):
             fundamentals={'ABC': self.fact}, market={'ABC': self.quote}, current=CURRENT)
         self.assertEqual(rows, [self.comparator]); self.assertEqual(report['status'], 'absent')
 
+    def test_maintained_case_survives_next_day_rank_drift_within_existing_data_scope(self):
+        import build_current_research_baseline as baseline
+        write_json(self.root, '01_policies/long_horizon_research_policy.json',
+            read_json(PROJECT_ROOT/'01_policies/long_horizon_research_policy.json'))
+        def rows(path):
+            if path == baseline.SIGNAL_SCORES_PATH:
+                return [{'ticker': t, 'total_score': '9', 'data_quality_label': 'ok'} for t in ('TOP1', 'TOP2', 'TOP3', 'ABC')]
+            return []
+        with patch.object(baseline, 'ROOT', self.root), patch.object(baseline, 'read_csv', side_effect=rows), \
+                patch.object(baseline, 'requested_coverage_tickers', return_value={'SPY'}), \
+                patch.object(baseline, 'fundamentals_candidate_queue', return_value=[]), \
+                patch.object(baseline, 'APPROVED_CANDIDATE_TICKERS', {'ABC'}):
+            first, held = baseline.selected_tickers()
+            self.assertIn('ABC', first)
+            self.assertEqual(held, set())
+            # Next day: rank falls entirely out of both ranked lists. Retain
+            # the versioned judgment, including its future reassessment, not
+            # a synthetic position/entry plan or a promoted new universe.
+            with patch.object(baseline, 'read_csv', return_value=[]):
+                second, _ = baseline.selected_tickers()
+            self.assertIn('ABC', second)
+            self.assertEqual(baseline.retained_company_tickers({'OTHER'}), set())
+
     def test_recorded_company_case_is_visible_before_admission_without_buy_authority(self):
         from decimal import Decimal
         from company_research_presentation import presentation_case
@@ -161,9 +184,12 @@ class CompanyValuationTests(unittest.TestCase):
         # Exercise the actual final text/HTML renderer, not just its card data.
         # Its source contract is a list of public URLs; private proof objects
         # remain in the source-bound capital record.
-        from email_brief import _render_cards
-        _, plain, html = _render_cards('Research case', result,
-            title='Portfolio update', stamp='Dated reference; not live', footer='No trade or email sent.')
+        from email_brief import render_email
+        from test_email_brief import decision_fixture
+        final = decision_fixture()
+        final.update(decision)
+        final['workflow_integrity']={'schema_version':'equity_workflow_integrity_v1'}
+        _, plain, html = render_email(final)
         self.assertIn('$8.00 / $15.00 / $20.00', plain)
         self.assertIn('当前新增订单股数：0 股', html)
         self.assertIn('data-email-group="background"', html)
@@ -176,8 +202,71 @@ class CompanyValuationTests(unittest.TestCase):
         options=dict(root=self.root,current=CURRENT,quote=self.quote,minimum_reward_to_risk=Decimal('1.25'))
         self.assertIsNotNone(presentation_case(view,**options))
         (self.root/self.model_rel).write_text('{}')
-        self.assertIsNone(presentation_case(view,**options))
-        self.assertIsNone(presentation_case(view,**{**options,'current':CURRENT+timedelta(days=8)}))
+        changed = presentation_case(view,**options)
+        self.assertIsNone(changed['scenario_prices'])
+        self.assertIn('research_model_source_unverified', changed['pending_requirements'])
+        expired = presentation_case(view,**{**options,'current':CURRENT+timedelta(days=8)})
+        self.assertIsNone(expired['scenario_prices'])
+        self.assertEqual(expired['review_status'], 'reassessment_required')
+        self.assertIn('scheduled_company_review_due', expired['pending_requirements'])
+
+    def test_partial_no_model_and_reopened_cases_render_exact_zero_reason_without_prices(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        from capital_decision import SCHEMA as CAPITAL_SCHEMA
+        from daily_common import canonical_sha256
+        from email_brief import render_email
+        from test_email_brief import decision_fixture
+        for reopen in (False, True):
+            with self.subTest(reopen=reopen):
+                view=deepcopy(self.views()['ABC'])
+                view['review_record']['valuation_model']=None
+                view['review_record']['valuation'].update(status='unresolved',unresolved=['Acquisition-adjusted cash/debt/share count is required.'])
+                view['review_record']['conclusion']='当前不买入 ABC；目标仓位 0%，新增 0 股；并购债务与股数模型未完成。'
+                view['conclusion']=view['review_record']['conclusion']
+                view['valuation_readiness']='unresolved'
+                if reopen:
+                    view.update(status='reassess',reopen_reasons=['new_financial_period_not_reviewed'])
+                case=presentation_case(view,root=self.root,current=CURRENT,quote=self.quote,minimum_reward_to_risk=Decimal('1.25'))
+                self.assertIsNone(case['scenario_prices'])
+                self.assertEqual(case['model_admission_status'],'no_completed_model')
+                self.assertIn('Acquisition-adjusted cash/debt/share count is required.',case['review_conditions'])
+                row={'ticker':'ABC','decision':'BLOCKED','shares':0,'order_draft':None,'research_case':case,
+                    'reasons':[case['conclusion']],'blockers':['valuation'],'dependencies':[]}
+                capital={'schema_version':CAPITAL_SCHEMA,'automatic_action_allowed':False,'broker_connected':False,'order_placed':False,
+                    'decisions':[row],'dependencies':[],'planning_cash':4000,'mandatory_reserve':0,'global_blockers':[]}
+                capital['content_sha256']=canonical_sha256(capital)
+                decision=decision_fixture()
+                decision.update(generated_at=CURRENT.isoformat(),capital_decision=capital,
+                    long_horizon_research={'candidate_views':{'ABC':view}},
+                    workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
+                _,plain,html=render_email(decision)
+                for rendered in (plain,html):
+                    self.assertIn('目标仓位 0%',rendered)
+                    self.assertIn('Acquisition-adjusted cash/debt/share count is required.',rendered)
+                    self.assertIn(case['next_review_at'],rendered)
+                    self.assertNotIn('$8.00 / $15.00 / $20.00',rendered)
+                    self.assertNotIn('BUY LIMIT',rendered)
+                if reopen:
+                    self.assertIn('保留的历史判断',plain)
+                    self.assertEqual(case['review_status'],'reassessment_required')
+
+    def test_current_case_does_not_reuse_stale_or_missing_completed_quote(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        for quote in ({},self.quote|{'market_session_date':'2026-10-08'}):
+            case=presentation_case(self.views()['ABC'],root=self.root,current=CURRENT,quote=quote,minimum_reward_to_risk=Decimal('1.25'))
+            self.assertIsNone(case['reference_price'])
+            self.assertIsNone(case['scenario_prices'])
+            self.assertIn('current_completed_close_unverified',case['pending_requirements'])
+
+    def test_held_company_sell_case_cannot_relabel_exit_shares_as_new_buy(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case, case_lines
+        case=presentation_case(self.views()['ABC'],root=self.root,current=CURRENT,quote=self.quote,minimum_reward_to_risk=Decimal('1.25'))
+        text='\n'.join(case_lines(case,shares=2,order_side='sell'))
+        self.assertIn('当前卖出订单草案股数：2 股',text)
+        self.assertNotIn('当前新增订单股数：2 股',text)
 
     def test_admitted_case_retains_authored_horizon_and_rejects_changed_proof(self):
         from decimal import Decimal

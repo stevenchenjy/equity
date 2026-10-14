@@ -321,7 +321,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
                        reasons=observed if not missing else [reason])
         from company_research_presentation import admission_details, presentation_case
-        view = decision.get('long_horizon_research', {}).get('candidate_views', {}).get(ticker, {})
+        research = decision.get('long_horizon_research', {})
+        view = research.get('candidate_views', {}).get(ticker, research.get('views', {}).get(ticker, {}))
         if view.get('review_record'):
             tiers = config.get('account', {}).get('candidate_sizing_tiers', [])
             quote = next((q for q in read_csv(root/'03_source_data/equity_research/market_data_snapshot.csv') if q['ticker'] == ticker), {})
@@ -335,7 +336,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     admission=admission_details(proof, root=root))
                 if case:
                     row['research_case'] = case
-                    if row['decision'] in {'NO_ACTION', 'BLOCKED'}:
+                    if row['decision'] in {'NO_ACTION', 'BLOCKED'} and case.get('review_status') == 'current':
                         row['reasons'] = [case['conclusion'], *[r for r in row['reasons'] if not r.startswith('Recorded company review remains visible;')]]
         row['dependencies']=[classify(c,ticker=ticker) for c in row['blockers']]
         dependencies.extend(row['dependencies']);rows.append(row)

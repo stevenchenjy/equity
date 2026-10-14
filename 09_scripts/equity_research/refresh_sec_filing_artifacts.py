@@ -46,7 +46,7 @@ INDEX_PATH = (
 INDEX_SCHEMA_VERSION = "phase5r_sec_filing_artifact_index_v1"
 PARSER_ID = "phase5r_sec_text_normalizer"
 PARSER_VERSION = "1.0.0"
-SELECTION_POLICY = "latest_filing_and_periodic_plus_event_anchored_material_v4"
+SELECTION_POLICY = "latest_periodic_and_bounded_earnings_plus_event_material_v5"
 PERIODIC_FORMS = frozenset({"10-K", "10-Q", "20-F", "40-F"})
 ALLOWED_SEC_HOSTS = frozenset({"sec.gov", "www.sec.gov"})
 ALLOWED_CONTENT_TYPES = frozenset(
@@ -331,22 +331,31 @@ def source_id_for(row: dict[str, str]) -> str:
 
 
 class _ExhibitLinks(HTMLParser):
-    """Only explicit exhibit-number anchors; never crawl arbitrary links."""
+    """Explicit anchors or numbered exhibit-table rows, never arbitrary links."""
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
         self.href = ""
         self.parts: list[str] = []
         self.links: list[tuple[str, str]] = []
+        self.rows: list[dict[str, Any]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "tr":
+            self.rows.append({"cells": [], "cell": None, "links": []})
+        elif tag in {"td", "th"} and self.rows:
+            self.rows[-1]["cell"] = []
         if tag == "a":
             self.href = dict(attrs).get("href") or ""
             self.parts = []
+            if self.rows and self.href:
+                self.rows[-1]["links"].append(self.href)
 
     def handle_data(self, data: str) -> None:
         if self.href:
             self.parts.append(data)
+        if self.rows and self.rows[-1]["cell"] is not None:
+            self.rows[-1]["cell"].append(data)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == "a" and self.href:
@@ -355,6 +364,19 @@ class _ExhibitLinks(HTMLParser):
                 self.links.append((label, self.href))
             self.href = ""
             self.parts = []
+        if tag in {"td", "th"} and self.rows and self.rows[-1]["cell"] is not None:
+            row = self.rows[-1]
+            row["cells"].append(normalize_whitespace("".join(row["cell"])))
+            row["cell"] = None
+        elif tag == "tr" and self.rows:
+            row = self.rows.pop()
+            cells = [cell for cell in row["cells"] if cell]
+            links = set(row["links"])
+            # MU labels 99.1 in a separate cell and hyperlinks the release
+            # description. Require a standalone leading exhibit number and
+            # exactly one document; ambiguous rows are not guessed.
+            if cells and re.fullmatch(r"99(?:\.\d{1,2})?", cells[0]) and len(links) == 1:
+                self.links.append((cells[0], links.pop()))
 
 
 def exhibit_rows(row: dict[str, str], raw: bytes, charset: str) -> list[dict[str, str]]:
@@ -426,6 +448,7 @@ def normalize_ledger_row(row: dict[str, str]) -> dict[str, str]:
         "url": url,
         "is_new": row.get("is_new", "").strip().lower(),
         "material_event": row.get("material_event", "").strip().lower(),
+        "items": row.get("items", "").strip(),
     }
     normalized["source_id"] = source_id_for(normalized)
     return normalized
@@ -492,11 +515,28 @@ def select_filing_rows(
             key = (row["ticker"], row["form"])
             latest_periodic_dates[key] = max(row["filing_date"], latest_periodic_dates.get(key, ""))
     selected: list[dict[str, str]] = []
+    earnings_ids: set[str] = set()
+    # Keep one earnings release associated with each issuer's latest periodic
+    # filing, independently of the seven-day event window. This is only source
+    # retention: the numerical adapter must still verify its actual period.
+    # A bounded 70-day window cannot turn older/unrelated 8-Ks into facts.
+    for ticker in latest_dates:
+        periodic_dates = [day for (name, _), day in latest_periodic_dates.items() if name == ticker]
+        if not periodic_dates:
+            continue
+        anchor = date.fromisoformat(max(periodic_dates))
+        candidates = [row for row in deduplicated.values() if row["ticker"] == ticker
+            and row["form"] == "8-K" and "2.02" in row.get("items", "").split(",")
+            and 0 <= (anchor - date.fromisoformat(row["filing_date"])).days <= 70]
+        if candidates:
+            latest = max(candidates, key=lambda row: (row["filing_date"], row["accession"]))
+            earnings_ids.add(latest["source_id"])
     for row in deduplicated.values():
         if (
             row["filing_date"] == latest_dates[row["ticker"]]
             or event_window_material(row, latest_dates[row["ticker"]], material_lookback_days)
             or row["filing_date"] == latest_periodic_dates.get((row["ticker"], row["form"]))
+            or row["source_id"] in earnings_ids
         ):
             selected.append(row)
     return sorted(

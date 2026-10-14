@@ -84,9 +84,10 @@ def cards(decision, view=None):
         case = row.get('research_case')
         if not case: continue
         presented.add(row['ticker'])
-        review = decision.get('long_horizon_research', {}).get('candidate_views', {}).get(row['ticker'], {}).get('review_record', {})
+        research = decision.get('long_horizon_research', {})
+        review = research.get('candidate_views', {}).get(row['ticker'], research.get('views', {}).get(row['ticker'], {})).get('review_record', {})
         result.append(dict(title='公司研究与配置判断 — ' + row['ticker'], group='background', kind='',
-            body='\n'.join(case_lines(case, shares=row['shares'])),
+            body='\n'.join(case_lines(case, shares=row['shares'], order_side=(row.get('order_draft') or {}).get('side'))),
             sources=[source['url'] for source in review.get('sources', [])
                      if str(source.get('url', '')).startswith('https://')]))
     for watch in decision.get('watch_candidates', []):

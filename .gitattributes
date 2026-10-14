@@ -1,0 +1,2 @@
+# Exact SEC proof bytes are SHA-bound. Never normalize their line endings.
+02_filings/sec_acceptance_proofs/*.raw -text

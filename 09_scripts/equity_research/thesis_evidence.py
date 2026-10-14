@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from daily_common import canonical_sha256, read_json
 from sec_acceptance import load_immutable_acceptance_index
 from sec_acceptance_extensions import load_extension_artifacts
+from sec_acceptance_corrections import load_corrections, corrected_record, correction_for
 
 STORE_REL = Path("04_research/company_research/thesis_dossiers.local.json")
 SCHEMA = "maintained_company_theses_v1"
@@ -121,7 +122,10 @@ def evidence_context(root: Path) -> dict[str, Any]:
     records = list(accepted["records"])
     records += [row for extension in extensions for row in extension["records"]]
     artifact_index = read_json(root / INDEX_REL, {})
-    return {"acceptance": {row["accession_number"]: row for row in records},
+    corrections = load_corrections(root, records)
+    return {"acceptance": {row["accession_number"]: corrected_record(row, corrections) for row in records},
+            "acceptance_corrections": corrections,
+            "historical_acceptance": {row["accession_number"]: row for row in records},
             "artifacts": {row["source_id"]: row for row in artifact_index.get("artifacts", [])}}
 
 
@@ -142,8 +146,21 @@ def _validate_filing_bytes(source: dict[str, Any], ticker: str, reviewed_at: dat
     accepted = context.get("acceptance", {}).get(accession, {})
     _require(accepted.get("ticker") == ticker, "source lacks official acceptance identity")
     published, retrieved = _timestamp(source["published_at"]), _timestamp(source["fetched_at"])
-    _require(published == _timestamp(accepted.get("accepted_at")), "source publication timestamp differs")
-    _require(published <= retrieved <= reviewed_at, "source retrieved/published after review")
+    canonical_published = _timestamp(accepted.get("accepted_at"))
+    legacy = context.get('historical_acceptance', {}).get(accession)
+    correction = correction_for(legacy, context.get('acceptance_corrections', [])) if legacy else None
+    if admission and correction is not None:
+        _require(_timestamp(correction['admitted_at']) <= reviewed_at,
+                 'new review predates acceptance correction evidence')
+    # Existing signed reviews retain their originally recorded observation.
+    # This exception never admits a new review, never accepts an arbitrary old
+    # clock, and never lets a review precede the independently proved instant.
+    legacy_valid = (not admission and correction is not None
+        and reviewed_at < _timestamp(correction['admitted_at'])
+        and published == _timestamp(correction['original']['accepted_at']))
+    _require(published == canonical_published or legacy_valid, "source publication timestamp differs")
+    _require(canonical_published <= retrieved <= reviewed_at and published <= retrieved,
+             "source retrieved/published after review")
     url = urlsplit(source["url"])
     _require(url.scheme == "https" and url.netloc in {"sec.gov", "www.sec.gov"}
              and not url.query and not url.fragment, "source must be an official SEC document")

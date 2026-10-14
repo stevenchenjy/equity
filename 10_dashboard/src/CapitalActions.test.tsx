@@ -20,6 +20,18 @@ test('action precedes research and explains no new position',()=>{
  const html=renderToStaticMarkup(<CapitalActions data={data}/>);
  assert.ok(html.indexOf('今天做什么')<html.indexOf('研究背景'));assert.match(html,/买入 \/ 加仓 0 股/);assert.match(html,/持有/);assert.match(html,/Company valuation incomplete/);
 });
+test('partial company case and expired record show zero reason and exact dependency without invented prices',()=>{
+ for(const expired of [false,true]){
+  const research:CompanyResearchCase={ticker:'RKLB',review_version:1,reviewed_at:'2026-10-14T09:00:00-04:00',next_review_at:'2026-10-16T13:45:00-04:00',review_status:expired?'reassessment_required':'current',conclusion:'当前不买入 RKLB；目标仓位 0%，新增 0 股；并购后债务模型未完成。',method:'公司特定估值仍需并购后现金流、债务和股数',horizon:'估值期限尚未完成',countercase:'现金消耗与新股稀释',review_conditions:['Combined cash/debt/share count is required.'],reference_price:64.22,reference_close:'2026-10-13',live_quote:false,scenario_prices:null,base_upside_pct:null,scenario_reward_to_risk:null,minimum_reward_to_risk:1.25,valuation_only_review_ceiling:null,review_ceiling_is_order_price:false,model_admission_status:'no_completed_model',pending_requirements:['company_specific_valuation_incomplete']};
+  const row:CapitalDecision['decisions'][number]={ticker:'RKLB',decision:'BLOCKED',shares:0,estimated_notional:0,reasons:[research.conclusion],blockers:['valuation'],dependencies:[],thesis_summary:'',order_draft:null,research_case:research};
+  const detail=renderToStaticMarkup(<CompanyCase row={row}/>);
+  for(const text of ['目标仓位 0%','新增 0 股','没有可用的估值买入价','Combined cash/debt/share count is required.','10/16','13:45','当前没有完整模型'])assert.ok(detail.includes(text),text);
+  assert.doesNotMatch(detail,/基准上涨空间|估值复核上限|BUY LIMIT|\$0\.00/);
+  const html=renderToStaticMarkup(<CapitalActions data={{...data,capital_decision:{...data.capital_decision!,decisions:[row]}}}/>);
+  assert.ok(html.indexOf('研究背景与其余候选')<html.indexOf('公司估值与配置判断'));
+  if(expired)assert.match(detail,/保留的历史判断须重新复核/);
+ }
+});
 test('missing or invalidated contract never displays a numerical buy',()=>{
  const html=renderToStaticMarkup(<CapitalActions data={{...data,capital_decision:null}}/>);
  assert.match(html,/暂无当前有效/);assert.doesNotMatch(html,/BUY LIMIT/);

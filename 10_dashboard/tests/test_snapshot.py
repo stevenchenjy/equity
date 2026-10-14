@@ -143,6 +143,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['capital_decision']['action'],'NO_NEW_POSITION')
         self.assertEqual(result['plans'][0]['eligible_quantity'],0)
         self.assertIsNone(result['plans'][0]['draft'])
+
         self.assertEqual(result['plans'][0]['historical_draft']['quantity'],2)
         self.assertEqual(result['candidates'][0]['quantity'],0)
         self.put('01_policies/production_strategies.json',{'changed':'policy'})
@@ -151,6 +152,29 @@ class SnapshotTests(unittest.TestCase):
         self.assertIsNone(result['capital_decision'])
         self.assertEqual(result['candidates'][0]['quantity'],0)
         self.assertIsNone(result['plans'][0]['draft'])
+
+    def test_zero_partial_company_case_is_retained_by_actual_snapshot_without_plan(self):
+        from capital_decision import binding, SCHEMA
+        from daily_common import canonical_sha256
+        from account_authority import load_authority
+        case={'ticker':'MSFT','review_status':'current','review_version':2,'scenario_prices':None,
+            'conclusion':'目标仓位 0%；新增 0 股；公司特定模型仍需核验。',
+            'review_conditions':['Source-bound cash/debt/shares are required.'],
+            'next_review_at':'2026-10-02T13:45:00-04:00','automatic_action_allowed':False}
+        row={'ticker':'MSFT','decision':'BLOCKED','shares':0,'estimated_notional':0,
+            'order_draft':None,'reasons':[case['conclusion']],'blockers':['valuation'],
+            'dependencies':[],'research_case':case}
+        c=dict(schema_version=SCHEMA,generated_at=self.decision['generated_at'],decisions=[row],action='NO_NEW_POSITION',
+            account_authority=load_authority(self.root,self.now),source_bindings=binding(self.root),
+            automatic_action_allowed=False,broker_connected=False,order_placed=False)
+        c['content_sha256']=canonical_sha256(c)
+        self.decision['capital_decision']=c;self.publish()
+        result=read_snapshot(self.root,self.now)
+        projected=result['capital_decision']['decisions'][0]
+        self.assertEqual(projected['research_case'],case)
+        self.assertEqual(projected['shares'],0)
+        self.assertIsNone(projected['order_draft'])
+        self.assertFalse(any(p['ticker']=='MSFT' for p in result['plans']))
 
     def test_current_snapshot_preserves_quantity_and_does_not_change_inputs(self):
         before = {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()}

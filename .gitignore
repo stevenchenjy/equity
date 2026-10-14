@@ -196,3 +196,6 @@ graphify-out/reflections/
 08_reviews/current/capital_decision.local.json
 08_reviews/decision_resolution.local/
 08_reviews/capital_escalation.local/
+
+# Incomplete independent SEC correction fetches retain private attempt history.
+/02_filings/sec_acceptance_staging.local/

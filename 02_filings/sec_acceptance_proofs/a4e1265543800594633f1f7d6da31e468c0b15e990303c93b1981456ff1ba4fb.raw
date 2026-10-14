@@ -1,0 +1,184 @@
+<HTML><HEAD><TITLE>SEC EDGAR Submission 0001713683-26-000193</TITLE>
+<!--
+<SEC-HEADER>0001713683-26-000193.hdr.sgml : 20260924
+<ACCEPTANCE-DATETIME>20260924160741
+<ACCESSION-NUMBER>0001713683-26-000193
+<TYPE>8-K
+<PUBLIC-DOCUMENT-COUNT>12
+<PERIOD>20260924
+<ITEMS>5.02
+<FILING-DATE>20260924
+<DATE-OF-FILING-DATE-CHANGE>20260924
+<FILER>
+<COMPANY-DATA>
+<CONFORMED-NAME>Zscaler, Inc.
+<CIK>0001713683
+<ASSIGNED-SIC>7371
+<ORGANIZATION-NAME>06 Technology
+<IRS-NUMBER>261173892
+<STATE-OF-INCORPORATION>DE
+<FISCAL-YEAR-END>0731
+</COMPANY-DATA>
+<FILING-VALUES>
+<FORM-TYPE>8-K
+<ACT>34
+<FILE-NUMBER>001-38413
+<FILM-NUMBER>261404839
+</FILING-VALUES>
+<BUSINESS-ADDRESS>
+<STREET1>120 HOLGER WAY
+<CITY>SAN JOSE
+<STATE>CA
+<ZIP>95134
+<PHONE>(408) 533-0288
+</BUSINESS-ADDRESS>
+<MAIL-ADDRESS>
+<STREET1>120 HOLGER WAY
+<CITY>SAN JOSE
+<STATE>CA
+<ZIP>95134
+</MAIL-ADDRESS>
+</FILER>
+</SEC-HEADER>
+-->
+</HEAD><BODY>
+<PRE>&lt;SEC-DOCUMENT&gt;0001713683-26-000193-index.html : 20260924
+&lt;SEC-HEADER&gt;0001713683-26-000193.hdr.sgml : 20260924
+&lt;ACCEPTANCE-DATETIME&gt;20260924160741
+ACCESSION NUMBER:		0001713683-26-000193
+CONFORMED SUBMISSION TYPE:	8-K
+PUBLIC DOCUMENT COUNT:		12
+CONFORMED PERIOD OF REPORT:	20260924
+ITEM INFORMATION:		Departure of Directors or Certain Officers; Election of Directors; Appointment of Certain Officers: Compensatory Arrangements of Certain Officers
+FILED AS OF DATE:		20260924
+DATE AS OF CHANGE:		20260924
+
+FILER:
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Zscaler, Inc.
+		CENTRAL INDEX KEY:			0001713683
+		STANDARD INDUSTRIAL CLASSIFICATION:	SERVICES-COMPUTER PROGRAMMING SERVICES [7371]
+		ORGANIZATION NAME:           	06 Technology
+		EIN:				261173892
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			0731
+
+	FILING VALUES:
+		FORM TYPE:		8-K
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	001-38413
+		FILM NUMBER:		261404839
+
+	BUSINESS ADDRESS:	
+		STREET 1:		120 HOLGER WAY
+		CITY:			SAN JOSE
+		STATE:			CA
+		ZIP:			95134
+		BUSINESS PHONE:		(408) 533-0288
+
+	MAIL ADDRESS:	
+		STREET 1:		120 HOLGER WAY
+		CITY:			SAN JOSE
+		STATE:			CA
+		ZIP:			95134
+&lt;/SEC-HEADER&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;8-K
+&lt;SEQUENCE&gt;1
+&lt;FILENAME&gt;zs-20260924.htm
+&lt;DESCRIPTION&gt;8-K
+&lt;TEXT&gt;
+<a href="zs-20260924.htm">Document 1 - file: zs-20260924.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-99.1
+&lt;SEQUENCE&gt;2
+&lt;FILENAME&gt;zs-09242026_991.htm
+&lt;DESCRIPTION&gt;EX-99.1
+&lt;TEXT&gt;
+<a href="zs-09242026_991.htm">Document 2 - file: zs-09242026_991.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.SCH
+&lt;SEQUENCE&gt;3
+&lt;FILENAME&gt;zs-20260924.xsd
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT
+&lt;TEXT&gt;
+<a href="zs-20260924.xsd">Document 3 - file: zs-20260924.xsd</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.LAB
+&lt;SEQUENCE&gt;4
+&lt;FILENAME&gt;zs-20260924_lab.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="zs-20260924_lab.xml">Document 4 - file: zs-20260924_lab.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.PRE
+&lt;SEQUENCE&gt;5
+&lt;FILENAME&gt;zs-20260924_pre.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="zs-20260924_pre.xml">Document 5 - file: zs-20260924_pre.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;7
+&lt;FILENAME&gt;R1.htm
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="R1.htm">Document 7 - file: R1.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;8
+&lt;FILENAME&gt;report.css
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="report.css">Document 8 - file: report.css</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;9
+&lt;FILENAME&gt;Show.js
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="Show.js">Document 9 - file: Show.js</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;11
+&lt;FILENAME&gt;FilingSummary.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/FilingSummary.xml">Document 11 - file: FilingSummary.html</a><br>
+<a href="FilingSummary.xml">Document 11 - RAW XML: FilingSummary.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;JSON
+&lt;SEQUENCE&gt;13
+&lt;FILENAME&gt;MetaLinks.json
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="MetaLinks.json">Document 13 - file: MetaLinks.json</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;ZIP
+&lt;SEQUENCE&gt;14
+&lt;FILENAME&gt;0001713683-26-000193-xbrl.zip
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="0001713683-26-000193-xbrl.zip">Document 14 - file: 0001713683-26-000193-xbrl.zip</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;15
+&lt;FILENAME&gt;zs-20260924_htm.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/zs-20260924_htm.xml">Document 15 - file: zs-20260924_htm.html</a><br>
+<a href="zs-20260924_htm.xml">Document 15 - RAW XML: zs-20260924_htm.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;/SEC-DOCUMENT&gt;</PRE><script type="text/javascript"  src="/RMOci/B/y8/Fsm2/wuMqMZFM/OthYpXf0tJJGNr/MmxYFhMB/FC/oLH14LR2Q"></script></BODY></HTML>

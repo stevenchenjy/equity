@@ -13,6 +13,7 @@ from equity_naming import report_heading
 import argparse
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 from typing import Any
 
 from daily_common import (
@@ -647,6 +648,29 @@ def build_watch_rows(candidate_recommendations: list[dict[str, Any]], *,
     return watch_rows
 
 
+def compose_capital_contracts(decision: dict[str, Any], *, root: Path) -> None:
+    """Bind capital/session checks to the completed decision's truthful clock.
+
+    The analysis-start cutoff can precede generated_at across a second boundary.
+    Reusing it made a valid completed-close decision look future-dated. Capture
+    one new clock here for both contract passes; genuinely future evidence still
+    fails the existing capital/session validators.
+    """
+    from capital_decision import build as build_capital_decision
+    from capital_escalation import refresh as refresh_capital_escalation
+
+    capital_current = now_et()
+    decision["capital_decision"] = build_capital_decision(decision, root=root, current=capital_current)
+    decision["capital_deployment_escalation"] = refresh_capital_escalation(
+        root, decision, decision["capital_decision"], current=capital_current)
+    if decision["capital_deployment_escalation"].get("triggered"):
+        priority = [row["ticker"] for row in decision["capital_deployment_escalation"]["ranked_capital_uses"]]
+        decision["capital_decision"] = build_capital_decision(
+            decision, root=root, current=capital_current, priority_tickers=priority)
+        decision["capital_deployment_escalation"] = refresh_capital_escalation(
+            root, decision, decision["capital_decision"], current=capital_current)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -1147,20 +1171,9 @@ def main() -> int:
     # sizing inputs. Rebind the presentation below to the completed contract.
     decision["delivery_followthrough"] = build_followthrough(decision, root=ROOT, current=now_et())
     # The sole final capital contract reuses reviewed policy and existing gates.
-    from capital_decision import build as build_capital_decision, publish as publish_capital_decision, meaning as capital_meaning
+    from capital_decision import publish as publish_capital_decision, meaning as capital_meaning
     from decision_dependencies import publish as publish_dependencies
-    decision["capital_decision"] = build_capital_decision(decision, root=ROOT, current=current)
-    from capital_escalation import refresh as refresh_capital_escalation
-    decision["capital_deployment_escalation"] = refresh_capital_escalation(
-        ROOT, decision, decision["capital_decision"], current=current)
-    if decision["capital_deployment_escalation"].get("triggered"):
-        # Compare admitted routes before assigning their shared cash budget.
-        # The same owners still enforce every eligibility and sizing gate.
-        priority = [r["ticker"] for r in decision["capital_deployment_escalation"]["ranked_capital_uses"]]
-        decision["capital_decision"] = build_capital_decision(
-            decision, root=ROOT, current=current, priority_tickers=priority)
-        decision["capital_deployment_escalation"] = refresh_capital_escalation(
-            ROOT, decision, decision["capital_decision"], current=current)
+    compose_capital_contracts(decision, root=ROOT)
     publish_capital_decision(ROOT, decision["capital_decision"])
     publish_dependencies(ROOT, decision["capital_decision"])
     escalation_meaning = {key: decision["capital_deployment_escalation"].get(key) for key in (

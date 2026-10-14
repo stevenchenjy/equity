@@ -70,6 +70,8 @@ from sec_supplemental_facts import NVDA_PRINCIPAL_TAG, supplement_companyfacts
 from earnings_incorporation import SecPayload, retain_sec_response, write_selection_receipt
 from latest_report_facts import supplement_cached_latest_report
 from evidence_scope import NONCOMPANY_BENCHMARKS
+from sec_acceptance_corrections import (correction_for, corrected_record, fetch_correction,
+    load_corrections, reconcile_with_corrections, write_corrections)
 
 
 SEC_TICKER_URL = "https://www.sec.gov/files/company_tickers.json"
@@ -461,8 +463,14 @@ def fact_units(
                     and tag == 'WeightedAverageNumberOfDilutedSharesOutstanding' and unit == 'shares'
                     and item.get('_source_kind') == 'sec_earnings_exhibit'
                     and bool(re.fullmatch(r'[0-9a-f]{64}', str(item.get('_raw_sha256', ''))))
-                    and str(item.get('_source_url', '')).startswith('https://www.sec.gov/Archives/edgar/data/789019/')
-                    and bool(item.get('_raw_path')))
+                    and (item.get('_source_ticker'), item.get('_source_cik')) in {('MSFT', 789019), ('MU', 723125)}
+                    and payload.get('cik') == item.get('_source_cik')
+                    and bool(re.fullmatch(r'\d{10}-\d{2}-\d{6}', str(item.get('accn', ''))))
+                    and str(item.get('_source_url', '')).startswith(
+                        f'https://www.sec.gov/Archives/edgar/data/{item.get("_source_cik")}/{str(item.get("accn", "")).replace("-", "")}/')
+                    and bool(re.fullmatch(r'[0-9a-f]{64}', str(item.get('_parent_raw_sha256', ''))))
+                    and bool(item.get('_source_accepted_at')) and bool(item.get('_raw_path'))
+                    and (item.get('_source_ticker') != 'MU' or bool(item.get('_period_support'))))
                 if (not isinstance(value, (int, float)) or isinstance(value, bool)
                         or not math.isfinite(value) or (item.get("form") not in REPORT_FORMS and not verified_earnings_shares)):
                     continue
@@ -470,18 +478,29 @@ def fact_units(
                     end = date.fromisoformat(str(item.get("end", "")))
                     filed = date.fromisoformat(str(item.get("filed", "")))
                     accepted = (acceptance_by_accession or {}).get(str(item.get("accn", "")))
+                    if verified_earnings_shares and not accepted:
+                        continue  # Furnished facts require the exact admitted parent time.
                     if accepted:
                         available = datetime.fromisoformat(accepted.replace("Z", "+00:00"))
                         if available.tzinfo is None:
                             continue
                         availability_basis = "official_acceptance_timestamp"
+                        if verified_earnings_shares and datetime.fromisoformat(item['_source_accepted_at'].replace('Z', '+00:00')) != available:
+                            continue
                     else:
                         available = datetime.combine(
                             filed + timedelta(days=1), datetime.min.time(),
                             tzinfo=ZoneInfo("America/New_York"),
                         )
                         availability_basis = "conservative_end_of_filed_day"
-                except (ValueError, TypeError):
+                    if verified_earnings_shares and item.get('_period_support'):
+                        period_available = datetime.fromisoformat(item['_period_support']['_available_at_utc'])
+                        if period_available.tzinfo is None:
+                            continue
+                        if period_available > available:
+                            available = period_available
+                            availability_basis = 'official_filing_and_fiscal_period_support'
+                except (ValueError, TypeError, KeyError):
                     continue
                 if end > filed or (as_of is not None and available > as_of):
                     continue
@@ -717,11 +736,14 @@ def fact_provenance(item: dict[str, Any] | None) -> dict[str, Any]:
         "derivation": item.get("_derivation", "reported_fact"),
         "status": "available",
     })
-    for key in ("source_url", "raw_sha256", "raw_path", "context_id", "fact_id", "source_kind", "reported_label"):
+    for key in ("source_url", "raw_sha256", "raw_path", "context_id", "fact_id", "source_kind", "reported_label",
+                "source_ticker", "source_cik", "source_accepted_at", "parent_raw_sha256", "parent_source_url", "fiscal_quarter_label"):
         if item.get("_" + key):
             result[key] = item["_" + key]
     if item.get("_components"):
         result["components"] = [fact_provenance(component) for component in item["_components"]]
+    if item.get('_period_support'):
+        result['period_support'] = fact_provenance(item['_period_support'])
     return result
 
 
@@ -1295,6 +1317,7 @@ def plan_issuer_admissions(
     entity_by_ticker: dict[str, str],
     historical_index_sha256: str,
     admitted_at: str,
+    corrections: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, str]], list[str], dict[str, list[str]], int, dict[str, list[str]]]:
     """Stage independent issuers against one validated immutable history.
 
@@ -1327,9 +1350,10 @@ def plan_issuer_admissions(
                 historical_index_sha256=historical_index_sha256,
                 admitted_at=admitted_at,
             )
-            issuer_reconciliations = reconcile_current_acceptance_records(
+            issuer_reconciliations = reconcile_with_corrections(
                 historical_records=[*historical_records, *extension_acceptance_records(candidate)],
                 current_records=current, reconciled_at=admitted_at,
+                corrections=corrections or [],
             )
         except AcceptanceIndexError as exc:
             rejected[ticker] = [acceptance_index_failure_reason(exc)]
@@ -1426,6 +1450,23 @@ def main() -> int:
     forms_by_accession: dict[str, str] = {}
     entity_by_ticker: dict[str, str] = {}
     pending_ledger_rows: list[dict[str, str]] = []
+    # Validate the correction layer before any issuer can use it. It is a
+    # separate current-reader input; historical index/extension bytes remain.
+    try:
+        prior_extensions = load_extension_artifacts(
+            historical_index_sha256=prior_immutable_index_sha256,
+            directory=SEC_ACCEPTANCE_EXTENSION_DIR,
+        )
+        correction_history = [*prior_acceptance_index['records'], *extension_acceptance_records(prior_extensions)]
+        corrections = load_corrections(ROOT, correction_history)
+    except (AcceptanceIndexError, OSError, ValueError, KeyError) as exc:
+        write_acceptance_index_failure_status(attempt_at=attempt_at, state=state,
+            held_tickers=held_tickers, reason='sec_acceptance_header_correction_invalid', diagnostic=str(exc))
+        print('scan_status=failed reason=sec_acceptance_header_correction_invalid')
+        return 1
+    corrections_to_admit: list[dict[str, Any]] = []
+    correction_staging_roots: dict[str, Any] = {}
+    historical_by_accession = {r['accession_number']: r for r in correction_history}
 
     try:
         ticker_map = load_ticker_map(user_agent, args.force_ticker_map)
@@ -1481,6 +1522,35 @@ def main() -> int:
                     accepted_at=filing["accepted_at"],
                     source_url=submission_url,
                 )
+                historical = historical_by_accession.get(filing['accession_number'])
+                proof = correction_for(acceptance_record, corrections)
+                if proof is None and historical is not None:
+                    try:
+                        reconcile_current_acceptance_records(historical_records=[historical],
+                            current_records=[acceptance_record], reconciled_at=iso_now())
+                    except AcceptanceReconciliationError as exc:
+                        # A timezone guess cannot clear a clock disagreement.
+                        # Require two exact independent archive representations
+                        # and the retained current raw submissions response.
+                        if 'not a permitted representation difference' not in str(exc):
+                            raise
+                        try:
+                            proof, proof_stage = fetch_correction(historical=historical, observed=acceptance_record,
+                                form=filing['form'], entity_name=entity_by_ticker[ticker],
+                                submissions_receipt=getattr(payload, 'receipt', {}), user_agent=user_agent,
+                                root=ROOT, observed_at=iso_now())
+                            correction_staging_roots[proof['correction_sha256']] = proof_stage
+                        except (OSError, ValueError, KeyError, urllib.error.URLError) as proof_exc:
+                            raise AcceptanceReconciliationError(str(exc) +
+                                '; independent header correction unavailable: ' + str(proof_exc)) from proof_exc
+                        corrections.append(proof)
+                        corrections_to_admit.append(proof)
+                if proof is not None:
+                    acceptance_record = corrected_record(acceptance_record, corrections)
+                    # Derived metadata uses authoritative EDGAR time; the raw
+                    # response, original index and correction record retain all
+                    # conflicting clocks and when this proof became known.
+                    filing['accepted_at'] = acceptance_record['accepted_at']
                 issuer_records.append(acceptance_record)
                 accession = acceptance_record["accession_number"]
                 prior_form = forms_by_accession.get(accession)
@@ -1489,7 +1559,7 @@ def main() -> int:
                         "SEC acceptance extension filing form identity conflict"
                     )
                 issuer_forms[accession] = filing["form"]
-        except (AcceptanceIndexError, TypeError, AttributeError, ValueError) as exc:
+        except (AcceptanceIndexError, TypeError, AttributeError, ValueError, KeyError, OSError) as exc:
             reason = (acceptance_index_failure_reason(exc) if isinstance(exc, AcceptanceIndexError)
                       else "sec_submissions_metadata_invalid")
             ticker_blockers[ticker] = [reason]
@@ -1566,7 +1636,7 @@ def main() -> int:
                 except (OSError, ValueError, urllib.error.URLError):
                     # Keep valid standard facts; unresolved custom scope stays
                     # explicitly insufficient and cannot authorize valuation.
-                    code = 'supplemental_reported_financial_fact_unavailable' if ticker == 'MSFT' else 'supplemental_cash_flow_unavailable'
+                    code = 'supplemental_reported_financial_fact_unavailable' if ticker in {'MSFT', 'MU'} else 'supplemental_cash_flow_unavailable'
                     fundamental_errors.append(f"{ticker}:{code}")
                 selected_row = fundamental_row(
                     ticker, cik, companyfacts, attempt_at,
@@ -1629,6 +1699,7 @@ def main() -> int:
                 entity_by_ticker=entity_by_ticker,
                 historical_index_sha256=prior_immutable_index_sha256,
                 admitted_at=iso_now(),
+                corrections=corrections,
             )
             ticker_blockers.update(rejected_tickers)
             ticker_failure_diagnostics.update(rejected_diagnostics)
@@ -1652,6 +1723,9 @@ def main() -> int:
                 reconciliations,
                 path=SEC_ACCEPTANCE_RECONCILIATION_LOG_PATH,
             )
+            write_corrections(ROOT,
+                [c for c in corrections_to_admit if c['original']['ticker'] in admitted_tickers],
+                correction_history, staged_roots=correction_staging_roots)
             for artifact in planned_extensions[len(retained_extensions):]:
                 write_extension_artifact(
                     artifact,
@@ -1786,6 +1860,7 @@ def main() -> int:
             ),
             "sec_acceptance_source": prior_acceptance_index["source_authority"],
             "sec_acceptance_reconciliation_count": len(reconciliations),
+            "sec_acceptance_header_correction_count": len(load_corrections(ROOT, correction_history)),
             "sec_acceptance_extension_version_count": len(extension_artifacts),
             "sec_acceptance_extension_admission_count": extension_admission_count,
             "unindexed_accession_count": unindexed_accession_count,
