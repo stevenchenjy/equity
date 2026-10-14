@@ -11,7 +11,7 @@
   "strategies": [
     {
       "strategy_id": "reviewed-core-v3",
-      "version": 13,
+      "version": 14,
       "adapter": "core_tranche",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -36,7 +36,7 @@
         "09_scripts/equity_research/regenerate_portfolio_outputs.py": "ac3bd0788977ce636869b5d939516c37777bf6d6eefedee2b3dda8b387670e81",
         "09_scripts/equity_research/valuation_research_inputs.py": "166e461833bd9068c612cbf878a147c8ae543f59f0dae8f7287da3d306fe1a58",
         "09_scripts/equity_research/create_daily_decision_and_brief.py": "52041f11d54210dccd0e04b32bd102240becb7ba332b2a123b939354a425c099",
-        "09_scripts/equity_research/capital_presentation.py": "7139bb788696000f98b5c865bdc74366442f2adfe8becd82a3f011c9d4336633",
+        "09_scripts/equity_research/capital_presentation.py": "f657f7d2b9f2ee7d188ed437209d7b78f30b67acb1fe668135d9061e98dd9873",
         "09_scripts/equity_research/verify_active_state_guard.py": "e19860b494dd4ef013df10d29f522dd05d1a6c5c7d31b403592259b6b6bd25b6",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
         "09_scripts/equity_research/company_research_presentation.py": "a20cc96dc345752d6ed15a3c090c0a80da9f5c7ffd0b75b7a22dca2e9af69cf3"
@@ -44,7 +44,7 @@
     },
     {
       "strategy_id": "reviewed-company-v3",
-      "version": 14,
+      "version": 15,
       "adapter": "reviewed_company",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -71,7 +71,7 @@
         "09_scripts/equity_research/regenerate_portfolio_outputs.py": "ac3bd0788977ce636869b5d939516c37777bf6d6eefedee2b3dda8b387670e81",
         "09_scripts/equity_research/valuation_research_inputs.py": "166e461833bd9068c612cbf878a147c8ae543f59f0dae8f7287da3d306fe1a58",
         "09_scripts/equity_research/create_daily_decision_and_brief.py": "52041f11d54210dccd0e04b32bd102240becb7ba332b2a123b939354a425c099",
-        "09_scripts/equity_research/capital_presentation.py": "7139bb788696000f98b5c865bdc74366442f2adfe8becd82a3f011c9d4336633",
+        "09_scripts/equity_research/capital_presentation.py": "f657f7d2b9f2ee7d188ed437209d7b78f30b67acb1fe668135d9061e98dd9873",
         "09_scripts/equity_research/verify_active_state_guard.py": "e19860b494dd4ef013df10d29f522dd05d1a6c5c7d31b403592259b6b6bd25b6",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
         "09_scripts/equity_research/company_research_presentation.py": "a20cc96dc345752d6ed15a3c090c0a80da9f5c7ffd0b75b7a22dca2e9af69cf3",
@@ -84,7 +84,7 @@
     },
     {
       "strategy_id": "reviewed-tactical-v3",
-      "version": 13,
+      "version": 14,
       "adapter": "reviewed_tactical",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -109,7 +109,7 @@
         "09_scripts/equity_research/regenerate_portfolio_outputs.py": "ac3bd0788977ce636869b5d939516c37777bf6d6eefedee2b3dda8b387670e81",
         "09_scripts/equity_research/valuation_research_inputs.py": "166e461833bd9068c612cbf878a147c8ae543f59f0dae8f7287da3d306fe1a58",
         "09_scripts/equity_research/create_daily_decision_and_brief.py": "52041f11d54210dccd0e04b32bd102240becb7ba332b2a123b939354a425c099",
-        "09_scripts/equity_research/capital_presentation.py": "7139bb788696000f98b5c865bdc74366442f2adfe8becd82a3f011c9d4336633",
+        "09_scripts/equity_research/capital_presentation.py": "f657f7d2b9f2ee7d188ed437209d7b78f30b67acb1fe668135d9061e98dd9873",
         "09_scripts/equity_research/verify_active_state_guard.py": "e19860b494dd4ef013df10d29f522dd05d1a6c5c7d31b403592259b6b6bd25b6",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
         "09_scripts/equity_research/company_research_presentation.py": "a20cc96dc345752d6ed15a3c090c0a80da9f5c7ffd0b75b7a22dca2e9af69cf3",
@@ -122,7 +122,7 @@
     },
     {
       "strategy_id": "maintained-exit-v3",
-      "version": 13,
+      "version": 14,
       "adapter": "maintained_exit",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -146,7 +146,7 @@
         "09_scripts/equity_research/regenerate_portfolio_outputs.py": "ac3bd0788977ce636869b5d939516c37777bf6d6eefedee2b3dda8b387670e81",
         "09_scripts/equity_research/valuation_research_inputs.py": "166e461833bd9068c612cbf878a147c8ae543f59f0dae8f7287da3d306fe1a58",
         "09_scripts/equity_research/create_daily_decision_and_brief.py": "52041f11d54210dccd0e04b32bd102240becb7ba332b2a123b939354a425c099",
-        "09_scripts/equity_research/capital_presentation.py": "7139bb788696000f98b5c865bdc74366442f2adfe8becd82a3f011c9d4336633",
+        "09_scripts/equity_research/capital_presentation.py": "f657f7d2b9f2ee7d188ed437209d7b78f30b67acb1fe668135d9061e98dd9873",
         "09_scripts/equity_research/verify_active_state_guard.py": "e19860b494dd4ef013df10d29f522dd05d1a6c5c7d31b403592259b6b6bd25b6",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
         "09_scripts/equity_research/company_research_presentation.py": "a20cc96dc345752d6ed15a3c090c0a80da9f5c7ffd0b75b7a22dca2e9af69cf3",

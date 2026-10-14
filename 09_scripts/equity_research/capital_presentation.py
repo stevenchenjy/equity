@@ -84,9 +84,11 @@ def cards(decision, view=None):
         case = row.get('research_case')
         if not case: continue
         presented.add(row['ticker'])
+        review = decision.get('long_horizon_research', {}).get('candidate_views', {}).get(row['ticker'], {}).get('review_record', {})
         result.append(dict(title='公司研究与配置判断 — ' + row['ticker'], group='background', kind='',
             body='\n'.join(case_lines(case, shares=row['shares'])),
-            sources=[{'path': case['model_relative_path'], 'sha256': case['model_sha256']}]))
+            sources=[source['url'] for source in review.get('sources', [])
+                     if str(source.get('url', '')).startswith('https://')]))
     for watch in decision.get('watch_candidates', []):
         if watch['ticker'] in presented: continue
         if watch.get('valuation_method') != 'admitted_source_bound_company_model':

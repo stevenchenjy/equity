@@ -1705,8 +1705,8 @@
     "semantic_hash": "13cb84203d3339b1700e3b16228ba277"
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1791947103.8436835,
-    "ast_hash": "4bbc62c29351e045531f77f5e4c00c3c",
+    "mtime": 1791948599.877722,
+    "ast_hash": "888c93818da604fb0f23f690653a66cc",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -1720,8 +1720,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/capital_presentation.py": {
-    "mtime": 1791944466.794994,
-    "ast_hash": "3232975469204d43bc9634e7b7ca38f2",
+    "mtime": 1791948579.0451512,
+    "ast_hash": "f7709cf42916cdd8b667d57380dac9f8",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/core_entry.py": {
@@ -1900,8 +1900,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_company_valuation.py": {
-    "mtime": 1791945082.211997,
-    "ast_hash": "f526e8d14721f7a9c4ea20fd1a3c77cc",
+    "mtime": 1791948579.0463653,
+    "ast_hash": "2afe576c27ad62107d88f1630c83091a",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/update_company_valuation.py": {

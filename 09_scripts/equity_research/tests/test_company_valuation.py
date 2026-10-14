@@ -149,7 +149,8 @@ class CompanyValuationTests(unittest.TestCase):
         capital={'schema_version':CAPITAL_SCHEMA,'automatic_action_allowed':False,'broker_connected':False,'order_placed':False,
             'decisions':[row],'dependencies':[],'planning_cash':4000,'mandatory_reserve':0,'global_blockers':[]}
         capital['content_sha256']=canonical_sha256(capital)
-        decision={'generated_at':CURRENT.isoformat(),'capital_decision':capital}
+        decision={'generated_at':CURRENT.isoformat(),'capital_decision':capital,
+            'long_horizon_research': {'candidate_views': {'ABC': view}}}
         result=cards(decision)
         research=next(c for c in result if c['title']=='公司研究与配置判断 — ABC')
         self.assertEqual(research['group'],'background')
@@ -157,6 +158,16 @@ class CompanyValuationTests(unittest.TestCase):
         self.assertIn('当前新增订单股数：0 股',research['body'])
         self.assertIn('不是买入限价或订单',research['body'])
         self.assertFalse(case['automatic_action_allowed'])
+        # Exercise the actual final text/HTML renderer, not just its card data.
+        # Its source contract is a list of public URLs; private proof objects
+        # remain in the source-bound capital record.
+        from email_brief import _render_cards
+        _, plain, html = _render_cards('Research case', result,
+            title='Portfolio update', stamp='Dated reference; not live', footer='No trade or email sent.')
+        self.assertIn('$8.00 / $15.00 / $20.00', plain)
+        self.assertIn('当前新增订单股数：0 股', html)
+        self.assertIn('data-email-group="background"', html)
+        self.assertTrue(all(isinstance(url, str) for url in research['sources']))
 
     def test_invalid_or_expired_research_model_never_acquires_current_display_prices(self):
         from decimal import Decimal
