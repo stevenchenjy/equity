@@ -30,6 +30,8 @@ INPUTS = {
  '05_risk_and_positions/current_account_state.local.json','05_risk_and_positions/current_positions.local.csv',
  '05_risk_and_positions/current_open_orders.local.json','05_risk_and_positions/investment_plans.local.json',
  '04_research/company_research/thesis_dossiers.local.json','04_data/equity_research/valuation_scenarios.local.json',
+ '04_data/equity_research/company_valuation_admissions.local.json',
+ '04_data/equity_research/company_valuation_admission_status.local.json',
  '03_source_data/equity_research/market_data_snapshot.csv',
  '07_automation/email_delivery/daily_delivery_ledger.csv',
  '05_risk_and_positions/manual_account_snapshot.local.json',
@@ -318,7 +320,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     'Research has not supplied a complete current investment case and entry contract.')
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
                        reasons=observed if not missing else [reason])
-        from company_research_presentation import presentation_case
+        from company_research_presentation import admission_details, presentation_case
         view = decision.get('long_horizon_research', {}).get('candidate_views', {}).get(ticker, {})
         if view.get('review_record'):
             tiers = config.get('account', {}).get('candidate_sizing_tiers', [])
@@ -329,7 +331,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                           and r.get('review_record_sha256') == view['review_record']['record_sha256']), None)
             if tiers:
                 case = presentation_case(view, root=root, current=current, quote=quote,
-                    minimum_reward_to_risk=min(num(t['minimum_reward_to_risk']) for t in tiers), admission=proof)
+                    minimum_reward_to_risk=min(num(t['minimum_reward_to_risk']) for t in tiers),
+                    admission=admission_details(proof, root=root))
                 if case:
                     row['research_case'] = case
                     if row['decision'] in {'NO_ACTION', 'BLOCKED'}:

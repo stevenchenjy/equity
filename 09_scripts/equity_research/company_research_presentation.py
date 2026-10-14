@@ -10,6 +10,19 @@ from daily_common import read_json, sha256_file
 from valuation_input_bundle import validate_and_materialize_bundle, _verified_source
 
 
+def admission_details(proof: dict | None, *, root: Path) -> dict | None:
+    """Recover authored method/horizon only for the exact current admission."""
+    if not proof or proof.get('status') != 'admitted_current': return None
+    from company_valuation import STORE_REL, validate_store
+    try:
+        record = validate_store(read_json(root / STORE_REL, {})).get(proof.get('ticker'))
+        if not record or any(record[key] != proof.get(key) for key in
+                ('record_sha256', 'model_sha256', 'review_record_sha256')): return None
+        return record
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
 def presentation_case(view: dict, *, root: Path, current: datetime,
                       quote: dict, minimum_reward_to_risk: Decimal,
                       admission: dict | None = None) -> dict | None:

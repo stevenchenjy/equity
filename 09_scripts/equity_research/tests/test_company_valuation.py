@@ -179,6 +179,19 @@ class CompanyValuationTests(unittest.TestCase):
         self.assertIsNone(presentation_case(view,**options))
         self.assertIsNone(presentation_case(view,**{**options,'current':CURRENT+timedelta(days=8)}))
 
+    def test_admitted_case_retains_authored_horizon_and_rejects_changed_proof(self):
+        from decimal import Decimal
+        from company_research_presentation import admission_details, presentation_case
+        _, report=self.project()
+        proof=report['records'][0]
+        record=admission_details(proof,root=self.root)
+        case=presentation_case(self.views()['ABC'],root=self.root,current=CURRENT,quote=self.quote,
+            minimum_reward_to_risk=Decimal('1.25'),admission=record)
+        self.assertEqual(case['horizon'],'Next four reported quarters')
+        self.assertEqual(case['method'],'Equity forward free-cash-flow sensitivity')
+        self.assertEqual(case['model_admission_status'],'admitted_current')
+        self.assertIsNone(admission_details({**proof,'record_sha256':'0'*64},root=self.root))
+
     def test_reprojection_changes_only_current_observation_and_preserves_original_bytes(self):
         original_bytes = (self.root/self.model_rel).read_bytes()
         self.quote['last_price'] = '11'
