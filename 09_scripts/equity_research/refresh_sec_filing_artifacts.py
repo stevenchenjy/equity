@@ -66,6 +66,8 @@ DEFAULT_CHUNK_OVERLAP = 200
 # sleep or make a request.
 SEC_MIN_REQUEST_INTERVAL_SECONDS = 0.2
 MAX_EXHIBITS_PER_FILING = 2
+# New exhibit requests per refresh. Verified retained sources do not consume
+# this network budget or disappear from the next index.
 MAX_EXHIBITS_PER_REFRESH = 8
 SAFE_PATH_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 ACCESSION_PATTERN = re.compile(r"\d{10}-\d{2}-\d{6}")
@@ -713,6 +715,35 @@ def complete_cache_entry(
     return cached
 
 
+def schedule_exhibits(
+    candidates: list[dict[str, str]], *, prior_by_id: dict[str, dict[str, Any]],
+    artifact_root: Path, project_root: Path, new_fetch_slots: int,
+) -> tuple[list[dict[str, str]], dict[str, int]]:
+    """Retain verified sources and reserve a bounded number of new requests.
+
+    This same admission/selection logic serves refresh and read-only check.
+    A file's existence alone is never a cache hit. Corrupt or mismatched
+    sources need a request reservation, while a verified raw source may be
+    reparsed without using network quota.
+    """
+    chosen, cached_count, reserved = [], 0, 0
+    for row in candidates[:MAX_EXHIBITS_PER_FILING]:
+        _, raw_path, text_path = artifact_paths(artifact_root, row)
+        entry = prior_by_id.get(row['source_id'], {})
+        verified = (_entry_identity_matches(entry, row, raw_path, text_path, project_root)
+                    and raw_cache_is_valid(entry, raw_path))
+        if verified:
+            cached_count += 1
+        elif reserved >= new_fetch_slots:
+            continue
+        else:
+            reserved += 1
+        chosen.append(row)
+    return chosen, {'selected_cached_exhibits': cached_count,
+        'new_fetch_budget_charges': reserved,
+        'omitted_due_to_bound': len(candidates) - len(chosen)}
+
+
 def build_entry(
     row: dict[str, str],
     result: FetchResult,
@@ -856,18 +887,21 @@ def refresh_artifacts(
     last_network_request_started: float | None = None
     exhibit_selection: list[dict[str, Any]] = []
     queued_exhibits = 0
+    exhibit_requests_started = 0
+    deferred_after_cache_change: list[str] = []
 
     def queue_exhibits(row: dict[str, str], entry: dict[str, Any], raw_path: Path) -> None:
         nonlocal queued_exhibits
         if row.get("artifact_kind") == "exhibit" or row["form"] not in {"8-K", "8-K/A", "6-K"}:
             return
         candidates = exhibit_rows(row, raw_path.read_bytes(), str(entry.get("charset", "utf-8")))
-        allowance = min(MAX_EXHIBITS_PER_FILING, MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
-        chosen = candidates[:allowance]
+        chosen, charges = schedule_exhibits(candidates, prior_by_id=prior_by_id,
+            artifact_root=artifact_root, project_root=project_root,
+            new_fetch_slots=MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
         selected.extend(chosen)
-        queued_exhibits += len(chosen)
+        queued_exhibits += charges['new_fetch_budget_charges']
         exhibit_selection.append({"parent_source_id": row["source_id"], "eligible_linked_exhibits": len(candidates),
-                                  "selected_exhibits": len(chosen), "omitted_due_to_bound": len(candidates) - len(chosen),
+                                  "selected_exhibits": len(chosen), **charges,
                                   "coverage": "explicit_linked_ex99_only_not_all_exhibits"})
 
     for row in selected:
@@ -907,6 +941,15 @@ def refresh_artifacts(
             queue_exhibits(row, entry, raw_path)
             continue
 
+        if row.get('artifact_kind') == 'exhibit':
+            # Recheck at the actual request boundary too. A previously valid
+            # cache changing after selection must neither become a false hit
+            # nor produce a ninth network attempt. Reserve before fetch, even
+            # if the source fails.
+            if exhibit_requests_started >= MAX_EXHIBITS_PER_REFRESH:
+                deferred_after_cache_change.append(row['source_id'])
+                continue
+            exhibit_requests_started += 1
         request_started = monotonic_clock()
         if last_network_request_started is not None:
             wait_seconds = max(
@@ -942,6 +985,10 @@ def refresh_artifacts(
         network_fetches=network_fetches,
     )
     payload["exhibit_selection"] = exhibit_selection
+    payload['exhibit_network_fetch_budget'] = MAX_EXHIBITS_PER_REFRESH
+    payload['exhibit_new_fetch_budget_charges'] = queued_exhibits
+    payload['exhibit_request_attempt_count'] = exhibit_requests_started
+    payload['exhibit_deferred_after_cache_change'] = deferred_after_cache_change
     atomic_write_json(index_path, payload)
     return payload
 
@@ -987,9 +1034,11 @@ def check_artifacts(
         if (_entry_identity_matches(entry, row, raw_path, text_path, project_root)
                 and raw_cache_is_valid(entry, raw_path) and row.get("artifact_kind") != "exhibit"):
             candidates = exhibit_rows(row, raw_path.read_bytes(), str(entry.get("charset", "utf-8")))
-            allowance = min(MAX_EXHIBITS_PER_FILING, MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
-            selected.extend(candidates[:allowance])
-            queued_exhibits += len(candidates[:allowance])
+            chosen, charges = schedule_exhibits(candidates, prior_by_id=prior_by_id,
+                artifact_root=artifact_root, project_root=project_root,
+                new_fetch_slots=MAX_EXHIBITS_PER_REFRESH - queued_exhibits)
+            selected.extend(chosen)
+            queued_exhibits += charges['new_fetch_budget_charges']
     return {
         "selected": len(selected),
         "complete_cache": complete,

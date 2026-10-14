@@ -11,7 +11,7 @@
   "strategies": [
     {
       "strategy_id": "reviewed-core-v3",
-      "version": 16,
+      "version": 17,
       "adapter": "core_tranche",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -39,15 +39,16 @@
         "09_scripts/equity_research/capital_presentation.py": "0edfa23311204063603946d7abbb4232be4af5047a7ef61c837290757d25afac",
         "09_scripts/equity_research/verify_active_state_guard.py": "6dc31768614ed80474da2780199fcce0eb79a34e2a77d06e9531b2066f77f5fc",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
-        "09_scripts/equity_research/company_research_presentation.py": "0377c81257d8dce48d55d8ede48acf3b3d1896fdc6f22cd6eb58e5e24e870058",
+        "09_scripts/equity_research/company_research_presentation.py": "beed5c8239c6a6e9a62bf884618aa08c950f8273eaf59c83097f7e15863a1692",
         "09_scripts/equity_research/sec_acceptance_corrections.py": "8e9249b2bfab59b7c50a254f14fd16604de7cbacb054a0583198e1e371504ac7",
         "09_scripts/equity_research/thesis_evidence.py": "251fbc85ec0a64bb917d02c2618567a4a7eb0cb5282c5aa889eb3a10dccbc3f3",
-        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9"
+        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9",
+        "09_scripts/equity_research/refresh_sec_filing_artifacts.py": "6d625a3d58817c8424f5e8a1a0d71f53c99947c709077ba6e7d40a9d11395db1"
       }
     },
     {
       "strategy_id": "reviewed-company-v3",
-      "version": 18,
+      "version": 19,
       "adapter": "reviewed_company",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -77,7 +78,7 @@
         "09_scripts/equity_research/capital_presentation.py": "0edfa23311204063603946d7abbb4232be4af5047a7ef61c837290757d25afac",
         "09_scripts/equity_research/verify_active_state_guard.py": "6dc31768614ed80474da2780199fcce0eb79a34e2a77d06e9531b2066f77f5fc",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
-        "09_scripts/equity_research/company_research_presentation.py": "0377c81257d8dce48d55d8ede48acf3b3d1896fdc6f22cd6eb58e5e24e870058",
+        "09_scripts/equity_research/company_research_presentation.py": "beed5c8239c6a6e9a62bf884618aa08c950f8273eaf59c83097f7e15863a1692",
         "09_scripts/equity_research/sec_earnings_tables.py": "34ba4c02ef50a48e80049a0c54fd891387a91118d5eacf90eb669d106c74a720",
         "09_scripts/equity_research/latest_report_facts.py": "6da6e84ea98078b10578fb2ed4224c98b70183e290c0f573d6f65c97e6f0e1c6",
         "09_scripts/equity_research/refresh_daily_evidence.py": "e0c4808630eb6b2ecf89a275f10df25087e09135a77290b75f6e1c03013ca5b3",
@@ -85,12 +86,13 @@
         "09_scripts/equity_research/earnings_incorporation.py": "71d5fbaf70fcc5684182c1afd35887e93dcf90d5053c68e5c115b3eab00aa47f",
         "09_scripts/equity_research/sec_acceptance_corrections.py": "8e9249b2bfab59b7c50a254f14fd16604de7cbacb054a0583198e1e371504ac7",
         "09_scripts/equity_research/thesis_evidence.py": "251fbc85ec0a64bb917d02c2618567a4a7eb0cb5282c5aa889eb3a10dccbc3f3",
-        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9"
+        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9",
+        "09_scripts/equity_research/refresh_sec_filing_artifacts.py": "6d625a3d58817c8424f5e8a1a0d71f53c99947c709077ba6e7d40a9d11395db1"
       }
     },
     {
       "strategy_id": "reviewed-tactical-v3",
-      "version": 17,
+      "version": 18,
       "adapter": "reviewed_tactical",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -118,7 +120,7 @@
         "09_scripts/equity_research/capital_presentation.py": "0edfa23311204063603946d7abbb4232be4af5047a7ef61c837290757d25afac",
         "09_scripts/equity_research/verify_active_state_guard.py": "6dc31768614ed80474da2780199fcce0eb79a34e2a77d06e9531b2066f77f5fc",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
-        "09_scripts/equity_research/company_research_presentation.py": "0377c81257d8dce48d55d8ede48acf3b3d1896fdc6f22cd6eb58e5e24e870058",
+        "09_scripts/equity_research/company_research_presentation.py": "beed5c8239c6a6e9a62bf884618aa08c950f8273eaf59c83097f7e15863a1692",
         "09_scripts/equity_research/sec_earnings_tables.py": "34ba4c02ef50a48e80049a0c54fd891387a91118d5eacf90eb669d106c74a720",
         "09_scripts/equity_research/latest_report_facts.py": "6da6e84ea98078b10578fb2ed4224c98b70183e290c0f573d6f65c97e6f0e1c6",
         "09_scripts/equity_research/refresh_daily_evidence.py": "e0c4808630eb6b2ecf89a275f10df25087e09135a77290b75f6e1c03013ca5b3",
@@ -126,12 +128,13 @@
         "09_scripts/equity_research/earnings_incorporation.py": "71d5fbaf70fcc5684182c1afd35887e93dcf90d5053c68e5c115b3eab00aa47f",
         "09_scripts/equity_research/sec_acceptance_corrections.py": "8e9249b2bfab59b7c50a254f14fd16604de7cbacb054a0583198e1e371504ac7",
         "09_scripts/equity_research/thesis_evidence.py": "251fbc85ec0a64bb917d02c2618567a4a7eb0cb5282c5aa889eb3a10dccbc3f3",
-        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9"
+        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9",
+        "09_scripts/equity_research/refresh_sec_filing_artifacts.py": "6d625a3d58817c8424f5e8a1a0d71f53c99947c709077ba6e7d40a9d11395db1"
       }
     },
     {
       "strategy_id": "maintained-exit-v3",
-      "version": 17,
+      "version": 18,
       "adapter": "maintained_exit",
       "state": "VERSIONED_PRODUCTION_STRATEGY",
       "origin": "existing_approved_policy",
@@ -158,7 +161,7 @@
         "09_scripts/equity_research/capital_presentation.py": "0edfa23311204063603946d7abbb4232be4af5047a7ef61c837290757d25afac",
         "09_scripts/equity_research/verify_active_state_guard.py": "6dc31768614ed80474da2780199fcce0eb79a34e2a77d06e9531b2066f77f5fc",
         "01_policies/official_news_sources.json": "f242225424a1a7d9d707e61fe7bdd34ce5969102591df6e4e56a9f3a6cd60a47",
-        "09_scripts/equity_research/company_research_presentation.py": "0377c81257d8dce48d55d8ede48acf3b3d1896fdc6f22cd6eb58e5e24e870058",
+        "09_scripts/equity_research/company_research_presentation.py": "beed5c8239c6a6e9a62bf884618aa08c950f8273eaf59c83097f7e15863a1692",
         "09_scripts/equity_research/sec_earnings_tables.py": "34ba4c02ef50a48e80049a0c54fd891387a91118d5eacf90eb669d106c74a720",
         "09_scripts/equity_research/latest_report_facts.py": "6da6e84ea98078b10578fb2ed4224c98b70183e290c0f573d6f65c97e6f0e1c6",
         "09_scripts/equity_research/refresh_daily_evidence.py": "e0c4808630eb6b2ecf89a275f10df25087e09135a77290b75f6e1c03013ca5b3",
@@ -166,7 +169,8 @@
         "09_scripts/equity_research/earnings_incorporation.py": "71d5fbaf70fcc5684182c1afd35887e93dcf90d5053c68e5c115b3eab00aa47f",
         "09_scripts/equity_research/sec_acceptance_corrections.py": "8e9249b2bfab59b7c50a254f14fd16604de7cbacb054a0583198e1e371504ac7",
         "09_scripts/equity_research/thesis_evidence.py": "251fbc85ec0a64bb917d02c2618567a4a7eb0cb5282c5aa889eb3a10dccbc3f3",
-        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9"
+        "09_scripts/equity_research/build_current_research_baseline.py": "97969419d80bc0c11820d6b76d87a8d8f9a94135ee527f669f453999d94ad2f9",
+        "09_scripts/equity_research/refresh_sec_filing_artifacts.py": "6d625a3d58817c8424f5e8a1a0d71f53c99947c709077ba6e7d40a9d11395db1"
       }
     }
   ]

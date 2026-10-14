@@ -225,3 +225,20 @@ report. No attempt is made to invent first discovery dates lost before this
 upgrade; `first_seen_at` means first capture by this layer, with the earlier
 source timestamp retained separately. Existing account/order confirmations and
 SEC acceptance reconciliation dependencies remain required by production.
+
+## Bounded SEC exhibit progression
+
+`refresh_sec_filing_artifacts.py` retains at most two explicitly linked exhibits
+per selected parent. Each refresh reserves at most eight **new exhibit network
+requests**, before the request is attempted. Earlier validated cache hits remain
+in the current index without consuming that request allowance. The next bounded
+refresh can therefore reach previously omitted parents instead of repeatedly
+spending its allowance on the same alphabetically early cached documents.
+
+Cache reuse requires the exact issuer/accession/URL and parent hash, a verified
+raw hash, supported content type and existing size limit. A corrupt file or an
+unindexed file is not a cache hit. The same bounded scheduling and identity
+checks serve the read-only `--check` path; pending uncached work remains visible
+as missing coverage. The per-parent and network limits, SEC pacing, same-accession
+link restrictions and prohibition on recursive exhibit crawling still apply.
+This source progression changes neither strategy admission nor trading authority.

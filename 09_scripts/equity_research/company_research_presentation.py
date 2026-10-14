@@ -120,7 +120,8 @@ def presentation_case(view: dict, *, root: Path, current: datetime,
                 def walk(node):
                     if isinstance(node, dict):
                         if node.get('case') == 'bull':
-                            for key in ('research_value_per_share', 'price', 'implied_price', 'implied_equity_value_per_share'):
+                            for key in ('research_value_per_share', 'price', 'implied_price', 'implied_equity_value_per_share',
+                                        'scenario_share_value_usd'):
                                 if key in node: found.append(Decimal(str(node[key])))
                         for value in node.values(): walk(value)
                     elif isinstance(node, list):

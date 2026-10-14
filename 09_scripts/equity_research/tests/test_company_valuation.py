@@ -268,6 +268,68 @@ class CompanyValuationTests(unittest.TestCase):
         self.assertIn('当前卖出订单草案股数：2 股',text)
         self.assertNotIn('当前新增订单股数：2 股',text)
 
+    def test_retained_fiscal_scenario_share_value_format_displays_verified_bull_only(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case, case_lines
+        from capital_decision import SCHEMA as CAPITAL_SCHEMA
+        from daily_common import canonical_sha256
+        from email_brief import render_email
+        from test_email_brief import decision_fixture
+        path=self.root/self.model_rel
+        original_bundle=read_json(path)
+        original_thesis=deepcopy(self.thesis)
+        values={'bear':'112.6995768809740764070230371','base':'242.7194268066707844348363187',
+                'bull':'363.7757093559210505895754249'}
+        for bull_key in ('scenario_share_value_usd','unrecognized_price_field'):
+            with self.subTest(bull_key=bull_key):
+                bundle=deepcopy(original_bundle)
+                row=bundle['records'][0]
+                row['inputs']['share_price']['value']='228.52'
+                market_source=next(s for s in row['sources'] if s['source_id'] in row['inputs']['share_price']['source_ids'])
+                market_text='share_price=228.52; session=2026-10-09 close'
+                (self.root/market_source['relative_path']).write_text(market_text)
+                market_source.update(char_end=len(market_text),content_sha256=hashlib.sha256(market_text.encode()).hexdigest())
+                row['inputs']['downside_price_assumption']['value']=values['bear']
+                row['inputs']['target_price_assumption']['value']=values['base']
+                source=next(s for s in row['sources'] if s['source_type']=='human_valuation_scenario')
+                document={'schema_version':'analyst_company_valuation_scenarios_v1',
+                    'forward_window':'Q3 FY2027 through Q2 FY2028, four fiscal quarters.',
+                    'valuation_method':'Issuer-definition forward free-cash-flow per share times equity P/FCF.',
+                    'scenario_assumptions':[{'case':case,
+                        bull_key if case=='bull' else 'scenario_share_value_usd':value}
+                        for case,value in values.items()]}
+                text=json.dumps(document)
+                (self.root/source['relative_path']).write_text(text)
+                source.update(char_end=len(text),content_sha256=hashlib.sha256(text.encode()).hexdigest())
+                _write_bundle(path,seal_bundle(bundle))
+                self.thesis=deepcopy(original_thesis)
+                self.thesis['valuation_model']['sha256']=sha256_file(path)
+                self.thesis=seal_review(self.thesis)
+                write_json(self.root,THESIS_REL,{'schema_version':THESIS_SCHEMA,'records':[self.thesis]})
+                case=presentation_case(self.views()['ABC'],root=self.root,current=CURRENT,quote=self.quote,
+                    minimum_reward_to_risk=Decimal('1.25'))
+                self.assertAlmostEqual(case['scenario_prices']['bear'],float(values['bear']))
+                self.assertAlmostEqual(case['scenario_prices']['base'],float(values['base']))
+                lines='\n'.join(case_lines(case,shares=0))
+                if bull_key=='scenario_share_value_usd':
+                    self.assertAlmostEqual(case['scenario_prices']['bull'],float(values['bull']))
+                    self.assertIn('$112.70 / $242.72 / $363.78',lines)
+                else:
+                    self.assertNotIn('bull',case['scenario_prices'])
+                    self.assertIn('$112.70 / $242.72 / 未核验',lines)
+                capital={'schema_version':CAPITAL_SCHEMA,'automatic_action_allowed':False,'broker_connected':False,'order_placed':False,
+                    'decisions':[{'ticker':'ABC','decision':'BLOCKED','shares':0,'order_draft':None,'research_case':case,
+                        'reasons':[case['conclusion']],'blockers':['valuation'],'dependencies':[]}],
+                    'dependencies':[],'planning_cash':4000,'mandatory_reserve':0,'global_blockers':[]}
+                capital['content_sha256']=canonical_sha256(capital)
+                final=decision_fixture()
+                final.update(generated_at=CURRENT.isoformat(),capital_decision=capital,
+                    workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
+                expected='$112.70 / $242.72 / '+('$363.78' if bull_key=='scenario_share_value_usd' else '未核验')
+                for rendered in render_email(final)[1:]:
+                    self.assertIn(expected,rendered)
+                    self.assertNotIn('BUY LIMIT',rendered)
+
     def test_admitted_case_retains_authored_horizon_and_rejects_changed_proof(self):
         from decimal import Decimal
         from company_research_presentation import admission_details, presentation_case

@@ -214,6 +214,89 @@ class SelectionAndValidationTests(unittest.TestCase):
             self.assertEqual(result["network_fetch_count"], 13)
             self.assertEqual(sum(x["selected_exhibits"] for x in result["exhibit_selection"]), 8)
             self.assertEqual(sum(x["omitted_due_to_bound"] for x in result["exhibit_selection"]), 2)
+            # Already verified children do not consume the next run's eight
+            # new-request budget. Previously the same first eight starved T5.
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',
+                project_root=root,user_agent='UnitTest/1.0 test@example.com',request_interval_seconds=0)
+            second=artifacts.refresh_artifacts(**args,fetcher=fetch)
+            self.assertEqual(second['network_fetch_count'],2)
+            self.assertEqual(second['exhibit_new_fetch_budget_charges'],2)
+            self.assertEqual(sum(x['selected_exhibits'] for x in second['exhibit_selection']),10)
+            self.assertEqual(sum(x['omitted_due_to_bound'] for x in second['exhibit_selection']),0)
+            summary=artifacts.check_artifacts(**{k:args[k] for k in ('ledger_path','artifact_root','index_path','project_root')})
+            self.assertEqual(summary,{'selected':15,'complete_cache':15,'reparsable_cache':0,'missing_cache':0})
+
+    def test_actual_mu_link_survives_eight_earlier_cached_children(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);ledger=root/'ledger.csv'
+            early=[ledger_row(ticker=name,form='8-K',accession=f'0001234567-26-00000{i}')
+                for i,name in enumerate(['AAA','BBB','CCC','DDD'],1)]
+            mu=ledger_row(ticker='MU',cik='723125',form='8-K',filing_date='2026-09-30',
+                accession='0000723125-26-000018',document='mu-20260930.htm')
+            calls=[]
+            def fetch(url,*_args):
+                calls.append(url)
+                if url==mu['source_url']:
+                    # Actual MU parent: 99.1 and the linked description are
+                    # separate cells, rather than a numbered anchor label.
+                    raw=b'<table><tr><td>99.1</td><td></td><td><a href="a2026q4ex991-pressrelease.htm">Press Release issued on September 30, 2026</a></td></tr></table>'
+                elif url.endswith(('earnings.htm','deck.htm','a2026q4ex991-pressrelease.htm')):
+                    raw=b'<p>Retained official source text</p>'
+                else:
+                    raw=b'<a href="earnings.htm">99.1</a><a href="deck.htm">99.2</a>'
+                return artifacts.FetchResult(raw,'text/html','utf-8')
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',
+                project_root=root,user_agent='UnitTest/1.0 test@example.com',fetcher=fetch,request_interval_seconds=0)
+            write_ledger(ledger,early)
+            first=artifacts.refresh_artifacts(**args)
+            self.assertEqual(first['exhibit_new_fetch_budget_charges'],8)
+            write_ledger(ledger,[*early,mu]);calls.clear()
+            second=artifacts.refresh_artifacts(**args)
+            self.assertEqual(len(calls),2)  # New parent and one child only.
+            self.assertEqual(second['exhibit_new_fetch_budget_charges'],1)
+            child=next(a for a in second['artifacts'] if a['ticker']=='MU' and a.get('artifact_kind')=='exhibit')
+            self.assertEqual(child['url'],'https://www.sec.gov/Archives/edgar/data/723125/000072312526000018/a2026q4ex991-pressrelease.htm')
+            self.assertEqual(second['cache_hit_count'],12)
+            # Corruption spends a fresh-request slot; it cannot masquerade as
+            # a hit. With no slots it remains explicitly omitted.
+            (root/child['raw_path']).write_bytes(b'corrupt')
+            row={**child}; row['primary_document']='a2026q4ex991-pressrelease.htm'
+            chosen,charges=artifacts.schedule_exhibits([row],prior_by_id={child['source_id']:child},
+                artifact_root=root/'filings',project_root=root,new_fetch_slots=0)
+            self.assertEqual(chosen,[])
+            self.assertEqual(charges,{'selected_cached_exhibits':0,'new_fetch_budget_charges':0,'omitted_due_to_bound':1})
+            calls.clear();third=artifacts.refresh_artifacts(**args)
+            self.assertEqual(calls,[child['url']])
+            self.assertEqual(third['exhibit_new_fetch_budget_charges'],1)
+            summary=artifacts.check_artifacts(**{k:args[k] for k in ('ledger_path','artifact_root','index_path','project_root')})
+            self.assertEqual(summary,{'selected':14,'complete_cache':14,'reparsable_cache':0,'missing_cache':0})
+
+    def test_cache_change_after_selection_cannot_exceed_eight_actual_exhibit_attempts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);ledger=root/'ledger.csv'
+            early=[ledger_row(ticker=f'A{i}',form='8-K',accession=f'0001234567-26-00000{i}') for i in range(1,5)]
+            later=[ledger_row(ticker=f'B{i}',form='8-K',accession=f'0001234567-26-00100{i}') for i in range(1,9)]
+            damaged=None
+            def fetch(url,*_args):
+                nonlocal damaged
+                if damaged is not None and url==later[0]['source_url']:
+                    damaged.write_bytes(b'corrupt after verified selection');damaged=None
+                if url.endswith(('earnings.htm','deck.htm')):
+                    raw=b'<p>Official exhibit</p>'
+                elif url in {r['source_url'] for r in early}:
+                    raw=b'<a href="earnings.htm">99.1</a><a href="deck.htm">99.2</a>'
+                else:
+                    raw=b'<a href="earnings.htm">99.1</a>'
+                return artifacts.FetchResult(raw,'text/html','utf-8')
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',
+                project_root=root,user_agent='UnitTest/1.0 test@example.com',fetcher=fetch,request_interval_seconds=0)
+            write_ledger(ledger,early);first=artifacts.refresh_artifacts(**args)
+            damaged=root/next(a for a in first['artifacts'] if a.get('artifact_kind')=='exhibit')['raw_path']
+            write_ledger(ledger,[*early,*later]);second=artifacts.refresh_artifacts(**args)
+            self.assertEqual(second['exhibit_request_attempt_count'],8)
+            self.assertEqual(second['network_fetch_count'],16)  # Eight parents plus eight exhibits.
+            self.assertEqual(len(second['exhibit_deferred_after_cache_change']),1)
+            self.assertEqual(sum(a.get('artifact_kind')=='exhibit' for a in second['artifacts']),15)
 
     def test_latest_date_ties_and_all_new_material_are_selected(self) -> None:
         rows = [
