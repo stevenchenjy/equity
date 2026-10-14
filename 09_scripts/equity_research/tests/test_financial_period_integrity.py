@@ -186,6 +186,29 @@ class FinancialPeriodIntegrityTests(unittest.TestCase):
         self.assertEqual(result["debt_latest"], "0.00")
         self.assertNotIn("missing_total_debt", valuation_input_issues(result, {"last_price": 10}, "2026-09-04T17:00:00Z"))
 
+    def test_explicit_source_bound_total_debt_label_reconciles_without_inventing_short_term_zero(self):
+        payload=fixture();tags=payload['facts']['us-gaap'];del tags['DebtAndCapitalLeaseObligations']
+        proof={'_raw_sha256':'a'*64,'_raw_path':'02_filings/report.raw'}
+        tags['LongTermDebt']=facts([{**instant('2026-06-30',70),**proof,'_reported_label':'Total debt'}])
+        tags['LongTermDebtCurrent']=facts([{**instant('2026-06-30',20),**proof}])
+        tags['LongTermDebtNoncurrent']=facts([{**instant('2026-06-30',50),**proof}])
+        tags.pop('ShortTermBorrowings',None)
+        self.assertEqual(row(payload)['debt_latest'],'70.00')
+        self.assertNotIn('ShortTermBorrowings',tags)
+        tags['ShortTermBorrowings']=facts([instant('2026-06-30',5)])
+        self.assertEqual(row(payload)['debt_latest'],'75.00')
+        del tags['ShortTermBorrowings']
+        tags['LongTermDebt']['units']['USD'][0]['val']=71
+        self.assertEqual(row(payload)['debt_latest'],'')
+
+    def test_partial_debt_label_without_source_proof_does_not_complete_valuation(self):
+        payload=fixture();tags=payload['facts']['us-gaap'];del tags['DebtAndCapitalLeaseObligations']
+        tags['LongTermDebt']=facts([{**instant('2026-06-30',70),'_reported_label':'Total debt'}])
+        tags['LongTermDebtCurrent']=facts([instant('2026-06-30',20)])
+        tags['LongTermDebtNoncurrent']=facts([instant('2026-06-30',50)])
+        tags.pop('ShortTermBorrowings',None)
+        self.assertEqual(row(payload)['debt_latest'],'')
+
     def test_combined_current_debt_plus_noncurrent_is_complete_without_double_counting(self):
         payload = fixture()
         gaap = payload["facts"]["us-gaap"]

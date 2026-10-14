@@ -78,6 +78,8 @@ OPTIONAL_ACTIVE_INPUTS = {
     "03_source_data/equity_research/official_news_status.local.json": "optional_generated_research",
 }
 OPTIONAL_ACTIVE_PATTERNS = {
+    "02_filings/issuer_filings/financial_supplements.local/*/*/*.raw": "optional_public_source_receipt",
+    "02_filings/issuer_filings/financial_supplements.local/*/*/*.json": "optional_public_source_receipt",
     "04_data/equity_research/company_valuation_observations.local/*.json": "optional_private_research_history",
     "04_research/company_research/objective_evidence.local/*.json": "optional_generated_research",
     "05_risk_and_positions/allocation_policy_migrations.local/*.json": "optional_private_reconciliation_proof",

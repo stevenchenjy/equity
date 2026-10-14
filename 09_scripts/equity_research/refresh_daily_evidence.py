@@ -456,8 +456,15 @@ def fact_units(
             values = units.get(unit, [])
             for item in values:
                 value = item.get("val")
+                verified_earnings_shares = (
+                    item.get('form') == '8-K' and taxonomy == 'us-gaap'
+                    and tag == 'WeightedAverageNumberOfDilutedSharesOutstanding' and unit == 'shares'
+                    and item.get('_source_kind') == 'sec_earnings_exhibit'
+                    and bool(re.fullmatch(r'[0-9a-f]{64}', str(item.get('_raw_sha256', ''))))
+                    and str(item.get('_source_url', '')).startswith('https://www.sec.gov/Archives/edgar/data/789019/')
+                    and bool(item.get('_raw_path')))
                 if (not isinstance(value, (int, float)) or isinstance(value, bool)
-                        or not math.isfinite(value) or item.get("form") not in REPORT_FORMS):
+                        or not math.isfinite(value) or (item.get("form") not in REPORT_FORMS and not verified_earnings_shares)):
                     continue
                 try:
                     end = date.fromisoformat(str(item.get("end", "")))
@@ -710,7 +717,7 @@ def fact_provenance(item: dict[str, Any] | None) -> dict[str, Any]:
         "derivation": item.get("_derivation", "reported_fact"),
         "status": "available",
     })
-    for key in ("source_url", "raw_sha256", "raw_path", "context_id", "fact_id"):
+    for key in ("source_url", "raw_sha256", "raw_path", "context_id", "fact_id", "source_kind", "reported_label"):
         if item.get("_" + key):
             result[key] = item["_" + key]
     if item.get("_components"):
@@ -755,6 +762,26 @@ def _debt_fact(payload: dict[str, Any], target_end: str, **selection: Any) -> tu
     total = instant_fact(payload, TOTAL_DEBT_TAGS, target_end=target_end, **selection)
     if total is not None:
         return total, [total]
+    reported = instant_fact(payload, ('LongTermDebt',), target_end=target_end, **selection)
+    current_part = instant_fact(payload, ('LongTermDebtCurrent',), target_end=target_end, **selection)
+    noncurrent_part = instant_fact(payload, ('LongTermDebtNoncurrent',), target_end=target_end, **selection)
+    separate_short_term = instant_fact(payload, SHORT_TERM_DEBT_TAGS, target_end=target_end, **selection)
+    known_current_total = instant_fact(payload, COMBINED_CURRENT_DEBT_TAGS, target_end=target_end, **selection)
+    if (reported and reported.get('_reported_label') == 'Total debt'
+            and bool(re.fullmatch(r'[0-9a-f]{64}', str(reported.get('_raw_sha256', ''))))
+            and bool(reported.get('_raw_path'))
+            and current_part is not None and noncurrent_part is not None
+            and (separate_short_term is None or float(separate_short_term['val']) == 0)
+            and (known_current_total is None or float(known_current_total['val']) == float(current_part['val']))
+            and len({p['accn'] for p in (reported, current_part, noncurrent_part)}) == 1
+            and all(p.get('_raw_sha256') == reported['_raw_sha256'] for p in (current_part, noncurrent_part))
+            and all(float(p['val']) >= 0 for p in (reported, current_part, noncurrent_part))
+            and abs(float(reported['val']) - float(current_part['val']) - float(noncurrent_part['val'])) <= .01):
+        # Admit the explicitly labelled reported total; no absent short-term
+        # borrowing fact is created or treated as zero.
+        reported = {**reported, '_derivation': 'explicit_reported_total_debt_reconciled_to_current_and_noncurrent',
+                    '_components': [current_part, noncurrent_part]}
+        return reported, [reported, current_part, noncurrent_part]
     combined_current = instant_fact(payload, COMBINED_CURRENT_DEBT_TAGS, target_end=target_end, **selection)
     # Match the scope of DebtCurrent: interest-bearing debt excluding leases.
     noncurrent_debt = instant_fact(payload, ("LongTermDebtNoncurrent",), target_end=target_end, **selection)
@@ -1539,7 +1566,8 @@ def main() -> int:
                 except (OSError, ValueError, urllib.error.URLError):
                     # Keep valid standard facts; unresolved custom scope stays
                     # explicitly insufficient and cannot authorize valuation.
-                    fundamental_errors.append(f"{ticker}:supplemental_cash_flow_unavailable")
+                    code = 'supplemental_reported_financial_fact_unavailable' if ticker == 'MSFT' else 'supplemental_cash_flow_unavailable'
+                    fundamental_errors.append(f"{ticker}:{code}")
                 selected_row = fundamental_row(
                     ticker, cik, companyfacts, attempt_at,
                     acceptance_by_accession={

@@ -1,13 +1,43 @@
 {
   "schema_version": "phase5r_official_news_sources_v1",
   "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
-  "verified_on": "2026-10-12",
+  "verified_on": "2026-10-13",
   "max_age_hours": 36,
   "event_lookback_days": 7,
   "retention_days": 180,
   "request_timeout_seconds": 15,
   "maximum_attempts": 2,
   "sources": [
+    {
+      "source_id": "msft_press_releases",
+      "ticker": "MSFT",
+      "url": "https://news.microsoft.com/source/tag/press-releases/feed/",
+      "format": "rss_atom",
+      "allowed_hosts": ["news.microsoft.com", "www.microsoft.com"],
+      "required": true,
+      "verification_page": "https://news.microsoft.com/source/tag/press-releases/",
+      "verification_note": "Microsoft's official press-release directory explicitly advertises this tag RSS feed. Original directory/feed bytes and dated event parsing were verified October 13, 2026. Coverage is the configured press-release feed, not every Microsoft product blog; publication and impact review remain separate."
+    },
+    {
+      "source_id": "salesforce_ir",
+      "ticker": "CRM",
+      "url": "https://investor.salesforce.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": ["investor.salesforce.com"],
+      "required": true,
+      "verification_page": "https://investor.salesforce.com/news/default.aspx",
+      "verification_note": "Issuer-hosted investor press-release RSS fetched and parsed October 13, 2026; article URLs remain on the official investor domain. Original directory and feed bytes are retained in the pipeline repair audit. A current fetch does not establish investment support."
+    },
+    {
+      "source_id": "servicenow_newsroom",
+      "ticker": "NOW",
+      "url": "https://newsroom.servicenow.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": ["newsroom.servicenow.com"],
+      "required": true,
+      "verification_page": "https://newsroom.servicenow.com/press-releases/default.aspx",
+      "verification_note": "The official investor overview links this newsroom's press-release directory. Issuer-hosted RSS and article identity were fetched and parsed October 13, 2026. Newly returned announcements remain pending impact review."
+    },
     {
       "source_id": "samsara_ir",
       "ticker": "IOT",

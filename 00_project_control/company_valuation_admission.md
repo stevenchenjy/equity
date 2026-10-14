@@ -72,3 +72,34 @@ fills or net returns and are not independent performance trials. Use
 realistic costs and whole shares in final drafts; a price-distance ratio is
 not a calibrated expected return. Subsequent observations cannot rewrite the
 original case or automatically promote an experimental strategy.
+
+
+## Reported financial coverage and visible company cases
+
+The October 13 repair removes a field-coverage shortcut: the latest date anywhere
+in companyfacts can be a later cover-page share count, and cannot prove that every
+current statement field is present. The collector now verifies the cached latest
+periodic report and fills its supported missing fields at the same period, retaining
+original bytes and contexts. An explicitly labelled consolidated “Total debt” row
+must reconcile to source-bound current/noncurrent debt; known separate borrowings
+cannot be omitted, and missing short-term debt is never replaced with an invented zero.
+
+Microsoft quarterly diluted shares use the actual Exhibit 99.1 link in its accepted
+Item 2.02 8-K. The bounded issuer format adapter reads the reported quarter and
+comparative columns, retains the parent/exhibit hashes, and preserves the annual
+denominator as a separate period. This source adapter is not a stock-selection rule.
+An unavailable or changed exhibit remains an issuer-local incomplete input. The
+offline incorporation path may fill a proven current-period hole without overwriting
+existing financial numbers; it never makes a network request to do so.
+
+A valid current company case is carried in the capital row's optional
+`research_case` display projection. Its original model hash, review version, actual
+reference close, assumptions, zero-share reason and review conditions feed both
+email supporting information and the dashboard company detail even when no position
+plan exists. Missing model admission/news coverage remains explicitly labelled.
+Invalid, expired or source-changed models do not acquire current display prices.
+This display projection neither clears a gate nor creates an order. Only the existing
+validated capital draft populates BUY/SELL; valuation-only review ceilings are never
+presented as buy limits. The October 13 verified source manifest adds the official
+MSFT press-release feed and CRM/NOW issuer feeds; collection still requires distinct
+impact review and does not supply positive investment evidence.

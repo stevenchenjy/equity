@@ -11,7 +11,7 @@ from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
-from daily_common import canonical_sha256, sha256_file, read_json, atomic_write_json, last_completed_market_session
+from daily_common import canonical_sha256, sha256_file, read_json, read_csv, atomic_write_json, last_completed_market_session
 from production_strategies import REGISTRY, select
 from decision_dependencies import classify
 from tactical_review import review_open_orders
@@ -318,6 +318,22 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     'Research has not supplied a complete current investment case and entry contract.')
             row.update(decision='BLOCKED' if missing else 'NO_ACTION',blockers=sorted(set(global_codes+missing)) if missing else [],
                        reasons=observed if not missing else [reason])
+        from company_research_presentation import presentation_case
+        view = decision.get('long_horizon_research', {}).get('candidate_views', {}).get(ticker, {})
+        if view.get('review_record'):
+            tiers = config.get('account', {}).get('candidate_sizing_tiers', [])
+            quote = next((q for q in read_csv(root/'03_source_data/equity_research/market_data_snapshot.csv') if q['ticker'] == ticker), {})
+            try: admission = read_json(root/'04_data/equity_research/company_valuation_admission_status.local.json', {}).get('records', [])
+            except (OSError, ValueError): admission = []
+            proof = next((r for r in admission if r.get('ticker') == ticker and r.get('status') == 'admitted_current'
+                          and r.get('review_record_sha256') == view['review_record']['record_sha256']), None)
+            if tiers:
+                case = presentation_case(view, root=root, current=current, quote=quote,
+                    minimum_reward_to_risk=min(num(t['minimum_reward_to_risk']) for t in tiers), admission=proof)
+                if case:
+                    row['research_case'] = case
+                    if row['decision'] in {'NO_ACTION', 'BLOCKED'}:
+                        row['reasons'] = [case['conclusion'], *[r for r in row['reasons'] if not r.startswith('Recorded company review remains visible;')]]
         row['dependencies']=[classify(c,ticker=ticker) for c in row['blockers']]
         dependencies.extend(row['dependencies']);rows.append(row)
     result=dict(schema_version=SCHEMA,generated_at=current.isoformat(),market_data_timestamp=expected,

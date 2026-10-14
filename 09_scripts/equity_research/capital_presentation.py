@@ -78,7 +78,17 @@ def cards(decision, view=None):
                         'Automatic objective collectors, valuation recomposition and the source-bound analyst continue working. Successful source collection does not complete an investment case.',sources=[]))
     import json
     by_ticker = {r['ticker']: r for r in c['decisions']}
+    from company_research_presentation import case_lines
+    presented = set()
+    for row in c['decisions']:
+        case = row.get('research_case')
+        if not case: continue
+        presented.add(row['ticker'])
+        result.append(dict(title='公司研究与配置判断 — ' + row['ticker'], group='background', kind='',
+            body='\n'.join(case_lines(case, shares=row['shares'])),
+            sources=[{'path': case['model_relative_path'], 'sha256': case['model_sha256']}]))
     for watch in decision.get('watch_candidates', []):
+        if watch['ticker'] in presented: continue
         if watch.get('valuation_method') != 'admitted_source_bound_company_model':
             continue
         try:

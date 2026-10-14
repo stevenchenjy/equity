@@ -155,6 +155,17 @@ class InlineFallbackTests(unittest.TestCase):
         self.assertEqual({f['_tag']:f['val'] for f in facts},{'Revenues':341871000,'NetIncomeLoss':-5000000})
         self.assertTrue(all(f['_raw_sha256']==self.artifact['raw_sha256'] for f in facts))
 
+    def test_current_cover_date_does_not_hide_missing_current_statement_fields(self):
+        payload={'cik':1,'facts':{'dei':{'EntityCommonStockSharesOutstanding':{'units':{'shares':[
+            {'end':'2026-07-23','filed':'2026-08-01','form':'10-Q','accn':ACC,'val':100}]}}}}}
+        merged,diagnostic=supplement_cached_latest_report(payload,ticker='ABC',cik=1,
+            filings=[self.filing],root=self.root,as_of=NOW,allowed_tags={'Revenues','NetIncomeLoss'})
+        self.assertEqual(diagnostic['status'],'verified_inline_report_supplement')
+        row=fundamental_row('ABC',1,merged,NOW.isoformat())
+        self.assertEqual(row['revenue_latest'],'341871000.00')
+        self.assertEqual(row['net_income_latest'],'-5000000.00')
+        self.assertEqual(payload['facts'].keys(),{'dei'})
+
     def test_companyfacts_endpoint_lag_is_repaired_from_verified_report(self):
         merged,diagnostic=supplement_cached_latest_report({'cik':1,'facts':{}},ticker='ABC',cik=1,
             filings=[self.filing],root=self.root,as_of=NOW,allowed_tags={'Revenues','NetIncomeLoss'})

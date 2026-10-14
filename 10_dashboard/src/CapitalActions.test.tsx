@@ -2,8 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {CapitalActions} from './CapitalActions';
+import CompanyCase from './CompanyCase';
+import type {CapitalDecision, CompanyResearchCase} from './domain';
 import type {CapitalDeploymentEscalation, CapitalUse, DeploymentGate, Snapshot} from './domain';
 const data={positions:[{ticker:'HELD'}],capital_decision:{action:'NO_NEW_POSITION',market_data_timestamp:'2026-10-02',global_blockers:['current_account_snapshot_stale'],decisions:[{ticker:'HELD',decision:'HOLD',shares:0,estimated_notional:0,reasons:['Maintain the recorded core purpose'],dependencies:[],blockers:[],order_draft:null},{ticker:'NEW',decision:'BLOCKED',shares:0,estimated_notional:0,reasons:['Company valuation incomplete'],dependencies:[],blockers:[],order_draft:null}]}} as unknown as Snapshot;
+test('unheld company case shows prices, zero-allocation reason and review without requiring a position plan',()=>{
+ const research:CompanyResearchCase={ticker:'MSFT',review_version:1,reviewed_at:'2026-10-13T13:58:00-04:00',next_review_at:'2026-10-16T13:45:00-04:00',conclusion:'暂不买入 MSFT；目标仓位 0%，新增 0 股；收益／风险不足。',method:'FY27 normalized earnings endpoints',horizon:'FY27 ending2027-06-30',countercase:'AI investment and compensation reduce economic cash.',review_conditions:['重大证据或价格变化提前复核'],reference_price:541.15,reference_close:'2026-10-12',live_quote:false,scenario_prices:{bear:351.15,base:597.34,bull:832.89},base_upside_pct:10.38,scenario_reward_to_risk:.30,minimum_reward_to_risk:1.25,valuation_only_review_ceiling:460.57,review_ceiling_is_order_price:false,model_admission_status:'research_only_pending_admission',pending_requirements:['company_model_not_admitted']};
+ const row:CapitalDecision['decisions'][number]={ticker:'MSFT',decision:'BLOCKED',shares:0,estimated_notional:0,reasons:[research.conclusion],blockers:['valuation'],dependencies:[],thesis_summary:'',order_draft:null,research_case:research};
+ const detail=renderToStaticMarkup(<CompanyCase row={row}/>);
+ for(const text of ['MSFT','目标仓位 0%','351.15','597.34','832.89','0.30','1.25','460.57','不是买入限价或订单','10/16','13:45'])assert.ok(detail.includes(text),text);
+ assert.doesNotMatch(detail,/BUY LIMIT|capital-buy/);
+ const html=renderToStaticMarkup(<CapitalActions data={{...data,capital_decision:{...data.capital_decision!,decisions:[row]}}}/>);
+ assert.ok(html.indexOf('研究背景与其余候选')<html.indexOf('公司估值与配置判断'));
+ assert.match(html,/生产估值准入仍待完成|生产估值准入待完成/);
+});
 test('action precedes research and explains no new position',()=>{
  const html=renderToStaticMarkup(<CapitalActions data={data}/>);
  assert.ok(html.indexOf('今天做什么')<html.indexOf('研究背景'));assert.match(html,/买入 \/ 加仓 0 股/);assert.match(html,/持有/);assert.match(html,/Company valuation incomplete/);

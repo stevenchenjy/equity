@@ -1,3 +1,4 @@
+import CompanyCase from './CompanyCase';
 import { money, timeLabel, type CapitalDeploymentEscalation, type DeploymentGate, type Snapshot } from './domain';
 const labels:Record<string,string>={ACTIONABLE_BUY:'买入',ACTIONABLE_ADD:'加仓',HOLD:'持有',REDUCE_REVIEW:'减仓复核',EXIT_REVIEW:'退出复核',NO_ACTION:'不操作',BLOCKED:'暂不可给出新交易'};
 const routeLabels:Record<string,string>={existing_quality_holding:'加仓现有高质量持仓',researched_growth_candidate:'新建研究最充分的成长仓位',diversified_core_growth:'增加分散的核心 / 成长配置'};
@@ -76,6 +77,6 @@ export function CapitalActions({data}:{data:Snapshot}) {
     {actionable.length&&escalation?<DeploymentEscalation summary={escalation} draftTickers={actionable.map(row=>row.ticker)}/>:null}
     {c.account_authority?.local_planning_enabled?<details><summary>账户计算依据</summary><p>按你批准的本地台账计算条件方案；记录日期与现金估算标签不拦截研究建议。下单时核对可执行资金及未记录的账户变化。券商实时状态未被确认。</p></details>:null}
     <p className="form-hint">参考行情 {c.market_data_timestamp}，非实时。系统不连接券商或下单。请阅读完整草案后自行在 Chase 执行；条件不符就跳过。</p>
-    <details><summary>研究背景与其余候选（与行动分开）</summary>{c.decisions.filter(r=>!primary.includes(r)).map(r=><p key={r.ticker}><strong>{r.ticker} · {labels[r.decision]??r.decision}</strong><br/>{[...r.reasons,...r.blockers].join('；')}</p>)}</details>
+    <details><summary>研究背景与其余候选（与行动分开）</summary>{c.decisions.filter(r=>!primary.includes(r)).map(r=>r.research_case?<CompanyCase key={r.ticker} row={r}/>:<p key={r.ticker}><strong>{r.ticker} · {labels[r.decision]??r.decision}</strong><br/>{[...r.reasons,...r.blockers].join('；')}</p>)}</details>
   </section>;
 }

@@ -42,6 +42,7 @@ def inline_report_facts(raw: bytes, *, artifact: dict[str, Any], cik: int,
         tree = ET.fromstring(raw)
     except ET.ParseError:
         raise ValueError("unsupported_report_xml") from None
+    parents = {child: parent for parent in tree.iter() for child in parent}
     contexts = {}
     for ctx in tree.findall('.//xbrli:context', NS):
         if any(el.tag.rsplit('}', 1)[-1] in {"segment", "scenario", "explicitMember", "typedMember"} for el in ctx.iter()):
@@ -114,6 +115,17 @@ def inline_report_facts(raw: bytes, *, artifact: dict[str, Any], cik: int,
                 '_source_url': artifact['url'], '_raw_path': artifact['raw_path'],
                 '_raw_sha256': artifact['raw_sha256'], '_context_id': item.get('contextRef'),
                 '_fact_id': item.get('id', ''), '_taxonomy': taxonomy, '_tag': tag, '_unit': unit}
+        # LongTermDebt is ordinarily only a partial disclosure. An explicit
+        # consolidated "Total debt" row can be recognized, but is still
+        # reconciled to both current/noncurrent components by the selector.
+        if tag == 'LongTermDebt' and taxonomy == 'us-gaap' and unit == 'USD':
+            ancestor = parents.get(item)
+            while ancestor is not None and ancestor.tag.rsplit('}', 1)[-1].lower() != 'tr':
+                ancestor = parents.get(ancestor)
+            if ancestor is not None:
+                cells = [el for el in ancestor if el.tag.rsplit('}', 1)[-1].lower() in {'td', 'th'}]
+                if cells and ' '.join(''.join(cells[0].itertext()).split()).casefold() == 'total debt':
+                    fact['_reported_label'] = 'Total debt'
         if key in result and result[key]['val'] != fact['val']:
             conflicts.add(key)
         else:
@@ -135,9 +147,9 @@ def supplement_cached_latest_report(payload: dict[str, Any], *, ticker: str, cik
                       if f.get('form') in REPORT_FORMS), default='')
     diagnostic = {'status': 'companyfacts_current', 'raw_latest_period_end': raw_latest,
                   'latest_report_accession': latest['accession_number'], 'latest_report_period_end': end}
-    # Missing metadata cannot justify silently treating companyfacts as current.
-    if end and raw_latest >= end:
-        return payload, diagnostic
+    # A maximum date anywhere in companyfacts can be a cover-page share
+    # count or another instant, not proof of field-level statement coverage.
+    # Verify the selected report even when the snapshot has a current date.
     index = read_json(root / '03_source_data/equity_research/sec_filing_artifact_index.json', {})
     artifacts = [a for a in index.get('artifacts', []) if a.get('ticker') == ticker
                  and a.get('accession') == latest['accession_number'] and a.get('form') == latest['form']
@@ -164,7 +176,12 @@ def supplement_cached_latest_report(payload: dict[str, Any], *, ticker: str, cik
                     and f.get('start', '') == fact.get('start', '') and f.get('end') == fact['end']]
         if existing and any(f.get('val') != fact['val'] for f in existing):
             return payload, {**diagnostic, 'status': 'companyfacts_report_value_conflict'}
-        if not existing:
+        if existing:
+            # Add verified source/row bindings without changing the reported
+            # number. A current maximum date alone does not prove all fields.
+            for value in existing:
+                value.update({k: v for k, v in fact.items() if k.startswith('_')})
+        else:
             arr.append(fact)
     return merged, {**diagnostic, 'status': 'verified_inline_report_supplement',
                     'latest_report_period_end': end, 'admitted_fact_count': len(facts),

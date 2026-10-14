@@ -291,10 +291,30 @@ def reconcile_cached_financial_selections(*, root: Path = ROOT, now: datetime | 
             filings=filings, root=root, as_of=as_of, allowed_tags=approved_inline_tags())
         if diagnostic.get('status') != 'verified_inline_report_supplement':
             continue
+        if ticker == 'MSFT' and cik == 789019:
+            from sec_earnings_tables import supplement_msft_shares
+            def offline_only(*args, **kwargs):
+                raise ValueError('earnings_exhibit_cache_required')
+            try:
+                merged = supplement_msft_shares(merged, filings, '', as_of=as_of,
+                    cache_root=root/'02_filings/issuer_filings/financial_supplements.local',
+                    fetcher=offline_only, project_root=root)
+            except (OSError, ValueError):
+                # A missing/invalid source remains missing, independently of
+                # other valid inline fields and the rest of the issuer batch.
+                pass
         selected = fundamental_row(ticker, cik, merged, row['fetched_at'], acceptance_by_accession={
             f['accession_number']: f['accepted_at'] for f in filings})
-        if selected.get('latest_period_end', '') <= row.get('latest_period_end', ''):
+        if selected.get('latest_period_end', '') < row.get('latest_period_end', ''):
             continue
+        if selected.get('latest_period_end', '') == row.get('latest_period_end', ''):
+            numeric = [k for k in FUNDAMENTAL_FIELDS if k not in {'ticker','cik','fetched_at','latest_period_end',
+                'latest_frame','trend_label','data_quality','source_url','financial_period_type','ttm_period_end',
+                'selection_version','data_quality_reasons','valuation_input_quality','valuation_input_limitations',
+                'field_provenance_json','prior_quarter_period_end'}]
+            if (not any(not row.get(k) and selected.get(k) for k in numeric)
+                    or any(row.get(k) and row[k] != selected.get(k) for k in numeric)):
+                continue
         rows[i] = selected
         changes.append(ticker)
         receipts.append(dict(ticker=ticker, cik=cik, fundamental=selected, filings=filings,

@@ -1,5 +1,13 @@
 export type FeedbackStatus = 'skipped' | 'pending' | 'partial' | 'filled' | 'cancelled' | 'account';
 export type SummaryPoint = {label: string; text: string};
+export type CompanyResearchCase = {
+  ticker:string; review_version:number; reviewed_at:string; next_review_at:string; conclusion:string;
+  method:string; horizon:string; countercase:string; review_conditions:string[];
+  reference_price:number; reference_close:string; live_quote:false;
+  scenario_prices:{bear:number;base:number;bull?:number}; base_upside_pct:number;
+  scenario_reward_to_risk:number|null; minimum_reward_to_risk:number; valuation_only_review_ceiling:number;
+  review_ceiling_is_order_price:false; model_admission_status:string; pending_requirements:string[];
+};
 export type Plan = {
   ticker: string; plan_id: string; version: number; record_hash: string; action: string;
   status: 'expired' | 'pending' | 'current' | 'unverified'; expires_at: string | null;
@@ -15,6 +23,7 @@ export type CapitalDecision = {
   account_authority?:{mode:string;local_planning_enabled:boolean;execution_checks?:string[]};
   dependencies?:{category:string;code:string;scope:string;evidence_required:string}[];
   decisions:{ticker:string;decision:string;shares:number;estimated_notional:number;reasons:string[];blockers:string[];thesis_summary:string;
+    research_case?:CompanyResearchCase;
     dependencies:{category:string;code:string;evidence_required:string}[];
     order_draft:null|{side?:string;exit_price?:number;entry_order_type:string;entry_limit:number|null;entry_window:{starts_at:string;ends_at:string};time_in_force:string;
       invalidation_price:number|null;invalidation_rule:string;planned_total_loss:number;planned_account_risk_pct:number;risk_model:string;

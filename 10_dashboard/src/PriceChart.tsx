@@ -46,7 +46,7 @@ export default function PriceChart({ ticker, plan, now, offline, revision }: {ti
     </svg>
     <div className="chart-day-controls" aria-label="选择日线日期"><button type="button" className="text-button" disabled={(index??bars.length-1)===0} onClick={()=>setIndex(i=>Math.max(0,(i??bars.length-1)-1))}>← 上一交易日</button><button type="button" className="text-button" disabled={(index??bars.length-1)===bars.length-1} onClick={()=>setIndex(i=>Math.min(bars.length-1,(i??bars.length-1)+1))}>下一交易日 →</button></div>
     <p className="chart-footnote">行情截至 {chart.market_session} · 未复权 · 下方为成交量。触摸或左右键查看日线。</p>
-    {!draft?<p className="form-hint">当前方案已过期或待核对，图上不显示历史委托价作为当前条件。</p>:null}
+    {!draft?<p className="form-hint">图上未显示当前订单价；历史委托价不作为当前买卖条件。</p>:null}
     {chart.fills.length?<div className="chart-fills"><strong>用户报告的成交</strong>{chart.fills.map(f=><p key={f.id}>{f.date} {f.time?`大致 ${f.time} ET`:'仅记录日期'} · {f.side==='buy'?'买入':'卖出'} {f.shares} 股 · {money(f.price)}{outside.includes(f)?' · 在当前日线范围之外':''}{f.account_corrected_by?.length?' · 关联账户已更正，原始成交报告保留':''}</p>)}</div>:null}
     <details className="source-details"><summary>行情来源</summary><p>{chart.source}</p><a href={chart.source_url} target="_blank" rel="noreferrer">公共日线来源</a></details>
   </section>;

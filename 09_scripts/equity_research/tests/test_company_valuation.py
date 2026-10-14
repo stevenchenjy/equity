@@ -130,6 +130,44 @@ class CompanyValuationTests(unittest.TestCase):
             fundamentals={'ABC': self.fact}, market={'ABC': self.quote}, current=CURRENT)
         self.assertEqual(rows, [self.comparator]); self.assertEqual(report['status'], 'absent')
 
+    def test_recorded_company_case_is_visible_before_admission_without_buy_authority(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        from capital_presentation import cards
+        view=self.views()['ABC']
+        view['news_review']['coverage_complete']=False
+        case=presentation_case(view,root=self.root,current=CURRENT,quote=self.quote,
+            minimum_reward_to_risk=Decimal('1.25'))
+        self.assertEqual(case['scenario_prices'],{'bear':8.,'base':15.,'bull':20.})
+        self.assertEqual(case['conclusion'],self.thesis['conclusion'])
+        self.assertEqual(case['model_admission_status'],'research_only_pending_admission')
+        self.assertIn('configured_issuer_news_coverage_incomplete',case['pending_requirements'])
+        row={'ticker':'ABC','decision':'BLOCKED','shares':0,'order_draft':None,
+            'research_case':case,'reasons':[case['conclusion']],'blockers':['maintained_company_research_incomplete'],'dependencies':[]}
+        from capital_decision import SCHEMA as CAPITAL_SCHEMA
+        from daily_common import canonical_sha256
+        capital={'schema_version':CAPITAL_SCHEMA,'automatic_action_allowed':False,'broker_connected':False,'order_placed':False,
+            'decisions':[row],'dependencies':[],'planning_cash':4000,'mandatory_reserve':0,'global_blockers':[]}
+        capital['content_sha256']=canonical_sha256(capital)
+        decision={'generated_at':CURRENT.isoformat(),'capital_decision':capital}
+        result=cards(decision)
+        research=next(c for c in result if c['title']=='公司研究与配置判断 — ABC')
+        self.assertEqual(research['group'],'background')
+        self.assertIn('$8.00 / $15.00 / $20.00',research['body'])
+        self.assertIn('当前新增订单股数：0 股',research['body'])
+        self.assertIn('不是买入限价或订单',research['body'])
+        self.assertFalse(case['automatic_action_allowed'])
+
+    def test_invalid_or_expired_research_model_never_acquires_current_display_prices(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        view=self.views()['ABC']
+        options=dict(root=self.root,current=CURRENT,quote=self.quote,minimum_reward_to_risk=Decimal('1.25'))
+        self.assertIsNotNone(presentation_case(view,**options))
+        (self.root/self.model_rel).write_text('{}')
+        self.assertIsNone(presentation_case(view,**options))
+        self.assertIsNone(presentation_case(view,**{**options,'current':CURRENT+timedelta(days=8)}))
+
     def test_reprojection_changes_only_current_observation_and_preserves_original_bytes(self):
         original_bytes = (self.root/self.model_rel).read_bytes()
         self.quote['last_price'] = '11'
