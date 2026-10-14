@@ -4,7 +4,6 @@
   "2": "run_full_universe_market_data.py",
   "3": "App.tsx",
   "4": "CapitalDecisionTests",
-  "5": "capital_decision.py",
   "6": "main",
   "7": "is_us_market_session_date",
   "8": "CapitalWorkQueueTests",
@@ -260,8 +259,5 @@
   "258": "test_tactical_order_scopes.py",
   "259": "equity_naming.py",
   "260": "shadow_evaluation_health",
-  "261": "measure_paths",
-  "262": "run_stage",
-  "263": "Company-specific valuation in production",
-  "264": "test_research_opportunities.py"
+  "261": "measure_paths"
 }

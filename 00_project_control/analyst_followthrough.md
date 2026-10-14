@@ -111,6 +111,19 @@ does not acknowledge or incorporate its events.
    previous hashes, expired/failed outcomes and accounting scope. If no
    admissible writer exists, save the sourced proposal as pending admission;
    do not edit an acceptance result or financial CSV to bypass validation.
+   After a completed company judgment or model admission, reconcile its durable
+   opportunity attention assessment in the same useful batch. A current admitted
+   model must not leave old collector/model-missing requirements as today's work.
+   Use `update_research_assessment.py --root /Users/messssi/LocalRuntime/equity
+   --input PROPOSAL` to check, then the same command with `--apply`. Preserve the
+   original attention history. A terminal negative case needs a sourced `reopen`
+   transition with the actual changed-evidence reason before a new negative
+   assessment; an `evidence_attached` item can record its current economic
+   rejection directly. Bind original model, current observed close, primary
+   evidence, countercase and review deadline. Do not infer a new positive case
+   or change strategy authority. Verify unchanged completed negative cases wait
+   for a newer close, material evidence or review date, while genuine unfinished
+   work remains prioritized. Do not directly edit queue/ranking output.
 6. Recheck input hashes immediately before applying. Serialize writes with
    the existing runtime and daily-pipeline locks and each writer's own lock,
    following the lock order and publication procedure below.
