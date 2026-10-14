@@ -109,6 +109,41 @@ class IncorporationTests(unittest.TestCase):
         event['title']='To announce third quarter results conference call'
         self.assertEqual(self.assess(news={'events':[event]})['status'],'incorporated')
 
+    def install_news(self, published):
+        from official_news import load_manifest, refresh_news
+        import csv
+        manifest=load_manifest()
+        manifest['sources']=[{'source_id':'issuer','ticker':'ABC','url':'https://ir.example.com/feed',
+            'allowed_hosts':['ir.example.com'],'format':'rss_atom','required':True}]
+        mp=self.root/'01_policies/official_news_sources.json';mp.parent.mkdir(parents=True);mp.write_text(json.dumps(manifest))
+        directory=self.root/'03_source_data/equity_research';directory.mkdir(parents=True,exist_ok=True)
+        with (directory/'daily_fundamentals.csv').open('w',newline='') as out:
+            writer=csv.DictWriter(out,fieldnames=list(self.fund));writer.writeheader();writer.writerow(self.fund)
+        raw=f'<rss><channel><item><title>Reports quarterly results</title><link>https://ir.example.com/results</link><pubDate>{published.isoformat()}</pubDate></item></channel></rss>'.encode()
+        return refresh_news(now=NOW,manifest_path=mp,
+            status_path=directory/'official_news_status.local.json',events_path=directory/'official_news_events.local.json',
+            fetcher=lambda *a,**k:raw)
+
+    def test_historical_feed_archive_does_not_reopen_current_financial_selection(self):
+        # The same-day press release follows the incorporated SEC report, but
+        # is months old when this issuer's feed is first configured.
+        self.install_news(datetime(2026,8,1,20,25,tzinfo=timezone.utc))
+        raw=json.loads((self.root/'03_source_data/equity_research/official_news_events.local.json').read_text())
+        self.assertEqual(len(raw['events']),1)
+        result=build_earnings_incorporation(root=self.root,now=NOW)['companies']['ABC']
+        self.assertEqual(result['status'],'incorporated')
+        self.assertEqual(len(json.loads((self.root/'03_source_data/equity_research/official_news_events.local.json').read_text())['events']),1)
+
+    def test_retained_unresolved_results_do_not_expire_with_feed_window(self):
+        from issuer_news_queue import merge_news_context
+        news=self.install_news(NOW-timedelta(hours=1))
+        (self.root/'04_research/company_research').mkdir(parents=True)
+        merge_news_context(news,root=self.root,current=NOW,persist=True)
+        current=build_earnings_incorporation(root=self.root,now=NOW)['companies']['ABC']
+        later=build_earnings_incorporation(root=self.root,now=NOW+timedelta(days=8))['companies']['ABC']
+        self.assertIn('newer_official_results_news_pending_review',current['blocking_reasons'])
+        self.assertIn('newer_official_results_news_pending_review',later['blocking_reasons'])
+
     def test_missing_or_future_financial_period_cannot_claim_incorporation(self):
         self.sub['filings']['recent']['reportDate']=['']
         self.receipt=self.save_receipt()

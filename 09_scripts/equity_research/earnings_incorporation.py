@@ -227,7 +227,24 @@ def build_earnings_incorporation(*, root: Path = ROOT, now: datetime | None = No
         raise ValueError('incorporation check requires timezone-aware time')
     fundamentals = read_csv(root / '03_source_data/equity_research/daily_fundamentals.csv')
     ledger = read_csv(root / '03_source_data/equity_research/daily_evidence_ledger.csv')
-    news = read_json(root / '03_source_data/equity_research/official_news_events.local.json', {})
+    raw_news = read_json(root / '03_source_data/equity_research/official_news_events.local.json', {})
+    news = raw_news
+    manifest_path = root / '01_policies/official_news_sources.json'
+    if manifest_path.exists():
+        # A feed also retains historical releases. Its complete archive is not
+        # the current reassessment queue. Use the existing admission window,
+        # plus source-bound unresolved events that survive that window. Never
+        # expire an already retained financial-news dependency by age alone.
+        from official_news import read_official_news_status
+        from issuer_news_queue import merge_news_context
+        context = merge_news_context(read_official_news_status(now=now,
+            manifest_path=manifest_path,
+            status_path=root / '03_source_data/equity_research/official_news_status.local.json',
+            events_path=root / '03_source_data/equity_research/official_news_events.local.json'),
+            root=root, current=now)
+        events = {event['event_id']: event for event in
+                  [*context.get('recent_events', []), *context.get('review_events', [])]}
+        news = {'events': list(events.values())}
     companies = {}
     for row in fundamentals:
         ticker = row.get('ticker', '')
@@ -245,7 +262,7 @@ def build_earnings_incorporation(*, root: Path = ROOT, now: datetime | None = No
     return {'schema_version': SCHEMA_VERSION, 'generated_at': now.isoformat(), 'companies': companies,
             'held_company_tickers': held, 'held_pending_tickers': [t for t in held if not companies[t]['positive_decision_eligible']],
             'fundamentals_sha256': canonical_sha256(fundamentals), 'ledger_sha256': canonical_sha256(ledger),
-            'news_sha256': canonical_sha256(news), 'scope': 'financial_selection_not_analyst_thesis_completion'}
+            'news_sha256': canonical_sha256(raw_news), 'scope': 'financial_selection_not_analyst_thesis_completion'}
 
 
 def read_earnings_incorporation_status(*, root: Path = ROOT, now: datetime | None = None) -> dict[str, Any]:
