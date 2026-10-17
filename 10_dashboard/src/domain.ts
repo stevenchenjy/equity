@@ -72,7 +72,7 @@ export type Snapshot = {
   capital_deployment_escalation?:CapitalDeploymentEscalation|null;
 };
 export type Feedback = {
-  entry_mode?: 'simple'; order_link_mode?: 'independent';
+  entry_mode?: 'simple' | 'simple_total'; order_link_mode?: 'independent';
   ticker: string; side: 'buy' | 'sell'; status: FeedbackStatus; shares: string;
   amount: string; amount_mode: 'price' | 'gross' | 'net'; fee_status: 'known' | 'unknown'; fees: string;
   date: string; time: string; notes: string; order_type: string; order_price: string; stop_price: string;
@@ -94,8 +94,8 @@ export const statusNames: Record<FeedbackStatus, string> = {
   skipped: '未操作', pending: '已挂单', partial: '部分成交', filled: '全部成交', cancelled: '已撤单', account: '账户核对',
 };
 export const defaults = (ticker = 'SPY', date = easternDate()): Feedback => ({
-  entry_mode: 'simple', ticker, side: 'buy', status: 'filled', shares: '', amount: '', amount_mode: 'price', fee_status: 'known',
-  fees: '0', date, time: '', notes: '', order_type: 'LIMIT', order_price: '', stop_price: '', time_in_force: 'DAY',
+  entry_mode: 'simple_total', ticker, side: 'buy', status: 'filled', shares: '', amount: '', amount_mode: 'net', fee_status: 'known',
+  fees: '0', date, time: '', notes: '', order_type: 'UNSPECIFIED', order_price: '', stop_price: '', time_in_force: 'DAY',
   remaining: '', linked_order: '', prior_partial: false, cash: '', holdings: [], inventory_complete: false,
 });
 export type FormalRecord = {
@@ -120,7 +120,7 @@ export function validStoredFeedback(value:unknown):value is Feedback {
   return strings.every(k=>typeof f[k]==='string') && Object.hasOwn(statusNames,String(f.status))
     && ['buy','sell'].includes(String(f.side)) && ['price','gross','net'].includes(String(f.amount_mode))
     && ['known','unknown'].includes(String(f.fee_status))
-    && (f.entry_mode===undefined||f.entry_mode==='simple')
+    && (f.entry_mode===undefined||f.entry_mode==='simple'||f.entry_mode==='simple_total')
     && (f.order_link_mode===undefined||f.order_link_mode==='independent') && typeof f.prior_partial==='boolean'
     && typeof f.inventory_complete==='boolean' && Array.isArray(f.holdings)
     && f.holdings.every(h=>h&&typeof h.ticker==='string'&&typeof h.shares==='string'&&(h.entry_price===undefined||typeof h.entry_price==='string'));
@@ -128,13 +128,13 @@ export function validStoredFeedback(value:unknown):value is Feedback {
 export function initialFeedback(data:Snapshot|null,ticker:string,status:FeedbackStatus='filled'):Feedback {
   const f=defaults(ticker,data?easternDate(Date.parse(data.server_now)):easternDate());
   return status==='account' ? {...f,status,cash:data?String(data.account.cash_available):'',
-    holdings:data?.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)}))??[],account_observed:false} : {...f,status};
+    holdings:data?.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)}))??[],account_observed:false} : {...f,status,order_type:status==='pending'?'LIMIT':f.order_type};
 }
 export function editableFeedback(feedback:Feedback):Feedback {
   // Earlier CLI records omit fields unrelated to the reported operation.
   // Retain historical amount/time semantics; the owner confirmed this broker has no fees.
   // This only prepares an explicit new revision, never rewrites the original record.
-  const f={...defaults(feedback.ticker),...feedback,entry_mode:feedback.entry_mode,holdings:feedback.holdings??[],not_in_account:false};
+  const f={...defaults(feedback.ticker),...feedback,amount_mode:feedback.amount_mode??'price',entry_mode:feedback.entry_mode,holdings:feedback.holdings??[],not_in_account:false};
   const revised:Feedback=f.fee_status==='unknown'||!f.fees ? {...f,fee_status:'known',fees:'0'} : Number(f.fees)===0?{...f,fees:'0'}:f;
   return revised.amount_mode==='price'&&revised.fees==='0'&&!revised.time ? {...revised,entry_mode:'simple'} : revised;
 }

@@ -54,6 +54,18 @@ class PrivateRoutesTests(unittest.TestCase):
         self.assertEqual(self.request('POST','/api/feedback',p,good),(200,result))
         self.assertEqual(len(self.request('GET','/api/feedback')[1]['records']),1)
 
+    def test_ui_version_uses_the_served_build_and_checks_access(self):
+        dist=self.root/'dist';(dist/'assets').mkdir(parents=True)
+        (dist/'index.html').write_text('<script type="module" src="/assets/index-one.js"></script>')
+        (dist/'assets/index-one.js').write_text('/* fixture */')
+        with patch('server.APP_ROOT',self.root):
+            self.assertEqual(self.request('GET','/api/ui-version'),(200,{'entry_script':'/assets/index-one.js'}))
+            self.assertEqual(self.request('GET','/api/ui-version',headers={'Host':'untrusted.example'})[0],403)
+            (dist/'index.html').write_text('<script type="module" src="/assets/index-two.js"></script>')
+            self.assertEqual(self.request('GET','/api/ui-version')[0],503)
+            (dist/'assets/index-two.js').write_text('/* next fixture */')
+            self.assertEqual(self.request('GET','/api/ui-version'),(200,{'entry_script':'/assets/index-two.js'}))
+
     def test_tailscale_owner_host_and_https_origin_required(self):
         private={'Host':'test.example.ts.net','Tailscale-User-Login':'owner@example.test'}
         self.assertEqual(self.request('GET','/api/feedback',headers=private)[0],200)

@@ -109,3 +109,7 @@ h1, h2, h3 { text-wrap: balance; }
 .capital-actions h2{margin-top:0}.capital-headline{font-size:1.35rem;font-weight:750;line-height:1.45}.capital-action{padding:16px 0;border-top:1px solid #e1e8e4}.capital-action h3{margin-top:0}.capital-buy{border-left:5px solid #187547;padding-left:18px;background:#f1f9f3}.capital-actions dt{font-size:.82rem;color:#61716a}.capital-actions dd{margin:6px 0;line-height:1.6}.capital-actions li{margin:8px 0;line-height:1.6}.capital-actions details{margin-top:18px;padding-top:14px;border-top:1px solid #e1e8e4}
 
 .capital-sell{border-left:5px solid #a32e3d;padding-left:18px;background:#fff4f5}
+
+.feedback-options{border-top:1px solid var(--rule);padding-top:12px;font-size:14px}
+.feedback-options>summary{cursor:pointer;color:var(--muted);padding:3px 0}
+.feedback-options[open]>.field,.feedback-options[open]>.check-field{margin-top:14px}

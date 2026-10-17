@@ -56,6 +56,51 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(self.store.submit(p),r)
         self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
 
+    def total_payload(self, **changes):
+        p=self.simple_payload(**changes)
+        p['feedback']['entry_mode']='simple_total'
+        p['feedback'].pop('order_type',None)
+        return p
+
+    def test_total_fill_buy_and_sell_keep_total_cash_without_inventing_order_type(self):
+        buy=self.submit(self.total_payload(shares='2',amount='201'))
+        self.assertEqual(buy['stage'],'applied')
+        self.assertEqual(buy['changes']['cash_after'],799)
+        self.assertEqual(buy['changes']['fill_price'],100.5)
+        self.assertEqual(buy['feedback']['order_type'],'UNSPECIFIED')
+        self.assertEqual(buy['feedback']['amount_mode'],'net')
+        sell=self.submit(self.total_payload(side='sell',shares='4',amount='440'))
+        self.assertEqual(sell['changes']['cash_after'],1239)
+        self.assertEqual(sell['changes']['shares_after'],0)
+        self.assertEqual(sell['changes']['fill_price'],110)
+        self.assertEqual(rows((self.root/LEDGER).read_bytes())[-1]['order_type'],'UNSPECIFIED')
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),2)
+
+    def test_total_fill_partial_inherits_only_the_known_matching_order_type(self):
+        order=self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        p=self.total_payload(status='partial',shares='2',amount='199',remaining='1')
+        result=self.submit(p)
+        self.assertEqual(result['stage'],'applied')
+        self.assertEqual(result['changes']['cash_after'],801)
+        self.assertEqual(result['changes']['fill_price'],99.5)
+        self.assertEqual(result['feedback']['order_type'],'LIMIT')
+        self.assertEqual(result['feedback']['linked_order'],order['order_id'])
+        self.assertEqual(json.loads((self.root/ORDERS).read_text())['orders'][0]['remaining_quantity'],1)
+        self.assertEqual(self.store.submit(p),result)
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
+    def test_amount_protocol_versions_cannot_silently_reinterpret_multi_share_fills(self):
+        new=self.store.preview(self.total_payload(shares='2',amount='100'))
+        old=self.store.preview(self.simple_payload(shares='2',amount='100'))
+        self.assertEqual(new['changes']['cash_after'],900)
+        self.assertEqual(old['changes']['cash_after'],800)
+        p=self.total_payload(amount_mode='price')
+        with self.assertRaisesRegex(FeedbackError,'simple_entry_contract_conflict'):self.store.preview(p)
+        # Unknown is valid for a fill, never for an unexecuted order.
+        with self.assertRaisesRegex(FeedbackError,'invalid_order_type'):
+            self.store.preview(self.simple_payload(status='pending',order_type='UNSPECIFIED'))
+        self.assertEqual(self.store.history(),[])
+
     def test_compact_contract_never_silently_reinterprets_legacy_money_or_time(self):
         for field,value in [('amount_mode','gross'),('amount_mode','net'),('fee_status','unknown'),('fees','1'),('time','14:00')]:
             with self.subTest(field=field,value=value):

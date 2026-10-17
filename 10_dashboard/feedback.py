@@ -255,14 +255,19 @@ class Store:
         # The compact owner form has one monetary meaning and a standing zero-fee
         # instruction. Older CLI requests and retained records keep their original
         # price/gross/net, fee and approximate-time semantics.
-        simple = f.get('entry_mode') == 'simple'
+        # Keep the original per-share compact protocol for old open tabs/retries.
+        # A distinct version makes the new total-cash amount unambiguous.
+        simple = f.get('entry_mode') in ('simple','simple_total')
         if 'entry_mode' in f and not simple:
             raise FeedbackError('invalid_entry_mode')
         if simple:
-            compact = {'amount_mode':'price', 'fee_status':'known', 'fees':'0', 'time':''}
+            compact = {'amount_mode':'net' if f['entry_mode']=='simple_total' else 'price',
+                       'fee_status':'known', 'fees':'0', 'time':''}
             if any(key in f and f[key] != value for key,value in compact.items()):
                 raise FeedbackError('simple_entry_contract_conflict')
             f.update(compact)
+            if f['entry_mode']=='simple_total' and f.get('status') in {'filled','partial'}:
+                f.setdefault('order_type','UNSPECIFIED')
         link_mode = f.get('order_link_mode','auto')
         if not isinstance(link_mode,str) or link_mode not in {'auto','independent'} or (link_mode == 'independent'
                 and (not simple or f.get('status') != 'filled' or f.get('linked_order'))):
@@ -345,7 +350,7 @@ class Store:
             prior_dates = [r.get('fill_date','') for r in rows(read(self.root,CONFIRMED,optional=True)) if r.get('canonical_state_applied')=='yes']
             if prior_dates and f['date'] < max(prior_dates):
                 missing.append('较晚成交已计入账户；先完整账户核对，避免倒序重复应用')
-            if f['order_type'] not in {'LIMIT','MARKET','STOP','STOP_LIMIT'}: raise FeedbackError('invalid_order_type')
+            if f['order_type'] not in {'LIMIT','MARKET','STOP','STOP_LIMIT','UNSPECIFIED'}: raise FeedbackError('invalid_order_type')
             if status == 'partial':
                 need('remaining','剩余挂单股数',integer=True)
                 if not f['linked_order'] and '请选择对应挂单' not in missing:
@@ -383,6 +388,8 @@ class Store:
             if simple:
                 changes['linked_order'] = {key:linked.get(key) for key in ('ticker','side','remaining_quantity',
                     'limit_price','stop_price','order_type','time_in_force','session_date')}
+                if f.get('order_type')=='UNSPECIFIED' and linked.get('order_type') in {'LIMIT','MARKET','STOP','STOP_LIMIT'}:
+                    f['order_type']=linked['order_type']
             if status != 'cancelled' and qty:
                 remaining = dec(linked.get('remaining_quantity'),'remaining',integer=True)
                 if qty > remaining: raise FeedbackError('fill_exceeds_remaining_order')

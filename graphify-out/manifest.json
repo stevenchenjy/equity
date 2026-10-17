@@ -1480,18 +1480,18 @@
     "semantic_hash": "e2648d2279a02d5d21d980b0177820ee"
   },
   "10_dashboard/package.json": {
-    "mtime": 1792209662.5063846,
-    "ast_hash": "4f045c58eb89ee8f90fa49666b91aced",
+    "mtime": 1792210856.6679428,
+    "ast_hash": "7ec0dc5d6e7f012bf0c42680b483c4f7",
     "semantic_hash": ""
   },
   "10_dashboard/server.py": {
-    "mtime": 1792209750.8915846,
-    "ast_hash": "1c2414204694c7bfd0f50ba2f98b7dcb",
+    "mtime": 1792210806.4925752,
+    "ast_hash": "1da0bca42a8e2eced7935205dde35229",
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
-    "mtime": 1792210048.1394432,
-    "ast_hash": "2487539021bb9c524130d7c386fc781e",
+    "mtime": 1792210806.491457,
+    "ast_hash": "383fd6bfa2d4b84f4a369ed7325d98bf",
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.test.ts": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.ts": {
-    "mtime": 1792209820.4762473,
-    "ast_hash": "d3e7f7d47509ab82c290ab0cf89bb195",
+    "mtime": 1792210889.8090365,
+    "ast_hash": "55d490b15eb0e6026c6c9719dc84cd6d",
     "semantic_hash": ""
   },
   "10_dashboard/src/main.tsx": {
@@ -1535,8 +1535,8 @@
     "semantic_hash": "9b87cc49c0df32c26c9da2383c4e3399"
   },
   "10_dashboard/README.md": {
-    "mtime": 1792209662.5060067,
-    "ast_hash": "05b83c3a8777ea7f5fa61eab428ffb74",
+    "mtime": 1792210806.5730596,
+    "ast_hash": "22095cc58b017776f69fa6b92d841f94",
     "semantic_hash": ""
   },
   "10_dashboard/index.html": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": "ed46b9785d345736c59d31423d4abec4"
   },
   "10_dashboard/feedback.py": {
-    "mtime": 1792209787.2284353,
-    "ast_hash": "16aad5975a5a117fafb4f34a3aa398b4",
+    "mtime": 1792210882.128414,
+    "ast_hash": "0740e2cdfc1d2bd0a2bfd5307efbb73a",
     "semantic_hash": ""
   },
   "10_dashboard/install_service.py": {
@@ -1575,8 +1575,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/tests/test_feedback.py": {
-    "mtime": 1792209787.2346058,
-    "ast_hash": "db8fe544caad135d1cd3497fbca30aa2",
+    "mtime": 1792210856.6670785,
+    "ast_hash": "81366e3c0e86427ed0b0450fa2b2bec4",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/dashboard_publication.py": {
@@ -1585,9 +1585,9 @@
     "semantic_hash": "f54ed86b37bdc611fa42050ba99fdc51"
   },
   "10_dashboard/tests/test_private_routes.py": {
-    "mtime": 1790854762.427931,
-    "ast_hash": "842098a2c435e45482b7feb2cec297d2",
-    "semantic_hash": "842098a2c435e45482b7feb2cec297d2"
+    "mtime": 1792210856.6687028,
+    "ast_hash": "bc74c731d1a511b636792c7afd656ffd",
+    "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v33.json": {
     "mtime": 1790817081.103177,
@@ -1975,8 +1975,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/FeedbackForm.test.tsx": {
-    "mtime": 1792209940.3724508,
-    "ast_hash": "963b6970e7a0735f5a7952d44b951341",
+    "mtime": 1792210842.8047426,
+    "ast_hash": "319fb5c20a1ce2b0ccccf3ae299b3507",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_corrections/sec_acceptance_correction_v2.json": {
@@ -2002,6 +2002,16 @@
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v44.json": {
     "mtime": 1792209983.3437183,
     "ast_hash": "729e37a651fd34981041606449677322",
+    "semantic_hash": ""
+  },
+  "10_dashboard/src/uiVersion.test.ts": {
+    "mtime": 1792210842.8050263,
+    "ast_hash": "5dfd13b3a36c5d2de1710ed3aeddc741",
+    "semantic_hash": ""
+  },
+  "10_dashboard/src/uiVersion.ts": {
+    "mtime": 1792210806.4908767,
+    "ast_hash": "612ae2689457554f4673f73d507a0d0c",
     "semantic_hash": ""
   }
 }

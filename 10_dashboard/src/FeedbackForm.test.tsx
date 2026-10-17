@@ -14,12 +14,23 @@ test('quick and full entry forms remove unnecessary fields and repeated instruct
     const html=markup(status,wide);
     assert.doesNotMatch(html,/金额口径|已确认费用|大致时间|type="time"|订单编号|股数是本次新增成交量|连续部分成交请逐次填写|真实操作请用正式登记/);
     assert.match(html,/日期/);assert.match(html,/预览登记结果/);
-    if(status==='filled'||status==='partial'){assert.match(html,/成交单价/);assert.match(html,/成交股数/);assert.doesNotMatch(html,/name="fees"|name="amount_mode"/);}
+    if(status==='filled'||status==='partial'){assert.match(html,/成交总额（USD）/);assert.match(html,/股数/);assert.doesNotMatch(html,/订单类型|name="fees"|name="amount_mode"/);}
   }
 });
 test('new entries use owner-confirmed zero fees and dates without inventing a time',()=>{
   const f=defaults('ABC','2026-10-17');
-  assert.equal(f.entry_mode,'simple');assert.equal(f.amount_mode,'price');assert.equal(f.fee_status,'known');assert.equal(f.fees,'0');assert.equal(f.time,'');
+  assert.equal(f.entry_mode,'simple_total');assert.equal(f.amount_mode,'net');assert.equal(f.fee_status,'known');assert.equal(f.fees,'0');assert.equal(f.time,'');assert.equal(f.order_type,'UNSPECIFIED');
+});
+test('default fill has exactly five visible inputs; optional scenarios stay collapsed',()=>{
+  for(const wide of [false,true]){
+    const html=markup('filled',wide);
+    assert.match(html,/<details class="feedback-options"><summary>其他情况/);
+    const visible=html.replace(/<details class="feedback-options">[\s\S]*?<\/details>/,'');
+    assert.deepEqual([...visible.matchAll(/<(?:input|select|textarea)\b[^>]*name="([^"]+)"/g)].map(m=>m[1]),['ticker','side','shares','amount','date']);
+    assert.doesNotMatch(visible,/订单类型|执行状态|备注|试填|尚未计入|费用|金额口径|对应订单/);
+  }
+  assert.match(markup('pending'),/订单类型/);
+  assert.match(markup('partial'),/剩余挂单股数/);
 });
 test('order choices use readable terms without asking for raw identifiers',()=>{
   const row={order_id:'opaque-private-order-123',ticker:'ABC',side:'buy',status:'partially_filled',remaining_quantity:'2',order_type:'LIMIT',limit_price:'99',time_in_force:'DAY'};

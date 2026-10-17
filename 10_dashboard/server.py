@@ -360,6 +360,15 @@ class Handler(BaseHTTPRequestHandler):
         if not self.permitted():
             return self.error_json(403, "local_origin_required")
         path = unquote(urlsplit(self.path).path)
+        if path == '/api/ui-version':
+            try:
+                html=(APP_ROOT/'dist/index.html').read_text()
+                entry=re.search(r'<script\b[^>]*\bsrc="(/assets/[^"/]+\.js)"',html)
+                if not entry or not (APP_ROOT/'dist'/entry[1].lstrip('/')).is_file():
+                    return self.error_json(503,'ui_build_unavailable')
+                return self.respond(200,json.dumps({'entry_script':entry[1]}).encode(),'application/json')
+            except OSError:
+                return self.error_json(503,'ui_build_unavailable')
         if path == "/api/snapshot":
             try:
                 # Open an existing lock read-only; never create runtime files.

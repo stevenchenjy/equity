@@ -7,6 +7,7 @@ import type { DemoRecord, Feedback, FeedbackStatus, FormalRecord, Plan, ReviewRe
 import PriceChart from './PriceChart';
 import ResearchSection from './ResearchSection';
 import CompanyCase from './CompanyCase';
+import { useUiVersion } from './uiVersion';
 
 type Page = 'today' | 'account' | 'feedback' | 'history' | 'detail';
 const pages = [
@@ -121,12 +122,13 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, em
   useEffect(() => { if(!pending.current){setForm(editing?editableFeedback(editing.feedback):initialFeedback(data,ticker,initialStatus));setReceipt(null);setFormalReceipt(null);setPreview(null);base.current=data;} }, [ticker,editing,initialStatus,correction]);
   const set = <K extends keyof Feedback>(key: K, value: Feedback[K]) => { onDirty(true); savedSignature.current = null;pending.current=null; setForm(f => ({ ...f, [key]: value, ...(['ticker','side','status'].includes(key)?{linked_order:'',order_link_mode:undefined}:{}) })); setErrors({}); setReceipt(null); setFormalReceipt(null);setPreview(null); };
   const filled = form.status === 'filled' || form.status === 'partial';
+  const compact=Boolean(form.entry_mode);
   const orders=matchingOrders(form,data?.orders.rows??[]);
   const orderPicker=!demo&&['filled','partial','cancelled'].includes(form.status)&&orders.length>0
-    &&(orders.length>1||form.status==='filled'||form.entry_mode!=='simple') ?
+    &&(orders.length>1||form.status==='filled'||!compact) ?
     <Field label="对应挂单"><select name="linked_order" value={form.order_link_mode==='independent'?'independent':form.linked_order} onChange={e=>{set('linked_order',e.target.value==='independent'?'':e.target.value);set('order_link_mode',e.target.value==='independent'?'independent':undefined)}}>
-      <option value="">{orders.length===1&&form.entry_mode==='simple'?'自动匹配当前挂单':'选择挂单'}</option>
-      {form.status==='filled'&&form.entry_mode==='simple'?<option value="independent">独立成交</option>:null}
+      <option value="">{orders.length===1&&compact?'自动匹配当前挂单':'选择挂单'}</option>
+      {form.status==='filled'&&compact?<option value="independent">独立成交</option>:null}
       {orders.map(r=><option key={String(r.order_id)} value={String(r.order_id)}>{orderLabel(r)}</option>)}
     </select></Field>:null;
   const today = data ? easternDate(Date.parse(data.server_now)) : easternDate();
@@ -148,7 +150,9 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, em
         if(!base.current)throw new Error('请等待账户快照后再填写。');
         if(!pending.current){
           const plan=base.current.plans.find(p=>p.ticker===form.ticker.toUpperCase());
-          const payload:RequestPayload={request_id:crypto.randomUUID(),feedback:form,account_version:base.current.account_version,snapshot_id:base.current.snapshot_id,
+          // The preview + "confirm new fill" action records a new transaction.
+          // Account corrections use their separate complete-snapshot path.
+          const payload:RequestPayload={request_id:crypto.randomUUID(),feedback:{...form,...(filled?{not_in_account:true}:{})},account_version:base.current.account_version,snapshot_id:base.current.snapshot_id,
             plan:planReference(plan),...(correction?{correction:{record_id:correction.id,reason:correctionReason.trim()}}:{}),email_version_id:editing?(editing.email_version_id??null):(emailVersion??null),...(editing?{record_id:editing.id,revision:editing.revision}:{})};
           const result=await post('/api/feedback/preview',payload) as Preview;
           payload.preview_hash=result.preview_hash; pending.current=payload; setPreview(result); return;
@@ -166,21 +170,21 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, em
   };
   const numericInput = (key: 'shares' | 'amount' | 'order_price' | 'stop_price' | 'remaining' | 'cash', placeholder = '请输入…') => <input name={key} autoComplete="off" inputMode={key==='shares'||key==='remaining'?'numeric':'decimal'} value={form[key]} placeholder={placeholder} onChange={e => set(key, e.target.value)} aria-invalid={Boolean(errors[key])} />;
   return <form ref={formRef} className={`feedback-form ${wide ? 'wide-form' : ''}`} onSubmit={submit} noValidate>
-    <>{correction?<div className="correction-notice"><strong>更正当前账户</strong><p>请填写当前完整现金和持仓；原始成交与历史将保留。</p></div>:null}{emailVersion||editing?.email_version_id?<p className="form-hint">关联历史邮件 {(editing?.email_version_id??emailVersion)?.slice(0,8)}；登记使用当前账户。</p>:null}</><div className="form-mode"><strong>{editing?'补全正式记录':demo?'试填练习':'正式登记'}</strong>{!editing&&!correction?<label><input type="checkbox" checked={demo} disabled={busy||Boolean(unconfirmed)||Boolean(preview)||Boolean(formalReceipt)} onChange={e=>{setDemo(e.target.checked);setPreview(null);pending.current=null;setReceipt(null);setFormalReceipt(null)}}/>试填（不更新账户）</label>:null}</div>
+    <>{correction?<div className="correction-notice"><strong>更正当前账户</strong><p>请填写当前完整现金和持仓；原始成交与历史将保留。</p></div>:null}{emailVersion||editing?.email_version_id?<p className="form-hint">关联历史邮件 {(editing?.email_version_id??emailVersion)?.slice(0,8)}；登记使用当前账户。</p>:null}</>
+    {editing||demo?<strong>{editing?'补全正式记录':'试填练习'}</strong>:null}
     {formalReceipt?<div className="receipt" role="status"><CheckCircle2 size={21}/><div><strong>{formalReceipt.stage==='pending'?'记录已保存，待补全':'正式记录已接纳'}</strong><p>{formalReceipt.missing.length?formalReceipt.missing.join('、'):formalReceipt.production_effect?'账户记录已应用。':'未操作反馈已记录。'}</p><small>{researchNames[formalReceipt.research_status]} · 可在正式历史查看</small></div></div>:null}
     <fieldset disabled={busy||Boolean(preview)||Boolean(unconfirmed)||Boolean(formalReceipt)} className="form-fields">
     {receipt ? <div className="receipt" role="status"><CheckCircle2 size={21} /><div><strong>试填记录已保存</strong><p>{receipt.stage === 'demo_pending' ? `待补全：${receipt.missing.join('、')}` : '信息齐全，可在记录历史的「此浏览器的试填记录」中查看。'}</p><small>实际账户未更新 · 研究未重算</small></div><button type="button" className="icon-button" aria-label="关闭保存回执" onClick={() => setReceipt(null)}><X size={18} /></button></div> : null}
     {correction?<Field label="更正原因" error={errors.correction}><textarea rows={2} maxLength={1500} value={correctionReason} onChange={e=>{setCorrectionReason(e.target.value);onDirty(true);setErrors({})}} placeholder="例如重复登记；当前账户已按券商核对"/></Field>:null}
     {form.status !== 'account' ? <div className="fields-row">
-      <Field label="当前标的" error={errors.ticker}><input name="ticker" autoComplete="off" spellCheck={false} list={wide ? 'tickers-wide' : 'tickers-quick'} value={form.ticker} placeholder="例如 SPY…" onChange={e => set('ticker', e.target.value.toUpperCase())} /></Field>
-      <Field label="买卖方向"><select name="side" value={form.side} onChange={e => {set('side', e.target.value as 'buy' | 'sell');set('linked_order','');set('order_link_mode',undefined)}}><option value="buy">买入</option><option value="sell">卖出</option></select></Field>
+      <Field label="股票" error={errors.ticker}><input name="ticker" autoComplete="off" spellCheck={false} list={wide ? 'tickers-wide' : 'tickers-quick'} value={form.ticker} placeholder="例如 SPY…" onChange={e => set('ticker', e.target.value.toUpperCase())} /></Field>
+      <Field label="买卖"><select name="side" value={form.side} onChange={e => {set('side', e.target.value as 'buy' | 'sell');set('linked_order','');set('order_link_mode',undefined)}}><option value="buy">买入</option><option value="sell">卖出</option></select></Field>
     </div> : null}
     <datalist id={wide ? 'tickers-wide' : 'tickers-quick'}>{[...new Set([...(data?.positions.map(p => p.ticker) ?? []), ...(data?.candidates.map(p => p.ticker) ?? [])])].map(t => <option key={t} value={t} />)}</datalist>
-    <Field label="执行状态"><select disabled={Boolean(correction)} value={form.status} onChange={e => {const status=e.target.value as FeedbackStatus;set('status',status);if(status==='account'&&!editing&&data)setForm(f=>({...f,cash:String(data.account.cash_available),holdings:data.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)})),account_observed:false,inventory_complete:false,no_open_orders:false,orders_match:false}));}}>{Object.entries(statusNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
     {filled ? <>
-      <div className="fields-row"><Field label="成交股数" error={errors.shares}>{numericInput('shares', '实际成交股数')}</Field><Field label={form.amount_mode === 'price' ? '成交单价' : form.amount_mode === 'gross' ? '成交总金额' : '实际扣款 / 到账'} error={errors.amount}>{numericInput('amount', 'USD')}</Field></div>
+      <div className="fields-row"><Field label="股数" error={errors.shares}>{numericInput('shares', '例如 2…')}</Field><Field label={form.entry_mode==='simple_total'?'成交总额（USD）':form.amount_mode === 'price' ? '成交单价（USD）' : form.amount_mode === 'gross' ? '成交总金额（USD）' : '实际扣款 / 到账（USD）'} error={errors.amount}>{numericInput('amount', '例如 200.00…')}</Field></div>
       {form.status === 'partial' ? <Field label="剩余挂单股数" error={errors.remaining}>{numericInput('remaining')}</Field> : null}
-      {!demo?<><Field label="订单类型"><select value={form.order_type} onChange={e=>set('order_type',e.target.value)}>{['LIMIT','MARKET','STOP','STOP_LIMIT'].map(t=><option key={t}>{t}</option>)}</select></Field>{orderPicker}<label className="check-field"><input type="checkbox" checked={form.not_in_account??false} onChange={e=>set('not_in_account',e.target.checked)}/>这笔成交尚未计入当前账户</label></>:null}
+      {orderPicker}
     </> : null}
     {form.status === 'pending' ? <>
       <div className="fields-row"><Field label="委托股数" error={errors.shares}>{numericInput('shares')}</Field><Field label="订单类型"><select value={form.order_type} onChange={e => set('order_type', e.target.value)}><option>LIMIT</option><option>MARKET</option><option>STOP</option><option>STOP_LIMIT</option></select></Field></div>
@@ -201,12 +205,16 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, editing, em
       {!demo?<><label className="check-field"><input type="checkbox" checked={form.account_observed??false} onChange={e=>set('account_observed',e.target.checked)}/>现金和持仓是当前账户完整列表</label>{form.inventory_complete?<><label className="check-field"><input type="checkbox" checked={form.no_open_orders??false} onChange={e=>{set('no_open_orders',e.target.checked);set('orders_match',false)}}/>券商当前挂单列表为空</label>{!form.no_open_orders?<><p className="form-hint">已记录的当前挂单：{data?.orders.rows.filter(r=>['open','pending','partial_fill','partially_filled'].includes(String(r.status))&&r.record_scope!=='unresolved_historical_reservation').map(r=>`${r.ticker} ${r.side==='buy'?'买入':'卖出'} ${r.remaining_quantity??r.quantity} 股 (${r.order_id})`).join('；')||'无；有挂单请先逐笔登记'}</p><label className="check-field"><input type="checkbox" checked={form.orders_match??false} onChange={e=>{set('orders_match',e.target.checked);set('observed_order_ids',data?.orders.rows.filter(r=>['open','pending','partial_fill','partially_filled'].includes(String(r.status))&&r.record_scope!=='unresolved_historical_reservation').map(r=>String(r.order_id))??[])}}/>券商全部当前挂单与此列表完全一致</label></>:null}</>:null}<p className="form-hint">有挂单时请先逐笔登记。未知挂单状态可以保存反馈，研究继续等待核对。</p></>:null}
     </> : null}
     <Field label="日期" error={errors.date}><input name="date" type="date" value={form.date} max={today} onChange={e => set('date', e.target.value)} /></Field>
-    <Field label="备注（可选）"><textarea name="notes" rows={2} value={form.notes} maxLength={1500} placeholder={form.status === 'skipped' ? '例如价格没到…' : '补充说明…'} onChange={e => set('notes', e.target.value)} /></Field>
+    <details className="feedback-options" open={form.status!=='filled'||demo||Boolean(form.notes)||undefined}><summary>其他情况</summary>
+      <Field label="记录类型"><select name="status" disabled={Boolean(correction)} value={form.status} onChange={e => {const status=e.target.value as FeedbackStatus;set('status',status);if(status==='pending'&&form.order_type==='UNSPECIFIED')set('order_type','LIMIT');if(['filled','partial'].includes(status)&&form.entry_mode==='simple_total')set('order_type','UNSPECIFIED');if(status==='account'&&!editing&&data)setForm(f=>({...f,cash:String(data.account.cash_available),holdings:data.positions.map(p=>({ticker:p.ticker,shares:String(p.shares)})),account_observed:false,inventory_complete:false,no_open_orders:false,orders_match:false}));}}>{Object.entries(statusNames).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
+      <Field label="备注"><textarea name="notes" rows={2} value={form.notes} maxLength={1500} placeholder="补充说明…" onChange={e => set('notes', e.target.value)} /></Field>
+      {!editing&&!correction?<label className="check-field"><input name="demo" type="checkbox" checked={demo} onChange={e=>{onDirty(true);setDemo(e.target.checked);setPreview(null);pending.current=null;setReceipt(null);setFormalReceipt(null)}}/>试填（不更新账户）</label>:null}
+    </details>
     </fieldset>
-    {preview?<div className="submission-preview" role="status"><strong>{preview.missing.length?'将保存为待补全记录':'核对本次登记'}</strong>{preview.missing.length?<p>待补全：{preview.missing.join('、')}。当前现金和持仓暂不改变。</p>:preview.changes?<><p>现金 {money(preview.changes.cash_before)} → {money(preview.changes.cash_after)}</p>{preview.changes.linked_order?<p>关联挂单：{orderLabel(preview.changes.linked_order)}</p>:null}{preview.changes.ticker?<p>{preview.changes.ticker}：{preview.changes.shares_before} → {preview.changes.shares_after} 股</p>:<p>完整持仓：{preview.changes.holdings_after.map(r=>`${r.ticker} ${r.shares} 股`).join('；')||'全现金'}</p>}</>:null}<button className="text-button" type="button" disabled={busy||Boolean(unconfirmed)} onClick={()=>{pending.current=null;setPreview(null)}}>返回修改</button></div>:null}
+    {preview?<div className="submission-preview" role="status"><strong>{preview.missing.length?'将保存为待补全记录':'核对本次登记'}</strong>{preview.missing.length?<p>待补全：{preview.missing.join('、')}。当前现金和持仓暂不改变。</p>:preview.changes?<><p>现金 {money(preview.changes.cash_before)} → {money(preview.changes.cash_after)}</p>{filled?<p>{form.side==='buy'?'买入':'卖出'} {form.shares} 股 · 每股 {money(preview.changes.fill_price)}</p>:null}{preview.changes.linked_order?<p>关联挂单：{orderLabel(preview.changes.linked_order)}</p>:null}{preview.changes.ticker?<p>{preview.changes.ticker}：{preview.changes.shares_before} → {preview.changes.shares_after} 股</p>:<p>完整持仓：{preview.changes.holdings_after.map(r=>`${r.ticker} ${r.shares} 股`).join('；')||'全现金'}</p>}</>:null}<button className="text-button" type="button" disabled={busy||Boolean(unconfirmed)} onClick={()=>{pending.current=null;setPreview(null)}}>返回修改</button></div>:null}
     {unconfirmed&&!formalReceipt?<p className="notice">提交结果尚未确认。请用原请求重试；刷新后仍可恢复这个请求。</p>:null}
     {errors.save ? <p className="field-error" role="alert">{errors.save}</p> : null}
-    <button className="primary save-button" type="submit" disabled={busy || (demo&&Boolean(storageError)) || Boolean(receipt)||Boolean(formalReceipt)||(!demo&&!data)}>{busy?'处理中…':demo?'保存试填记录':unconfirmed?'用原请求重试':preview?'确认保存正式记录':'预览登记结果'}</button>
+    <button className="primary save-button" type="submit" disabled={busy || (demo&&Boolean(storageError)) || Boolean(receipt)||Boolean(formalReceipt)||(!demo&&!data)}>{busy?'处理中…':demo?'保存试填记录':unconfirmed?'用原请求重试':preview?(filled&&!preview.missing.length?'确认新增成交':'确认保存正式记录'):'预览登记结果'}</button>
     {!demo&&!preview&&!unconfirmed&&errors.save?<button className="text-button" type="button" onClick={()=>{base.current=data;set('not_in_account',false)}}>核对最新账户后重新预览</button>:null}
     {demo?<p className="storage-note">试填仅保存在此浏览器，不更新账户。</p>:null}
     {formalReceipt&&!editing&&!correction?<button className="secondary" type="button" onClick={()=>{setForm(defaults(ticker));setFormalReceipt(null);setErrors({});base.current=data}}>登记另一笔操作</button>:null}
@@ -274,6 +282,7 @@ export default function App() {
   const [records, setRecords] = useState<DemoRecord[]>([]);
   const [formStatus,setFormStatus]=useState<FeedbackStatus>('filled'),[correction,setCorrection]=useState<FormalRecord|null>(null);
   const [dirty,setDirty]=useState(false),[pendingNavigation,setPendingNavigation]=useState<(()=>void)|null>(null);
+  const updateAvailable=useUiVersion(dirty);
   const [historyQuery,setHistoryQuery]=useState(''),[formalStatus,setFormalStatus]=useState('all'),[formalStage,setFormalStage]=useState('all');
   const [reviewRequests,setReviewRequests]=useState<ReviewRequest[]>([]);
   const [historyFilter, setHistoryFilter] = useState('all');
@@ -338,6 +347,7 @@ export default function App() {
     <div className="mobile-brand"><span className="brand">Equity Research</span><span>私人工作台</span></div>
     <main id="main-content" tabIndex={-1}>
       <header className="page-header"><div><h1>{title}</h1><p>{new Intl.DateTimeFormat('zh-CN', { timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric' }).format(now)}</p></div><button className="secondary refresh-button" onClick={() => { void load();void loadRecords();void loadReviews(); }} disabled={loading}><RefreshCw size={18} className={loading ? 'spin' : ''} /><span>{loading ? '读取中' : '更新视图'}</span></button></header>
+      {updateAvailable?<div className="notice" role="status">新版已就绪，当前输入已保留。<a href={window.location.href} target="_blank" rel="noopener noreferrer">打开新版</a></div>:null}
       <>{pendingNavigation?<div className="unsaved-confirm" role="alert"><p>表单有尚未保存的内容。离开后，这些内容会被清除。</p><button className="secondary" onClick={()=>setPendingNavigation(null)}>继续填写</button><button className="secondary" onClick={()=>{setDirty(false);pendingNavigation();setPendingNavigation(null)}}>放弃内容并离开</button></div>:null}</>{data?.mode==='verification'?<div className="notice neutral"><ClipboardList size={18}/><span>隔离验收账户 · 以下记录是模拟数据，不影响真实持仓。</span></div>:null}
       {data?.research_ready===false?<div className="notice"><Clock3 size={19}/><span>下方显示最新账户记录。研究尚未完成重算，旧数量方案已暂停。</span></div>:null}
       {error ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>当前视图未能更新</strong><p>{error} {data ? '下方保留上次读取的数据，当前数量方案暂停展示。' : ''}</p></div></div> : null}
