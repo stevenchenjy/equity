@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm} from './App';
+import {FeedbackForm,FeedbackReceipt} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
-import type {FeedbackStatus, Snapshot} from './domain';
+import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
 
 const data={server_now:'2026-10-17T10:00:00-04:00',account:{cash_available:4000},positions:[],candidates:[],plans:[],orders:{rows:[]}} as unknown as Snapshot;
 function markup(status:FeedbackStatus='filled',wide=false,rows:Record<string,unknown>[]=[]){
@@ -45,4 +45,14 @@ test('editing a historical fee or amount basis preserves its economic interpreta
   const editable=editableFeedback(old);
   assert.equal(editable.entry_mode,undefined);assert.equal(editable.amount_mode,'net');assert.equal(editable.amount,'201');assert.equal(editable.fees,'1');assert.equal(editable.time,'13:45');
   assert.equal(editable.not_in_account,false);
+});
+
+test('accepted receipt follows durable research status without confusing failure with a failed save',()=>{
+  const saved={id:'first-fill',revision:2,stage:'applied',production_effect:true,missing:[],research_status:'queued'} as unknown as FormalRecord;
+  for(const [status,label] of [['running','正在重算'],['passed','重算完成'],['failed','重算失败，可重试'],['degraded','重算有缺口']] as const){
+    const html=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[{...saved,research_status:status}]}/>);
+    assert.match(html,/账户记录已应用/);assert.ok(html.includes(label));assert.doesNotMatch(html,/等待重算/);
+  }
+  const fallback=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[{...saved,id:'other-fill',research_status:'passed'},{...saved,revision:1,research_status:'passed'}]}/>);
+  assert.match(fallback,/等待重算/);
 });

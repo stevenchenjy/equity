@@ -288,6 +288,31 @@ class FeedbackTests(unittest.TestCase):
             fcntl.flock(lock,fcntl.LOCK_EX)
             with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'): self.store.preview(self.payload())
 
+    def test_completed_request_receipt_is_readable_during_research_without_reapplying(self):
+        import fcntl
+        p=self.total_payload()
+        saved=self.submit(p)
+        before={rel:(self.root/rel).read_bytes() for rel in (ACCOUNT,POSITIONS,LEDGER,ORDERS,PENDING)}
+        with (self.root/'runtime.lock').open('a+b') as lock:
+            fcntl.flock(lock,fcntl.LOCK_EX)
+            self.assertEqual(self.store.submit(p),saved)
+            changed=json.loads(json.dumps(p));changed['feedback']['amount']='200'
+            with self.assertRaisesRegex(FeedbackError,'request_id_reused'):self.store.submit(changed)
+            with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'):self.store.submit(self.total_payload())
+        self.assertEqual(before,{rel:(self.root/rel).read_bytes() for rel in before})
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
+    def test_prepared_request_must_recover_under_lock_before_returning_a_receipt(self):
+        import fcntl
+        p=self.total_payload();p['preview_hash']=self.store.preview(p)['preview_hash']
+        with patch('feedback.atomic',side_effect=OSError('interrupted write')):
+            with self.assertRaises(OSError):self.store.submit(p)
+        with (self.root/'runtime.lock').open('a+b') as lock:
+            fcntl.flock(lock,fcntl.LOCK_EX)
+            with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'):self.store.submit(p)
+        self.assertEqual(self.store.submit(p)['stage'],'applied')
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
     def test_oversell_and_invalid_net_cash_are_rejected(self):
         with self.assertRaisesRegex(FeedbackError,'insufficient_recorded_shares'): self.store.preview(self.payload(side='sell',shares='3'))
         with self.assertRaisesRegex(FeedbackError,'net_amount_less_than_fees'): self.store.preview(self.payload(amount_mode='net',amount='1',fees='2'))

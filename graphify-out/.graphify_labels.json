@@ -262,11 +262,8 @@
   "260": "shadow_evaluation_health",
   "261": "measure_paths",
   "262": "refresh_capital_work_queue",
-  "263": "MarketCoverageRecompositionTests",
+  "263": "Handler",
   "264": "maintained_plan",
   "265": "test_shadow_archive_isolation.py",
-  "266": "measure_paths",
-  "268": "OwnerSnapshotTests",
-  "269": "presentation_lines",
-  "270": "SecPayload"
+  "268": "OwnerSnapshotTests"
 }

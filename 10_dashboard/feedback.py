@@ -470,6 +470,17 @@ class Store:
         try: uuid.UUID(request_id)
         except (ValueError, TypeError, AttributeError): raise FeedbackError('invalid_request_id')
         body = encoded(payload).decode()
+        # A lost HTTP response does not make an already completed write pending.
+        # Read its durable receipt without taking the research mutation lock.
+        # Prepared/conflicted transitions still require locked recovery below.
+        with self.db() as con:
+            previous = con.execute('''SELECT q.payload,q.state,r.body FROM requests q
+                JOIN records r ON r.id=q.record_id WHERE q.id=?''',(request_id,)).fetchone()
+            if previous:
+                if previous['payload'] != body: raise FeedbackError('request_id_reused',status=409)
+                record = json.loads(previous['body'])
+                if previous['state']=='complete' and record['stage'] in {'pending','applied'}:
+                    return record
         with self.locked(), self.db() as con:
             self.recover(con)
             previous = con.execute('SELECT * FROM requests WHERE id=?',(request_id,)).fetchone()
