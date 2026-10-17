@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-10-17)
 
 ## Corpus Check
-- 394 files · ~364,666 words
+- 396 files · ~365,089 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4424 nodes · 11834 edges · 271 communities (179 shown, 92 thin omitted)
-- Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 2485 edges (avg confidence: 0.79)
+- 4437 nodes · 11876 edges · 270 communities (175 shown, 95 thin omitted)
+- Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 2489 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `64e9709a`
+- Built from commit: `9aa7dc21`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -280,7 +280,6 @@
 - maintained_plan
 - test_shadow_archive_isolation.py
 - measure_paths
-- main
 - OwnerSnapshotTests
 - presentation_lines
 - SecPayload
@@ -312,35 +311,35 @@
 ## Import Cycles
 - None detected.
 
-## Communities (271 total, 92 thin omitted)
+## Communities (270 total, 95 thin omitted)
 
 ### Community 0 - "RuntimeSyncError"
-Cohesion: 0.12
-Nodes (44): _append_execution_record(), assert_non_icloud_runtime_root(), _best_effort_failure_record(), _best_effort_preflight_alert(), _deployment_receipt_path(), _eligible_connectivity_failure(), _exec_scheduler(), _git() (+36 more)
+Cohesion: 0.05
+Nodes (61): ExclusiveFileLock, Process lock using flock over a private, non-linked regular file., _append_execution_record(), assert_non_icloud_runtime_root(), _best_effort_failure_record(), _best_effort_preflight_alert(), _deployment_receipt_path(), _eligible_connectivity_failure() (+53 more)
 
 ### Community 1 - "save_decision"
-Cohesion: 0.15
-Nodes (6): DeliveryWindowTests, receipt(), stamp(), actionable_fixture(), publication_fixture(), SenderPublicationTests
+Cohesion: 0.19
+Nodes (4): DeliveryWindowTests, receipt(), stamp(), actionable_fixture()
 
 ### Community 2 - "run_full_universe_market_data.py"
 Cohesion: 0.19
 Nodes (3): decision_fixture(), discovery_fixture(), DiscoveryReportingTests
 
 ### Community 3 - "App.tsx"
-Cohesion: 0.05
-Nodes (77): actionNames, App(), AuditTrail(), blockerNames, blockerText(), errorNames, FeedbackForm(), formalErrors (+69 more)
+Cohesion: 0.12
+Nodes (26): AuditTrail(), Summary(), CapitalActions(), DeploymentEscalation(), DeploymentGates(), escalationLabels, gateLabels, isGlobalGate() (+18 more)
 
 ### Community 4 - "CapitalDecisionTests"
 Cohesion: 0.09
 Nodes (4): CapitalDecisionTests, archive(), decision(), FollowthroughTests
 
 ### Community 5 - "market_data_adapter.py"
-Cohesion: 0.14
-Nodes (18): api_key_from_environment(), _default_http_get(), _finite_number(), _http_failure_code(), MassiveB2Error, MassiveBasicEODClient, _NoRedirectHandler, _normalized_bars() (+10 more)
+Cohesion: 0.20
+Nodes (20): FeedbackForm(), defaults(), DemoRecord, easternDate(), editableFeedback(), FeedbackStatus, initialFeedback(), makeDemoRecord() (+12 more)
 
 ### Community 6 - "main"
 Cohesion: 0.20
-Nodes (25): build_report(), _cache_read(), _digest(), DiscoveryClient, DiscoveryError, _empty(), _http_get(), load_discovery() (+17 more)
+Nodes (26): build_report(), _cache_read(), _cache_write(), _digest(), DiscoveryClient, DiscoveryError, _empty(), _http_get() (+18 more)
 
 ### Community 7 - "is_us_market_session_date"
 Cohesion: 0.21
@@ -351,32 +350,32 @@ Cohesion: 0.08
 Nodes (29): _aware(), _blockers(), build_capital_work_queue(), compact_summary(), _core_coverage(), _item_semantic(), _money(), _next_check() (+21 more)
 
 ### Community 9 - "read_json"
-Cohesion: 0.13
-Nodes (6): read_json(), _cache_write(), intake(), read_report(), summary(), OpportunityTests
+Cohesion: 0.09
+Nodes (20): main(), Path, run_stage(), _base_metrics(), elapsed_sessions(), held_tickers(), intake(), negative_assessment_wait() (+12 more)
 
 ### Community 10 - "build_long_horizon_report"
-Cohesion: 0.09
-Nodes (26): evaluate_archived(), display(), main(), missing_label(), render_report(), build_long_horizon_report(), fundamentals_candidate_queue(), hurdle_diagnostic() (+18 more)
+Cohesion: 0.08
+Nodes (33): evaluate_archived(), Evaluate retained observations with their exact archived implementation.  Only e, clamp(), main(), number(), price_unverified_research_row(), Keep owner-requested research visible without granting trade eligibility., requested_coverage_tickers() (+25 more)
 
 ### Community 11 - "canonical_sha256"
 Cohesion: 0.12
 Nodes (55): canonical_sha256(), _append_ledger_event(), _archive_packet(), _archived_packet_index(), _atomic_private_json(), _atomic_private_text(), _contract_failure_code(), critic_route() (+47 more)
 
 ### Community 12 - "sec_acceptance.py"
-Cohesion: 0.11
-Nodes (30): acceptance_map(), AcceptanceReconciliationError, load_acceptance_index(), load_acceptance_reconciliation_log(), load_immutable_acceptance_index(), _make_reconciliation_row(), normalize_acceptance_timestamp(), _normalize_generated_at() (+22 more)
+Cohesion: 0.15
+Nodes (17): AcceptanceReconciliationError, load_acceptance_reconciliation_log(), _make_reconciliation_row(), Return a stable identifier for one timestamp-only reconciliation., Validate one durable log row without mutating it., Fields that must remain fixed across an idempotent log retry., Load the append-only reconciliation log or fail closed on corruption., Append only newly observed, validated timestamp reconciliations.      The histor (+9 more)
 
 ### Community 13 - "account_common.py"
 Cohesion: 0.10
-Nodes (40): append_run_log(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), format_cap(), is_core_allocation_ticker(), load_account_state() (+32 more)
+Nodes (41): append_run_log(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), format_cap(), is_core_allocation_ticker(), load_account_state() (+33 more)
 
 ### Community 14 - "B2MarketRefreshFailureCommitTests"
-Cohesion: 0.09
-Nodes (22): MarketCoverageRecompositionTests, B2MarketRefreshFailureCommitTests, _candidate_row(), _CompleteCachedClient, _DuplicateSessionErrorClient, _FailingFullFetchClient, _market_row(), _PartialApprovedTickerClient (+14 more)
+Cohesion: 0.11
+Nodes (21): B2MarketRefreshFailureCommitTests, _candidate_row(), _CompleteCachedClient, _DuplicateSessionErrorClient, _FailingFullFetchClient, _market_row(), _PartialApprovedTickerClient, date (+13 more)
 
 ### Community 15 - "refresh_daily_evidence.py"
 Cohesion: 0.09
-Nodes (51): acceptance_map(), main(), append_csv_durable(), log_daily_run(), acceptance_index_failure_reason(), approved_inline_tags(), classify_materiality(), company_fundamentals_required() (+43 more)
+Nodes (51): acceptance_map(), main(), acceptance_index_failure_reason(), approved_inline_tags(), classify_materiality(), company_fundamentals_required(), count_unindexed_acceptance_accessions(), _debt_fact() (+43 more)
 
 ### Community 16 - "market_discovery.py"
 Cohesion: 0.10
@@ -387,12 +386,12 @@ Cohesion: 0.06
 Nodes (58): artifact_paths(), ArtifactError, atomic_write_bytes(), atomic_write_json(), build_chunks(), build_entry(), check_artifacts(), complete_cache_entry() (+50 more)
 
 ### Community 18 - "now_et"
-Cohesion: 0.31
-Nodes (6): Fetch and perform only a clean fast-forward, or fail without updating HEAD., sync_runtime_repository(), _git(), LocalRepositoryFixture, Path, RuntimeGitSyncTests
+Cohesion: 0.14
+Nodes (16): actionNames, App(), blockerNames, blockerText(), errorNames, formalErrors, Page, pages (+8 more)
 
 ### Community 19 - "sec_acceptance_extensions.py"
-Cohesion: 0.12
-Nodes (45): plan_issuer_admissions(), Stage independent issuers against one validated immutable history.      A curren, admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path() (+37 more)
+Cohesion: 0.13
+Nodes (42): admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record(), extension_acceptance_records(), extension_artifact_path(), _extension_number(), extension_set_sha256() (+34 more)
 
 ### Community 20 - "aware"
 Cohesion: 0.12
@@ -411,16 +410,16 @@ Cohesion: 0.14
 Nodes (8): actionable(), CapitalEscalationTests, fixture(), sealed(), stamp(), update(), DecisionCompositionClockTests, Exercise the production composition boundary against real session checks.
 
 ### Community 24 - "workflow_evaluation.py"
-Cohesion: 0.22
-Nodes (18): build_report(), main(), render(), append_record(), finite(), load_performance_records(), operational_summary(), Any (+10 more)
+Cohesion: 0.12
+Nodes (24): build_report(), main(), render(), base(), flow(), nav(), review(), WorkflowEvaluationTests (+16 more)
 
 ### Community 25 - "execution_common.py"
 Cohesion: 0.13
-Nodes (32): csv_fields(), load_positions(), Path, write_csv(), write_text(), main(), report_heading(), append_c9b_log() (+24 more)
+Nodes (31): csv_fields(), load_positions(), write_text(), main(), report_heading(), append_c9b_log(), execution_cash(), intraday_range_pct() (+23 more)
 
 ### Community 26 - "thesis_evidence.py"
-Cohesion: 0.14
-Nodes (39): append_review(), apply_issuer_news_review(), _day(), evaluate_thesis(), evidence_context(), _inside(), material_filing_receipt(), Any (+31 more)
+Cohesion: 0.15
+Nodes (37): append_review(), apply_issuer_news_review(), _day(), evaluate_thesis(), evidence_context(), _inside(), material_filing_receipt(), Any (+29 more)
 
 ### Community 27 - "Two-session capital deployment escalation"
 Cohesion: 0.22
@@ -439,8 +438,8 @@ Cohesion: 0.13
 Nodes (20): chart(), current_snapshot(), digest(), email_version(), email_versions(), escalation_view(), number(), datetime (+12 more)
 
 ### Community 31 - "load_active_config"
-Cohesion: 0.24
-Nodes (5): Capital needed to reach the core floor at the canonical whole-share mark.      T, remaining_core_floor_cost(), Reserve actual eligible core whole shares and prior ranked research buys.      T, shared_candidate_budget(), SharedCandidateBudgetTests
+Cohesion: 0.18
+Nodes (11): main(), price_unverified_recommendation(), price_unverified_score(), rank_candidate_budget_rows(), Retain investment meaning, excluding clock-only plan renewals., Allocate new capital by evidence score, without a held-name preference., Reserve actual eligible core whole shares and prior ranked research buys.      T, reviewed_allocation_semantics() (+3 more)
 
 ### Community 32 - "render_email"
 Cohesion: 0.09
@@ -467,8 +466,8 @@ Cohesion: 0.17
 Nodes (24): build_evidence_freshness_receipt(), EvidenceFreshnessError, freshness_action_review_reasons(), _normalize_bool(), _normalize_date(), _normalize_digest(), _normalize_source_ids(), _normalize_ticker() (+16 more)
 
 ### Community 38 - "apply_workflow_integrity"
-Cohesion: 0.15
-Nodes (26): Read the rendered email body without markup, head or style content., visible_html_text(), WorkflowPublicationTests, _account_blockers(), apply_workflow_integrity(), company_review_complete(), current_news_context(), current_thesis_views() (+18 more)
+Cohesion: 0.12
+Nodes (28): Hash recommendation meaning, excluding quotes, dates and raw filings., recommendation_notification_fingerprint(), Read the rendered email body without markup, head or style content., visible_html_text(), WorkflowPublicationTests, _account_blockers(), apply_workflow_integrity(), company_review_complete() (+20 more)
 
 ### Community 39 - "valuation_evidence_v1.py"
 Cohesion: 0.16
@@ -487,35 +486,35 @@ Cohesion: 0.19
 Nodes (8): Fail closed before producing a range, not merely before order routing., valuation_input_issues(), duration(), facts(), FinancialPeriodIntegrityTests, fixture(), instant(), row()
 
 ### Community 44 - "SupplementalFactsTests"
-Cohesion: 0.19
-Nodes (3): Delivery-only comparison against what the owner actually received.  Research fin, NamingCompatibilityTests, Display migration must preserve research meaning and delivery identity.
+Cohesion: 0.16
+Nodes (5): compare(), CrossDayDeliveryTests, receipt(), NamingCompatibilityTests, Display migration must preserve research meaning and delivery identity.
 
 ### Community 45 - "evaluate_shadow_llm_incremental_value.py"
 Cohesion: 0.20
 Nodes (30): aggregate(), _atomic_private_snapshot_text(), _atomic_private_text(), _authority_checks(), _deduplicate_evidence(), _discover(), _evidence_keys(), load_automatic_bundle() (+22 more)
 
 ### Community 46 - "compare_policies"
-Cohesion: 0.06
-Nodes (18): compare_policies(), _decimal(), Holding, _number(), Compare capacities independently, never sum candidate share counts.  These are u, Apply explicit per-ticker price shocks simultaneously, keeping cash fixed.  Ever, RiskPolicy, simultaneous_stress() (+10 more)
+Cohesion: 0.18
+Nodes (12): compare_policies(), _decimal(), Holding, _number(), Compare capacities independently, never sum candidate share counts.  These are u, Apply explicit per-ticker price shocks simultaneously, keeping cash fixed.  Ever, RiskPolicy, simultaneous_stress() (+4 more)
 
 ### Community 47 - "verify_active_state_guard.py"
 Cohesion: 0.10
 Nodes (16): CanonicalWorkflowTests, OptionalActiveInputTests, registry_row(), _canonical_source_issues(), Check, collect_checks(), _deprecated_registry_issues(), _loaded() (+8 more)
 
 ### Community 48 - "merge_news_context"
-Cohesion: 0.19
-Nodes (17): _append(), _hash(), merge_news_context(), Any, datetime, Path, Private source-bound issuer-news continuity; collectors never infer a view.  The, Merge retained identities and current verified observations, idempotently. (+9 more)
+Cohesion: 0.17
+Nodes (19): _append(), _hash(), merge_news_context(), Any, datetime, Path, Private source-bound issuer-news continuity; collectors never infer a view.  The, Merge retained identities and current verified observations, idempotently. (+11 more)
 
 ### Community 49 - "main"
-Cohesion: 0.15
-Nodes (30): action_review_display(), action_stability(), build_watch_rows(), candidate_proposal_fingerprint(), candidate_stability(), compose_capital_contracts(), execution_conflicts(), held_position_summary() (+22 more)
+Cohesion: 0.13
+Nodes (32): action_review_display(), action_stability(), build_watch_rows(), candidate_proposal_fingerprint(), candidate_stability(), compose_capital_contracts(), execution_conflicts(), held_position_summary() (+24 more)
 
 ### Community 50 - "Handler"
 Cohesion: 0.11
 Nodes (8): bind_dashboard_link(), publication_id(), Path, Snapshot a private dashboard link; rendering never reads mutable config., Handler, main(), PrivateRoutesTests, BaseHTTPRequestHandler
 
 ### Community 51 - "MaintainedThesisTests"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (7): fixture(), MaintainedThesisTests, material_fixture(), ValueError, The review cannot be used as a current maintained conclusion., seal_review(), ThesisValidationError
 
 ### Community 52 - "sha256_file"
@@ -539,15 +538,15 @@ Cohesion: 0.15
 Nodes (20): datetime, Independent official-news checks using the existing serialized scheduler.  No se, run_due_news_checks(), due_slots(), main(), market_snapshot_mode(), _market_step_passed(), _massive_auth_presence_probe_exit_code() (+12 more)
 
 ### Community 57 - "equity_naming.py"
-Cohesion: 0.16
-Nodes (7): build_regime(), load_regime_controls(), number(), Any, Point-in-time, bounded market context for research pacing, never execution., Use a single complete public close; repeated intraday runs add no votes., MarketRegimeTests
+Cohesion: 0.21
+Nodes (5): build_regime(), number(), Any, Use a single complete public close; repeated intraday runs add no votes., MarketRegimeTests
 
 ### Community 59 - "What You Must Do When Invoked"
 Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 60 - "ActiveProductionTests"
-Cohesion: 0.29
+Cohesion: 0.26
 Nodes (21): _append_history(), attention_rows(), build_backlog(), complete_objective_data(), _history(), numeric(), datetime, Path (+13 more)
 
 ### Community 61 - "compose_research_inputs"
@@ -570,10 +569,6 @@ Nodes (13): atomic_write_text(), archive_before_replace(), _archive_location(), 
 Cohesion: 0.18
 Nodes (24): correct_filings(), corrected_record(), correction_for(), CorrectionError, current_corrections(), fetch_correction(), load_corrections(), make_correction() (+16 more)
 
-### Community 66 - "research_backlog.py"
-Cohesion: 0.20
-Nodes (7): ExclusiveFileLock, Process lock using flock over a private, non-linked regular file., AutomationAlertTests, CanonicalLockRegressionTests, NotificationPolicySecurityTests, Path, SmtpConfigurationSecurityTests
-
 ### Community 67 - "ledger_row"
 Cohesion: 0.16
 Nodes (8): fetch(), Path, CacheTests, ledger_row(), NormalizationTests, Path, SelectionAndValidationTests, write_ledger()
@@ -583,12 +578,12 @@ Cohesion: 0.09
 Nodes (21): dependencies, lucide-react, react, react-dom, devDependencies, tsx, @types/node, @types/react (+13 more)
 
 ### Community 69 - "allocation_policy.md"
-Cohesion: 0.08
-Nodes (20): Account record authority, Concentrated growth and strategy-specific controls, Explicit authorization and definitions, Owner-approved allocation policy, Supersession and reproducibility, Analyst workflow, Company-specific valuation in production, Reported financial coverage and visible company cases (+12 more)
+Cohesion: 0.09
+Nodes (17): Account record authority, Concentrated growth and strategy-specific controls, Explicit authorization and definitions, Owner-approved allocation policy, Supersession and reproducibility, Cash-Deployment Decision, Equity Research — Core Allocation Policy, Separation (+9 more)
 
 ### Community 70 - "ExclusiveFileLock"
-Cohesion: 0.17
-Nodes (14): eligible_core_tranche(), Any, Existing dated broad-core entry admission; shared by decision and legacy output., A same-session, exact core review that can be displayed and continued.      This, cards(), core_tranche_line(), core_tranche_steps(), _current_tactical_drafts() (+6 more)
+Cohesion: 0.16
+Nodes (15): eligible_core_tranche(), Any, Existing dated broad-core entry admission; shared by decision and legacy output., A same-session, exact core review that can be displayed and continued.      This, cards(), core_tranche_line(), core_tranche_steps(), _current_tactical_drafts() (+7 more)
 
 ### Community 71 - "append_plan"
 Cohesion: 0.23
@@ -611,16 +606,16 @@ Cohesion: 0.17
 Nodes (15): active_document(), audit(), first_heading(), main(), Path, tracked_markdown(), atomic_write(), main() (+7 more)
 
 ### Community 76 - "earnings_incorporation.py"
-Cohesion: 0.31
+Cohesion: 0.28
 Nodes (15): main(), _accessions(), assess_company(), build_earnings_incorporation(), Any, datetime, Path, Hash-bound financial selection receipts and offline incorporation gate.  Collect (+7 more)
 
 ### Community 77 - "create_research_questions.py"
-Cohesion: 0.21
-Nodes (5): CompactReviewTests, delivery_fixture(), owner_review_fixture(), OwnerReviewDeliveryTests, save_decision()
+Cohesion: 0.15
+Nodes (7): CompactReviewTests, delivery_fixture(), owner_review_fixture(), OwnerReviewDeliveryTests, save_decision(), publication_fixture(), SenderPublicationTests
 
 ### Community 78 - "tactical_review.py"
-Cohesion: 0.14
-Nodes (25): Evaluate retained observations with their exact archived implementation.  Only e, build_tactical_review(), _day(), _integer(), _last_sessions(), load_tactical_review(), _money(), _number() (+17 more)
+Cohesion: 0.32
+Nodes (19): build_tactical_review(), _day(), _integer(), _last_sessions(), load_tactical_review(), _money(), _number(), _positive() (+11 more)
 
 ### Community 79 - "IssuerIsolationTests"
 Cohesion: 0.23
@@ -631,12 +626,12 @@ Cohesion: 0.18
 Nodes (6): command(), main(), our_route(), Bind only the signed-in owner's Tailscale identity to HTTPS Serve.  Run after th, Allow a retry only when every existing route belongs to this app., Install/restart the loopback production dashboard as a user LaunchAgent.
 
 ### Community 81 - "latest_published_market_session"
-Cohesion: 0.14
-Nodes (19): main(), build_review(), _cohort(), markdown(), datetime, Path, ValueError, Prepare an early manual-review packet without changing the frozen experiment. (+11 more)
+Cohesion: 0.32
+Nodes (5): chained(), MomentumExperimentReviewTests, observations(), outcome(), payloads()
 
 ### Community 82 - "iso_now"
-Cohesion: 0.17
-Nodes (25): main(), cycle_date(), easter_sunday(), expected_market_session(), is_us_market_session_date(), last_completed_market_session(), last_weekday(), now_et() (+17 more)
+Cohesion: 0.10
+Nodes (45): main(), append_csv_durable(), atomic_write_json(), bool_value(), clear_automation_alert(), cycle_date(), delivery_guard(), easter_sunday() (+37 more)
 
 ### Community 83 - "evidence_scope.py"
 Cohesion: 0.24
@@ -655,28 +650,28 @@ Cohesion: 0.11
 Nodes (17): Action-email presentation (v2, 2026-09-05), Boundaries, Current delivery and presentation rule (2026-09-26), Display naming, Duplicate Protection, Eligibility, Equity Research — Daily Delivery Policy, Explicit correction resend (+9 more)
 
 ### Community 88 - "verify_daily_upgrade.py"
-Cohesion: 0.30
-Nodes (13): delivery_policy(), add_check(), append_verification_log(), file_digest_or_absent(), loaded(), main(), plist_checks(), pure_guard_tests() (+5 more)
+Cohesion: 0.33
+Nodes (12): add_check(), append_verification_log(), file_digest_or_absent(), loaded(), main(), plist_checks(), pure_guard_tests(), Path (+4 more)
 
 ### Community 89 - "score_candidates.py"
-Cohesion: 0.19
-Nodes (26): empty_market_row(), expected_history_sessions(), finite_number(), fmt_float(), fmt_int(), full_universe_rows_are_committable(), history_window(), market_row_from_massive_bars() (+18 more)
+Cohesion: 0.06
+Nodes (71): api_key_from_environment(), _default_http_get(), _finite_number(), _http_failure_code(), MassiveB2Error, MassiveBasicEODClient, _NoRedirectHandler, _normalized_bars() (+63 more)
 
 ### Community 92 - "ConcentratedAllocationTests"
 Cohesion: 0.15
 Nodes (6): current_allocations(), datetime, Path, Source-bound company allocation judgments; no inferred size from volatility.  Th, ConcentratedAllocationTests, Owner-approved allocation migration: source-bound size across final authority.
 
 ### Community 93 - "send_once"
-Cohesion: 0.14
-Nodes (29): brand_name(), desktop_alert_script(), load_display_names(), Path, Shared presentation names; no strategy, delivery or protocol authority., subject_prefix(), append_delivery(), _attempt_identity() (+21 more)
+Cohesion: 0.17
+Nodes (29): now_et(), append_delivery(), _attempt_identity(), build_message(), ConfigError, correction_eligibility(), _current_cycle_receipts(), cycle_is_blocked() (+21 more)
 
 ### Community 94 - "supplement_cached_latest_report"
 Cohesion: 0.23
 Nodes (8): inline_report_facts(), Any, datetime, Path, Conservative local inline-XBRL fallback when companyfacts lags a report.  Only a, supplement_cached_latest_report(), verified_artifact(), InlineFallbackTests
 
 ### Community 96 - "LimitedRefreshTests"
-Cohesion: 0.26
-Nodes (13): NoRedirect, objective_research(), datetime, Path, Bounded objective research, isolated from canonical financial admission.  Reuse, Fixed public SEC endpoints; no retry, secret, redirect or unbounded read., request_sec(), _seal() (+5 more)
+Cohesion: 0.23
+Nodes (14): main(), build_review(), _cohort(), markdown(), datetime, Path, ValueError, Prepare an early manual-review packet without changing the frozen experiment. (+6 more)
 
 ### Community 97 - "plan_summary.py"
 Cohesion: 0.27
@@ -699,8 +694,8 @@ Cohesion: 0.40
 Nodes (5): Authoritative policy and boundaries, Current runtime outputs — read their generated timestamps, Dashboard implementation and remaining phases, Equity Research — current document entrypoints, Historical material — retained, not current instructions
 
 ### Community 104 - "DeliveryWindowTests"
-Cohesion: 0.13
-Nodes (26): atomic_write_json(), clear_automation_alert(), iso_now(), publish_automation_alert(), Path, Persist one terminal blocker and notify the logged-in owner once.      The Notif, Clear any prior terminal alert after a completed daily decision., active_delivery_window() (+18 more)
+Cohesion: 0.18
+Nodes (17): active_delivery_window(), configured_delivery_windows(), delivery_window_by_id(), Any, datetime, Stable owner-attention windows; clocks never confer trading eligibility., Return explicit windows, retaining one-window legacy configuration reads., delivery_status_is_unknown() (+9 more)
 
 ### Community 105 - "IncorporationTests"
 Cohesion: 0.25
@@ -719,16 +714,16 @@ Cohesion: 0.40
 Nodes (4): Account and execution boundary, Allocation and position risk, Review, Risk Policy
 
 ### Community 111 - "write_acceptance_index"
-Cohesion: 0.14
-Nodes (14): AcceptanceIndexError, build_acceptance_index(), make_acceptance_record(), ValueError, The SEC acceptance index failed its closed validation contract., validate_acceptance_index(), write_acceptance_index(), Regression coverage for the SEC acceptance precommit boundary. (+6 more)
+Cohesion: 0.10
+Nodes (28): acceptance_map(), AcceptanceIndexError, build_acceptance_index(), load_acceptance_index(), load_immutable_acceptance_index(), make_acceptance_record(), normalize_acceptance_timestamp(), _normalize_generated_at() (+20 more)
 
 ### Community 112 - "payloads"
 Cohesion: 0.14
-Nodes (31): main(), append_chained(), _attempt_summary(), comparison_markdown(), evaluate(), failure_reason(), next_open_session(), number() (+23 more)
+Nodes (32): main(), append_chained(), _attempt_summary(), comparison_markdown(), evaluate(), failure_reason(), next_open_session(), number() (+24 more)
 
 ### Community 114 - "MarketCoverageRecompositionTests"
-Cohesion: 0.17
-Nodes (17): Preserve exact bytes before a producer can overwrite its current output., retain_input(), collect_triggers(), packet(), positive_changes(), producer(), datetime, Path (+9 more)
+Cohesion: 0.12
+Nodes (29): read_json(), inside(), NoRedirect, objective_research(), datetime, Path, Bounded objective research, isolated from canonical financial admission.  Reuse, Fixed public SEC endpoints; no retry, secret, redirect or unbounded read. (+21 more)
 
 ### Community 115 - "compilerOptions"
 Cohesion: 0.15
@@ -743,12 +738,12 @@ Cohesion: 0.38
 Nodes (4): orders(), PlanBlockerScopeTests, Local research work never clears evidence or freezes unrelated valid work., sell()
 
 ### Community 119 - "MarketCoverageRecompositionTests"
-Cohesion: 0.23
-Nodes (3): A stable winner cannot starve the queued label over repeated cycles., RuntimeLockConcurrencyTests, Popen
+Cohesion: 0.13
+Nodes (3): notification_delivery_policy(), Return event-driven eligibility independently of scheduler time., ActiveProductionTests
 
 ### Community 120 - "objective"
-Cohesion: 0.67
-Nodes (3): main(), Path, run_stage()
+Cohesion: 0.21
+Nodes (4): FrozenRuntimeTests, Reproducibility regressions: immutable capture, closure, atomic append, replay., Bind real fixture bytes, so isolated frozen execution sees the same inputs., write_fixture()
 
 ### Community 121 - "decision_dependencies.py"
 Cohesion: 0.11
@@ -770,6 +765,10 @@ Nodes (8): Data Handling, Equity Research — Configured-Universe Data and Broad
 Cohesion: 0.20
 Nodes (9): Bounded SEC exhibit progression, Bounds and positive acceleration, Diagnosis and resulting flow, Equity Research — discovery, research attention and capital boundaries, Experiments and prospective measurement, Extension, operations and diagnosis, Invariants, Ownership and authoritative contracts (+1 more)
 
+### Community 126 - "WorkflowEvaluationTests"
+Cohesion: 0.22
+Nodes (11): Feedback, FormalRecord, errorCode(), pause(), preparePreview(), Preview, RequestPayload, preview (+3 more)
+
 ### Community 127 - "AGENTS.md"
 Cohesion: 0.20
 Nodes (8): Completion evidence for pipeline changes, File Conventions and Checkout Boundaries, graphify, Non-Negotiable Constraints, Owner-Requested Reviews and Email, Purpose, Research Standards, Script Safety
@@ -784,27 +783,23 @@ Nodes (7): Active Workflow, Authority Order, Equity Research — Canonical Activ
 
 ### Community 131 - "Equity Research 命名与归档规则"
 Cohesion: 0.19
-Nodes (14): covered_by_last_delivery(), delivery_meaning_key(), delivery_notification_comparison(), latest_delivery_receipt(), Any, datetime, Path, Use the latest durable receipt, including claimed or uncertain delivery. (+6 more)
+Nodes (15): covered_by_last_delivery(), delivery_meaning_key(), delivery_notification_comparison(), latest_delivery_receipt(), Any, datetime, Path, Delivery-only comparison against what the owner actually received.  Research fin (+7 more)
 
 ### Community 132 - "Momentum integration decision — 2026-09-27"
 Cohesion: 0.25
 Nodes (7): External feasibility sources (checked September 27, 2026), Frozen experiment and limits, Momentum integration decision — 2026-09-27, Owner-approved first-cohort review timing — September 27 follow-up, Source-grounded integration choices, What runs without another chat, What was verified
 
 ### Community 134 - "prior_outputs_are_coherent"
-Cohesion: 0.24
-Nodes (7): applied_reconciliation_current_state_status(), applied_reconciliation_matches_current_state(), Path, Classify whether a current C9 state remains consistent with one fill.      C9B r, Return the closed accepted subset of reconciliation-state statuses., C9BAccountSnapshotRefreshTests, _reconciliation()
+Cohesion: 0.26
+Nodes (6): applied_reconciliation_current_state_status(), applied_reconciliation_matches_current_state(), Classify whether a current C9 state remains consistent with one fill.      C9B r, Return the closed accepted subset of reconciliation-state statuses., C9BAccountSnapshotRefreshTests, _reconciliation()
 
 ### Community 135 - "Equity Research 私人工作台"
 Cohesion: 0.29
 Nodes (7): Equity Research 私人工作台, Tailscale 私人连接, 发布和服务, 日常使用, 日常登记与研究复审, 权威状态与后台, 验证和历史
 
 ### Community 136 - "opportunity_contract.py"
-Cohesion: 0.25
-Nodes (19): append_event(), empty_store(), inside(), publish_store(), Any, datetime, Path, Authoritative research-only contracts, journal replay and transitions.  An atomi (+11 more)
-
-### Community 137 - "Equity Research — MacBook → GitHub → Mac mini workflow"
-Cohesion: 0.22
-Nodes (12): _base_metrics(), elapsed_sessions(), held_tickers(), negative_assessment_wait(), priority(), publish_view(), datetime, Path (+4 more)
+Cohesion: 0.15
+Nodes (24): append_event(), empty_store(), publish_store(), Any, datetime, Path, Authoritative research-only contracts, journal replay and transitions.  An atomi, Preserve exact bytes before a producer can overwrite its current output. (+16 more)
 
 ### Community 138 - "Maintained investment research workflow"
 Cohesion: 0.29
@@ -814,13 +809,9 @@ Nodes (6): Daily and longer-horizon work, Information flow and authority, Limita
 Cohesion: 0.29
 Nodes (6): Admission requirements, Boundaries, Commit and recovery behavior, Equity Research — SEC Acceptance-Index Extension Policy v1, Immutable historical layer, Versioned artifacts and audit
 
-### Community 140 - "production_strategies.py"
-Cohesion: 0.15
-Nodes (24): append_audit(), append_csv(), csv_header(), prior_outputs_are_coherent(), Namespace, Path, Explicit offline projection after a held-only symbol leaves the account.      Th, Reuse a verified local B2 trio without touching the public provider. (+16 more)
-
 ### Community 141 - "RuntimeLockConcurrencyTests"
-Cohesion: 0.33
-Nodes (10): deployment_health(), jsonl_count(), main(), momentum_health(), momentum_review_health(), Any, datetime, Path (+2 more)
+Cohesion: 0.23
+Nodes (8): jsonl_count(), momentum_health(), momentum_review_health(), Any, datetime, Path, An advisory file cannot break status rendering or hide a failed refresh., Only a current, successful advisory packet can advertise owner readiness.
 
 ### Community 142 - "OutcomeCoverageTests"
 Cohesion: 0.22
@@ -839,8 +830,8 @@ Cohesion: 0.33
 Nodes (5): Action Inertia, Current-State Authority, Decision Priority, Equity Research — Daily Decision Policy, Required Presentation
 
 ### Community 146 - "opportunity_evidence.py"
-Cohesion: 0.23
-Nodes (20): append_jsonl(), classification(), evaluate(), forecast_origin(), jsonl(), linked_record(), main(), market_sessions() (+12 more)
+Cohesion: 0.10
+Nodes (29): main(), number(), Any, Solve required revenue for explicit terminal-multiple/return sensitivities., render_whole_share_diagnostics(), reverse_expectations(), whole_share_diagnostics(), AllocationReportSemanticsTests (+21 more)
 
 ### Community 147 - "Equity Research — Manual Execution Policy"
 Cohesion: 0.33
@@ -855,12 +846,12 @@ Cohesion: 0.33
 Nodes (5): Boundary, Equity Research — Price Guidance Policy, Evidence, Order-Style Framework, Slippage Review Formula
 
 ### Community 150 - "refresh_handoff.py"
-Cohesion: 0.30
-Nodes (10): make_limited_handoff(), datetime, Path, Narrow, hash-bound status handoff after an official-evidence soft failure.  This, Preserve failed evidence, current source bindings and every execution gate., validate_failure_shape(), validate_limited_decision(), validate_limited_handoff() (+2 more)
+Cohesion: 0.40
+Nodes (9): make_limited_handoff(), datetime, Path, Narrow, hash-bound status handoff after an official-evidence soft failure.  This, Preserve failed evidence, current source bindings and every execution gate., validate_failure_shape(), validate_limited_decision(), validate_limited_handoff() (+1 more)
 
 ### Community 151 - "ResearchRiskLimitsTests"
-Cohesion: 0.13
-Nodes (13): _jsonl(), main(), _number(), Path, main(), number(), Any, Solve required revenue for explicit terminal-multiple/return sensitivities. (+5 more)
+Cohesion: 0.16
+Nodes (14): _jsonl(), main(), _number(), Path, display(), main(), missing_label(), render_report() (+6 more)
 
 ### Community 152 - "Ross Cameron primary-source audit"
 Cohesion: 0.33
@@ -883,12 +874,8 @@ Cohesion: 0.29
 Nodes (7): Absolute-path audit, Bounded collection continuity during network failure, Equity Research — MacBook → GitHub → Mac mini workflow, Failure behavior, Normal authoring and deployment, Production boundary, Runtime operations
 
 ### Community 158 - "test_manual_valuation_bootstrap.py"
-Cohesion: 0.22
+Cohesion: 0.21
 Nodes (9): archive_validated_delivery(), _matches(), Path, Retain exact validated message inputs before a durable delivery claim.  Only dec, Remove only known dead-process temporary links to these exact bytes.      Unknow, Atomically publish immutable content-addressed files; fail before send.      Par, _recover_crashed_publish_links(), DeliveryArchiveTests (+1 more)
-
-### Community 160 - "time"
-Cohesion: 0.12
-Nodes (15): bool_value(), delivery_guard(), load_active_state(), load_inhibit(), notification_change_comparison(), Any, Hash recommendation meaning, excluding quotes, dates and raw filings., recommendation_notification_fingerprint() (+7 more)
 
 ### Community 162 - "graphify reference: query, path, explain"
 Cohesion: 0.33
@@ -911,24 +898,20 @@ Cohesion: 0.40
 Nodes (4): Approval Boundary, Manual Approval Policy, Out Of Scope, Required Before Approval
 
 ### Community 167 - "capital_presentation.py"
-Cohesion: 0.20
-Nodes (18): clamp(), main(), number(), price_unverified_research_row(), Keep owner-requested research visible without granting trade eligibility., requested_coverage_tickers(), requested_only_price_unverified(), retained_company_tickers() (+10 more)
-
-### Community 168 - "migrate"
-Cohesion: 0.21
-Nodes (9): ManualValuationBootstrapTests, mark(), current_manual_snapshot_matches(), main(), parse_position(), Path, Read an auditable manual valuation reference, never a B2 market row., A later owner snapshot may supersede history, but cannot waive new fills. (+1 more)
+Cohesion: 0.43
+Nodes (3): current_no_orders(), historical_sell(), TacticalOrderScopeTests
 
 ### Community 169 - "generate_current_status.py"
-Cohesion: 0.13
-Nodes (12): WorkQueueReportingTests, cash_lines(), _money(), Any, datetime, Path, Read and present recurring work without granting decision authority., A prior success file cannot conceal a failed or stale scheduled step. (+4 more)
+Cohesion: 0.14
+Nodes (13): main(), WorkQueueReportingTests, cash_lines(), _money(), Any, datetime, Path, Read and present recurring work without granting decision authority. (+5 more)
 
 ### Community 170 - "feedback_blocker"
 Cohesion: 0.50
 Nodes (3): feedback_blocker(), Path, Fail-closed publication barrier for unresolved owner-reported facts.
 
 ### Community 171 - "create_long_horizon_research.py"
-Cohesion: 0.20
-Nodes (6): base(), flow(), nav(), review(), WorkflowEvaluationTests, performance_summary()
+Cohesion: 0.29
+Nodes (7): PlanDetail(), expired(), Plan, Bar, Chart, Fill, PriceChart()
 
 ### Community 172 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
@@ -947,16 +930,16 @@ Cohesion: 0.67
 Nodes (3): Active decision state, phase5r_daily active pipeline, Private positions and account-state inputs
 
 ### Community 176 - "SecPayload"
-Cohesion: 0.30
-Nodes (3): Keep operational completion, maintained views, and price readiness separate., workflow_health(), CurrentWorkflowStatusTests
+Cohesion: 0.32
+Nodes (4): deployment_health(), Keep operational completion, maintained views, and price readiness separate., workflow_health(), CurrentWorkflowStatusTests
 
 ### Community 177 - "Scoped blockers and recurring research work"
 Cohesion: 0.33
 Nodes (5): Blocker scope, Bounded objective research, Cash and recurring work, Expired plans and reporting, Scoped blockers and recurring research work
 
 ### Community 210 - "WorkflowBlockerScopeTests"
-Cohesion: 0.10
-Nodes (24): ActiveConfigError, load_active_config(), main(), Any, Path, ValueError, Raised when the active configuration is unsafe or incomplete., Validate an optional research overlay without accepting financial data. (+16 more)
+Cohesion: 0.08
+Nodes (31): ActiveConfigError, load_active_config(), main(), Any, Path, ValueError, Raised when the active configuration is unsafe or incomplete., Validate an optional research overlay without accepting financial data. (+23 more)
 
 ### Community 211 - "Capital decision and manual execution contract"
 Cohesion: 0.25
@@ -967,15 +950,15 @@ Cohesion: 0.06
 Nodes (26): Boundaries, Decision, Equity Research — AI operating decision, Future evaluation boundary, Historical decision evidence — August 31 only, Checkouts and authority, Current guidance and dated history, Numbered directory contract (+18 more)
 
 ### Community 213 - "score_candidates.py"
-Cohesion: 0.27
-Nodes (11): latest_published_market_session(), Return the required close for the scheduled Basic REST verification.      The hi, append_audit(), as_float(), clamp(), main(), Path, read_csv() (+3 more)
+Cohesion: 0.40
+Nodes (9): append_audit(), as_float(), clamp(), main(), Path, read_csv(), score_row(), timestamp() (+1 more)
 
 ### Community 214 - "Equity Research — Account-State Policy"
 Cohesion: 0.29
 Nodes (7): Canonical Inputs, Effective research allocation and risk limits, Equity Research — Account-State Policy, Manual UI valuation bootstrap, Privacy and Execution Boundary, Runtime State, Validation
 
 ### Community 216 - "Risk Policy"
-Cohesion: 0.27
+Cohesion: 0.36
 Nodes (3): _proof_fixture(), Path, RuntimeCorrectionTests
 
 ### Community 217 - "Equity Research — Dynamic Weight Policy"
@@ -983,8 +966,8 @@ Cohesion: 0.33
 Nodes (5): Concentration and Sleeve Rules, Current-Weight Formula, Equity Research — Dynamic Weight Policy, Price Quality, Stored Percentage Boundary
 
 ### Community 252 - "test_cross_day_delivery.py"
-Cohesion: 0.47
-Nodes (3): compare(), CrossDayDeliveryTests, receipt()
+Cohesion: 0.70
+Nodes (3): uiUpdateAction(), unresolvedRequest(), useUiVersion()
 
 ### Community 255 - "MarketCoverageRecompositionTests"
 Cohesion: 0.33
@@ -995,24 +978,24 @@ Cohesion: 0.23
 Nodes (11): line_excerpt(), main(), number(), Any, Path, Match the packet clock's whole-second point-in-time precision., selected_band(), source() (+3 more)
 
 ### Community 258 - "test_tactical_order_scopes.py"
-Cohesion: 0.07
-Nodes (10): notification_delivery_policy(), Return event-driven eligibility independently of scheduler time., core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count. (+2 more)
+Cohesion: 0.13
+Nodes (9): core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Capital needed to reach the core floor at the canonical whole-share mark.      T, Return the highest supported sizing tier and a feasible share count., remaining_core_floor_cost() (+1 more)
+
+### Community 260 - "shadow_evaluation_health"
+Cohesion: 0.67
+Nodes (3): SummaryPoint, originalPoints(), ResearchSection()
 
 ### Community 262 - "refresh_capital_work_queue"
 Cohesion: 0.31
 Nodes (6): observe(), publish(), Path, Classify exact dependencies and retain bounded automatic-resolution receipts.  T, record_attempt(), Routing repairs preserve numeric rejection and human execution authority.
 
 ### Community 263 - "MarketCoverageRecompositionTests"
-Cohesion: 0.43
+Cohesion: 0.52
 Nodes (3): Report independent SHADOW health without altering canonical eligibility., shadow_evaluation_health(), ShadowStatusHealthTests
 
 ### Community 266 - "measure_paths"
-Cohesion: 0.40
-Nodes (4): measure_paths(), datetime, Path, Prospective observation paths, including deferred/rejected names; no trades.  En
-
-### Community 267 - "main"
 Cohesion: 0.67
-Nodes (3): main(), massive_auth_probe_exit_code(), Construct the Massive client without I/O and disclose only fixed status.
+Nodes (3): Analyst workflow, Company-specific valuation in production, Reported financial coverage and visible company cases
 
 ### Community 269 - "presentation_lines"
 Cohesion: 0.67
@@ -1023,18 +1006,18 @@ Cohesion: 0.67
 Nodes (3): JSON object with out-of-band raw-byte receipt (never inserted in facts)., SecPayload, dict
 
 ## Knowledge Gaps
-- **379 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+374 more)
+- **378 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+373 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **92 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **95 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `canonical_sha256()` connect `canonical_sha256` to `Equity Research 命名与归档规则`, `CapitalDecisionTests`, `shadow_evaluation_health`, `refresh_capital_work_queue`, `is_us_market_session_date`, `CapitalWorkQueueTests`, `opportunity_contract.py`, `build_long_horizon_report`, `measure_paths`, `read_json`, `Equity Research — MacBook → GitHub → Mac mini workflow`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `sec_acceptance.py`, `opportunity_evidence.py`, `sec_acceptance_extensions.py`, `official_news.py`, `ResearchRiskLimitsTests`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `shadow_llm_contract.py`, `read_snapshot`, `time`, `build_decision_evidence_packet.py`, `apply_workflow_integrity`, `capital_presentation.py`, `momentum_experiment.py`, `investment_plans.py`, `evaluate_shadow_llm_incremental_value.py`, `merge_news_context`, `main`, `MaintainedThesisTests`, `sha256_file`, `ShadowLlmTests`, `ShadowProviderError`, `WorkflowPublicationTests`, `ActiveProductionTests`, `ledger`, `main`, `append_plan`, `validate_packet`, `earnings_incorporation.py`, `IssuerIsolationTests`, `latest_published_market_session`, `iso_now`, `payloads`, `economic_packet`, `send_once`, `LimitedRefreshTests`, `run_daily_refresh.py`, `ValuationResearchRetentionTests`, `IncorporationTests`, `objective_research`, `write_acceptance_index`, `payloads`, `MarketCoverageRecompositionTests`, `WorkflowBlockerScopeTests`, `decision_dependencies.py`?**
-  _High betweenness centrality (0.139) - this node is a cross-community bridge._
-- **Why does `ExclusiveFileLock` connect `research_backlog.py` to `RuntimeSyncError`, `shadow_evaluation_health`, `is_us_market_session_date`, `CapitalWorkQueueTests`, `read_json`, `opportunity_contract.py`, `main`, `refresh_daily_evidence.py`, `now_et`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `time`, `apply_workflow_integrity`, `merge_news_context`, `ActiveProductionTests`, `append_plan`, `IssuerIsolationTests`, `latest_published_market_session`, `iso_now`, `WorkflowBlockerScopeTests`, `payloads`, `verify_daily_upgrade.py`, `send_once`, `DeliveryWindowTests`, `IncorporationTests`, `payloads`, `MarketCoverageRecompositionTests`, `MarketCoverageRecompositionTests`, `objective`?**
+- **Why does `canonical_sha256()` connect `canonical_sha256` to `Equity Research 命名与归档规则`, `CapitalDecisionTests`, `refresh_capital_work_queue`, `is_us_market_session_date`, `CapitalWorkQueueTests`, `opportunity_contract.py`, `build_long_horizon_report`, `read_json`, `sec_acceptance.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `opportunity_evidence.py`, `sec_acceptance_extensions.py`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `shadow_llm_contract.py`, `read_snapshot`, `load_active_config`, `build_decision_evidence_packet.py`, `apply_workflow_integrity`, `momentum_experiment.py`, `investment_plans.py`, `evaluate_shadow_llm_incremental_value.py`, `merge_news_context`, `main`, `MaintainedThesisTests`, `sha256_file`, `ShadowLlmTests`, `ShadowProviderError`, `WorkflowPublicationTests`, `ActiveProductionTests`, `ledger`, `main`, `append_plan`, `validate_packet`, `earnings_incorporation.py`, `IssuerIsolationTests`, `iso_now`, `payloads`, `economic_packet`, `send_once`, `LimitedRefreshTests`, `run_daily_refresh.py`, `ValuationResearchRetentionTests`, `IncorporationTests`, `objective_research`, `write_acceptance_index`, `payloads`, `MarketCoverageRecompositionTests`, `WorkflowBlockerScopeTests`, `decision_dependencies.py`?**
+  _High betweenness centrality (0.138) - this node is a cross-community bridge._
+- **Why does `ExclusiveFileLock` connect `RuntimeSyncError` to `is_us_market_session_date`, `CapitalWorkQueueTests`, `read_json`, `opportunity_contract.py`, `refresh_daily_evidence.py`, `official_news.py`, `CapitalEscalationTests`, `workflow_evaluation.py`, `thesis_evidence.py`, `apply_workflow_integrity`, `merge_news_context`, `ActiveProductionTests`, `append_plan`, `IssuerIsolationTests`, `iso_now`, `WorkflowBlockerScopeTests`, `payloads`, `verify_daily_upgrade.py`, `score_candidates.py`, `send_once`, `LimitedRefreshTests`, `DeliveryWindowTests`, `IncorporationTests`, `payloads`, `MarketCoverageRecompositionTests`?**
   _High betweenness centrality (0.035) - this node is a cross-community bridge._
-- **Why does `render_email()` connect `render_email` to `save_decision`, `email_brief.py`, `Equity Research 命名与归档规则`, `CapitalDecisionTests`, `run_full_universe_market_data.py`, `apply_workflow_integrity`, `FeedbackError`, `generate_current_status.py`, `ResearchBacklogTests`, `create_research_questions.py`, `main`, `Handler`, `iso_now`, `TacticalEmailTests`, `refresh_handoff.py`, `decision_dependencies.py`, `send_once`?**
+- **Why does `render_email()` connect `render_email` to `email_brief.py`, `Equity Research 命名与归档规则`, `CapitalDecisionTests`, `run_full_universe_market_data.py`, `apply_workflow_integrity`, `FeedbackError`, `ResearchBacklogTests`, `create_research_questions.py`, `main`, `Handler`, `TacticalEmailTests`, `refresh_handoff.py`, `decision_dependencies.py`, `send_once`?**
   _High betweenness centrality (0.032) - this node is a cross-community bridge._
 - **Are the 163 inferred relationships involving `canonical_sha256()` (e.g. with `load_authority()` and `evaluate_archived()`) actually correct?**
   _`canonical_sha256()` has 163 INFERRED edges - model-reasoned connections that need verification._

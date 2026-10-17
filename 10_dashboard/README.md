@@ -18,6 +18,8 @@ Phase 2 正式反馈、Phase 3 图表/历史，以及 Phase 4 搜索、审计更
 
 提交结果未知时用原请求重试，刷新后可恢复同一个请求编号。另一个设备或 writer 改变账户时，停止应用并要求核对新账户。多文件中断在重启时恢复；发现外部修改则暂停，不覆盖新状态。
 
+连续登记时，上一笔触发的研究重算可能暂占账户锁。表单保留输入，每 3 秒等待重试，最多 5 分钟，也可以停止等待。下一笔预览会重新读取最新现金和持仓，生成预览后仍须本人确认保存。已确认提交的重试只复用原请求，不产生新的成交；连接结果未知、账户版本冲突和真实校验失败不会被自动忽略。研究更新状态不会显示为成交保存失败。
+
 ## 权威状态与后台
 
 继续使用 `05_risk_and_positions/current_account_state.local.json`、`current_positions.local.csv` 和 `current_open_orders.local.json`。成交继续写既有 `06_execution_records/manual_executions.local.csv`、`confirmed_execution_report.csv` 与 `reconciliation_report.csv`。
