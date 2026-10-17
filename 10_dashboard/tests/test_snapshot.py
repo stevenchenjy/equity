@@ -14,6 +14,21 @@ from server import ACCOUNT, CORE_INPUTS, DECISION, MARKET, ORDERS, PLANS, POSITI
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_readable_order_picker_retains_order_terms_and_session_without_guessing(self):
+        order=dict(order_id='private-opaque-id',ticker='ABC',side='buy',quantity=3,remaining_quantity=2,status='partial_fill',
+            limit_price=99,stop_price=None,order_type='LIMIT',time_in_force='DAY',session_date='2026-09-30')
+        self.put(ORDERS,dict(as_of='2026-09-30T13:00:00-04:00',complete=True,orders=[order]))
+        self.decision['workflow_integrity']['input_hashes'][ORDERS]=hashlib.sha256((self.root/ORDERS).read_bytes()).hexdigest()
+        self.publish()
+        result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['orders']['rows'][0],{**order,'record_scope':None})
+        # Missing historical terms stay unknown, rather than inventing order facts.
+        self.put(ORDERS,dict(as_of='2026-09-30T13:00:00-04:00',complete=True,orders=[{k:v for k,v in order.items() if k not in {'order_type','time_in_force','session_date'}}]))
+        self.decision['workflow_integrity']['input_hashes'][ORDERS]=hashlib.sha256((self.root/ORDERS).read_bytes()).hexdigest()
+        self.publish()
+        old=read_snapshot(self.root,self.now)['orders']['rows'][0]
+        self.assertIsNone(old['order_type']);self.assertIsNone(old['time_in_force']);self.assertIsNone(old['session_date'])
+
     def test_recomposition_fallback_keeps_exact_gates_and_withholds_drafts(self):
         from daily_common import canonical_sha256
         from server import current_snapshot

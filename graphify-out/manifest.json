@@ -1480,28 +1480,28 @@
     "semantic_hash": "e2648d2279a02d5d21d980b0177820ee"
   },
   "10_dashboard/package.json": {
-    "mtime": 1791078174.5319579,
-    "ast_hash": "06c640446b6bab8b01e672f4b12f10a8",
+    "mtime": 1792209662.5063846,
+    "ast_hash": "4f045c58eb89ee8f90fa49666b91aced",
     "semantic_hash": ""
   },
   "10_dashboard/server.py": {
-    "mtime": 1791570555.1530647,
-    "ast_hash": "caf05b29dfa86aff827f3bac883f6eb1",
+    "mtime": 1792209750.8915846,
+    "ast_hash": "1c2414204694c7bfd0f50ba2f98b7dcb",
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
-    "mtime": 1791944578.8963377,
-    "ast_hash": "f0417bf733b7c750a98085dbbce1d543",
+    "mtime": 1792210048.1394432,
+    "ast_hash": "2487539021bb9c524130d7c386fc781e",
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.test.ts": {
-    "mtime": 1790855701.2287228,
-    "ast_hash": "6bfdbc3cfc3aada5a0d271281a6a1f36",
-    "semantic_hash": "6bfdbc3cfc3aada5a0d271281a6a1f36"
+    "mtime": 1792209662.5056176,
+    "ast_hash": "9f57d93540e75ed78bcbfbce731432df",
+    "semantic_hash": ""
   },
   "10_dashboard/src/domain.ts": {
-    "mtime": 1792003959.133764,
-    "ast_hash": "b7d7acb89e18a8446a38e58fd8c299c9",
+    "mtime": 1792209820.4762473,
+    "ast_hash": "d3e7f7d47509ab82c290ab0cf89bb195",
     "semantic_hash": ""
   },
   "10_dashboard/src/main.tsx": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": "355db2bc23f7aba8d89dc945b6cdbc45"
   },
   "10_dashboard/tests/test_snapshot.py": {
-    "mtime": 1792004088.5633063,
-    "ast_hash": "5a10f16a2d45f6fa653c20be57da1e45",
+    "mtime": 1792209750.8990097,
+    "ast_hash": "9205e277d3be14402a8319e3f6db4ce0",
     "semantic_hash": ""
   },
   "10_dashboard/tsconfig.json": {
@@ -1535,9 +1535,9 @@
     "semantic_hash": "9b87cc49c0df32c26c9da2383c4e3399"
   },
   "10_dashboard/README.md": {
-    "mtime": 1790855677.1993923,
-    "ast_hash": "222a9dcee1298647b07f7ee0481730f2",
-    "semantic_hash": "222a9dcee1298647b07f7ee0481730f2"
+    "mtime": 1792209662.5060067,
+    "ast_hash": "05b83c3a8777ea7f5fa61eab428ffb74",
+    "semantic_hash": ""
   },
   "10_dashboard/index.html": {
     "mtime": 1790806773.025532,
@@ -1555,9 +1555,9 @@
     "semantic_hash": "ed46b9785d345736c59d31423d4abec4"
   },
   "10_dashboard/feedback.py": {
-    "mtime": 1790820749.4476,
-    "ast_hash": "dee85c0a5bd327523c85a584a955112a",
-    "semantic_hash": "dee85c0a5bd327523c85a584a955112a"
+    "mtime": 1792209787.2284353,
+    "ast_hash": "16aad5975a5a117fafb4f34a3aa398b4",
+    "semantic_hash": ""
   },
   "10_dashboard/install_service.py": {
     "mtime": 1790814372.427896,
@@ -1575,9 +1575,9 @@
     "semantic_hash": ""
   },
   "10_dashboard/tests/test_feedback.py": {
-    "mtime": 1790854762.427313,
-    "ast_hash": "5fa8dd34b3cf7d3c7adf94452edb0aaf",
-    "semantic_hash": "5fa8dd34b3cf7d3c7adf94452edb0aaf"
+    "mtime": 1792209787.2346058,
+    "ast_hash": "db8fe544caad135d1cd3497fbca30aa2",
+    "semantic_hash": ""
   },
   "09_scripts/equity_research/dashboard_publication.py": {
     "mtime": 1790815513.840378,
@@ -1972,6 +1972,36 @@
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v41.json": {
     "mtime": 1792005697.9546614,
     "ast_hash": "2b35ff44c4ad47ab4280d52aaf455aff",
+    "semantic_hash": ""
+  },
+  "10_dashboard/src/FeedbackForm.test.tsx": {
+    "mtime": 1792209940.3724508,
+    "ast_hash": "963b6970e7a0735f5a7952d44b951341",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_corrections/sec_acceptance_correction_v2.json": {
+    "mtime": 1792209983.2541718,
+    "ast_hash": "503c75136ea3f5aab8e8b8c9e53e743c",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_corrections/sec_acceptance_correction_v3.json": {
+    "mtime": 1792209983.2669528,
+    "ast_hash": "6863211223560f4cfc44b66902aae4f7",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v42.json": {
+    "mtime": 1792209983.32417,
+    "ast_hash": "b1142a2a1ff342d26ef9e04c8246fb4e",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v43.json": {
+    "mtime": 1792209983.3338604,
+    "ast_hash": "4fa8dcbc86d5429ed6f42f9a047bd7d1",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v44.json": {
+    "mtime": 1792209983.3437183,
+    "ast_hash": "729e37a651fd34981041606449677322",
     "semantic_hash": ""
   }
 }

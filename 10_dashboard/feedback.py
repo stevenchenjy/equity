@@ -252,6 +252,21 @@ class Store:
         if payload.get('account_version') != version(self.root):
             raise FeedbackError('account_version_changed', {'account_version': version(self.root)}, 409)
         f = dict(payload['feedback'])
+        # The compact owner form has one monetary meaning and a standing zero-fee
+        # instruction. Older CLI requests and retained records keep their original
+        # price/gross/net, fee and approximate-time semantics.
+        simple = f.get('entry_mode') == 'simple'
+        if 'entry_mode' in f and not simple:
+            raise FeedbackError('invalid_entry_mode')
+        if simple:
+            compact = {'amount_mode':'price', 'fee_status':'known', 'fees':'0', 'time':''}
+            if any(key in f and f[key] != value for key,value in compact.items()):
+                raise FeedbackError('simple_entry_contract_conflict')
+            f.update(compact)
+        link_mode = f.get('order_link_mode','auto')
+        if not isinstance(link_mode,str) or link_mode not in {'auto','independent'} or (link_mode == 'independent'
+                and (not simple or f.get('status') != 'filled' or f.get('linked_order'))):
+            raise FeedbackError('invalid_order_link_mode')
         correction = payload.get('correction')
         if correction is not None:
             if (not isinstance(correction, dict) or set(correction) != {'record_id', 'reason'}
@@ -304,6 +319,15 @@ class Store:
         positions = {r['ticker']: dict(r) for r in old_positions}
         orders = json.loads(read(self.root, ORDERS))
         missing, writes = [], {}
+        active = {'open','pending','partial_fill','partially_filled'}
+        if simple and link_mode != 'independent' and f['status'] in {'filled','partial','cancelled'} and not f['linked_order']:
+            matching = [r for r in orders['orders'] if r.get('status') in active
+                and r.get('record_scope') != 'unresolved_historical_reservation'
+                and r.get('ticker') == f['ticker'] and r.get('side') == f['side']]
+            if len(matching) == 1:
+                f['linked_order'] = matching[0]['order_id']
+            elif len(matching) > 1:
+                missing.append('请选择对应挂单')
         changes = {'cash_before': account['cash_available'], 'cash_after': account['cash_available'],
                    'holdings_before': [{'ticker':r['ticker'],'shares':r['shares_optional']} for r in old_positions]}
         def need(key, label, **kwargs):
@@ -324,7 +348,8 @@ class Store:
             if f['order_type'] not in {'LIMIT','MARKET','STOP','STOP_LIMIT'}: raise FeedbackError('invalid_order_type')
             if status == 'partial':
                 need('remaining','剩余挂单股数',integer=True)
-                if not f['linked_order']: missing.append('已记录的对应订单编号')
+                if not f['linked_order'] and '请选择对应挂单' not in missing:
+                    missing.append('对应挂单' if simple else '已记录的对应订单编号')
             if qty and amount and fee is not None:
                 gross = amount * qty if f['amount_mode'] == 'price' else amount
                 if f['amount_mode'] == 'net': gross = amount - fee if f['side']=='buy' else amount + fee
@@ -350,12 +375,14 @@ class Store:
             if f['order_type'] in {'STOP','STOP_LIMIT'}: need('stop_price','触发价')
             if f['time_in_force'] == 'unknown': missing.append('订单有效期')
             elif f['time_in_force'] not in {'DAY','GTC'}: raise FeedbackError('invalid_order_duration')
-            if not f['time']: missing.append('挂单时间')
-        active = {'open','pending','partial_fill','partially_filled'}
+            if not f['time'] and not simple: missing.append('挂单时间')
         linked = next((r for r in orders['orders'] if r.get('order_id')==f['linked_order']), None)
         if status in {'filled','partial','cancelled'} and f['linked_order']:
             if linked is None or linked.get('status') not in active: raise FeedbackError('active_order_not_found')
-            if status != 'cancelled' and (linked['ticker'] != ticker or linked['side'] != f['side']): raise FeedbackError('order_facts_conflict')
+            if (status != 'cancelled' or simple) and (linked['ticker'] != ticker or linked['side'] != f['side']): raise FeedbackError('order_facts_conflict')
+            if simple:
+                changes['linked_order'] = {key:linked.get(key) for key in ('ticker','side','remaining_quantity',
+                    'limit_price','stop_price','order_type','time_in_force','session_date')}
             if status != 'cancelled' and qty:
                 remaining = dec(linked.get('remaining_quantity'),'remaining',integer=True)
                 if qty > remaining: raise FeedbackError('fill_exceeds_remaining_order')
@@ -363,7 +390,8 @@ class Store:
                 if status == 'filled' and new_remaining != 0: raise FeedbackError('order_still_has_remaining_shares')
                 if status == 'partial' and f['remaining'] and new_remaining != dec(f['remaining'],'remaining',integer=True): raise FeedbackError('remaining_order_conflict')
         if status == 'cancelled':
-            if not f['linked_order']: missing.append('对应订单编号')
+            if not f['linked_order'] and '请选择对应挂单' not in missing:
+                missing.append('对应挂单' if simple else '对应订单编号')
             if f['prior_partial'] and f.get('partial_recorded') is not True: missing.append('确认撤单前成交已单独计入账户')
             if f.get('terminal_confirmed') is not True: missing.append('确认券商已显示撤单完成')
         if status == 'account':
@@ -467,7 +495,8 @@ class Store:
                     orders['orders'].append(dict(order_id=oid,ticker=f['ticker'],side=f['side'],quantity=int(f['shares']),remaining_quantity=int(f['shares']),
                         order_type=f['order_type'],time_in_force=f['time_in_force'],session_date=f['date'],status='open',
                         limit_price=float(f['order_price']) if f['order_price'] else None,stop_price=float(f['stop_price']) if f['stop_price'] else None,
-                        submitted_at=datetime.strptime(f['date']+' '+f['time'],'%Y-%m-%d %H:%M').replace(tzinfo=ET).isoformat(),source='owner_dashboard'))
+                        submitted_at=datetime.strptime(f['date']+' '+f['time'],'%Y-%m-%d %H:%M').replace(tzinfo=ET).isoformat() if f['time'] else None,
+                        submitted_time_precision='approximate' if f['time'] else 'date_only',source='owner_dashboard'))
                     record['order_id'] = oid
                 elif status in {'filled','partial','cancelled'} and f['linked_order']:
                     linked = next(r for r in orders['orders'] if r.get('order_id')==f['linked_order'])

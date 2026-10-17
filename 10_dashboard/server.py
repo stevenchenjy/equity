@@ -208,7 +208,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         "plans": plans, "candidates": candidates,
         "orders": {"as_of": orders_raw.get("as_of"), "complete": orders_raw.get("complete") is True,
                    "fresh": bool(observed and 0 <= (now - observed).total_seconds() <= 86400),
-                   "rows": [{k: r.get(k) for k in ("ticker", "side", "quantity", "remaining_quantity", "status", "order_id", "limit_price", "stop_price", "record_scope")}
+                   "rows": [{k: r.get(k) for k in ("ticker", "side", "quantity", "remaining_quantity", "status", "order_id", "limit_price", "stop_price", "order_type", "time_in_force", "session_date", "record_scope")}
                             for r in orders_raw.get("orders", [])]},
         "global_blockers": (capital.get("global_blockers", []) if capital else
                             d.get("workflow_integrity", {}).get("global_blockers", [])),

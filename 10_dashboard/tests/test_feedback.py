@@ -38,6 +38,126 @@ class FeedbackTests(unittest.TestCase):
         p['preview_hash']=preview['preview_hash']
         return self.store.submit(p)
 
+    def simple_payload(self, **changes):
+        p=self.payload(time='')
+        for key in ('amount_mode','fee_status','fees','time'):
+            p['feedback'].pop(key)
+        p['feedback'].update(entry_mode='simple', **changes)
+        return p
+
+    def test_compact_fill_uses_owner_zero_fee_price_and_date_only_contract(self):
+        p=self.simple_payload(amount='123.45')
+        r=self.submit(p)
+        self.assertEqual(r['stage'],'applied')
+        self.assertEqual(r['event_time_precision'],'date_only')
+        self.assertEqual((r['feedback']['amount_mode'],r['feedback']['fee_status'],r['feedback']['fees'],r['feedback']['time']),('price','known','0',''))
+        self.assertEqual(r['changes']['cash_after'],876.55)
+        self.assertEqual(rows((self.root/LEDGER).read_bytes())[0]['fees'],'0')
+        self.assertEqual(self.store.submit(p),r)
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
+    def test_compact_contract_never_silently_reinterprets_legacy_money_or_time(self):
+        for field,value in [('amount_mode','gross'),('amount_mode','net'),('fee_status','unknown'),('fees','1'),('time','14:00')]:
+            with self.subTest(field=field,value=value):
+                with self.assertRaisesRegex(FeedbackError,'simple_entry_contract_conflict'):
+                    self.store.preview(self.simple_payload(**{field:value}))
+        self.assertEqual(self.store.history(),[])
+        self.assertFalse((self.root/LEDGER).exists())
+
+    def test_compact_pending_date_has_no_fabricated_submission_time(self):
+        r=self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        self.assertEqual(r['stage'],'applied')
+        order=json.loads((self.root/ORDERS).read_text())['orders'][0]
+        self.assertIsNone(order['submitted_at'])
+        self.assertEqual(order['submitted_time_precision'],'date_only')
+        self.assertEqual(order['session_date'],'2026-09-29')
+        self.assertEqual(order['status'],'open')
+        self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['cash_available'],1000)
+        self.assertFalse((self.root/LEDGER).exists())
+        # Shared order checks consume session_date and prices, not an invented time.
+        from investment_plans import _order_scopes
+        from zoneinfo import ZoneInfo
+        current=datetime(2026,9,29,14,0,tzinfo=ZoneInfo('America/New_York'))
+        issues,_,_=_order_scopes(json.loads((self.root/ORDERS).read_text()),{'ABC':2},current,local_authority=True,local_risk_zero=True)
+        self.assertEqual(issues,[])
+
+    def test_compact_partial_and_final_fill_resolve_unique_order_without_typing_id(self):
+        pending=self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        preview=self.store.preview(self.simple_payload(status='partial',shares='1',remaining='2'))
+        self.assertEqual(preview['changes']['linked_order'],dict(ticker='ABC',side='buy',remaining_quantity=3,
+            limit_price=100.0,stop_price=None,order_type='LIMIT',time_in_force='DAY',session_date='2026-09-29'))
+        self.assertNotIn('order_id',preview['changes']['linked_order'])
+        first=self.submit(self.simple_payload(status='partial',shares='1',remaining='2'))
+        second=self.submit(self.simple_payload(status='partial',shares='1',remaining='1'))
+        final=self.submit(self.simple_payload(status='filled',shares='1'))
+        self.assertEqual([r['feedback']['linked_order'] for r in (first,second,final)],[pending['order_id']]*3)
+        self.assertEqual(rows((self.root/POSITIONS).read_bytes())[0]['shares_optional'],'5')
+        self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['cash_available'],700)
+        order=json.loads((self.root/ORDERS).read_text())['orders'][0]
+        self.assertEqual((order['status'],order['remaining_quantity']),('filled',0))
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),3)
+
+    def test_compact_order_ambiguity_requires_choice_and_does_not_change_cash(self):
+        first=self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        second=self.submit(self.simple_payload(status='pending',shares='3',order_price='99'))
+        before={p:(self.root/p).read_bytes() for p in (ACCOUNT,POSITIONS,ORDERS)}
+        for status in ('partial','filled','cancelled'):
+            with self.subTest(status=status):
+                p=self.simple_payload(status=status,shares='1',remaining='2',terminal_confirmed=True)
+                preview=self.store.preview(p)
+                self.assertEqual(preview['missing'],['请选择对应挂单'])
+                self.assertIsNone(preview['changes'])
+        self.assertEqual(before,{p:(self.root/p).read_bytes() for p in before})
+        r=self.submit(self.simple_payload(status='partial',shares='1',remaining='2',linked_order=second['order_id']))
+        self.assertEqual(r['stage'],'applied')
+        orders={r['order_id']:r for r in json.loads((self.root/ORDERS).read_text())['orders']}
+        self.assertEqual(orders[first['order_id']]['remaining_quantity'],3)
+        self.assertEqual(orders[second['order_id']]['remaining_quantity'],2)
+
+    def test_compact_explicit_independent_fill_does_not_consume_matching_order(self):
+        self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        self.submit(self.simple_payload(status='pending',shares='3',order_price='99'))
+        p=self.simple_payload(shares='1',order_link_mode='independent')
+        preview=self.store.preview(p)
+        self.assertEqual(preview['missing'],[])
+        self.assertNotIn('linked_order',preview['changes'])
+        result=self.submit(p)
+        self.assertEqual(result['feedback']['linked_order'],'')
+        orders=json.loads((self.root/ORDERS).read_text())['orders']
+        self.assertEqual([o['remaining_quantity'] for o in orders],[3,3])
+        self.assertEqual([o['status'] for o in orders],['open','open'])
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+        with self.assertRaisesRegex(FeedbackError,'invalid_order_link_mode'):
+            self.store.preview(self.simple_payload(status='partial',shares='1',remaining='2',order_link_mode='independent'))
+
+    def test_compact_does_not_auto_resolve_historical_reservation_or_wrong_side(self):
+        pending=self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        orders=json.loads((self.root/ORDERS).read_text())
+        orders['orders'][0]['record_scope']='unresolved_historical_reservation'
+        self.put(ORDERS,orders)
+        partial=self.store.preview(self.simple_payload(status='partial',shares='1',remaining='2'))
+        self.assertEqual(partial['missing'],['对应挂单'])
+        # An explicit mismatched selection cannot cancel another side's order.
+        with self.assertRaisesRegex(FeedbackError,'order_facts_conflict'):
+            self.store.preview(self.simple_payload(status='cancelled',side='sell',linked_order=pending['order_id'],terminal_confirmed=True))
+
+    def test_compact_cancellation_resolves_unique_order_and_preserves_partial_fills(self):
+        self.submit(self.simple_payload(status='pending',shares='3',order_price='100'))
+        self.submit(self.simple_payload(status='partial',shares='1',remaining='2'))
+        r=self.submit(self.simple_payload(status='cancelled',prior_partial=True,partial_recorded=True,terminal_confirmed=True))
+        self.assertEqual(r['stage'],'applied')
+        self.assertEqual(rows((self.root/POSITIONS).read_bytes())[0]['shares_optional'],'3')
+        self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['cash_available'],900)
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+        self.assertEqual(json.loads((self.root/ORDERS).read_text())['orders'][0]['status'],'cancelled')
+
+    def test_legacy_pending_still_requires_explicit_time_and_keeps_approximate_precision(self):
+        self.assertEqual(self.store.preview(self.payload(status='pending',shares='3',order_price='100',time=''))['missing'],['挂单时间'])
+        r=self.submit(self.payload(status='pending',shares='3',order_price='100',time='14:00'))
+        order=json.loads((self.root/ORDERS).read_text())['orders'][0]
+        self.assertEqual(r['event_time_precision'],'approximate')
+        self.assertEqual(order['submitted_at'],'2026-09-29T14:00:00-04:00')
+
     def test_first_buy_and_sale_to_all_cash(self):
         r=self.submit(self.payload(ticker='XYZ',amount='50',fees='1'))
         self.assertEqual(r['stage'],'applied'); self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['cash_available'],949)

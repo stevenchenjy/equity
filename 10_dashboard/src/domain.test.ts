@@ -13,7 +13,7 @@ test('Unsummarized source preserves every sentence, decimal prices and condition
   assert.equal(originalPoints([{text:'  '}]).length,0);
 });
 test('Unknown fee stays unknown and creates an incomplete demo, even for a net amount', () => {
-  const f = { ...defaults('ABC', '2026-09-30'), shares: '2', amount: '200', amount_mode: 'net' as const, time: '13:45' };
+  const f = { ...defaults('ABC', '2026-09-30'), shares: '2', amount: '200', amount_mode: 'net' as const, entry_mode: undefined, fee_status:'unknown' as const, fees:'', time: '13:45' };
   const record = makeDemoRecord(f, null, 'event-1', at);
   assert.equal(record.production_effect, false);
   assert.equal(record.stage, 'demo_pending');
@@ -93,7 +93,8 @@ test('Earlier sparse CLI fills remain searchable and editable without inventing 
   assert.equal(matchesHistory(r,'spy 2026-09-30','all','all'),true);
   assert.equal(matchesHistory(r,'rbrk','all','all'),false);
   const f=editableFeedback(r.feedback);assert.equal(validStoredFeedback(f),true);
-  assert.equal(f.not_in_account,false);assert.equal(f.fee_status,'unknown');assert.deepEqual(f.holdings,[]);
+  assert.equal(f.not_in_account,false);assert.equal(f.fee_status,'known');assert.equal(f.fees,'0');assert.deepEqual(f.holdings,[]);
+  assert.equal(r.feedback.fee_status,'unknown'); // Original historical record remains intact.
 });
 
 test('A new holding without a versioned plan does not create an invalid plan reference', () => {
