@@ -1,0 +1,64 @@
+{
+  "artifact_sha256": "66e8c59dc68e0985b6084bf6fed9831784a4ebf9f022861c81df73f985a27975",
+  "previous_artifact_sha256": "bd554ef97cbc3e2f8f993280b59bc788daba816f5005df8c02e13ed52781a069",
+  "records": [
+    {
+      "admitted_at": "2026-10-15T12:54:20.107+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-07-29T20:04:53.000+00:00",
+        "accession_number": "0001193125-26-323632",
+        "cik": "789019",
+        "filing_date": "2026-07-29",
+        "record_sha256": "507d960579f835186dfcdc24b1c703033471150b0196d21e4b90bdc44eeb3c0e",
+        "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+        "ticker": "MSFT"
+      },
+      "correction_sha256": "0bf09b1a3adb31538529d4fdd2d02ca8c653c55262eb584574e570182008a2cd",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "MICROSOFT CORP",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-07-30T00:04:53.000+00:00",
+        "accession_number": "0001193125-26-323632",
+        "cik": "789019",
+        "filing_date": "2026-07-29",
+        "record_sha256": "fd3edb7b313ac5fbe24197594ffd703ec2d63716495e040b220b916a1d68ea2f",
+        "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+        "ticker": "MSFT"
+      },
+      "original": {
+        "accepted_at": "2026-07-29T20:04:53.000+00:00",
+        "accession_number": "0001193125-26-323632",
+        "cik": "789019",
+        "filing_date": "2026-07-29",
+        "record_sha256": "507d960579f835186dfcdc24b1c703033471150b0196d21e4b90bdc44eeb3c0e",
+        "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+        "ticker": "MSFT"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-15T12:54:19.999+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/f25eaf1fdd1f8034967303e955f2c3e13631b626896d4efa151815b229e209a6.raw",
+          "raw_sha256": "f25eaf1fdd1f8034967303e955f2c3e13631b626896d4efa151815b229e209a6",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323632/0001193125-26-323632-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-15T12:54:20.107+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/2588079e72145d5811c2df314450927422ed7fc365057e33522c1a54f16f9b5c.raw",
+          "raw_sha256": "2588079e72145d5811c2df314450927422ed7fc365057e33522c1a54f16f9b5c",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323632/0001193125-26-323632-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-15T08:11:33.000-04:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/4dce45d2dcac53cb8e9d690331ead28daff35cd042edc38524a0482382b2f3e3.raw",
+          "raw_sha256": "4dce45d2dcac53cb8e9d690331ead28daff35cd042edc38524a0482382b2f3e3",
+          "url": "https://data.sec.gov/submissions/CIK0000789019.json"
+        }
+      }
+    }
+  ],
+  "schema_version": "sec_acceptance_header_correction_v1",
+  "version": 2
+}

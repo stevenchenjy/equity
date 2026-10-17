@@ -1,0 +1,64 @@
+{
+  "artifact_sha256": "9457257b2b007f8bdd7bf6958cb7cf1391b79f10adcb0c647c5dda087f5d3f58",
+  "previous_artifact_sha256": "66e8c59dc68e0985b6084bf6fed9831784a4ebf9f022861c81df73f985a27975",
+  "records": [
+    {
+      "admitted_at": "2026-10-16T12:20:41.985+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-28T20:16:47.000+00:00",
+        "accession_number": "0000002488-26-000182",
+        "cik": "2488",
+        "filing_date": "2026-09-28",
+        "record_sha256": "3932419d5f35507ca400d395f3e793492c9377270162fbc07694bccf0d1f629f",
+        "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+        "ticker": "AMD"
+      },
+      "correction_sha256": "e114bb9cfb48b57c409b68376b21d6576d015a8429ebbe40ecba9c3de08a55fd",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "ADVANCED MICRO DEVICES INC",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-29T00:16:47.000+00:00",
+        "accession_number": "0000002488-26-000182",
+        "cik": "2488",
+        "filing_date": "2026-09-28",
+        "record_sha256": "02809036d3cfa38024e341dfb54f6b5f7de58bc505d4cb00f46122f6ea4e2f77",
+        "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+        "ticker": "AMD"
+      },
+      "original": {
+        "accepted_at": "2026-09-28T16:16:47.000+00:00",
+        "accession_number": "0000002488-26-000182",
+        "cik": "2488",
+        "filing_date": "2026-09-28",
+        "record_sha256": "eb034265f722b079a1bc88731e0d75bec45af2dcdd8058452f75f655d8b42445",
+        "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+        "ticker": "AMD"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-16T12:20:41.811+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/524a147042f91ba6220b7667bb34028d9362c2e168e2b0f0e523344c88ef5b07.raw",
+          "raw_sha256": "524a147042f91ba6220b7667bb34028d9362c2e168e2b0f0e523344c88ef5b07",
+          "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000182/0000002488-26-000182-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-16T12:20:41.984+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/5251be51443e82180f4a637ac93b65a94dbb9f4fc47a770374109665752c72b5.raw",
+          "raw_sha256": "5251be51443e82180f4a637ac93b65a94dbb9f4fc47a770374109665752c72b5",
+          "url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000182/0000002488-26-000182-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-16T08:20:41.000-04:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/59ed037aef7ecf2d39a2a317886461dfbe5888f9691c46609e526ec4891792a9.raw",
+          "raw_sha256": "59ed037aef7ecf2d39a2a317886461dfbe5888f9691c46609e526ec4891792a9",
+          "url": "https://data.sec.gov/submissions/CIK0000002488.json"
+        }
+      }
+    }
+  ],
+  "schema_version": "sec_acceptance_header_correction_v1",
+  "version": 3
+}
