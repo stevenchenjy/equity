@@ -92,7 +92,8 @@ class OptionalRotationEmailTests(unittest.TestCase):
             lead=text.split('HOLD — SPY')[0]
             for term in ('$292.26','$763.25','09:45','10:30','全部实际成交','仅部分成交时不卖 SPY','过于激进','不换仓'):
                 self.assertIn(term,lead)
-            self.assertIn('OTHER BUY — none',lead)
+            self.assertNotIn('BUY — none',lead)
+            self.assertNotIn('SELL — none',lead)
         self.assertIn('data-action-kind="buy"',html)
         self.assertIn('data-action-kind="sell"',html)
         self.assertEqual(d,before)

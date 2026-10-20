@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-10-19)
 
 ## Corpus Check
-- 407 files · ~378,713 words
+- 407 files · ~378,813 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4623 nodes · 12452 edges · 284 communities (189 shown, 95 thin omitted)
+- 4623 nodes · 12452 edges · 276 communities (183 shown, 93 thin omitted)
 - Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 2635 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ee4bdbaf`
+- Built from commit: `5c439479`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -286,17 +286,9 @@
 - RecommendationNotificationTests
 - shadow_evaluation_health
 - ResearchSection.tsx
-- Equity Research 私人工作台
 - Equity Research — Dynamic Weight Policy
-- Repository layout and path ownership
 - measure_paths
-- Equity Research — current document entrypoints
-- Momentum experiment reproducibility
 - update_manual_account.py
-- Owner-approved allocation policy
-- Position purpose and reassessment
-- Company-specific valuation in production
-- Equity Research — Core Allocation Policy
 
 ## God Nodes (most connected - your core abstractions)
 1. `canonical_sha256()` - 171 edges
@@ -325,7 +317,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (284 total, 95 thin omitted)
+## Communities (276 total, 93 thin omitted)
 
 ### Community 0 - "RuntimeSyncError"
 Cohesion: 0.12
@@ -372,12 +364,12 @@ Cohesion: 0.13
 Nodes (55): canonical_sha256(), _append_ledger_event(), _archive_packet(), _archived_packet_index(), _atomic_private_json(), _atomic_private_text(), _contract_failure_code(), critic_route() (+47 more)
 
 ### Community 12 - "sec_acceptance.py"
-Cohesion: 0.15
-Nodes (22): chart(), core_allocation_view(), current_snapshot(), digest(), email_version(), email_versions(), escalation_view(), number() (+14 more)
+Cohesion: 0.19
+Nodes (18): chart(), core_allocation_view(), current_snapshot(), digest(), email_version(), email_versions(), escalation_view(), number() (+10 more)
 
 ### Community 13 - "account_common.py"
 Cohesion: 0.10
-Nodes (35): append_run_log(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), format_cap(), is_core_allocation_ticker(), load_account_state() (+27 more)
+Nodes (31): approved_core_tickers(), as_float(), concentration_status(), dynamic_candidate_fit(), dynamic_position_fit(), format_cap(), is_core_allocation_ticker(), load_market_rows() (+23 more)
 
 ### Community 14 - "B2MarketRefreshFailureCommitTests"
 Cohesion: 0.11
@@ -424,8 +416,8 @@ Cohesion: 0.12
 Nodes (14): _jsonl(), main(), _number(), Path, main(), number(), Any, questions_for() (+6 more)
 
 ### Community 25 - "execution_common.py"
-Cohesion: 0.14
-Nodes (31): csv_fields(), load_active_inhibit(), load_positions(), Path, write_text(), main(), append_c9b_log(), execution_cash() (+23 more)
+Cohesion: 0.12
+Nodes (36): append_run_log(), csv_fields(), load_account_state(), load_active_inhibit(), load_positions(), Path, write_text(), create_if_missing() (+28 more)
 
 ### Community 26 - "thesis_evidence.py"
 Cohesion: 0.15
@@ -440,12 +432,12 @@ Cohesion: 0.15
 Nodes (34): analyst_schema(), _assert_nonimperative(), build_blind_judge_target(), build_deterministic_baseline(), _calculation_index(), critic_schema(), deterministic_claim_capture(), _entity_tickers() (+26 more)
 
 ### Community 29 - "rows"
-Cohesion: 0.14
-Nodes (17): atomic(), cash(), csv_bytes(), dec(), encoded(), ValueError, Durable human feedback coordinator. Canonical CSV/JSON remain authoritative.  Th, Analyst work is a separate queue, never a deterministic refresh result. (+9 more)
+Cohesion: 0.19
+Nodes (10): cash(), csv_bytes(), dec(), encoded(), Path, Analyst work is a separate queue, never a deterministic refresh result., Local analyst admission; the browser cannot claim or complete a review., sha() (+2 more)
 
 ### Community 30 - "read_snapshot"
-Cohesion: 0.24
-Nodes (3): load_authority(), Path, SnapshotTests
+Cohesion: 0.19
+Nodes (7): load_authority(), Path, ValueError, Capture retained bytes, verify publication fingerprints, then read back.      Pr, read_snapshot(), SnapshotError, SnapshotTests
 
 ### Community 31 - "load_active_config"
 Cohesion: 0.10
@@ -484,7 +476,7 @@ Cohesion: 0.16
 Nodes (24): complete_inputs(), item(), ValuationEvidenceV1Tests, build_valuation_evidence_v1(), _calculation_receipt(), _InputSpec, _normalize_input(), _parse_decimal() (+16 more)
 
 ### Community 40 - "momentum_experiment.py"
-Cohesion: 0.14
+Cohesion: 0.15
 Nodes (4): atomic_write_csv(), negative_opportunity(), inline(), ResearchBacklogTests
 
 ### Community 41 - "investment_plans.py"
@@ -564,7 +556,7 @@ Cohesion: 0.08
 Nodes (24): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+16 more)
 
 ### Community 60 - "ActiveProductionTests"
-Cohesion: 0.29
+Cohesion: 0.26
 Nodes (21): _append_history(), attention_rows(), build_backlog(), complete_objective_data(), _history(), numeric(), datetime, Path (+13 more)
 
 ### Community 61 - "compose_research_inputs"
@@ -637,7 +629,7 @@ Nodes (21): local_tactical_risk_is_zero(), A local ledger containing only core h
 
 ### Community 80 - "feedback.py"
 Cohesion: 0.09
-Nodes (9): notification_delivery_policy(), Return event-driven eligibility independently of scheduler time., core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation., Return the highest supported sizing tier and a feasible share count. (+1 more)
+Nodes (10): valuation_trim_review_required(), notification_delivery_policy(), Return event-driven eligibility independently of scheduler time., core_starter_decision(), individual_sizing_decision(), _passed_confidence(), Any, Size one staged broad-market core review without using stock valuation. (+2 more)
 
 ### Community 81 - "latest_published_market_session"
 Cohesion: 0.14
@@ -656,8 +648,8 @@ Cohesion: 0.29
 Nodes (10): _execute_frozen(), _execute_outcomes(), load_registry(), _module_imports(), Run an explicitly registered experiment from immutable, verified Git bytes.  Liv, Import-time dependencies; function-local imports stay outside the entry API., Validate all version bindings, stage a frozen run, then publish its append., run_frozen() (+2 more)
 
 ### Community 86 - "README.md"
-Cohesion: 0.40
-Nodes (5): “5R”的来源与结论, Equity Research 命名与归档规则, 兼容边界, 文件与目录, 派生知识图谱显示名
+Cohesion: 0.25
+Nodes (6): Equity Research 改动验收入口, “5R”的来源与结论, Equity Research 命名与归档规则, 兼容边界, 文件与目录, 派生知识图谱显示名
 
 ### Community 87 - "Equity Research — Daily Delivery Policy"
 Cohesion: 0.11
@@ -674,6 +666,10 @@ Nodes (72): report_heading(), api_key_from_environment(), _default_http_get(), _
 ### Community 90 - "MomentumExperimentTests"
 Cohesion: 0.27
 Nodes (8): binding(), catalog(), main(), matching_summary(), Version-bound presentation notes; never a research or account input., source_hash(), validate_catalog(), PlanSummaryTests
+
+### Community 91 - "frozen_momentum_runtime.py"
+Cohesion: 0.28
+Nodes (3): FeedbackError, read(), ReviewAndCorrectionTests
 
 ### Community 92 - "ConcentratedAllocationTests"
 Cohesion: 0.15
@@ -708,8 +704,8 @@ Cohesion: 0.14
 Nodes (14): Action-first regular email (2026-09-29), Boundaries, Broker and order mechanics, Current allocation authority (2026-10-06; core membership amended 2026-10-19), Current email correction (2026-09-26), Delivery expectation, Durable follow-through for interactive reviews (2026-09-28), Email readability (2026-09-22 follow-up) (+6 more)
 
 ### Community 103 - "work_queue_reporting.py"
-Cohesion: 0.12
-Nodes (7): Account record authority, Equity Research 改动验收入口, Maintained company research, effective 2026-09-24, 长期研究、倍增情景与证据边界, Research and owner collaboration, SEC acceptance clock corrections, Current portfolio files
+Cohesion: 0.09
+Nodes (17): Analyst workflow, Company-specific valuation in production, Reported financial coverage and visible company cases, Approved index core, Cash-Deployment Decision, Equity Research — Core Allocation Policy, Authoritative policy and boundaries, Current runtime outputs — read their generated timestamps (+9 more)
 
 ### Community 104 - "DeliveryWindowTests"
 Cohesion: 0.14
@@ -732,8 +728,8 @@ Cohesion: 0.30
 Nodes (6): Fetch and perform only a clean fast-forward, or fail without updating HEAD., sync_runtime_repository(), _git(), LocalRepositoryFixture, Path, RuntimeGitSyncTests
 
 ### Community 109 - "test_allocation_policy_migration.py"
-Cohesion: 0.40
-Nodes (4): Account and execution boundary, Allocation and position risk, Review, Risk Policy
+Cohesion: 0.20
+Nodes (7): atomic(), ValueError, Durable human feedback coordinator. Canonical CSV/JSON remain authoritative.  Th, Verify the final visible publication, beyond hashes on stale content., verify_publication(), main(), Same coordinator as the form, for explicit owner-reported facts in Codex.  Use -
 
 ### Community 111 - "write_acceptance_index"
 Cohesion: 0.20
@@ -776,15 +772,15 @@ Cohesion: 0.22
 Nodes (8): Equity Research — Daily Research Policy, Facts, Estimates, and Opinions, Long-Term Interpretation, Principle, Refresh and Freshness Rules, Request Discipline, Source coverage and research completeness, Source Hierarchy
 
 ### Community 123 - "Equity Research Dashboard Phase 0 和 Phase 1 契约"
-Cohesion: 0.25
-Nodes (8): Equity Research Dashboard Phase 0 和 Phase 1 契约, Phase 1 的边界和后续接点, 数据入口和输出, 演示记录和状态流转, 用户可观察的结果, 表单字段和校验, 页面与状态规则, 验收证据
+Cohesion: 0.10
+Nodes (16): Equity Research Dashboard Phase 0 和 Phase 1 契约, Phase 1 的边界和后续接点, 数据入口和输出, 演示记录和状态流转, 用户可观察的结果, 表单字段和校验, 页面与状态规则, 验收证据 (+8 more)
 
 ### Community 124 - "Equity Research — Configured-Universe Data and Broad Discovery Policy"
 Cohesion: 0.22
 Nodes (8): Data Handling, Equity Research — Configured-Universe Data and Broad Discovery Policy, Independent broad-market discovery extension (September 22, 2026), Permitted Source and Scope, Purpose, Safety Boundary, Scoring, Tactical research extension (September 22, 2026)
 
 ### Community 125 - "Equity Research — discovery, research attention and capital boundaries"
-Cohesion: 0.22
+Cohesion: 0.20
 Nodes (9): Bounded SEC exhibit progression, Bounds and positive acceleration, Diagnosis and resulting flow, Equity Research — discovery, research attention and capital boundaries, Experiments and prospective measurement, Extension, operations and diagnosis, Invariants, Ownership and authoritative contracts (+1 more)
 
 ### Community 126 - "WorkflowEvaluationTests"
@@ -812,7 +808,7 @@ Cohesion: 0.23
 Nodes (20): append_jsonl(), classification(), evaluate(), forecast_origin(), jsonl(), linked_record(), main(), market_sessions() (+12 more)
 
 ### Community 132 - "Momentum integration decision — 2026-09-27"
-Cohesion: 0.29
+Cohesion: 0.25
 Nodes (7): External feasibility sources (checked September 27, 2026), Frozen experiment and limits, Momentum integration decision — 2026-09-27, Owner-approved first-cohort review timing — September 27 follow-up, Source-grounded integration choices, What runs without another chat, What was verified
 
 ### Community 133 - "CandidateStabilityTests"
@@ -852,7 +848,7 @@ Cohesion: 0.33
 Nodes (5): Account Total, Canonical Update, Cash, Equity Research — Account Reconciliation Policy, Preconditions
 
 ### Community 144 - "Equity Research — Action Threshold Policy"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Allowed Exact Actions, Current Positions, Equity Research — Action Threshold Policy, Maximum Entry and Trim Conditions, New Individual-Stock Eligibility
 
 ### Community 145 - "Equity Research — Daily Decision Policy"
@@ -956,20 +952,20 @@ Cohesion: 0.33
 Nodes (10): deployment_health(), jsonl_count(), main(), momentum_health(), momentum_review_health(), Any, datetime, Path (+2 more)
 
 ### Community 177 - "Scoped blockers and recurring research work"
-Cohesion: 0.40
+Cohesion: 0.33
 Nodes (5): Blocker scope, Bounded objective research, Cash and recurring work, Expired plans and reporting, Scoped blockers and recurring research work
 
 ### Community 210 - "WorkflowBlockerScopeTests"
-Cohesion: 0.07
-Nodes (34): approved_core_tickers(), load_research_account_state(), Validate a proposed account without reading or writing active state., Overlay approved allocation policy while preserving raw financial truth.      Fi, Read approved membership from the validated active policy, not ETF labels., validate_account_state(), ActiveConfigError, load_active_config() (+26 more)
+Cohesion: 0.08
+Nodes (32): load_research_account_state(), Validate a proposed account without reading or writing active state., Overlay approved allocation policy while preserving raw financial truth.      Fi, validate_account_state(), ActiveConfigError, load_active_config(), main(), Any (+24 more)
 
 ### Community 211 - "Capital decision and manual execution contract"
 Cohesion: 0.19
 Nodes (3): decision_fixture(), discovery_fixture(), DiscoveryReportingTests
 
 ### Community 212 - "Equity Research — SHADOW_LLM Evaluation Policy"
-Cohesion: 0.10
-Nodes (17): Boundaries, Decision, Equity Research — AI operating decision, Future evaluation boundary, Historical decision evidence — August 31 only, Calls and cost, Equity Research — SHADOW_LLM Evaluation Policy, Event-driven selection and replay (+9 more)
+Cohesion: 0.07
+Nodes (21): Boundaries, Decision, Equity Research — AI operating decision, Future evaluation boundary, Historical decision evidence — August 31 only, Immutable execution and admission, Interpreting progress, Introducing another experiment version (+13 more)
 
 ### Community 213 - "score_candidates.py"
 Cohesion: 0.40
@@ -1015,6 +1011,10 @@ Nodes (3): A stable winner cannot starve the queued label over repeated cycles.,
 Cohesion: 0.33
 Nodes (5): Active Boundary, Decision Implications, Equity Research — Long-Horizon Return Objective Policy, Measurement Contract, Objective
 
+### Community 267 - "Path"
+Cohesion: 0.25
+Nodes (8): Calls and cost, Equity Research — SHADOW_LLM Evaluation Policy, Event-driven selection and replay, Evidence stages, Isolation and deterministic authority, Question being measured, Small evaluation architecture, Stop conditions
+
 ### Community 268 - "OwnerSnapshotTests"
 Cohesion: 0.38
 Nodes (9): NoRedirect, objective_research(), datetime, Path, Bounded objective research, isolated from canonical financial admission.  Reuse, Fixed public SEC endpoints; no retry, secret, redirect or unbounded read., request_sec(), _seal() (+1 more)
@@ -1031,54 +1031,22 @@ Nodes (3): Report independent SHADOW health without altering canonical eligibili
 Cohesion: 0.67
 Nodes (3): SummaryPoint, originalPoints(), ResearchSection()
 
-### Community 273 - "Equity Research 私人工作台"
-Cohesion: 0.29
-Nodes (7): Equity Research 私人工作台, Tailscale 私人连接, 发布和服务, 日常使用, 日常登记与研究复审, 权威状态与后台, 验证和历史
-
 ### Community 274 - "Equity Research — Dynamic Weight Policy"
-Cohesion: 0.33
-Nodes (5): Concentration and Sleeve Rules, Current-Weight Formula, Equity Research — Dynamic Weight Policy, Price Quality, Stored Percentage Boundary
-
-### Community 275 - "Repository layout and path ownership"
-Cohesion: 0.33
-Nodes (6): Checkouts and authority, Current guidance and dated history, Numbered directory contract, Path ownership and bounded future migrations, Repository layout and path ownership, Tracked evidence versus regenerable output
+Cohesion: 0.11
+Nodes (14): Account record authority, Concentrated growth and strategy-specific controls, Explicit authorization and definitions, Owner-approved allocation policy, Supersession and reproducibility, Concentration and Sleeve Rules, Current-Weight Formula, Equity Research — Dynamic Weight Policy (+6 more)
 
 ### Community 276 - "measure_paths"
 Cohesion: 0.40
 Nodes (4): measure_paths(), datetime, Path, Prospective observation paths, including deferred/rejected names; no trades.  En
 
-### Community 277 - "Equity Research — current document entrypoints"
-Cohesion: 0.40
-Nodes (5): Authoritative policy and boundaries, Current runtime outputs — read their generated timestamps, Dashboard implementation and remaining phases, Equity Research — current document entrypoints, Historical material — retained, not current instructions
-
-### Community 278 - "Momentum experiment reproducibility"
-Cohesion: 0.40
-Nodes (5): Immutable execution and admission, Interpreting progress, Introducing another experiment version, Momentum experiment reproducibility, Retired names and missing evidence
-
 ### Community 279 - "update_manual_account.py"
 Cohesion: 0.60
 Nodes (4): main(), parse_position(), Read an auditable manual valuation reference, never a B2 market row., read_ui_valuation()
 
-### Community 280 - "Owner-approved allocation policy"
-Cohesion: 0.50
-Nodes (4): Concentrated growth and strategy-specific controls, Explicit authorization and definitions, Owner-approved allocation policy, Supersession and reproducibility
-
-### Community 281 - "Position purpose and reassessment"
-Cohesion: 0.50
-Nodes (3): Explicit purpose, Position purpose and reassessment, Required reassessment
-
-### Community 282 - "Company-specific valuation in production"
-Cohesion: 0.67
-Nodes (3): Analyst workflow, Company-specific valuation in production, Reported financial coverage and visible company cases
-
-### Community 283 - "Equity Research — Core Allocation Policy"
-Cohesion: 0.67
-Nodes (3): Approved index core, Cash-Deployment Decision, Equity Research — Core Allocation Policy
-
 ## Knowledge Gaps
 - **382 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+377 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **95 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **93 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -1087,7 +1055,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.139) - this node is a cross-community bridge._
 - **Why does `read_json()` connect `read_json` to `run_full_universe_market_data.py`, `Equity Research 命名与归档规则`, `build_long_horizon_report`, `OwnerSnapshotTests`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `sec_acceptance_extensions.py`, `measure_paths`, `test_allocation_policy_migration.py`, `official_news.py`, `ResearchRiskLimitsTests`, `workflow_evaluation.py`, `aware`, `thesis_evidence.py`, `update_manual_account.py`, `read_snapshot`, `build_decision_evidence_packet.py`, `LimitedRefreshTests`, `FeedbackError`, `apply_workflow_integrity`, `momentum_experiment.py`, `FinancialPeriodIntegrityTests`, `SecPayload`, `main`, `merge_news_context`, `sha256_file`, `main`, `equity_naming.py`, `ActiveProductionTests`, `atomic_write_text`, `main`, `ledger_row`, `earnings_incorporation.py`, `WorkflowBlockerScopeTests`, `iso_now`, `verify_daily_upgrade.py`, `ConcentratedAllocationTests`, `send_once`, `supplement_cached_latest_report`, `DeliveryWindowTests`, `payloads`, `decision_dependencies.py`?**
   _High betweenness centrality (0.045) - this node is a cross-community bridge._
-- **Why does `render_email()` connect `render_email` to `CapitalDecisionTests`, `Equity Research 私人工作台`, `OutcomeCoverageTests`, `opportunity_evidence.py`, `refresh_handoff.py`, `rows`, `load_active_config`, `email_brief.py`, `apply_workflow_integrity`, `ResearchBacklogTests`, `SupplementalFactsTests`, `main`, `Handler`, `create_research_questions.py`, `Capital decision and manual execution contract`, `plan_summary.py`, `IncorporationTests`, `TacticalEmailTests`, `decision_dependencies.py`?**
+- **Why does `render_email()` connect `render_email` to `CapitalDecisionTests`, `Equity Research 私人工作台`, `OutcomeCoverageTests`, `opportunity_evidence.py`, `refresh_handoff.py`, `load_active_config`, `email_brief.py`, `apply_workflow_integrity`, `ResearchBacklogTests`, `SupplementalFactsTests`, `main`, `Handler`, `create_research_questions.py`, `Capital decision and manual execution contract`, `plan_summary.py`, `IncorporationTests`, `test_allocation_policy_migration.py`, `TacticalEmailTests`, `decision_dependencies.py`?**
   _High betweenness centrality (0.039) - this node is a cross-community bridge._
 - **Are the 167 inferred relationships involving `canonical_sha256()` (e.g. with `load_authority()` and `evaluate_archived()`) actually correct?**
   _`canonical_sha256()` has 167 INFERRED edges - model-reasoned connections that need verification._

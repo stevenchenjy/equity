@@ -452,7 +452,7 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_load_account_state",
-      "community": 13,
+      "community": 25,
       "norm_label": "load_account_state()"
     },
     {
@@ -522,7 +522,7 @@
       "source_location": "L340",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_approved_core_tickers",
-      "community": 210,
+      "community": 13,
       "norm_label": "approved_core_tickers()"
     },
     {
@@ -612,7 +612,7 @@
       "source_location": "L433",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_append_run_log",
-      "community": 13,
+      "community": 25,
       "norm_label": "append_run_log()"
     },
     {
@@ -672,7 +672,7 @@
       "source_location": "L341",
       "_origin": "ast",
       "id": "09_scripts_equity_research_account_common_rationale_341",
-      "community": 210,
+      "community": 13,
       "norm_label": "read approved membership from the validated active policy, not etf labels."
     },
     {
@@ -2782,7 +2782,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_account_state",
-      "community": 13,
+      "community": 25,
       "norm_label": "create_account_state.py"
     },
     {
@@ -2792,7 +2792,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_account_state_create_if_missing",
-      "community": 13,
+      "community": 25,
       "norm_label": "create_if_missing()"
     },
     {
@@ -2802,7 +2802,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_account_state_main",
-      "community": 13,
+      "community": 25,
       "norm_label": "main()"
     },
     {
@@ -3252,7 +3252,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_exact_action_plan_valuation_trim_review_required",
-      "community": 13,
+      "community": 80,
       "norm_label": "valuation_trim_review_required()"
     },
     {
@@ -3262,7 +3262,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "09_scripts_equity_research_create_exact_action_plan_main",
-      "community": 13,
+      "community": 25,
       "norm_label": "main()"
     },
     {
@@ -17702,7 +17702,7 @@
       "source_location": "L347",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_active_production_activeproductiontests_test_adverse_complete_valuation_opens_only_a_trim_review",
-      "community": 13,
+      "community": 80,
       "norm_label": ".test_adverse_complete_valuation_opens_only_a_trim_review()"
     },
     {
@@ -27369,7 +27369,7 @@
       "label": ".test_future_preview_is_allowed_but_exact_deadline_and_next_session_are_not()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L101",
+      "source_location": "L102",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_future_preview_is_allowed_but_exact_deadline_and_next_session_are_not",
       "community": 135,
@@ -27379,7 +27379,7 @@
       "label": ".test_recorded_partial_fill_or_order_prevents_duplicate_pair()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L108",
+      "source_location": "L109",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_recorded_partial_fill_or_order_prevents_duplicate_pair",
       "community": 135,
@@ -27389,7 +27389,7 @@
       "label": ".test_insufficient_cash_changed_holdings_policy_or_real_conflict_hides_pair()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L115",
+      "source_location": "L116",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_insufficient_cash_changed_holdings_policy_or_real_conflict_hides_pair",
       "community": 135,
@@ -27399,7 +27399,7 @@
       "label": ".test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful()",
       "file_type": "code",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L124",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
       "community": 135,
@@ -29652,7 +29652,7 @@
       "source_location": "L318",
       "_origin": "ast",
       "id": "09_scripts_equity_research_tests_test_research_backlog_researchbacklogtests_test_canonical_position_shares_override_stale_research_held_flag",
-      "community": 40,
+      "community": 60,
       "norm_label": ".test_canonical_position_shares_override_stale_research_held_flag()"
     },
     {
@@ -38292,7 +38292,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_feedback",
-      "community": 29,
+      "community": 109,
       "norm_label": "feedback.py"
     },
     {
@@ -38312,7 +38312,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "10_dashboard_feedback_py_valueerror",
-      "community": 29,
+      "community": 109,
       "norm_label": "valueerror"
     },
     {
@@ -38322,7 +38322,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "10_dashboard_feedback_feedbackerror_init",
-      "community": 267,
+      "community": 91,
       "norm_label": ".__init__()"
     },
     {
@@ -38352,7 +38352,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "10_dashboard_feedback_read",
-      "community": 29,
+      "community": 91,
       "norm_label": "read()"
     },
     {
@@ -38372,7 +38372,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "10_dashboard_feedback_verify_publication",
-      "community": 29,
+      "community": 109,
       "norm_label": "verify_publication()"
     },
     {
@@ -38422,7 +38422,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "10_dashboard_feedback_atomic",
-      "community": 29,
+      "community": 109,
       "norm_label": "atomic()"
     },
     {
@@ -38442,7 +38442,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "10_dashboard_feedback_store_init",
-      "community": 267,
+      "community": 29,
       "norm_label": ".__init__()"
     },
     {
@@ -38452,7 +38452,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "10_dashboard_feedback_py_path",
-      "community": 267,
+      "community": 29,
       "norm_label": "path"
     },
     {
@@ -38652,7 +38652,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_feedback_rationale_1",
-      "community": 29,
+      "community": 109,
       "norm_label": "durable human feedback coordinator. canonical csv/json remain authoritative.  th"
     },
     {
@@ -38662,7 +38662,7 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "10_dashboard_feedback_rationale_84",
-      "community": 29,
+      "community": 109,
       "norm_label": "verify the final visible publication, beyond hashes on stale content."
     },
     {
@@ -39022,7 +39022,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback",
-      "community": 29,
+      "community": 109,
       "norm_label": "record_feedback.py"
     },
     {
@@ -39032,7 +39032,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback_main",
-      "community": 29,
+      "community": 109,
       "norm_label": "main()"
     },
     {
@@ -39042,7 +39042,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_record_feedback_rationale_1",
-      "community": 29,
+      "community": 109,
       "norm_label": "same coordinator as the form, for explicit owner-reported facts in codex.  use -"
     },
     {
@@ -39062,7 +39062,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "10_dashboard_server_snapshoterror",
-      "community": 12,
+      "community": 30,
       "norm_label": "snapshoterror"
     },
     {
@@ -39072,7 +39072,7 @@
       "source_location": "",
       "_origin": "ast",
       "id": "10_dashboard_server_py_valueerror",
-      "community": 12,
+      "community": 30,
       "norm_label": "valueerror"
     },
     {
@@ -39162,7 +39162,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "10_dashboard_server_read_snapshot",
-      "community": 12,
+      "community": 30,
       "norm_label": "read_snapshot()"
     },
     {
@@ -39352,7 +39352,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "10_dashboard_server_rationale_117",
-      "community": 12,
+      "community": 30,
       "norm_label": "capture retained bytes, verify publication fingerprints, then read back.      pr"
     },
     {
@@ -40452,7 +40452,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_feedback",
-      "community": 29,
+      "community": 109,
       "norm_label": "test_feedback.py"
     },
     {
@@ -41072,7 +41072,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_review_requests",
-      "community": 29,
+      "community": 109,
       "norm_label": "test_review_requests.py"
     },
     {
@@ -41412,7 +41412,7 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot_snapshottests_test_current_snapshot_preserves_quantity_and_does_not_change_inputs",
-      "community": 12,
+      "community": 30,
       "norm_label": ".test_current_snapshot_preserves_quantity_and_does_not_change_inputs()"
     },
     {
@@ -41422,7 +41422,7 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot_snapshottests_test_review_deadline_suppresses_both_held_and_new_quantities",
-      "community": 12,
+      "community": 30,
       "norm_label": ".test_review_deadline_suppresses_both_held_and_new_quantities()"
     },
     {
@@ -41432,7 +41432,7 @@
       "source_location": "L249",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot_snapshottests_test_different_day_is_stale_without_renewing_plan",
-      "community": 12,
+      "community": 30,
       "norm_label": ".test_different_day_is_stale_without_renewing_plan()"
     },
     {
@@ -41472,7 +41472,7 @@
       "source_location": "L270",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot_snapshottests_test_cash_confirmation_does_not_prove_settlement",
-      "community": 12,
+      "community": 30,
       "norm_label": ".test_cash_confirmation_does_not_prove_settlement()"
     },
     {
@@ -41492,7 +41492,7 @@
       "source_location": "L279",
       "_origin": "ast",
       "id": "10_dashboard_tests_test_snapshot_snapshottests_test_unknown_input_and_symlink_are_rejected",
-      "community": 12,
+      "community": 30,
       "norm_label": ".test_unknown_input_and_symlink_are_rejected()"
     },
     {
@@ -42312,7 +42312,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_account_record_authority",
-      "community": 103,
+      "community": 274,
       "norm_label": "account_record_authority.md"
     },
     {
@@ -42322,7 +42322,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_account_record_authority_account_record_authority",
-      "community": 103,
+      "community": 274,
       "norm_label": "account record authority"
     },
     {
@@ -42332,7 +42332,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_account_state_policy",
-      "community": 103,
+      "community": 274,
       "norm_label": "account_state_policy.md"
     },
     {
@@ -42412,7 +42412,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_action_threshold_policy",
-      "community": 103,
+      "community": 144,
       "norm_label": "action_threshold_policy.md"
     },
     {
@@ -42612,7 +42612,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_allocation_policy",
-      "community": 103,
+      "community": 274,
       "norm_label": "allocation_policy.md"
     },
     {
@@ -42622,7 +42622,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_allocation_policy_owner_approved_allocation_policy",
-      "community": 280,
+      "community": 274,
       "norm_label": "owner-approved allocation policy"
     },
     {
@@ -42632,7 +42632,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "00_project_control_allocation_policy_explicit_authorization_and_definitions",
-      "community": 280,
+      "community": 274,
       "norm_label": "explicit authorization and definitions"
     },
     {
@@ -42642,7 +42642,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "00_project_control_allocation_policy_concentrated_growth_and_strategy_specific_controls",
-      "community": 280,
+      "community": 274,
       "norm_label": "concentrated growth and strategy-specific controls"
     },
     {
@@ -42652,7 +42652,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "00_project_control_allocation_policy_supersession_and_reproducibility",
-      "community": 280,
+      "community": 274,
       "norm_label": "supersession and reproducibility"
     },
     {
@@ -42662,7 +42662,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_analyst_followthrough",
-      "community": 103,
+      "community": 274,
       "norm_label": "analyst_followthrough.md"
     },
     {
@@ -42762,7 +42762,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_capital_decision_contract",
-      "community": 103,
+      "community": 274,
       "norm_label": "capital_decision_contract.md"
     },
     {
@@ -42862,7 +42862,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_company_valuation_admission_company_specific_valuation_in_production",
-      "community": 282,
+      "community": 103,
       "norm_label": "company-specific valuation in production"
     },
     {
@@ -42872,7 +42872,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "00_project_control_company_valuation_admission_analyst_workflow",
-      "community": 282,
+      "community": 103,
       "norm_label": "analyst workflow"
     },
     {
@@ -42882,7 +42882,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "00_project_control_company_valuation_admission_reported_financial_coverage_and_visible_company_cases",
-      "community": 282,
+      "community": 103,
       "norm_label": "reported financial coverage and visible company cases"
     },
     {
@@ -42892,7 +42892,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_completion_gate",
-      "community": 103,
+      "community": 86,
       "norm_label": "completion_gate.md"
     },
     {
@@ -42902,7 +42902,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_completion_gate_equity_research_\u6539\u52a8\u9a8c\u6536\u5165\u53e3",
-      "community": 103,
+      "community": 86,
       "norm_label": "equity research \u6539\u52a8\u9a8c\u6536\u5165\u53e3"
     },
     {
@@ -42922,7 +42922,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_core_allocation_policy_equity_research_core_allocation_policy",
-      "community": 283,
+      "community": 103,
       "norm_label": "equity research \u2014 core allocation policy"
     },
     {
@@ -42932,7 +42932,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "00_project_control_core_allocation_policy_approved_index_core",
-      "community": 283,
+      "community": 103,
       "norm_label": "approved index core"
     },
     {
@@ -42942,7 +42942,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "00_project_control_core_allocation_policy_cash_deployment_decision",
-      "community": 283,
+      "community": 103,
       "norm_label": "cash-deployment decision"
     },
     {
@@ -42962,7 +42962,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_current_documents_equity_research_current_document_entrypoints",
-      "community": 277,
+      "community": 103,
       "norm_label": "equity research \u2014 current document entrypoints"
     },
     {
@@ -42972,7 +42972,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "00_project_control_current_documents_authoritative_policy_and_boundaries",
-      "community": 277,
+      "community": 103,
       "norm_label": "authoritative policy and boundaries"
     },
     {
@@ -42982,7 +42982,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "00_project_control_current_documents_dashboard_implementation_and_remaining_phases",
-      "community": 277,
+      "community": 103,
       "norm_label": "dashboard implementation and remaining phases"
     },
     {
@@ -42992,7 +42992,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "00_project_control_current_documents_current_runtime_outputs_read_their_generated_timestamps",
-      "community": 277,
+      "community": 103,
       "norm_label": "current runtime outputs \u2014 read their generated timestamps"
     },
     {
@@ -43002,7 +43002,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "00_project_control_current_documents_historical_material_retained_not_current_instructions",
-      "community": 277,
+      "community": 103,
       "norm_label": "historical material \u2014 retained, not current instructions"
     },
     {
@@ -43342,7 +43342,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_dashboard_build_plan",
-      "community": 103,
+      "community": 123,
       "norm_label": "dashboard_build_plan.md"
     },
     {
@@ -43482,7 +43482,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_dashboard_phase01_contract",
-      "community": 103,
+      "community": 123,
       "norm_label": "dashboard_phase01_contract.md"
     },
     {
@@ -43632,7 +43632,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_equity_naming_policy",
-      "community": 103,
+      "community": 86,
       "norm_label": "equity_naming_policy.md"
     },
     {
@@ -43892,7 +43892,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_macbook_github_macmini_workflow",
-      "community": 103,
+      "community": 212,
       "norm_label": "macbook_github_macmini_workflow.md"
     },
     {
@@ -44092,7 +44092,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_momentum_integration_20260927",
-      "community": 103,
+      "community": 132,
       "norm_label": "momentum_integration_20260927.md"
     },
     {
@@ -44172,7 +44172,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility",
-      "community": 103,
+      "community": 212,
       "norm_label": "momentum_reproducibility.md"
     },
     {
@@ -44182,7 +44182,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility_momentum_experiment_reproducibility",
-      "community": 278,
+      "community": 212,
       "norm_label": "momentum experiment reproducibility"
     },
     {
@@ -44192,7 +44192,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility_immutable_execution_and_admission",
-      "community": 278,
+      "community": 212,
       "norm_label": "immutable execution and admission"
     },
     {
@@ -44202,7 +44202,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility_retired_names_and_missing_evidence",
-      "community": 278,
+      "community": 212,
       "norm_label": "retired names and missing evidence"
     },
     {
@@ -44212,7 +44212,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility_introducing_another_experiment_version",
-      "community": 278,
+      "community": 212,
       "norm_label": "introducing another experiment version"
     },
     {
@@ -44222,7 +44222,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "00_project_control_momentum_reproducibility_interpreting_progress",
-      "community": 278,
+      "community": 212,
       "norm_label": "interpreting progress"
     },
     {
@@ -44252,7 +44252,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_owner_review_preferences",
-      "community": 103,
+      "community": 274,
       "norm_label": "owner_review_preferences.md"
     },
     {
@@ -44402,7 +44402,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_position_purpose_reassessment",
-      "community": 281,
+      "community": 103,
       "norm_label": "position_purpose_reassessment.md"
     },
     {
@@ -44412,7 +44412,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_position_purpose_reassessment_position_purpose_and_reassessment",
-      "community": 281,
+      "community": 103,
       "norm_label": "position purpose and reassessment"
     },
     {
@@ -44422,7 +44422,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "00_project_control_position_purpose_reassessment_explicit_purpose",
-      "community": 281,
+      "community": 103,
       "norm_label": "explicit purpose"
     },
     {
@@ -44432,7 +44432,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "00_project_control_position_purpose_reassessment_required_reassessment",
-      "community": 281,
+      "community": 103,
       "norm_label": "required reassessment"
     },
     {
@@ -44502,7 +44502,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_repository_layout",
-      "community": 103,
+      "community": 212,
       "norm_label": "repository_layout.md"
     },
     {
@@ -44512,7 +44512,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_repository_layout_and_path_ownership",
-      "community": 275,
+      "community": 212,
       "norm_label": "repository layout and path ownership"
     },
     {
@@ -44522,7 +44522,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_checkouts_and_authority",
-      "community": 275,
+      "community": 212,
       "norm_label": "checkouts and authority"
     },
     {
@@ -44532,7 +44532,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_numbered_directory_contract",
-      "community": 275,
+      "community": 212,
       "norm_label": "numbered directory contract"
     },
     {
@@ -44542,7 +44542,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_tracked_evidence_versus_regenerable_output",
-      "community": 275,
+      "community": 212,
       "norm_label": "tracked evidence versus regenerable output"
     },
     {
@@ -44552,7 +44552,7 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_current_guidance_and_dated_history",
-      "community": 275,
+      "community": 212,
       "norm_label": "current guidance and dated history"
     },
     {
@@ -44562,7 +44562,7 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "00_project_control_repository_layout_path_ownership_and_bounded_future_migrations",
-      "community": 275,
+      "community": 212,
       "norm_label": "path ownership and bounded future migrations"
     },
     {
@@ -44572,7 +44572,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_research_opportunity_architecture",
-      "community": 103,
+      "community": 125,
       "norm_label": "research_opportunity_architecture.md"
     },
     {
@@ -44812,7 +44812,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_sec_acceptance_corrections",
-      "community": 103,
+      "community": 212,
       "norm_label": "sec_acceptance_corrections.md"
     },
     {
@@ -44822,7 +44822,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_sec_acceptance_corrections_sec_acceptance_clock_corrections",
-      "community": 103,
+      "community": 212,
       "norm_label": "sec acceptance clock corrections"
     },
     {
@@ -44912,7 +44912,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_equity_research_shadow_llm_evaluation_policy",
-      "community": 212,
+      "community": 267,
       "norm_label": "equity research \u2014 shadow_llm evaluation policy"
     },
     {
@@ -44922,7 +44922,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_question_being_measured",
-      "community": 212,
+      "community": 267,
       "norm_label": "question being measured"
     },
     {
@@ -44932,7 +44932,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_isolation_and_deterministic_authority",
-      "community": 212,
+      "community": 267,
       "norm_label": "isolation and deterministic authority"
     },
     {
@@ -44942,7 +44942,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_small_evaluation_architecture",
-      "community": 212,
+      "community": 267,
       "norm_label": "small evaluation architecture"
     },
     {
@@ -44952,7 +44952,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_event_driven_selection_and_replay",
-      "community": 212,
+      "community": 267,
       "norm_label": "event-driven selection and replay"
     },
     {
@@ -44962,7 +44962,7 @@
       "source_location": "L105",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_calls_and_cost",
-      "community": 212,
+      "community": 267,
       "norm_label": "calls and cost"
     },
     {
@@ -44972,7 +44972,7 @@
       "source_location": "L135",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_evidence_stages",
-      "community": 212,
+      "community": 267,
       "norm_label": "evidence stages"
     },
     {
@@ -44982,7 +44982,7 @@
       "source_location": "L168",
       "_origin": "ast",
       "id": "00_project_control_shadow_llm_evaluation_policy_stop_conditions",
-      "community": 212,
+      "community": 267,
       "norm_label": "stop conditions"
     },
     {
@@ -45042,7 +45042,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "00_project_control_workflow_followthrough_20260927",
-      "community": 103,
+      "community": 177,
       "norm_label": "workflow_followthrough_20260927.md"
     },
     {
@@ -45262,7 +45262,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "01_policies_risk_policy",
-      "community": 109,
+      "community": 274,
       "norm_label": "risk_policy.md"
     },
     {
@@ -45272,7 +45272,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "01_policies_risk_policy_risk_policy",
-      "community": 109,
+      "community": 274,
       "norm_label": "risk policy"
     },
     {
@@ -45282,7 +45282,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "01_policies_risk_policy_allocation_and_position_risk",
-      "community": 109,
+      "community": 274,
       "norm_label": "allocation and position risk"
     },
     {
@@ -45292,7 +45292,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "01_policies_risk_policy_account_and_execution_boundary",
-      "community": 109,
+      "community": 274,
       "norm_label": "account and execution boundary"
     },
     {
@@ -45302,7 +45302,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "01_policies_risk_policy_review",
-      "community": 109,
+      "community": 274,
       "norm_label": "review"
     },
     {
@@ -45432,7 +45432,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "05_risk_and_positions_readme",
-      "community": 103,
+      "community": 123,
       "norm_label": "readme.md"
     },
     {
@@ -45442,7 +45442,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "05_risk_and_positions_readme_current_portfolio_files",
-      "community": 103,
+      "community": 123,
       "norm_label": "current portfolio files"
     },
     {
@@ -45502,7 +45502,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_readme",
-      "community": 103,
+      "community": 123,
       "norm_label": "readme.md"
     },
     {
@@ -45512,7 +45512,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "10_dashboard_readme_equity_research_\u79c1\u4eba\u5de5\u4f5c\u53f0",
-      "community": 273,
+      "community": 123,
       "norm_label": "equity research \u79c1\u4eba\u5de5\u4f5c\u53f0"
     },
     {
@@ -45522,7 +45522,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "10_dashboard_readme_\u65e5\u5e38\u4f7f\u7528",
-      "community": 273,
+      "community": 123,
       "norm_label": "\u65e5\u5e38\u4f7f\u7528"
     },
     {
@@ -45532,7 +45532,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "10_dashboard_readme_\u6743\u5a01\u72b6\u6001\u4e0e\u540e\u53f0",
-      "community": 273,
+      "community": 123,
       "norm_label": "\u6743\u5a01\u72b6\u6001\u4e0e\u540e\u53f0"
     },
     {
@@ -45542,7 +45542,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "10_dashboard_readme_\u53d1\u5e03\u548c\u670d\u52a1",
-      "community": 273,
+      "community": 123,
       "norm_label": "\u53d1\u5e03\u548c\u670d\u52a1"
     },
     {
@@ -45552,7 +45552,7 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "10_dashboard_readme_tailscale_\u79c1\u4eba\u8fde\u63a5",
-      "community": 273,
+      "community": 123,
       "norm_label": "tailscale \u79c1\u4eba\u8fde\u63a5"
     },
     {
@@ -45562,7 +45562,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "10_dashboard_readme_\u9a8c\u8bc1\u548c\u5386\u53f2",
-      "community": 273,
+      "community": 123,
       "norm_label": "\u9a8c\u8bc1\u548c\u5386\u53f2"
     },
     {
@@ -45572,7 +45572,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "10_dashboard_readme_\u65e5\u5e38\u767b\u8bb0\u4e0e\u7814\u7a76\u590d\u5ba1",
-      "community": 273,
+      "community": 123,
       "norm_label": "\u65e5\u5e38\u767b\u8bb0\u4e0e\u7814\u7a76\u590d\u5ba1"
     },
     {
@@ -45682,7 +45682,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "readme",
-      "community": 103,
+      "community": 212,
       "norm_label": "readme.md"
     },
     {
@@ -54860,7 +54860,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L104",
+      "source_location": "L105",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_future_preview_is_allowed_but_exact_deadline_and_next_session_are_not",
       "target": "09_scripts_equity_research_capital_presentation_optional_rotation_cards"
@@ -54871,7 +54871,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L122",
+      "source_location": "L123",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_insufficient_cash_changed_holdings_policy_or_real_conflict_hides_pair",
       "target": "09_scripts_equity_research_capital_presentation_optional_rotation_cards"
@@ -70011,7 +70011,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L130",
+      "source_location": "L131",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
       "target": "09_scripts_equity_research_delivery_continuity_delivery_meaning_key"
@@ -70862,7 +70862,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L126",
+      "source_location": "L127",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
       "target": "09_scripts_equity_research_delivery_followthrough_displayed_actions"
@@ -74637,7 +74637,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
       "target": "09_scripts_equity_research_email_brief_render_email"
@@ -141407,7 +141407,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L109",
+      "source_location": "L110",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_recorded_partial_fill_or_order_prevents_duplicate_pair",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_context",
@@ -141429,7 +141429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L102",
+      "source_location": "L103",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_future_preview_is_allowed_but_exact_deadline_and_next_session_are_not",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_decision",
@@ -141440,7 +141440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L117",
+      "source_location": "L118",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_insufficient_cash_changed_holdings_policy_or_real_conflict_hides_pair",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_decision",
@@ -141451,7 +141451,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L125",
+      "source_location": "L126",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_decision",
@@ -141471,7 +141471,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L101",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_future_preview_is_allowed_but_exact_deadline_and_next_session_are_not",
@@ -141481,7 +141481,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L115",
+      "source_location": "L116",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_insufficient_cash_changed_holdings_policy_or_real_conflict_hides_pair",
@@ -141501,7 +141501,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_optional_review_is_not_assumed_filled_and_plan_change_is_meaningful",
@@ -141511,7 +141511,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "09_scripts/equity_research/tests/test_optional_rotation_email.py",
-      "source_location": "L108",
+      "source_location": "L109",
       "weight": 1.0,
       "source": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests",
       "target": "09_scripts_equity_research_tests_test_optional_rotation_email_optionalrotationemailtests_test_recorded_partial_fill_or_order_prevents_duplicate_pair",
@@ -179381,5 +179381,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "ee4bdbafd0aa1190c1e21eea9e0f86e1d6c0b8e6"
+  "built_at_commit": "5c43947937796343cf520e380bc1c7f90efffb5d"
 }

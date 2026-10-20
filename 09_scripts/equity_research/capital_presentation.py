@@ -93,8 +93,8 @@ def cards(decision, view=None):
                        'Buy/add 0 new shares in this cycle. The exact reasons and next steps follow.',sources=[]))
     result.extend(rotations)
     for side in ('buy', 'sell'):
-        if not any(r['order_draft'].get('side') == side for r in actionable):
-            result.append(dict(title=('OTHER '+side.upper() if rotations else side.upper())+' — none', group='action', kind='inactive',
+        if not rotations and not any(r['order_draft'].get('side') == side for r in actionable):
+            result.append(dict(title=side.upper()+' — none', group='action', kind='inactive',
                 headline='0 shares · no current order price',
                 body='No complete current conditional '+side+' draft passes the required checks. No order is requested by this update.', sources=[]))
     for row in [*actionable,*[r for r in c['decisions'] if r['decision'] in {'REDUCE_REVIEW','EXIT_REVIEW','HOLD'} and not r['order_draft']]]:
