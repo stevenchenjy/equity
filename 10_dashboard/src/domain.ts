@@ -61,7 +61,7 @@ export type CapitalDeploymentEscalation = {
 };
 export type Snapshot = {
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;
-  market_session: string; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
+  market_session: string; market_sources?: string[]; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
   account: { account_total_value: number | null; cash_available: number; invested_capital: number | null;
     last_updated: string; cash_basis: string; settled_cash_verified: boolean };
   positions: { ticker: string; shares: number; price: number | null; weight: number | null; role: string }[];

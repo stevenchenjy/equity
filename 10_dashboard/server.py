@@ -240,7 +240,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     return {
         "schema_version": "equity_dashboard_snapshot_v1", "mode": "read_only_preview",
         "server_now": now.isoformat(), "generated_at": d["generated_at"], "cycle_date": d.get("cycle_date"),
-        "market_session": expected_session, "stale": stale,
+        "market_session": expected_session, "market_sources": d.get("market_gate", {}).get("data_sources", []), "stale": stale,
         "snapshot_id": digest(decision_raw), "account_version": version(root),
         "account": {**values, "last_updated": account_raw.get("last_updated"), "cash_basis": account.get("cash_basis"),
                     "settled_cash_verified": orders_raw.get("broker_balance_observation", {}).get("settled_cash_verified") is True},
@@ -310,6 +310,7 @@ def current_snapshot(root):
             capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False))
     if not result.get('research_ready'):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
+        result['market_sources'] = d.get('market_gate', {}).get('data_sources', [])
         project_core_roles(result['positions'], result['allocation'], 'role')
     result['mode'] = 'formal_feedback'
     return result

@@ -257,22 +257,16 @@ def latest_published_market_session(
     *,
     publication_time: time = BASIC_EOD_PUBLICATION_TIME,
 ) -> date:
-    """Return the required close for the scheduled Basic REST verification.
+    """Require the latest completed close, independently of vendor delay.
 
-    The historical function name is retained for callers. This is a calendar
-    freshness target, NOT evidence of provider availability: the actual Custom
-    Bars collector must return and validate every required session. Before the
-    first 08:00 ET attempt, retain the prior verified-cycle target; afterwards
-    require the previous calendar day's market session. Never treat same-day
-    EOD access or a failed morning request as a verified current snapshot.
+    The name and publication_time argument remain compatibility identifiers.
+    The October 19 owner-approved backup removes the provider-specific overnight
+    lag. After the existing 16:15 close boundary today's close is required;
+    before it, require the preceding session. Availability still needs a fully
+    validated provider batch. Frozen experiments retain their archived helper.
     """
-
     current_et = current.astimezone(ET) if current.tzinfo is not None else current
-    current_clock = current_et.timetz().replace(tzinfo=None)
-    calendar_lag_days = 1 if current_clock >= publication_time else 2
-    return expected_market_session(
-        current_et - timedelta(days=calendar_lag_days)
-    )
+    return last_completed_market_session(current_et)
 
 
 def read_json(path: Path, default: Any | None = None) -> Any:

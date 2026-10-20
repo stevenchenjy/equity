@@ -186,7 +186,9 @@ class CapitalEscalationTests(unittest.TestCase):
             values = fixture("2026-10-06", stamp("2026-10-08", 7))
             result = update(root, *values)
             self.assertIsNone(result["consecutive_no_action_sessions"])
-            self.assertEqual(result["session_history_reason"], "completed_session_regression")
+            self.assertEqual(result["session_history_reason"], "validated_completed_market_session_unavailable")
+            # Pre-08:00 now requires October 7; the stale October 6 input
+            # is rejected before it can regress the persisted history.
             self.assertEqual((root / engine.STORE_REL).read_bytes(), old)
 
     def test_unverified_intraday_and_future_sessions_do_not_count(self):

@@ -16,6 +16,9 @@ import sys
 import tempfile
 from typing import Any
 import uuid
+import io
+
+import market_backup
 
 from daily_common import (
     atomic_write_csv,
@@ -79,7 +82,7 @@ CANDIDATE_FIELDS = [
 AUDIT_FIELDS = ["timestamp", "script_name", "action", "input_path", "output_path", "status", "safety_notes"]
 
 LEGACY_YFINANCE_DATA_SOURCE = "yfinance_public_market_data"
-COHERENT_DATA_SOURCES = {MASSIVE_DATA_SOURCE, LEGACY_YFINANCE_DATA_SOURCE}
+COHERENT_DATA_SOURCES = {MASSIVE_DATA_SOURCE, LEGACY_YFINANCE_DATA_SOURCE, market_backup.SOURCE}
 SMOKE_PRECHECK_ABORTED_CODE = "massive_smoke_preflight_aborted"
 SMOKE_VALIDATION_FAILED_CODE = "massive_smoke_validation_failed"
 SMOKE_CURRENT_SESSION_NOT_PUBLISHED_CODE = "massive_current_session_not_published"
@@ -492,6 +495,7 @@ def retrieve_full_universe(
     client: MassiveBasicEODClient,
     current: datetime,
     history_out: dict[str, Any] | None = None,
+    full_history_out: dict[str, Any] | None = None,
 ) -> tuple[
     list[dict[str, str]],
     str,
@@ -525,6 +529,12 @@ def retrieve_full_universe(
                     ],
                 }
             rows.append(row)
+            if full_history_out is not None and row.get("data_quality_label") == "ok":
+                full_history_out[ticker] = {
+                    "source_url": f"https://api.massive.com/v2/aggs/ticker/{ticker}/range/1/day/{start_date}/{end_date}?adjusted=false",
+                    "bars": [{"session_date": str(bar["session_date"]),
+                              **{key: bar[key] for key in ("open", "high", "low", "close", "volume")}} for bar in bars],
+                }
             if (
                 first_diagnostic is None
                 and diagnostic.get("validation_code")
@@ -586,11 +596,12 @@ def write_decision(
     prior_outputs_preserved: bool = False,
     source_failure_code: str = "none",
     full_diagnostic: dict[str, str] | None = None,
+    selected_source: str = MASSIVE_DATA_SOURCE,
 ) -> None:
     lines = [
         report_heading("market_source"), "", f"Generated: `{timestamp()}`", "",
-        "## Decision", "", f"- Selected source: `{MASSIVE_DATA_SOURCE}`.",
-        "- Source use: `Massive Stocks Basic end-of-day read-only market data`.",
+        "## Decision", "", f"- Selected source: `{selected_source}`.",
+        "- Source use: read-only daily prices; Massive primary with the owner-approved validated Nasdaq session-extension backup.",
         "- Price basis: `unadjusted`; this preserves the former B2 `auto_adjust=False` semantics.",
         f"- Benchmark preflight: `{'passed' if smoke_passed else 'failed'}`.",
         f"- Source-failure classification: `{source_failure_code}`.",
@@ -769,6 +780,8 @@ def prior_outputs_are_coherent(
     )
     if not market_by_ticker or not quality_by_ticker or not candidates_by_ticker:
         return False, [], "prior_output_ticker_coverage_invalid"
+    if len({row["data_source"] for row in market_rows}) != 1:
+        return False, [], "prior_output_mixed_provider_batch"
 
     required_positive_fields = {
         "last_price",
@@ -901,6 +914,8 @@ def full_universe_rows_are_committable(
     if market_by_ticker is None:
         return False, FULL_UNIVERSE_INCOMPLETE_CODE
 
+    if len({row.get("data_source") for row in market_rows}) != 1:
+        return False, FULL_UNIVERSE_INCOMPLETE_CODE
     expected_session = latest_published_market_session(current).isoformat()
     held_set = {ticker.strip().upper() for ticker in held_tickers}
     required_positive_fields = {"last_price", "previous_close"}
@@ -921,7 +936,7 @@ def full_universe_rows_are_committable(
         if set(row) != set(MARKET_FIELDS):
             return False, FULL_UNIVERSE_INCOMPLETE_CODE
         if (
-            row.get("data_source") != MASSIVE_DATA_SOURCE
+            row.get("data_source") not in {MASSIVE_DATA_SOURCE, market_backup.SOURCE}
             or row.get("data_quality_label") != quality_label(row)
             or row.get("data_quality_label") == "insufficient_data"
             or not parse_iso_datetime(row.get("data_timestamp", ""))
@@ -992,6 +1007,10 @@ def validated_snapshot_reuse(
     observed_sessions = {row.get("market_session_date", "") for row in rows}
     if observed_sessions != {expected_session}:
         return False, REUSE_STALE_SNAPSHOT_CODE, expected_session
+    if rows[0].get("data_source") == market_backup.SOURCE:
+        snapshot = (output_paths or (SNAPSHOT_PATH, QUALITY_PATH, CANDIDATES_PATH))[0]
+        if not market_backup.verify_binding(snapshot.parents[2], tickers, rows, sha256_file(snapshot)):
+            return False, REUSE_INVALID_SNAPSHOT_CODE, expected_session
     return True, REUSE_VALIDATED_SNAPSHOT_CODE, expected_session
 
 
@@ -1066,7 +1085,7 @@ def recompose_current_coverage(
             from tactical_review import _validated_bars
             history = json.loads(original[history_path])
             old_hash = before_hashes[SNAPSHOT_PATH.name]
-            if (isinstance(history, dict) and history.get("data_source") == MASSIVE_DATA_SOURCE
+            if (isinstance(history, dict) and history.get("data_source") in {MASSIVE_DATA_SOURCE, market_backup.SOURCE}
                     and all(not _validated_bars(history, row["ticker"], date.fromisoformat(session),
                                                 old_hash, row["last_price"])[1] for row in projected)):
                 history["tickers"] = {ticker: history["tickers"][ticker] for ticker in tickers}
@@ -1206,17 +1225,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--no-lock", action="store_true", help="Internal: caller owns the daily pipeline lock for coverage recomposition")
     args = parser.parse_args([] if argv is None else argv)
-    if args.no_lock and not args.recompose_current_coverage:
-        parser.error("--no-lock requires --recompose-current-coverage")
     if args.massive_auth_presence_probe:
         return massive_auth_probe_exit_code()
-    if args.recompose_current_coverage:
-        with (nullcontext() if args.no_lock else ExclusiveFileLock(ROOT / "00_project_control/run_logs/daily_pipeline.lock")):
-            return _run_main(args)
-    return _run_main(args)
+    with (nullcontext() if args.no_lock else ExclusiveFileLock(SNAPSHOT_PATH.parents[2] / "00_project_control/run_logs/daily_pipeline.lock")):
+        return _run_main(args)
 
 
 def _run_main(args: argparse.Namespace) -> int:
+    market_backup.recover_interrupted_publications(SNAPSHOT_PATH.parents[2])
     universe = read_csv(UNIVERSE_PATH)
     candidate_tickers = [row["ticker"].upper() for row in universe]
     if not universe:
@@ -1306,6 +1322,9 @@ def _run_main(args: argparse.Namespace) -> int:
     full_retrieval_succeeded = False
     full_diagnostic: dict[str, str] | None = None
     tactical_history: dict[str, Any] = {}
+    full_history: dict[str, Any] = {}
+    selected_source = MASSIVE_DATA_SOURCE
+    history_bundle: dict[str, Any] | None = None
     prior_outputs_preserved = False
     prior_validation_reason = "not_checked"
     if smoke_passed:
@@ -1321,6 +1340,7 @@ def _run_main(args: argparse.Namespace) -> int:
             client=client,
             current=refresh_time,
             history_out=tactical_history,
+            full_history_out=full_history,
         )
         if full_retrieval_succeeded:
             committable, commit_code = full_universe_rows_are_committable(
@@ -1388,6 +1408,46 @@ def _run_main(args: argparse.Namespace) -> int:
             f"network_attempted={'yes' if network_attempted else 'no'}; "
             "retries=0",
         )
+
+    if source_failure and market_backup.enabled(SNAPSHOT_PATH.parents[2]):
+        primary_failure = current_source_failure_code
+        current_ready, _, _ = validated_snapshot_reuse(universe=universe, tickers=tickers,
+            held_tickers=held_tickers, current=refresh_time)
+        if current_ready:
+            append_audit("primary_failed_current_close_retained", "current_validated_snapshot", "unchanged",
+                "complete", f"primary_failure_code={primary_failure}; latest_required_session_already_validated=yes; no_new_observation_claimed=yes")
+            return reuse_validated_snapshot(universe=universe, tickers=tickers, held_tickers=held_tickers)
+        try:
+            classes = {r["ticker"]: "etf" if r.get("sector") == "ETF" else "stocks" for r in universe}
+            classes.update({t: "stocks" for t in held_tickers if t not in classes})
+            history_bundle = market_backup.recover(SNAPSHOT_PATH.parents[2], tickers, classes,
+                latest_published_market_session(refresh_time))
+            market_rows = []
+            tactical_history = {}
+            now = timestamp()
+            for ticker in tickers:
+                series = history_bundle["tickers"][ticker]
+                normalized = [{**bar, "session_date": date.fromisoformat(bar["session_date"])} for bar in series["bars"]]
+                row = market_row_from_massive_bars(ticker, normalized, now, refresh_time)
+                row["data_source"] = market_backup.SOURCE
+                market_rows.append(row)
+                tactical_history[ticker] = {"source_url": series["source_url"], "bars": series["bars"][-20:]}
+            committable, code = full_universe_rows_are_committable(market_rows=market_rows,
+                tickers=tickers, held_tickers=held_tickers, current=refresh_time)
+            if not committable:
+                raise market_backup.BackupError(code)
+            selected_source = market_backup.SOURCE
+            source_failure = False
+            full_retrieval_succeeded = True
+            full_note = "Validated full-universe Nasdaq new-session extension of retained unadjusted Massive history; primary failure retained in audit."
+            current_source_failure_code = "none"
+            append_audit("backup_market_batch", str(market_backup.CURRENT), str(SNAPSHOT_PATH.relative_to(ROOT)),
+                "complete", f"primary_failure_code={primary_failure}; backup_source={selected_source}; full_scope_validated=yes; historical_bars_preserved=yes; retries=0")
+        except (market_backup.BackupError, OSError, ValueError, KeyError, TypeError) as exc:
+            history_bundle = None
+            code = str(exc) if isinstance(exc, market_backup.BackupError) else "backup_unavailable_or_invalid"
+            append_audit("backup_market_batch", str(market_backup.CURRENT), "canonical_outputs_unchanged", "failed",
+                f"primary_failure_code={primary_failure}; backup_failure_code={code}; no_partial_commit=yes")
 
     if source_failure:
         (
@@ -1460,23 +1520,39 @@ def _run_main(args: argparse.Namespace) -> int:
             )
             candidates.append(candidate)
 
-        write_csv(SNAPSHOT_PATH, market_rows, MARKET_FIELDS)
-        write_csv(QUALITY_PATH, quality_rows, QUALITY_FIELDS)
-        write_csv(CANDIDATES_PATH, candidates, CANDIDATE_FIELDS)
+        def csv_bytes(rows, fields):
+            buffer = io.StringIO(newline="")
+            writer = csv.DictWriter(buffer, fieldnames=fields)
+            writer.writeheader(); writer.writerows(rows)
+            return buffer.getvalue().encode("utf-8")
+        files = {SNAPSHOT_PATH: csv_bytes(market_rows, MARKET_FIELDS),
+                 QUALITY_PATH: csv_bytes(quality_rows, QUALITY_FIELDS),
+                 CANDIDATES_PATH: csv_bytes(candidates, CANDIDATE_FIELDS)}
+        snapshot_hash = hashlib.sha256(files[SNAPSHOT_PATH]).hexdigest()
         # Public research cache only. Binding to committed snapshot bytes means
         # a interrupted or failed update cannot promote mismatched history.
         # Derive its location from SNAPSHOT_PATH to keep offline fixture writes
         # isolated and leave prior cache bytes untouched on source failure.
         if tactical_history and set(tactical_history) == set(tickers):
-            atomic_write_json(SNAPSHOT_PATH.with_name("tactical_price_history.local.json"), {
+            history = {
                 "schema_version": "phase5r_tactical_price_history_v1",
                 "validated": True,
-                "data_source": MASSIVE_DATA_SOURCE,
+                "data_source": selected_source,
                 "generated_at": now,
                 "market_session": latest_published_market_session(refresh_time).isoformat(),
-                "snapshot_sha256": sha256_file(SNAPSHOT_PATH),
+                "snapshot_sha256": snapshot_hash,
                 "tickers": tactical_history,
-            })
+            }
+            files[SNAPSHOT_PATH.with_name("tactical_price_history.local.json")] = (json.dumps(history, indent=2, sort_keys=True) + "\n").encode()
+        if history_bundle is None and set(full_history) == set(tickers):
+            history_bundle = {"schema_version": market_backup.SCHEMA, "data_source": MASSIVE_DATA_SOURCE,
+                "price_basis": "unadjusted", "market_session": str(latest_published_market_session(refresh_time)),
+                "generated_at": now, "kind": "labelled_normalized_provider_observation_not_original_http_response", "tickers": full_history}
+        if history_bundle is not None:
+            market_backup.checked_bundle(history_bundle, tickers)
+            market_backup.publish(SNAPSHOT_PATH.parents[2], files, history_bundle, SNAPSHOT_PATH)
+        else:
+            raise market_backup.BackupError("complete_unadjusted_history_required_for_publication")
 
         # Keep forward evidence for retired names in unfinished experiments.
         # This separate cache never expands canonical rows or new captures.
@@ -1489,6 +1565,8 @@ def _run_main(args: argparse.Namespace) -> int:
                 return rows[0], series[ticker], 'none'
             return None, None, reason if reason != 'none' else 'massive_market_row_validation_failed'
         try:
+            if selected_source != MASSIVE_DATA_SOURCE:
+                raise ValueError("experimental_outcome_feed_not_changed")
             outcome_receipt = collect_outcome_prices(SNAPSHOT_PATH.parents[2], tickers, refresh_time, fetch_outcome_ticker)
             append_audit('momentum_outcome_price_coverage', str(outcome_path), str(outcome_path),
                 'complete' if not outcome_receipt['missing'] else 'partial',
@@ -1508,6 +1586,7 @@ def _run_main(args: argparse.Namespace) -> int:
         prior_outputs_preserved=prior_outputs_preserved,
         source_failure_code=current_source_failure_code,
         full_diagnostic=full_diagnostic,
+        selected_source=selected_source,
     )
     write_data_report(
         market_rows,

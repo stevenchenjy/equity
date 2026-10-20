@@ -175,7 +175,8 @@ def run_step(
     )
     try:
         completed = subprocess.run(
-            [sys.executable, str(SCRIPT_DIR / script_name), *extra_arguments],
+            [sys.executable, str(SCRIPT_DIR / script_name), *extra_arguments,
+             *(["--no-lock"] if name == "market_refresh" else [])],
             cwd=ROOT,
             # Child diagnostics can contain third-party response fragments.
             # The durable refresh state records only finite status fields, so

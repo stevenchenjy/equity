@@ -13,7 +13,7 @@ for independent broad screening, without changing B2's evidence contract.
 
 - Candidate membership comes only from `03_source_data/equity_research/universe_seed.csv`.
 - Current local ticker symbols may be appended to the public market snapshot for C9 position-price monitoring. They are not added to the candidate universe or B2 candidate scores.
-- Public market data may be retrieved only through the Massive Stocks Basic end-of-day Custom Bars path after the QQQ, XLK, and SPY preflight succeeds. Massive is the sole active remote production source for B2; Yahoo/yfinance and every other public market-data source are prohibited as a fetch or fallback.
+- Massive Stocks Basic Custom Bars remains the primary B2 source after its QQQ, XLK and SPY preflight. The October 19 owner-approved [validated full-universe backup](market_feed_backup.md) permits Nasdaq's credential-free historical endpoint to extend retained unadjusted history after a primary failure. Every configured and held-only symbol, exact session coverage, overlapping closes and provenance must pass before publication. Yahoo/yfinance and other sources remain outside production fallback authority.
 - The Massive request must explicitly use `adjusted=false`, preserving the unadjusted B2 close/range/volume basis.
 - The required `MASSIVE_API_KEY` may be supplied only by the external process runtime. Its value must not be placed in this repository, a `.env` file, a launchd plist, source code, a report, a receipt, or a shell transcript.
 - The refresh requests daily historical market data only. B2 itself does not create intraday alerts, a recurring scheduler, an every-15-minute scan, or email delivery.
@@ -27,10 +27,10 @@ for independent broad screening, without changing B2's evidence contract.
   boundary was inferred from [S3 day aggregate files](https://massive.com/docs/flat-files/stocks/day-aggregates),
   a different product that is not included in Basic. It is retired as a REST
   availability assumption; see [collector timing evidence](../11_archive/project_control_history/collector_timing_20260928.md).
-- The expected date is the most recent U.S. market session on or before the
-  previous Eastern calendar day. This is the date requested and validated,
-  not a claim that the provider has already published it. Missing expected
-  bars remain a freshness failure even when HTTP status is 200.
+- The required date is the latest completed U.S. exchange session, using the
+  existing 16:15 ET boundary. The October 19 backup adoption removes the former
+  provider-specific overnight lag, including before 08:00. This calendar target
+  is not a publication promise; missing expected bars fail even after HTTP 200.
 - A bounded Custom Bars diagnostic at 20:35 ET on September 28 requested the
   completed September 28 session. HTTP 200 / DELAYED returned 250 of the 251
   expected daily bars, ending September 25 and missing September 28. A control
@@ -66,7 +66,7 @@ for independent broad screening, without changing B2's evidence contract.
 - An explicit operator-only `--recompose-current-coverage` mode can recover a local current-close trio after a held-only symbol leaves the account. Under the daily pipeline lock it first validates the entire original wider trio, then validates a staged projection containing exactly the unchanged 31 candidates and current holdings. It only removes obsolete held-only rows; missing, stale, malformed, duplicated or inconsistent data still blocks. Original artifacts and input hashes are preserved in ignored `market_coverage_recompositions.local/` before any canonical write, with a dated receipt. Candidate bytes, retained prices, provenance and observation timestamps remain unchanged. A previously bound tactical sidecar is projected and rebound only when each retained series passes the existing historical-bar validator against the original snapshot; unverified history is preserved without rebinding. This is local recomposition, never a new market observation or an automatic retry; normal reuse remains read-only.
 - During this one-way migration, an existing coherent trio labeled with the former local yfinance provenance may be read only to validate, preserve byte-for-byte after a Massive failure, or validate no-network reuse. It never authorizes a Yahoo/yfinance request, an alternate remote source, re-dating, a successful current refresh, or a substitution for Massive data.
 - The full refresh requests a one-year daily history to calculate the latest close, prior close, latest volume, 20-session average volume, latest day range, and observed one-year range. The returned session-date sequence must exactly cover every expected U.S. market session in that window; gaps, duplicate session dates, or a truncated history reject the row.
-- A completed download is not committed merely because the provider call returned. Before any B2 snapshot, quality, or candidate output is written, the response must have exact ticker coverage, valid core fields, coherent provenance, and the latest published market-session date for every covered ticker. A partial, empty, stale, or malformed row rejects the entire response with a finite non-sensitive code.
+- A completed download is not committed merely because the provider call returned. Before any B2 snapshot, quality, or candidate output is written, the response must have exact ticker coverage, valid core fields, coherent provenance, and the required completed market-session date for every covered ticker. A partial, empty, stale, malformed or price-basis-conflicting row rejects the entire response. Original failure facts are retained when the independently validated backup recovers the batch; backup failure never contributes partial canonical rows.
 - Rejected full-universe responses never contribute partial live data. The existing B2 output trio remains byte-for-byte unchanged whether it is coherent, stale, or already invalid; downstream gates continue to reject it until a complete valid Massive batch replaces it. No fallback market value or signal is invented.
 - Scoring independently compares each candidate row with the latest published market session and emits `insufficient_data` rather than an actionable-looking score for a preserved stale row.
 

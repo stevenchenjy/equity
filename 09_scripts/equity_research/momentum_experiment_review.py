@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from daily_common import (BASIC_EOD_PUBLICATION_TIME, ET, ExclusiveFileLock,
-    atomic_write_json, atomic_write_text, canonical_sha256, latest_published_market_session)
+    atomic_write_json, atomic_write_text, canonical_sha256, expected_market_session, latest_published_market_session)
 import momentum_experiment as experiment
 from workflow_evaluation import aware
 
@@ -107,7 +107,11 @@ def _cohort(observations, outcomes):
         if (outcome.get("evaluation_inputs", {}).get("implementation_sha256")
                 != observation["inputs"].get("implementation_sha256")):
             raise ReviewError("review_outcome_implementation_mismatch")
-        if latest_published_market_session(aware(outcome["recorded_at"]), publication_time=publication_clock) < date.fromisoformat(sessions[-1]):
+        # Feed recovery must not advance an archived experiment's publication
+        # clock. Preserve its original prior-calendar-day rule explicitly.
+        recorded = aware(outcome["recorded_at"]).astimezone(ET)
+        lag = 1 if recorded.timetz().replace(tzinfo=None) >= publication_clock else 2
+        if expected_market_session(recorded - timedelta(days=lag)) < date.fromisoformat(sessions[-1]):
             raise ReviewError("review_outcome_precedes_data_publication")
     summary = experiment.summarize([*observations, *matched])
     comparison = summary["comparison_by_version"][first["experiment_version"]]

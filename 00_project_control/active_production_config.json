@@ -5,7 +5,7 @@
   "authority": "active production configuration; historical Phase 5R pilot policies are non-authoritative",
   "workflow": {
     "baseline": "deterministic_public_evidence",
-    "market_provider": "Massive Basic end-of-day, read-only",
+    "market_provider": "Massive Basic unadjusted EOD primary; validated Nasdaq new-session backup over retained unadjusted history",
     "official_fundamentals_provider": "SEC submissions and companyfacts",
     "objective_research_max_tickers": 10,
     "portfolio_execution": "manual only",

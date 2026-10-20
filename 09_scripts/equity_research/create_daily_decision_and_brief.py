@@ -172,6 +172,10 @@ def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, An
             and current.strftime("%H:%M") >= "16:15"
         )
     )
+    sources = sorted({r.get("data_source", "") for r in rows.values()})
+    from market_backup import SOURCE as BACKUP_SOURCE, verify_binding
+    if BACKUP_SOURCE in sources and not verify_binding(ROOT, list(rows), list(rows.values()), sha256_file(MARKET_SNAPSHOT_PATH)):
+        failures.append("backup_market_provenance_invalid")
     complete_close_verified = not failures and session_closed
     return {
         "passed": not failures,
@@ -185,6 +189,8 @@ def load_market_gate(current: datetime, held_tickers: list[str]) -> dict[str, An
         "complete_close_verified": complete_close_verified,
         "failures": failures,
         "source": str(MARKET_SNAPSHOT_PATH.relative_to(ROOT)),
+        "data_sources": sources,
+        "price_basis": "unadjusted; retained historical bars with validated new-session extension" if BACKUP_SOURCE in sources else "unadjusted",
     }
 
 

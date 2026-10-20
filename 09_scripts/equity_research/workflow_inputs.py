@@ -6,6 +6,8 @@ from publication fingerprints nor rejected by a separate display allowlist.
 from account_authority import POLICY_REL
 
 WORKFLOW_INPUTS = {
+    "03_source_data/equity_research/market_feed.local/current.json",
+    "01_policies/market_data_feeds.json",
     POLICY_REL,
     "05_risk_and_positions/investment_plans.local.json",
     "05_risk_and_positions/current_positions.local.csv",

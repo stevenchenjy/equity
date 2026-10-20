@@ -158,12 +158,12 @@ class B2RefreshCadenceTests(unittest.TestCase):
             }[name]
             stack.enter_context(patch.object(b2, name, value))
 
-    def test_basic_eod_publication_boundary_is_distinct_from_market_close(self) -> None:
+    def test_latest_completed_close_is_required_before_and_after_first_fetch_slot(self) -> None:
         self.assertEqual(
             latest_published_market_session(
                 datetime(2026, 8, 6, 7, 59, tzinfo=ET)
             ),
-            date(2026, 8, 4),
+            date(2026, 8, 5),
         )
         self.assertEqual(
             latest_published_market_session(PUBLICATION_BOUNDARY),
@@ -188,10 +188,10 @@ class B2RefreshCadenceTests(unittest.TestCase):
             date(2026, 9, 4),
         )
 
-    def test_prepublication_reuse_keeps_latest_published_snapshot_and_skips_client(self) -> None:
+    def test_pre_0800_reuse_requires_latest_completed_snapshot_and_skips_client(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             paths = self._paths(Path(directory))
-            self._write_coherent_snapshot(paths, "2026-08-04")
+            self._write_coherent_snapshot(paths, "2026-08-05")
             prior = {
                 name: paths[name].read_bytes()
                 for name in ("snapshot", "quality", "candidates")

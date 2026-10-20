@@ -38,6 +38,8 @@ relevant checks before relying on any linked claim.
 
 ## Current runtime outputs — read their generated timestamps
 
+- [Validated full-universe market backup](market_feed_backup.md): retained unadjusted history, Nasdaq new-session admission, latest completed-close freshness, source fingerprints and interrupted-publication recovery. All investment limits and delivery windows remain unchanged.
+
 These paths refer to `/Users/messssi/LocalRuntime/equity`, not cached reports
 in the authoring clone. Missing local reports are not assumed complete.
 

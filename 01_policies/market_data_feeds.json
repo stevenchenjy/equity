@@ -1,0 +1,11 @@
+{
+  "schema_version": "equity_market_data_feeds_v1",
+  "authority": "Owner request on October 19, 2026: implement and deploy a validated full-universe backup feed; all investment limits and manual execution remain unchanged.",
+  "primary": "massive_stocks_basic_eod",
+  "backup": "massive_unadjusted_history_nasdaq_eod_extension",
+  "backup_enabled": true,
+  "backup_origin": "https://api.nasdaq.com",
+  "backup_scope": "Complete configured candidate universe plus current held-only symbols; extend retained validated unadjusted history only after overlapping closing-price checks. Never substitute adjusted historical series.",
+  "latest_completed_close_required": true,
+  "no_email_or_execution": true
+}

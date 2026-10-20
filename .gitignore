@@ -149,6 +149,7 @@ graphify-out/reflections/
 05_risk_and_positions/thesis_reviews.local.json
 
 # Local-only migration backups and receipts; historical Git archives are tracked.
+03_source_data/equity_research/market_feed.local/
 11_archive/runtime_naming_migration_*.local/
 
 # Maintained research, plans, incorporation receipts and evaluation history.

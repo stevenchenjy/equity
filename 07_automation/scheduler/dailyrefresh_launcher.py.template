@@ -68,9 +68,11 @@ def main() -> int:
     child_environment[b"PHASE5R_SEC_USER_AGENT"] = SEC_USER_AGENT.encode("utf-8")
     if not args.feedback_refresh or args.market_snapshot_mode=='fetch':
         massive_secret = keychain_value(MASSIVE_KEYCHAIN_SERVICE)
-        if massive_secret is None:
-            return KEYCHAIN_UNAVAILABLE_EXIT
-        child_environment[b"MASSIVE_API_KEY"] = massive_secret
+        if massive_secret is not None:
+            child_environment[b"MASSIVE_API_KEY"] = massive_secret
+        # Missing primary authentication is a finite collector failure. Let the
+        # verified runtime try its owner-approved credential-free backup; it
+        # still fails closed if the retained baseline or backup is unavailable.
     arguments = ([PYTHON, '/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_daily_refresh.py',
                   '--run','--no-lock','--market-snapshot-mode',args.market_snapshot_mode]
                  if args.feedback_refresh else [PYTHON,RUNTIME_SCHEDULER,'--job','dailyrefresh'])

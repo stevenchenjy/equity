@@ -165,6 +165,9 @@ def cards(decision, view=None):
     result.append(dict(title='Cash and research progress',group='background',kind='',body=f"Cash: ${c['planning_cash']:.2f}; mandatory reserve ${c['mandatory_reserve']:.2f}. Planning cash is not broker buying power.\n"+
                         f"Research queue: {decision.get('research_opportunities',{}).get('metrics',{}).get('research_queue_size','unverified')} retained opportunities.\n"+
                         'Automatic objective collectors, valuation recomposition and the source-bound analyst continue working. Successful source collection does not complete an investment case.',sources=[]))
+    if 'massive_unadjusted_history_nasdaq_eod_extension' in decision.get('market_gate', {}).get('data_sources', []):
+        result.append(dict(title='Market data source', group='background', kind='', sources=[],
+            body='Validated Nasdaq backup for the latest completed session, with retained unadjusted Massive history. Complete configured coverage and overlapping closes passed; dated EOD observations, not live execution quotes.'))
     import json
     by_ticker = {r['ticker']: r for r in c['decisions']}
     from company_research_presentation import case_lines
