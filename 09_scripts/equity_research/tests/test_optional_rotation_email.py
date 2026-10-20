@@ -20,7 +20,7 @@ def rotation_plan():
         recorded_at='2026-10-19T21:00:00-04:00', effective_at='2026-10-19T21:00:00-04:00',
         account_observed_at='2026-10-19T20:00:00-04:00',
         review_at='2026-10-20T10:30:00-04:00', valid_until='2026-10-20T10:30:00-04:00',
-        instruction='持有记录中的 SPY；配对换仓只按独立的有效行动卡自主决定。')
+        instruction='Retain recorded SPY; decide on the optional pair using its separate valid action cards.')
     row['purpose'] = {key: 'Retain the same approved index-core purpose.' for key in
         ('strategy','holding_period_justification','entry_validity','failure_condition','exit_rule')}
     row['purpose']['sources'] = copy.deepcopy(row['sources'])
@@ -31,9 +31,9 @@ def rotation_plan():
         sell=dict(ticker='SPY', quantity=1, minimum_price=763.25),
         expected_holdings={'SPY':2,'QQQM':0}, minimum_combined_core_pct=30,
         reference_close='2026-10-16',
-        skip_conditions=['价格不好或风险过于激进，就跳过；保留当前持仓。'],
-        incomplete_pair_rule='保留真实的中间持仓并复核，不追价，不推定 SPY 已卖出。',
-        rationale='这只是可选的指数结构调整，不要求买入 QQQM。', sources=copy.deepcopy(row['sources']))
+        skip_conditions=['Skip unfavorable prices or excessive risk; retain current holdings.'],
+        incomplete_pair_rule='Keep and reassess actual interim holdings; do not chase or assume a SPY sale.',
+        rationale='This is optional index allocation; no QQQM purchase is required.', sources=copy.deepcopy(row['sources']))
     return row
 
 
@@ -86,11 +86,11 @@ class OptionalRotationEmailTests(unittest.TestCase):
         d=decision(); before=copy.deepcopy(d)
         subject,plain,html=render_email(d)
         for text in (plain,html):
-            self.assertLess(text.index('可选换仓 · BUY 买入 2 股 QQQM'),text.index('配对第二步 · SELL 卖出 1 股 SPY'))
-            self.assertLess(text.index('配对第二步 · SELL 卖出 1 股 SPY'),text.index('HOLD — SPY'))
-            self.assertLess(text.index('跳过条件'),text.index('Supporting information'))
+            self.assertLess(text.index('OPTIONAL ROTATION · BUY 2 shares QQQM'),text.index('PAIRED SECOND STEP · SELL 1 share SPY'))
+            self.assertLess(text.index('PAIRED SECOND STEP · SELL 1 share SPY'),text.index('HOLD — SPY'))
+            self.assertLess(text.index('SKIP CONDITIONS'),text.index('Supporting information'))
             lead=text.split('HOLD — SPY')[0]
-            for term in ('$292.26','$763.25','09:45','10:30','全部实际成交','仅部分成交时不卖 SPY','过于激进','不换仓'):
+            for term in ('$292.26','$763.25','09:45','10:30','All shares must actually fill','Do not sell SPY after only a partial buy fill','too aggressive','Skip the rotation'):
                 self.assertIn(term,lead)
             self.assertNotIn('BUY — none',lead)
             self.assertNotIn('SELL — none',lead)
