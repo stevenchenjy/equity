@@ -125,6 +125,59 @@ def _validate_reassessment(row: dict[str, Any]) -> None:
     _bound_sources(review, row, "plan_reassessment")
 
 
+def _validate_rotation_review(row: dict[str, Any], root: Path | None = None) -> None:
+    """A dated optional pair is a review, never two independent order drafts."""
+    review = row.get("conditional_rotation_review")
+    if review is None:
+        return
+    if (not isinstance(review, dict) or review.get("optional") is not True
+            or review.get("human_execution_only") is not True
+            or review.get("sequence") != "buy_fully_then_sell"
+            or row.get("role") != "broad_core" or row.get("strategy_horizon") != "broad_core"
+            or row.get("action") != "hold" or row.get("order_draft")
+            or _whole(row.get("proposed_change_shares")) != 0):
+        raise ValueError("plan_rotation_review_authority_invalid")
+    buy, sell = review.get("buy", {}), review.get("sell", {})
+    if (not isinstance(buy, dict) or not isinstance(sell, dict)
+            or sell.get("ticker") != row["ticker"] or buy.get("ticker") == sell.get("ticker")
+            or not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", str(buy.get("ticker", "")))
+            or not 0 < _whole(sell.get("quantity")) <= _whole(row["expected_shares"])
+            or _whole(buy.get("quantity")) <= 0):
+        raise ValueError("plan_rotation_review_legs_invalid")
+    for leg, field in ((buy, "maximum_price"), (sell, "minimum_price")):
+        value = leg.get(field)
+        if isinstance(value, bool) or not math.isfinite(float(value or 0)) or float(value or 0) <= 0:
+            raise ValueError("plan_rotation_review_price_invalid")
+    expected = review.get("expected_holdings")
+    if (not isinstance(expected, dict) or set(expected) != {buy["ticker"], sell["ticker"]}
+            or _whole(expected[sell["ticker"]]) != _whole(row["expected_shares"])):
+        raise ValueError("plan_rotation_review_expected_holdings_invalid")
+    _whole(expected[buy["ticker"]])
+    starts, ends = stamp(review.get("starts_at")), stamp(review.get("ends_at"))
+    session = review.get("session_date")
+    close = regular_close(session)
+    if (starts.date().isoformat() != session or ends.date().isoformat() != session
+            or not datetime.combine(starts.date(), time(9, 30), ET) <= starts < ends <= close
+            or ends > stamp(row["review_at"]) or not row.get("valid_until")
+            or ends > stamp(row["valid_until"]) or stamp(row["recorded_at"]) >= ends
+            or date.fromisoformat(review.get("reference_close", "")) > starts.date()):
+        raise ValueError("plan_rotation_review_window_invalid")
+    conditions = review.get("skip_conditions")
+    if (not isinstance(conditions, list) or not conditions
+            or any(not isinstance(x, str) or not x.strip() for x in conditions)):
+        raise ValueError("plan_rotation_review_skip_conditions_required")
+    _required_text(review, ("incomplete_pair_rule", "rationale"), "plan_rotation_review")
+    if review.get("minimum_combined_core_pct") != 30:
+        raise ValueError("plan_rotation_review_core_policy_invalid")
+    if root is not None:
+        from active_config import validate_core_allocation_tickers
+        config = json.loads((root / "00_project_control/active_production_config.json").read_text())
+        if (not {buy["ticker"], sell["ticker"]} <= set(validate_core_allocation_tickers(config["account"]))
+                or float(config["account"]["core_minimum_pct"]) != review["minimum_combined_core_pct"]):
+            raise ValueError("plan_rotation_review_core_policy_invalid")
+    _bound_sources(review, row, "plan_rotation_review")
+
+
 def _expired_at(row: dict[str, Any], current: datetime) -> bool:
     return (any(row.get(field) and current >= stamp(row[field])
                 for field in ("time_exit_at", "valid_until"))
@@ -263,6 +316,7 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
     validate_allocation(row)
     _validate_purpose(row)
     _validate_reassessment(row)
+    _validate_rotation_review(row, root)
 
 
 def validate_ledger(payload: dict[str, Any], *, root: Path | None = None) -> dict[str, dict[str, Any]]:
@@ -549,6 +603,15 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         if row.get("time_exit_at") and quantity:
             instruction += " 原定时间退出/复核：" + row["time_exit_at"] + "。"
         effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "recorded_at", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources", "strategy_horizon", "purpose", "setup_status", "setup_status_reason", "reassessment", "reviewed_allocation", "valid_until")}
+        rotation = row.get("conditional_rotation_review")
+        if rotation:
+            pair = {rotation["buy"]["ticker"], rotation["sell"]["ticker"]}
+            conflicts = any(order.get("ticker") in pair and order.get("status") not in
+                            {"cancelled", "canceled", "filled", "rejected", "expired"}
+                            for order in open_orders["orders"] if isinstance(order, dict))
+            unchanged = all(held.get(name, 0) == amount for name, amount in rotation["expected_holdings"].items())
+            if status == "maintained" and unchanged and not conflicts and not base["global_blockers"] and not reasons:
+                effective["conditional_rotation_review"] = copy.deepcopy(rotation)
         effective.update(status=status, action=row["action"] if status == "maintained" else "reconcile_plan",
                          instruction=instruction, historical_instruction=row["instruction"],
                          current_shares=quantity, eligible_quantity=0, proposed_change_shares=row["proposed_change_shares"],

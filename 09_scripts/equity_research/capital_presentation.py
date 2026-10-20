@@ -2,6 +2,7 @@
 from __future__ import annotations
 from capital_decision import BUY, validate
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 
 
 def action_lines(row):
@@ -26,17 +27,74 @@ def action_lines(row):
     return lines
 
 
+def optional_rotation_cards(decision):
+    """Prominent dated owner review; never manufacture capital order drafts."""
+    current = datetime.fromisoformat(decision['generated_at'])
+    c = decision['capital_decision']
+    policy = decision.get('allocation_policy', {})
+    core = set(policy.get('core_tickers', []))
+    held = {row['ticker']: row for row in decision.get('held_positions', [])}
+    result = []
+    for plan in decision.get('plan_continuity', {}).get('plans', []):
+        review = plan.get('conditional_rotation_review')
+        if (not review or plan.get('status') != 'maintained' or plan.get('blockers')
+                or decision.get('plan_continuity', {}).get('global_blockers')
+                or decision.get('workflow_integrity', {}).get('global_blockers')):
+            continue
+        buy, sell = review['buy'], review['sell']
+        ends = datetime.fromisoformat(review['ends_at'])
+        if (review.get('optional') is not True or review.get('human_execution_only') is not True
+                or review.get('sequence') != 'buy_fully_then_sell' or current >= ends
+                or not {buy['ticker'], sell['ticker']} <= core
+                or policy.get('core_minimum_pct') != review['minimum_combined_core_pct']):
+            continue
+        try:
+            unchanged = all(Decimal(str(held.get(ticker, {}).get('current_shares', 0))) == Decimal(str(qty))
+                            for ticker, qty in review['expected_holdings'].items())
+            available = min(Decimal(str(c['planning_cash'])) - Decimal(str(c['mandatory_reserve'])),
+                            Decimal(str(c['estimated_uncommitted_cash_after'])))
+            cost = Decimal(str(buy['quantity'])) * Decimal(str(buy['maximum_price']))
+            if not unchanged or not available.is_finite() or available < cost:
+                continue
+        except (KeyError, ValueError, TypeError, InvalidOperation):
+            continue
+        from investment_plans import stamp
+        start, end = stamp(review['starts_at']), stamp(review['ends_at'])
+        window = f"{start:%Y-%m-%d %H:%M}–{end:%H:%M} ET"
+        result.extend([
+            dict(title=f"可选换仓 · BUY 买入 {buy['quantity']} 股 {buy['ticker']}", group='action', kind='buy',
+                headline=f"先买入 · LIMIT ≤ ${float(buy['maximum_price']):.2f} · 条件不好就跳过",
+                body=f"时间: {window}；只在窗口内自主决定，未生成或提交订单。\n"
+                     + f"价格: 每股最多 ${float(buy['maximum_price']):.2f}，不追价、不自动抬高上限；{review['reference_close']} 收盘仅为制定条件的历史依据，执行前检查当前可成交报价。\n"
+                     + f"先后顺序: 第一步可选买入 {buy['quantity']} 股 {buy['ticker']}，总额最多 ${float(cost):.2f}；LIMIT / DAY，必须全部实际成交，才可考虑下一步卖出。仅部分成交时不卖 {sell['ticker']}。\n"
+                     + "执行条件: 晨间所需行情核验通过；本地记录无未处理的账户或订单变化，实际可执行资金足够，且你愿意承担更集中的成长指数敞口。价格、价差或波动让你觉得过于激进，就不换仓。",
+                sources=[]),
+            dict(title=f"配对第二步 · SELL 卖出 {sell['quantity']} 股 {sell['ticker']}", group='action', kind='sell',
+                headline=f"仅在 {buy['quantity']} 股 {buy['ticker']} 全部成交后 · LIMIT ≥ ${float(sell['minimum_price']):.2f}",
+                body=f"价格: 每股至少 ${float(sell['minimum_price']):.2f}；LIMIT / DAY，买入上限与卖出下限必须同时满足，不单独执行卖出。\n"
+                     + f"配置条件: 按当前价格复算，换仓后 {sell['ticker']} + {buy['ticker']} 合计仍须至少 {review['minimum_combined_core_pct']}%。\n"
+                     + f"截止: {end:%Y-%m-%d %H:%M} ET；届时取消仍未成交且你不再监控的订单，重新复核，不自动延续。\n"
+                     + f"第二步未成交: {review['incomplete_pair_rule']}", sources=[]),
+            dict(title='跳过条件 · 不要求为了完成方案而交易', group='action', kind='inactive',
+                headline='没有成交就保留当前持仓；只记录实际发生的成交',
+                body='\n'.join(review['skip_conditions'])+'\n'+review['rationale'], sources=[]),
+        ])
+    return result
+
+
 def cards(decision, view=None):
     c=decision['capital_decision'];validate(c,current=datetime.fromisoformat(decision['generated_at']))
     result=[]
+    rotations=optional_rotation_cards(decision)
     actionable=[r for r in c['decisions'] if r['order_draft']]
     result.append(dict(title="TODAY'S ACTION",group='action',kind='buy' if actionable else 'inactive',
-                       headline='EXACT CONDITIONAL ORDER DRAFTS' if actionable else 'NO NEW POSITION',
-                       body='Review the complete drafts below, then manually enter any approved order in Chase.' if actionable else
+                       headline='可选条件换仓 · 可以不执行' if rotations else 'EXACT CONDITIONAL ORDER DRAFTS' if actionable else 'NO NEW POSITION',
+                       body='优先阅读下面配对的 BUY / SELL 条件。价格不合适或风险过于激进就跳过；由你决定及下单。' if rotations else 'Review the complete drafts below, then manually enter any approved order in Chase.' if actionable else
                        'Buy/add 0 new shares in this cycle. The exact reasons and next steps follow.',sources=[]))
+    result.extend(rotations)
     for side in ('buy', 'sell'):
         if not any(r['order_draft'].get('side') == side for r in actionable):
-            result.append(dict(title=side.upper()+' — none', group='action', kind='inactive',
+            result.append(dict(title=('OTHER '+side.upper() if rotations else side.upper())+' — none', group='action', kind='inactive',
                 headline='0 shares · no current order price',
                 body='No complete current conditional '+side+' draft passes the required checks. No order is requested by this update.', sources=[]))
     for row in [*actionable,*[r for r in c['decisions'] if r['decision'] in {'REDUCE_REVIEW','EXIT_REVIEW','HOLD'} and not r['order_draft']]]:

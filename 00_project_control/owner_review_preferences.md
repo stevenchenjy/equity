@@ -32,6 +32,19 @@ clear supporting-information divider. Never mix a historical or reference
 price into a current action card. Use textual BUY/SELL labels as well as visual
 emphasis so the distinction survives plain-text mail and color limitations.
 
+October 19 optional-rotation clarification: an explicitly owner-requested,
+source-bound, dated paired review belongs at the top of the normal action
+email, with separate BUY and SELL cards before HOLD. Carry its structured
+prices, quantities, buy-fully-before-sell sequence, expiry and skip conditions
+from the maintained plan; do not extract orders from free prose. Clearly label
+it optional and distinguish the fixed proposed price limits from historical
+quotes and current execution checks. Bad prices, aggressive conditions or an
+owner decision to skip mean no rotation. Partial fills, existing pair orders,
+changed holdings, real account contradictions and expiry suspend the pair.
+These review cards do not create capital-contract order drafts or assumed
+fills, promote a strategy, change risk limits, or authorize an extra send.
+Keep the existing morning delivery window and the original dated deadline.
+
 The owner asked for clear current actions and prices, with no buzz sections or
 instructions merely to “assess” stocks. Ordinary emails must lead with the
 current decision, then each holding's admitted hold/reduce/protect/exit intent,
