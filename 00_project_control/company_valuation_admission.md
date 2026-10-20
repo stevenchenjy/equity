@@ -125,3 +125,13 @@ October 15 announcement schedules the October 29 results call and is not
 results evidence or a positive investment signal. Collection and source-bound
 impact review remain separate requirements. Post-period financing, acquisitions,
 lease commitments and per-share cash economics still require actual analysis.
+
+When a later completed market session is still unavailable, a newly accepted
+company review can retain its explicitly dated prior-close valuation and
+add/hold/exit judgment. That does not admit its model as current or authorize a
+new order. The dashboard verifies the complete retained snapshot, exact held
+prices and per-holding session declarations against the failed market gate,
+displays the actual retained date and a separate required-session warning, and
+withholds legacy entry quantities. A changed account, price, source fingerprint,
+mixed session or falsely passing gate still fails validation. Company-model
+admission and all production investment freshness/quality limits are unchanged.

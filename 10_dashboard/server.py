@@ -12,7 +12,7 @@ import mimetypes
 import re
 import threading
 import sqlite3
-from datetime import datetime
+from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit, parse_qs
@@ -155,11 +155,28 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     if generated is None or generated > now:
         raise SnapshotError("decision_timestamp_invalid")
     rows = {r["ticker"]: r for r in csv.DictReader(io.StringIO(raws[MARKET].decode()))}
-    expected_session = d.get("market_gate", {}).get("expected_market_session")
+    gate = d.get("market_gate", {})
+    expected_session = gate.get("expected_market_session")
+    reference_session = expected_session
+    market_current = gate.get('passed') is not False
+    # A failed new-session collection may publish a correctly dated held-risk
+    # review using the retained close. Verify its explicit per-holding dates
+    # against the bound CSV; never relabel old prices as the required session.
+    if gate.get('passed') is False and gate.get('complete_close_verified') is False:
+        observed = {row['ticker']: rows.get(row['ticker'], {}).get('market_session_date') for row in held}
+        sessions = {row.get('market_session_date') for row in rows.values()}
+        if (rows and observed == gate.get('held_session_dates') and len(sessions) == 1
+                and all(row.get('data_quality_label') == 'ok' for row in rows.values())):
+            retained = next(iter(sessions))
+            try:
+                if date.fromisoformat(retained) < date.fromisoformat(expected_session):
+                    reference_session = retained
+            except (ValueError, TypeError):
+                pass  # The normal mismatch check remains effective.
     for row in held:
         market = rows.get(row["ticker"], {})
         if (market.get("data_quality_label") != "ok"
-                or market.get("market_session_date") != expected_session
+                or market.get("market_session_date") != reference_session
                 or number(market.get("last_price")) != number(row.get("current_price"))):
             raise SnapshotError("decision_price_snapshot_mismatch")
     stale = d.get("cycle_date") != now.date().isoformat()
@@ -183,9 +200,9 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
             "counterargument": p.get("counterargument", ""), "purpose": p.get("purpose", {}),
             "display_summary": matching_summary(p, summaries),
             "sources": [{"path": s.get("path"), "sha256": s.get("sha256")} for s in p.get("sources", [])],
-            "draft": p.get("order_draft") if status == "current" else None,
+            "draft": p.get("order_draft") if status == "current" and market_current else None,
             "historical_draft": p.get("historical_order_draft", p.get("order_draft")),
-            "eligible_quantity": p.get("eligible_quantity", 0) if status == "current" else 0,
+            "eligible_quantity": p.get("eligible_quantity", 0) if status == "current" and market_current else 0,
         })
     values = {k: number(account.get(k)) for k in ("account_total_value", "cash_available", "invested_capital")}
     if any(v is None or v < 0 for v in values.values()):
@@ -204,7 +221,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     candidates = []
     for r in d.get("watch_candidates", []):
         p = plan_map.get(r["ticker"])
-        valid = (not stale and (not p or p["status"] == "current")
+        valid = (market_current and not stale and (not p or p["status"] == "current")
                  and r["ticker"] in d.get("eligible_new_position_review_candidates", [])
                  and not r.get("workflow_global_blockers") and not r.get("workflow_ticker_blockers"))
         candidates.append({
@@ -243,7 +260,8 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     return {
         "schema_version": "equity_dashboard_snapshot_v1", "mode": "read_only_preview",
         "server_now": now.isoformat(), "generated_at": d["generated_at"], "cycle_date": d.get("cycle_date"),
-        "market_session": expected_session, "market_sources": d.get("market_gate", {}).get("data_sources", []), "stale": stale,
+        "market_session": reference_session, "expected_market_session": expected_session,
+        "market_current": market_current, "market_sources": gate.get("data_sources", []), "stale": stale,
         "snapshot_id": digest(decision_raw), "account_version": version(root),
         "account": {**values, "last_updated": account_raw.get("last_updated"), "cash_basis": account.get("cash_basis"),
                     "settled_cash_verified": orders_raw.get("broker_balance_observation", {}).get("settled_cash_verified") is True},

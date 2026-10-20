@@ -276,6 +276,36 @@ class SnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(SnapshotError, 'decision_price_snapshot_mismatch'):
             read_snapshot(self.root, self.now)
 
+    def test_failed_new_close_keeps_verified_dated_research_without_entry_drafts(self):
+        self.decision['market_gate'].update(expected_market_session='2026-09-30', passed=False,
+            complete_close_verified=False, held_session_dates={'ABC':'2026-09-29'})
+        self.publish()
+        result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['market_session'],'2026-09-29')
+        self.assertEqual(result['expected_market_session'],'2026-09-30')
+        self.assertFalse(result['market_current'])
+        self.assertEqual(result['positions'][0]['price'],100)
+        self.assertEqual(result['plans'][0]['eligible_quantity'],0)
+        self.assertIsNone(result['plans'][0]['draft'])
+        self.assertEqual(result['candidates'][0]['quantity'],0)
+
+    def test_retained_close_requires_explicit_failed_gate_and_exact_bound_dates(self):
+        for changes in [dict(passed=True),dict(complete_close_verified=True),
+                        dict(held_session_dates={}),dict(held_session_dates={'ABC':'2026-09-28'})]:
+            self.decision['market_gate']={'expected_market_session':'2026-09-30','passed':False,
+                'complete_close_verified':False,'held_session_dates':{'ABC':'2026-09-29'},**changes}
+            self.publish()
+            with self.subTest(changes=changes),self.assertRaisesRegex(SnapshotError,'decision_price_snapshot_mismatch'):
+                read_snapshot(self.root,self.now)
+
+    def test_mixed_canonical_sessions_cannot_be_displayed_as_one_retained_close(self):
+        self.decision['market_gate'].update(expected_market_session='2026-09-30', passed=False,
+            complete_close_verified=False, held_session_dates={'ABC':'2026-09-29'})
+        self.put(MARKET,'ticker,last_price,market_session_date,data_quality_label\nABC,100,2026-09-29,ok\nXYZ,50,2026-09-30,ok\n')
+        self.publish()
+        with self.assertRaisesRegex(SnapshotError,'decision_price_snapshot_mismatch'):
+            read_snapshot(self.root,self.now)
+
     def test_mismatched_dynamic_total_fails_closed(self):
         self.decision['account']['account_total_value'] = '1250'
         self.publish()

@@ -1485,13 +1485,13 @@
     "semantic_hash": ""
   },
   "10_dashboard/server.py": {
-    "mtime": 1792516260.0934002,
-    "ast_hash": "7d228980484de23f117b79bd5d516c36",
+    "mtime": 1792528066.4162002,
+    "ast_hash": "8748ffcf15496b616768cb87a375fa0a",
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
-    "mtime": 1792515974.2532423,
-    "ast_hash": "8189ad0720f9206eb306e0656cb58046",
+    "mtime": 1792528013.8517385,
+    "ast_hash": "1b50be071d022f03bfcf29eb2686756a",
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.test.ts": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.ts": {
-    "mtime": 1792516008.4443326,
-    "ast_hash": "0bc65721296a9c40fdb37781c7f2ed6c",
+    "mtime": 1792528013.8506858,
+    "ast_hash": "1960d0ec6f9b74a24ccc21e40daa5434",
     "semantic_hash": ""
   },
   "10_dashboard/src/main.tsx": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": "355db2bc23f7aba8d89dc945b6cdbc45"
   },
   "10_dashboard/tests/test_snapshot.py": {
-    "mtime": 1792516260.094605,
-    "ast_hash": "cd2f97cb2fd22b95158615a670a535c9",
+    "mtime": 1792528066.4169257,
+    "ast_hash": "37dfdf61d875e74f812b45afc3c711a7",
     "semantic_hash": ""
   },
   "10_dashboard/tsconfig.json": {
@@ -1910,8 +1910,8 @@
     "semantic_hash": ""
   },
   "00_project_control/company_valuation_admission.md": {
-    "mtime": 1792526359.8626153,
-    "ast_hash": "d490c29c3c65e315645ec46db9ee1836",
+    "mtime": 1792528066.4499967,
+    "ast_hash": "0fd227b9e48770635e99e03b8e3e7c03",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/company_research_presentation.py": {

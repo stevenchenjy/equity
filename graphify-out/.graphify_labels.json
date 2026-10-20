@@ -282,5 +282,15 @@
   "280": "test_manual_valuation_bootstrap.py",
   "281": "admit_market_history_baseline.py",
   "282": "smoke_diagnostic_notes",
-  "283": "main"
+  "283": "main",
+  "284": "research_opportunities.py",
+  "285": "PacketMarketObservationTests",
+  "286": "IncorporationTests",
+  "287": "feedback.py",
+  "288": "account_access.py",
+  "289": "actionable_fixture",
+  "290": "migrate",
+  "291": "shadow_evaluation_health",
+  "292": "HeldCorePositionTests",
+  "293": "run"
 }
