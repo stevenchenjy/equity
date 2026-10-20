@@ -21,6 +21,15 @@ facts from management claims and estimates, and do not repeat unchanged risks
 as new discoveries. A stock score cannot replace business, valuation and
 portfolio reasoning. Missing company-specific assumptions remain missing.
 
+The [maintained price-expectation, capital-loss and thesis-review method](maintained_investment_workflow.md#price-expectations-capital-loss-paths-and-thesis-review)
+adds optional source-bound reasoning and later original-thesis assessments to
+that same dossier. It separates conditional price requirements from observed
+market consensus, traces material economic-loss paths and preserves what was
+known before an outcome. Existing company details and the workflow evaluation
+consume these fields; unchanged work produces no parallel report. Use coverage
+and decisive evidence to improve research effort, without treating adoption or
+short price histories as investment skill.
+
 The deterministic research companion runs within the existing capital
 validation reporting step and writes only noncanonical research artifacts.
 It uses no model and is not read by the decision engine or sender. Reverse

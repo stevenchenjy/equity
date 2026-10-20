@@ -18,6 +18,7 @@ relevant checks before relying on any linked claim.
 - [Active production configuration](active_production_config.json): active paths and deterministic production controls.
 - [Momentum integration decision](momentum_integration_20260927.md), [experimental parameters](../01_policies/momentum_experiment.json) and [position-purpose reassessment](position_purpose_reassessment.md): autonomous research without changing allocation, risk caps or trade authority.
 - [SHADOW evaluation configuration](shadow_llm_config.json) and [policy](shadow_llm_evaluation_policy.md): evaluation allowance, routing, measurements, and future authority-review thresholds.
+- [Maintained investment workflow](maintained_investment_workflow.md#price-expectations-capital-loss-paths-and-thesis-review): dated price conditions, evidence-backed differences, capital-loss paths and original-thesis retrospective; one dossier and existing outputs, no extra cadence.
 - [Research working agreement](research_working_agreement.md): routine autonomous work versus authority-changing choices.
 - [Scoped blockers and recurring research work](workflow_followthrough_20260927.md): cash explanations, bounded objective completion and durable expired-plan reassessment; no allocation or risk-policy changes.
 - [Discovery and research attention architecture](research_opportunity_architecture.md): durable first-seen opportunities, bounded official evidence, research assessments and the explicit experiment-to-research boundary; production capital contracts remain separate.
@@ -42,6 +43,7 @@ in the authoring clone. Missing local reports are not assumed complete.
 
 - [Production status](/Users/messssi/LocalRuntime/equity/00_project_control/current_production_status.local.md).
 - [Experimental momentum observations and forward evaluation](/Users/messssi/LocalRuntime/equity/08_reviews/momentum_experiment.local/report.md): private frozen cohorts, costs, missed/expired setups and explicitly unverified execution. Check current status for failures; a historical report is not a current signal.
+- [Workflow evaluation and thesis-based learning](/Users/messssi/LocalRuntime/equity/08_reviews/current/workflow_evaluation.local.md): useful-method coverage, due original theses, separate process/business/price outcomes and qualitative shared exposures; adoption is not performance evidence.
 - [Current daily research decision](/Users/messssi/LocalRuntime/equity/04_research/company_research/daily_decision.md).
 - [Current research opportunities](/Users/messssi/LocalRuntime/equity/08_reviews/current/research_opportunities.local.md): original observations, research timing, separated evidence families, blockers and prospective measurement; no buy/sell authority.
 - [Cash and recurring opportunity work](/Users/messssi/LocalRuntime/equity/08_reviews/capital_work_queue.local/report.md) and [prioritized research backlog](/Users/messssi/LocalRuntime/equity/08_reviews/current/research_backlog.local.md): check generated times and production health; pending work does not establish an eligible trade.

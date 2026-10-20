@@ -205,6 +205,172 @@ def outcome_coverage(snapshots: list[dict[str, Any]], outcomes: list[dict[str, A
                             "Counts do not establish profitable selection, completed review meetings, or portfolio performance."]}
 
 
+def empty_thesis_review() -> dict[str, Any]:
+    return {"status": "not_recorded", "recorded_versions": 0, "distinct_reasoning_cases": 0,
+        "recorded_method_cases": 0, "prospective_method_cases": 0,
+        "price_conditions_assessed_cases": 0, "loss_paths_assessed_cases": 0, "falsifiable_difference_cases": 0,
+        "retrospective_cases": 0, "business_evidence_cases": 0,
+        "price_observed_cases": 0, "cases": [], "adoption_queue": [], "shared_exposures": [],
+        "shared_exposure_coverage": "unknown", "validation_errors": [],
+        "limitations": ["Repeated unchanged reviews count once; these cases and their price horizons remain correlated.",
+            "Process assessments are authored judgments against the original record, not scores inferred from later returns.",
+            "Business evidence and close-price paths are separate; no causal alpha, luck attribution or executed return is inferred.",
+            "Shared exposures are qualitative; ETF look-through, portfolio weights and loss correlation are not quantified."]}
+
+
+def thesis_review_summary(store: dict[str, Any] | None, snapshots: list[dict[str, Any]],
+                         outcomes: list[dict[str, Any]], *, now: datetime, evidence_root: Path,
+                         held_tickers: set[str] | None = None) -> dict[str, Any]:
+    """An optional learning section fails visibly without stopping the report."""
+    try:
+        return _thesis_review_summary(store, snapshots, outcomes, now=now, evidence_root=evidence_root,
+                                      held_tickers=held_tickers)
+    except (ValueError, KeyError, TypeError, OSError, AttributeError) as exc:
+        result = empty_thesis_review()
+        result.update(status="invalid_evidence", validation_errors=[str(exc)])
+        return result
+
+
+def _thesis_review_summary(store: dict[str, Any] | None, snapshots: list[dict[str, Any]],
+                          outcomes: list[dict[str, Any]], *, now: datetime, evidence_root: Path,
+                          held_tickers: set[str] | None = None) -> dict[str, Any]:
+    """Join immutable versions; unchanged reasoning is grouped, never rewritten."""
+    from thesis_evidence import evidence_context, validate_review, validate_store
+    from thesis_retrospective import method_features, original_reasoning_time, price_observations, reasoning_fingerprint
+
+    result = empty_thesis_review()
+    held = held_tickers or set()
+    if store is None:
+        result["adoption_queue"] = [{"ticker": ticker, "priority": "held", "reason": "company_review_not_recorded",
+            "next_evidence": "Create a source-bound company review with explicit unknowns for unavailable expectations and loss evidence."}
+            for ticker in sorted(held)]
+        return result
+    try:
+        latest = validate_store(store)
+        context = evidence_context(evidence_root)
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        result.update(status="invalid_evidence", validation_errors=[str(exc)])
+        return result
+    records = [row for row in store["records"] if aware(row["reviewed_at"]) <= now]
+    # Do not show future-authored assessments when rendering an earlier cutoff.
+    latest = {row["ticker"]: row for row in records}
+    result["recorded_versions"] = len(records)
+    by_id = {row["review_id"]: row for row in records}
+    by_version = {(row["ticker"], str(row["version"])): row for row in records}
+    verified, invalid = set(), {}
+    retrospective_originals = {row["retrospective"]["original_review_id"] for row in records if row.get("retrospective")}
+    for row in records:
+        if row.get("research_method") or row.get("retrospective") or row["review_id"] in retrospective_originals:
+            try:
+                validate_review(row, evidence_root, context, now.isoformat())
+                if original_reasoning_time(row) <= now:
+                    verified.add(row["review_id"])
+            except (ValueError, KeyError, TypeError, OSError) as exc:
+                invalid[row["review_id"]] = str(exc)
+    result["validation_errors"] = [f"{key}: {value}" for key, value in invalid.items()]
+    # The ledger supplies the anchor. Snapshot linkage never backfills a method.
+    anchors = {row["review_id"]: row for row in records if row.get("research_method") and row["review_id"] in verified}
+    for snapshot in snapshots:
+        row = by_version.get((snapshot.get("ticker"), str(snapshot.get("thesis_version"))))
+        if row and row["review_id"] not in invalid and snapshot.get("thesis_id") == "company_thesis:" + row["ticker"]:
+            anchors[row["review_id"]] = row
+    retrospectives: dict[str, list[dict[str, Any]]] = {}
+    for row in records:
+        retrospective = row.get("retrospective")
+        if retrospective and row["review_id"] in verified:
+            original_id = retrospective["original_review_id"]
+            anchors[original_id] = by_id[original_id]
+            retrospectives.setdefault(original_id, []).append(row)
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for original in anchors.values():
+        groups.setdefault(reasoning_fingerprint(original), []).append(original)
+    for fingerprint, originals in groups.items():
+        originals.sort(key=lambda row: (original_reasoning_time(row), row["version"]))
+        reviews = [review for original in originals for review in retrospectives.get(original["review_id"], [])]
+        retrospective_record = max(reviews, key=lambda row: (aware(row["reviewed_at"]), row["version"])) if reviews else None
+        # A review of a later duplicate remains bound to that exact duplicate.
+        original = by_id[retrospective_record["retrospective"]["original_review_id"]] if retrospective_record else originals[0]
+        retrospective = retrospective_record["retrospective"] if retrospective_record else None
+        method_valid = bool(original.get("research_method")) and original["review_id"] in verified
+        original_verified = original["review_id"] in verified
+        features = {key: value and method_valid for key, value in method_features(original).items()}
+        cutoff = aware(retrospective_record["reviewed_at"]) if retrospective_record else now
+        prices = price_observations(original, snapshots, outcomes, cutoff)
+        blockers = []
+        if not method_valid:
+            blockers.append("original_method_unavailable_or_unverified")
+        if retrospective and not original_verified:
+            blockers.append("original_source_evidence_unverified")
+        if not retrospective:
+            blockers.append("retrospective_not_recorded")
+        if not retrospective or not original_verified or retrospective["business_outcome"]["status"] == "not_yet_observable":
+            blockers.append("later_business_evidence_not_assessed")
+        if prices["status"] != "observed_price_path":
+            blockers.append(prices["status"])
+        waiting = (original.get("research_method") or {}).get("waiting_for", {}) if method_valid else {}
+        next_evidence = retrospective["business_outcome"]["assessment"] if retrospective else (
+            waiting.get("next_evidence") or waiting.get("condition") or "; ".join(original.get("unresolved_questions", [])[:2]))
+        case = {"case_fingerprint": fingerprint, "ticker": original["ticker"],
+            "position_scope": "held" if original["ticker"] in held else "research_only",
+            "original_review_id": original["review_id"], "original_record_sha256": original["record_sha256"],
+            "original_version": original["version"], "equivalent_recorded_versions": [row["version"] for row in originals],
+            "original_evidence_verified": original_verified,
+            "method_recorded": method_valid, "prospective_method_recorded": method_valid and all(features.values()),
+            "method_features": features,
+            "retrospective_review_id": retrospective_record["review_id"] if retrospective_record else None,
+            "retrospective_reviewed_at": retrospective_record["reviewed_at"] if retrospective_record else None,
+            "decision_process": retrospective["decision_process"] if retrospective and method_valid else {"assessment": "unresolved",
+                "rationale": "Original prospective method unavailable or later process review not recorded."},
+            "business_outcome": retrospective["business_outcome"] if retrospective and original_verified else {
+                "status": "not_yet_observable", "assessment": "No later evidence assessment with a verified original source record.", "claim_ids": []},
+            "lesson": retrospective["lesson"] if retrospective else None, "price_observations": prices,
+            "pending_reasons": blockers, "next_evidence": next_evidence,
+            "scheduled_review_due": aware(original["next_review_at"]) <= now and not retrospective}
+        result["cases"].append(case)
+    result["cases"].sort(key=lambda row: (row["ticker"], row["original_version"]))
+    result["distinct_reasoning_cases"] = len(result["cases"])
+    result["recorded_method_cases"] = sum(row["method_recorded"] for row in result["cases"])
+    result["prospective_method_cases"] = sum(row["prospective_method_recorded"] for row in result["cases"])
+    for field in ("price_conditions_assessed", "loss_paths_assessed", "falsifiable_difference"):
+        result[field + "_cases"] = sum(row["method_features"][field] for row in result["cases"])
+    result["retrospective_cases"] = sum(bool(row["retrospective_review_id"]) for row in result["cases"])
+    result["business_evidence_cases"] = sum(row["business_outcome"]["status"] != "not_yet_observable" for row in result["cases"])
+    result["price_observed_cases"] = sum(row["price_observations"]["status"] == "observed_price_path" for row in result["cases"])
+    exposure_members: dict[str, list[dict[str, str]]] = {}
+    with_exposures = 0
+    for ticker in sorted(set(latest) | held):
+        row = latest.get(ticker, {})
+        method = row.get("research_method") if row.get("review_id") in verified else None
+        missing = []
+        if not method:
+            missing.append("current_research_method_not_recorded_or_unverified")
+        else:
+            # Unknown external consensus is valid disclosure, not mandatory work
+            # when the analyst can compare a thesis against price conditions.
+            for field in ("price_implied_conditions", "differentiated_view", "loss_analysis"):
+                if method.get(field, {}).get("status") == "unknown":
+                    missing.append(field + "_unknown")
+        if missing:
+            waiting = (method or {}).get("waiting_for", {})
+            result["adoption_queue"].append({"ticker": ticker, "priority": "held" if ticker in held else "research",
+                "reason": "; ".join(missing), "next_evidence": waiting.get("next_evidence") or waiting.get("condition")
+                or "; ".join(row.get("unresolved_questions", [])[:2]) or "Record the next source-bound discriminating evidence in the existing company review."})
+        drivers = (method or {}).get("loss_analysis", {}).get("shared_exposures", [])
+        if drivers:
+            with_exposures += 1
+        for driver in drivers:
+            exposure_members.setdefault(driver["risk_tag"], []).append({"ticker": ticker, "mechanism": driver["mechanism"],
+                "position_scope": "held" if ticker in held else "research_only"})
+    result["adoption_queue"].sort(key=lambda row: (row["priority"] != "held", row["ticker"]))
+    result["shared_exposures"] = [{"driver": driver, "tickers": sorted({row["ticker"] for row in members}),
+        "held_tickers": sorted(row["ticker"] for row in members if row["position_scope"] == "held"),
+        "mechanisms": members, "basis": "authored_qualitative_exposure"}
+        for driver, members in sorted(exposure_members.items()) if len({row["ticker"] for row in members}) > 1]
+    result["shared_exposure_coverage"] = "partial" if with_exposures else "unknown"
+    result["status"] = "partial_evidence" if invalid else "available"
+    return result
+
+
 def validate_performance_record(record: dict[str, Any]) -> None:
     for key in ("record_id", "kind", "source_reference", "source_sha256", "confirmed_by", "confirmed_at"):
         if not str(record.get(key, "")).strip():

@@ -7,12 +7,66 @@ import hashlib
 import json
 from pathlib import Path
 
-from daily_common import (DAILY_RUN_LOG_PATH, DAILY_SCHEDULER_STATE_PATH, ROOT,
+from daily_common import (DAILY_DECISION_JSON_PATH, DAILY_RUN_LOG_PATH, DAILY_SCHEDULER_STATE_PATH, ROOT,
                           atomic_write_json, atomic_write_text, iso_now, now_et, read_csv, read_json)
 from track_recommendation_outcomes import SNAPSHOT_PATH, OUTCOME_PATH, HISTORY_PATH
 from workflow_evaluation import (EVALUATION_JSON_PATH, EVALUATION_MD_PATH, PERFORMANCE_PATH, REFRESH_HISTORY_PATH,
     load_performance_records, operational_summary, outcome_coverage, performance_summary,
-    read_jsonl, record_performance)
+    read_jsonl, record_performance, thesis_review_summary, empty_thesis_review)
+from thesis_evidence import STORE_REL
+
+
+def render_thesis_review(review: dict) -> list[str]:
+    """One learning section in the existing evaluation, with no parallel report."""
+    def cell(value: object) -> str:
+        return " ".join(str(value).split()).replace("|", "\\|")
+
+    lines = ["", "## Thesis-based learning", "",
+        f"Status: **{review['status']}**. {review['recorded_versions']} recorded versions; {review['distinct_reasoning_cases']} distinct reasoning cases after unchanged restamps are grouped.",
+        f"Cases with a recorded method: {review['recorded_method_cases']}; with substantive prospective reasoning: {review['prospective_method_cases']}. Assessed price conditions: {review['price_conditions_assessed_cases']}; assessed loss paths: {review['loss_paths_assessed_cases']}; falsifiable differences: {review['falsifiable_difference_cases']}.",
+        f"Cases with a recorded retrospective: {review['retrospective_cases']}; with later business facts assessed: {review['business_evidence_cases']}; with an original-version price path: {review['price_observed_cases']}.",
+        "Unknown templates do not count as substantive reasoning or supported decision process; coverage does not establish investment skill."]
+    if review["validation_errors"]:
+        lines.extend(["", "Validation gaps: " + "; ".join(cell(value) for value in review["validation_errors"])])
+    if review["adoption_queue"]:
+        lines.extend(["", "Use the next existing company review to close these gaps; held companies come first.", "",
+            "| Company | Priority | Pending method | Next evidence |", "|---|---|---|---|"])
+        focused = [row for row in review["adoption_queue"] if row["priority"] == "held"] or review["adoption_queue"][:5]
+        for row in focused:
+            lines.append("| " + " | ".join(cell(row[key]) for key in ("ticker", "priority", "reason", "next_evidence")) + " |")
+        remaining = [row["ticker"] for row in review["adoption_queue"] if row not in focused]
+        if remaining:
+            lines.extend(["", "Other existing company reviews with method gaps: " + ", ".join(remaining)
+                + ". Their full pending reasons remain in this evaluation's JSON; reuse their existing review queues."])
+    reviewed = [row for row in review["cases"] if row["retrospective_review_id"]]
+    due = sorted((row for row in review["cases"] if row["prospective_method_recorded"] and row["scheduled_review_due"]),
+        key=lambda row: (row["position_scope"] != "held", row["ticker"], row["original_version"]))
+    if due:
+        lines.extend(["", f"{len(due)} substantive original theses are due for a retrospective; assess the next evidence even when the outcome remains unobservable."])
+        for row in due[:5]:
+            lines.append(f"- {row['ticker']} v{row['original_version']} ({row['position_scope']}): {cell(row['next_evidence'])}")
+        if len(due) > 5:
+            lines.append(f"- {len(due) - 5} additional pending cases remain in this evaluation's JSON.")
+    if reviewed:
+        lines.extend(["", "| Original thesis | Process judgment | Business outcome | Original-version price observation | Next evidence / lesson |",
+            "|---|---|---|---|---|"])
+        for row in reviewed:
+            prices = row["price_observations"]
+            observed = prices["horizons"][-1] if prices["horizons"] else None
+            price_text = (f"{observed['horizon_sessions']} sessions: {observed['absolute_return_pct']}% to {observed['evaluation_session']}"
+                if observed else prices["status"])
+            lines.append("| " + " | ".join(cell(value) for value in (f"{row['ticker']} v{row['original_version']}",
+                row["decision_process"]["assessment"] + ": " + row["decision_process"]["rationale"],
+                row["business_outcome"]["status"] + ": " + row["business_outcome"]["assessment"], price_text,
+                row["next_evidence"] + " / " + row["lesson"])) + " |")
+    else:
+        lines.extend(["", "No source-bound thesis retrospective has been recorded. Existing price paths alone do not establish business realization or decision quality."])
+    lines.extend(["", f"Shared exposure coverage: **{review['shared_exposure_coverage']}**. Groups describe the latest researched companies; held membership is shown separately. Groups require the same assessed tag on at least two companies. Unpaired or missing tags leave diversification unassessed."])
+    for row in review["shared_exposures"]:
+        mechanisms = "; ".join(f"{member['ticker']} ({member['position_scope']}): {member['mechanism']}" for member in row["mechanisms"])
+        lines.append(f"- {cell(row['driver'])}: {cell(', '.join(row['tickers']))}. {cell(mechanisms)}")
+    lines.extend(["", *review["limitations"]])
+    return lines
 
 
 def render(report: dict) -> str:
@@ -37,7 +91,10 @@ def render(report: dict) -> str:
                   "| Horizon sessions | Matured observations | Pending/missing |", "|---:|---:|---:|"])
     for row in ideas["horizons"]:
         lines.append(f"| {row['horizon_sessions']} | {row['matured']} | {row['pending_or_missing']} |")
-    lines.extend(["", *ideas["limitations"], "", "## Actual portfolio performance", "",
+    lines.extend(["", *ideas["limitations"]])
+    if "thesis_review" in report:
+        lines.extend(render_thesis_review(report["thesis_review"]))
+    lines.extend(["", "## Actual portfolio performance", "",
                   f"Status: **{performance['status']}**. Confirmed actual NAV observations: {performance.get('actual_nav_observations', 0)}; usable reviewed intervals: {performance.get('ready_intervals', 0)}.",
                   "Blockers: " + (", ".join(performance.get("blockers", [])) or "none for the individually listed intervals"), ""])
     for row in performance.get("intervals", []):
@@ -52,10 +109,21 @@ def build_report() -> dict:
     except (ValueError, KeyError, TypeError, OSError):
         portfolio = {"status": "invalid_evidence", "blockers": ["private_performance_ledger_invalid; preserve records and review"],
                      "portfolio_lifetime_return_pct": None}
+    snapshots, outcomes = read_jsonl(SNAPSHOT_PATH), read_csv(OUTCOME_PATH)
+    try:
+        decision = read_json(DAILY_DECISION_JSON_PATH, {})
+        thesis = thesis_review_summary(read_json(ROOT / STORE_REL, None), snapshots, outcomes,
+            now=now_et(), evidence_root=ROOT,
+            held_tickers={row["ticker"] for row in decision.get("held_positions", [])
+                if isinstance(row, dict) and row.get("ticker") and row.get("asset_role") != "core_allocation"})
+    except (ValueError, KeyError, TypeError, OSError, AttributeError) as exc:
+        thesis = empty_thesis_review()
+        thesis.update(status="invalid_evidence", validation_errors=[str(exc)])
     return {"schema_version": "workflow_evaluation_v1", "generated_at": iso_now(),
             "operations": operational_summary(read_json(DAILY_SCHEDULER_STATE_PATH), read_csv(DAILY_RUN_LOG_PATH),
                  read_csv(ROOT / "00_project_control/run_logs/runtime_execution_log.csv"), read_jsonl(REFRESH_HISTORY_PATH), now=now_et()),
-            "recommendation_outcomes": outcome_coverage(read_jsonl(SNAPSHOT_PATH), read_csv(OUTCOME_PATH), read_csv(HISTORY_PATH)),
+            "recommendation_outcomes": outcome_coverage(snapshots, outcomes, read_csv(HISTORY_PATH)),
+            "thesis_review": thesis,
             "portfolio_performance": portfolio, "automatic_action_allowed": False}
 
 

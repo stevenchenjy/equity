@@ -421,6 +421,7 @@ def write_retrospective() -> None:
         "- Origin is the next observed close after the aware creation date; missing timestamps or future closes remain pending.",
         "- Same-origin observations across overlapping horizons or correlated issuers are not statistically independent.",
         "- Human feedback is optional and does not block tracking or research measurement.",
+        "- [Thesis-based process and business review](workflow_evaluation.local.md#thesis-based-learning) is maintained in the existing workflow evaluation; price paths here do not assess business realization.",
     ]
     lines.extend(["", "| Horizon (sessions) | Matured observations | Pending or missing data |", "|---:|---:|---:|"])
     for horizon in coverage["horizons"]:

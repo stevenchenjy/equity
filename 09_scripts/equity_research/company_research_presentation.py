@@ -10,6 +10,45 @@ from daily_common import read_json, sha256_file, latest_published_market_session
 from valuation_input_bundle import validate_and_materialize_bundle, _verified_source
 
 
+def reasoning_view(record: dict) -> dict | None:
+    """One concise projection shared by existing text/HTML and company detail.
+
+    The dossier evaluator has already validated these authored fields. Keep the
+    dated price and unknowns visible; this adds no eligibility or sizing input.
+    """
+    method = record.get('research_method')
+    if not method:
+        return None
+    price = method['price_implied_conditions']
+    consensus = method['market_consensus']
+    difference = method['differentiated_view']
+    loss = method['loss_analysis']
+    waiting = method['waiting_for']
+    reference = price.get('reference_price')
+    basis = (f"（{reference['date']} · ${Decimal(str(reference['value'])):.2f}）" if reference else '（尚未完成）')
+    lines = ['价格成立条件' + basis + '：' + price['summary'],
+        ('外部预期观察：' if consensus['status'] == 'sourced_observation' else '市场共识未知：') + consensus['summary'],
+        ('差异化假设：' if difference['status'] == 'hypothesis' else '差异化判断待完成：') + difference['summary']]
+    if consensus['status'] == 'sourced_observation':
+        lines.append('共识样本范围：' + consensus['sample_scope'])
+    if difference.get('falsifier'):
+        lines.append('什么会推翻判断：' + difference['falsifier'])
+    if loss['status'] == 'assessed':
+        for path in loss['paths']:
+            lines.append('损失路径：' + ' → '.join(step.rstrip('。；; ') for step in path['steps']) + '；资本损害：' + path['impairment'].rstrip('。；; ')
+                         + '；早期信号：' + path['early_warning'])
+        for assumption in loss['fragile_assumptions']:
+            lines.append('脆弱假设：' + assumption['assumption'].rstrip('。；; ') + '；若' + assumption['adverse_change'].rstrip('。；; ')
+                         + '，则' + assumption['consequence'])
+    else:
+        lines.append('损失路径待完成：' + '；'.join(loss['unknowns']))
+    labels = {'price': '价格', 'evidence': '证据', 'research': '研究完成'}
+    lines.append('当前等待' + labels[waiting['reason']] + '：' + waiting['condition'])
+    lines.append('下一条决定性证据：' + waiting['next_evidence'])
+    return {'authored_at': method.get('authored_at', record['reviewed_at']),
+            'lines': lines, 'automatic_action_allowed': False}
+
+
 def admission_details(proof: dict | None, *, root: Path) -> dict | None:
     """Recover authored method/horizon only for the exact current admission."""
     if not proof or proof.get('status') != 'admitted_current': return None
@@ -79,6 +118,9 @@ def presentation_case(view: dict, *, root: Path, current: datetime,
         'pending_requirements': pending, 'model_relative_path': (model or {}).get('relative_path'),
         'model_sha256': (model or {}).get('sha256'), 'automatic_action_allowed': False,
     }
+    reasoning = reasoning_view(record)
+    if reasoning:
+        case['research_reasoning'] = reasoning
     try:
         price = Decimal(str(quote.get('last_price', '')))
         valid_quote = (price.is_finite() and price > 0 and quote.get('data_quality_label') == 'ok'
@@ -184,4 +226,8 @@ def case_lines(case: dict, *, shares: int, order_side: str | None = None) -> lis
         *('复核条件：' + text for text in case['review_conditions']),
         '模型状态：' + statuses.get(case['model_admission_status'], '未核验。') +
         (' 待完成：' + '、'.join(labels.get(v, v) for v in case['pending_requirements']) if case['pending_requirements'] else '')])
+    reasoning = case.get('research_reasoning')
+    if reasoning:
+        lines.extend(['研究判断依据（记录时间 ' + reasoning['authored_at'] + '；价格条件沿用所列日期）：',
+                      *reasoning['lines']])
     return lines

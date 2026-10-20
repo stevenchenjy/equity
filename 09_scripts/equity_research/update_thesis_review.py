@@ -8,18 +8,33 @@ lock. It never updates a position, plan, confidence tier, email or order.
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 from daily_common import ROOT, ExclusiveFileLock, atomic_write_json, iso_now, read_json
 from thesis_evidence import SCHEMA, STORE_REL, append_review
+from investment_reasoning import research_method_template
+from thesis_retrospective import retrospective_template
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, required=True, help="Sealed company review JSON")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--input", type=Path, help="Sealed company review JSON")
+    mode.add_argument("--research-method-template", action="store_true",
+                      help="Print an unknown research-method block for the next dossier version")
+    mode.add_argument("--retrospective-template", type=Path, metavar="ORIGINAL_REVIEW_JSON",
+                      help="Print an unresolved retrospective anchored to an existing review")
     parser.add_argument("--root", type=Path, default=ROOT, help="Evidence and private ledger root")
     parser.add_argument("--apply", action="store_true", help="Append validated version to private ledger")
     args = parser.parse_args()
+    if args.research_method_template or args.retrospective_template:
+        if args.apply:
+            parser.error("template mode cannot apply a dossier review")
+        block = ({"research_method": research_method_template()} if args.research_method_template
+                 else {"retrospective": retrospective_template(read_json(args.retrospective_template))})
+        print(json.dumps(block, ensure_ascii=False, indent=2))
+        return 0
     root = args.root.resolve()
     record = read_json(args.input)
     lock = root / "00_project_control/run_logs/thesis_dossiers.lock"

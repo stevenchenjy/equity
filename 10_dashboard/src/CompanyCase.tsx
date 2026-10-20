@@ -28,6 +28,7 @@ export default function CompanyCase({row}:{row:CapitalDecision['decisions'][numb
     {c.review_conditions.length?<ul>{c.review_conditions.map((condition,i)=><li key={i}>{condition}</li>)}</ul>:null}
     <p className="form-hint">{modelLabels[c.model_admission_status]??'模型状态未核验。'}研究判断与完整交易草案分别校验。</p>
     {c.pending_requirements.length?<p>仍待完成：{c.pending_requirements.map(v=>pendingLabels[v]??v).join('；')}</p>:null}
+    {c.research_reasoning?<details className="summary-original"><summary>价格预期、分歧与损失路径</summary><p className="form-hint">记录于 {timeLabel(c.research_reasoning.authored_at)}；价格条件沿用所列日期。</p>{c.research_reasoning.lines.map((line,i)=><p key={i}>{line}</p>)}</details>:null}
     <details><summary>估值方法与反方证据</summary><p>{c.method}</p><p>{c.countercase}</p><small>研究版本 {c.review_version} · {timeLabel(c.reviewed_at)}</small></details>
   </article>;
 }

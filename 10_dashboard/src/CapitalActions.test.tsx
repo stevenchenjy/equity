@@ -128,3 +128,12 @@ test('held and unheld plan labels depend on projected approved role rather than 
  assert.equal(planRoleLabel({ticker:'XLI',asset_role:'sector_etf',action:'watch'} as Plan),'观察');
  assert.equal(planRoleLabel({ticker:'SPY',action:'watch'} as Plan),'观察');
 });
+
+test('dated reasoning is disclosed once without upgrading unknown consensus or zero-share decision',()=>{
+ const research={ticker:'MSFT',review_version:5,reviewed_at:'2026-10-19T20:58:00-04:00',next_review_at:'2026-10-20T10:30:00-04:00',conclusion:'新增 0 股',reference_price:null,scenario_prices:null,horizon:'FY27',review_conditions:[],model_admission_status:'research_model_unverified',pending_requirements:[],method:'Original model',countercase:'Cash may disappoint',research_reasoning:{authored_at:'2026-10-19T20:58:00-04:00',lines:['价格成立条件（2026-10-16 · $529.05）：条件等式','市场共识未知：未留存可靠样本','损失路径：现金投入未兑现'],automatic_action_allowed:false}} as unknown as CompanyResearchCase;
+ const row={ticker:'MSFT',shares:0,order_draft:null,research_case:research} as CapitalDecision['decisions'][number];
+ const before=JSON.stringify(row),html=renderToStaticMarkup(<CompanyCase row={row}/>);
+ assert.match(html,/<details class="summary-original"><summary>价格预期、分歧与损失路径<\/summary>/);
+ for(const text of research.research_reasoning!.lines)assert.equal(html.split(text).length-1,1);
+ assert.match(html,/新增订单草案：0 股/);assert.doesNotMatch(html,/BUY LIMIT/);assert.equal(JSON.stringify(row),before);
+});

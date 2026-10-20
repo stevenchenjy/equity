@@ -95,6 +95,17 @@ does not acknowledge or incorporate its events.
    plans. Distinguish facts from estimates and judgment. Record why a task
    remains blocked if sources do not support completion. Do not mark a copied
    dossier, timestamp change or repeated unresolved checklist as progress.
+   Apply the [price-expectation, capital-loss and thesis-review method](maintained_investment_workflow.md#price-expectations-capital-loss-paths-and-thesis-review)
+   within the same dossier during a substantive company review. Select the
+   decisive assumption, use the existing model to explain dated price conditions,
+   preserve unknown consensus, record a supported falsifiable difference and
+   one to three causal loss paths. Read the existing workflow evaluation's
+   `thesis_review` due queue and adoption coverage; urgent held risks still take
+   priority. Do not repeat unchanged narratives or count blank method templates
+   as progress. At decisive later evidence, bind the exact original review in
+   `retrospective` and distinguish process quality, business facts and forward
+   price observations. Weekly/monthly review uses the same evaluation section;
+   this adds no report or scheduled task.
 5. Validate every proposed durable amendment with the existing writer before
    applying it. Use `update_investment_plan.py` for source-bound plan versions
    and `update_thesis_review.py` for company reviews. The valuation-input
@@ -108,7 +119,13 @@ does not acknowledge or incorporate its events.
    an explicit zero-share rejection. Model admission and a maintained allocation
    plan are separate validated amendments. Count accepted cases and conclusions
    separately from processed dossiers. Preserve
-   previous hashes, expired/failed outcomes and accounting scope. If no
+   previous hashes, expired/failed outcomes and accounting scope. A new dossier
+   version changes the exact review hash: if its company model remains admitted,
+   check and append the matching admission in the same coordinated batch under
+   the documented locks, preserving the model, economic assumptions and original
+   deadline unless new evidence independently supports changing them. Method
+   annotations carry their actual authorship time; they do not renew freshness.
+   If no
    admissible writer exists, save the sourced proposal as pending admission;
    do not edit an acceptance result or financial CSV to bypass validation.
    After a completed company judgment or model admission, reconcile its durable

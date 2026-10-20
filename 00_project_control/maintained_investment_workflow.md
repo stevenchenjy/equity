@@ -28,6 +28,134 @@ Use the existing bounded discovery shortlist for research priorities. Prioritize
 
 Weekly review should inspect overdue plans/dossiers, stale coverage, contradictory states, and matured outcomes. Monthly review should inspect reliability denominators, outcome coverage at each horizon, unresolved execution evidence and eligible actual-performance intervals. Do not claim an investment edge from a short or selected sample, and do not change thresholds automatically from early results.
 
+## Price expectations, capital-loss paths and thesis review
+
+Adopted by the owner on October 19, 2026, following discussion of Howard
+Marks's *The Most Important Thing*. The objective is better decisions per unit
+of research effort: make the disputed assumption explicit, investigate the
+evidence that can change it, and preserve the original judgment for review.
+These are analyst methods within the existing workflow. Capital eligibility
+continues through the existing strategy and evidence contracts.
+
+### 1. State what the price requires and where our view differs
+
+For a held-company review or a decision-relevant active-company candidate,
+select the one to three operating assumptions that explain most of the case.
+Use the existing reviewed company model to ask what must hold at an explicitly
+dated price. Hold the other assumptions fixed and name them. For an earnings
+multiple model, required EPS = price / assumed multiple; for a cash-flow model,
+solve a named growth, cash-margin or reinvestment condition under the stated
+discount rate and terminal assumptions. Identify the model's exact hash and
+horizon. An endpoint multiple calculation does not become a present-value DCF,
+and a price-distance ratio does not become a probability-weighted return.
+
+Record three distinct assessments in the existing dossier's `research_method`:
+
+- **Price-implied conditions:** a conditional model result with its dated
+  price, method, fixed assumptions and main unknowns. A single price cannot
+  uniquely reveal the market's growth, margin, discount-rate and terminal
+  expectations; show the conditionality instead of claiming a unique answer.
+- **Observed consensus:** only a dated, retained external expectations sample
+  with a source and stated coverage. Management guidance and our reverse
+  valuation are not market consensus. Missing consensus remains unknown;
+  it need not prevent a useful comparison against price-implied conditions.
+- **Differentiated view:** the specific disagreement, supporting and
+  contradictory claim references, what would falsify it, and the next evidence
+  that discriminates between the explanations. A different opinion alone does
+  not establish an edge. If no supported disagreement exists, say so.
+
+Do not change model inputs to make the current price pass. A changed economic
+assumption needs the existing source-bound company/model amendment process.
+
+### 2. Trace how capital could be lost
+
+Write one to three material causal paths, not a general list of risks: adverse
+event -> business/financing effect -> impairment of per-share value. Attach
+supporting claim IDs and an observable early warning. Separate temporary price
+volatility from economic impairment and from an investor's inability to wait.
+The latter must use the owner's actual horizon and liquidity constraints.
+
+Name the one to three most fragile assumptions and what an adverse change
+would do to the conclusion. Reuse the existing sensitivity/model outputs when
+available; label uncalculated severity as unknown. Bear/base/bull cases are
+conditional scenarios, not probabilities, a worst-loss bound or stop protection.
+
+Use a few stable exposure tags with issuer-specific causal explanations to
+identify common risks across companies, such as customer financing or the same
+capital-spending cycle. The existing workflow evaluation groups these tags for
+portfolio review. Include known fund overlap with a dated holdings source when
+available; missing fund look-through stays explicit. Tag counts are not weights,
+correlations or evidence of diversification and do not set position limits.
+
+### 3. Revisit the original thesis without rewriting it
+
+At a decisive operating disclosure, a recorded falsifier/review date, or a
+material change of view, attach `retrospective` to the next ordinary dossier
+version. Bind the exact earlier review ID and hash. Separate:
+
+- **Decision process:** whether the original evidence, price comparison,
+  countercase and loss paths supported the judgment at that time. If the
+  original record lacks this method, leave process quality unresolved rather
+  than reconstructing an excellent past thesis after seeing the outcome.
+- **Business outcome:** which original conditions were supported or challenged
+  by later reported facts, with citations in the new review. An event that has
+  not occurred is `not_yet_observable`, including when the share price moved.
+- **Price outcome:** the existing forward observation tied to the original
+  thesis version and observation timestamp. Preserve missing periods, original
+  no-action/negative cases and costs/dividend/corporate-action limitations.
+- **Learning:** one specific analytical lesson or next test. No automatic
+  threshold changes, strategy promotion or claim of skill from a short streak.
+
+Where comparable positive per-share earnings/cash flows and matched prices
+exist, an analyst may distinguish business change from multiple change using
+P = per-share metric x multiple, with consistent periods and accounting scope.
+Otherwise leave attribution unresolved. Benchmark-relative price changes alone
+do not establish causal alpha, luck or actual portfolio returns.
+
+### Work selection, delivery and effectiveness
+
+Use the existing analyst cadence and priority order: urgent held risks first,
+then the unresolved assumption most likely to change a candidate's decision.
+Complete these blocks during the next substantive company review; do not
+restamp every dossier to manufacture adoption statistics. An unchanged source
+set without a useful new question does not warrant another research narrative.
+Record the primary reason for waiting as price, evidence or unfinished research,
+with the condition that would reopen work and the next useful evidence.
+
+One authored record feeds the existing company detail and daily text/HTML;
+show concise reasoning within that company case. Full methods and citations
+stay in the dossier. The existing `workflow_evaluation.local` report owns
+cross-company risk grouping, retrospective coverage and pending reviews. Do
+not create a separate Marks report, duplicate watchlist or parallel journal.
+
+Judge effectiveness at weekly/monthly review using distinct original thesis
+versions and unchanged-method deduplication: coverage of useful price/risk
+reasoning, unresolved decisive evidence, source-backed business follow-through,
+and due original theses still awaiting review. Repeated daily snapshots and
+copied method blocks are not new analytical cases or independent trials.
+Check whether the new evidence changed the thesis, price judgment, risk
+assessment or next research task; more filled fields is not proof of value.
+Actual investment performance remains subject to the existing confirmed NAV,
+flows and benchmark requirements.
+
+Obtain an unknown method block with `update_thesis_review.py
+--research-method-template`. For a later review, use
+`--retrospective-template ORIGINAL_REVIEW_JSON` to bind the exact original.
+Merge only completed or explicitly unknown assessments into the next ordinary
+review, seal it with `thesis_evidence.seal_review`, and use the existing
+`--input` check followed by `--apply` under the documented locks. A template
+alone is not completed research. Newly authored reasoning carries its own
+`authored_at`; unchanged reasoning retains its original provenance.
+
+Historical dossier versions remain immutable and valid without these optional
+fields. Missing or unresolved method fields cannot independently clear or block
+capital; supplied fields must pass the same evidence-integrity discipline as
+the dossier. Any amended company review still uses the existing writer,
+model admission bindings and full no-send recomposition procedure; a research
+annotation must not silently renew the original model or review deadline.
+Its own authored timestamp governs prospective evaluation; an old financial
+review timestamp cannot backdate newly written reasoning.
+
 ## Private records and operator updates
 
 Private records are ignored by Git and must not enter source-control commits:

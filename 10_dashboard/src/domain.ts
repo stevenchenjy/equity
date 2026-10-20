@@ -8,6 +8,7 @@ export type CompanyResearchCase = {
   scenario_prices:{bear:number;base:number;bull?:number}|null; base_upside_pct:number|null;
   scenario_reward_to_risk:number|null; minimum_reward_to_risk:number; valuation_only_review_ceiling:number|null;
   review_ceiling_is_order_price:false; model_admission_status:string; pending_requirements:string[];
+  research_reasoning?:{authored_at:string; lines:string[]; automatic_action_allowed:false};
 };
 export type Plan = {
   ticker: string; plan_id: string; version: number; record_hash: string; action: string;

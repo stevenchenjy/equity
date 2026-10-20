@@ -20,6 +20,8 @@ from daily_common import canonical_sha256, read_json
 from sec_acceptance import load_immutable_acceptance_index
 from sec_acceptance_extensions import load_extension_artifacts
 from sec_acceptance_corrections import load_corrections, corrected_record, correction_for
+from investment_reasoning import validate_research_method, validate_research_method_ancestry
+from thesis_retrospective import validate_retrospective
 
 STORE_REL = Path("04_research/company_research/thesis_dossiers.local.json")
 SCHEMA = "maintained_company_theses_v1"
@@ -37,7 +39,7 @@ RECORD_FIELDS = {
     "valuation", "portfolio_role_and_alternatives", "conclusion", "unresolved_questions",
     "invalidation_conditions", "reviewed_material_accessions", "valuation_model", "record_sha256",
 }
-OPTIONAL_RECORD_FIELDS = {"reviewed_news_events", "reviewed_material_filings"}
+OPTIONAL_RECORD_FIELDS = {"reviewed_news_events", "reviewed_material_filings", "research_method", "retrospective"}
 FILING_RECEIPT_FIELDS = {"source_id", "ticker", "accession", "url", "normalized_path", "normalized_sha256",
                        "raw_path", "raw_sha256", "fetched_at", "form", "primary_document", "published_at"}
 PERIODIC_FORMS = {"10-Q", "10-K", "10-Q/A", "10-K/A"}
@@ -445,13 +447,17 @@ def validate_review(record: dict[str, Any], root: Path, context: dict[str, Any],
     if record["review_state"] in {"reviewed", "monitor"}:
         _require(record["business_case"]["status"] != "unresolved", "reviewed view lacks business conclusion")
     validate_news_reviews(record, root, observed_at, admission=admission)
+    try:
+        validate_research_method(record, root, observed_at)
+    except ValueError as exc:
+        raise ThesisValidationError(str(exc)) from exc
 
 
 def validate_store(store: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Validate append-only identities before choosing the latest version."""
     _require(isinstance(store, dict) and set(store) == {"schema_version", "records"} and store["schema_version"] == SCHEMA, "unsupported thesis store")
     _require(isinstance(store["records"], list), "thesis records must be a list")
-    latest, ids = {}, set()
+    latest, ids, preceding_records = {}, set(), []
     for record in store["records"]:
         _require(isinstance(record, dict) and RECORD_FIELDS <= set(record) <= RECORD_FIELDS | OPTIONAL_RECORD_FIELDS and seal_review(record) == record, "historical review hash or fields invalid")
         ticker = record["ticker"]
@@ -460,8 +466,14 @@ def validate_store(store: dict[str, Any]) -> dict[str, dict[str, Any]]:
         _require(record["supersedes_sha256"] == (prior["record_sha256"] if prior else ""), "thesis supersession chain differs")
         _require(record["review_id"] not in ids, "duplicate review ID")
         _require(not prior or _timestamp(record["reviewed_at"]) >= _timestamp(prior["reviewed_at"]), "review chronology regressed")
+        try:
+            validate_retrospective(record, preceding_records)
+            validate_research_method_ancestry(record, preceding_records)
+        except ValueError as exc:
+            raise ThesisValidationError(str(exc)) from exc
         ids.add(record["review_id"])
         latest[ticker] = record
+        preceding_records.append(record)
     return latest
 
 
