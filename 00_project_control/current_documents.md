@@ -35,7 +35,7 @@ relevant checks before relying on any linked claim.
 - [Dashboard phased build plan](dashboard_build_plan.md): Phase 0/1 delivered; Phase 2 formal feedback deployed; isolated acceptance and production no-send recomposition verified. Phase 3 charts/history ready; private HTTPS and real phone acceptance require Tailscale login.
 - [Phase 0/1 contract](dashboard_phase01_contract.md): retained initial read-only and demo boundaries.
 - [Dashboard application](../10_dashboard/README.md): shared formal forms, preview/apply receipts, incomplete-record completion, private service setup and operational recovery.
-- [Consecutive account-record intake](feedback_intake.md): immediate durable account writes, a bounded quiet interval before feedback research, and safe waiting during an existing refresh.
+- [Consecutive account-record intake](feedback_intake.md): independent immediate account writes during refresh, version-bound recomposition and publication, and retained duplicate/recovery checks.
 
 ## Current runtime outputs — read their generated timestamps
 

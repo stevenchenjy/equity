@@ -682,6 +682,8 @@ def main() -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
+    from account_access import expected_version, publication_guard
+    account_input_version = expected_version(ROOT) if not args.check else None
     active_state = load_active_state()
     active_config = load_active_config()
     inhibit = load_inhibit()
@@ -994,6 +996,7 @@ def main() -> int:
     )
     decision = {
         "schema_version": "phase5r_daily_decision_v1",
+        "account_input_version": account_input_version,
         "generated_at": iso_now(),
         "cycle_date": cycle_date(),
         "timezone": "America/New_York",
@@ -1226,8 +1229,6 @@ def main() -> int:
             decision["send_reason"] = send_reason
     from dashboard_publication import bind_dashboard_link
     bind_dashboard_link(decision, ROOT)
-    atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
-    record_decision_history(decision, root=ROOT)
 
     held_lines = "\n".join(
         f"- {row['ticker']}: {held_position_summary(row)}" for row in held_rows
@@ -1339,11 +1340,8 @@ def main() -> int:
 """
     from capital_presentation import markdown as capital_markdown
     report = "# Equity Research — capital decision\n\n" + capital_markdown(decision) + "\n\n---\n\n## Full research diagnostics\n\n" + report
-    atomic_write_text(DAILY_DECISION_REPORT_PATH, report)
 
     subject, plain, html_body = render_email(decision)
-    atomic_write_text(DAILY_BRIEF_TEXT_PATH, plain)
-    atomic_write_text(DAILY_BRIEF_HTML_PATH, html_body)
 
     state = {
         "schema_version": "phase5r_daily_decision_state_v1",
@@ -1366,7 +1364,16 @@ def main() -> int:
         "new_candidate_proposal_distinct_closes": new_candidate_stability_count,
         "new_candidate_stability": new_candidate_state,
     }
-    atomic_write_json(DAILY_DECISION_STATE_PATH, state)
+    # Only this short commit excludes account writers. Collection and analysis
+    # never hold their lock. A superseded computation cannot publish new hashes
+    # over calculations made from older account facts.
+    with publication_guard(ROOT, account_input_version):
+        atomic_write_json(DAILY_DECISION_JSON_PATH, decision)
+        atomic_write_text(DAILY_DECISION_REPORT_PATH, report)
+        atomic_write_text(DAILY_BRIEF_TEXT_PATH, plain)
+        atomic_write_text(DAILY_BRIEF_HTML_PATH, html_body)
+        atomic_write_json(DAILY_DECISION_STATE_PATH, state)
+        record_decision_history(decision, root=ROOT)
     log_daily_run(
         component="daily_decision",
         run_mode="compose_no_send",

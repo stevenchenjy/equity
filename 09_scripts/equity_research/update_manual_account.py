@@ -110,7 +110,7 @@ def parse_position(value: str) -> tuple[str, float, float | None]:
     return ticker, shares, entry
 
 
-def main() -> int:
+def _main() -> int:
     parser = argparse.ArgumentParser(
         epilog=(
             "Example: update_manual_account.py --cash 1900 "
@@ -261,6 +261,12 @@ def main() -> int:
         "manual_truth_updated=true broker_read=false automatic_order=false"
     )
     return 0
+
+
+def main():
+    from account_access import account_lock
+    with account_lock(ACCOUNT_STATE_PATH.parents[1]):
+        return _main()
 
 
 if __name__ == "__main__":

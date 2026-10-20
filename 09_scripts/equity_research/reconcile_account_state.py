@@ -325,7 +325,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
     return reconciliation_state, positions_modified
 
 
-def main() -> None:
+def _main() -> None:
     args = parse_args()
     load_active_inhibit()
     rows = load_execution_rows()
@@ -377,6 +377,12 @@ def main() -> None:
         notes=f"reconciliation_state={state}; fill_price_invented=no",
     )
     print(f"Equity Research reconciliation status={state}; canonical_state_modified={modified}")
+
+
+def main():
+    from account_access import account_lock
+    with account_lock(ACCOUNT_STATE.parents[1]):
+        return _main()
 
 
 if __name__ == "__main__":

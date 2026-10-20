@@ -385,6 +385,8 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
 
 
 def validate_published_workflow(decision: dict[str, Any], *, root: Path, current: datetime) -> None:
+    from account_access import validate_account_publication
+    validate_account_publication(decision, root)
     if decision.get("capital_decision"):
         from capital_decision import validate as validate_capital_decision
         validate_capital_decision(decision["capital_decision"], root=root, current=current)

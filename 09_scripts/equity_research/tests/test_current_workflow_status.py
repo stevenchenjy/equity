@@ -89,7 +89,7 @@ class CurrentWorkflowStatusTests(unittest.TestCase):
         with (patch.object(refresh,'load_active_state'),patch.object(refresh,'load_inhibit'),
               patch.object(refresh,'log_daily_run'),patch.object(refresh,'run_step',side_effect=run_step),
               patch('workflow_evaluation.record_refresh',side_effect=lambda state: calls.append('durable_refresh_record')),
-              patch.object(refresh,'atomic_write_json',side_effect=lambda path,state:writes.append(copy.deepcopy(state)))):
+              patch.object(refresh,'atomic_write_json',side_effect=lambda path,state:writes.append(copy.deepcopy(state)) if path==refresh.DAILY_REFRESH_STATE_PATH else None)):
             self.assertEqual(refresh.run_refresh(no_lock=True),0)
         self.assertEqual(calls[-3:],['durable_refresh_record','workflow_evaluation_final','current_status'])
         self.assertEqual(writes[0]['research_completed_at'],writes[0]['completed_at'])

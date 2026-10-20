@@ -31,6 +31,21 @@ def publication_fixture(*, correction=False):
 
 
 class SenderPublicationTests(unittest.TestCase):
+    def test_intake_account_lock_is_released_before_smtp_network_activity(self):
+        import threading
+        from account_access import account_lock
+        with publication_fixture() as (_, smtp):
+            save_decision(actionable_fixture())
+            def network_send(_message):
+                acquired=threading.Event()
+                def intake():
+                    with account_lock(sender.ROOT): acquired.set()
+                thread=threading.Thread(target=intake);thread.start()
+                thread.join(1)
+                self.assertTrue(acquired.is_set(),'SMTP must never hold the intake lock')
+            smtp.return_value.__enter__.return_value.send_message.side_effect=network_send
+            self.assertEqual(sender.send_once(smtp),0)
+
     def test_correction_uses_actual_clock_for_workflow_expiry(self):
         decision = actionable_fixture()
         decision["workflow_integrity"] = {"schema_version": "equity_workflow_integrity_v1"}

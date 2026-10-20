@@ -20,7 +20,14 @@ Phase 2 正式反馈、Phase 3 图表/历史，以及 Phase 4 搜索、审计更
 
 已完成写入的原请求可直接读取持久回执，不需要等研究锁释放，也不依赖当前账户快照加载成功。内容不同的同一编号仍拒绝；未完成的多文件写入仍需取得锁后恢复。表单保存回执随正式历史更新重算状态，区分「账户已应用」与研究仍在进行、完成或失败。
 
-连续登记时，上一笔触发的研究重算可能暂占账户锁。表单保留输入，每 3 秒等待重试，最多 5 分钟，也可以停止等待。下一笔预览会重新读取最新现金和持仓，生成预览后仍须本人确认保存。已确认提交的重试只复用原请求，不产生新的成交；连接结果未知、账户版本冲突和真实校验失败不会被自动忽略。研究更新状态不会显示为成交保存失败。
+Trade preview and saving now use a short account lock independently of long
+research refreshes. Cash and holdings update immediately; the dashboard shows
+these committed facts while superseded research quantities are withheld. The
+worker releases account and SQLite transactions for public research, admits only
+a matching account-version publication, and carries later fills forward without
+reapplying them. The 90-second quiet interval batches research only. Exact
+concurrency, bounded recomposition, recovery and email-claim semantics are in
+[trade recording during refresh](../00_project_control/feedback_intake.md).
 
 ## 权威状态与后台
 
@@ -28,7 +35,7 @@ Phase 2 正式反馈、Phase 3 图表/历史，以及 Phase 4 搜索、审计更
 
 私人 `dashboard_feedback.local/journal.sqlite3` 保存请求、修订、前后字节和后台任务，不替代正式 CSV/JSON。观察凭据在同一忽略目录。`dashboard_feedback_pending.local.json` 是额外绑定哈希的研究输入；缺项或恢复冲突暂停未核对的数量和保护草案。
 
-协调器持有既有 runtime 和 daily 锁。应用事实后运行完整无发送刷新；生产沿用外部公共行情 launcher 的 `--feedback-refresh` 模式及其既有 SEC/Keychain 管理。dashboard 不存凭据，不调用邮件 sender。公共采集失败保留事实并显示失败/缺口，可重试；重算不等于分析师签署新建议。
+账户写入使用独立的短时锁；研究任务继续持有 runtime 和 daily 锁。应用事实后运行完整无发送刷新；生产沿用外部公共行情 launcher 的 `--feedback-refresh` 模式及其既有 SEC/Keychain 管理。dashboard 不存凭据，不调用邮件 sender。公共采集失败保留事实并显示失败/缺口，可重试；重算不等于分析师签署新建议。
 
 新标的缺少公开价格时仍可记录人工事实。旧总额仅作参考，页面显示待估值，旧决策不会混入新账户。
 

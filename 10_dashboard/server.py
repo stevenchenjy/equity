@@ -17,6 +17,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit, parse_qs
 from zoneinfo import ZoneInfo
+from account_access import account_lock, validate_account_publication
 from feedback import Store, FeedbackError, version, PENDING, CONFIRMED, RECONCILED
 from tactical_review import _validated_bars
 from dashboard_publication import publication_id
@@ -122,6 +123,8 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     now = now or datetime.now(ET)
     decision_raw = safe_read(root, DECISION)
     d = json.loads(decision_raw)
+    try: validate_account_publication(d, root)
+    except ValueError: raise SnapshotError('research_inputs_changed')
     if not isinstance(d, dict) or not isinstance(d.get("held_positions"), list):
         raise SnapshotError("decision_schema_invalid")
     hashes = d.get("workflow_integrity", {}).get("input_hashes", {})
@@ -284,13 +287,14 @@ def escalation_view(decision, *, current_contract):
     return result
 
 
-def current_snapshot(root):
+def current_snapshot(root, *, research_busy=False):
     """Show accepted account facts while its former research is superseded."""
     try:
+        if research_busy: raise SnapshotError('research_refresh_in_progress')
         result = read_snapshot(root)
         result['research_ready'] = True
     except SnapshotError as exc:
-        if str(exc) not in {'research_inputs_changed','decision_cash_differs_from_account','decision_shares_differ_from_account','decision_price_snapshot_mismatch'}:
+        if str(exc) not in {'research_refresh_in_progress','research_inputs_changed','decision_cash_differs_from_account','decision_shares_differ_from_account','decision_price_snapshot_mismatch'}:
             raise
         a = json.loads(safe_read(root,ACCOUNT))
         o = json.loads(safe_read(root,ORDERS))
@@ -415,10 +419,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self.error_json(503,'ui_build_unavailable')
         if path == "/api/snapshot":
             try:
-                # Open an existing lock read-only; never create runtime files.
-                with RUNTIME_LOCK.open("rb") as lock:
-                    fcntl.flock(lock.fileno(), fcntl.LOCK_SH | fcntl.LOCK_NB)
-                    result = current_snapshot(self.server.runtime_root) if hasattr(self.server,'store') else read_snapshot(self.server.runtime_root)
+                # A long research lock changes recommendation availability,
+                # never availability of the latest committed account facts.
+                with account_lock(self.server.runtime_root, shared=True), RUNTIME_LOCK.open("rb") as lock:
+                    try:
+                        fcntl.flock(lock.fileno(), fcntl.LOCK_SH | fcntl.LOCK_NB)
+                        research_busy=False
+                    except BlockingIOError:
+                        research_busy=True
+                    if hasattr(self.server,'store'):
+                        result=current_snapshot(self.server.runtime_root,research_busy=research_busy)
+                    else:
+                        if research_busy: raise BlockingIOError()
+                        result=read_snapshot(self.server.runtime_root)
                     if getattr(self.server,'verification',False): result['mode']='verification'
                 return self.respond(200, json.dumps(result, ensure_ascii=False, allow_nan=False).encode(), "application/json; charset=utf-8")
             except BlockingIOError:

@@ -157,7 +157,7 @@ def write_reports(rows: list[dict[str, str]]) -> tuple[int, int]:
     return len(pending), len(confirmed)
 
 
-def main() -> None:
+def _main() -> None:
     args = parse_args()
     load_active_inhibit()
     rows = load_execution_rows()
@@ -193,6 +193,12 @@ def main() -> None:
         notes=f"pending_rows={pending_count}; confirmed_rows={confirmed_count}; canonical_state_modified=no",
     )
     print(f"Equity Research execution validation complete; pending={pending_count}; confirmed={confirmed_count}")
+
+
+def main():
+    from account_access import account_lock
+    with account_lock(EXECUTION_FILE.parents[1]):
+        return _main()
 
 
 if __name__ == "__main__":

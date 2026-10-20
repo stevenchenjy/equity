@@ -819,42 +819,46 @@ def send_once(
             request_suffix += ";scheduled_slot=" + scheduled_slot
         if limited_status:
             request_suffix += ";refresh_handoff=limited_status_only"
-        try:
-            check_limited_handoff()
-            if decision.get("workflow_integrity") is not None:
-                from workflow_integrity import validate_published_workflow
-                validate_published_workflow(decision, root=ROOT, current=now_et())
-        except (OSError, ValueError) as exc:
-            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
-            print(f"email_sent=false reason={exc} smtp_config_read=true")
-            return 2
-        try:
-            from delivery_followthrough import validate_followthrough
-            validate_followthrough(decision, root=ROOT, current=now_et())
-        except (OSError, ValueError) as exc:
-            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
-            print(f"email_sent=false reason={exc} smtp_config_read=true")
-            return 2
-        # A long validation must not deliver after the owner's usable window.
-        if scheduled_slot is not None:
-            enabled_now, reason_now, _, _ = delivery_guard()
-            window = active_delivery_window(load_active_config()["notifications"], now_et())
-            if not enabled_now or window is None or window["id"] != scheduled_slot:
-                reason = reason_now if not enabled_now else "outside_delivery_window"
-                log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=reason)
-                print(f"email_sent=false reason={reason} smtp_config_read=true")
+        # Claim one immutable account-version snapshot. Later fills belong to
+        # the next publication; intake never waits for SMTP/network activity.
+        from account_access import account_lock
+        with account_lock(ROOT, shared=True):
+            try:
+                check_limited_handoff()
+                if decision.get("workflow_integrity") is not None:
+                    from workflow_integrity import validate_published_workflow
+                    validate_published_workflow(decision, root=ROOT, current=now_et())
+            except (OSError, ValueError) as exc:
+                log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
+                print(f"email_sent=false reason={exc} smtp_config_read=true")
                 return 2
-        # This durable claim is intentionally written before any SMTP operation.
-        append_delivery(
-            status=status_prefix + "send_claimed",
-            reason=reason_prefix + "pre_smtp_durable_claim" + request_suffix,
-            decision=decision,
-            email_attempted="no",
-            email_sent="no",
-            smtp_config_read="yes",
-            message_count="0",
-            content_hashes=content_hashes,
-        )
+            try:
+                from delivery_followthrough import validate_followthrough
+                validate_followthrough(decision, root=ROOT, current=now_et())
+            except (OSError, ValueError) as exc:
+                log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
+                print(f"email_sent=false reason={exc} smtp_config_read=true")
+                return 2
+            # A long validation must not deliver after the owner's usable window.
+            if scheduled_slot is not None:
+                enabled_now, reason_now, _, _ = delivery_guard()
+                window = active_delivery_window(load_active_config()["notifications"], now_et())
+                if not enabled_now or window is None or window["id"] != scheduled_slot:
+                    reason = reason_now if not enabled_now else "outside_delivery_window"
+                    log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=reason)
+                    print(f"email_sent=false reason={reason} smtp_config_read=true")
+                    return 2
+            # This durable claim is intentionally written before any SMTP operation.
+            append_delivery(
+                status=status_prefix + "send_claimed",
+                reason=reason_prefix + "pre_smtp_durable_claim" + request_suffix,
+                decision=decision,
+                email_attempted="no",
+                email_sent="no",
+                smtp_config_read="yes",
+                message_count="0",
+                content_hashes=content_hashes,
+            )
         try:
             with smtp_factory("smtp.gmail.com", 587, timeout=30) as client:
                 client.ehlo()

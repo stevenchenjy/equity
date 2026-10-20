@@ -270,7 +270,7 @@ class ActiveProductionTests(unittest.TestCase):
             patch.object(
                 daily_refresh,
                 "atomic_write_json",
-                side_effect=lambda _path, state: writes.append(copy.deepcopy(state)),
+                side_effect=lambda _path, state: writes.append(copy.deepcopy(state)) if _path==daily_refresh.DAILY_REFRESH_STATE_PATH else None,
             ),
         ):
             result = daily_refresh.run_refresh(

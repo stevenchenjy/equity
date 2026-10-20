@@ -7,6 +7,7 @@ This pipeline never imports or invokes an email sender.
 from __future__ import annotations
 
 import argparse
+from account_access import research_context, publication_guard, capture_version, CHECKPOINT
 import subprocess
 import sys
 import time
@@ -231,6 +232,37 @@ def safe_check() -> int:
     return 0
 
 
+def consistent_steps(market_snapshot_mode):
+    """Retry only account-dependent work; never repeat objective/network quota.
+
+    Continuous intake remains available even through retries. After two bounded
+    retries, retain the real pending condition for the durable feedback worker.
+    """
+    steps, retries = [], []
+    boundary = next(i for i, spec in enumerate(STEP_SPECS) if spec[0]=='earnings_incorporation')
+    for attempt in range(3):
+        with research_context(ROOT) as version:
+            specs = STEP_SPECS if attempt==0 else STEP_SPECS[boundary:]
+            results = [run_step(*spec, market_snapshot_mode=market_snapshot_mode) for spec in specs]
+            if attempt==0:
+                steps=results
+            else:
+                retries.append({'attempt':attempt,'account_input_version':version,'steps':results})
+                replaced={r['name'] for r in results}
+                steps=[r for r in steps if r['name'] not in replaced]+results
+            try:
+                with publication_guard(ROOT, version):
+                    # Direct later composers must use the same proved account
+                    # context. A new fill invalidates this checkpoint naturally.
+                    if any(r['name']=='daily_decision' and r['exit_code']==0 for r in results):
+                        atomic_write_json(ROOT/CHECKPOINT, {'schema_version':'equity_account_research_v1',
+                            'account_input_version':version})
+                    return steps, retries, True
+            except ValueError as exc:
+                if str(exc)!='account_inputs_changed_recompose_required': raise
+    return steps, retries, False
+
+
 def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH) -> int:
     load_active_state()
     load_inhibit()
@@ -243,10 +275,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     with lock_context:
         snapshot_active_portfolio(ROOT)
         try:
-            steps = [
-                run_step(*spec, market_snapshot_mode=market_snapshot_mode)
-                for spec in STEP_SPECS
-            ]
+            steps, account_recompositions, account_current = consistent_steps(market_snapshot_mode)
         finally:
             snapshot_active_portfolio(ROOT)
     hard_failures = [
@@ -269,6 +298,8 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     decision_completed = any(
         row["name"] == "daily_decision" and row["exit_code"] == 0 for row in steps
     )
+    if not account_current:
+        hard_failures.append('account_recomposition_pending')
     if decision_completed and not hard_failures and not soft_failures:
         outcome = "passed"
     elif decision_completed:
@@ -288,6 +319,8 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         "decision_created": decision_completed,
         "market_snapshot_mode": market_snapshot_mode,
         "steps": steps,
+        "account_recompositions": account_recompositions,
+        "account_publication_current": account_current,
         "email_attempted": False,
         "email_sent": False,
         "broker_connected": False,

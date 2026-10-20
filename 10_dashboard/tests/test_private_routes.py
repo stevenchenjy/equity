@@ -66,6 +66,39 @@ class PrivateRoutesTests(unittest.TestCase):
             (dist/'assets/index-two.js').write_text('/* next fixture */')
             self.assertEqual(self.request('GET','/api/ui-version'),(200,{'entry_script':'/assets/index-two.js'}))
 
+    def test_actual_http_intake_and_live_account_work_during_research(self):
+        import fcntl
+        self.fixture.put('04_research/company_research/daily_decision.json',{
+            'generated_at':datetime.now().astimezone().isoformat(),
+            'cycle_date':datetime.now().date().isoformat(),'market_gate':{'expected_market_session':'2026-09-29'}})
+        daily=self.root/'00_project_control/run_logs/daily_pipeline.lock'
+        daily.parent.mkdir(parents=True,exist_ok=True)
+        good={'Origin':self.local,'Content-Type':'application/json'}
+        with self.lock.open('a+b') as runtime,daily.open('a+b') as pipeline:
+            fcntl.flock(runtime,fcntl.LOCK_EX);fcntl.flock(pipeline,fcntl.LOCK_EX)
+            code,snapshot=self.request('GET','/api/snapshot')
+            self.assertEqual(code,200)
+            self.assertFalse(snapshot['research_ready'])
+            self.assertEqual(snapshot['plans'],[])
+            payload=self.fixture.total_payload(amount='100')
+            code,preview=self.request('POST','/api/feedback/preview',payload,good)
+            self.assertEqual(code,200)
+            payload['preview_hash']=preview['preview_hash']
+            code,receipt=self.request('POST','/api/feedback',payload,good)
+            self.assertEqual((code,receipt['stage']),(200,'applied'))
+            self.assertEqual(self.request('POST','/api/feedback',payload,good),(200,receipt))
+            code,updated=self.request('GET','/api/snapshot')
+            self.assertEqual((code,updated['account']['cash_available']),(200,900))
+            self.assertEqual(updated['positions'][0]['shares'],3)
+            self.assertEqual(updated['plans'],[])
+            plain=(self.root/'07_automation/email_briefs/daily_email_brief.txt').read_text()
+            html=(self.root/'07_automation/email_briefs/daily_email_brief.html').read_text()
+            for body in (plain,html):
+                self.assertIn('$900.00',body)
+                self.assertIn('ABC 3 shares',body)
+                self.assertIn('previous trade instructions are superseded',body)
+        self.assertEqual(len(self.request('GET','/api/feedback')[1]['records']),1)
+
     def test_tailscale_owner_host_and_https_origin_required(self):
         private={'Host':'test.example.ts.net','Tailscale-User-Login':'owner@example.test'}
         self.assertEqual(self.request('GET','/api/feedback',headers=private)[0],200)

@@ -200,3 +200,7 @@ graphify-out/reflections/
 
 # Incomplete independent SEC correction fetches retain private attempt history.
 /02_filings/sec_acceptance_staging.local/
+
+# Independent short account transactions and stable research context
+00_project_control/run_logs/account_records.lock
+00_project_control/run_logs/account_research_version.local.json

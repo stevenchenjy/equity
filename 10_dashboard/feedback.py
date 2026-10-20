@@ -1,14 +1,15 @@
 """Durable human feedback coordinator. Canonical CSV/JSON remain authoritative.
 
 The journal records a prepared multi-file transition before any replacement.
-Both the runtime and daily locks are held for each write and recovery. Public
-research runs afterwards; its failure never rolls back accepted human facts.
+A short account lock guards each write and recovery. Public research uses
+separate runtime/daily locks; its failure never rolls back accepted human facts.
 """
 from __future__ import annotations
 
 import csv
 import fcntl
 import hashlib
+import html
 import io
 import json
 import os
@@ -31,6 +32,7 @@ from execution_common import EXECUTION_FIELDS, validate_execution_row
 from validate_execution_fill import CONFIRMED_FIELDS
 from reconcile_account_state import RECONCILIATION_FIELDS
 from portfolio_archive import archive_before_replace
+from account_access import account_lock, input_version, validate_account_publication
 
 ET = ZoneInfo('America/New_York')
 ACCOUNT = '05_risk_and_positions/current_account_state.local.json'
@@ -162,21 +164,22 @@ class Store:
 
     @contextmanager
     def locked(self):
-        if not self.mutex.acquire(blocking=False):
-            raise FeedbackError('runtime_refresh_in_progress', status=503)
-        try:
-            self.runtime_lock.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-            with self.runtime_lock.open('a+b') as outer:
-                try: fcntl.flock(outer, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        # Serialize only short account transactions, never public research.
+        with self.mutex, account_lock(self.root):
+            yield
+
+    @contextmanager
+    def research_locked(self):
+        self.runtime_lock.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        with self.runtime_lock.open('a+b') as outer:
+            try: fcntl.flock(outer, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError: raise FeedbackError('runtime_refresh_in_progress', status=503)
+            daily = self.root / '00_project_control/run_logs/daily_pipeline.lock'
+            daily.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            with daily.open('a+b') as inner:
+                try: fcntl.flock(inner, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 except BlockingIOError: raise FeedbackError('runtime_refresh_in_progress', status=503)
-                daily = self.root / '00_project_control/run_logs/daily_pipeline.lock'
-                daily.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-                with daily.open('a+b') as inner:
-                    try: fcntl.flock(inner, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                    except BlockingIOError: raise FeedbackError('runtime_refresh_in_progress', status=503)
-                    yield
-        finally:
-            self.mutex.release()
+                yield
 
     @contextmanager
     def db(self):
@@ -228,6 +231,21 @@ class Store:
         unresolved = [dict(id=r['id'], ticker=r['feedback'].get('ticker'), stage=r['stage'], missing=r['missing'])
                       for r in data if r['stage'] in {'pending', 'applying', 'recovery_conflict'} and r['feedback']['status'] != 'skipped']
         return encoded({'schema_version': 'equity_dashboard_pending_v1', 'records': sorted(unresolved, key=lambda r:r['id'])})
+
+    def pending_brief(self, writes, now):
+        """Invalidate the visible unsent draft in the same durable transition."""
+        account=json.loads(writes.get(ACCOUNT,read(self.root,ACCOUNT)))
+        positions=rows(writes.get(POSITIONS,read(self.root,POSITIONS)))
+        lines=['Equity Research — account updated; research refreshing',
+               'Recorded: '+now.isoformat(),
+               'Recorded cash: $'+format(Decimal(str(account['cash_available'])),'.2f'),
+               'Recorded holdings: '+('; '.join(r['ticker']+' '+r['shares_optional']+' shares' for r in positions) or 'none'),
+               'The previous trade instructions are superseded. Current research will recompose automatically.',
+               'No new trade instructions in this pending update. No email or order was executed.']
+        plain='\n\n'.join(lines)+'\n'
+        body='<!doctype html><html lang="en"><meta charset="utf-8"><title>Equity Research</title><body>'+''.join('<p>'+html.escape(line)+'</p>' for line in lines)+'</body></html>\n'
+        return {'07_automation/email_briefs/daily_email_brief.txt':plain.encode(),
+                '07_automation/email_briefs/daily_email_brief.html':body.encode()}
 
     def recover(self, con):
         for req in con.execute("SELECT * FROM requests WHERE state='prepared'").fetchall():
@@ -571,6 +589,7 @@ class Store:
                     manual=json.loads(writes[MANUAL])
                     manual.update(source={'path':observation,'sha256':sha(observed)},correction=record['correction'])
                     writes[MANUAL]=encoded(manual)
+            if f['status']!='skipped': writes.update(self.pending_brief(writes,now))
             final = record['stage']
             record['stage'],record['final_stage'] = 'applying',final
             con.execute('INSERT OR REPLACE INTO records VALUES(?,?)',(rid,encoded(record).decode()))
@@ -658,7 +677,7 @@ class Store:
 
     def claim_review(self, request_id, *, rebind_current=False):
         """Local analyst admission; the browser cannot claim or complete a review."""
-        with self.locked(),self.db() as con:
+        with self.research_locked(),self.locked(),self.db() as con:
             self.recover(con)
             row = con.execute('SELECT body FROM review_requests WHERE id=?',(request_id,)).fetchone()
             if not row: raise FeedbackError('review_request_not_found',status=404)
@@ -685,7 +704,7 @@ class Store:
         relative = path.as_posix()
         if not relative.startswith('08_reviews/analyst_followthrough.local/') or path.suffix!='.json':
             raise FeedbackError('invalid_review_receipt_path')
-        with self.locked(),self.db() as con:
+        with self.research_locked(),self.locked(),self.db() as con:
             self.recover(con)
             row = con.execute('SELECT body FROM review_requests WHERE id=?',(request_id,)).fetchone()
             if not row: raise FeedbackError('review_request_not_found',status=404)
@@ -748,23 +767,24 @@ class Store:
                   and r['stage'] in {'pending','applied'}]
         if not prepared and self.intake_waiting(queued):
             return False
-        with self.locked(), self.db() as con:
-            self.recover(con)
-            pending = [json.loads(r[0]) for r in con.execute('SELECT body FROM records')]
-            pending = [r for r in pending if r['research_status'] in {'queued','running'} and r['stage'] in {'pending','applied'}]
-            if not pending: return False
-            # A new fill may have arrived after the unlocked outbox check.
-            if not prepared and self.intake_waiting(pending): return False
-            for r in pending:
-                r['research_status']='running'
-                con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),r['id']))
-            con.commit()
+        with self.research_locked():
+            with self.locked(), self.db() as con:
+                self.recover(con)
+                pending = [json.loads(r[0]) for r in con.execute('SELECT body FROM records')]
+                pending = [r for r in pending if r['research_status'] in {'queued','running'} and r['stage'] in {'pending','applied'}]
+                if not pending: return False
+                if not prepared and self.intake_waiting(pending): return False
+                for r in pending:
+                    r['research_status']='running'
+                    con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),r['id']))
+                con.commit()
+                bound_version=input_version(self.root)
+                tickers = {r['ticker'] for r in rows(read(self.root,POSITIONS))}
             if not self.refresh: return False
             log = self.root / '07_automation/dashboard.local/refresh.log'
             log.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
             # Only the existing public research pipeline; no sender or broker.
             script = self.root / '09_scripts/equity_research/run_daily_refresh.py'
-            tickers = {r['ticker'] for r in rows(read(self.root,POSITIONS))}
             markets = {r['ticker'] for r in rows(read(self.root,MARKET,optional=True)) if r.get('data_quality_label')=='ok'}
             mode = 'reuse_validated_snapshot' if tickers <= markets else 'fetch'
             started=datetime.now(ET).replace(microsecond=0)
@@ -780,24 +800,41 @@ class Store:
                         if self.root==Path('/Users/messssi/LocalRuntime/equity') else [sys.executable,str(script),'--run','--no-lock','--market-snapshot-mode',mode])
                     completed = subprocess.run(command,cwd=self.root,
                                                stdout=handle,stderr=subprocess.STDOUT,timeout=1800)
-                refresh_path = self.root / '00_project_control/run_logs/daily_refresh_state.local.json'
-                state = json.loads(refresh_path.read_text())
-                d = json.loads(read(self.root,'04_research/company_research/daily_decision.json'))
-                hashes = d.get('workflow_integrity',{}).get('input_hashes',{})
-                bound = all(hashes.get(p)==sha(read(self.root,p)) for p in (ACCOUNT,POSITIONS,ORDERS,PENDING))
-                if not bound or state.get('email_attempted') is not False or datetime.fromisoformat(state['started_at'])<started:
-                    raise ValueError('refresh_publication_not_bound')
-                verify_publication(self.root,d)
-                outcome = 'passed' if completed.returncode==0 and state.get('outcome')=='passed' else 'failed' if state.get('hard_failures') or state.get('decision_created') is not True else 'degraded'
-                error = None if outcome=='passed' else 'public_research_degraded'
             except (OSError,ValueError,KeyError,TypeError,InvalidOperation,subprocess.TimeoutExpired):
-                outcome,error = 'failed','research_refresh_failed'
-            for r in pending:
-                r['research_status'],r['research_completed_at'],r['error'] = outcome,datetime.now(ET).isoformat(),error
-                con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),r['id']))
-                con.execute('INSERT INTO events(record_id,body) VALUES(?,?)',(r['id'],encoded(r).decode()))
-            con.commit()
-            return True
+                completed=None
+            with self.locked(), self.db() as con:
+                try:
+                    if completed is None: raise ValueError('research_refresh_failed')
+                    refresh_path = self.root / '00_project_control/run_logs/daily_refresh_state.local.json'
+                    state = json.loads(refresh_path.read_text())
+                    d = json.loads(read(self.root,'04_research/company_research/daily_decision.json'))
+                    hashes = d.get('workflow_integrity',{}).get('input_hashes',{})
+                    bound = all(hashes.get(p)==sha(read(self.root,p)) for p in (ACCOUNT,POSITIONS,ORDERS,PENDING))
+                    if not bound or state.get('email_attempted') is not False or datetime.fromisoformat(state['started_at'])<started:
+                        raise ValueError('refresh_publication_not_bound')
+                    validate_account_publication(d,self.root)
+                    verify_publication(self.root,d)
+                    outcome = 'passed' if completed.returncode==0 and state.get('outcome')=='passed' else 'failed' if state.get('hard_failures') or state.get('decision_created') is not True else 'degraded'
+                    error = None if outcome=='passed' else 'public_research_degraded'
+                except (OSError,ValueError,KeyError,TypeError,InvalidOperation):
+                    outcome,error = 'failed','research_refresh_failed'
+                changed=input_version(self.root)!=bound_version
+                selected={r['id'] for r in pending}
+                for row in con.execute('SELECT body FROM records').fetchall():
+                    r=json.loads(row[0])
+                    # A successful latest-account publication covers subsequent
+                    # entries too. Never overwrite a newer revision with a stale
+                    # copy captured before the child ran.
+                    if r['stage'] not in {'pending','applied'} or r['research_status'] not in {'queued','running'}: continue
+                    if outcome!='passed' and r['id'] not in selected: continue
+                    if outcome!='passed' and changed:
+                        r['research_status'],r['error']='queued',None
+                    else:
+                        r['research_status'],r['research_completed_at'],r['error']=outcome,datetime.now(ET).isoformat(),error
+                    con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),r['id']))
+                    con.execute('INSERT INTO events(record_id,body) VALUES(?,?)',(r['id'],encoded(r).decode()))
+                con.commit()
+                return True
 
     def intake_waiting(self, records):
         if not records or any(r['research_status']=='running' for r in records):

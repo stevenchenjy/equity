@@ -1,27 +1,45 @@
-# Consecutive account-record intake
+# Trade recording during research refresh
 
-An accepted fill updates the canonical local account and execution journal
-immediately under the existing runtime and pipeline locks. Its receipt remains
-distinct from research completion. No broker or email action is performed.
+Trade preview, confirmation, duplicate detection and recovery use the short
+`account_records.lock`. They do not acquire the runtime or daily research lock.
+An accepted fill updates canonical cash, holdings, known orders and the existing
+execution journal immediately. The original request ID remains the idempotency
+key; a changed payload under that ID is rejected. A stale account version needs
+a fresh preview. Multi-file transitions retain their prepared-write recovery and
+external-change checks. Research failure never rolls back accepted facts.
 
-The dashboard waits for a 90-second quiet interval after queued feedback before
-starting its automatic full public-research refresh. Further entries within that
-interval are saved normally and join the same research batch. The oldest queued
-entry limits this coalescing interval to three minutes, so continued input cannot
-defer research indefinitely. Queue times are durable across server restarts;
-interrupted runs and prepared-write recovery bypass this delay.
-The one-shot `record_feedback.py --apply --refresh` command also bypasses
-the quiet interval and completes its explicit research attempt before exiting.
+The public research worker keeps the runtime and daily locks, but releases both
+the account lock and its SQLite transaction before starting subprocess/network
+work. It rereads durable records at completion, preserving later entries and
+revisions. A successful current publication covers entries admitted during the
+run too; superseded work is queued again, never reported as a failed trade save.
 
-This is an intake scheduling change, not an investment threshold or a waiver of
-coherent publication. A research job already running, including a scheduled
-refresh, still holds the existing locks. A new form waits safely in that case,
-shows elapsed waiting time, preserves its input and original request identity,
-and continues automatically after release. Unknown network results retain the
-same request for recovery; account or preview conflicts require a fresh preview.
-Never retry by inventing another request ID or assume a reported trade was
-executed by the system.
+Research starts with a fingerprint of account, positions, orders, execution and
+reconciliation records, pending-write barrier and manual observation receipt.
+The composer checks that exact context before computation and under the short
+publication lock before replacing decision, report, text/HTML and state. A new
+fill cannot be disguised by attaching fresh hashes to older calculations. The
+full refresh can retry account-dependent stages twice using current inputs;
+public collection and objective-research quota are not restarted. Continuous
+changes beyond that bound leave research pending for the durable worker.
+The last stable account context is retained in
+`00_project_control/run_logs/account_research_version.local.json`; a standalone
+composer cannot adopt a changed account without recomposition.
 
-The worker rechecks intake after acquiring its locks, batches pending records,
-and verifies the resulting decision and exact text/HTML against the current
-account. Accepted account facts survive a failed research refresh.
+The account transition also replaces the unsent text/HTML brief with a current
+account-only pending notice, retaining the old bytes in the durable journal.
+A composer cannot overwrite an applying/recovery-conflict transition.
+The dashboard serves current committed cash and holdings throughout a refresh.
+It withholds superseded research quantities and drafts until recomposition is
+current. Email validates the same account fingerprint; final validation and its
+durable send claim use the short shared account lock. The lock is released
+before SMTP. A claim fixes the immutable as-of snapshot; a fill recorded after
+that claim belongs to the next publication. Historical sent artifacts remain
+unchanged. No additional email, broker connection or trade is authorized.
+
+The existing 90-second quiet interval, bounded at three minutes from the oldest
+queued entry, now batches research only. It never delays trade intake. Explicit
+`record_feedback.py --apply --refresh` still attempts research immediately.
+Legacy account writers and allocation migrations share the account lock; their
+transaction and recovery checks remain effective. Deployment retains the
+runtime/daily locks, and service replacement must preserve the durable journal.

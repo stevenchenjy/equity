@@ -84,7 +84,8 @@ def migrate(root: Path, *, apply: bool = False, request_reference: str = "") -> 
     with ExitStack() as stack:
         for path in (root.parent / ".locks/equity-research-runtime.lock",
                      root / "00_project_control/run_logs/daily_pipeline.lock",
-                     root / "05_risk_and_positions/allocation_policy.local.lock"):
+                     root / "05_risk_and_positions/allocation_policy.local.lock",
+                     root / "00_project_control/run_logs/account_records.lock"):
             stack.enter_context(ExclusiveFileLock(path, wait_timeout_seconds=5))
         result = proposal(root)
         if not result["changes"]:

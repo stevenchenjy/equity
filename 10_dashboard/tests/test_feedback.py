@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 from unittest.mock import patch
 from datetime import datetime
-from feedback import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version
+from feedback import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version, read, sha
 
 
 class FeedbackTests(unittest.TestCase):
@@ -282,11 +282,18 @@ class FeedbackTests(unittest.TestCase):
         with self.assertRaisesRegex(FeedbackError,'recovery_conflict'): self.store.submit(p)
         self.assertEqual(json.loads((self.root/ACCOUNT).read_text()),{'external':'new state'})
 
-    def test_busy_runtime_returns_retryable_without_effect(self):
-        import fcntl
-        with (self.root/'runtime.lock').open('a+b') as lock:
-            fcntl.flock(lock,fcntl.LOCK_EX)
-            with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'): self.store.preview(self.payload())
+    def test_new_fill_is_saved_while_both_research_locks_are_held(self):
+        import fcntl,time
+        daily=self.root/'00_project_control/run_logs/daily_pipeline.lock'
+        daily.parent.mkdir(parents=True,exist_ok=True)
+        with (self.root/'runtime.lock').open('a+b') as lock,daily.open('a+b') as pipeline:
+            fcntl.flock(lock,fcntl.LOCK_EX);fcntl.flock(pipeline,fcntl.LOCK_EX)
+            started=time.monotonic()
+            payload=self.total_payload();saved=self.submit(payload)
+            self.assertLess(time.monotonic()-started,1)
+            self.assertEqual(saved['stage'],'applied')
+            self.assertEqual(self.store.submit(payload),saved)
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
 
     def test_completed_request_receipt_is_readable_during_research_without_reapplying(self):
         import fcntl
@@ -298,7 +305,7 @@ class FeedbackTests(unittest.TestCase):
             self.assertEqual(self.store.submit(p),saved)
             changed=json.loads(json.dumps(p));changed['feedback']['amount']='200'
             with self.assertRaisesRegex(FeedbackError,'request_id_reused'):self.store.submit(changed)
-            with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'):self.store.submit(self.total_payload())
+            self.assertEqual(self.store.preview(self.total_payload())['missing'],[])
         self.assertEqual(before,{rel:(self.root/rel).read_bytes() for rel in before})
         self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
 
@@ -309,13 +316,67 @@ class FeedbackTests(unittest.TestCase):
             with self.assertRaises(OSError):self.store.submit(p)
         with (self.root/'runtime.lock').open('a+b') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
-            with self.assertRaisesRegex(FeedbackError,'runtime_refresh_in_progress'):self.store.submit(p)
+            self.assertEqual(self.store.submit(p)['stage'],'applied')
         self.assertEqual(self.store.submit(p)['stage'],'applied')
         self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
+    def test_worker_releases_account_and_sqlite_writes_during_public_research(self):
+        import threading,subprocess
+        self.submit(self.total_payload(amount='100'));self.store.refresh=True
+        entered,released=threading.Event(),threading.Event()
+        def public_child(*args,**kwargs):
+            entered.set()
+            if not released.wait(3):raise AssertionError('intake waited for research')
+            raise subprocess.TimeoutExpired('public research',1800)
+        with patch('feedback.subprocess.run',side_effect=public_child):
+            worker=threading.Thread(target=self.store.work_once);worker.start()
+            try:
+                self.assertTrue(entered.wait(2))
+                other=Store(self.root,self.root/'runtime.lock',intake_quiet_seconds=0)
+                second=self.total_payload(side='sell',shares='1',amount='110')
+                second['preview_hash']=other.preview(second)['preview_hash']
+                saved=other.submit(second)
+                self.assertFalse(released.is_set())
+                self.assertEqual(saved['changes']['cash_after'],1010)
+                self.assertEqual(other.submit(second)['id'],saved['id'])
+            finally:
+                released.set();worker.join(3)
+            self.assertFalse(worker.is_alive())
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),2)
+        self.assertTrue(all(r['research_status']=='queued' for r in self.store.history()))
+        self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['cash_available'],1010)
 
     def test_oversell_and_invalid_net_cash_are_rejected(self):
         with self.assertRaisesRegex(FeedbackError,'insufficient_recorded_shares'): self.store.preview(self.payload(side='sell',shares='3'))
         with self.assertRaisesRegex(FeedbackError,'net_amount_less_than_fees'): self.store.preview(self.payload(amount_mode='net',amount='1',fees='2'))
+
+    def test_latest_publication_completes_fills_added_after_worker_started(self):
+        import subprocess
+        from account_access import capture_version
+        self.submit(self.total_payload(amount='100'));self.store.refresh=True
+        def renderer(d):
+            text='Current cash '+str(d['account']['cash_available'])+'; ABC '+str(d['held_positions'][0]['current_shares'])
+            return 'Subject',text,'<p>'+text+'</p>'
+        def child(command,**kwargs):
+            if '--recompose-current-coverage' in command:return subprocess.CompletedProcess(command,0)
+            other=Store(self.root,self.root/'runtime.lock',intake_quiet_seconds=0)
+            second=self.total_payload(side='sell',shares='1',amount='110')
+            second['preview_hash']=other.preview(second)['preview_hash'];other.submit(second)
+            d={'account_input_version':capture_version(self.root),
+               'account':{'cash_available':1010,'invested_capital':200,'account_total_value':1210},
+               'held_positions':[{'ticker':'ABC','current_shares':2,'current_price':100}],
+               'workflow_integrity':{'input_hashes':{p:sha(read(self.root,p)) for p in (ACCOUNT,POSITIONS,ORDERS,PENDING)}}}
+            self.put('04_research/company_research/daily_decision.json',d)
+            self.put('07_automation/email_briefs/daily_email_brief.txt',renderer(d)[1])
+            self.put('07_automation/email_briefs/daily_email_brief.html',renderer(d)[2])
+            self.put('00_project_control/run_logs/daily_refresh_state.local.json',{
+                'started_at':datetime.now().astimezone().replace(microsecond=0).isoformat(),
+                'email_attempted':False,'outcome':'passed','hard_failures':[],'decision_created':True})
+            return subprocess.CompletedProcess(command,0)
+        with patch('feedback.subprocess.run',side_effect=child),patch('email_brief.render_email',side_effect=renderer):
+            self.assertTrue(self.store.work_once())
+        self.assertEqual(len(rows(read(self.root,LEDGER))),2)
+        self.assertTrue(all(r['research_status']=='passed' for r in self.store.history()))
 
     def test_all_cash_loader_and_generated_weights(self):
         import account_common as common
