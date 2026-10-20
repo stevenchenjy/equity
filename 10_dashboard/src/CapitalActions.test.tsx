@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {CapitalActions} from './CapitalActions';
-import {Summary, planRoleLabel} from './App';
+import {Summary, planRoleLabel, orderObservationNote} from './App';
 import CompanyCase from './CompanyCase';
 import type {CapitalDecision, CompanyResearchCase, Plan} from './domain';
 import type {CapitalDeploymentEscalation, CapitalUse, DeploymentGate, Snapshot} from './domain';
@@ -136,4 +136,12 @@ test('dated reasoning is disclosed once without upgrading unknown consensus or z
  assert.match(html,/<details class="summary-original"><summary>价格预期、分歧与损失路径<\/summary>/);
  for(const text of research.research_reasoning!.lines)assert.equal(html.split(text).length-1,1);
  assert.match(html,/新增订单草案：0 股/);assert.doesNotMatch(html,/BUY LIMIT/);assert.equal(JSON.stringify(row),before);
+});
+
+test('account-only refresh keeps validated local-ledger authority without borrowing a stale capital contract',()=>{
+ const snapshot={...data,capital_decision:null,orders:{fresh:false},account_authority:{mode:'owner_local_ledger',local_planning_enabled:true}} as unknown as Snapshot;
+ assert.match(orderObservationNote(snapshot),/本地台账用于条件方案/);
+ snapshot.capital_decision={account_authority:{local_planning_enabled:true}} as unknown as CapitalDecision;
+ snapshot.account_authority={mode:'unverified',local_planning_enabled:false};
+ assert.match(orderObservationNote(snapshot),/需要重新核对/);
 });

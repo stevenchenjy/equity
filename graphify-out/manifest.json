@@ -1485,13 +1485,13 @@
     "semantic_hash": ""
   },
   "10_dashboard/server.py": {
-    "mtime": 1792515733.9390237,
-    "ast_hash": "5a6fcb20296d1204f4b265b714fceee7",
+    "mtime": 1792515959.0724351,
+    "ast_hash": "a9c8265a6b922cc9dcb9f3466fcf5d76",
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
-    "mtime": 1792511987.1207986,
-    "ast_hash": "352a31e4f1e7fc0dcb4e5a8b60a15d67",
+    "mtime": 1792515974.2532423,
+    "ast_hash": "8189ad0720f9206eb306e0656cb58046",
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.test.ts": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.ts": {
-    "mtime": 1792463362.0091102,
-    "ast_hash": "5635e81c5b243a50a37672b2a90f1ba2",
+    "mtime": 1792516008.4443326,
+    "ast_hash": "0bc65721296a9c40fdb37781c7f2ed6c",
     "semantic_hash": ""
   },
   "10_dashboard/src/main.tsx": {
@@ -1510,8 +1510,8 @@
     "semantic_hash": "355db2bc23f7aba8d89dc945b6cdbc45"
   },
   "10_dashboard/tests/test_snapshot.py": {
-    "mtime": 1792457219.3560123,
-    "ast_hash": "6d0c8cd1906bee1fa33a5229fcbdc191",
+    "mtime": 1792515974.2542498,
+    "ast_hash": "1423977f6292d28eefc3e53a6403abcb",
     "semantic_hash": ""
   },
   "10_dashboard/tsconfig.json": {
@@ -1745,8 +1745,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/CapitalActions.test.tsx": {
-    "mtime": 1792458467.7870612,
-    "ast_hash": "d3ae8aab0aee49ec33080c540a2fb295",
+    "mtime": 1792515974.2537239,
+    "ast_hash": "e7e9fb9326ab5616b44498162533dec4",
     "semantic_hash": ""
   },
   "10_dashboard/src/CapitalActions.tsx": {
@@ -2105,8 +2105,8 @@
     "semantic_hash": ""
   },
   "00_project_control/feedback_intake.md": {
-    "mtime": 1792515383.2916443,
-    "ast_hash": "9262a84ada195362d1afbb82af54190e",
+    "mtime": 1792516063.4848592,
+    "ast_hash": "bd06741f6c771a9cb2f74fef6e1fec0b",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v45.json": {

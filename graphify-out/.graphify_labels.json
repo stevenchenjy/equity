@@ -263,13 +263,17 @@
   "261": "feedback_blocker",
   "262": "Company-specific valuation in production",
   "263": "Handler",
+  "264": "compare",
   "265": "Equity Research — Long-Horizon Return Objective Policy",
   "266": "smoke_diagnostic_notes",
+  "267": "RecommendationNotificationTests",
   "268": "OwnerSnapshotTests",
   "269": "compare",
   "270": "main",
   "271": "create_long_horizon_research.py",
   "272": "ResearchSection.tsx",
+  "273": "_DocumentPeriod",
   "274": "Position purpose and reassessment",
+  "275": "feedback_blocker",
   "276": "Equity Research — Core Allocation Policy"
 }

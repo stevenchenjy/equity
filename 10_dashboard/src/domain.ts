@@ -60,6 +60,7 @@ export type CapitalDeploymentEscalation = {
   explanation:string; automatic_action_allowed:false;
 };
 export type Snapshot = {
+  account_authority?:CapitalDecision['account_authority'];
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;
   market_session: string; market_sources?: string[]; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
   account: { account_total_value: number | null; cash_available: number; invested_capital: number | null;

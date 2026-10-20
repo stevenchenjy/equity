@@ -31,7 +31,9 @@ account-only pending notice, retaining the old bytes in the durable journal.
 A composer cannot overwrite an applying/recovery-conflict transition.
 The dashboard serves current committed cash and holdings throughout a refresh.
 It withholds superseded research quantities and drafts until recomposition is
-current. Email validates the same account fingerprint; final validation and its
+current. The temporary account-only view retains the independently validated
+owner local-ledger authority; research refresh does not request a new broker
+observation or claim one occurred. Email validates the same account fingerprint; final validation and its
 durable send claim use the short shared account lock. The lock is released
 before SMTP. A claim fixes the immutable as-of snapshot; a fill recorded after
 that claim belongs to the next publication. Historical sent artifacts remain

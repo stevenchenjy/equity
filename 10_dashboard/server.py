@@ -316,6 +316,10 @@ def current_snapshot(root, *, research_busy=False):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
         result['market_sources'] = d.get('market_gate', {}).get('data_sources', [])
         project_core_roles(result['positions'], result['allocation'], 'role')
+    from account_authority import load_authority
+    try: result['account_authority']=load_authority(root,datetime.now(ET))
+    except (OSError,ValueError,KeyError,TypeError):
+        result['account_authority']={'mode':'unverified','local_planning_enabled':False}
     result['mode'] = 'formal_feedback'
     return result
 

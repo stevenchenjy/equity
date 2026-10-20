@@ -138,6 +138,12 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['capital_decision_status'], 'current')
         self.assertTrue(result['capital_decision']['account_authority']['local_planning_enabled'])
         self.assertFalse(result['capital_decision']['account_authority']['broker_observation_claimed'])
+        from server import current_snapshot
+        busy=current_snapshot(self.root,research_busy=True)
+        self.assertTrue(busy['account_authority']['local_planning_enabled'])
+        self.assertFalse(busy['account_authority']['broker_observation_claimed'])
+        self.assertEqual(busy['plans'],[])
+
         self.assertFalse(result['orders']['complete'])
         self.assertFalse(result['account']['settled_cash_verified'])
         self.put(POLICY_REL, {'mode': 'changed'})
