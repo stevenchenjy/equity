@@ -25,7 +25,9 @@ def main():
     parser.add_argument('--rebind-current',action='store_true',help='Explicitly claim against changed current account; original request binding stays audited')
     parser.add_argument('--refresh',action='store_true',help='Run full no-send research after applying; facts survive research failure')
     args=parser.parse_args()
-    store=Store(DEFAULT_ROOT,RUNTIME_LOCK)
+    # This is a one-shot operator command, not the background intake worker.
+    # An explicit --refresh must run before the process exits.
+    store=Store(DEFAULT_ROOT,RUNTIME_LOCK,intake_quiet_seconds=0)
     if args.preview or args.apply or args.request_review:
         if not args.request_file: parser.error('this mode requires a private request JSON file')
         with open(args.request_file) as handle: payload=json.load(handle)

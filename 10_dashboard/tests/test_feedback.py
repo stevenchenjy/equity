@@ -416,6 +416,23 @@ class FeedbackTests(unittest.TestCase):
             child.assert_not_called()
         self.assertEqual(self.store.history()[0]['research_status'],'queued')
 
+    def test_explicit_cli_refresh_is_not_left_queued_by_the_intake_delay(self):
+        import contextlib,io,subprocess
+        import record_feedback as cli
+        payload=self.total_payload()
+        payload['preview_hash']=self.store.preview(payload)['preview_hash']
+        request_file=self.root/'owner-request.json'
+        request_file.write_text(json.dumps(payload))
+        with patch.object(cli,'DEFAULT_ROOT',self.root),patch.object(cli,'RUNTIME_LOCK',self.root/'runtime.lock'),\
+             patch('sys.argv',['record_feedback.py',str(request_file),'--apply','--refresh']),\
+             patch('feedback.subprocess.run',side_effect=subprocess.TimeoutExpired('public research',1800)) as child,\
+             contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(),0)
+        self.assertEqual(child.call_count,1)
+        record=self.store.history()[0]
+        self.assertEqual(record['stage'],'applied')
+        self.assertEqual(record['research_status'],'failed')
+
     def test_all_cash_keeps_public_watchlist_research_without_invented_holdings(self):
         import refresh_daily_evidence as evidence
         self.put(POSITIONS,'ticker,shares_optional\n')

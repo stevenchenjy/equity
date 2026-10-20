@@ -10,6 +10,8 @@ interval are saved normally and join the same research batch. The oldest queued
 entry limits this coalescing interval to three minutes, so continued input cannot
 defer research indefinitely. Queue times are durable across server restarts;
 interrupted runs and prepared-write recovery bypass this delay.
+The one-shot `record_feedback.py --apply --refresh` command also bypasses
+the quiet interval and completes its explicit research attempt before exiting.
 
 This is an intake scheduling change, not an investment threshold or a waiver of
 coherent publication. A research job already running, including a scheduled
