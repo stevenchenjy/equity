@@ -912,6 +912,20 @@ def fundamental_row(
     )
     ocf_fact = _ttm_fact_at(duration_values(payload, OPERATING_CASH_FLOW_TAGS, **selection), target_end) if target_end else None
     capex_fact = _ttm_fact_at(duration_values(payload, CAPEX_TAGS, **selection), target_end) if target_end else None
+    # Amazon's verified Q2 2026 statement tags the gross cash PPE row with
+    # PaymentsToAcquireProductiveAssets. Admit only that exact consolidated
+    # row from the hash-verified periodic report; the generic tag alone does
+    # not establish scope. Do not net sales/incentives or apply NVIDIA's
+    # separately disclosed financed-asset-principal definition to Amazon.
+    amzn_gross_ppe = False
+    if ticker == 'AMZN' and cik == 1018724 and capex_fact is None and target_end:
+        values = [item for item in duration_values(payload, ('PaymentsToAcquireProductiveAssets',), **selection)
+                  if item.get('_reported_label') == 'Purchases of property and equipment'
+                  and re.fullmatch(r'[0-9a-f]{64}', str(item.get('_raw_sha256', '')))
+                  and str(item.get('_source_url', '')).startswith(
+                      f'https://www.sec.gov/Archives/edgar/data/1018724/{str(item.get("accn", "")).replace("-", "")}/')]
+        capex_fact = _ttm_fact_at(values, target_end)
+        amzn_gross_ppe = capex_fact is not None
     if ticker in PRODUCTIVE_ASSET_CAPEX_ISSUERS:
         capex_fact = _ttm_fact_at(
             duration_values(payload, ("PaymentsToAcquireProductiveAssets",), **selection), target_end
@@ -1031,7 +1045,7 @@ def fundamental_row(
         valuation_limitations.append("issuer_fcf_financed_asset_principal_not_available")
     if share_dilution is None:
         valuation_limitations.append("share_dilution_missing_for_required_period")
-    if (capex_fact and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment"
+    if (capex_fact and not amzn_gross_ppe and capex_fact["_tag"] != "PaymentsToAcquirePropertyPlantAndEquipment"
             and capex_fact.get("_derivation") not in {
                 "reported_ppe_plus_separately_disclosed_internal_use_software",
                 "reported_productive_asset_purchases_plus_financed_asset_principal"}):

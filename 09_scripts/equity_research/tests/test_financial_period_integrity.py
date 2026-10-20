@@ -64,6 +64,26 @@ def row(payload=None, at="2026-09-04T16:00:00+00:00", **kwargs):
 
 
 class FinancialPeriodIntegrityTests(unittest.TestCase):
+    def test_amazon_gross_cash_ppe_alias_requires_verified_reported_scope(self):
+        payload = fixture()
+        payload['cik'] = 1018724
+        gaap = payload['facts']['us-gaap']
+        values = gaap.pop('PaymentsToAcquirePropertyPlantAndEquipment')
+        for item in values['units']['USD']:
+            item.update(_reported_label='Purchases of property and equipment', _raw_sha256='a' * 64,
+                        _source_url='https://www.sec.gov/Archives/edgar/data/1018724/' + item['accn'].replace('-', '') + '/report.htm')
+        gaap['PaymentsToAcquireProductiveAssets'] = values
+        gaap['FinanceLeasePrincipalPayments'] = copy.deepcopy(values)
+        result = evidence.fundamental_row('AMZN', 1018724, payload, '2026-09-04T16:00:00Z')
+        self.assertEqual(result['ttm_capex'], '13.50')
+        self.assertEqual(result['ttm_free_cash_flow'], '121.50')
+        self.assertEqual(result['valuation_input_quality'], 'complete')
+        self.assertEqual(json.loads(result['field_provenance_json'])['ttm_capex']['tag'], 'PaymentsToAcquireProductiveAssets')
+        self.assertEqual(evidence.fundamental_row('TST', 1018724, payload, '2026-09-04T16:00:00Z')['ttm_capex'], '')
+        for item in values['units']['USD']:
+            item['_reported_label'] = 'Purchases of productive assets and intangibles'
+        self.assertEqual(evidence.fundamental_row('AMZN', 1018724, payload, '2026-09-04T16:00:00Z')['ttm_capex'], '')
+
     def test_rubrik_fcf_includes_separately_reported_capitalized_software(self):
         payload = fixture()
         gaap = payload["facts"]["us-gaap"]

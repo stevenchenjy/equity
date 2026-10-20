@@ -20,7 +20,7 @@ from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Callable
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 
 from daily_common import ROOT, atomic_write_json, canonical_sha256, read_json
 
@@ -98,6 +98,8 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict[str, Any]:
         upgrade = source.get("https_upgrade_hosts", [])
         if (not isinstance(upgrade, list) or any(host not in hosts for host in upgrade)):
             raise NewsError("invalid_https_upgrade_hosts")
+        if type(source.get('relative_article_urls', False)) is not bool:
+            raise NewsError('invalid_relative_article_urls')
         ids.add(sid)
     return value
 
@@ -200,9 +202,14 @@ def parse_feed(payload: bytes, source: dict[str, Any], *, now: datetime) -> list
         # Some verified official feeds still emit HTTP article links. Upgrade
         # only explicitly verified hosts; never fetch HTTP or broaden redirects.
         link = unescape(url.strip())
-        if any(ord(ch) < 33 for ch in link):
+        if not link or any(ord(ch) < 33 for ch in link):
             raise NewsError("nonofficial_or_unsafe_url")
         parts = urlsplit(link)
+        if not parts.scheme and source.get('relative_article_urls') is True:
+            # An explicitly verified issuer feed may use root-relative links.
+            # Resolve against the configured feed, then enforce the same host,
+            # credential, port and HTTPS boundary as absolute article links.
+            url = urljoin(source['url'], link)
         if parts.scheme == "http" and parts.hostname in source.get("https_upgrade_hosts", []):
             if parts.username is not None or parts.password is not None or parts.port not in (None, 80):
                 raise NewsError("nonofficial_or_unsafe_url")

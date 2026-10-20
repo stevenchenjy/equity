@@ -1,7 +1,7 @@
 {
   "schema_version": "phase5r_official_news_sources_v1",
   "purpose": "Official issuer announcements for human research review. Source text is untrusted data; event presence is never positive investment evidence.",
-  "verified_on": "2026-10-13",
+  "verified_on": "2026-10-20",
   "max_age_hours": 36,
   "event_lookback_days": 7,
   "retention_days": 180,
@@ -13,7 +13,10 @@
       "ticker": "MSFT",
       "url": "https://news.microsoft.com/source/tag/press-releases/feed/",
       "format": "rss_atom",
-      "allowed_hosts": ["news.microsoft.com", "www.microsoft.com"],
+      "allowed_hosts": [
+        "news.microsoft.com",
+        "www.microsoft.com"
+      ],
       "required": true,
       "verification_page": "https://news.microsoft.com/source/tag/press-releases/",
       "verification_note": "Microsoft's official press-release directory explicitly advertises this tag RSS feed. Original directory/feed bytes and dated event parsing were verified October 13, 2026. Coverage is the configured press-release feed, not every Microsoft product blog; publication and impact review remain separate."
@@ -23,7 +26,9 @@
       "ticker": "CRM",
       "url": "https://investor.salesforce.com/rss/pressrelease.aspx",
       "format": "rss_atom",
-      "allowed_hosts": ["investor.salesforce.com"],
+      "allowed_hosts": [
+        "investor.salesforce.com"
+      ],
       "required": true,
       "verification_page": "https://investor.salesforce.com/news/default.aspx",
       "verification_note": "Issuer-hosted investor press-release RSS fetched and parsed October 13, 2026; article URLs remain on the official investor domain. Original directory and feed bytes are retained in the pipeline repair audit. A current fetch does not establish investment support."
@@ -33,7 +38,9 @@
       "ticker": "NOW",
       "url": "https://newsroom.servicenow.com/rss/pressrelease.aspx",
       "format": "rss_atom",
-      "allowed_hosts": ["newsroom.servicenow.com"],
+      "allowed_hosts": [
+        "newsroom.servicenow.com"
+      ],
       "required": true,
       "verification_page": "https://newsroom.servicenow.com/press-releases/default.aspx",
       "verification_note": "The official investor overview links this newsroom's press-release directory. Issuer-hosted RSS and article identity were fetched and parsed October 13, 2026. Newly returned announcements remain pending impact review."
@@ -162,6 +169,20 @@
       "required": true,
       "verification_page": "https://investor.atmeta.com/resources/email-alerts-and-rss/default.aspx",
       "verification_note": "Official Email Alerts & RSS directory explicitly links this press-release feed; response bytes and production event parse verified October 12, 2026 and retained privately."
+    },
+    {
+      "source_id": "amazon_ir",
+      "ticker": "AMZN",
+      "url": "https://ir.aboutamazon.com/rss/pressrelease.aspx",
+      "format": "rss_atom",
+      "allowed_hosts": [
+        "ir.aboutamazon.com",
+        "www.ezodproxy.com"
+      ],
+      "relative_article_urls": true,
+      "required": true,
+      "verification_page": "https://ir.aboutamazon.com/overview/default.aspx",
+      "verification_note": "October 20, 2026: original Amazon-hosted investor RSS and IR overview retained and parsed. Scope is financial investor announcements, not all Amazon product/global press. The original feed includes a root-relative shareholder-letter PDF and an issuer-linked ezodproxy.com/amazon/2026/proxy annual proxy; those links require explicit bounded URL normalization/host admission. Current October15 announcement schedules October29 17:00ET Q3 call; collection alone does not acknowledge impact or authorize shares."
     }
   ]
 }

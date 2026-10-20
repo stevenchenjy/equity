@@ -172,6 +172,20 @@ class IncorporationTests(unittest.TestCase):
 
 
 class InlineFallbackTests(unittest.TestCase):
+    def test_amazon_ppe_label_is_bound_to_the_actual_tagged_row(self):
+        raw = XML.replace(b'0000000001', b'0001018724').replace(b'</html>', b'''<table><tr>
+        <td>Purchases of property and equipment</td><td><ix:nonFraction
+        name="us-gaap:PaymentsToAcquireProductiveAssets" contextRef="quarter" unitRef="usd"
+        scale="6" format="ixt:num-dot-decimal" id="ppe">54,208</ix:nonFraction></td></tr></table></html>''')
+        facts, _ = inline_report_facts(raw, artifact=self.artifact, cik=1018724,
+            filing=self.filing, allowed_tags={'PaymentsToAcquireProductiveAssets'})
+        self.assertEqual(len(facts), 1)
+        self.assertEqual(facts[0]['val'], 54_208_000_000)
+        self.assertEqual(facts[0]['_reported_label'], 'Purchases of property and equipment')
+        other, _ = inline_report_facts(raw.replace(b'Purchases of property and equipment', b'Purchases of productive assets and intangibles'),
+            artifact=self.artifact, cik=1018724, filing=self.filing, allowed_tags={'PaymentsToAcquireProductiveAssets'})
+        self.assertNotIn('_reported_label', other[0])
+
     def setUp(self):
         self.tmp=tempfile.TemporaryDirectory();self.addCleanup(self.tmp.cleanup);self.root=Path(self.tmp.name)
         self.filing={'accession_number':ACC,'form':'10-Q','filing_date':'2026-08-01',

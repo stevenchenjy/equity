@@ -103,3 +103,25 @@ validated capital draft populates BUY/SELL; valuation-only review ceilings are n
 presented as buy limits. The October 13 verified source manifest adds the official
 MSFT press-release feed and CRM/NOW issuer feeds; collection still requires distinct
 impact review and does not supply positive investment evidence.
+
+
+## Amazon reported cash expenditure and investor news
+
+The October 20, 2026 source repair recognizes Amazon's consolidated gross cash
+“Purchases of property and equipment” row, tagged
+`us-gaap:PaymentsToAcquireProductiveAssets`, only when its exact label and
+hash-verified official periodic-report provenance are retained. Its uniform
+CFO-minus-gross-PPE cash-flow field does not net PPE sales/incentives and does
+not import NVIDIA's separate financed-asset-principal definition. Amazon's
+issuer-defined net-PPE free cash flow remains a distinct analytical bridge;
+negative reported cash flow is retained, not replaced by a forecast.
+
+The verified Amazon investor RSS is now in the production news manifest.
+Coverage is its financial investor announcements, not every Amazon product or
+global press story. The feed's root-relative shareholder-letter PDF is resolved
+only with explicit source permission and the existing HTTPS/host boundary; its
+issuer-linked annual proxy host is explicitly scoped in the manifest. The
+October 15 announcement schedules the October 29 results call and is not
+results evidence or a positive investment signal. Collection and source-bound
+impact review remain separate requirements. Post-period financing, acquisitions,
+lease commitments and per-share cash economics still require actual analysis.

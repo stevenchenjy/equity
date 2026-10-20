@@ -39,7 +39,24 @@ class NewsTests(unittest.TestCase):
 
     def test_verified_sources_are_valid_and_explicit(self):
         manifest = load_manifest(MANIFEST_PATH)
-        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC", "AVGO", "AMD", "MU", "ORCL", "META", "MSFT", "CRM", "NOW"})
+        self.assertEqual({s["ticker"] for s in manifest["sources"]}, {"IOT", "NVDA", "RBRK", "APP", "SMTC", "AVGO", "AMD", "MU", "ORCL", "META", "MSFT", "CRM", "NOW", "AMZN"})
+
+    def test_verified_relative_article_link_keeps_official_boundary(self):
+        source = dict(SOURCE, relative_article_urls=True)
+        event = parse_feed(feed(url='/files/letter.pdf'), source, now=NOW)[0]
+        self.assertEqual(event['url'], 'https://ir.example.com/files/letter.pdf')
+        for url in ['', '//evil.test/results', '//user@ir.example.com/a', '//ir.example.com:444/a', 'javascript:alert(1)']:
+            with self.subTest(url=url), self.assertRaises(NewsError):
+                parse_feed(feed(url=url), source, now=NOW)
+        with self.assertRaises(NewsError):
+            parse_feed(feed(url='/files/letter.pdf'), SOURCE, now=NOW)
+
+    def test_relative_link_permission_must_be_boolean(self):
+        value = load_manifest(self.manifest)
+        value['sources'][0]['relative_article_urls'] = 'yes'
+        self.manifest.write_text(json.dumps(value))
+        with self.assertRaisesRegex(NewsError, 'invalid_relative_article_urls'):
+            load_manifest(self.manifest)
 
     def test_http_article_upgrade_requires_verified_host_and_keeps_url_safety(self):
         source = dict(SOURCE, https_upgrade_hosts=["ir.example.com"])

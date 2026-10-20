@@ -118,7 +118,8 @@ def inline_report_facts(raw: bytes, *, artifact: dict[str, Any], cik: int,
         # LongTermDebt is ordinarily only a partial disclosure. An explicit
         # consolidated "Total debt" row can be recognized, but is still
         # reconciled to both current/noncurrent components by the selector.
-        if tag == 'LongTermDebt' and taxonomy == 'us-gaap' and unit == 'USD':
+        if (taxonomy == 'us-gaap' and unit == 'USD' and
+                (tag == 'LongTermDebt' or (cik == 1018724 and tag == 'PaymentsToAcquireProductiveAssets'))):
             ancestor = parents.get(item)
             while ancestor is not None and ancestor.tag.rsplit('}', 1)[-1].lower() != 'tr':
                 ancestor = parents.get(ancestor)
@@ -126,6 +127,9 @@ def inline_report_facts(raw: bytes, *, artifact: dict[str, Any], cik: int,
                 cells = [el for el in ancestor if el.tag.rsplit('}', 1)[-1].lower() in {'td', 'th'}]
                 if cells and ' '.join(''.join(cells[0].itertext()).split()).casefold() == 'total debt':
                     fact['_reported_label'] = 'Total debt'
+                if (tag == 'PaymentsToAcquireProductiveAssets' and cells and
+                        ' '.join(''.join(cells[0].itertext()).split()) == 'Purchases of property and equipment'):
+                    fact['_reported_label'] = 'Purchases of property and equipment'
         if key in result and result[key]['val'] != fact['val']:
             conflicts.add(key)
         else:

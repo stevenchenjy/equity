@@ -276,5 +276,11 @@
   "274": "Position purpose and reassessment",
   "275": "feedback_blocker",
   "276": "Equity Research — Core Allocation Policy",
-  "277": "SecPayload"
+  "277": "SecPayload",
+  "278": "Scoped blockers and recurring research work",
+  "279": "InlineFacts",
+  "280": "test_manual_valuation_bootstrap.py",
+  "281": "admit_market_history_baseline.py",
+  "282": "smoke_diagnostic_notes",
+  "283": "main"
 }
