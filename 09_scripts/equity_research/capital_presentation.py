@@ -107,6 +107,15 @@ def cards(decision, view=None):
                  f"At the dated reference close ${watch['current_price']}: base-scenario gap {watch['expected_upside_pct']}%, scenario reward/risk {watch['reward_to_risk_estimate']}.\n"+
                  f"Valuation-only review ceiling: ${watch['maximum_review_price'] or 'unverified'}; this is not a cleared buy limit. Company support, current evidence, a maintained allocation plan and all remaining gates still apply.\n"+
                  f"Current decision: {row.get('decision', 'unverified')}; proposed shares {row.get('shares', 0)}. Allocation judgment and counterevidence remain in the retained company case."))
+    allocation=decision.get('allocation_policy',{})
+    if allocation.get('core_tickers') and allocation.get('core_minimum_pct') is not None:
+        core_weight=allocation.get('core_weight_pct')
+        observed=f"{float(core_weight):.2f}%" if core_weight is not None else 'unverified'
+        result.append(dict(title='Index-core allocation policy',group='background',kind='',sources=[],
+            body='指数底仓（'+' + '.join(allocation['core_tickers'])+'）合计至少 '
+                 +f"{float(allocation['core_minimum_pct']):.0f}%；当前合计 {observed}。"
+                 +'两只基金共用一个底仓目标，不要求各占 30%，也不自动换仓。'
+                 +f"个股合计上限 {float(allocation['stock_maximum_pct']):.0f}%；其余现行风险规则不变。"))
     authority=c.get('account_authority',{})
     if authority.get('local_planning_enabled'):
         result.append(dict(title='Account planning basis',group='background',kind='',body='Owner-approved local records govern conditional plans.\n'+'\n'.join(authority['execution_checks']),sources=[]))

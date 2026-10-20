@@ -255,9 +255,13 @@
   "253": "MomentumReviewStatusTests",
   "254": "test_shadow_archive_isolation.py",
   "255": "MarketCoverageRecompositionTests",
+  "256": "create_long_horizon_research.py",
   "257": "test_cross_day_delivery.py",
   "258": "test_tactical_order_scopes.py",
+  "259": "failure_reason",
   "260": "shadow_evaluation_health",
+  "261": "run",
+  "262": "Company-specific valuation in production",
   "263": "Handler",
   "268": "OwnerSnapshotTests",
   "272": "ResearchSection.tsx"

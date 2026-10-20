@@ -10,6 +10,16 @@ from regenerate_portfolio_outputs import shared_candidate_budget
 import test_capital_decision as capital_tests
 
 class IndexCoreAuthorityTests(unittest.TestCase):
+    def test_final_capital_email_displays_combined_policy_separately_from_actions(self):
+        from email_brief import render_email
+        base=capital_tests.CapitalDecisionTests();base.setUp()
+        d=base.d;d['capital_decision']=base.build()
+        d['allocation_policy']=dict(core_tickers=['SPY','QQQM'],core_minimum_pct=30,core_weight_pct=33.7,stock_maximum_pct=70)
+        for rendered in render_email(d)[1:]:
+            self.assertIn('指数底仓（SPY + QQQM）合计至少 30%',rendered)
+            self.assertIn('当前合计 33.70%',rendered)
+            self.assertLess(rendered.index('Supporting information'),rendered.index('指数底仓（SPY + QQQM）'))
+
     def test_only_approved_etfs_count_not_all_benchmarks(self):
         rows=[dict(ticker=t,sector='ETF',is_benchmark='yes') for t in ('SPY','QQQM','QQQ','XLK','XLI')]
         with patch.object(account_common,'approved_core_tickers',return_value=('SPY','QQQM')), patch.object(account_common,'read_csv',return_value=rows):
