@@ -16,6 +16,15 @@ from connect_private import our_route
 
 
 class PrivateRoutesTests(unittest.TestCase):
+    def test_server_can_start_as_a_standalone_script_without_test_import_paths(self):
+        import subprocess,sys,os
+        from pathlib import Path
+        environment=dict(os.environ);environment.pop('PYTHONPATH',None)
+        result=subprocess.run([sys.executable,str(Path(__file__).resolve().parents[1]/'server.py'),'--help'],
+                              env=environment,capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+        self.assertIn('--runtime-root',result.stdout)
+
     def setUp(self):
         self.fixture=fixture_module.FeedbackTests()
         self.fixture.setUp()
