@@ -222,7 +222,7 @@ decisions, eligibility, thresholds, stability, scheduling or recipients.
 
 Every rendered report includes the actual canonical nonheld `watch_candidates`
 under a watch/new-position section, even when none are eligible. Already held
-names (including SPY) stay in holdings, rather than being duplicated as new
+names (including held SPY or QQQM) stay in holdings, rather than being duplicated as new
 positions. Display the reference price and its exact canonical session date;
 missing prices stay unknown and failed market gates remain labelled unverified.
 

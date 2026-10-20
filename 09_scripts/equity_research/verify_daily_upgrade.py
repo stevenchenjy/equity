@@ -35,6 +35,7 @@ from daily_common import (
     read_csv,
 )
 from send_daily_email import cycle_is_blocked, delivery_policy
+from account_common import is_core_allocation_ticker
 
 
 SCHEDULER_DIR = ROOT / "07_automation" / "scheduler"
@@ -613,7 +614,7 @@ def main() -> int:
         held_company_rows = [
             row for row in held_position_rows
             if row.get("asset_role") != "core_allocation"
-            and row.get("ticker") != "SPY"
+            and not is_core_allocation_ticker(row.get("ticker", ""))
         ]
         fundamental_ok = (
             decision.get("fundamental_gate", {}).get("passed") is True

@@ -337,15 +337,21 @@ def load_packets() -> dict[str, dict[str, str]]:
     return packets
 
 
-def is_core_allocation_ticker(ticker: str) -> bool:
-    """Return whether a ticker is the policy-approved broad-market core."""
+def approved_core_tickers() -> tuple[str, ...]:
+    """Read approved membership from the validated active policy, not ETF labels."""
+    from active_config import load_active_config, validate_core_allocation_tickers
+    return validate_core_allocation_tickers(load_active_config()["account"])
 
+
+def is_core_allocation_ticker(ticker: str) -> bool:
+    """Require explicit owner approval and matching ETF universe metadata."""
     normalized = ticker.strip().upper()
-    if normalized != "SPY":
+    if normalized not in approved_core_tickers():
         return False
     return any(
         row.get("ticker", "").strip().upper() == normalized
         and row.get("is_benchmark", "").strip().lower() == "yes"
+        and row.get("sector", "").strip().upper() == "ETF"
         for row in read_csv(UNIVERSE_SEED)
     )
 

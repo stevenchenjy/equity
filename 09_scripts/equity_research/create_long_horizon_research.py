@@ -55,7 +55,7 @@ def render_report(report: dict) -> str:
     for ticker, row in companies:
         facts = row.get("facts", {})
         values = [display(facts.get(key, {}).get("value")) for key in ("revenue_yoy_pct", "ttm_revenue_yoy_pct", "share_dilution_pct")]
-        readiness = {"not_applicable_core": "宽基核心，适用核心配置政策",
+        readiness = {"not_applicable_core": "指数底仓，适用核心配置政策",
             "not_applicable_etf": "ETF 配置复核", "reviewed_thesis_valuation_pending": "商业逻辑已审阅；估值未完成",
             "reviewed_research": "研究已审阅；不代表交易获准", "research_reassessment_required": "已有观点需重新审阅",
             "pending_research": "研究尚未完成"}.get(row["readiness"], "研究尚未完成")

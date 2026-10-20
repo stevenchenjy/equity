@@ -34,7 +34,8 @@ conflicting execution feedback and contradictory order facts remain substantive
 integrity failures. They must not be concealed as a display-only change.
 
 Local tactical open risk may be derived as zero only from a valid local inventory
-with exclusively broad-core holdings (or no holdings) and no nonterminal orders.
+with exclusively approved index-core holdings (SPY and/or QQQM, using the
+compatible `broad_core` purpose) or no holdings, and no nonterminal orders.
 An active stock whose tactical risk cannot be bounded retains its strategy risk
 dependency. Never label the derived local risk as broker-confirmed. Existing
 company evidence, valuation, entry, expiry, aggregate allocation and tactical loss

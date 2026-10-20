@@ -546,7 +546,7 @@ def plain_action(action: str) -> str:
 
 def valuation_display(row: dict[str, Any]) -> str:
     if row.get("valuation_applicability") == "not_applicable_broad_market_etf":
-        return "不适用（宽基 ETF 使用核心配置口径）"
+        return "不适用（获批指数 ETF 使用合并底仓配置口径）"
     if row.get("valuation_applicability") == "not_applicable_etf":
         return "不适用（ETF 待基金与配置策略审阅）"
     values = [
@@ -1073,6 +1073,14 @@ def main() -> int:
             "cash_basis": account.get("cash_basis", "owner_recorded"),
             "planning_capital_min": account.get("planning_capital_min"),
             "planning_capital_max": account.get("planning_capital_max"),
+        },
+        "allocation_policy": {
+            "version": active_config["account"].get("allocation_policy_version"),
+            "core_tickers": active_config["account"].get("core_allocation_tickers", ["SPY"]),
+            "core_minimum_pct": active_config["account"].get("core_minimum_pct"),
+            "core_target_pct": active_config["account"]["core_target_pct"],
+            "core_weight_pct": portfolio_summary.get("current_core_weight_pct"),
+            "stock_maximum_pct": active_config["account"]["research_risk_limits"]["active_stock_hard_cap_pct"],
         },
         "capital_allocation": {
             "proposed_deployment_value": round(proposed_deployment, 2),

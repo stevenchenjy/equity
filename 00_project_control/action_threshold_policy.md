@@ -31,7 +31,7 @@ Routine HOLD/WATCH rows set `human_confirmation_required=no` and still set
 
 ## Maximum Entry and Trim Conditions
 
-Maximum buy price is blank when no purchase review is selected. Conditional core plans use the latest quality-`ok` SPY reference price as a do-not-pay-above ceiling and also require a cleared maintenance state, valid current account state, compliant post-allocation weights, and a fresh human confirmation.
+Maximum buy price is blank when no purchase review is selected. Conditional core plans use the selected approved fund's own latest quality-`ok` reference price (SPY or QQQM) as a do-not-pay-above ceiling and also require a cleared maintenance state, valid current account state, compliant post-allocation weights, and a fresh human confirmation.
 
 Trim conditions identify the applicable aggregate, strategy-specific or sourced investment condition and current whole-share scenario. There is no fixed single-name allocation threshold. Research evidence can still cause hold, trim, or exit review.
 
@@ -39,7 +39,7 @@ Trim conditions identify the applicable aggregate, strategy-specific or sourced 
 
 An individual stock always requires a controlled packet, complete source-bound
 valuation, passing portfolio fit, feasible whole-share sizing, and resulting
-weights within the aggregate stock maximum while preserving the broad-core
+weights within the aggregate stock maximum while preserving the combined SPY-and-QQQM index-core
 minimum. Evidence eligibility retains these quality thresholds:
 
 - starter: score `7.0`, expected upside `10%`, reward/risk `1.25`, entry `5.5`;

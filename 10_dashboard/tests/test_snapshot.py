@@ -14,6 +14,46 @@ from server import ACCOUNT, CORE_INPUTS, DECISION, MARKET, ORDERS, PLANS, POSITI
 
 
 class SnapshotTests(unittest.TestCase):
+    def core_policy(self):
+        config = json.loads((Path(__file__).resolve().parents[2] / '00_project_control/active_production_config.json').read_text())
+        config['account']['core_allocation_tickers'] = ['SPY', 'QQQM']
+        self.put('00_project_control/active_production_config.json', config)
+        self.put('03_source_data/equity_research/universe_seed.csv', 'ticker,sector,is_benchmark\nSPY,ETF,yes\nQQQM,ETF,yes\nXLI,ETF,yes\n')
+
+    def test_core_display_uses_this_roots_policy_for_held_and_unheld_funds(self):
+        self.core_policy()
+        self.put(POSITIONS, 'ticker,shares_optional\nSPY,1\nQQQM,2\nXLI,1\n')
+        self.put(MARKET, 'ticker,last_price,market_session_date,data_quality_label\nSPY,100,2026-09-29,ok\nQQQM,50,2026-09-29,ok\nXLI,25,2026-09-29,ok\n')
+        self.decision['held_positions'] = [dict(ticker=t,current_shares=q,current_price=p,current_weight_pct=q*p/1225*100,asset_role='active_stock') for t,q,p in [('SPY',1,100),('QQQM',2,50),('XLI',1,25)]]
+        self.decision['account'].update(invested_capital=225,account_total_value=1225)
+        original = self.decision['plan_continuity']['plans'][0]
+        self.decision['plan_continuity']['plans'] = [{**original,'ticker':t} for t in ['SPY','QQQM','XLI']]
+        self.decision['workflow_integrity']['input_hashes'][POSITIONS] = hashlib.sha256((self.root/POSITIONS).read_bytes()).hexdigest()
+        self.publish()
+        snapshot = read_snapshot(self.root,self.now)
+        self.assertEqual(snapshot['allocation']['core_tickers'],['SPY','QQQM'])
+        self.assertAlmostEqual(snapshot['allocation']['core_weight_pct'],200/1225*100)
+        self.assertEqual([p['ticker'] for p in snapshot['positions'] if p['role']=='broad_core'],['SPY','QQQM'])
+        self.assertEqual([p['ticker'] for p in snapshot['plans'] if p.get('asset_role')=='broad_core'],['SPY','QQQM'])
+        self.put(POSITIONS,'ticker,shares_optional\nSPY,1\nXLI,1\n')
+        self.decision['held_positions'] = [p for p in self.decision['held_positions'] if p['ticker']!='QQQM']
+        self.decision['account'].update(invested_capital=125,account_total_value=1125)
+        self.decision['workflow_integrity']['input_hashes'][POSITIONS]=hashlib.sha256((self.root/POSITIONS).read_bytes()).hexdigest()
+        self.publish()
+        snapshot=read_snapshot(self.root,self.now)
+        self.assertEqual(next(p for p in snapshot['plans'] if p['ticker']=='QQQM')['asset_role'],'broad_core')
+        self.assertAlmostEqual(snapshot['allocation']['core_weight_pct'],100/1125*100)
+
+    def test_core_display_does_not_invent_policy_or_accept_other_etf_by_label(self):
+        from server import core_allocation_view
+        positions=[dict(ticker='QQQM',shares=2,price=50),dict(ticker='XLI',shares=1,price=25)]
+        self.assertIsNone(core_allocation_view(self.root,positions,1200))
+        self.core_policy()
+        value=core_allocation_view(self.root,positions,1200)
+        self.assertAlmostEqual(value['core_weight_pct'],100/1200*100)
+        self.put('03_source_data/equity_research/universe_seed.csv','ticker,sector,is_benchmark\nSPY,ETF,yes\nQQQM,Technology,no\nXLI,ETF,yes\n')
+        self.assertIsNone(core_allocation_view(self.root,positions,1200))
+
     def test_readable_order_picker_retains_order_terms_and_session_without_guessing(self):
         order=dict(order_id='private-opaque-id',ticker='ABC',side='buy',quantity=3,remaining_quantity=2,status='partial_fill',
             limit_price=99,stop_price=None,order_type='LIMIT',time_in_force='DAY',session_date='2026-09-30')

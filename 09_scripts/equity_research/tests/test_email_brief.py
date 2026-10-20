@@ -250,7 +250,7 @@ class EmailPresentationTests(unittest.TestCase):
         text = render_email(decision)[1]
         self.assertIn("复核价格上限 $765.11", text)
         self.assertIn("不是已提交订单", text)
-        self.assertIn("宽基 ETF", text)
+        self.assertIn("获批指数 ETF", text)
 
     def test_missing_valuation_is_not_global_financial_data_failure(self) -> None:
         decision = decision_fixture()

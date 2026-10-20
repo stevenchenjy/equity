@@ -70,6 +70,7 @@ from sec_supplemental_facts import NVDA_PRINCIPAL_TAG, supplement_companyfacts
 from earnings_incorporation import SecPayload, retain_sec_response, write_selection_receipt
 from latest_report_facts import supplement_cached_latest_report
 from evidence_scope import NONCOMPANY_BENCHMARKS
+from account_common import approved_core_tickers
 from sec_acceptance_corrections import (correction_for, corrected_record, fetch_correction,
     load_corrections, reconcile_with_corrections, write_corrections)
 
@@ -320,11 +321,11 @@ def researched_tickers() -> tuple[list[str], list[str]]:
         and row.get("total_score", "").strip()
     ]
     current_scores.sort(key=lambda row: (-float(row["total_score"]), row["ticker"]))
-    watched.add("SPY")
+    watched.update(approved_core_tickers())
     watched.update(
         row["ticker"].strip().upper()
         for row in current_scores[:8]
-        if row["ticker"].strip().upper() != "SPY"
+        if row["ticker"].strip().upper() not in approved_core_tickers()
     )
     return sorted(held), sorted(watched | held)
 

@@ -3,16 +3,27 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
+from pathlib import Path
 
-def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any]) -> dict[str, Any] | None:
+def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any], *, root: Path | None = None) -> dict[str, Any] | None:
     """A same-session, exact core review that can be displayed and continued.
 
     This is a conditional human draft, never execution authority.  An ordinary
     optimistic screen row cannot acquire an order side through presentation.
     """
     from investment_plans import regular_close
+    from account_authority import load_authority
+    from daily_common import ROOT
+    try:
+        generated_at = datetime.fromisoformat(decision["generated_at"])
+        local_planning = generated_at.tzinfo is not None and load_authority(root or ROOT, generated_at)["local_planning_enabled"]
+    except (KeyError, TypeError, ValueError):
+        local_planning = False
 
+    from account_common import is_core_allocation_ticker
     ticker = row.get("ticker")
+    if not isinstance(ticker, str) or not is_core_allocation_ticker(ticker):
+        return None
     if (decision.get("decision_code") != "action_review_candidate"
             or ticker not in decision.get("eligible_new_position_review_candidates", [])
             or row.get("action") != "core_allocation_tranche_review"
@@ -21,7 +32,7 @@ def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any]) -> dict
             or row.get("gate_blockers") or row.get("workflow_global_blockers")
             or row.get("workflow_ticker_blockers")
             or decision.get("account_conflicts")
-            or decision.get("account", {}).get("cash_basis") != "owner_recorded"
+            or (decision.get("account", {}).get("cash_basis") != "owner_recorded" and not local_planning)
             or decision.get("plan_continuity", {}).get("block_new_capital") is True
             or decision.get("plan_continuity", {}).get("global_blockers")
             or decision.get("workflow_integrity", {}).get("global_blockers")

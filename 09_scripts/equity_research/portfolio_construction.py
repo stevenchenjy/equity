@@ -17,22 +17,37 @@ def _passed_confidence(value: str, allowed: list[str]) -> bool:
 
 
 def remaining_core_floor_cost(*, account_total: float, current_core_value: float,
-                              core_minimum_pct: float, core_unit_price: float | None = None) -> float:
-    """Capital needed to reach the core floor at the canonical whole-share mark.
+                              core_minimum_pct: float, core_unit_price: float | None = None,
+                              core_unit_prices: list[float] | None = None) -> float:
+    """Least whole-share funding for the combined approved core floor.
 
-    The cash remains undeployed planning capacity, not a mandatory cash reserve.
-    A missing unit price is retained only for legacy callers' dollar-gap math;
-    production passes the validated SPY mark explicitly.
+    This reserves proposal capacity, not cash or orders. Production supplies
+    verified approved-fund marks. Legacy single-fund callers remain supported.
     """
     if any(not math.isfinite(value) or value < 0 for value in
            (account_total, current_core_value, core_minimum_pct)):
         raise ValueError("core_floor_inputs_invalid")
     gap = max(0.0, account_total * core_minimum_pct / 100.0 - current_core_value)
-    if core_unit_price is None:
+    prices = core_unit_prices if core_unit_prices is not None else (
+        [core_unit_price] if core_unit_price is not None else None)
+    if prices is None:
         return gap
-    if type(core_unit_price) not in (int, float) or not math.isfinite(core_unit_price) or core_unit_price <= 0:
+    if any(type(price) not in (int, float) or not math.isfinite(price) or price <= 0 for price in prices):
         raise ValueError("core_unit_price_invalid")
-    return max(0, math.ceil(gap / core_unit_price - 1e-12)) * core_unit_price
+    if not gap:
+        return 0.0
+    if not prices:
+        raise ValueError("core_floor_price_unverified")
+    # Two explicitly approved funds; enumerate one fund and complete the gap
+    # with the other. A mixture can require less cash than either fund alone.
+    units = sorted(set(prices), reverse=True)
+    if len(units) > 2:
+        raise ValueError("core_floor_membership_unsupported")
+    if len(units) == 1:
+        return math.ceil(gap / units[0] - 1e-12) * units[0]
+    high, low = units
+    return min(count * high + max(0, math.ceil((gap-count*high)/low-1e-12))*low
+               for count in range(math.ceil(gap/high-1e-12)+1))
 
 
 def individual_sizing_decision(
@@ -55,6 +70,7 @@ def individual_sizing_decision(
     current_position_value: float = 0.0,
     current_core_value: float | None = None,
     core_unit_price: float | None = None,
+    core_unit_prices: list[float] | None = None,
 ) -> dict[str, Any]:
     """Return the highest supported sizing tier and a feasible share count."""
 
@@ -119,7 +135,7 @@ def individual_sizing_decision(
     core_gap = remaining_core_floor_cost(account_total=account_total,
         current_core_value=float(current_core_value or 0),
         core_minimum_pct=float(policy.get("core_minimum_pct", 0)),
-        core_unit_price=core_unit_price) if sourced else 0.0
+        core_unit_price=core_unit_price, core_unit_prices=core_unit_prices) if sourced else 0.0
     maximum_position_value = max(0.0, min(
         max(0.0, deployable_cash - core_gap),
         max(0.0, account_total * tier_pct / 100.0 - current_position_value),

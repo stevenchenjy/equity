@@ -29,6 +29,8 @@ from account_common import (
     TARGET_ALLOCATION_REPORT,
     WEEKLY_DECISION_SUMMARY,
     append_run_log,
+    approved_core_tickers,
+    is_core_allocation_ticker,
     as_float,
     optional_cap,
     dynamic_candidate_fit,
@@ -235,7 +237,8 @@ def rank_candidate_budget_rows(rows: list[dict]) -> list[dict]:
 def shared_candidate_budget(*, policy: dict, core_plan: dict, account_total: float,
                             deployable_cash: float, active_weight_pct: float,
                             current_core_value: float, stock_committed_value: float,
-                            core_unit_price: float | None = None) -> dict:
+                            core_unit_price: float | None = None,
+                            core_unit_prices: list[float] | None = None) -> dict:
     """Reserve actual eligible core whole shares and prior ranked research buys.
 
     This is a shared proposal budget, not a cash reserve or an assumed fill.
@@ -254,13 +257,14 @@ def shared_candidate_budget(*, policy: dict, core_plan: dict, account_total: flo
     effective_core = current_core_value + core_commitment
     core_gap = remaining_core_floor_cost(account_total=account_total,
         current_core_value=effective_core, core_minimum_pct=float(policy.get("core_minimum_pct", 0)),
-        core_unit_price=core_unit_price)
+        core_unit_price=core_unit_price, core_unit_prices=core_unit_prices)
     return {"deployable_cash": remaining,
             "active_weight_pct": active_weight_pct + stock_committed_value / account_total * 100,
             "current_core_value": effective_core,
             "core_tranche_budget": core_commitment,
             "stock_committed_value": stock_committed_value,
             "core_unit_price": core_unit_price,
+            "core_unit_prices": core_unit_prices,
             "remaining_core_floor_cost": core_gap,
             "spendable_after_core_floor": max(0.0, remaining - core_gap)}
 
@@ -304,13 +308,13 @@ def main() -> None:
         if row.get("ticker", "").strip()
     }
     cash_plans = read_csv(CASH_DEPLOYMENT_PLAN)
-    core_plan = next(
-        (
-            row for row in cash_plans
-            if row.get("plan_id") == "core_starter_whole_share_review"
-        ),
-        {},
-    )
+    core_plans = {row["ticker_or_category"]: row for row in cash_plans
+                  if row.get("asset_role") == "core_allocation" and row.get("ticker_or_category") in approved_core_tickers()}
+    selected_core_plans = [row for row in core_plans.values() if row.get("status") == "selected_review"]
+    if len(selected_core_plans) > 1:
+        raise ValueError("duplicate_shared_core_tranche")
+    shared_core_plan = next(iter(selected_core_plans), {})
+    core_plan = shared_core_plan or next(iter(core_plans.values()), {})
     active_weight = as_float(summary["current_active_stock_weight_pct"], "current_active_stock_weight_pct")
     requested = requested_coverage_tickers()
     expected_session = latest_published_market_session(now_et()).isoformat()
@@ -338,7 +342,7 @@ def main() -> None:
                 if weight_row.get("asset_role") == "core_allocation"
                 else "dynamic_single_stock_weight_and_current_research"
             )
-        elif ticker == "SPY":
+        elif is_core_allocation_ticker(ticker):
             role = "core_allocation_candidate"
             weight = "0.0000"
             fit = 9.0
@@ -443,7 +447,12 @@ def main() -> None:
     account_total = as_float(summary["account_total_value"], "account_total_value")
     default_cap_pct = optional_cap(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
     active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
-    core_unit_price = as_float(market_by_ticker["SPY"]["last_price"], "SPY.core_floor_unit_price")
+    core_unit_prices = [as_float(market_by_ticker[t]["last_price"], f"{t}.core_floor_unit_price")
+                        for t in approved_core_tickers() if is_core_allocation_ticker(t)
+                        and market_by_ticker.get(t, {}).get("data_quality_label") == "ok"
+                        and market_by_ticker[t].get("market_session_date") == expected_session
+                        and market_by_ticker[t].get("data_timestamp") and market_by_ticker[t].get("data_source")
+                        and float(market_by_ticker[t].get("last_price", 0) or 0) > 0]
     for score in rank_candidate_budget_rows(scored):
         ticker = score["ticker"]
         if ticker in price_unverified:
@@ -453,7 +462,7 @@ def main() -> None:
             new_rows.append(etf_research_recommendation(ticker, packets[ticker], score,
                                                       market_by_ticker.get(ticker, {})))
             continue
-        is_core = ticker == "SPY"
+        is_core = is_core_allocation_ticker(ticker)
         packet = packets[ticker]
         valuation = valuation_by_ticker.get(ticker, {})
         prices = valuation.get("scenario_prices", {}) if valuation.get("status") == "complete" else {}
@@ -470,11 +479,11 @@ def main() -> None:
         allocation_review = allocation_plan.get("reviewed_allocation", {})
         allocation_semantics = reviewed_allocation_semantics(allocation_plan)
         budget = shared_candidate_budget(
-            policy=construction_policy, core_plan=core_plan, account_total=account_total,
+            policy=construction_policy, core_plan=shared_core_plan, account_total=account_total,
             deployable_cash=deployable_cash, active_weight_pct=active_weight,
             current_core_value=float(summary.get("current_core_value", 0) or 0),
             stock_committed_value=stock_committed_value,
-            core_unit_price=core_unit_price,
+            core_unit_prices=core_unit_prices,
         )
         # Both the close-based projection and a higher admitted entry ceiling
         # must fit. The final adapter separately validates the actual entry.
@@ -497,7 +506,7 @@ def main() -> None:
             reviewed_target_pct=allocation_review.get("target_position_pct"),
             current_position_value=float(weights.get(ticker, {}).get("current_value", 0) or 0),
             current_core_value=budget["current_core_value"],
-            core_unit_price=core_unit_price,
+            core_unit_prices=core_unit_prices,
         )
         gate_results = sizing["gate_results"]
         weekly_pass = bool(gate_results["score"])
@@ -522,11 +531,12 @@ def main() -> None:
             maximum_review_price = min(maximum_review_price, (base_price + minimum_rr * bear_price)/(1 + minimum_rr))
             maximum_review_price = math.floor(maximum_review_price * 100)/100
         if is_core:
+            core_plan = core_plans.get(ticker, {})
             core_status = core_plan.get("status", "not_selected")
             suggested_whole_shares = int(core_plan.get("planned_shares", "0") or 0)
             suggested_position_pct = as_float(
                 core_plan.get("core_weight_after", "0") or "0",
-                "SPY.core_weight_after",
+                f"{ticker}.core_weight_after",
             )
             sizing_tier = core_plan.get("sizing_tier", "no_allocation")
             maximum_review_price = current_price
@@ -543,7 +553,7 @@ def main() -> None:
                 else "watch_only"
             )
             reason = (
-                "Broad-market ETF valuation is not an individual-company EV/revenue exercise. "
+                "Approved index-core fund valuation is not an individual-company EV/revenue exercise. "
                 f"The separate core policy produced status={core_status}, {suggested_whole_shares} whole share(s), "
                 f"and a resulting core weight of {suggested_position_pct:.4f}%. "
                 + core_plan.get("reason", "")
@@ -644,10 +654,11 @@ def main() -> None:
         for row in new_rows
         if row["asset_role"] != "core_allocation_candidate" and row["eligibility_label"] == "eligible_buy_review"
     ]
+    core_plan = shared_core_plan or next(iter(core_plans.values()), {})
     review_date = cash_plans[0]["planned_review_date"]
-    core_recommendation = next(
-        row for row in new_rows if row["asset_role"] == "core_allocation_candidate"
-    )
+    core_recommendations = [row for row in new_rows if row["asset_role"] == "core_allocation_candidate"]
+    core_recommendation = next((row for row in core_recommendations
+        if row["ticker"] == shared_core_plan.get("ticker_or_category")), core_recommendations[0])
     post_action_rows = read_csv(POST_ACTION_PORTFOLIO)
     selected_post_action = next(
         row for row in post_action_rows
@@ -690,13 +701,14 @@ def main() -> None:
         "",
         (
             f"Current core conclusion: `{core_recommendation['eligibility_label']}`; "
-            f"whole-share example `{core_recommendation['suggested_whole_shares']}` SPY at the "
+            f"whole-share example `{core_recommendation['suggested_whole_shares']}` {core_recommendation['ticker']} at the "
             f"quality-ok close `${core_recommendation['current_price']}` (about "
             f"`{core_recommendation['suggested_position_pct']}%`). Individual-company EV/revenue "
-            "valuation is explicitly not applicable to this broad-market ETF; the separate core policy "
+            "valuation is explicitly not applicable to approved index-core funds; the shared SPY + QQQM core policy "
             "uses allocation gap, market quality, entry discipline, range position, reserve, and whole-share feasibility."
         ),
-        f"Cash rationale: {core_plan.get('cash_rationale', '')}",
+        f"Cash rationale: {next(iter(core_plans.values()), {}).get('cash_rationale', '')}",
+        *[f"- {t}: {p.get('status')}; {p.get('planned_shares', 0)} proposed shares. {p.get('reason', '')}" for t, p in core_plans.items()],
         "",
         "## New Individual Stocks",
         "",

@@ -99,13 +99,17 @@ function ReviewPanel({data,ticker,requests,error,onSaved,onDirty}:{data:Snapshot
   </section>;
 }
 
-function Summary({ data }: { data: Snapshot }) {
-  return <div className="account-strip">
+export function Summary({ data }: { data: Snapshot }) {
+  return <><div className="account-strip">
     <div><span>账户估值</span><strong>{money(data.account.account_total_value)}</strong></div>
     <div><span>现金</span><strong>{money(data.account.cash_available)}</strong></div>
     <div><span>已投资</span><strong>{money(data.account.invested_capital)}</strong></div>
     <p>研究与账户数据均有独立时间。<small>{data.account.cash_basis==='ledger_estimate'?'现金按成交台账推算':'现金为所有者记录'}，结算资金{data.account.settled_cash_verified ? '已核对' : '待核对'}。</small></p>
-  </div>;
+  </div>{data.allocation ? <div className="account-notes" aria-label="配置规则"><p><span>指数底仓（{data.allocation.core_tickers.join(' + ')}）≥{data.allocation.core_minimum_pct}%</span>当前合计 {data.allocation.core_weight_pct === null ? '待估值' : data.allocation.core_weight_pct.toFixed(2)+'%'} · 个股合计上限 {data.allocation.stock_maximum_pct}%</p></div> : null}</>;
+}
+
+export function planRoleLabel(plan:Plan):string {
+  return plan.asset_role === 'broad_core' ? '指数底仓' : actionNames[plan.action] ?? '持仓研究';
 }
 
 function Field({ label, error, children, className = '' }: { label: string; error?: string; children: ReactNode; className?: string }) {
@@ -385,7 +389,7 @@ export default function App() {
         {data ? <CapitalActions data={data} /> : null}
         {data ? <Summary data={data} /> : <div className="empty">{loading ? '正在读取生产研究快照…' : '当前没有可展示的完整研究快照。'}</div>}
         <div className="workspace"><section className="plan-column"><h2>当前方案</h2>
-          {data?.plans.length ? data.plans.map(p => { const old = expired(p, now) || Boolean(error); return <article className="plan-row" key={`${p.ticker}:${p.plan_id??'unversioned'}`}><div className="plan-symbol"><button onClick={() => openDetail(p.ticker)}>{p.ticker}</button><span>{p.ticker === 'SPY' ? '宽基配置' : actionNames[p.action] ?? '持仓研究'}</span><small>{data.positions.find(v => v.ticker === p.ticker)?.shares ?? '—'} 股已记录</small></div><div className="plan-state"><span className={`status ${old ? 'amber' : ''}`}>{old ? '需复审' : p.status === 'pending' ? '条件待核对' : p.status === 'unverified' ? '依据待核对' : '当前计划'}</span><p>{old ? '计划已到复审时间' : p.blockers.length ? '先核对价格、剩余股数与挂单' : actionNames[p.action] ?? '以当前研究依据为准'}</p><small>复审 {timeLabel(p.expires_at)}</small></div><button className="secondary" onClick={() => openDetail(p.ticker)}>查看依据</button></article>; }) : <p className="empty compact">没有可展示的维护计划。</p>}
+          {data?.plans.length ? data.plans.map(p => { const old = expired(p, now) || Boolean(error); return <article className="plan-row" key={`${p.ticker}:${p.plan_id??'unversioned'}`}><div className="plan-symbol"><button onClick={() => openDetail(p.ticker)}>{p.ticker}</button><span>{planRoleLabel(p)}</span><small>{data.positions.find(v => v.ticker === p.ticker)?.shares ?? '—'} 股已记录</small></div><div className="plan-state"><span className={`status ${old ? 'amber' : ''}`}>{old ? '需复审' : p.status === 'pending' ? '条件待核对' : p.status === 'unverified' ? '依据待核对' : '当前计划'}</span><p>{old ? '计划已到复审时间' : p.blockers.length ? '先核对价格、剩余股数与挂单' : actionNames[p.action] ?? '以当前研究依据为准'}</p><small>复审 {timeLabel(p.expires_at)}</small></div><button className="secondary" onClick={() => openDetail(p.ticker)}>查看依据</button></article>; }) : <p className="empty compact">没有可展示的维护计划。</p>}
           {data ? <div className="addition-summary">{additions.length ? additions.map(c => <p key={c.ticker}><strong>{c.ticker} · {data.capital_decision?'条件草稿':'新增复核'}</strong><span>{data.capital_decision?`${c.quantity} 股 · LIMIT ≤ ${money(c.maximum_review_price)}`:`最多 ${c.quantity} 股 · 最高复核价 ${money(c.maximum_review_price)}`}</span><button className="text-button" onClick={() => openDetail(c.ticker)}>查看完整条件</button></p>) : <p>当前没有仍在有效期内的新增方案。</p>}</div> : null}
           {data ? <div className="candidate-section"><h2>观察名单</h2><div className="table-scroll"><table><thead><tr><th>股票</th><th>状态</th><th>主要缺口</th><th className="hide-small">参考收盘</th></tr></thead><tbody>{(showAll ? watched : watched.slice(0, 3)).map(c => <tr key={c.ticker}><td><button className="ticker-link" onClick={() => openDetail(c.ticker)}>{c.ticker}</button></td><td><span className="status">观察</span></td><td>{blockerText(c.blockers)}</td><td className="hide-small">{money(c.price)}</td></tr>)}</tbody></table></div>{watched.length > 3 ? <button className="text-button expand-button" onClick={() => setShowAll(v => !v)}>{showAll ? '收起观察名单' : `展开全部 ${watched.length} 个观察标的`}<ArrowUpRight size={16} /></button> : null}</div> : null}
         </section><aside className="feedback-panel"><h2>快速反馈</h2><p className="panel-lead">登记你已发生的操作。</p><FeedbackForm data={data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptSnapshot} formalRecords={formalRecords} onDirty={setDirty} storageError={storageError} /></aside></div>

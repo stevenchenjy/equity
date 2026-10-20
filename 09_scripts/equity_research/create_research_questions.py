@@ -15,7 +15,7 @@ from daily_common import (
     canonical_sha256, iso_now, read_csv, read_json,
 )
 from track_recommendation_outcomes import append_jsonl, jsonl
-from account_common import load_research_account_state
+from account_common import load_research_account_state, is_core_allocation_ticker
 
 REPORT = ROOT / "08_reviews/current/research_questions.local.md"
 STATE = ROOT / "04_research/company_research/research_questions.local.json"
@@ -37,12 +37,19 @@ QUESTIONS = {
         "经营杠杆是否改善并抵消稀释？用同期间收入、GAAP费用、现金流和股份支付核对；年度证据不直接证明单季趋势。",
         "合作伙伴/渠道与客户集中是否上升？核对下一份官方集中度披露；旧风险重复出现不算新增发现。",
     ],
-    "SPY": [
-        "广泛市场核心配置是否仍符合资金用途与持有期限？短期价格变化不独立构成长期假设破坏。",
-        "现金储备、整股粒度与核心目标能否同时满足？按当前账户确定性比较，目标偏离不等同于硬风险违规。",
-        "基金结构、费用或跟踪条件是否出现官方披露变化？没有基金层证据时不生成公司估值或公司盈利判断。",
-    ],
 }
+
+
+def questions_for(ticker: str) -> list[str]:
+    if is_core_allocation_ticker(ticker):
+        return [
+            "指数底仓用途与持有期限是否仍成立？检查基金行业集中度、成长倾向及其与直接持股的重叠；短期价格变化不独立构成长期假设破坏。",
+            "获批指数基金合计能否满足核心最低配置、整股粒度和现有可用资金？无强制内部储备，达到合计下限不要求继续增加 ETF 或减仓。",
+            "基金结构、费用或跟踪条件是否出现官方披露变化？没有基金层证据时不生成公司估值或公司盈利判断。",
+        ]
+    return QUESTIONS.get(ticker, [
+        "增长由什么可持续经营因素驱动？", "现金转化与股数稀释是否改善？", "什么官方证据会反驳目前判断？",
+    ])
 
 
 def number(value: Any) -> float | None:
@@ -92,12 +99,19 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
     if total is None or total <= 0:
         return []
     deployable = number(summary.get("deployable_cash"))
+    core_rows = [row for row in weights if row.get("asset_role") == "core_allocation"
+                 and is_core_allocation_ticker(str(row.get("ticker", "")))]
+    core_tickers = {row["ticker"] for row in core_rows}
+    core_complete = all(number(row.get("latest_price")) is not None and number(row["latest_price"]) > 0
+                        and number(row.get("current_shares")) is not None and number(row["current_shares"]) >= 0
+                        for row in core_rows)
+    combined_core_value = sum(number(row["latest_price"]) * number(row["current_shares"]) for row in core_rows) if core_complete else None
     results = []
     for row in weights:
         price, shares = number(row.get("latest_price")), number(row.get("current_shares"))
         if price is None or shares is None or price <= 0 or shares < 0:
             continue
-        core = row.get("asset_role") == "core_allocation"
+        core = row.get("ticker") in core_tickers
         core_floor = core and "core_minimum_pct" in account
         target = number(account.get("core_minimum_pct" if core_floor else
                                     "core_allocation_target_pct" if core else "single_stock_default_cap_pct"))
@@ -112,8 +126,12 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
             "plus_one_share_weight_pct": round((shares + 1) * price / total * 100, 4),
             "one_share_reduction_fraction_pct": round(min(1, 1 / shares) * 100, 4) if shares else None,
             "target_pct": target, "hard_cap_pct": hard,
-            "allocation_status": ("minimum_satisfied" if value + 1e-9 >= total * target / 100 else "below_minimum") if core_floor and target is not None else "reference_only",
-            "remaining_core_minimum_value": round(max(0, total * target / 100 - value), 2) if core_floor and target is not None else None,
+            "combined_core_value": round(combined_core_value, 2) if core and combined_core_value is not None else None,
+            "combined_core_weight_pct": round(combined_core_value / total * 100, 4) if core and combined_core_value is not None else None,
+            "minus_one_share_core_weight_pct": round(max(0, combined_core_value - min(shares, 1) * price) / total * 100, 4) if core and combined_core_value is not None else None,
+            "plus_one_share_core_weight_pct": round((combined_core_value + price) / total * 100, 4) if core and combined_core_value is not None else None,
+            "allocation_status": ("unverified_core_prices" if combined_core_value is None else "minimum_satisfied" if combined_core_value + 1e-9 >= total * target / 100 else "below_minimum") if core_floor and target is not None else "reference_only",
+            "remaining_core_minimum_value": round(max(0, total * target / 100 - combined_core_value), 2) if core_floor and target is not None and combined_core_value is not None else None,
             "above_target_dollars": round(max(0, value - total * target / 100), 2) if target is not None and not core_floor else None,
             "additional_capital_to_reach_target_without_share_change": round(max(0, value / (target / 100) - total), 2) if target and target > 0 and not core_floor else None,
             "cash_can_fund_one_share": deployable >= price if deployable is not None else None,
@@ -124,17 +142,21 @@ def whole_share_diagnostics(summary: dict[str, Any], weights: list[dict[str, Any
 
 def render_whole_share_diagnostics(diagnostics: list[dict[str, Any]]) -> list[str]:
     lines = ["## 整股约束的研究情景", "",
-        "以下±1股只展示离散粒度，不是建议动作。广基核心最低配置是下限；达到或超过下限不触发减仓，也不要求补入资金摊薄权重。", "",
+        "以下±1股只展示单标的离散粒度，不是建议动作。指数底仓最低配置按所有获批核心基金合计判断；达到或超过下限不触发减仓，也不要求补入资金摊薄权重。", "",
         "| 标的 | 当前权重 | 减1股权重 | 加1股权重 | 最低配置/研究参考 | 硬上限 | 配置状态 |",
         "| --- | --- | --- | --- | --- | --- | --- |"]
     for row in diagnostics:
         core_floor = row["target_kind"] == "core_minimum"
         target = (("≥" if core_floor else "") + f"{row['target_pct']}%") if row['target_pct'] is not None else "按公司证据单独确定"
-        cap = ("不适用（广基核心）" if row["target_kind"].startswith("core_") else
+        cap = ("不适用（指数底仓）" if row["target_kind"].startswith("core_") else
                f"{row['hard_cap_pct']}%" if row['hard_cap_pct'] is not None else "无固定单股上限（组合约束仍有效）")
         if core_floor:
-            status = ("最低配置已满足；高于下限不需减仓" if row["allocation_status"] == "minimum_satisfied"
-                      else f"最低配置未满足，市值缺口 ${row['remaining_core_minimum_value']:.2f}；仍需合格计划及整股资金")
+            if row["allocation_status"] == "unverified_core_prices":
+                status = "核心合计价格不完整，最低配置状态未核验"
+            else:
+                status = ("最低配置已满足；高于下限不需减仓" if row["allocation_status"] == "minimum_satisfied"
+                          else f"最低配置未满足，市值缺口 ${row['remaining_core_minimum_value']:.2f}；仍需合格计划及整股资金")
+                status += f"；核心合计 {row['combined_core_weight_pct']}%（本标的减1股后 {row['minus_one_share_core_weight_pct']}%；加1股后 {row['plus_one_share_core_weight_pct']}%）"
         else:
             status = f"超出旧参考线 ${row['above_target_dollars']}（仅诊断）" if row['above_target_dollars'] is not None else "按公司专属计划与组合约束评估"
         lines.append(f"| {row['ticker']} | {row['current_weight_pct']}% | {row['minus_one_share_weight_pct']}% | {row['plus_one_share_weight_pct']}% | {target} | {cap} | {status} |")
@@ -162,9 +184,7 @@ def main() -> int:
         evidence_status = "first_observation" if ticker not in prior else "changed" if changed else "no_material_numeric_change"
         companies[ticker] = {
             "questions_are_unproven_hypotheses": True,
-            "questions": QUESTIONS.get(ticker, [
-                "增长由什么可持续经营因素驱动？", "现金转化与股数稀释是否改善？", "什么官方证据会反驳目前判断？",
-            ]),
+            "questions": questions_for(ticker),
             "observation": observation, "changed_fields": changed,
             "evidence_status": evidence_status,
             "source_url": fact.get("source_url", ""),

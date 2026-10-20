@@ -124,8 +124,10 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     risk_budget=decision.get('tactical_review',{}).get('risk_budget',{})
     try:risk_remaining=max(Decimal(0),num(risk_budget.get('combined_usd',0))-num(risk_budget.get('open_risk_usd',0)))
     except (ValueError,InvalidOperation):risk_remaining=Decimal(0)
-    active_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if r.get('asset_role')!='core_allocation')
-    core_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if r.get('asset_role')=='core_allocation')
+    from active_config import validate_core_allocation_tickers
+    approved_core = set(validate_core_allocation_tickers(config['account']))
+    active_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if not (r.get('asset_role')=='core_allocation' and r.get('ticker') in approved_core))
+    core_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if r.get('asset_role')=='core_allocation' and r.get('ticker') in approved_core)
     cfg=config['account']; rows=[]; dependencies=[]
     for code in global_codes: dependencies.append(classify(code,scope='global'))
     eligible=set(decision.get('eligible_new_position_review_candidates',[]))|set(decision.get('eligible_action_review_candidates',[]))
@@ -187,7 +189,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             else:
                 row.update(decision='HOLD',reasons=[p.get('instruction') or 'No supported change in the existing position purpose.'])
         if ticker in eligible:
-            core=w.get('valuation_applicability')=='not_applicable_broad_market_etf' or h.get('asset_role')=='core_allocation'
+            core=ticker in approved_core and (w.get('valuation_applicability')=='not_applicable_broad_market_etf' or h.get('asset_role')=='core_allocation')
             growth=not core and p.get('role')=='long_term_growth'
             adapter='core_tranche' if core else ('reviewed_company' if growth else 'reviewed_tactical')
             strategy,errors=select(root,adapter,strategies)
@@ -198,7 +200,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             if not core and not reviewed_candidate_ready(decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{}))):
                 view=decision.get('long_horizon_research',{}).get('candidate_views',{}).get(ticker,decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{}))
                 issues.append('reviewed_business_case_not_supported' if company_review_complete(view) else 'maintained_company_research_incomplete')
-            draft=eligible_core_tranche(decision,w) if core else tactical.get(ticker)
+            draft=eligible_core_tranche(decision,w,root=root) if core else tactical.get(ticker)
             if growth:
                 draft=None
                 try:
@@ -257,11 +259,16 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         role_room=total*num(cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-active_value
                         core_gap=max(Decimal(0),total*num(cfg.get('core_minimum_pct',0))/100-core_value)
                         if core_gap:
-                            core_row=held.get('SPY') or watch.get('SPY') or {}
-                            core_price=num(core_row.get('current_price',0))
-                            if core_price > 0:
-                                from decimal import ROUND_CEILING
-                                core_gap=(core_gap/core_price).to_integral_value(rounding=ROUND_CEILING)*core_price
+                            from portfolio_construction import remaining_core_floor_cost
+                            core_prices = [float(num(q.get('last_price', 0)))
+                                           for q in read_csv(root/'03_source_data/equity_research/market_data_snapshot.csv')
+                                           if q.get('ticker') in approved_core and q.get('data_quality_label') == 'ok'
+                                           and q.get('market_session_date') == expected and q.get('data_source') and q.get('data_timestamp')
+                                           and num(q.get('last_price', 0)) > 0]
+                            if core_prices:
+                                core_gap=num(remaining_core_floor_cost(account_total=float(total),
+                                    current_core_value=float(core_value), core_minimum_pct=float(cfg.get('core_minimum_pct',0)),
+                                    core_unit_prices=core_prices))
                             elif growth:
                                 raise ValueError('core_floor_price_unverified')
                         role_room=min(role_room,max(Decimal(0),cash_remaining-core_gap))

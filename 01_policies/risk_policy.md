@@ -1,14 +1,17 @@
 # Risk Policy
 
 Current allocation authority is the [owner-approved allocation policy](../00_project_control/allocation_policy.md),
-updated October 6, 2026. The preceding manual reference is
+updated October 19, 2026 for SPY-and-QQQM combined core membership. The preceding manual reference is
 [retained as history](../11_archive/allocation_policy_before_20261006/risk_policy.md).
 It does not supply active numerical limits.
 
 ## Allocation and position risk
 
-- Broad core has a 30% minimum and baseline target; larger core exposure is
-  permitted. Aggregate individual stocks have a 70% target and maximum.
+- SPY and QQQM together form the approved index core, with a combined 30%
+  minimum and baseline target; larger core exposure is permitted. Other ETFs
+  do not automatically qualify. Aggregate individual stocks have a 70% target
+  and maximum. QQQM's growth concentration and overlap need separate analysis;
+  no fixed fund split or automatic rotation is required.
 - Cash target and mandatory internal reserve are zero. Unallocated cash is
   permitted while evidence, account facts or executable opportunities are missing.
 - There is no fixed single-stock cap or fixed initial-size tier. Concentrated

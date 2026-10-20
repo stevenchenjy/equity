@@ -20,6 +20,12 @@ POLICY = json.loads((PROJECT_ROOT / "01_policies/long_horizon_research_policy.js
 
 
 class RequestedCoverageTests(unittest.TestCase):
+    def setUp(self):
+        core = ("SPY", "QQQM")
+        self.enterContext(patch.object(baseline, "approved_core_tickers", return_value=core))
+        self.enterContext(patch.object(baseline, "is_core_allocation_ticker", side_effect=lambda t: t in core))
+        self.enterContext(patch("long_horizon_research.is_core_allocation_ticker", side_effect=lambda t: t in core))
+
     def test_owner_names_survive_ranked_shortlist_without_becoming_eligible(self):
         def rows(path):
             if path == baseline.POSITIONS_PATH:
@@ -46,7 +52,7 @@ class RequestedCoverageTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     baseline.requested_coverage_tickers()
 
-    def test_new_seed_rows_cover_requested_prices_but_do_not_authorize_etf_core(self):
+    def test_new_seed_rows_cover_requested_prices_and_only_approved_core(self):
         with baseline.UNIVERSE_PATH.open(newline="") as handle:
             seeds = list(csv.DictReader(handle))
         tickers = [row["ticker"] for row in seeds]
@@ -57,7 +63,7 @@ class RequestedCoverageTests(unittest.TestCase):
         for ticker in ("QQQM", "XLI"):
             self.assertEqual(by_ticker[ticker]["is_benchmark"], "yes")
             self.assertFalse(evidence.company_fundamentals_required(ticker))
-            self.assertFalse(c9.is_core_allocation_ticker(ticker))
+            self.assertEqual(c9.is_core_allocation_ticker(ticker), ticker == "QQQM")
             self.assertIn(ticker, POLICY["excluded_benchmarks"])
         for ticker in ("APP", "RKLB"):
             self.assertTrue(evidence.company_fundamentals_required(ticker))
@@ -89,8 +95,8 @@ class RequestedCoverageTests(unittest.TestCase):
             self.assertEqual(by_ticker[ticker]["human_action_required"], "no")
             self.assertEqual(by_ticker[ticker]["primary_source_url"], "")
         for ticker in ("QQQM", "XLI"):
-            self.assertEqual(by_ticker[ticker]["research_role"], "etf_research_candidate")
-            self.assertEqual(by_ticker[ticker]["recommendation_label"], "watch_for_allocation_review")
+            self.assertEqual(by_ticker[ticker]["research_role"], "core_allocation_candidate" if ticker == "QQQM" else "etf_research_candidate")
+            self.assertEqual(by_ticker[ticker]["recommendation_label"], "core_allocation_candidate" if ticker == "QQQM" else "watch_for_allocation_review")
             self.assertIn("not_applicable_to_etf", by_ticker[ticker]["valuation_check"])
 
     def test_missing_named_market_data_still_blocks_baseline_commit(self):
@@ -184,14 +190,14 @@ class RequestedCoverageTests(unittest.TestCase):
             self.assertNotIn("scenario_prices", scenario)
             self.assertEqual(payloads[valuation.DEFAULT_BUNDLE_PATH]["records"], [])
 
-    def test_held_noncore_etf_omits_company_scenarios_without_core_promotion(self):
+    def test_held_approved_core_and_other_etf_remain_distinct(self):
         report = build_long_horizon_report(
             [], [{"ticker": "QQQM"}, {"ticker": "XLI"}], [], POLICY, "2026-09-22T20:00:00+00:00"
         )
         for ticker in ("QQQM", "XLI"):
             row = report["companies"][ticker]
-            self.assertEqual(row["readiness"], "not_applicable_etf")
-            self.assertEqual(row["thesis"]["status"], "allocation_policy_review_required")
+            self.assertEqual(row["readiness"], "not_applicable_core" if ticker == "QQQM" else "not_applicable_etf")
+            self.assertEqual(row["thesis"]["status"], "core_allocation_policy" if ticker == "QQQM" else "allocation_policy_review_required")
             self.assertNotIn("sensitivity_scenarios", row)
         self.assertFalse(report["recommendation_authority"])
         self.assertFalse(report["automatic_action_allowed"])

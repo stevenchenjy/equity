@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {CapitalActions} from './CapitalActions';
+import {Summary, planRoleLabel} from './App';
 import CompanyCase from './CompanyCase';
-import type {CapitalDecision, CompanyResearchCase} from './domain';
+import type {CapitalDecision, CompanyResearchCase, Plan} from './domain';
 import type {CapitalDeploymentEscalation, CapitalUse, DeploymentGate, Snapshot} from './domain';
 const data={positions:[{ticker:'HELD'}],capital_decision:{action:'NO_NEW_POSITION',market_data_timestamp:'2026-10-02',global_blockers:['current_account_snapshot_stale'],decisions:[{ticker:'HELD',decision:'HOLD',shares:0,estimated_notional:0,reasons:['Maintain the recorded core purpose'],dependencies:[],blockers:[],order_draft:null},{ticker:'NEW',decision:'BLOCKED',shares:0,estimated_notional:0,reasons:['Company valuation incomplete'],dependencies:[],blockers:[],order_draft:null}]}} as unknown as Snapshot;
 test('unheld company case shows prices, zero-allocation reason and review without requiring a position plan',()=>{
@@ -114,4 +115,16 @@ test('approved local planning keeps metadata out of action blockers and labels i
  assert.match(html,/券商实时状态未被确认/);
  assert.doesNotMatch(html,/你现在需要做的：更新账户记录/);
  assert.match(html,/Company valuation incomplete/);
+});
+
+test('allocation summary uses approved combined membership and actual weight',()=>{
+ const snapshot={...data,account:{account_total_value:4000,cash_available:1550,invested_capital:2450,cash_basis:'ledger_estimate',settled_cash_verified:false},allocation:{core_tickers:['SPY','QQQM'],core_minimum_pct:30,core_target_pct:30,stock_maximum_pct:70,core_weight_pct:33.71,policy_version:'owner-index-core-20261019'}} as Snapshot;
+ const html=renderToStaticMarkup(<Summary data={snapshot}/>);
+ assert.match(html,/指数底仓（SPY \+ QQQM）≥30%/);assert.match(html,/当前合计 33.71%/);assert.match(html,/个股合计上限 70%/);
+ assert.doesNotMatch(renderToStaticMarkup(<Summary data={{...snapshot,allocation:null}}/>),/指数底仓/);
+});
+test('held and unheld plan labels depend on projected approved role rather than ticker names',()=>{
+ for(const ticker of ['SPY','QQQM'])assert.equal(planRoleLabel({ticker,asset_role:'broad_core',action:'hold'} as Plan),'指数底仓');
+ assert.equal(planRoleLabel({ticker:'XLI',asset_role:'sector_etf',action:'watch'} as Plan),'观察');
+ assert.equal(planRoleLabel({ticker:'SPY',action:'watch'} as Plan),'观察');
 });

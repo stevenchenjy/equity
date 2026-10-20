@@ -32,8 +32,8 @@ The [current-document index](00_project_control/current_documents.md) distinguis
 maintained guidance from historical records.
 
 The [current owner-approved allocation](00_project_control/allocation_policy.md)
-uses a broad-core minimum of 30%, an individual-stock target and aggregate
-limit of 70%, and no fixed single-stock cap or cash reserve. Concentrated
+counts SPY and QQQM together toward an index-core minimum/baseline of 30%,
+with an individual-stock target and aggregate limit of 70%, and no fixed single-stock cap or cash reserve. Concentrated
 positions require company-specific research. Cash-account and strategy-specific
 risk controls and human-only execution remain.
 

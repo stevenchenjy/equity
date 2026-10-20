@@ -161,7 +161,8 @@ class CashPlanFloorReportingTests(unittest.TestCase):
               patch.object(cash_plan, "load_research_account_state", return_value=effective),
               patch.object(cash_plan, "load_portfolio_summary", return_value=summary),
               patch.object(cash_plan, "load_market_rows", return_value={"SPY": dict(
-                  last_price=775, fifty_two_week_high=800, fifty_two_week_low=600, data_quality_label="ok")}),
+                  last_price=775, fifty_two_week_high=800, fifty_two_week_low=600, data_quality_label="ok",
+                  market_session_date=cash_plan.latest_published_market_session(cash_plan.now_et()).isoformat())}),
               patch.object(cash_plan, "load_packets", return_value={"SPY": {"technical_entry_discipline_score": 7}}),
               patch.object(cash_plan, "read_csv", return_value=[]),
               patch.object(cash_plan, "write_csv", side_effect=lambda path, rows, _fields: written.update({path: rows})),

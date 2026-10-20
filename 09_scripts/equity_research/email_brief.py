@@ -109,7 +109,7 @@ def _is_core(row: dict[str, Any]) -> bool:
 
 def _valuation(row: dict[str, Any]) -> str:
     if _is_core(row):
-        return "宽基 ETF，按核心配置规则评估"
+        return "获批指数 ETF，按合并底仓规则评估"
     values = [row.get(f"valuation_{band}_price") for band in ("bear", "base", "bull")]
     if all(_decimal(value) is not None and _decimal(value) > 0 for value in values):
         return "低 / 中 / 高情景：" + " / ".join(money(value) for value in values) + "；是条件估算，不是价格预测或承诺回报"
@@ -710,6 +710,11 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         account_lines.append("账户估值 = 本地现金 + 已记录股数按参考收盘计值；不是实时券商余额。")
     if estimated_cash:
         account_lines.append("现金及上表权重基于本地账本估算或用户指定的规划现金假设，尚非券商已确认的可用或已结算资金；未核对的出入金不自动计入；银行备用资金未计入账户。")
+    policy = decision.get("allocation_policy", {})
+    if policy.get("core_tickers") and policy.get("core_minimum_pct") is not None:
+        account_lines.append("指数底仓（" + " + ".join(policy["core_tickers"]) + "）合计至少 "
+            + percent(policy["core_minimum_pct"]) + "；当前合计 " + percent(policy.get("core_weight_pct"))
+            + "。两只基金共用一个底仓目标，不要求各占 30%，也不自动换仓。")
     funding_lines = []
     low, high = _decimal(account.get("planning_capital_min")), _decimal(account.get("planning_capital_max"))
     if low is not None and high is not None and 0 < low <= high:

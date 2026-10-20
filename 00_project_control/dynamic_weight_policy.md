@@ -17,8 +17,9 @@ for the current local state.
 
 ## Concentration and Sleeve Rules
 
-The [October 6 owner allocation policy](allocation_policy.md) is authoritative:
-broad core has a 30% minimum and baseline target, aggregate individual stocks
+The [owner allocation policy](allocation_policy.md), amended October 19, is
+authoritative: SPY and QQQM combined have a 30% index-core minimum and baseline
+target; aggregate individual stocks
 have a 70% target and maximum, and cash target/reserve are zero. Fixed default
 and hard single-stock caps are disabled. Historical account-record percentages
 and archived policy values must not become fallback active limits.
@@ -28,7 +29,7 @@ and archived policy values must not become fallback active limits.
   do not manufacture a name-cap trim or concentration-only score penalty.
 - Combined individual-stock weight at or below 70% is within its aggregate
   target/cap. Above 70% remains an aggregate breach and blocks additions.
-- Broad-core weight below 30% is an allocation shortfall to address through
+- Combined SPY-and-QQQM index-core weight below 30% is an allocation shortfall to address through
   qualified research. At or above 30% satisfies the floor; being above the
   baseline target is not an automatic reduction condition.
 - Strategy-specific tactical exposure and planned-loss budgets still apply.

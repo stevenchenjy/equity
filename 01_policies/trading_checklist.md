@@ -40,7 +40,7 @@ Use this checklist before any paper trade plan or real trade plan. A real trade 
 - Entry price and stop price defined.
 - Target price, holding period plan, and exit rule defined.
 - Company-specific desired size and rationale are recorded in the maintained
-  plan; whole shares, broad-core floor, aggregate stock ceiling and actual
+  plan; whole shares, combined SPY-and-QQQM index-core floor, aggregate stock ceiling and actual
   funds are checked. No removed fixed name cap or size tier is reintroduced.
 - Trade size fits a cash account.
 - Planned order type is limit order only.

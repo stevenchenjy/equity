@@ -1,6 +1,6 @@
 {
   "schema_version": "phase5r_active_production_config_v1",
-  "effective_from": "2026-10-06",
+  "effective_from": "2026-10-19",
   "review_by": "2026-11-06",
   "authority": "active production configuration; historical Phase 5R pilot policies are non-authoritative",
   "workflow": {
@@ -78,7 +78,11 @@
     "positions_source": "05_risk_and_positions/current_positions.local.csv",
     "core_minimum_pct": 30.0,
     "sizing_method": "source_bound_company_allocation",
-    "allocation_policy_version": "owner-concentrated-growth-20261006"
+    "allocation_policy_version": "owner-index-core-spy-qqqm-20261019",
+    "core_allocation_tickers": [
+      "SPY",
+      "QQQM"
+    ]
   },
   "notifications": {
     "event_driven": true,

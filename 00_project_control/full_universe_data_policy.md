@@ -93,7 +93,10 @@ describes configured-watchlist monitoring, not a market-wide investment rank.
 
 ## Tactical research extension (September 22, 2026)
 
-After a complete validated batch, retain the last 20 daily OHLCV bars in an ignored local sidecar, bound by SHA-256 to the canonical snapshot. A failed batch preserves prior artifacts; old or mismatched history cannot authorize a tactical draft. QQQM and XLI are ETFs exempt from company XBRL valuation, not newly approved core allocations. The deterministic daily plan uses completed published data and cannot verify live entry triggers.
+After a complete validated batch, retain the last 20 daily OHLCV bars in an ignored local sidecar, bound by SHA-256 to the canonical snapshot. A failed batch preserves prior artifacts; old or mismatched history cannot authorize a tactical draft. QQQM and XLI are ETFs exempt from company XBRL valuation. Separately, the
+October 19 owner allocation amendment approves QQQM alongside SPY for the
+combined index-core sleeve; XLI remains outside that approval. Company-XBRL
+exemption alone never establishes core membership. The deterministic daily plan uses completed published data and cannot verify live entry triggers.
 
 ## Independent broad-market discovery extension (September 22, 2026)
 

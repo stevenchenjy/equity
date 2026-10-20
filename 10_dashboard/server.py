@@ -77,6 +77,42 @@ def number(value: object) -> float | None:
         return None
 
 
+def core_allocation_view(root: Path, positions: list[dict], account_value: object) -> dict | None:
+    """Read display policy from this snapshot's root, never from a UI whitelist."""
+    from active_config import load_active_config, validate_core_allocation_tickers
+    relative = "00_project_control/active_production_config.json"
+    try:
+        raw = safe_read(root, relative)
+        account = load_active_config(root / relative)["account"]
+        approved = validate_core_allocation_tickers(account)
+        metadata = list(csv.DictReader(io.StringIO(safe_read(root, "03_source_data/equity_research/universe_seed.csv").decode())))
+        eligible = {r.get("ticker", "").strip().upper() for r in metadata
+                    if r.get("sector", "").strip().upper() == "ETF"
+                    and r.get("is_benchmark", "").strip().lower() == "yes"}
+        if any(t not in eligible for t in approved) or safe_read(root, relative) != raw:
+            return None
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    total = number(account_value)
+    held_core = [p for p in positions if p["ticker"] in approved]
+    priced = all(number(p.get("shares")) is not None and number(p.get("price")) is not None for p in held_core)
+    core_value = sum(number(p["shares"]) * number(p["price"]) for p in held_core) if priced else None
+    return {"core_tickers": list(approved), "core_minimum_pct": account["core_minimum_pct"],
+            "core_target_pct": account["core_target_pct"],
+            "stock_maximum_pct": account["research_risk_limits"]["active_stock_hard_cap_pct"],
+            "core_weight_pct": core_value / total * 100 if core_value is not None and total and total > 0 else None,
+            "policy_version": account.get("allocation_policy_version", "")}
+
+
+def project_core_roles(rows: list[dict], allocation: dict | None, field: str) -> None:
+    approved = set((allocation or {}).get("core_tickers", []))
+    for row in rows:
+        if row["ticker"] in approved:
+            row[field] = "broad_core"
+        elif row.get(field) == "broad_core":
+            row[field] = "unverified"
+
+
 def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     """Capture retained bytes, verify publication fingerprints, then read back.
 
@@ -155,6 +191,12 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     if (abs(invested - values["invested_capital"]) > 0.01
             or abs(values["cash_available"] + invested - values["account_total_value"]) > 0.01):
         raise SnapshotError("decision_account_total_does_not_reconcile")
+    projected_positions = [{"ticker": r["ticker"], "shares": number(r.get("current_shares")),
+                            "price": number(r.get("current_price")), "weight": number(r.get("current_weight_pct")),
+                            "role": r.get("asset_role")} for r in held]
+    allocation = core_allocation_view(root, projected_positions, values["account_total_value"])
+    project_core_roles(projected_positions, allocation, "role")
+    project_core_roles(plans, allocation, "asset_role")
     plan_map = {p["ticker"]: p for p in plans}
     candidates = []
     for r in d.get("watch_candidates", []):
@@ -202,9 +244,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         "snapshot_id": digest(decision_raw), "account_version": version(root),
         "account": {**values, "last_updated": account_raw.get("last_updated"), "cash_basis": account.get("cash_basis"),
                     "settled_cash_verified": orders_raw.get("broker_balance_observation", {}).get("settled_cash_verified") is True},
-        "positions": [{"ticker": r["ticker"], "shares": number(r.get("current_shares")),
-                       "price": number(r.get("current_price")), "weight": number(r.get("current_weight_pct")),
-                       "role": r.get("asset_role")} for r in held],
+        "positions": projected_positions, "allocation": allocation,
         "plans": plans, "candidates": candidates,
         "orders": {"as_of": orders_raw.get("as_of"), "complete": orders_raw.get("complete") is True,
                    "fresh": bool(observed and 0 <= (now - observed).total_seconds() <= 86400),
@@ -268,6 +308,9 @@ def current_snapshot(root):
                 weight=float(r['shares_optional'])*float(market[r['ticker']]['last_price'])/total*100 if known and total else None,role='待研究') for r in positions],
             plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'],
             capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False))
+    if not result.get('research_ready'):
+        result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
+        project_core_roles(result['positions'], result['allocation'], 'role')
     result['mode'] = 'formal_feedback'
     return result
 

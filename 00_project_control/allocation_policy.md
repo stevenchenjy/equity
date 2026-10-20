@@ -1,6 +1,7 @@
 # Owner-approved allocation policy
 
-Approved by the owner on 2026-10-06 ET. This is the maintained allocation
+Allocation targets approved by the owner on 2026-10-06 ET; index-core membership
+expanded to SPY and QQQM on 2026-10-19 ET. This is the maintained allocation
 contract; the effective executable settings live in
 [active production configuration](active_production_config.json). Approval,
 source implementation, production deployment and recomposition are distinct
@@ -16,11 +17,20 @@ allocation or evidence that additional risk produces additional returns.
 
 | Allocation or control | Current approved standard |
 |---|---|
-| Broad-market core | At least 30% strategic allocation, with 30% as the baseline sizing target. More than 30% is permitted; 30% is not a ceiling or an automatic trim trigger. |
+| Index core: SPY + QQQM | Combined strategic allocation of at least 30%, with 30% as the baseline sizing target. More than 30% is permitted; 30% is not a ceiling or an automatic trim trigger. Either or both approved funds can supply the allocation. |
 | Individual stocks, in aggregate | 70% baseline target and maximum allocation. More core or undeployed cash reduces the room available to stocks. |
 | Cash | 0% strategic target and $0 mandatory internal reserve. Available capital need not be fully invested when evidence, account facts, integer shares or execution conditions prevent a qualified proposal. |
 | Fixed single-stock allocation cap | None. No legacy default or hard percentage may reappear through an account record, fallback, score, trim rule or renderer. |
 | Planning capital | The approved $4,000 planning basis is unchanged. Outside reserve money is not added to investment capital. Current cash, shares and market-value calculations retain their validated provenance. |
+
+The October 19 approval means SPY and QQQM market values are summed once into
+the same index-core sleeve. QQQM is more concentrated in large growth companies;
+it is not interchangeable with SPY in industry breadth or overlap with direct
+stock holdings. Other ETFs do not become approved core simply by being ETFs.
+There is no prescribed split, equal-weight rule, separate QQQM cap or automatic
+SPY-to-QQQM rotation. The `broad_core` compatibility identifier represents this
+approved index-core purpose. See [core allocation policy](core_allocation_policy.md)
+for the calculation and unchanged evidence gates.
 
 The percentages are allocation destinations, not three simultaneous minimums.
 At the baseline they total 100%. A higher core allocation necessarily reduces
@@ -59,6 +69,10 @@ experiments remain experimental until their separate version-specific adoption
 process is satisfied. Frozen studies retain their original rules and cohorts.
 
 ## Supersession and reproducibility
+
+The October 19 amendment supersedes the SPY-only core membership restriction;
+SPY remains the unchanged benchmark where explicitly used for comparison. It
+does not retrospectively change archived allocations or frozen experiments.
 
 This policy supersedes all active use of the former 40/50/10 allocation,
 50% aggregate stock cap, 15% fixed single-stock cap, and the separate 60%

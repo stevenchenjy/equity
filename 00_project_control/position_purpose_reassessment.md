@@ -13,7 +13,7 @@ New tactical plans with no prior ticker lineage must specify `strategy_horizon` 
 | intraday_momentum | tactical | Time exit, review and optional validity deadline must fall in the effective session, by its regular/early close; any DAY draft must name that session. |
 | multi_day_trend | tactical | Existing mandatory time exit remains in force. |
 | long_term_growth | long_term_growth | Authored holding rationale must support the longer purpose. |
-| broad_core | broad_core | Authored holding rationale must support the portfolio purpose. |
+| broad_core | broad_core | SPY and QQQM may share the approved index-core purpose; authored rationale must support that purpose and QQQM concentration/overlap. Other ETFs are not admitted automatically. |
 
 `purpose` requires nonempty `strategy`, `holding_period_justification`, `entry_validity`, `failure_condition`, and `exit_rule`, plus `sources`. Every source must identify a `path` and `sha256` already present in the plan's source receipts. The writer verifies retained bytes. It cannot judge whether the narrative actually establishes efficacy; that assessment remains research work. Explicit purpose and sources do not verify live market conditions.
 

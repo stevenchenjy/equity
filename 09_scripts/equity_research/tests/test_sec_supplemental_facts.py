@@ -165,10 +165,11 @@ class SupplementalFactsTests(unittest.TestCase):
             if path == evidence.POSITIONS_PATH:
                 return [{"ticker":"HELD"}]
             return []
-        with patch.object(evidence, "read_csv", side_effect=read):
+        with patch.object(evidence, "read_csv", side_effect=read), \
+             patch.object(evidence, "approved_core_tickers", return_value=("SPY", "QQQM")):
             held, researched = evidence.researched_tickers()
         self.assertEqual(held, ["HELD"])
-        self.assertEqual(researched, ["HELD", "SPY", "ZZZ"])
+        self.assertEqual(researched, ["HELD", "QQQM", "SPY", "ZZZ"])
         self.assertFalse(evidence.company_fundamentals_required("QQQ"))
 
     def test_sec_json_transient_retry_is_bounded_and_parse_errors_do_not_retry(self):

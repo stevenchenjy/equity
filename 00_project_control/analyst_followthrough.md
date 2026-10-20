@@ -372,9 +372,12 @@ work, use the documented full no-send recomposition and verify current views.
 Preserve the approved capital basis, zero mandatory internal reserve,
 the current [owner-approved allocation policy](allocation_policy.md), aggregate
 and strategy-specific tactical limits, evidence thresholds and human-only
-execution. The October 6 standard uses a 30% broad-core floor/baseline target,
+execution. The October 6 standard, amended October 19 to count SPY and QQQM
+together, uses a 30% combined index-core floor/baseline target,
 70% aggregate stock target/maximum, zero cash target and no fixed single-stock
-cap. Do not restore superseded name limits from old heartbeat wording, account
+cap. Core membership does not require equal weights or an automatic rotation;
+evaluate QQQM growth concentration and direct-stock overlap. Do not restore
+SPY-only core membership or superseded name limits from old heartbeat wording, account
 snapshots or historical reviews. Do not promote experimental momentum observations,
 retune after a streak, purchase services, enable leverage, access the broker
 unattended, invent broker facts or clear a genuine account-wide blocker.

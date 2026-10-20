@@ -173,11 +173,11 @@ def main() -> None:
             cash_change = 0.0
             resulting_weight = weight
             reason = (
-                "SPY is an existing broad-market core holding governed by the core-sleeve "
+                f"{ticker} is an approved index-core holding governed by the combined SPY + QQQM core-sleeve "
                 "allocation policy, not the individual-stock concentration cap."
             )
             trim_condition = (
-                "Review through the core-allocation policy if the broad-market thesis, "
+                "Review through the core-allocation policy if the index-core thesis, "
                 "reserve constraint, or target allocation changes."
             )
         elif label == "exit_review" and confirmed_thesis_break(thesis_reviews.get(ticker, {}), position):

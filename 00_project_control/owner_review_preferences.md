@@ -2,14 +2,17 @@
 
 Account planning authority now follows [the October 9 owner-approved local-record policy](account_record_authority.md). When its private approval is active, use local cash, holdings and known order commitments for conditional manual plans. Do not request a fresh broker snapshot solely for age, completeness flags or estimated-cash labels; preserve those facts as execution checks. Actual arithmetic/order/feedback contradictions and company/strategy requirements remain effective.
 
-## Current allocation authority (2026-10-06)
+## Current allocation authority (2026-10-06; core membership amended 2026-10-19)
 
-The owner explicitly replaced prior allocation targets with broad core at least
-30% (30% baseline target), individual stocks up to 70%, zero cash target and
+The owner explicitly replaced prior allocation targets with index core at least
+30% (30% baseline target), now counting SPY and QQQM together, individual stocks up to 70%, zero cash target and
 mandatory internal reserve, and no fixed single-stock cap. The owner also
 replaced fixed 3%/5%/6% starting sizes with company-specific source-bound sizing
 and requested research supporting concentrated higher-risk growth when the
-investment evidence justifies it. See [the maintained allocation contract](allocation_policy.md).
+investment evidence justifies it. Neither an equal SPY/QQQM split nor an
+automatic substitution is authorized by core membership alone. Assess QQQM's
+concentrated growth exposure and overlap with direct stocks. See
+[the maintained allocation contract](allocation_policy.md).
 Old asset-type targets and the economic-purpose split below are historical,
 not additional current constraints. Unused cash is not a reserve requirement,
 and a core holding above 30% is not automatically trimmed. Tactical strategy
@@ -43,7 +46,7 @@ prior-email continuity and human-only execution in the concise email.
 
 High cash is unallocated investment capital, not a recommendation to retain
 that percentage or a mandatory reserve. The approved owner planning basis remains unchanged, with zero mandatory
-internal reserve. Current targets and sizing follow the October 6 allocation
+internal reserve. Current targets and sizing follow the maintained allocation
 contract above; this earlier presentation correction did not itself change
 entry evidence or strategy authority. This presentation correction authorizes no resend, new trade,
 experimental promotion or invented price. A new numeric draft still requires
@@ -185,7 +188,7 @@ It is retained to explain prior decisions, not to provide current sizing inputs.
   only a review trigger, not a submitted order or automatic buy signal.
 - Positive proposed share counts require complete evidence and portfolio
   checks, including the admitted company-specific size, whole-share feasibility,
-  aggregate stock allocation, the broad-core floor, actual available cash and
+  aggregate stock allocation, the combined SPY-and-QQQM core floor, actual available cash and
   strategy-specific budgets. No removed fixed name cap or initial-size tier
   may return as an implicit constraint. A hypothetical
   later quantity must be labelled separately from today's recommendation.

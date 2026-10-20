@@ -8,6 +8,7 @@ from typing import Any
 from pathlib import Path
 
 from thesis_evidence import evaluate_thesis, evidence_context, apply_issuer_news_review
+from account_common import is_core_allocation_ticker
 
 FACT_FIELDS = (
     "revenue_latest", "revenue_yoy_pct", "ttm_revenue", "ttm_revenue_yoy_pct",
@@ -287,7 +288,7 @@ def build_long_horizon_report(
     prior_companies = (previous_report or {}).get("companies", {})
     for ticker in sorted(held | selected):
         if ticker in policy["excluded_benchmarks"]:
-            is_core = ticker == "SPY"
+            is_core = is_core_allocation_ticker(ticker)
             companies[ticker] = {
                 "readiness": "not_applicable_core" if is_core else "not_applicable_etf",
                 "held": ticker in held,

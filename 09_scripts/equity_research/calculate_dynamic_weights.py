@@ -297,7 +297,7 @@ def main() -> None:
         "position_count": str(len(dynamic_rows)),
         "account_state_updated": str(account["last_updated"]),
         "latest_price_timestamp": max((row["price_timestamp"] for row in dynamic_rows), default=str(account["last_updated"])),
-        "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; SPY_is_core_allocation; other_holdings_are_active_stock; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
+        "calculation_basis": "current_cash_plus_current_shares_at_canonical_b2_close; approved_SPY_QQQM_combined_index_core; other_holdings_are_active_stock; reported_account_total_reconciliation_only; stored_position_pct_historical_only",
     }
     write_csv(DYNAMIC_WEIGHTS, dynamic_rows, DYNAMIC_FIELDS)
     write_csv(PORTFOLIO_SUMMARY, [summary], SUMMARY_FIELDS)

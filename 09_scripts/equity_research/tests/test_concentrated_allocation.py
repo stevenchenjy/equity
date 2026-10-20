@@ -42,14 +42,16 @@ class ConcentratedAllocationTests(unittest.TestCase):
         self.assertEqual(self.result()['shares'],70)
         self.d['held_positions']=[]
         self.d['watch_candidates'].append(dict(ticker='SPY',current_price=100))
-        self.assertEqual(self.result()['shares'],49) # $7900 free cash less $3000 core floor
+        with patch.object(engine,'read_csv',return_value=[dict(ticker='SPY',last_price=100,data_quality_label='ok',market_session_date=self.d['market_gate']['expected_market_session'],data_source='fixture',data_timestamp=self.now.isoformat())]):
+            self.assertEqual(self.result()['shares'],49) # $7900 free cash less $3000 core floor
     def test_final_stock_budget_preserves_whole_share_core_capacity(self):
         self.d['held_positions']=[]
         self.d['account'].update(account_total_value=4000,cash_available=4000,cash_reserved=0)
         self.plan['reviewed_allocation']['target_position_pct']=70
         self.d['watch_candidates'].append(dict(ticker='SPY',current_price=775))
         # $1200 fractional gap actually needs $1550 for 2 whole SPY shares.
-        self.assertEqual(self.result()['shares'],24)
+        with patch.object(engine,'read_csv',return_value=[dict(ticker='SPY',last_price=775,data_quality_label='ok',market_session_date=self.d['market_gate']['expected_market_session'],data_source='fixture',data_timestamp=self.now.isoformat())]):
+            self.assertEqual(self.result()['shares'],24)
 
     def test_missing_expired_or_excessive_entry_review_fails_closed(self):
         for change in ('missing','expired','price','reward'):

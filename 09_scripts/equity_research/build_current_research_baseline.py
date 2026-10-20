@@ -21,6 +21,7 @@ from daily_common import (
     read_json,
 )
 
+from account_common import approved_core_tickers, is_core_allocation_ticker
 from long_horizon_research import fundamentals_candidate_queue
 from run_full_universe_market_data import APPROVED_CANDIDATE_TICKERS
 
@@ -125,7 +126,7 @@ def selected_tickers() -> tuple[list[str], set[str]]:
     ranked.sort(key=lambda row: (-float(row["total_score"]), row["ticker"]))
     candidates = [
         row["ticker"].strip().upper() for row in ranked
-        if row["ticker"].strip().upper() != "SPY"
+        if row["ticker"].strip().upper() not in approved_core_tickers()
     ][:3]
     policy = read_json(ROOT / "01_policies/long_horizon_research_policy.json")
     fundamental_queue = fundamentals_candidate_queue(read_csv(FUNDAMENTALS_PATH), held, policy)
@@ -136,7 +137,7 @@ def selected_tickers() -> tuple[list[str], set[str]]:
     # expired/failed judgments that must retain their reassessment history.
     # This does not admit a new market-data universe or grant any shares.
     retained = retained_company_tickers(held | requested | set(APPROVED_CANDIDATE_TICKERS))
-    return sorted(held | requested | retained | {"SPY", *candidates, *fundamental_candidates}), held
+    return sorted(held | requested | retained | {*approved_core_tickers(), *candidates, *fundamental_candidates}), held
 
 
 def retained_company_tickers(allowed: set[str]) -> set[str]:
@@ -220,13 +221,13 @@ def main() -> int:
         position = position_rows.get(ticker, {})
         role = (
             "current_position" if ticker in held else
-            "core_allocation_candidate" if ticker == "SPY" else
+            "core_allocation_candidate" if is_core_allocation_ticker(ticker) else
             "etf_research_candidate" if is_benchmark else
             "individual_stock_candidate"
         )
         recommendation = (
             "hold_existing" if ticker in held else
-            "core_allocation_candidate" if ticker == "SPY" else
+            "core_allocation_candidate" if is_core_allocation_ticker(ticker) else
             "watch_for_allocation_review" if is_benchmark else
             "watch_for_valuation"
         )

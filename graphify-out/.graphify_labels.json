@@ -255,15 +255,10 @@
   "253": "MomentumReviewStatusTests",
   "254": "test_shadow_archive_isolation.py",
   "255": "MarketCoverageRecompositionTests",
-  "256": "decision_dependencies.py",
   "257": "test_cross_day_delivery.py",
   "258": "test_tactical_order_scopes.py",
-  "259": "equity_naming.py",
   "260": "shadow_evaluation_health",
-  "261": "measure_paths",
-  "262": "refresh_capital_work_queue",
   "263": "Handler",
-  "264": "maintained_plan",
-  "265": "test_shadow_archive_isolation.py",
-  "268": "OwnerSnapshotTests"
+  "268": "OwnerSnapshotTests",
+  "272": "ResearchSection.tsx"
 }

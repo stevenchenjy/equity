@@ -16,6 +16,7 @@ export type Plan = {
   purpose: Record<string, unknown>; sources: { path: string; sha256: string }[];
   draft: Record<string, unknown> | null; historical_draft: Record<string, unknown> | null;
   eligible_quantity: number;
+  asset_role?: string;
   display_summary?: {reason: SummaryPoint[]; counterargument: SummaryPoint[]; conditions: SummaryPoint[]} | null;
 };
 export type CapitalDecision = {
@@ -63,6 +64,7 @@ export type Snapshot = {
   account: { account_total_value: number | null; cash_available: number; invested_capital: number | null;
     last_updated: string; cash_basis: string; settled_cash_verified: boolean };
   positions: { ticker: string; shares: number; price: number | null; weight: number | null; role: string }[];
+  allocation?: {core_tickers:string[];core_minimum_pct:number;core_target_pct:number;stock_maximum_pct:number;core_weight_pct:number|null;policy_version:string}|null;
   plans: Plan[];
   candidates: { ticker: string; label: string; status: string; price: number;
     quantity: number; maximum_review_price: number | null; blockers: string; invalidation: string; valuation_source: string | null }[];

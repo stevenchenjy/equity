@@ -147,9 +147,10 @@ class LongHorizonResearchTests(unittest.TestCase):
             raise AssertionError(path)
         with patch.object(baseline, "read_csv", side_effect=inputs), \
              patch.object(baseline, "read_json", return_value=POLICY), \
-             patch.object(baseline, "requested_coverage_tickers", return_value=set()):
+             patch.object(baseline, "requested_coverage_tickers", return_value=set()), \
+             patch.object(baseline, "approved_core_tickers", return_value=("SPY", "QQQM")):
             selected, held = baseline.selected_tickers()
-        self.assertEqual(set(selected), {"QUIET", "LOUD", "HELD", "SPY"})
+        self.assertEqual(set(selected), {"QUIET", "LOUD", "HELD", "SPY", "QQQM"})
         self.assertEqual(held, {"HELD"})
 
     def test_new_adverse_material_filing_does_not_raise_score(self):

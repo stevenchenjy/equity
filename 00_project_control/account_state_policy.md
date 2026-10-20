@@ -33,7 +33,12 @@ below available cash, and make core/active/cash targets total 100%.
 Contribution-history fields need not equal current equity after market movement,
 cash flows, or fees and are never silently rewritten to force equality.
 
-Current positions require positive shares. Each held ticker and SPY require exactly one canonical B2 row with a positive price, `data_quality_label=ok`, source, and timestamp.
+Current positions require positive shares. Each held ticker requires exactly one
+canonical B2 row with a positive price, `data_quality_label=ok`, source, and
+timestamp. Each proposed SPY or QQQM entry also requires that fund's own validated
+row. A missing nonheld candidate price prevents that candidate's entry review;
+it must not invalidate another fund's verified holding or create an account-wide
+blocker. The separate market-provider benchmark preflight remains unchanged.
 
 Reported cash plus current holdings may differ from the last reported total because holdings are repriced while cash is manually maintained. C9 always exposes the difference and labels a material mismatch as a stale reported-total reference; sizing continues from cash plus current holdings. A missing or invalid cash/share input still fails closed.
 
@@ -47,8 +52,8 @@ metadata are zero. No additional external reserve amount is recorded or added
 to investment capital. This supersedes earlier reserve requirements; historical
 snapshots retain their original values. Cash is still limited by actual funds,
 order commitments, evidence and position limits. Allocation targets are
-subject to the subsequent [October 6 allocation policy](allocation_policy.md):
-30% broad-core minimum/baseline target, 70% aggregate stock target/maximum,
+subject to the [maintained allocation policy](allocation_policy.md), including
+the October 19 SPY-and-QQQM amendment: 30% combined index-core minimum/baseline target, 70% aggregate stock target/maximum,
 zero cash target and no fixed single-stock cap. A target is not a direction to
 buy without evidence or a statement of current broker funds.
 

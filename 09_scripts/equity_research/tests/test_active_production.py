@@ -114,7 +114,7 @@ class ActiveProductionTests(unittest.TestCase):
             valuation_display({
                 "valuation_applicability": "not_applicable_broad_market_etf"
             }),
-            "不适用（宽基 ETF 使用核心配置口径）",
+            "不适用（获批指数 ETF 使用合并底仓配置口径）",
         )
         self.assertEqual(valuation_display({"valuation_applicability": "not_applicable_etf"}),
                          "不适用（ETF 待基金与配置策略审阅）")

@@ -55,6 +55,16 @@ def validate_research_risk_limits(value: Any) -> dict[str, float | None]:
     return limits
 
 
+def validate_core_allocation_tickers(account: dict[str, Any]) -> tuple[str, ...]:
+    """Only explicitly approved index funds receive core allocation authority."""
+    tickers = account.get("core_allocation_tickers", ["SPY"])
+    if (not isinstance(tickers, list) or not tickers
+            or any(not isinstance(ticker, str) or ticker not in {"SPY", "QQQM"} for ticker in tickers)
+            or len(set(tickers)) != len(tickers)):
+        raise ActiveConfigError("core allocation tickers must be unique owner-approved SPY/QQQM symbols")
+    return tuple(tickers)
+
+
 def validate_allocation_targets(account: dict[str, Any]) -> dict[str, float]:
     """Validate an explicitly configured target set and its broad-core floor.
 
@@ -99,6 +109,7 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     if review_by < effective:
         raise ActiveConfigError("review_by cannot precede effective_from")
     account = config.get("account", {})
+    validate_core_allocation_tickers(account)
     targets = validate_allocation_targets(account)
     research_budget = config.get("workflow", {}).get("objective_research_max_tickers", 3)
     if type(research_budget) is not int or not 1 <= research_budget <= 10:

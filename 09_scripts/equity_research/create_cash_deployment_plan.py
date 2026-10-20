@@ -15,6 +15,8 @@ from account_common import (
     POST_ACTION_PORTFOLIO,
     TARGET_ALLOCATION_REPORT,
     append_run_log,
+    approved_core_tickers,
+    is_core_allocation_ticker,
     as_float,
     load_research_account_state,
     load_active_inhibit,
@@ -25,6 +27,7 @@ from account_common import (
     write_csv,
 )
 from portfolio_construction import core_starter_decision
+from daily_common import latest_published_market_session, now_et
 
 
 PLAN_FIELDS = [
@@ -83,14 +86,6 @@ def main() -> None:
     account = load_research_account_state()
     summary = load_portfolio_summary()
     construction_policy = load_active_config()["account"]
-    spy = load_market_rows(["SPY"])["SPY"]
-    spy_price = as_float(spy["last_price"], "SPY.last_price")
-    spy_high = as_float(spy["fifty_two_week_high"], "SPY.fifty_two_week_high")
-    spy_low = as_float(spy["fifty_two_week_low"], "SPY.fifty_two_week_low")
-    spy_packet = load_packets()["SPY"]
-    spy_technical = as_float(
-        spy_packet["technical_entry_discipline_score"], "SPY.technical"
-    )
     account_total = as_float(summary["account_total_value"], "account_total_value")
     cash = as_float(summary["cash_available"], "cash_available")
     reserve = as_float(summary["cash_reserved"], "cash_reserved")
@@ -112,98 +107,134 @@ def main() -> None:
         datetime.now(ZoneInfo("America/New_York")).date() + timedelta(days=1)
     ).isoformat()
     maintenance_active = inhibit.get("active") is True
-    core = core_starter_decision(
-        policy=construction_policy,
-        market_quality=spy["data_quality_label"],
-        technical_score=spy_technical,
-        current_price=spy_price,
-        fifty_two_week_high=spy_high,
-        fifty_two_week_low=spy_low,
-        account_total=account_total,
-        deployable_cash=deployable_cash,
-        current_core_value=current_core,
-        core_target_pct=core_target,
-        maintenance_active=maintenance_active,
-    )
-    shares = int(core["suggested_whole_shares"])
-    planned_amount = shares * spy_price
-    core_status = (
-        "minimum_satisfied" if core_minimum is not None and core_threshold_met else
-        "target_satisfied" if core_threshold_met else
-        "selected_review" if core["selected"] else
-        "blocked_maintenance" if core["blocked_only_by_maintenance"] else
-        "not_selected"
-    )
+    # Evaluate each approved fund independently. A bad unheld alternative must
+    # not block another fund, and alternatives never share the same buy quantity.
+    options = []
+    packets = load_packets()
+    expected_session = latest_published_market_session(now_et()).isoformat()
+    for ticker in approved_core_tickers():
+        source_issue = ""
+        price = 0.0
+        try:
+            if not is_core_allocation_ticker(ticker):
+                raise ValueError("approved core fund metadata is unverified")
+            market = load_market_rows([ticker])[ticker]
+            if market.get("market_session_date") != expected_session:
+                raise ValueError(f"completed close for {expected_session} is required")
+            price = as_float(market["last_price"], f"{ticker}.last_price")
+            high = as_float(market["fifty_two_week_high"], f"{ticker}.fifty_two_week_high")
+            low = as_float(market["fifty_two_week_low"], f"{ticker}.fifty_two_week_low")
+            technical = as_float(packets[ticker]["technical_entry_discipline_score"], f"{ticker}.technical")
+            if price <= 0 or high <= 0 or low < 0 or high <= low:
+                raise ValueError("positive price and ordered 52-week range required")
+            review = core_starter_decision(
+                policy=construction_policy, market_quality=market["data_quality_label"],
+                technical_score=technical, current_price=price,
+                fifty_two_week_high=high, fifty_two_week_low=low,
+                account_total=account_total, deployable_cash=deployable_cash,
+                current_core_value=current_core, core_target_pct=core_target,
+                maintenance_active=maintenance_active,
+            )
+        except (KeyError, ValueError, OSError) as exc:
+            source_issue = str(exc)
+            review = {"selected": False, "blocked_only_by_maintenance": False,
+                      "suggested_whole_shares": 0, "fifty_two_week_range_percentile": None,
+                      "cash_affordable_shares": 0, "target_gap_whole_shares": 0,
+                      "failed_gates": ["core_market_or_entry_evidence_unverified"]}
+        options.append({"ticker": ticker, "price": price, "review": review, "source_issue": source_issue})
+    # Configuration order retains the existing SPY-first starter preference.
+    # Approval to count either fund does not imply an automatic rotation or a
+    # second tranche when the combined floor is already satisfied.
+    selected = next((option for option in options if option["review"]["selected"]
+                     and not core_threshold_met), None)
+    chosen = selected or options[0]
+    core = chosen["review"]
+    core_ticker = chosen["ticker"]
+    core_price = chosen["price"]
+    shares = int(core["suggested_whole_shares"]) if selected else 0
+    core_status = ("minimum_satisfied" if core_minimum is not None and core_threshold_met else
+                   "target_satisfied" if core_threshold_met else
+                   "selected_review" if selected else "not_selected")
     cash_rationale = (
-        f"${reserve:.2f} is the strategic reserve; the remaining cash is staged capital. "
+        f"${reserve:.2f} is the mandatory internal reserve; the remaining cash is available for qualified opportunities. "
         "Individual stocks must still pass source-bound valuation and reward/risk gates; "
-        "whole-share constraints are calculated explicitly rather than leaving an accidental residual."
+        "whole-share constraints and the combined index-core floor are calculated explicitly."
     )
-    failed_text = ",".join(core["failed_gates"]) or "none"
+    failures = "; ".join(option["ticker"] + ":" + ",".join(option["review"]["failed_gates"])
+                         for option in options if option["review"]["failed_gates"])
+    plan_rows = [{
+        "plan_id": "retain_cash_fallback", "asset_role": "cash",
+        "ticker_or_category": "CASH", "tranche_number": "0",
+        "planned_shares": "0", "planned_amount": "0.00", "sizing_tier": "no_allocation",
+        "maximum_entry_condition": "Retain unassigned cash until a separate opportunity passes its current gates.",
+        "planned_review_date": review_date, "estimated_cash_released": "0.00",
+        "cash_remaining_after": f"{cash:.2f}",
+        "core_weight_after": f"{current_core / account_total * 100.0:.4f}",
+        "active_stock_weight_after": f"{active_weight:.4f}",
+        "fifty_two_week_range_percentile": "",
+        "status": "available_for_qualified_opportunities" if core_threshold_met else
+                  "fallback_option" if selected else "selected_cash_retention",
+        "cash_rationale": cash_rationale,
+        "reason": (
+            f"Combined index core already meets the {core_threshold:.0f}% "
+            f"{'minimum' if core_minimum is not None else 'target'}. Remaining cash is available for "
+            "independently qualified opportunities; no extra cash reserve is imposed by this status."
+        ) if core_threshold_met else (
+            "Each approved index fund is evaluated separately; only one starter can use the shared cash budget. "
+            f"Current fund checks: {failures or 'none'}."
+        ), "human_confirmation_required": "no",
+    }]
     core_policy = construction_policy["core_starter_review"]
-    entry_condition = (
-        f"SPY price <= ${spy_price:.2f}; data_quality=ok; technical_score >= "
-        f"{core_policy['minimum_entry_score']}; "
-        f"52-week range percentile <= {core_policy['maximum_52_week_range_percentile']}%; "
-        "maintenance_inhibit=false; reserve_preserved=true; independent_human_confirmation=yes"
-    )
-    core_pct = planned_amount / account_total * 100.0
-
-    plan_rows = [
-        {
-            "plan_id": "retain_cash_fallback", "asset_role": "cash",
-            "ticker_or_category": "CASH", "tranche_number": "0",
-            "planned_shares": "0", "planned_amount": "0.00",
-            "sizing_tier": "no_allocation",
-            "maximum_entry_condition": "Retain cash if any core or individual evidence gate fails before review.",
-            "planned_review_date": review_date, "estimated_cash_released": "0.00",
-            "cash_remaining_after": f"{cash:.2f}",
-            "core_weight_after": f"{current_core / account_total * 100.0:.4f}",
-            "active_stock_weight_after": f"{active_weight:.4f}",
-            "fifty_two_week_range_percentile": f"{core['fifty_two_week_range_percentile']:.2f}",
-            "status": "available_for_qualified_opportunities" if core_threshold_met else
-                      "fallback_option" if core["selected"] else "selected_cash_retention",
-            "cash_rationale": cash_rationale,
-            "reason": (
-                f"Broad core already meets the {core_threshold:.0f}% "
-                f"{'minimum' if core_minimum is not None else 'target'}. Remaining cash is available for "
-                "independently qualified opportunities; no extra cash reserve is imposed by this status."
-            ) if core_threshold_met else (
-                "Fail-closed cash alternative. It becomes the selected conclusion whenever refreshed "
-                f"core gates fail (current failed gates: {failed_text})."
-            ),
-            "human_confirmation_required": "no",
-        },
-        {
-            "plan_id": "core_starter_whole_share_review",
-            "asset_role": "core_allocation", "ticker_or_category": "SPY",
-            "tranche_number": "1", "planned_shares": str(shares),
-            "planned_amount": f"{planned_amount:.2f}",
-            "sizing_tier": "starter_allocation" if shares else "no_allocation",
+    for option in options:
+        ticker, price, review = option["ticker"], option["price"], option["review"]
+        status = ("minimum_satisfied" if core_minimum is not None and core_threshold_met else
+                  "target_satisfied" if core_threshold_met else
+                  "selected_review" if option is selected else
+                  "alternative_not_selected" if review["selected"] else
+                  "blocked_maintenance" if review["blocked_only_by_maintenance"] else "not_selected")
+        quantity = int(review["suggested_whole_shares"]) if option is selected else 0
+        amount = quantity * price
+        failed = list(review["failed_gates"])
+        if status == "alternative_not_selected":
+            failed.append("shared_core_starter_alternative_not_selected")
+        failed_text = ",".join(failed) or "none"
+        percentile = review["fifty_two_week_range_percentile"]
+        entry_condition = (
+            f"{ticker} price <= ${price:.2f}; data_quality=ok; technical_score >= "
+            f"{core_policy['minimum_entry_score']}; "
+            f"52-week range percentile <= {core_policy['maximum_52_week_range_percentile']}%; "
+            "maintenance_inhibit=false; reserve_preserved=true; independent_human_confirmation=yes"
+        ) if not option["source_issue"] else f"{ticker}: restore validated market and entry evidence before evaluating any buy price."
+        reason = (
+            f"Combined index core weight {current_core / account_total * 100.0:.4f}% meets the "
+            f"{core_threshold:.0f}% {'minimum' if core_minimum is not None else 'target'}. "
+            "No additional core tranche is proposed; exceeding a core minimum is not a trim instruction."
+        ) if core_threshold_met else (
+            f"{ticker}: {quantity} whole-share(s) selected from a shared one-fund starter review. "
+            f"Cash can fund {review['cash_affordable_shares']} share(s); the combined core gap needs "
+            f"{review['target_gap_whole_shares']} whole-share(s) at this fund's reference price. "
+            + (f"Evidence unavailable: {option['source_issue']}. " if option["source_issue"] else "")
+            + f"Failed gates: {failed_text}."
+        )
+        # Even when the allocation task is complete, preserve a fund-local
+        # missing-evidence observation rather than suggesting it was verified.
+        if core_threshold_met and option["source_issue"]:
+            reason += f" {ticker} evidence remains unverified: {option['source_issue']}."
+        plan_rows.append({
+            "plan_id": f"core_starter_whole_share_review:{ticker}",
+            "asset_role": "core_allocation", "ticker_or_category": ticker,
+            "tranche_number": "1", "planned_shares": str(quantity),
+            "planned_amount": f"{amount:.2f}",
+            "sizing_tier": "starter_allocation" if quantity else "no_allocation",
             "maximum_entry_condition": entry_condition,
             "planned_review_date": review_date, "estimated_cash_released": "0.00",
-            "cash_remaining_after": f"{cash - planned_amount:.2f}",
-            "core_weight_after": f"{(current_core + planned_amount) / account_total * 100.0:.4f}",
+            "cash_remaining_after": f"{cash - amount:.2f}",
+            "core_weight_after": f"{(current_core + amount) / account_total * 100.0:.4f}",
             "active_stock_weight_after": f"{active_weight:.4f}",
-            "fifty_two_week_range_percentile": f"{core['fifty_two_week_range_percentile']:.2f}",
-            "status": core_status, "cash_rationale": cash_rationale,
-            "reason": (
-                f"Current core weight {current_core / account_total * 100.0:.4f}% meets the "
-                f"{core_threshold:.0f}% {'minimum' if core_minimum is not None else 'target'}. "
-                "No additional core tranche is proposed; exceeding a core minimum is not a trim instruction."
-            ) if core_threshold_met else (
-                f"Current policy permits {shares} whole-share(s), {core_pct:.2f}% of the dynamic account. "
-                f"Cash can fund {core['cash_affordable_shares']} share(s); the remaining target gap "
-                f"can contain {core['target_gap_whole_shares']} whole-share(s). "
-                f"SPY is at the {core['fifty_two_week_range_percentile']:.2f}th percentile of its "
-                "52-week range, so the proposal is staged rather than sized to the full "
-                f"{core_target:.0f}% policy target. Failed gates: {failed_text}."
-            ),
-            "human_confirmation_required": (
-                "yes" if core_status == "selected_review" else "no"
-            ),
-        },
-    ]
+            "fifty_two_week_range_percentile": f"{percentile:.2f}" if percentile is not None else "",
+            "status": status, "cash_rationale": cash_rationale, "reason": reason,
+            "human_confirmation_required": "yes" if quantity else "no",
+        })
 
     actions = read_csv(EXACT_ACTION_PLAN)
     released_cash = sum(
@@ -217,19 +248,19 @@ def main() -> None:
         for row in actions
         if row.get("asset_role") == "active_stock"
     )
-    selected_core_shares = shares if core["selected"] else 0
+    selected_core_shares = shares
     post_rows = [
         _post_action_row(
             scenario="current_portfolio", account_total=account_total,
             current_cash=cash, released_cash=0.0, core_ticker="", core_shares=0,
-            core_price=spy_price, current_core_value=current_core,
+            core_price=core_price, current_core_value=current_core,
             active_value=active_value, status="current",
-            retained_cash_reason="Current cash includes the strategic reserve and capital not yet assigned by evidence-supported reviews.",
+            retained_cash_reason=f"Current cash includes the ${reserve:.2f} mandatory internal reserve and capital not yet assigned by evidence-supported reviews.",
         ),
         _post_action_row(
             scenario="after_current_position_reviews", account_total=account_total,
             current_cash=cash, released_cash=released_cash, core_ticker="",
-            core_shares=0, core_price=spy_price, current_core_value=current_core,
+            core_shares=0, core_price=core_price, current_core_value=current_core,
             active_value=active_after_reviews,
             status="hypothetical_human_reviews_only",
             retained_cash_reason="Released capital remains cash unless a separate opportunity passes its own current gates.",
@@ -237,12 +268,12 @@ def main() -> None:
         _post_action_row(
             scenario="after_position_and_core_reviews", account_total=account_total,
             current_cash=cash, released_cash=released_cash,
-            core_ticker="SPY" if selected_core_shares else "",
-            core_shares=selected_core_shares, core_price=spy_price,
+            core_ticker=core_ticker if selected_core_shares else "",
+            core_shares=selected_core_shares, core_price=core_price,
             current_core_value=current_core, active_value=active_after_reviews,
             status="hypothetical_selected_reviews" if selected_core_shares else "core_not_selected",
             retained_cash_reason=(
-                f"Retains the ${reserve:.2f} strategic reserve plus staged cash because no individual-stock "
+                f"Retains the ${reserve:.2f} mandatory internal reserve plus available cash because no individual-stock "
                 "candidate may receive capital without independent valuation and reward/risk support."
             ),
         ),
@@ -256,9 +287,9 @@ def main() -> None:
             "target_value": f"{account_total * core_target / 100.0:.2f}",
             "allocation_gap_value": f"{account_total * core_target / 100.0 - current_core:.2f}",
             "policy_status": ("minimum_satisfied" if core_minimum is not None else "target_satisfied") if core_threshold_met else
-                             "below_minimum_starter_review" if core_minimum is not None and core["selected"] else
+                             "below_minimum_starter_review" if core_minimum is not None and selected else
                              "below_minimum_unfunded" if core_minimum is not None else
-                             "below_target_starter_review" if core["selected"] else "below_target_unfunded",
+                             "below_target_starter_review" if selected else "below_target_unfunded",
             "calculation_basis": "dynamic effective total; whole-share core review is staged and never automatic",
         },
         {
@@ -289,7 +320,8 @@ def main() -> None:
         [CASH_DEPLOYMENT_PLAN, TARGET_ALLOCATION_REPORT, POST_ACTION_PORTFOLIO],
         position_count=len(read_csv(DYNAMIC_WEIGHTS)),
         notes=(
-            f"core_candidate=SPY; core_status={core_status}; proposed_whole_shares={shares}; "
+            f"core_candidates={','.join(approved_core_tickers())}; selected_core={core_ticker if selected else 'none'}; "
+            f"core_status={core_status}; proposed_whole_shares={shares}; "
             f"estimated_released_cash={released_cash:.2f}; automatic_selection=no"
         ),
     )

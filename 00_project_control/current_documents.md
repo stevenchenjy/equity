@@ -1,6 +1,6 @@
 # Equity Research — current document entrypoints
 
-Reviewed 2026-10-14 ET. This index locates maintained guidance and generated
+Reviewed 2026-10-19 ET. This index locates maintained guidance and generated
 outputs; it does not freeze balances, test counts, call counts, schedules, or
 open-item counts. Verify the current branch, files, runtime timestamps and
 relevant checks before relying on any linked claim.
@@ -14,7 +14,7 @@ relevant checks before relying on any linked claim.
 - [Repository layout and path ownership](repository_layout.md): source/runtime/generated boundaries, archive recovery and retained compatibility paths.
 
 - [Equity Research naming decision and migration plan](equity_naming_policy.md): fixed user-facing name and functional naming rules; display names are centralized; legacy technical identifiers remain compatible.
-- [Owner-approved allocation policy](allocation_policy.md): October 6 replacement standard — broad core at least 30%, individual stocks up to 70%, zero cash target/reserve and no fixed single-stock cap; strategy-specific risk and execution controls remain.
+- [Owner-approved allocation policy](allocation_policy.md): October 6 allocation standard with October 19 core-membership amendment — SPY and QQQM together satisfy the 30% index-core minimum/baseline, individual stocks up to 70%, zero cash target/reserve and no fixed single-stock cap; no prescribed fund split or automatic rotation, and strategy-specific risk/execution controls remain.
 - [Active production configuration](active_production_config.json): active paths and deterministic production controls.
 - [Momentum integration decision](momentum_integration_20260927.md), [experimental parameters](../01_policies/momentum_experiment.json) and [position-purpose reassessment](position_purpose_reassessment.md): autonomous research without changing allocation, risk caps or trade authority.
 - [SHADOW evaluation configuration](shadow_llm_config.json) and [policy](shadow_llm_evaluation_policy.md): evaluation allowance, routing, measurements, and future authority-review thresholds.
