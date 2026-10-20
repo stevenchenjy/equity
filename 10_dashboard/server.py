@@ -301,6 +301,11 @@ def current_snapshot(root, *, research_busy=False):
         positions = list(csv.DictReader(io.StringIO(safe_read(root,POSITIONS).decode())))
         market = {r['ticker']:r for r in csv.DictReader(io.StringIO(safe_read(root,MARKET).decode()))}
         d = json.loads(safe_read(root,DECISION))
+        # A collector can replace prices before the completed publication moves
+        # to its new session. Never label incoming marks as the preceding close.
+        expected_session=d.get('market_gate',{}).get('expected_market_session')
+        market={ticker:r for ticker,r in market.items() if r.get('data_quality_label')=='ok'
+                and expected_session and r.get('market_session_date')==expected_session}
         known = all(market.get(r['ticker'],{}).get('data_quality_label')=='ok' for r in positions)
         invested = sum(float(r['shares_optional'])*float(market[r['ticker']]['last_price']) for r in positions) if known else None
         total = float(a['cash_available'])+invested if known else None

@@ -69,6 +69,15 @@ class SnapshotTests(unittest.TestCase):
         old=read_snapshot(self.root,self.now)['orders']['rows'][0]
         self.assertIsNone(old['order_type']);self.assertIsNone(old['time_in_force']);self.assertIsNone(old['session_date'])
 
+    def test_busy_snapshot_does_not_mislabel_incoming_session_prices(self):
+        from server import current_snapshot
+        self.put(MARKET,'ticker,last_price,market_session_date,data_quality_label\nABC,999,2026-09-30,ok\n')
+        result=current_snapshot(self.root,research_busy=True)
+        self.assertEqual(result['account']['cash_available'],1000)
+        self.assertIsNone(result['account']['account_total_value'])
+        self.assertIsNone(result['positions'][0]['price'])
+        self.assertEqual(result['plans'],[])
+
     def test_recomposition_fallback_keeps_exact_gates_and_withholds_drafts(self):
         from daily_common import canonical_sha256
         from server import current_snapshot
