@@ -60,6 +60,60 @@ def decision():
 
 
 class OptionalRotationEmailTests(unittest.TestCase):
+    def assessed(self, verdict='proceed'):
+        d=decision();r=d['plan_continuity']['plans'][0]['conditional_rotation_review']
+        r['assessment']=dict(decision=verdict,reviewed_at='2026-10-20T09:00:00-04:00',market_session='2026-10-19',
+            reason='Fresh assessment: sequencing risk is not attractive.' if verdict!='proceed' else 'Current reviewed allocation case.',sources=r['sources'],
+            prices={'QQQM':290,'SPY':763.25},market_snapshot=dict(path='receipt.json',sha256=d['capital_decision']['source_bindings']['03_source_data/equity_research/market_data_snapshot.csv']))
+        d['watch_candidates']=[dict(ticker='QQQM',current_price=290)]
+        return d
+
+    def test_pending_or_adverse_review_leads_skip_without_positive_pair_cards(self):
+        for verdict in ('pending','skip'):
+            d=self.assessed(verdict)
+            for text in render_email(d)[1:]:
+                self.assertLess(text.index('Skip the rotation'),text.index('HOLD — SPY'))
+                self.assertIn('sequencing risk is not attractive',text)
+                self.assertNotIn('OPTIONAL ROTATION · BUY',text)
+                self.assertNotIn('PAIRED SECOND STEP · SELL',text)
+
+    def test_supported_review_still_needs_both_fixed_prices_and_same_latest_session(self):
+        d=self.assessed();self.assertEqual(len(optional_rotation_cards(d)),3)
+        for ticker,price in (('QQQM',292.27),('SPY',763.24)):
+            changed=copy.deepcopy(d)
+            changed['plan_continuity']['plans'][0]['conditional_rotation_review']['assessment']['prices'][ticker]=price
+            cards=optional_rotation_cards(changed)
+            self.assertEqual([x['title'] for x in cards],['Skip the rotation'])
+            self.assertIn('unchanged price limits',cards[0]['body'])
+        d['market_gate']['expected_market_session']='2026-10-16'
+        self.assertEqual(optional_rotation_cards(d)[0]['title'],'Skip the rotation')
+
+    def test_unverified_or_missing_price_pair_cannot_reactivate_review(self):
+        for change in ('missing','quality','stale_assessment','changed_snapshot'):
+            d=self.assessed()
+            if change=='missing':d['plan_continuity']['plans'][0]['conditional_rotation_review']['assessment']['prices']={}
+            if change=='quality':d['market_gate']['passed']=False
+            if change=='stale_assessment':d['plan_continuity']['plans'][0]['conditional_rotation_review']['assessment']['market_session']='2026-10-16'
+            if change=='changed_snapshot':d['plan_continuity']['plans'][0]['conditional_rotation_review']['assessment']['market_snapshot']['sha256']='0'*64
+            self.assertEqual(optional_rotation_cards(d)[0]['title'],'Skip the rotation')
+
+    def test_writer_rejects_looser_price_limits_or_later_deadline_on_reassessment(self):
+        row=rotation_plan();review=row['conditional_rotation_review']
+        review['assessment']=dict(decision='pending',reviewed_at=row['recorded_at'],market_session='2026-10-16',reason='Await the next validated close.',sources=copy.deepcopy(row['sources']),prices={'SPY':763.25,'QQQM':292.26},market_snapshot=copy.deepcopy(row['sources'][0]))
+        first=append_plan({'schema_version':SCHEMA,'records':[]},row)
+        invalid=copy.deepcopy(row);invalid['conditional_rotation_review']['assessment']['decision']='proceed'
+        with self.assertRaisesRegex(ValueError,'latest_completed_session_required'):validate_record(invalid)
+        for change in ('higher_buy','lower_sell','more_shares','later_deadline','removed_assessment'):
+            next_row=copy.deepcopy(row)
+            r=next_row['conditional_rotation_review']
+            if change=='higher_buy':r['buy']['maximum_price']=293
+            if change=='lower_sell':r['sell']['minimum_price']=760
+            if change=='more_shares':r['buy']['quantity']=3
+            if change=='later_deadline':
+                r['ends_at']='2026-10-20T10:45:00-04:00';next_row.update(review_at=r['ends_at'],valid_until=r['ends_at'])
+            if change=='removed_assessment':r.pop('assessment')
+            with self.assertRaisesRegex(ValueError,'cannot_loosen_owner_conditions|cannot_remove_assessment'):append_plan(first,next_row)
+
     def test_writer_binds_optional_pair_without_making_an_order(self):
         row=rotation_plan(); first=append_plan({'schema_version':SCHEMA,'records':[]},row)
         self.assertEqual(first['records'][0]['version'],1)

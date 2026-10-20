@@ -176,6 +176,37 @@ def _validate_rotation_review(row: dict[str, Any], root: Path | None = None) -> 
                 or float(config["account"]["core_minimum_pct"]) != review["minimum_combined_core_pct"]):
             raise ValueError("plan_rotation_review_core_policy_invalid")
     _bound_sources(review, row, "plan_rotation_review")
+    assessment = review.get("assessment")
+    if assessment is not None:
+        _required_text(assessment, ("decision", "reviewed_at", "market_session", "reason"), "plan_rotation_assessment")
+        if (assessment["decision"] not in {"pending", "proceed", "skip"}
+                or stamp(assessment["reviewed_at"]) > stamp(row["recorded_at"])
+                or date.fromisoformat(assessment["market_session"]) > stamp(assessment["reviewed_at"]).date()):
+            raise ValueError("plan_rotation_assessment_invalid")
+        regular_close(assessment["market_session"])
+        if assessment["decision"] == "proceed":
+            from daily_common import last_completed_market_session
+            if assessment["market_session"] != last_completed_market_session(stamp(row["recorded_at"])).isoformat():
+                raise ValueError("plan_rotation_assessment_latest_completed_session_required")
+        _bound_sources(assessment, row, "plan_rotation_assessment")
+        snapshot = assessment.get("market_snapshot")
+        if not isinstance(snapshot, dict) or snapshot not in assessment["sources"]:
+            raise ValueError("plan_rotation_assessment_snapshot_required")
+        prices = assessment.get("prices", {})
+        if not isinstance(prices, dict) or set(prices) != {buy["ticker"], sell["ticker"]}:
+            raise ValueError("plan_rotation_assessment_price_pair_required")
+        if any(isinstance(v, bool) or not math.isfinite(float(v)) or float(v) <= 0 for v in prices.values()):
+            raise ValueError("plan_rotation_assessment_price_invalid")
+        if root is not None:
+            import csv
+            with (root / snapshot["path"]).open() as handle:
+                quoted = [r for r in csv.DictReader(handle) if r.get("ticker") in prices]
+            if (len(quoted) != 2 or {r["ticker"] for r in quoted} != set(prices)
+                    or any(r.get("market_session_date") != assessment["market_session"]
+                           or r.get("data_quality_label") != "ok" or not r.get("data_source")
+                           or stamp(r.get("data_timestamp")) > stamp(assessment["reviewed_at"])
+                           or float(r.get("last_price", 0)) != float(prices[r["ticker"]]) for r in quoted)):
+                raise ValueError("plan_rotation_assessment_snapshot_pair_mismatch")
 
 
 def _expired_at(row: dict[str, Any], current: datetime) -> bool:
@@ -204,6 +235,17 @@ def _validate_append_transition(payload: dict[str, Any], latest: dict[str, dict[
         if "reassessment" in proposal:
             raise ValueError("plan_reassessment_has_no_prior")
         return
+    old_rotation = previous.get("conditional_rotation_review")
+    new_rotation = proposal.get("conditional_rotation_review")
+    if old_rotation and new_rotation and (old_rotation.get("assessment") or new_rotation.get("assessment")):
+        if old_rotation.get("assessment") and not new_rotation.get("assessment"):
+            raise ValueError("plan_rotation_reassessment_cannot_remove_assessment")
+        if (any(new_rotation[side][field] != old_rotation[side][field]
+                for side in ("buy", "sell") for field in ("ticker", "quantity"))
+                or float(new_rotation["buy"]["maximum_price"]) > float(old_rotation["buy"]["maximum_price"])
+                or float(new_rotation["sell"]["minimum_price"]) < float(old_rotation["sell"]["minimum_price"])
+                or stamp(new_rotation["ends_at"]) > stamp(old_rotation["ends_at"])):
+            raise ValueError("plan_rotation_reassessment_cannot_loosen_owner_conditions")
     changed_purpose = (proposal["role"] != previous["role"]
                        or proposal.get("strategy_horizon") != previous.get("strategy_horizon")
                        or proposal.get("purpose") != previous.get("purpose"))
@@ -346,6 +388,11 @@ def append_plan(payload: dict[str, Any], proposal: dict[str, Any], *, root: Path
     if any(key in proposal for key in ("version", "record_hash", "previous_hash", "supersedes")):
         raise ValueError("plan_writer_owns_version_fields")
     validate_record(proposal, root=root)
+    assessment = (proposal.get("conditional_rotation_review") or {}).get("assessment")
+    if root is not None and assessment:
+        if assessment["market_snapshot"]["sha256"] != hashlib.sha256(
+                (root / "03_source_data/equity_research/market_data_snapshot.csv").read_bytes()).hexdigest():
+            raise ValueError("plan_rotation_assessment_canonical_snapshot_changed")
     _validate_append_transition(payload, latest, proposal)
     prior = latest.get(proposal["plan_id"])
     row = copy.deepcopy(proposal)

@@ -45,6 +45,17 @@ These review cards do not create capital-contract order drafts or assumed
 fills, promote a strategy, change risk limits, or authorize an extra send.
 Keep the existing morning delivery window and the original dated deadline.
 
+October 19 reassessment instruction: before the October 20 morning email, the
+existing analyst follow-up must reassess the latest validated price pair and
+the sequencing/concentration risk. A source-bound `assessment` inside the
+optional review records `pending`, `skip` or `proceed`, its actual review time,
+market session, reason and bound sources. Pending, adverse, missing or newly
+stale assessments lead with "Skip the rotation" and display no positive pair
+cards. A positive assessment also requires a coherent latest validated close
+inside both unchanged price conditions; it does not verify live quotes. The
+writer must not raise the buy ceiling, lower the sell floor, increase quantities
+or extend the deadline during reassessment. No extra email or order follows.
+
 The owner asked for clear current actions and prices, with no buzz sections or
 instructions merely to “assess” stocks. Ordinary emails must lead with the
 current decision, then each holding's admitted hold/reduce/protect/exit intent,

@@ -48,6 +48,36 @@ def optional_rotation_cards(decision):
                 or not {buy['ticker'], sell['ticker']} <= core
                 or policy.get('core_minimum_pct') != review['minimum_combined_core_pct']):
             continue
+        assessment = review.get('assessment')
+        if assessment:
+            reason = assessment['reason'] if assessment['decision'] != 'proceed' else ''
+            session = decision.get('market_gate', {}).get('expected_market_session')
+            if not reason:
+                from daily_common import last_completed_market_session
+                if (assessment['market_session'] != session
+                        or session != last_completed_market_session(current).isoformat()
+                        or decision.get('market_gate', {}).get('passed') is not True
+                        or assessment.get('market_snapshot', {}).get('sha256') != c.get('source_bindings', {}).get(
+                            '03_source_data/equity_research/market_data_snapshot.csv')):
+                    reason = 'The latest required validated close has not received a current rotation assessment.'
+            if not reason:
+                prices = assessment.get('prices', {})
+                try:
+                    q, s = Decimal(str(prices[buy['ticker']])), Decimal(str(prices[sell['ticker']]))
+                    if not q.is_finite() or not s.is_finite() or min(q, s) <= 0:
+                        raise ValueError('price_unverified')
+                    if q > Decimal(str(buy['maximum_price'])) or s < Decimal(str(sell['minimum_price'])):
+                        reason = 'The latest validated closing prices do not meet both unchanged price limits. Do not chase the rotation.'
+                except (KeyError, ValueError, InvalidOperation):
+                    reason = 'A coherent validated price pair is unavailable; do not substitute old or unverified quotes.'
+            if reason:
+                result.append(dict(title='Skip the rotation', group='action', kind='inactive',
+                    headline='No QQQM purchase or SPY sale is recommended by this review',
+                    body='Reason: '+reason+'\n'
+                         +f"Limits remain fixed: QQQM buy maximum ${float(buy['maximum_price']):.2f}; SPY sell minimum ${float(sell['minimum_price']):.2f}. Do not raise the buy limit or lower the sell floor.\n"
+                         +'Next step: The scheduled morning analyst must reassess the latest validated close and the sequencing/concentration risk before any positive action cards return.\n'
+                         +'Holdings: Keep the locally recorded holdings unless you report actual changes. No order or fill is inferred.', sources=[]))
+                continue
         try:
             unchanged = all(Decimal(str(held.get(ticker, {}).get('current_shares', 0))) == Decimal(str(qty))
                             for ticker, qty in review['expected_holdings'].items())
@@ -86,10 +116,11 @@ def cards(decision, view=None):
     c=decision['capital_decision'];validate(c,current=datetime.fromisoformat(decision['generated_at']))
     result=[]
     rotations=optional_rotation_cards(decision)
+    skip_rotation=any(r['title']=='Skip the rotation' for r in rotations)
     actionable=[r for r in c['decisions'] if r['order_draft']]
     result.append(dict(title="TODAY'S ACTION",group='action',kind='buy' if actionable else 'inactive',
-                       headline='OPTIONAL CONDITIONAL ROTATION · You may skip' if rotations else 'EXACT CONDITIONAL ORDER DRAFTS' if actionable else 'NO NEW POSITION',
-                       body='Read the paired BUY / SELL conditions first. Skip unfavorable prices or excessive risk. You decide and place any orders yourself.' if rotations else 'Review the complete drafts below, then manually enter any approved order in Chase.' if actionable else
+                       headline='Skip the rotation' if skip_rotation else 'OPTIONAL CONDITIONAL ROTATION · You may skip' if rotations else 'EXACT CONDITIONAL ORDER DRAFTS' if actionable else 'NO NEW POSITION',
+                       body='Do not force the SPY / QQQM pair. Its fixed limits and original deadline remain unchanged.' if skip_rotation else 'Read the paired BUY / SELL conditions first. Skip unfavorable prices or excessive risk. You decide and place any orders yourself.' if rotations else 'Review the complete drafts below, then manually enter any approved order in Chase.' if actionable else
                        'Buy/add 0 new shares in this cycle. The exact reasons and next steps follow.',sources=[]))
     result.extend(rotations)
     for side in ('buy', 'sell'):
