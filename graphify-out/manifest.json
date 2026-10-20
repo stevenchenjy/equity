@@ -730,8 +730,8 @@
     "semantic_hash": "d26809fbbfdd5b8746f4d9d79d3daa50"
   },
   "00_project_control/current_documents.md": {
-    "mtime": 1792463578.1034153,
-    "ast_hash": "25078c0037a3b0ee83e178da29bb76c1",
+    "mtime": 1792512110.4980917,
+    "ast_hash": "66a9e8c57fc2b0f96e821db6d066be63",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/email_brief.py": {
@@ -1490,8 +1490,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/App.tsx": {
-    "mtime": 1792463362.0105298,
-    "ast_hash": "a797262704a072cbd8d1a503acd5869c",
+    "mtime": 1792511987.1207986,
+    "ast_hash": "352a31e4f1e7fc0dcb4e5a8b60a15d67",
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.test.ts": {
@@ -1555,8 +1555,8 @@
     "semantic_hash": "ed46b9785d345736c59d31423d4abec4"
   },
   "10_dashboard/feedback.py": {
-    "mtime": 1792213848.651948,
-    "ast_hash": "4ae6956563c0c6868573dc2ca0ba3dd8",
+    "mtime": 1792512048.7273726,
+    "ast_hash": "938bd79f85e838dc78e02eabf862543e",
     "semantic_hash": ""
   },
   "10_dashboard/install_service.py": {
@@ -1575,8 +1575,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/tests/test_feedback.py": {
-    "mtime": 1792213808.5448432,
-    "ast_hash": "9aac0bf6871cf0c7457280e49ac96580",
+    "mtime": 1792512048.7288926,
+    "ast_hash": "9961c02fef395712f816b37f72a7f057",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/dashboard_publication.py": {
@@ -2015,13 +2015,13 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/feedbackRequest.test.ts": {
-    "mtime": 1792212854.2017539,
-    "ast_hash": "c7733261c06cd61303407bc2be2be1c5",
+    "mtime": 1792512048.7340019,
+    "ast_hash": "e379b968f853dfffe58bfabf1a5d8a14",
     "semantic_hash": ""
   },
   "10_dashboard/src/feedbackRequest.ts": {
-    "mtime": 1792212789.550357,
-    "ast_hash": "db5455ff753191479dba0e7b512c8771",
+    "mtime": 1792511987.1205087,
+    "ast_hash": "34b33eb8a49a8d2dedb99902f4fac2bb",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_index_core_authority.py": {
@@ -2102,6 +2102,11 @@
   "00_project_control/market_feed_backup.md": {
     "mtime": 1792463578.0990896,
     "ast_hash": "81d37ec79383daefba1438741f020879",
+    "semantic_hash": ""
+  },
+  "00_project_control/feedback_intake.md": {
+    "mtime": 1792512048.734595,
+    "ast_hash": "8a67bee1df0aedc37ed7de0c37f50dea",
     "semantic_hash": ""
   }
 }

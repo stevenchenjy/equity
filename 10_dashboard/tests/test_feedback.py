@@ -12,7 +12,7 @@ class FeedbackTests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory(); self.addCleanup(self.temp.cleanup)
         self.root=Path(self.temp.name)
-        self.store=Store(self.root,self.root/'runtime.lock',refresh=False)
+        self.store=Store(self.root,self.root/'runtime.lock',refresh=False,intake_quiet_seconds=0)
         self.put(ACCOUNT,dict(account_total_value=1200,prior_account_value=1200,new_external_cash=0,cash_available=1000,cash_reserved=0,
             investment_horizon_years=5,cash_needed_within_three_years='no',core_allocation_target_pct=50,active_stock_target_pct=30,
             active_stock_hard_cap_pct=40,cash_target_pct=20,single_stock_default_cap_pct=10,single_stock_hard_cap_pct=20,
@@ -364,6 +364,57 @@ class FeedbackTests(unittest.TestCase):
             self.store.work_once()
         self.assertEqual(self.store.history()[0]['research_status'],'failed')
         self.assertEqual(before,{p:(self.root/p).read_bytes() for p in before})
+
+    def test_consecutive_fills_stay_available_before_one_bounded_research_batch(self):
+        import subprocess
+        from datetime import timedelta
+        from zoneinfo import ZoneInfo
+        self.store.intake_quiet_seconds=90
+        self.store.refresh=True
+        first=self.submit(self.total_payload(amount='100'))
+        started=datetime.fromisoformat(first['recorded_at'])
+        with patch('feedback.datetime',wraps=datetime) as clock,patch('feedback.subprocess.run') as child:
+            clock.now.return_value=started+timedelta(seconds=60)
+            self.assertFalse(self.store.work_once())
+            # Preview and apply the next entry while public research is deferred.
+            second=self.submit(self.total_payload(side='sell',shares='1',amount='110'))
+            self.assertEqual(second['changes']['cash_after'],1010)
+            clock.now.return_value=started+timedelta(seconds=100)
+            restarted=Store(self.root,self.root/'runtime.lock')
+            self.assertFalse(restarted.work_once())
+            child.assert_not_called()
+            before={p:(self.root/p).read_bytes() for p in (ACCOUNT,POSITIONS,LEDGER)}
+            clock.now.return_value=started+timedelta(seconds=150)
+            child.side_effect=subprocess.TimeoutExpired('public research',1800)
+            self.assertTrue(self.store.work_once())
+            self.assertEqual(child.call_count,1)
+        self.assertEqual(before,{p:(self.root/p).read_bytes() for p in before})
+        self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),2)
+        self.assertTrue(all(r['research_status']=='failed' for r in self.store.history()))
+
+    def test_continuous_intake_and_interrupted_runs_cannot_starve_research(self):
+        from datetime import timedelta
+        first=datetime.now().astimezone()
+        records=[{'stage':'applied','research_status':'queued','recorded_at':first.isoformat()},
+                 {'stage':'applied','research_status':'queued','recorded_at':(first+timedelta(seconds=170)).isoformat()}]
+        self.store.intake_quiet_seconds=90
+        with patch('feedback.datetime',wraps=datetime) as clock:
+            clock.now.return_value=first+timedelta(seconds=179)
+            self.assertTrue(self.store.intake_waiting(records))
+            clock.now.return_value=first+timedelta(seconds=180)
+            self.assertFalse(self.store.intake_waiting(records))
+            records[0]['research_status']='running'
+            clock.now.return_value=first+timedelta(seconds=175)
+            self.assertFalse(self.store.intake_waiting(records))
+
+    def test_intake_is_rechecked_after_acquiring_the_research_lock(self):
+        self.submit(self.total_payload())
+        self.store.refresh=True
+        with patch.object(self.store,'intake_waiting',side_effect=[False,True]) as waiting,patch('feedback.subprocess.run') as child:
+            self.assertFalse(self.store.work_once())
+            self.assertEqual(waiting.call_count,2)
+            child.assert_not_called()
+        self.assertEqual(self.store.history()[0]['research_status'],'queued')
 
     def test_all_cash_keeps_public_watchlist_research_without_invented_holdings(self):
         import refresh_daily_evidence as evidence

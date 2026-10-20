@@ -45,6 +45,11 @@ MARKET = '03_source_data/equity_research/market_data_snapshot.csv'
 MANUAL = '05_risk_and_positions/manual_account_snapshot.local.json'
 SYMBOL = re.compile(r'[A-Z][A-Z0-9.\-]{0,11}')
 CENT = Decimal('.01')
+# Keep a short intake window after an accepted record so the next human fill
+# does not immediately race a long public-research job. Account writes still
+# use both existing locks, and a continuous batch cannot defer research forever.
+INTAKE_QUIET_SECONDS = 90
+INTAKE_MAX_BATCH_SECONDS = 180
 
 
 class FeedbackError(ValueError):
@@ -148,8 +153,10 @@ def atomic(root, rel, content):
 
 
 class Store:
-    def __init__(self, root: Path, runtime_lock: Path, *, refresh=True):
+    def __init__(self, root: Path, runtime_lock: Path, *, refresh=True,
+                 intake_quiet_seconds=INTAKE_QUIET_SECONDS):
         self.root, self.runtime_lock, self.refresh = root.resolve(), runtime_lock, refresh
+        self.intake_quiet_seconds = intake_quiet_seconds
         self.mutex = threading.RLock()
         self.wake = threading.Event()
 
@@ -504,6 +511,7 @@ class Store:
                 stage='pending' if missing else 'applied', research_status='queued' if f['status']!='skipped' else 'not_needed',
                 production_effect=not missing and f['status']!='skipped', changes=None if missing else changes,
                 request_id=request_id, email_sent=False)
+            record['research_requested_at'] = now.isoformat()
             record['email_version_id']=payload.get('email_version_id') or (old.get('email_version_id') if old else None)
             record['correction'] = payload.get('correction')
             if not missing:
@@ -584,6 +592,7 @@ class Store:
             r = json.loads(row[0])
             if r.get('research_status') not in {'failed','degraded'}: raise FeedbackError('research_not_retryable',status=409)
             r['research_status']='queued'; r.pop('error',None)
+            r['research_requested_at']=datetime.now(ET).isoformat()
             con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),record_id)); con.commit()
         self.wake.set()
         return r
@@ -728,11 +737,24 @@ class Store:
             return self._save_review(con,request)
 
     def work_once(self):
+        # Read the durable outbox without taking the long research locks. This
+        # delays research only; saved facts and preview/submit remain available.
+        # Prepared writes and interrupted runs bypass the quiet window so their
+        # existing recovery path is never delayed by newer form activity.
+        with self.db() as con:
+            prepared = con.execute("SELECT 1 FROM requests WHERE state='prepared' LIMIT 1").fetchone()
+            queued = [json.loads(r[0]) for r in con.execute('SELECT body FROM records')]
+        queued = [r for r in queued if r['research_status'] in {'queued','running'}
+                  and r['stage'] in {'pending','applied'}]
+        if not prepared and self.intake_waiting(queued):
+            return False
         with self.locked(), self.db() as con:
             self.recover(con)
             pending = [json.loads(r[0]) for r in con.execute('SELECT body FROM records')]
             pending = [r for r in pending if r['research_status'] in {'queued','running'} and r['stage'] in {'pending','applied'}]
             if not pending: return False
+            # A new fill may have arrived after the unlocked outbox check.
+            if not prepared and self.intake_waiting(pending): return False
             for r in pending:
                 r['research_status']='running'
                 con.execute('UPDATE records SET body=? WHERE id=?',(encoded(r).decode(),r['id']))
@@ -776,6 +798,19 @@ class Store:
                 con.execute('INSERT INTO events(record_id,body) VALUES(?,?)',(r['id'],encoded(r).decode()))
             con.commit()
             return True
+
+    def intake_waiting(self, records):
+        if not records or any(r['research_status']=='running' for r in records):
+            return False
+        try:
+            stamps=[datetime.fromisoformat(r.get('research_requested_at',r['recorded_at'])) for r in records]
+            current=datetime.now(ET)
+            newest=(current-max(stamps)).total_seconds()
+            oldest=(current-min(stamps)).total_seconds()
+            return (0 <= newest < self.intake_quiet_seconds
+                    and 0 <= oldest < INTAKE_MAX_BATCH_SECONDS)
+        except (TypeError,ValueError):
+            return False  # Invalid clocks cannot create an unbounded deferral.
 
     def worker(self):
         while True:

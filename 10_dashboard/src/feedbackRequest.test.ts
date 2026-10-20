@@ -67,3 +67,13 @@ test('leaving during a snapshot read cannot start an abandoned preview',async()=
   await assert.rejects(preparePreview(payload(),async()=>{controller.abort();return snapshot()},async()=>{previews++;return preview},{...options(),signal:controller.signal}),e=>e instanceof Error&&e.name==='AbortError');
   assert.equal(previews,0);
 });
+
+test('busy status reports actual elapsed time without changing the original request',async()=>{
+  const originalNow=Date.now;let now=1000,calls=0;const elapsed:number[]=[];
+  try {
+    Date.now=()=>now;
+    const result=await waitForResearch(async()=>{if(++calls<3)throw busy();return 'saved'},
+      {...options(),onWaiting:seconds=>elapsed.push(seconds),delay:async()=>{now+=3000}});
+    assert.equal(result,'saved');assert.deepEqual(elapsed,[0,3]);
+  } finally {Date.now=originalNow}
+});

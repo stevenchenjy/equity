@@ -135,6 +135,7 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, onSnapshot,
   const submitting = useRef(false);
   const activeRequest = useRef<AbortController|null>(null);
   const [waiting,setWaiting]=useState(false);
+  const [waitSeconds,setWaitSeconds]=useState(0);
   useEffect(()=>()=>activeRequest.current?.abort(),[]);
   const savedSignature = useRef<string | null>(null);
   useEffect(()=>{if(!base.current&&data)base.current=data},[data]);
@@ -160,9 +161,9 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, onSnapshot,
     if(correction&&!unconfirmed&&!correctionReason.trim())result.errors.correction='请说明需要更正的原因';
     setErrors(result.errors);
     if (Object.keys(result.errors).length) { requestAnimationFrame(()=>formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus()); return; }
-    submitting.current = true;setBusy(true);setWaiting(false);
+    submitting.current = true;setBusy(true);setWaiting(false);setWaitSeconds(0);
     const controller=new AbortController();activeRequest.current=controller;
-    const retry={signal:controller.signal,onWaiting:()=>setWaiting(true)};
+    const retry={signal:controller.signal,onWaiting:(seconds:number)=>{setWaiting(true);setWaitSeconds(seconds)}};
     try {
       if(demo){
         if (storageError) throw new Error(storageError);
@@ -237,7 +238,7 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, onSnapshot,
     </details>
     </fieldset>
     {preview?<div className="submission-preview" role="status"><strong>{preview.missing.length?'将保存为待补全记录':'核对本次登记'}</strong>{preview.missing.length?<p>待补全：{preview.missing.join('、')}。当前现金和持仓暂不改变。</p>:preview.changes?<><p>现金 {money(preview.changes.cash_before)} → {money(preview.changes.cash_after)}</p>{filled?<p>{form.side==='buy'?'买入':'卖出'} {form.shares} 股 · 每股 {money(preview.changes.fill_price)}</p>:null}{preview.changes.linked_order?<p>关联挂单：{orderLabel(preview.changes.linked_order)}</p>:null}{preview.changes.ticker?<p>{preview.changes.ticker}：{preview.changes.shares_before} → {preview.changes.shares_after} 股</p>:<p>完整持仓：{preview.changes.holdings_after.map(r=>`${r.ticker} ${r.shares} 股`).join('；')||'全现金'}</p>}</>:null}<button className="text-button" type="button" disabled={busy||Boolean(unconfirmed)} onClick={()=>{pending.current=null;setPreview(null)}}>返回修改</button></div>:null}
-    {waiting?<div className="notice" role="status"><span>后台正在更新，完成后自动继续。输入已保留。</span><button className="text-button" type="button" onClick={()=>activeRequest.current?.abort()}>停止等待</button></div>:null}
+    {waiting?<div className="notice" role="status"><span>Finishing the previous research update · {waitSeconds}s. Your entry is kept and will continue automatically.</span><button className="text-button" type="button" onClick={()=>activeRequest.current?.abort()}>停止等待</button></div>:null}
     {unconfirmed&&!formalReceipt&&!waiting?<p className="notice">提交结果尚未确认。请用原请求重试；刷新后仍可恢复这个请求。</p>:null}
     {errors.save ? <p className="field-error" role="alert">{errors.save}</p> : null}
     <button className="primary save-button" type="submit" disabled={busy || (demo&&Boolean(storageError)) || Boolean(receipt)||Boolean(formalReceipt)||(!demo&&!data&&!unconfirmed)}>{waiting?'等待更新完成…':busy?'处理中…':demo?'保存试填记录':unconfirmed?'用原请求重试':preview?(filled&&!preview.missing.length?'确认新增成交':'确认保存正式记录'):'预览登记结果'}</button>

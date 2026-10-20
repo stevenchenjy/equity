@@ -3,7 +3,7 @@ import type { Feedback, FormalRecord, Snapshot } from './domain';
 
 export type RequestPayload = {request_id:string; record_id?:string; revision?:number; feedback:Feedback; account_version:string; snapshot_id:string; plan:FormalRecord['plan'];preview_hash?:string; email_version_id?:string|null; correction?:FormalRecord['correction']};
 export type Preview = {missing:string[];changes:null|{cash_before:number;cash_after:number;ticker?:string;shares_before?:number;shares_after?:number;fill_price?:number;linked_order?:Record<string,unknown>;holdings_after:{ticker:string;shares:string}[]};preview_hash:string};
-type Waiting = {signal:AbortSignal; onWaiting:()=>void; attempts?:number; delay?:()=>Promise<void>};
+type Waiting = {signal:AbortSignal; onWaiting:(elapsedSeconds:number)=>void; attempts?:number; delay?:()=>Promise<void>};
 export const errorCode = (error:unknown) => error instanceof Error && 'code' in error ? String(error.code) : '';
 
 function pause(signal:AbortSignal) {
@@ -19,13 +19,14 @@ function pause(signal:AbortSignal) {
 // original submitted request for manual recovery, never a newly generated ID.
 export async function waitForResearch<T>(work:()=>Promise<T>, options:Waiting):Promise<T> {
   const attempts=options.attempts??100;
+  const started=Date.now();
   for(let attempt=0;attempt<attempts;attempt++) {
     options.signal.throwIfAborted();
     try {return await work()}
     catch(error) {
       if(errorCode(error)!=='runtime_refresh_in_progress')throw error;
       if(attempt===attempts-1)throw Object.assign(new Error('后台更新尚未完成，输入已保留。稍后可继续。'),{code:'runtime_refresh_in_progress'});
-      options.onWaiting();
+      options.onWaiting(Math.floor((Date.now()-started)/1000));
       await (options.delay?options.delay():pause(options.signal));
     }
   }
