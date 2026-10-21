@@ -197,7 +197,8 @@ def intake(root: Path, *, current: datetime) -> dict:
         # active state. Reconcile that real lifecycle transition before new
         # admissions; preserve its assessment and the displaced unfinished work.
         active_states = TERMINAL | {"deferred_capacity"}
-        active = [i for i in replay(store).values() if i["state"] not in active_states]
+        current_items = replay(store)
+        active = [i for i in current_items.values() if i["state"] not in active_states]
         while len(active) > policy["active_capacity"]:
             victims = [i for i in active if priority(i, held, current=current)[0] > 0
                 and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
@@ -207,14 +208,14 @@ def intake(root: Path, *, current: datetime) -> dict:
             transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
                 reason="research_capacity_rebalanced_after_analyst_review", sources=victim["observations"][-1]["sources"],
                 blockers=["bounded_research_capacity"], current=current)
-            active = [i for i in replay(store).values() if i["state"] not in active_states]
+            current_items = replay(store)
+            active = [i for i in current_items.values() if i["state"] not in active_states]
         # Rank the complete pool before allocating scarce research attention.
         # A newly observed held/adverse item can displace lower-priority work;
         # its original evidence/unfinished task remains retained as deferred.
-        for item in sorted(replay(store).values(), key=lambda i: priority(i, held, current=current)):
+        for item in sorted(current_items.values(), key=lambda i: priority(i, held, current=current)):
             if item["state"] != "deferred_capacity" or admitted >= policy["new_opportunities_per_run"]:
                 continue
-            active = [i for i in replay(store).values() if i["state"] not in TERMINAL | {"deferred_capacity"}]
             if len(active) >= policy["active_capacity"]:
                 victims = [i for i in active if priority(i, held, current=current)[0] > 0
                     and priority(i, held, current=current) > priority(item, held, current=current)
@@ -230,6 +231,11 @@ def intake(root: Path, *, current: datetime) -> dict:
                     blockers=["bounded_research_capacity"], current=current)
             transition(store, item["opportunity_id"], "queued", owner="research_orchestration", reason="bounded_attention_admission",
                 sources=item["observations"][-1]["sources"], blockers=[], current=current)
+            # Replaying the entire durable journal for every deferred lead is
+            # quadratic when a full queue admits none. Only actual mutations
+            # can change the active projection or the next victim choice.
+            current_items = replay(store)
+            active = [i for i in current_items.values() if i["state"] not in active_states]
             admitted += 1
             metrics["new_opportunities"] += 1
         publish_store(root, store, previous=previous, current=current)

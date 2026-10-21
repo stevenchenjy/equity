@@ -63,6 +63,12 @@ conflicting schedule invalidation, review-source durability across unrelated row
 changes, late/backdated admission, raw corruption, partial coverage, source-bound
 zero-entry outcomes, email separation and responsive paginated display.
 
+A saturated broad event queue exposed a quadratic journal-replay path; intake
+now reuses its validated active projection until an actual state transition,
+preserving queue order, workload bounds and original history. The regression
+counts replay operations across hundreds of unchanged deferred leads, rather
+than relying on a timing-only test.
+
 Versioned production adapter bindings advance for changed implementations only.
 No approved numerical policy or strategy authority changes. Deployment, exact
 test totals, real pre-event observations, full refresh, final artifacts and

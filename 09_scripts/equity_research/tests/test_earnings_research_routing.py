@@ -249,6 +249,23 @@ class EarningsResearchRoutingTests(unittest.TestCase):
             self.assertEqual(read_json(self.root / STORE_REL)["events"], before_repeat)
             self.assertEqual(next(i for i in repeat["opportunities"] if i["ticker"] == "NEW")["first_seen_at"], first_seen)
 
+    def test_full_queue_with_hundreds_of_deferred_events_replays_only_when_state_changes(self):
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=1)
+        atomic_write_json(self.root / POLICY_REL, policy)
+        events = [self.event(f"EV{i:04d}", 20 + i / 1000) for i in range(256)]
+        first = self.collect(events)
+        self.assertEqual([i["ticker"] for i in first["priority_queue"]], ["EV0000"])
+        self.assertEqual(first["metrics"]["states"]["deferred_capacity"], 256)
+        before = (self.root / STORE_REL).read_bytes()
+        with patch("research_opportunities.replay", wraps=replay) as journal_replays:
+            report = self.collect(events, current=NOW + timedelta(minutes=1))
+        self.assertLessEqual(journal_replays.call_count, 8)
+        self.assertEqual([i["ticker"] for i in report["priority_queue"]], ["EV0000"])
+        self.assertEqual(report["metrics"]["new_opportunities"], 0)
+        self.assertEqual(report["metrics"]["rediscovery_updates"], 0)
+        self.assertEqual((self.root / STORE_REL).read_bytes(), before)
+
 
 if __name__ == "__main__":
     unittest.main()
