@@ -1,0 +1,64 @@
+{
+  "artifact_sha256": "e8779c7d1b232f7533b406b096a202820f89c462ae3f35daac9233b5071c9df9",
+  "previous_artifact_sha256": "9457257b2b007f8bdd7bf6958cb7cf1391b79f10adcb0c647c5dda087f5d3f58",
+  "records": [
+    {
+      "admitted_at": "2026-10-21T12:22:17.957+00:00",
+      "clock_basis": "America/New_York",
+      "corrected": {
+        "accepted_at": "2026-09-17T01:02:48.000+00:00",
+        "accession_number": "0001108524-26-000210",
+        "cik": "1108524",
+        "filing_date": "2026-09-17",
+        "record_sha256": "ac77d7e16730c7d61aaf1069c12b4660b2909b4798a58216f44ae5f88e0f60df",
+        "source_url": "https://data.sec.gov/submissions/CIK0001108524.json",
+        "ticker": "CRM"
+      },
+      "correction_sha256": "10c1bdd67906d7379751303f73491ce8515def8ba612883c7dc850d9e727840b",
+      "decision": "independent_edgar_header_and_index_clock",
+      "entity_name": "Salesforce, Inc.",
+      "form": "8-K",
+      "historical_observations_unchanged": true,
+      "observed_submissions": {
+        "accepted_at": "2026-09-17T05:02:48.000+00:00",
+        "accession_number": "0001108524-26-000210",
+        "cik": "1108524",
+        "filing_date": "2026-09-17",
+        "record_sha256": "60adcc48b28fc844823bf5c910ae0f08198983e0706fdd0d25b4cd9a2ea89f65",
+        "source_url": "https://data.sec.gov/submissions/CIK0001108524.json",
+        "ticker": "CRM"
+      },
+      "original": {
+        "accepted_at": "2026-09-16T21:02:48.000+00:00",
+        "accession_number": "0001108524-26-000210",
+        "cik": "1108524",
+        "filing_date": "2026-09-17",
+        "record_sha256": "e69c75cceb47d98946338d8a0ea69e715c643082227a27478b9bd75f94da04e7",
+        "source_url": "https://data.sec.gov/submissions/CIK0001108524.json",
+        "ticker": "CRM"
+      },
+      "sources": {
+        "header": {
+          "observed_at": "2026-10-21T12:22:17.848+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/c068b0930f2b256e4bb4507ee029988e15912604d8b377258f77037eea4ffac1.raw",
+          "raw_sha256": "c068b0930f2b256e4bb4507ee029988e15912604d8b377258f77037eea4ffac1",
+          "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000210/0001108524-26-000210-index-headers.html"
+        },
+        "index": {
+          "observed_at": "2026-10-21T12:22:17.956+00:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/a45caef63a92b38c4cca9fcedb8c6bdd4e4aa617d2a65cce1aed084edb6e2d82.raw",
+          "raw_sha256": "a45caef63a92b38c4cca9fcedb8c6bdd4e4aa617d2a65cce1aed084edb6e2d82",
+          "url": "https://www.sec.gov/Archives/edgar/data/1108524/000110852426000210/0001108524-26-000210-index.html"
+        },
+        "submissions": {
+          "observed_at": "2026-10-21T08:22:17.000-04:00",
+          "raw_path": "02_filings/sec_acceptance_proofs/23d3d32182fd5ae3b3293a69b448eeb5fa85a05c3257d053710d6ab75f03a528.raw",
+          "raw_sha256": "23d3d32182fd5ae3b3293a69b448eeb5fa85a05c3257d053710d6ab75f03a528",
+          "url": "https://data.sec.gov/submissions/CIK0001108524.json"
+        }
+      }
+    }
+  ],
+  "schema_version": "sec_acceptance_header_correction_v1",
+  "version": 4
+}

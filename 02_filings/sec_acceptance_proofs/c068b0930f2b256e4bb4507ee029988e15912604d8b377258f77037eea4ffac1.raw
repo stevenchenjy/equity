@@ -1,0 +1,416 @@
+<HTML><HEAD><TITLE>SEC EDGAR Submission 0001108524-26-000210</TITLE>
+<!--
+<SEC-HEADER>0001108524-26-000210.hdr.sgml : 20260917
+<ACCEPTANCE-DATETIME>20260916210248
+<ACCESSION-NUMBER>0001108524-26-000210
+<TYPE>8-K
+<PUBLIC-DOCUMENT-COUNT>42
+<PERIOD>20260916
+<ITEMS>7.01
+<ITEMS>9.01
+<FILING-DATE>20260917
+<DATE-OF-FILING-DATE-CHANGE>20260916
+<FILER>
+<COMPANY-DATA>
+<CONFORMED-NAME>Salesforce, Inc.
+<CIK>0001108524
+<ASSIGNED-SIC>7372
+<ORGANIZATION-NAME>06 Technology
+<IRS-NUMBER>943320693
+<STATE-OF-INCORPORATION>DE
+<FISCAL-YEAR-END>0131
+</COMPANY-DATA>
+<FILING-VALUES>
+<FORM-TYPE>8-K
+<ACT>34
+<FILE-NUMBER>001-32224
+<FILM-NUMBER>261385060
+</FILING-VALUES>
+<BUSINESS-ADDRESS>
+<STREET1>SALESFORCE TOWER
+<STREET2>415 MISSION STREET 3RD FL
+<CITY>SAN FRANCISCO
+<STATE>CA
+<ZIP>94105
+<PHONE>415-901-7000
+</BUSINESS-ADDRESS>
+<MAIL-ADDRESS>
+<STREET1>SALESFORCE TOWER
+<STREET2>415 MISSION STREET 3RD FL
+<CITY>SAN FRANCISCO
+<STATE>CA
+<ZIP>94105
+</MAIL-ADDRESS>
+<FORMER-COMPANY>
+<FORMER-CONFORMED-NAME>SALESFORCE.COM, INC.
+<DATE-CHANGED>20190806
+</FORMER-COMPANY>
+<FORMER-COMPANY>
+<FORMER-CONFORMED-NAME>SALESFORCE COM INC
+<DATE-CHANGED>20000307
+</FORMER-COMPANY>
+</FILER>
+</SEC-HEADER>
+-->
+</HEAD><BODY>
+<PRE>&lt;SEC-DOCUMENT&gt;0001108524-26-000210-index.html : 20260917
+&lt;SEC-HEADER&gt;0001108524-26-000210.hdr.sgml : 20260917
+&lt;ACCEPTANCE-DATETIME&gt;20260916210248
+ACCESSION NUMBER:		0001108524-26-000210
+CONFORMED SUBMISSION TYPE:	8-K
+PUBLIC DOCUMENT COUNT:		42
+CONFORMED PERIOD OF REPORT:	20260916
+ITEM INFORMATION:		Regulation FD Disclosure
+ITEM INFORMATION:		Financial Statements and Exhibits
+FILED AS OF DATE:		20260917
+DATE AS OF CHANGE:		20260916
+
+FILER:
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			Salesforce, Inc.
+		CENTRAL INDEX KEY:			0001108524
+		STANDARD INDUSTRIAL CLASSIFICATION:	SERVICES-PREPACKAGED SOFTWARE [7372]
+		ORGANIZATION NAME:           	06 Technology
+		EIN:				943320693
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			0131
+
+	FILING VALUES:
+		FORM TYPE:		8-K
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	001-32224
+		FILM NUMBER:		261385060
+
+	BUSINESS ADDRESS:	
+		STREET 1:		SALESFORCE TOWER
+		STREET 2:		415 MISSION STREET 3RD FL
+		CITY:			SAN FRANCISCO
+		STATE:			CA
+		ZIP:			94105
+		BUSINESS PHONE:		415-901-7000
+
+	MAIL ADDRESS:	
+		STREET 1:		SALESFORCE TOWER
+		STREET 2:		415 MISSION STREET 3RD FL
+		CITY:			SAN FRANCISCO
+		STATE:			CA
+		ZIP:			94105
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	SALESFORCE.COM, INC.
+		DATE OF NAME CHANGE:	20190806
+
+	FORMER COMPANY:	
+		FORMER CONFORMED NAME:	SALESFORCE COM INC
+		DATE OF NAME CHANGE:	20000307
+&lt;/SEC-HEADER&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;8-K
+&lt;SEQUENCE&gt;1
+&lt;FILENAME&gt;crm-20260916.htm
+&lt;DESCRIPTION&gt;8-K
+&lt;TEXT&gt;
+<a href="crm-20260916.htm">Document 1 - file: crm-20260916.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-99.1
+&lt;SEQUENCE&gt;2
+&lt;FILENAME&gt;investorday2026.htm
+&lt;DESCRIPTION&gt;EX-99.1
+&lt;TEXT&gt;
+<a href="investorday2026.htm">Document 2 - file: investorday2026.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.SCH
+&lt;SEQUENCE&gt;3
+&lt;FILENAME&gt;crm-20260916.xsd
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION SCHEMA DOCUMENT
+&lt;TEXT&gt;
+<a href="crm-20260916.xsd">Document 3 - file: crm-20260916.xsd</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.LAB
+&lt;SEQUENCE&gt;4
+&lt;FILENAME&gt;crm-20260916_lab.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION LABEL LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="crm-20260916_lab.xml">Document 4 - file: crm-20260916_lab.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;EX-101.PRE
+&lt;SEQUENCE&gt;5
+&lt;FILENAME&gt;crm-20260916_pre.xml
+&lt;DESCRIPTION&gt;XBRL TAXONOMY EXTENSION PRESENTATION LINKBASE DOCUMENT
+&lt;TEXT&gt;
+<a href="crm-20260916_pre.xml">Document 5 - file: crm-20260916_pre.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;6
+&lt;FILENAME&gt;investorday2026001.jpg
+&lt;TEXT&gt;
+<a href="investorday2026001.jpg">Document 6 - file: investorday2026001.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;7
+&lt;FILENAME&gt;investorday2026002.jpg
+&lt;TEXT&gt;
+<a href="investorday2026002.jpg">Document 7 - file: investorday2026002.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;8
+&lt;FILENAME&gt;investorday2026003.jpg
+&lt;TEXT&gt;
+<a href="investorday2026003.jpg">Document 8 - file: investorday2026003.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;9
+&lt;FILENAME&gt;investorday2026004.jpg
+&lt;TEXT&gt;
+<a href="investorday2026004.jpg">Document 9 - file: investorday2026004.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;10
+&lt;FILENAME&gt;investorday2026005.jpg
+&lt;TEXT&gt;
+<a href="investorday2026005.jpg">Document 10 - file: investorday2026005.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;11
+&lt;FILENAME&gt;investorday2026006.jpg
+&lt;TEXT&gt;
+<a href="investorday2026006.jpg">Document 11 - file: investorday2026006.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;12
+&lt;FILENAME&gt;investorday2026007.jpg
+&lt;TEXT&gt;
+<a href="investorday2026007.jpg">Document 12 - file: investorday2026007.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;13
+&lt;FILENAME&gt;investorday2026008.jpg
+&lt;TEXT&gt;
+<a href="investorday2026008.jpg">Document 13 - file: investorday2026008.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;14
+&lt;FILENAME&gt;investorday2026009.jpg
+&lt;TEXT&gt;
+<a href="investorday2026009.jpg">Document 14 - file: investorday2026009.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;15
+&lt;FILENAME&gt;investorday2026010.jpg
+&lt;TEXT&gt;
+<a href="investorday2026010.jpg">Document 15 - file: investorday2026010.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;16
+&lt;FILENAME&gt;investorday2026011.jpg
+&lt;TEXT&gt;
+<a href="investorday2026011.jpg">Document 16 - file: investorday2026011.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;17
+&lt;FILENAME&gt;investorday2026012.jpg
+&lt;TEXT&gt;
+<a href="investorday2026012.jpg">Document 17 - file: investorday2026012.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;18
+&lt;FILENAME&gt;investorday2026013.jpg
+&lt;TEXT&gt;
+<a href="investorday2026013.jpg">Document 18 - file: investorday2026013.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;19
+&lt;FILENAME&gt;investorday2026014.jpg
+&lt;TEXT&gt;
+<a href="investorday2026014.jpg">Document 19 - file: investorday2026014.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;20
+&lt;FILENAME&gt;investorday2026015.jpg
+&lt;TEXT&gt;
+<a href="investorday2026015.jpg">Document 20 - file: investorday2026015.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;21
+&lt;FILENAME&gt;investorday2026016.jpg
+&lt;TEXT&gt;
+<a href="investorday2026016.jpg">Document 21 - file: investorday2026016.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;22
+&lt;FILENAME&gt;investorday2026017.jpg
+&lt;TEXT&gt;
+<a href="investorday2026017.jpg">Document 22 - file: investorday2026017.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;23
+&lt;FILENAME&gt;investorday2026018.jpg
+&lt;TEXT&gt;
+<a href="investorday2026018.jpg">Document 23 - file: investorday2026018.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;24
+&lt;FILENAME&gt;investorday2026019.jpg
+&lt;TEXT&gt;
+<a href="investorday2026019.jpg">Document 24 - file: investorday2026019.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;25
+&lt;FILENAME&gt;investorday2026020.jpg
+&lt;TEXT&gt;
+<a href="investorday2026020.jpg">Document 25 - file: investorday2026020.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;26
+&lt;FILENAME&gt;investorday2026021.jpg
+&lt;TEXT&gt;
+<a href="investorday2026021.jpg">Document 26 - file: investorday2026021.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;27
+&lt;FILENAME&gt;investorday2026022.jpg
+&lt;TEXT&gt;
+<a href="investorday2026022.jpg">Document 27 - file: investorday2026022.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;28
+&lt;FILENAME&gt;investorday2026023.jpg
+&lt;TEXT&gt;
+<a href="investorday2026023.jpg">Document 28 - file: investorday2026023.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;29
+&lt;FILENAME&gt;investorday2026024.jpg
+&lt;TEXT&gt;
+<a href="investorday2026024.jpg">Document 29 - file: investorday2026024.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;30
+&lt;FILENAME&gt;investorday2026025.jpg
+&lt;TEXT&gt;
+<a href="investorday2026025.jpg">Document 30 - file: investorday2026025.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;31
+&lt;FILENAME&gt;investorday2026026.jpg
+&lt;TEXT&gt;
+<a href="investorday2026026.jpg">Document 31 - file: investorday2026026.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;32
+&lt;FILENAME&gt;investorday2026027.jpg
+&lt;TEXT&gt;
+<a href="investorday2026027.jpg">Document 32 - file: investorday2026027.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;33
+&lt;FILENAME&gt;investorday2026028.jpg
+&lt;TEXT&gt;
+<a href="investorday2026028.jpg">Document 33 - file: investorday2026028.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;34
+&lt;FILENAME&gt;investorday2026029.jpg
+&lt;TEXT&gt;
+<a href="investorday2026029.jpg">Document 34 - file: investorday2026029.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;GRAPHIC
+&lt;SEQUENCE&gt;35
+&lt;FILENAME&gt;investorday2026030.jpg
+&lt;TEXT&gt;
+<a href="investorday2026030.jpg">Document 35 - file: investorday2026030.jpg</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;38
+&lt;FILENAME&gt;report.css
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="report.css">Document 38 - file: report.css</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;39
+&lt;FILENAME&gt;Show.js
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="Show.js">Document 39 - file: Show.js</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;ZIP
+&lt;SEQUENCE&gt;44
+&lt;FILENAME&gt;0001108524-26-000210-xbrl.zip
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="0001108524-26-000210-xbrl.zip">Document 44 - file: 0001108524-26-000210-xbrl.zip</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;47
+&lt;FILENAME&gt;crm-20260916_htm.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/crm-20260916_htm.xml">Document 47 - file: crm-20260916_htm.html</a><br>
+<a href="crm-20260916_htm.xml">Document 47 - RAW XML: crm-20260916_htm.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;48
+&lt;FILENAME&gt;R1.htm
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="R1.htm">Document 48 - file: R1.htm</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;XML
+&lt;SEQUENCE&gt;49
+&lt;FILENAME&gt;FilingSummary.xml
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="xsl/FilingSummary.xml">Document 49 - file: FilingSummary.html</a><br>
+<a href="FilingSummary.xml">Document 49 - RAW XML: FilingSummary.xml</a><br>
+&lt;/DOCUMENT&gt;
+&lt;DOCUMENT&gt;
+&lt;TYPE&gt;JSON
+&lt;SEQUENCE&gt;51
+&lt;FILENAME&gt;MetaLinks.json
+&lt;DESCRIPTION&gt;IDEA: XBRL DOCUMENT
+&lt;TEXT&gt;
+<a href="MetaLinks.json">Document 51 - file: MetaLinks.json</a><br>
+&lt;/DOCUMENT&gt;
+&lt;/SEC-DOCUMENT&gt;</PRE><script type="text/javascript"  src="/MysEuRLP/LP1/Elt/jlLflGgMiF/bab9VzmQ6DfhG2SYJ1/UR4dAQ/MB/xhfghUEns"></script></BODY></HTML>
