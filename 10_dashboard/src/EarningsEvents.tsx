@@ -27,7 +27,8 @@ const deadlineValue=(row:EarningsEvent)=>{
 };
 export function orderedUpcoming(events:EarningsEvent[]):EarningsEvent[] {
   return events.filter(row=>row.timing==='pre_event'&&row.status!=='cancelled')
-    .sort((a,b)=>deadlineValue(a)-deadlineValue(b)||a.event_date.localeCompare(b.event_date)||a.ticker.localeCompare(b.ticker)||a.event_id.localeCompare(b.event_id));
+    .sort((a,b)=>Number(!['eligible_conditional_plan','reviewed_without_entry'].includes(a.status))-Number(!['eligible_conditional_plan','reviewed_without_entry'].includes(b.status))
+      ||deadlineValue(a)-deadlineValue(b)||a.event_date.localeCompare(b.event_date)||a.ticker.localeCompare(b.ticker)||a.event_id.localeCompare(b.event_id));
 }
 export const EARNINGS_PAGE_SIZE=50;
 export function earningsPage(events:EarningsEvent[],page:number):EarningsEvent[] {
@@ -40,6 +41,11 @@ function EventTable({rows,report,data,unavailable}:{rows:EarningsEvent[];report:
       <td data-label="Research deadline">{eventTime(row.research_deadline_at)}<br/><small>First detected {eventTime(row.first_detected_at)}</small></td>
       <td data-label="Research status and next step"><strong>{earningsStatus(row,report,data,unavailable)}</strong><p>{row.next_step}</p>{row.blockers.length?<p>Research dependency: {row.blockers.join('; ')}</p>:null}
         <details><summary>Evidence and timing</summary><p>Research state: {row.research_state}. Observation timing: {row.timing}. Release timing: {sessionLabels[row.session]??'time unconfirmed'}; {row.date_confidence==='issuer_confirmed'&&row.session!=='time_unknown'&&row.event_at?eventTime(row.event_at):'exact release time unconfirmed'}.</p>
+          {row.event_review?<section aria-label="Source-bound earnings review"><h3>Source-bound earnings review</h3>
+            <p><strong>Expectations:</strong> {row.event_review.expectations_case}</p><p><strong>Priced-in assessment:</strong> {row.event_review.priced_in_assessment}</p>
+            <p><strong>Valuation:</strong> {row.event_review.valuation_case}</p><p><strong>Downside:</strong> {row.event_review.downside_case}</p><p><strong>Recheck condition:</strong> {row.event_review.recheck_condition}</p>
+            <ul>{row.event_review.sources.map((source,index)=><li key={source.sha256+index}>{safeSource(source.source_url)?<a href={source.source_url} target="_blank" rel="noreferrer">Reviewed primary source {index+1}</a>:<span>Review source URL unverified</span>}<br/><small>SHA-256 {source.sha256}</small></li>)}</ul>
+          </section>:null}
           {row.sources.length?<ul>{row.sources.map((source,index)=><li key={source.sha256+index}>{safeSource(source.source_url)?<a href={source.source_url} target="_blank" rel="noreferrer">Primary calendar / issuer source {index+1}</a>:<span>Source URL unverified</span>}<br/><small>Available {eventTime(source.available_at)} · SHA-256 {source.sha256}</small></li>)}</ul>:<p>No verified source receipt is available.</p>}
         </details>
       </td>
@@ -64,7 +70,7 @@ export default function EarningsEvents({data,unavailable=false}:{data:Snapshot;u
     <h2>Upcoming earnings research</h2>
     <p className="panel-lead">Independent of momentum rank. Calendar detection creates research work; it does not authorize a trade.</p>
     <p className="panel-lead">Coverage: {coverage.scope??'unverified scope'} · {coverage.horizon_start??'unknown'} — {coverage.horizon_end??'unknown'} · {coverage.days_verified??0}/{coverage.days_requested??0} dates verified · {report.events.length} retained events.</p>
-    <p className="panel-lead">{upcoming.length} upcoming events, earliest research deadline first. {history.length} elapsed, cancelled or timing-unverified events retained separately.</p>
+    <p className="panel-lead">{upcoming.length} upcoming events, reviewed outcomes first, then research deadline. {history.length} elapsed, cancelled or timing-unverified events retained separately.</p>
     {report.status!=='ready'?<p className="summary-context" role="status">Calendar status: {report.status}. Missing or stale coverage is not evidence that no company reports.</p>:null}
     {unavailable?<p className="summary-context" role="status">Research is refreshing or this view could not update. Retained event research is shown without conditional-plan eligibility.</p>:null}
     {coverage.failed_dates?.length?<p className="summary-context">Unverified calendar dates: {coverage.failed_dates.join(', ')}.</p>:null}

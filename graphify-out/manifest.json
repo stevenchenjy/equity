@@ -735,8 +735,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/email_brief.py": {
-    "mtime": 1792605719.5827265,
-    "ast_hash": "55d554e630733e7a9ece81f0e739ef95",
+    "mtime": 1792606544.867899,
+    "ast_hash": "5f44be4c8b1ccbd9c8b12175ceda8773",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_email_brief.py": {
@@ -1500,8 +1500,8 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/domain.ts": {
-    "mtime": 1792605325.375487,
-    "ast_hash": "19c94c18b9ae3a969a3b2fead5c6c4b4",
+    "mtime": 1792606544.866142,
+    "ast_hash": "57eddbd229a98f17255a7c510caea2f6",
     "semantic_hash": ""
   },
   "10_dashboard/src/main.tsx": {
@@ -1675,8 +1675,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/research_opportunities.py": {
-    "mtime": 1792605782.084826,
-    "ast_hash": "477186f620e276f98e89c0d9a27aa08b",
+    "mtime": 1792606696.9064999,
+    "ast_hash": "7750accfc629dfeb8ccb69f44f308102",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_research_opportunities.py": {
@@ -1705,8 +1705,8 @@
     "semantic_hash": "13cb84203d3339b1700e3b16228ba277"
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1792606091.8461556,
-    "ast_hash": "4d242f47351d43cb36c30e0e01b85049",
+    "mtime": 1792606763.665336,
+    "ast_hash": "3083f53e5ef037b3d5a0146cfbfb6faf",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -2155,8 +2155,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_earnings_event_surfaces.py": {
-    "mtime": 1792605805.2448657,
-    "ast_hash": "7e0bc26509ad6e14677e4ad02ca003e2",
+    "mtime": 1792606544.8692749,
+    "ast_hash": "3f2eb4633e81560b710c9d53b2b6d458",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_earnings_events.py": {
@@ -2165,8 +2165,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_earnings_research_routing.py": {
-    "mtime": 1792605782.0901356,
-    "ast_hash": "89f528673501d3810f91ec210f4afa26",
+    "mtime": 1792606696.9122348,
+    "ast_hash": "17da947f2a740a4d5a9052050dd51907",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_earnings_workflow.py": {
@@ -2175,13 +2175,13 @@
     "semantic_hash": ""
   },
   "10_dashboard/src/EarningsEvents.test.tsx": {
-    "mtime": 1792605813.931649,
-    "ast_hash": "e46fddc98e589e5538e1e55e8850f191",
+    "mtime": 1792606544.8687644,
+    "ast_hash": "d3ea62928f41c93e4e359f18d048cdf4",
     "semantic_hash": ""
   },
   "10_dashboard/src/EarningsEvents.tsx": {
-    "mtime": 1792605765.528758,
-    "ast_hash": "42638183e865d6a03c5241cadac14799",
+    "mtime": 1792606544.866846,
+    "ast_hash": "a57f8c03021981c4851d576cefed9b6a",
     "semantic_hash": ""
   },
   "10_dashboard/tests/test_earnings_events.py": {

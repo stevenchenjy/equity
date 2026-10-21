@@ -173,6 +173,21 @@ def intake(root: Path, *, current: datetime) -> dict:
                     "blockers": ["bounded_research_capacity"]})
                 by_ticker[p["ticker"]] = identity
             seen.add(p["observation_id"])
+        # A separately accepted analyst review can move deferred work into an
+        # active state. Reconcile that real lifecycle transition before new
+        # admissions; preserve its assessment and the displaced unfinished work.
+        active_states = TERMINAL | {"deferred_capacity"}
+        active = [i for i in replay(store).values() if i["state"] not in active_states]
+        while len(active) > policy["active_capacity"]:
+            victims = [i for i in active if priority(i, held, current=current)[0] > 0
+                and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+            if not victims:
+                break
+            victim = max(victims, key=lambda i: priority(i, held, current=current))
+            transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
+                reason="research_capacity_rebalanced_after_analyst_review", sources=victim["observations"][-1]["sources"],
+                blockers=["bounded_research_capacity"], current=current)
+            active = [i for i in replay(store).values() if i["state"] not in active_states]
         # Rank the complete pool before allocating scarce research attention.
         # A newly observed held/adverse item can displace lower-priority work;
         # its original evidence/unfinished task remains retained as deferred.
@@ -331,6 +346,12 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
         project_research_requirements(item, authority)
     items.sort(key=lambda i: tuple(i["attention_priority_key"]))
     active = [i for i in items if i["state"] not in TERMINAL | {"deferred_capacity"}]
+    capacity = validate_policy(read_json(root / POLICY_REL))["active_capacity"]
+    diagnostics = copy.deepcopy(diagnostics)
+    diagnostics["capacity"] = {"configured_active_capacity": capacity, "active_count": len(active),
+        "protected_active_count": sum(priority(i, held, current=current)[0] == 0 for i in active),
+        "capacity_debt": max(0, len(active) - capacity),
+        "status": "protected_or_nondeferable_work_exceeds_capacity" if len(active) > capacity else "within_capacity"}
     reassess = [i for i in items if i["state"] in TERMINAL and i["transitions"]
         and aware(i["last_evidence_at"]) > max(aware(t["recorded_at"]) for t in i["transitions"] if t["to_state"] in TERMINAL)]
     report = {"schema_version": "equity_research_opportunity_report_v1", "generated_at": current.isoformat(),

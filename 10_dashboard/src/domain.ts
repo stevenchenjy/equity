@@ -93,6 +93,9 @@ export type EarningsEvent = {
   date_confidence: 'exchange_calendar_estimate' | 'issuer_confirmed'; research_state: string;
   blockers: string[]; next_step: string;
   sources: { source_url: string; sha256: string; path: string; available_at: string }[];
+  event_review?: {event_id: string; expectations_case: string; priced_in_assessment: string; valuation_case: string;
+    downside_case: string; recheck_condition: string;
+    sources: {source_url: string; sha256: string; path: string; available_at?: string}[]};
 };
 export type Feedback = {
   entry_mode?: 'simple' | 'simple_total'; order_link_mode?: 'independent';

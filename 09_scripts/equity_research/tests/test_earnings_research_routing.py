@@ -176,6 +176,45 @@ class EarningsResearchRoutingTests(unittest.TestCase):
         self.assertEqual(final["metrics"]["objective_items_processed"], 2)
         self.assertEqual(final["metrics"]["network_requests"], 0)
 
+    def test_accepted_review_of_deferred_item_is_rebalanced_without_losing_assessment(self):
+        self.discovery(["TOP", "SYN"])
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=1)
+        atomic_write_json(self.root / POLICY_REL, policy)
+        first = self.collect([])
+        self.assertEqual({i["ticker"] for i in first["priority_queue"]}, {"TOP"})
+        proposal = self.assessment("unresolved")
+        accepted = apply_assessment(self.root, proposal, current=NOW, apply=True)
+        self.assertEqual(accepted["status"], "recorded")
+        prior = read_json(self.root / STORE_REL)["events"]
+        before = summary(self.root, current=NOW)
+        self.assertEqual(before["metrics"]["research_queue_size"], 2)
+        after = self.collect([], current=NOW + timedelta(minutes=1))
+        self.assertEqual(len(after["priority_queue"]), 1)
+        item = next(i for i in after["opportunities"] if i["ticker"] == "SYN")
+        self.assertEqual(item["state"], "deferred_capacity")
+        self.assertEqual(item["assessment"], proposal)
+        self.assertEqual(item["reason_code"], "research_capacity_rebalanced_after_analyst_review")
+        self.assertEqual(read_json(self.root / STORE_REL)["events"][:len(prior)], prior)
+        self.assertEqual(after["diagnostics"]["capacity"]["capacity_debt"], 0)
+
+    def test_protected_held_capacity_debt_remains_explicit_without_dropping_reviews(self):
+        self.discovery(["TOP", "SYN"])
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=1)
+        atomic_write_json(self.root / POLICY_REL, policy)
+        self.collect([])
+        proposal = self.assessment("unresolved")
+        apply_assessment(self.root, proposal, current=NOW, apply=True)
+        positions = self.root / "05_risk_and_positions/current_positions.local.csv"
+        positions.parent.mkdir(parents=True, exist_ok=True)
+        positions.write_text("ticker,shares_optional\nTOP,1\nSYN,1\n")
+        after = self.collect([], current=NOW + timedelta(minutes=1))
+        self.assertEqual({i["ticker"] for i in after["priority_queue"]}, {"TOP", "SYN"})
+        self.assertEqual(after["diagnostics"]["capacity"]["capacity_debt"], 1)
+        self.assertEqual(after["diagnostics"]["capacity"]["protected_active_count"], 2)
+        self.assertEqual(next(i for i in after["opportunities"] if i["ticker"] == "SYN")["assessment"], proposal)
+
 
 if __name__ == "__main__":
     unittest.main()

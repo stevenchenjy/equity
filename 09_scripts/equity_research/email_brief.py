@@ -894,7 +894,10 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
             timestamp = deadline.timestamp() if deadline.tzinfo else float("inf")
         except (ValueError, TypeError, OverflowError):
             timestamp = float("inf")
-        return timestamp, str(row.get("event_date", "")), str(row.get("ticker", "")), str(row.get("event_id", ""))
+        # Current source-bound event outcomes must reach the owner even when
+        # hundreds of earlier calendar leads still await substantive research.
+        outcome = row.get("status") in {"eligible_conditional_plan", "reviewed_without_entry"}
+        return (0 if outcome else 1), timestamp, str(row.get("event_date", "")), str(row.get("ticker", "")), str(row.get("event_id", ""))
     upcoming = sorted((row for row in events if row.get("timing") == "pre_event"
                        and row.get("status") != "cancelled"), key=deadline_order)
     other_count = len(events) - len(upcoming)
@@ -916,6 +919,7 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
              "reviewed_without_entry": "Reviewed without entry", "eligible_conditional_plan": "Eligible conditional plan — see action cards",
              "elapsed_unreviewed": "Elapsed without pre-event review", "cancelled": "Cancelled", "schedule_conflict": "Schedule conflict"}
     sessions = {"after_close": "after close", "before_open": "before open", "time_unknown": "time unconfirmed"}
+    review_sources: list[str] = []
     # Keep the daily message compact; the dashboard retains every detected event.
     for row in upcoming[:6]:
         event_status = str(row.get("status", "detected"))
@@ -931,14 +935,19 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
             lines.append("Research dependency: " + "; ".join(details) + ".")
         if row.get("next_step"):
             lines.append("Next: " + str(row["next_step"]))
+        if event_status == "reviewed_without_entry":
+            for source in (row.get("event_review") or {}).get("sources", []):
+                url = source.get("source_url") if isinstance(source, dict) else None
+                if isinstance(url, str) and urlsplit(url).scheme == "https" and urlsplit(url).hostname:
+                    review_sources.append(url)
     if not upcoming:
         lines.append("No verified upcoming event is available in this retained coverage." if status != "ready"
                      else "No upcoming event was detected in the verified calendar coverage.")
     if len(upcoming) > 6:
-        lines.append(f"Showing 6 of {len(upcoming)} upcoming events, earliest research deadline first. Open Upcoming earnings research on the dashboard for every retained event and source.")
+        lines.append(f"Showing 6 of {len(upcoming)} upcoming events, reviewed outcomes first, then research deadline. Open Upcoming earnings research on the dashboard for every retained event and source.")
     else:
         lines.append("Full retained event history and source receipts are available under Upcoming earnings research on the dashboard.")
-    return {"title": "Upcoming earnings research", "body": "\n".join(lines), "sources": [], "group": "background"}
+    return {"title": "Upcoming earnings research", "body": "\n".join(lines), "sources": list(dict.fromkeys(review_sources)), "group": "background"}
 
 
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:

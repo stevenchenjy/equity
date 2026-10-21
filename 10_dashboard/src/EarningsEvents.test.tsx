@@ -58,3 +58,26 @@ test('unknown or estimated release time does not masquerade as an exact midnight
     assert.match(html,/Research deadline/);assert.match(html,/9:30 AM ET/);
   }
 });
+test('completed current event reviews beyond100 pending leads appear first without changing capital action cards',()=>{
+  const pending=Array.from({length:150},(_,i)=>({...event,event_id:`pending-${i}`,ticker:`PENDING${i}`}));
+  const reviewed=['LRCX','META'].map(ticker=>({...event,event_id:ticker,ticker,status:'reviewed_without_entry' as const,event_date:'2026-10-23',research_deadline_at:'2026-10-23T09:30:00-04:00',next_step:'Reviewed event case: reject pre-event entry; downside valuation is insufficient.'}));
+  const events=[...pending,...reviewed];
+  const ordered=orderedUpcoming(events);
+  assert.deepEqual(ordered.slice(0,2).map(row=>row.ticker),['LRCX','META']);
+  assert.equal(ordered.length,152);
+  const value={...data,earnings_events:{...report,events}} as Snapshot;
+  const before=renderToStaticMarkup(<CapitalActions data={data}/>);
+  const html=renderToStaticMarkup(<EarningsEvents data={value}/>);
+  for(const expected of ['LRCX','META','Reviewed without entry','reject pre-event entry','reviewed outcomes first, then research deadline','Browse all 152 upcoming events'])assert.ok(html.includes(expected),expected);
+  assert.ok(html.indexOf('LRCX')<html.indexOf('PENDING0'));
+  assert.equal(renderToStaticMarkup(<CapitalActions data={value}/>),before);
+  assert.doesNotMatch(html,/BUY LIMIT|capital-buy/);
+});
+test('expanded source-bound review preserves unknown and negative cases with safe official evidence links',()=>{
+  const event_review={event_id:event.event_id,expectations_case:'Consensus expectations are unknown.',priced_in_assessment:'No evidence establishes that growth is priced in.',valuation_case:'Company-specific valuation is incomplete; do not enter.',downside_case:'Downside can exceed the planned loss.',recheck_condition:'Recheck only after sourced results and a completed valuation.',sources:[{source_url:'https://investor.atmeta.com/investor-news/',sha256:'b'.repeat(64),path:'meta.html'},{source_url:'javascript:alert(1)',sha256:'c'.repeat(64),path:'invalid'}]};
+  const html=renderToStaticMarkup(<EarningsEvents data={{...data,earnings_events:{...report,events:[{...event,status:'reviewed_without_entry',event_review}]}}}/>);
+  for(const point of [event_review.expectations_case,event_review.priced_in_assessment,event_review.valuation_case,event_review.downside_case,event_review.recheck_condition])assert.ok(html.includes(point),point);
+  assert.match(html,/<details><summary>Evidence and timing<\/summary>[\s\S]*Source-bound earnings review/);
+  assert.match(html,/href="https:\/\/investor.atmeta.com\/investor-news\/"/);
+  assert.match(html,/Review source URL unverified/);assert.doesNotMatch(html,/href="javascript:/);
+});

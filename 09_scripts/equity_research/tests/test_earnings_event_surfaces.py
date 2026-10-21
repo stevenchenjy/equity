@@ -89,10 +89,45 @@ class EarningsEventPresentationTests(unittest.TestCase):
         self.assertNotIn("OLD0:", card)
         self.assertLess(card.index("NEW0:"), card.index("NEW1:"))
 
+    def test_completed_event_outcomes_beyond_one_hundred_pending_leads_reach_email_without_changing_actions(self):
+        decision = self.decision()
+        sample = decision["earnings_events"]["events"][0]
+        pending = [{**sample, "event_id": f"pending-{i}", "ticker": f"PENDING{i}"} for i in range(150)]
+        decision["earnings_events"]["events"] = pending
+        original_actions = render_email(decision)[1].split("Upcoming earnings research")[0]
+        reviewed = [{**sample, "event_id": ticker, "ticker": ticker, "status": "reviewed_without_entry",
+                     "event_date": "2026-10-23", "research_deadline_at": "2026-10-23T09:30:00-04:00",
+                     "next_step": "Reviewed event case: reject pre-event entry because valuation does not cover downside."}
+                    for ticker in ("LRCX", "META")]
+        decision["earnings_events"]["events"] = pending + reviewed
+        before = copy.deepcopy(decision)
+        _, plain, document = render_email(decision)
+        for body in (plain, document):
+            self.assertIn("LRCX:", body)
+            self.assertIn("META:", body)
+            self.assertIn("Reviewed without entry", body)
+            self.assertIn("reject pre-event entry", body)
+            self.assertIn("reviewed outcomes first, then research deadline", body)
+        self.assertLess(plain.index("LRCX:"), plain.index("PENDING0:"))
+        self.assertEqual(plain.split("Upcoming earnings research")[0], original_actions)
+        self.assertEqual(decision, before)
+
     def test_invalid_schema_cannot_render_as_verified_empty_coverage(self):
         decision = self.decision()
         decision["earnings_events"]["schema_version"] = "unknown"
         self.assertIsNone(earnings_research_card(decision))
+
+    def test_reviewed_event_keeps_official_review_source_links_without_executing_remote_content(self):
+        decision = self.decision()
+        row = decision["earnings_events"]["events"][0]
+        row.update(status="reviewed_without_entry", next_step="Valuation remains incomplete; do not enter.",
+                   event_review={"sources": [{"source_url": "https://investor.atmeta.com/investor-news/"},
+                                              {"source_url": "javascript:alert(1)"}]})
+        _, plain, document = render_email(decision)
+        self.assertIn("https://investor.atmeta.com/investor-news/", plain)
+        self.assertIn('href="https://investor.atmeta.com/investor-news/"', document)
+        self.assertIn("Valuation remains incomplete; do not enter.", plain)
+        self.assertNotIn("javascript:", document)
 
 
 if __name__ == "__main__":

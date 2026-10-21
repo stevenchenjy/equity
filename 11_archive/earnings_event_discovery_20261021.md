@@ -31,6 +31,16 @@ becoming an account-wide investment restriction. Stable completed advice can
 participate in the existing delivery comparison; calendar/refetch churn cannot
 create filler delivery. No schedule, recipient or execution authority changed.
 
+Real-production verification recorded two event-specific unresolved reviews
+before their conservative deadlines. That path exposed two adjacent issues:
+completed reviews could be buried by alphabetical pending leads, and admitting
+an analyst assessment from deferred work could temporarily exceed attention
+capacity. The final presentation puts current reviewed outcomes first and shows
+their exact source-bound reasoning and issuer links. Ordinary intake rebalances
+excess lower-priority nonheld work through existing deferral transitions, keeping
+all assessments and protected held/adverse work. Any protected capacity debt is
+explicit; numerical capacity itself is unchanged.
+
 The observed omission regression fails with the original trigger adapter: two
 synthetic weak-momentum outside-universe companies do not reach research. It
 passes after repair. Additional checks cover capacity, shared budgets, stale and

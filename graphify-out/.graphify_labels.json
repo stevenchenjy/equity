@@ -288,6 +288,20 @@
   "286": "IncorporationTests",
   "287": "feedback.py",
   "288": "Equity Research — Core Allocation Policy",
-  "292": "HeldCorePositionTests",
-  "293": "run"
+  "289": "admit_market_history_baseline.py",
+  "290": "AccountConcurrencyTests",
+  "291": "test_momentum_price_coverage.py",
+  "292": "production_strategies.py",
+  "293": "run",
+  "294": "test_tactical_order_scopes.py",
+  "295": "HeldCorePositionTests",
+  "296": "_DocumentPeriod",
+  "297": "OwnerSnapshotTests",
+  "298": "capital_presentation.py",
+  "299": "run_stage",
+  "300": "smoke_diagnostic_notes",
+  "301": "NamingCompatibilityTests",
+  "302": "notification_delivery_policy",
+  "303": "SecPayload",
+  "304": "main"
 }
