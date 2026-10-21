@@ -41,6 +41,15 @@ excess lower-priority nonheld work through existing deferral transitions, keepin
 all assessments and protected held/adverse work. Any protected capacity debt is
 explicit; numerical capacity itself is unchanged.
 
+The final real-data browser check also caught a 27 MB opportunity report being
+read as display data under the dashboard's 12 MB per-file guard. The dashboard
+now streams fingerprints only for the two exact approved research journal/view
+paths, with bounded chunks, a time budget, no symlinks/nonregular files and
+identity/size/metadata checks across both reads. It does not load these journals
+into display bytes or raise the existing account/decision/display read limit.
+Regression coverage uses a genuinely oversized bound report and verifies
+changed bytes, replacement races, growth, timeouts and symlink rejection.
+
 The observed omission regression fails with the original trigger adapter: two
 synthetic weak-momentum outside-universe companies do not reach research. It
 passes after repair. Additional checks cover capacity, shared budgets, stale and

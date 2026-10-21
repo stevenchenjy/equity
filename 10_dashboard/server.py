@@ -9,9 +9,12 @@ import io
 import json
 import math
 import mimetypes
+import os
 import re
+import stat
 import threading
 import sqlite3
+from time import monotonic
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -36,6 +39,10 @@ ORDERS = "05_risk_and_positions/current_open_orders.local.json"
 MARKET = "03_source_data/equity_research/market_data_snapshot.csv"
 CORE_INPUTS = {ACCOUNT, POSITIONS, PLANS, ORDERS}
 ALLOWED_INPUTS = set(WORKFLOW_INPUTS)
+STREAM_HASH_INPUTS = {
+    "04_research/company_research/opportunities.local/store.json",
+    "04_research/company_research/opportunities.local/report.json",
+}
 
 
 class SnapshotError(ValueError):
@@ -58,6 +65,68 @@ def safe_read(root: Path, relative: str) -> bytes:
     if not path.is_file() or path.stat().st_size > 12_000_000:
         raise SnapshotError("input_missing_or_too_large:" + relative)
     return path.read_bytes()
+
+
+def streamed_input_fingerprint(root: Path, relative: str) -> tuple[str, tuple]:
+    """Hash the two growing research journals without loading them for display.
+
+    Every read is bounded by the original file length plus one byte and five
+    seconds. Identity, size and nanosecond metadata must remain unchanged.
+    """
+    if relative not in STREAM_HASH_INPUTS:
+        raise SnapshotError("unregistered_streamed_input")
+    path = root / relative
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise SnapshotError("input_path_outside_runtime")
+    for part in (path, *path.parents):
+        if part == root.parent:
+            break
+        if part.is_symlink():
+            raise SnapshotError("symlink_input_rejected")
+    identity = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+    try:
+        before = path.stat(follow_symlinks=False)
+        if not stat.S_ISREG(before.st_mode):
+            raise SnapshotError("streamed_input_not_regular")
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        try:
+            if identity(os.fstat(descriptor)) != identity(before):
+                raise SnapshotError("snapshot_changed_during_read")
+            remaining, consumed = before.st_size + 1, 0
+            end = monotonic() + 5
+            result = hashlib.sha256()
+            while remaining:
+                if monotonic() > end:
+                    raise SnapshotError("streamed_input_read_timeout")
+                chunk = os.read(descriptor, min(1_048_576, remaining))
+                if not chunk:
+                    break
+                result.update(chunk)
+                consumed += len(chunk)
+                remaining -= len(chunk)
+                if identity(os.fstat(descriptor)) != identity(before):
+                    raise SnapshotError("snapshot_changed_during_read")
+            if (consumed != before.st_size or identity(os.fstat(descriptor)) != identity(before)
+                    or identity(path.stat(follow_symlinks=False)) != identity(before)):
+                raise SnapshotError("snapshot_changed_during_read")
+            if monotonic() > end:
+                raise SnapshotError("streamed_input_read_timeout")
+            if not path.resolve().is_relative_to(root.resolve()):
+                raise SnapshotError("input_path_outside_runtime")
+            for part in (path, *path.parents):
+                if part == root.parent:
+                    break
+                if part.is_symlink():
+                    raise SnapshotError("symlink_input_rejected")
+            return result.hexdigest(), identity(before)
+        finally:
+            os.close(descriptor)
+    except OSError as exc:
+        raise SnapshotError("streamed_input_unavailable") from exc
+
+
+def streamed_input_hash(root: Path, relative: str) -> str:
+    return streamed_input_fingerprint(root, relative)[0]
 
 
 def stamp(value: object) -> datetime | None:
@@ -135,11 +204,14 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     if (root/PENDING).exists() and PENDING not in hashes:
         raise SnapshotError('research_inputs_changed')
     paths = {path for path in set(hashes) | {MARKET} if (root/path).exists()}
-    raws = {path: safe_read(root, path) for path in paths}
-    mismatch = [path for path, expected in hashes.items() if (digest(raws[path]) if path in raws else None) != expected]
+    streamed = {path: streamed_input_fingerprint(root, path) for path in paths & STREAM_HASH_INPUTS}
+    raws = {path: safe_read(root, path) for path in paths - STREAM_HASH_INPUTS}
+    mismatch = [path for path, expected in hashes.items()
+                if (streamed[path][0] if path in streamed else digest(raws[path]) if path in raws else None) != expected]
     if mismatch:
         raise SnapshotError("research_inputs_changed")
-    if safe_read(root, DECISION) != decision_raw or any(safe_read(root, p) != b for p, b in raws.items()):
+    if (safe_read(root, DECISION) != decision_raw or any(safe_read(root, p) != b for p, b in raws.items())
+            or any(streamed_input_fingerprint(root, path) != value for path, value in streamed.items())):
         raise SnapshotError("snapshot_changed_during_read")
     account_raw = json.loads(raws[ACCOUNT])
     orders_raw = json.loads(raws[ORDERS])

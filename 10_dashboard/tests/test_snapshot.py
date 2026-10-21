@@ -253,6 +253,81 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['candidates'][0]['quantity'], 1)
         self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
 
+    def test_large_hash_bound_research_report_preserves_the_genuine_account_snapshot(self):
+        relative = '04_research/company_research/opportunities.local/report.json'
+        payload = json.dumps({'retained_research': 'x' * 12_100_000}).encode()
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(payload)
+        self.decision['workflow_integrity']['input_hashes'][relative] = hashlib.sha256(payload).hexdigest()
+        self.publish()
+        current_events = {'status': 'ready', 'events': [{'ticker': 'ABC', 'status': 'reviewed_without_entry'}]}
+        original_safe_read = safe_read
+        # The actual snapshot path still validates account/holdings; the large
+        # journal is hash-only, never passed to the byte-retaining reader.
+        def bounded_read(root, name):
+            self.assertNotEqual(name, relative)
+            return original_safe_read(root, name)
+        with patch('server.safe_read', side_effect=bounded_read), patch('server.earnings_event_view', return_value=current_events):
+            result = read_snapshot(self.root, self.now)
+        self.assertEqual(result['account']['cash_available'], 1000)
+        self.assertEqual(result['positions'][0]['shares'], 2)
+        self.assertEqual(result['earnings_events'], current_events)
+        from server import streamed_input_fingerprint
+        original_fingerprint = streamed_input_fingerprint
+        calls = 0
+        def replace_between_reads(root, name):
+            nonlocal calls
+            value = original_fingerprint(root, name)
+            calls += 1
+            if calls == 1:
+                replacement = path.with_suffix('.replacement')
+                replacement.write_bytes(payload)
+                replacement.replace(path)
+            return value
+        with patch('server.streamed_input_fingerprint', side_effect=replace_between_reads), self.assertRaisesRegex(SnapshotError, 'snapshot_changed_during_read'):
+            read_snapshot(self.root, self.now)
+        with self.assertRaisesRegex(SnapshotError, 'input_missing_or_too_large'):
+            safe_read(self.root, relative)
+        path.write_bytes(payload + b' ')
+        with self.assertRaisesRegex(SnapshotError, 'research_inputs_changed'):
+            read_snapshot(self.root, self.now)
+
+    def test_streamed_research_rejects_symlinks_mutation_timeout_and_unregistered_paths(self):
+        import os
+        from server import streamed_input_hash
+        relative = '04_research/company_research/opportunities.local/store.json'
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b'x' * 2_000_000)
+        self.assertEqual(streamed_input_hash(self.root, relative), hashlib.sha256(path.read_bytes()).hexdigest())
+        with self.assertRaisesRegex(SnapshotError, 'unregistered_streamed_input'):
+            streamed_input_hash(self.root, DECISION)
+        original_read = os.read
+        changed = False
+        def mutating_read(descriptor, amount):
+            nonlocal changed
+            value = original_read(descriptor, amount)
+            if not changed:
+                changed = True
+                with path.open('ab') as handle:
+                    handle.write(b'changed')
+            return value
+        with patch('server.os.read', side_effect=mutating_read), self.assertRaisesRegex(SnapshotError, 'snapshot_changed_during_read'):
+            streamed_input_hash(self.root, relative)
+        with patch('server.monotonic', side_effect=[0, 6]), self.assertRaisesRegex(SnapshotError, 'streamed_input_read_timeout'):
+            streamed_input_hash(self.root, relative)
+        target = self.root / 'retained-real-journal.json'
+        path.rename(target)
+        path.symlink_to(target)
+        with self.assertRaisesRegex(SnapshotError, 'symlink_input_rejected'):
+            streamed_input_hash(self.root, relative)
+
+    def test_large_display_decision_is_still_rejected_before_parsing(self):
+        (self.root / DECISION).write_bytes(b' ' * 12_000_001)
+        with self.assertRaisesRegex(SnapshotError, 'input_missing_or_too_large'):
+            read_snapshot(self.root, self.now)
+
     def test_review_deadline_suppresses_both_held_and_new_quantities(self):
         result = read_snapshot(self.root, datetime.fromisoformat('2026-09-30T15:30:00-04:00'))
         self.assertEqual(result['plans'][0]['status'], 'expired')
