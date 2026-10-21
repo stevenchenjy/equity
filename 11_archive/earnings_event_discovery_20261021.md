@@ -50,6 +50,12 @@ into display bytes or raise the existing account/decision/display read limit.
 Regression coverage uses a genuinely oversized bound report and verifies
 changed bytes, replacement races, growth, timeouts and symlink rejection.
 
+A final recovery countercase proved that global duplicate suppression could
+retain an invalidated schedule even after the same valid event returned. The
+calendar adapter now records each changed semantic state against the preceding
+schedule observation; unchanged repolls remain duplicates. Repeated recovery
+cycles preserve original detection, source clocks and the complete journal.
+
 The observed omission regression fails with the original trigger adapter: two
 synthetic weak-momentum outside-universe companies do not reach research. It
 passes after repair. Additional checks cover capacity, shared budgets, stale and

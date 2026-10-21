@@ -282,14 +282,12 @@
   "280": "test_manual_valuation_bootstrap.py",
   "281": "admit_market_history_baseline.py",
   "282": "smoke_diagnostic_notes",
-  "284": "run_stage",
+  "283": "publication_meaning",
   "285": "PacketMarketObservationTests",
   "286": "IncorporationTests",
   "287": "feedback.py",
   "288": "Equity Research — Core Allocation Policy",
-  "289": "admit_market_history_baseline.py",
   "291": "test_momentum_price_coverage.py",
   "294": "test_tactical_order_scopes.py",
-  "296": "_DocumentPeriod",
-  "303": "SecPayload"
+  "296": "_DocumentPeriod"
 }

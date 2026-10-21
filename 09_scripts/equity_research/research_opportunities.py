@@ -12,8 +12,8 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
     read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, publish_store,
-    retain_input, validate_policy, require)
-from opportunity_triggers import collect_triggers
+    retain_input, validate_policy, validate_observation, require)
+from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
 from account_authority import load_authority, project_research_requirements
@@ -154,11 +154,29 @@ def intake(root: Path, *, current: datetime) -> dict:
         packets, diagnostics = collect_triggers(root, current=current, policy=policy)
         seen = {p["observation_id"] for i in items.values() for p in i["observations"]}
         by_ticker = {i["ticker"]: identity for identity, i in items.items()}
+        latest_schedules = {(i["ticker"], p["evidence"]["event"]["event_id"]): p
+            for i in items.values() for p in i["observations"]
+            if p.get("trigger") == "upcoming_earnings_calendar"}
         admitted = 0
         for p in sorted(packets, key=lambda i: priority(i, held, current=current)):
+            schedule_key = ((p["ticker"], p["evidence"]["event"]["event_id"])
+                if p.get("trigger") == "upcoming_earnings_calendar" else None)
             if p["observation_id"] in seen:
-                metrics["duplicate_packets_skipped"] += 1
-                continue
+                latest = latest_schedules.get(schedule_key)
+                semantic = lambda evidence: {k: v for k, v in evidence.items() if k != "prior_schedule_observation_id"}
+                if latest and semantic(latest["evidence"]) != semantic(p["evidence"]):
+                    # A recovery can match an earlier original schedule. Bind
+                    # this newly observed state to the immediately prior state
+                    # rather than rewriting history or discarding it as old.
+                    evidence = {**copy.deepcopy(p["evidence"]),
+                        "prior_schedule_observation_id": latest["observation_id"]}
+                    p = packet(ticker=p["ticker"], family=p["family"], trigger=p["trigger"],
+                        evidence=evidence, sources=p["sources"], current=aware(p["detected_at"]),
+                        produced_by=p["producer"], kind=p["instrument_kind"], missing=p["missing_evidence"])
+                    validate_observation(p, root=root, current=current)
+                else:
+                    metrics["duplicate_packets_skipped"] += 1
+                    continue
             identity = by_ticker.get(p["ticker"])
             if identity:
                 append_event(store, {"kind": "observed", "opportunity_id": identity,
@@ -173,6 +191,8 @@ def intake(root: Path, *, current: datetime) -> dict:
                     "blockers": ["bounded_research_capacity"]})
                 by_ticker[p["ticker"]] = identity
             seen.add(p["observation_id"])
+            if schedule_key:
+                latest_schedules[schedule_key] = p
         # A separately accepted analyst review can move deferred work into an
         # active state. Reconcile that real lifecycle transition before new
         # admissions; preserve its assessment and the displaced unfinished work.

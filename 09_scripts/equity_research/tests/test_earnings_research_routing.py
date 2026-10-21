@@ -215,6 +215,40 @@ class EarningsResearchRoutingTests(unittest.TestCase):
         self.assertEqual(after["diagnostics"]["capacity"]["protected_active_count"], 2)
         self.assertEqual(next(i for i in after["opportunities"] if i["ticker"] == "SYN")["assessment"], proposal)
 
+    def test_same_schedule_recovers_after_invalidation_and_repeated_cycles_without_resetting_history(self):
+        from opportunity_contract import validate_observation
+        original = self.event("NEW", 20)
+        first = self.collect([original])
+        item = next(i for i in first["opportunities"] if i["ticker"] == "NEW")
+        first_seen = item["first_seen_at"]
+        original_packet = copy.deepcopy(item["first_observation"])
+        blocked = copy.deepcopy(original)
+        blocked.update(timing="unverified", blockers=["earnings_calendar_receipt_stale"])
+        for cycle in range(2):
+            blocked_at = NOW + timedelta(minutes=cycle * 3 + 1)
+            state = self.collect([blocked], current=blocked_at)
+            item = next(i for i in state["opportunities"] if i["ticker"] == "NEW")
+            self.assertIsNone(upcoming_earnings(item, blocked_at))
+            prefix = read_json(self.root / STORE_REL)["events"]
+            recovered_at = blocked_at + timedelta(minutes=1)
+            recovered = copy.deepcopy(original)
+            recovered["last_observed_at"] = recovered_at.isoformat()
+            state = self.collect([recovered], current=recovered_at)
+            item = next(i for i in state["opportunities"] if i["ticker"] == "NEW")
+            self.assertIsNotNone(upcoming_earnings(item, recovered_at))
+            self.assertEqual(len(item["observations"]), cycle * 2 + 3)
+            self.assertEqual(item["first_seen_at"], first_seen)
+            self.assertEqual(item["first_observation"], original_packet)
+            self.assertEqual(read_json(self.root / STORE_REL)["events"][:len(prefix)], prefix)
+            self.assertEqual(item["observations"][-1]["sources"], original_packet["sources"])
+            self.assertEqual(item["observations"][-1]["evidence"]["event"]["first_detected_at"], original["first_detected_at"])
+            for observation in item["observations"]:
+                validate_observation(observation, root=self.root, current=recovered_at)
+            before_repeat = read_json(self.root / STORE_REL)["events"]
+            repeat = self.collect([recovered], current=recovered_at + timedelta(seconds=1))
+            self.assertEqual(read_json(self.root / STORE_REL)["events"], before_repeat)
+            self.assertEqual(next(i for i in repeat["opportunities"] if i["ticker"] == "NEW")["first_seen_at"], first_seen)
+
 
 if __name__ == "__main__":
     unittest.main()
