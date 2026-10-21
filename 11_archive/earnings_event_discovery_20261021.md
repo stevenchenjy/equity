@@ -69,6 +69,12 @@ preserving queue order, workload bounds and original history. The regression
 counts replay operations across hundreds of unchanged deferred leads, rather
 than relying on a timing-only test.
 
+The actual email byte-position check found the event section after large
+existing background cases. It now begins the separate research-background
+group immediately after action cards, with a large-background regression.
+The original scheduled send is retained; this presentation repair does not
+authorize an extra message or change any advice.
+
 Versioned production adapter bindings advance for changed implementations only.
 No approved numerical policy or strategy authority changes. Deployment, exact
 test totals, real pre-event observations, full refresh, final artifacts and

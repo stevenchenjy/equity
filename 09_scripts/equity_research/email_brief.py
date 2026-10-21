@@ -959,7 +959,11 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
     sections = cards(decision, view)
     earnings_card = earnings_research_card(decision)
     if earnings_card:
-        sections.append(earnings_card)
+        # Keep time-sensitive research immediately after action cards, ahead
+        # of retained long-form cases that mail clients may clip.
+        background_index = next((index for index, card in enumerate(sections)
+                                 if card.get("group") == "background"), len(sections))
+        sections.insert(background_index, earnings_card)
     return _render_cards(email_subject(decision), sections, title=title,
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
         footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
@@ -995,6 +999,9 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
         trade_lines += ["待研究标的：" + "、".join(rejected),
                         "上述自动短线情景未通过准入，本次新增 0 股。机械生成的观察价格和原始阻断代码仅保留在本地报告，不作为新的指令发送。"]
     sections.append(("订单与可复核方案", trade_lines))
+    earnings_card = earnings_research_card(decision)
+    if earnings_card:
+        sections.append((earnings_card["title"], earnings_card["body"].splitlines()))
     watch_lines = ["仅列本次确定性候选清单；不是全市场机会排名。"]
     for row in view["watchlist"]:
         watch_lines += [row["title"], row["reference"], row["instruction"], "依据：" + row["reason"], "再次复核条件：" + row["next_step"]]
@@ -1009,9 +1016,6 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
         evidence += [row["title"], row["url"] or "来源链接待核验"]
     sections.append(("证据与限制", evidence))
     sections.append(("四条规则与下一步", [*view["trading_rules"], view["next_step"], view["ai_note"]]))
-    earnings_card = earnings_research_card(decision)
-    if earnings_card:
-        sections.append((earnings_card["title"], earnings_card["body"].splitlines()))
     esc = lambda value: html.escape(str(value), quote=True)
     text = [subject]
     content = [f'<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">{esc(view["title"])}</h1>']

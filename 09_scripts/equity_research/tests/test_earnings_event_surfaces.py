@@ -1,8 +1,10 @@
 import copy
+import re
 import unittest
+from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
-from email_brief import earnings_research_card, render_email
+from email_brief import build_email_view, earnings_research_card, render_email
 from test_email_brief import decision_fixture
 
 
@@ -128,6 +130,39 @@ class EarningsEventPresentationTests(unittest.TestCase):
         self.assertIn('href="https://investor.atmeta.com/investor-news/"', document)
         self.assertIn("Valuation remains incomplete; do not enter.", plain)
         self.assertNotIn("javascript:", document)
+
+    def test_earnings_precedes_large_background_without_changing_action_cards(self):
+        decision = self.decision()
+        cards = [{"title": "Unchanged action card", "body": "No new order. Existing conditions remain unchanged.",
+                  "sources": [], "kind": "status", "group": "action"},
+                 {"title": "Large retained background", "body": "Retained background " + "x" * 125_000,
+                  "sources": [], "group": "background"}]
+        baseline = copy.deepcopy(decision)
+        baseline.pop("earnings_events")
+        before = copy.deepcopy(decision)
+        with patch("scheduled_email.cards", side_effect=lambda *_: copy.deepcopy(cards)):
+            _, original_text, original_html = render_email(baseline)
+            _, plain, document = render_email(decision)
+        for body in (plain, document):
+            self.assertGreater(len(body.encode()), 120_000)
+            self.assertLess(body.index("Unchanged action card"), body.index("Upcoming earnings research"))
+            self.assertLess(body.index("Upcoming earnings research"), body.index("Large retained background"))
+            self.assertLess(len(body[:body.index("Upcoming earnings research")].encode()), 20_000)
+        action_pattern = r'<div data-email-group="action".*?</div>'
+        self.assertEqual(re.findall(action_pattern, original_html, re.S), re.findall(action_pattern, document, re.S))
+        self.assertEqual(plain.split("Supporting information")[0], original_text.split("Supporting information")[0])
+        self.assertEqual(decision, before)
+
+    def test_legacy_compact_earnings_stays_after_order_section_before_large_discovery_background(self):
+        decision = self.decision()
+        decision.pop("workflow_integrity")
+        view = build_email_view(decision)
+        view["discovery"]["lines"] = ["Large discovery background " + "x" * 125_000]
+        with patch("email_brief.build_email_view", return_value=view):
+            _, plain, document = render_email(decision)
+        for body in (plain, document):
+            self.assertLess(body.index("订单与可复核方案"), body.index("Upcoming earnings research"))
+            self.assertLess(body.index("Upcoming earnings research"), body.index("Large discovery background"))
 
 
 if __name__ == "__main__":
