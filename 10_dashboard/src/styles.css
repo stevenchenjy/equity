@@ -77,6 +77,20 @@ h1, h2, h3 { text-wrap: balance; }
 .history-tools > .field:has(input) { flex: 2; min-width: min(100%, 200px); }
 .order-list > div { display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }
 .research-summary-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-top: 25px; }
+.earnings-events td { vertical-align: top; }
+.earnings-events td p, .earnings-events td details { margin-top: 8px; }
+.earnings-events td small { overflow-wrap: anywhere; }
+.earnings-pagination { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin: 12px 0; font-size: 13px; }
+.earnings-history { margin: 18px 0; }
+.earnings-history>summary { cursor: pointer; font-size: 14px; color: var(--muted); }
+@media(max-width:620px) {
+  .earnings-events .table-scroll { overflow: visible; }
+  .earnings-events table, .earnings-events tbody { display: block; }
+  .earnings-events thead { display: none; }
+  .earnings-events tr { display: block; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .earnings-events td { display: block; width: auto; border: 0; padding: 8px 0; font-size: 13px; }
+  .earnings-events td::before { content: attr(data-label); display: block; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+}
 .research-summary { min-width: 0; padding: 20px; background: #f6f8f5; border: 1px solid var(--rule); border-radius: 8px; }
 .research-summary-wide { grid-column: 1 / -1; }
 .research-summary h3 { margin-bottom: 14px; }

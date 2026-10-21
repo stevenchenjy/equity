@@ -1,0 +1,19 @@
+{
+  "schema_version": "equity_earnings_event_policy_v1",
+  "provider": "nasdaq_public_earnings_calendar",
+  "endpoint": "https://api.nasdaq.com/api/calendar/earnings",
+  "horizon_calendar_days": 14,
+  "requested_days": "weekdays",
+  "max_age_hours": 24,
+  "request_timeout_seconds": 10,
+  "maximum_response_bytes": 2097152,
+  "maximum_rows_per_date": 5000,
+  "maximum_attempts_per_date": 1,
+  "redirects_allowed": false,
+  "date_confidence": "exchange_calendar_estimate",
+  "coverage_scope": "All valid returned exchange-calendar leads for each requested weekday; not complete market coverage or issuer-confirmed dates.",
+  "capital_authority": false,
+  "canonical_admission": false,
+  "automatic_action_allowed": false,
+  "execution_authority": false
+}

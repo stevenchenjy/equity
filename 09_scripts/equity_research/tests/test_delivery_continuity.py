@@ -35,6 +35,21 @@ def fixture():
 
 
 class DeliveryContinuityTests(unittest.TestCase):
+    def test_earnings_collection_churn_is_quiet_but_completed_advice_matters(self):
+        a = fixture(); b = copy.deepcopy(a)
+        b['earnings_events'] = {'status': 'ready', 'generated_at': NOW.isoformat(),
+            'events': [{'ticker': 'OUTSIDE', 'event_id': 'e', 'timing': 'pre_event',
+                'status': 'awaiting_research', 'first_detected_at': NOW.isoformat()}]}
+        self.assertEqual(delivery_meaning_key(a), delivery_meaning_key(b))
+        event = b['earnings_events']['events'][0]
+        event.update(status='reviewed_without_entry', assessment_sha256='a'*64,
+            blockers=['valuation_pending'], next_step='No entry until a current sourced valuation and event downside review.')
+        self.assertNotEqual(delivery_meaning_key(a), delivery_meaning_key(b))
+        key = delivery_meaning_key(b)
+        b['earnings_events']['generated_at'] = '2026-09-02T14:15:00-04:00'
+        b['earnings_events']['coverage'] = {'latest_fetch_at': '2026-09-02T14:15:00-04:00'}
+        self.assertEqual(key, delivery_meaning_key(b))
+
     def test_next_day_and_weekend_rank_churn_do_not_repeat_retained_plan(self):
         a=fixture();b=copy.deepcopy(a)
         b.update(cycle_date='2026-09-05',generated_at='2026-09-05T13:00:00-04:00')

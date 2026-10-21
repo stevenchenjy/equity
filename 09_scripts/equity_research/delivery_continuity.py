@@ -91,6 +91,12 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
         "prior_action_not_structured", "multiple_deliveries_require_reconciliation"}
     meaning = {"recommendation": recommendation_notification_fingerprint(value),
                "shares": quantities, "cash": facts}
+    # A completed source-bound earnings judgment is advice even when it
+    # rejects an entry. Bulk calendar leads and polling clocks are not advice.
+    from earnings_events import notification_meaning as earnings_notification_meaning
+    event_advice = earnings_notification_meaning(decision.get("earnings_events", {}))
+    if event_advice:
+        meaning["earnings_event_advice"] = event_advice
     if decision.get("capital_decision") is not None:
         # The published exact draft, not an older 'up to' ceiling, is the
         # delivery baseline. Unqualified research churn and raw input hashes

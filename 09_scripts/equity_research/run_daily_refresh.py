@@ -57,6 +57,9 @@ STEP_SPECS = [
         "refresh_sec_filing_artifacts.py",
         True,
     ),
+    # Public earnings-calendar leads have their own research intake. They do
+    # not depend on the momentum shortlist or admit capital/market prices.
+    ("earnings_event_discovery", "refresh_earnings_events.py", True),
     ("research_opportunity_intake", "create_research_opportunities.py", True),
     # Bounded objective work uses retained official receipts before the normal
     # incorporation and valuation gates. It cannot author an investment thesis.
@@ -107,7 +110,7 @@ STEP_SPECS = [
     ("momentum_experiment_review", "create_momentum_experiment_review.py", True),
 ]
 ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review",
-    "research_opportunity_intake", "research_opportunity_objective", "capital_deployment_escalation"}
+    "earnings_event_discovery", "research_opportunity_intake", "research_opportunity_objective", "capital_deployment_escalation"}
 CURRENT_STATUS_SPEC = (
     "current_status",
     "generate_current_status.py",
@@ -119,6 +122,16 @@ def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
     if "dependency_before" in result:
         from decision_dependencies import record_attempt
         record_attempt(ROOT, result, result.pop("dependency_before"))
+    if result["name"] == "earnings_event_discovery":
+        marker = {
+            "stage": result["name"],
+            **{key: result[key] for key in ("started_at", "completed_at", "exit_code")}}
+        base = ROOT / "03_source_data/equity_research/earnings_events.local"
+        atomic_write_json(base / "last_stage_run.json", marker)
+        # Offline reuse success cannot erase an interrupted public fetch.
+        # The fetch CLI owns its successful network-completion marker.
+        if result["exit_code"] != 0:
+            atomic_write_json(base / "last_run.json", marker)
     if result["name"] in {"research_opportunity_intake", "research_opportunity_objective"}:
         stage = "intake" if result["name"].endswith("intake") else "objective"
         atomic_write_json(ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json"), {
@@ -156,6 +169,9 @@ def run_step(
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     extra_arguments = (
+        (["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])
+        if name == "earnings_event_discovery"
+        else
         ["--stage", "objective", *(["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])]
         if name == "research_opportunity_objective"
         else

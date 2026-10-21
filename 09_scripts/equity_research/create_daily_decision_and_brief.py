@@ -1191,6 +1191,11 @@ def main() -> int:
     from capital_decision import publish as publish_capital_decision, meaning as capital_meaning
     from decision_dependencies import publish as publish_dependencies
     compose_capital_contracts(decision, root=ROOT)
+    # Event discovery remains independent of momentum and cannot admit capital.
+    # Only the completed capital contract may supply conditional-plan status.
+    from earnings_events import summary as earnings_event_summary
+    decision["earnings_events"] = earnings_event_summary(
+        ROOT, current=now_et(), capital=decision["capital_decision"])
     publish_capital_decision(ROOT, decision["capital_decision"])
     publish_dependencies(ROOT, decision["capital_decision"])
     escalation_meaning = {key: decision["capital_deployment_escalation"].get(key) for key in (

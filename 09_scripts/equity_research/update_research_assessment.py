@@ -36,6 +36,38 @@ def validate_assessment(proposal: dict, *, root: Path, current: datetime, item: 
         for point in proposal[name]:
             require(bool(point.get("point")) and point.get("evidence_kind") in {"fact", "interpretation", "unknown"}, "research_point_invalid")
             validate_receipts(point["sources"], root=root, current=stamp)
+    event_review = proposal.get("earnings_event_review")
+    if event_review is not None:
+        # An event-specific judgment is separate from a generic business case.
+        # Keep every original detection clock; no retrospective pre-event claim.
+        from earnings_events import event_observations, validate_event_review
+        events, coverage = event_observations(root, current=current)
+        require(isinstance(event_review, dict), "earnings_event_review_invalid")
+        event = next((e for e in events if e["event_id"] == event_review.get("event_id")
+            and e["ticker"] == item["ticker"]), None)
+        require(event is not None, "earnings_event_review_event_unverified")
+        require(current < aware(event["research_deadline_at"]), "earnings_event_review_admitted_after_deadline")
+        require(aware(event["first_detected_at"]) <= stamp < next_review
+            <= aware(event["research_deadline_at"]), "earnings_event_review_after_deadline")
+        for key in ("expectations_case", "priced_in_assessment", "valuation_case",
+                    "downside_case", "recheck_condition"):
+            require(isinstance(event_review.get(key), str) and bool(event_review[key].strip()),
+                "earnings_event_review_missing_analysis")
+        validate_receipts(event_review.get("sources"), root=root, current=stamp)
+        admitted_sources = [s for p in item.get("observations", [])
+            if p.get("evidence", {}).get("event", {}).get("event_id") == event["event_id"]
+            and p.get("evidence", {}).get("event", {}).get("row_sha256") == event.get("row_sha256")
+            and p.get("evidence", {}).get("event", {}).get("schedule_version") == event.get("schedule_version")
+            for s in p.get("sources", [])]
+        observed = {s["sha256"] for s in admitted_sources}
+        require(observed and any(s["sha256"] in observed for s in event_review["sources"]),
+            "earnings_event_review_not_bound_to_detection")
+        validate_event_review(event_review, event, root=root, current=current,
+            assessed_at=proposal["assessed_at"], admitted_sources=admitted_sources)
+        if proposal["conclusion"] == "supported":
+            require(coverage["status"] == "ready" and event.get("timing") == "pre_event"
+                and not event.get("blockers") and event.get("status") != "schedule_conflict",
+                "earnings_event_supported_requires_current_schedule")
     if proposal["conclusion"] == "supported":
         require(item["state"] in {"evidence_attached", "insufficient_evidence", "research_supported"}
             and proposal["data_confidence"] != "unverified", "research_supported_requires_objective_evidence")

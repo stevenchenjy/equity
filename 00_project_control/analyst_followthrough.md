@@ -370,6 +370,21 @@ external dependencies.
 
 ## Early research opportunities
 
+### Upcoming earnings
+
+Read `earnings_event_research.md` and the final decision's `earnings_events`
+view. After urgent held/adverse risk, prioritize imminent event deadlines
+independently of momentum and the older ordinary candidate queue. All returned
+leads are research attention only; preserve capacity deferrals, estimates,
+schedule conflicts and elapsed unreviewed work. Use the existing assessment
+writer's `earnings_event_review` contract to record expectations, priced-in
+case, valuation, downside and recheck conditions before the event deadline.
+Unknowns support a precise unresolved/no-entry outcome, never a fabricated
+positive case. Only existing canonical thesis, valuation, capital and tactical
+gates may produce a conditional plan. See the event guide for exact fields and
+source/time validation. Verify actual pre-event detection and recorded review
+separately; a dossier, deployment or historical notice is not analytical completion.
+
 Read the validated opportunity view and its source-bound journal described in
 `research_opportunity_architecture.md` alongside the existing backlog. Held and
 urgent adverse work still comes first. Prioritize the most decision-relevant

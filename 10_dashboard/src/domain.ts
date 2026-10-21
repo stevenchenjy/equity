@@ -60,6 +60,7 @@ export type CapitalDeploymentEscalation = {
   explanation:string; automatic_action_allowed:false;
 };
 export type Snapshot = {
+  earnings_events?: EarningsEventView;
   account_authority?:CapitalDecision['account_authority'];
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;
   market_session: string; expected_market_session?: string; market_current?: boolean; market_sources?: string[]; stale: boolean; snapshot_id: string; account_version: string; research_ready?: boolean;
@@ -74,6 +75,24 @@ export type Snapshot = {
   global_blockers: string[];
   capital_decision?:CapitalDecision|null; capital_decision_status?:string;
   capital_deployment_escalation?:CapitalDeploymentEscalation|null;
+};
+export type EarningsEventView = {
+  schema_version: 'equity_earnings_event_view_v1'; generated_at: string;
+  status: 'ready' | 'partial' | 'stale' | 'unverified' | 'missing';
+  coverage: { scope?: string; horizon_start?: string; horizon_end?: string; days_requested?: number;
+    days_verified?: number; failed_dates?: string[]; events_detected?: number; latest_fetch_at?: string };
+  events: EarningsEvent[]; capital_authority: false; automatic_action_allowed: false;
+};
+export type EarningsEvent = {
+  event_id: string; ticker: string; company_name: string; event_date: string;
+  session: 'after_close' | 'before_open' | 'time_unknown'; event_at: string | null;
+  research_deadline_at: string | null; first_detected_at: string;
+  timing: 'pre_event' | 'post_event' | 'elapsed' | 'unverified';
+  status: 'detected' | 'awaiting_research' | 'research_in_progress' | 'reviewed_without_entry'
+    | 'eligible_conditional_plan' | 'elapsed_unreviewed' | 'cancelled' | 'schedule_conflict';
+  date_confidence: 'exchange_calendar_estimate' | 'issuer_confirmed'; research_state: string;
+  blockers: string[]; next_step: string;
+  sources: { source_url: string; sha256: string; path: string; available_at: string }[];
 };
 export type Feedback = {
   entry_mode?: 'simple' | 'simple_total'; order_link_mode?: 'independent';

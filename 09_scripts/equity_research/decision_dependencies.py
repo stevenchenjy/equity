@@ -9,12 +9,14 @@ from typing import Any
 from daily_common import canonical_sha256, read_json, sha256_file, atomic_write_json
 
 STAGE_INPUTS = {
+ 'earnings_event_discovery': ['01_policies/earnings_event_policy.json', '03_source_data/equity_research/earnings_events.local.json'],
  'official_evidence': ['03_source_data/equity_research/sec_submission_acceptance_index.json'],
  'research_backlog': ['03_source_data/equity_research/daily_fundamentals.csv', '04_research/company_research/research_backlog.local.json'],
  'research_opportunity_objective': ['04_research/company_research/opportunities.local/store.json'],
  'valuation_scenarios': ['04_data/equity_research/valuation_inputs.local.json'],
 }
 STAGE_OUTPUTS = {
+ 'earnings_event_discovery': ['03_source_data/equity_research/earnings_events.local.json', '03_source_data/equity_research/earnings_events_status.local.json'],
  'official_evidence': ['03_source_data/equity_research/daily_evidence_status.json',
                        '03_source_data/equity_research/daily_evidence_ledger.csv',
                        '03_source_data/equity_research/sec_acceptance_extension_admission_audit.csv'],

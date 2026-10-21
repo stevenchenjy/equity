@@ -7,6 +7,8 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Independent earnings-event research](earnings_event_research.md): rolling public calendar leads independent of momentum, deadline-aware research attention, event-specific assessments and unchanged capital gates; estimated dates and incomplete coverage remain explicit.
+
 - [Company valuation admission](company_valuation_admission.md): owner-authorized October 12 bridge from individually reviewed immutable company cases to canonical decisions; current evidence and independent allocation/entry gates remain.
 
 - [SEC acceptance corrections](sec_acceptance_corrections.md): independent archive-header/index proof, canonical Eastern clock conversion and immutable observation history; no generic timezone tolerance or frozen-experiment rewriting.

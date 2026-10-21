@@ -166,6 +166,47 @@ def validate_approval(record: dict, *, root: Path, current: datetime) -> dict:
 def collect_triggers(root: Path, *, current: datetime, policy: dict) -> tuple[list, dict]:
     produced_by = producer(root, policy)
     packets, diagnostics = [], {"unverified": [], "experiment_review_only": [], "network_requests": 0}
+    # The public earnings calendar is an independent research lead, including
+    # issuers outside the canonical universe and every momentum shortlist.
+    # Its original receipts remain separate from this actual intake clock.
+    try:
+        from earnings_events import event_observations
+        events, coverage = event_observations(root, current=current)
+        diagnostics["earnings_calendar"] = coverage
+        known_schedules = {record.get("observation", {}).get("evidence", {}).get("event", {}).get("event_id")
+            for record in read_json(root / "04_research/company_research/opportunities.local/store.json", {}).get("events", [])
+            if record.get("observation", {}).get("trigger") == "upcoming_earnings_calendar"}
+        for event in events:
+            try:
+                eligible_lead = not (event.get("timing") != "pre_event" or event.get("blockers")
+                        or event.get("status") == "schedule_conflict"
+                        or aware(event["research_deadline_at"]) <= current)
+                # A newly uncertain lead stays in calendar diagnostics. An
+                # already routed schedule must retain the new conflict so its
+                # previous, favorable priority is not silently reused.
+                if not eligible_lead and event.get("event_id") not in known_schedules:
+                    continue
+                sources = event["sources"]
+                validate_receipts(sources, root=root, current=current)
+                require(aware(event["first_detected_at"]) <= current,
+                    "earnings_detection_from_future")
+                # Receipt refreshes do not create a new research hypothesis.
+                # Exact source bytes live in packet.sources; stable schedule
+                # and identity fields define the observation itself.
+                evidence = {"event": {k: v for k, v in event.items()
+                    if k not in {"sources", "last_seen_at", "last_checked_at", "last_observed_at", "fetched_at"}},
+                    "schedule_authority": "research_lead_only_not_entry_approval"}
+                packets.append(packet(ticker=event["ticker"], family="catalyst",
+                    trigger="upcoming_earnings_calendar", evidence=evidence,
+                    sources=sources, current=current, produced_by=produced_by,
+                    missing=["earnings_expectations_and_priced_in_case", "event_downside_and_counterevidence",
+                        "company_specific_valuation", "canonical_admission_and_existing_entry_gates", *event.get("blockers", [])]))
+            except (ValueError, KeyError, OSError, TypeError):
+                diagnostics["unverified"].append({"ticker": event.get("ticker"),
+                    "reason": "earnings_event_source_or_clock_unverified"})
+    except (ImportError, ValueError, KeyError, OSError, TypeError):
+        diagnostics["earnings_calendar"] = {"status": "unverified",
+            "reason": "earnings_calendar_current_receipts_unverified"}
     discovery = load_discovery(root, current)
     diagnostics["discovery_status"] = discovery["status"]
     diagnostics["discovery_candidates"] = discovery.get("coverage", {}).get("screen_eligible_count", 0)

@@ -204,3 +204,9 @@ graphify-out/reflections/
 # Independent short account transactions and stable research context
 00_project_control/run_logs/account_records.lock
 00_project_control/run_logs/account_research_version.local.json
+
+# Retained public earnings-calendar observations and source-bound scans.
+03_source_data/equity_research/earnings_events.local/
+03_source_data/equity_research/earnings_events.local.json
+03_source_data/equity_research/earnings_events_status.local.json
+00_project_control/run_logs/earnings_events.lock

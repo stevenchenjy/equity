@@ -880,13 +880,78 @@ def _render_compact_owner(decision: dict[str, Any], sections: list[dict[str, Any
         footer=f"Research only. No orders have been placed or changed. The automated baseline uses {baseline} data; this dated owner review is separate and does not override its eligibility checks.")
 
 
+def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
+    """Present event research separately; calendar membership never grants shares."""
+    report = decision.get("earnings_events")
+    if not isinstance(report, dict) or report.get("schema_version") != "equity_earnings_event_view_v1":
+        return None
+    coverage = report.get("coverage") or {}
+    status = str(report.get("status", "unverified"))
+    events = [row for row in report.get("events", []) if isinstance(row, dict)]
+    def deadline_order(row: dict[str, Any]) -> tuple:
+        try:
+            deadline = datetime.fromisoformat(str(row.get("research_deadline_at", "")))
+            timestamp = deadline.timestamp() if deadline.tzinfo else float("inf")
+        except (ValueError, TypeError, OverflowError):
+            timestamp = float("inf")
+        return timestamp, str(row.get("event_date", "")), str(row.get("ticker", "")), str(row.get("event_id", ""))
+    upcoming = sorted((row for row in events if row.get("timing") == "pre_event"
+                       and row.get("status") != "cancelled"), key=deadline_order)
+    other_count = len(events) - len(upcoming)
+    lines = [
+        f"Coverage: {coverage.get('scope', 'unverified scope')}; {coverage.get('horizon_start', 'unknown')} to "
+        f"{coverage.get('horizon_end', 'unknown')}; {coverage.get('days_verified', 0)}/{coverage.get('days_requested', 0)} dates verified. Status: {status}.",
+        "Independent of momentum rank. These are research tasks; entry, valuation and risk gates still apply.",
+        f"Upcoming research events: {len(upcoming)}. Elapsed, cancelled or timing-unverified retained events: {other_count}; kept separately on the dashboard.",
+    ]
+    failures = coverage.get("failed_dates") or []
+    if failures:
+        lines.append("Unverified calendar dates: " + ", ".join(str(value) for value in failures) + ".")
+    capital = decision.get("capital_decision") or {}
+    admitted = {row.get("ticker") for row in capital.get("decisions", []) if isinstance(row, dict)
+                and row.get("decision") in {"ACTIONABLE_BUY", "ACTIONABLE_ADD"}
+                and _decimal(row.get("shares")) is not None and _decimal(row.get("shares")) > 0
+                and isinstance(row.get("order_draft"), dict) and row["order_draft"].get("side") == "buy"}
+    names = {"detected": "Detected", "awaiting_research": "Awaiting research", "research_in_progress": "Research in progress",
+             "reviewed_without_entry": "Reviewed without entry", "eligible_conditional_plan": "Eligible conditional plan — see action cards",
+             "elapsed_unreviewed": "Elapsed without pre-event review", "cancelled": "Cancelled", "schedule_conflict": "Schedule conflict"}
+    sessions = {"after_close": "after close", "before_open": "before open", "time_unknown": "time unconfirmed"}
+    # Keep the daily message compact; the dashboard retains every detected event.
+    for row in upcoming[:6]:
+        event_status = str(row.get("status", "detected"))
+        if event_status == "eligible_conditional_plan" and (status != "ready" or row.get("ticker") not in admitted
+                or row.get("timing") != "pre_event"):
+            event_status = "research_in_progress"
+        confidence = "issuer-confirmed" if row.get("date_confidence") == "issuer_confirmed" else "exchange estimate; issuer confirmation required"
+        lines.append(f"{row.get('ticker', 'Unknown')}: {row.get('event_date', 'unknown')} {sessions.get(row.get('session'), 'time unconfirmed')} "
+                     f"({confidence}); {names.get(event_status, 'Research state unverified')}. Research deadline: "
+                     f"{row.get('research_deadline_at') or 'unverified'}.")
+        details = [str(value) for value in row.get("blockers", []) if value]
+        if details:
+            lines.append("Research dependency: " + "; ".join(details) + ".")
+        if row.get("next_step"):
+            lines.append("Next: " + str(row["next_step"]))
+    if not upcoming:
+        lines.append("No verified upcoming event is available in this retained coverage." if status != "ready"
+                     else "No upcoming event was detected in the verified calendar coverage.")
+    if len(upcoming) > 6:
+        lines.append(f"Showing 6 of {len(upcoming)} upcoming events, earliest research deadline first. Open Upcoming earnings research on the dashboard for every retained event and source.")
+    else:
+        lines.append("Full retained event history and source receipts are available under Upcoming earnings research on the dashboard.")
+    return {"title": "Upcoming earnings research", "body": "\n".join(lines), "sources": [], "group": "background"}
+
+
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
     verified = decision.get('market_gate', {}).get('passed') is True
     title = ("Limited evidence update" if decision.get("capital_decision")
              and decision.get("evidence_gate", {}).get("passed") is False else "Your action plan")
-    return _render_cards(email_subject(decision), cards(decision, view), title=title,
+    sections = cards(decision, view)
+    earnings_card = earnings_research_card(decision)
+    if earnings_card:
+        sections.append(earnings_card)
+    return _render_cards(email_subject(decision), sections, title=title,
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
         footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
                 + ("This system has placed or changed no orders; owner execution is verified only through account records."
@@ -935,6 +1000,9 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
         evidence += [row["title"], row["url"] or "来源链接待核验"]
     sections.append(("证据与限制", evidence))
     sections.append(("四条规则与下一步", [*view["trading_rules"], view["next_step"], view["ai_note"]]))
+    earnings_card = earnings_research_card(decision)
+    if earnings_card:
+        sections.append((earnings_card["title"], earnings_card["body"].splitlines()))
     esc = lambda value: html.escape(str(value), quote=True)
     text = [subject]
     content = [f'<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">{esc(view["title"])}</h1>']

@@ -25,6 +25,9 @@ OUTCOMES = {'ACTIONABLE_BUY','ACTIONABLE_ADD','HOLD','REDUCE_REVIEW','EXIT_REVIE
 BUY = {'ACTIONABLE_BUY','ACTIONABLE_ADD'}
 EXITS = {'REDUCE_REVIEW','EXIT_REVIEW'}
 INPUTS = {
+ '01_policies/earnings_event_policy.json',
+ '03_source_data/equity_research/earnings_events.local.json',
+ '03_source_data/equity_research/earnings_events_status.local.json',
  POLICY_REL,
  REGISTRY, '00_project_control/active_production_config.json', '01_policies/tactical_trade_policy.json',
  '05_risk_and_positions/current_account_state.local.json','05_risk_and_positions/current_positions.local.csv',
@@ -36,6 +39,7 @@ INPUTS = {
  '07_automation/email_delivery/daily_delivery_ledger.csv',
  '05_risk_and_positions/manual_account_snapshot.local.json',
  '04_research/company_research/opportunities.local/store.json',
+ '04_research/company_research/opportunities.local/report.json',
  '03_source_data/equity_research/daily_fundamentals.csv',
  '03_source_data/equity_research/daily_evidence_status.json',
  '03_source_data/equity_research/sec_filing_artifact_index.json',

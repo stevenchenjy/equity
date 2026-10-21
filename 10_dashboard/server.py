@@ -117,8 +117,8 @@ def project_core_roles(rows: list[dict], allocation: dict | None, field: str) ->
 def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     """Capture retained bytes, verify publication fingerprints, then read back.
 
-    Production callers also hold the existing runtime lock. No pipeline module
-    is imported: several readers have persistence side effects.
+    Production callers also hold the existing runtime lock. Imported contract
+    validators and event projections are read-only; pipeline writers stay out.
     """
     now = now or datetime.now(ET)
     decision_raw = safe_read(root, DECISION)
@@ -275,7 +275,37 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                             d.get("workflow_integrity", {}).get("global_blockers", [])),
         "capital_decision": capital, "capital_decision_status": capital_status,
         "capital_deployment_escalation": escalation_view(d, current_contract=capital_status == "current"),
+        "earnings_events": earnings_event_view(root, now, capital=capital,
+                                               current_contract=capital_status == "current"),
     }
+
+
+def earnings_event_view(root: Path, current: datetime, *, capital: dict | None = None,
+                       current_contract: bool = False) -> dict:
+    """Read validated event research; a busy/invalid contract never retains eligibility."""
+    from earnings_events import summary
+    try:
+        result = summary(root, current=current, capital=capital if current_contract else None)
+    except (OSError, ValueError, KeyError, TypeError):
+        return {"schema_version": "equity_earnings_event_view_v1", "generated_at": current.isoformat(),
+                "status": "unverified", "coverage": {}, "events": [],
+                "capital_authority": False, "automatic_action_allowed": False}
+    # Projection must not mutate durable event history or infer a trade from a
+    # prior snapshot while account/research inputs are being recomposed.
+    result = json.loads(json.dumps(result))
+    result.update(capital_authority=False, automatic_action_allowed=False)
+    admitted = {row.get("ticker") for row in (capital or {}).get("decisions", []) if isinstance(row, dict)
+                and row.get("decision") in {"ACTIONABLE_BUY", "ACTIONABLE_ADD"}
+                and (number(row.get("shares")) or 0) > 0
+                and isinstance(row.get("order_draft"), dict) and row["order_draft"].get("side") == "buy"}
+    for row in result.get("events", []):
+        if row.get("status") == "eligible_conditional_plan" and (
+                not current_contract or result.get("status") != "ready"
+                or row.get("ticker") not in admitted or row.get("timing") != "pre_event"):
+            row["status"] = "research_in_progress"
+            row["blockers"] = list(dict.fromkeys([*(row.get("blockers") or []), "current_conditional_plan_unverified"]))
+            row["next_step"] = "Recompose and verify a current capital decision; no event-based order is eligible."
+    return result
 
 
 def escalation_view(decision, *, current_contract):
@@ -334,7 +364,8 @@ def current_snapshot(root, *, research_busy=False):
             positions=[dict(ticker=r['ticker'],shares=float(r['shares_optional']),price=number(market.get(r['ticker'],{}).get('last_price')) if market.get(r['ticker'],{}).get('data_quality_label')=='ok' else None,
                 weight=float(r['shares_optional'])*float(market[r['ticker']]['last_price'])/total*100 if known and total else None,role='待研究') for r in positions],
             plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'],
-            capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False))
+            capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False),
+            earnings_events=earnings_event_view(root, datetime.now(ET), current_contract=False))
     if not result.get('research_ready'):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
         result['market_sources'] = d.get('market_gate', {}).get('data_sources', [])

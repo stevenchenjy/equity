@@ -256,6 +256,7 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
     for ticker in sorted(set(rows) | set(attention) | {t for t in companies if _ticker(t)} | {t for t in held if _ticker(t)}):
         row, company, dossier = rows.get(ticker, {}), companies.get(ticker, {}), dossiers.get(ticker, {})
         opportunity = attention.get(ticker, {})
+        event = None
         # Source-bound research-only facts can complete research gaps without
         # becoming rows in the canonical table or changing its authority.
         if not row and opportunity.get("objective_status") == "source_bound":
@@ -309,8 +310,22 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
         tier = 0 if held_ticker else 1 if material_reopen else 2 if "valuation_pending" in company.get("readiness", "") else 3
         if opportunity:
             reasons += ["durable_early_research_opportunity", "first_trigger:"+opportunity["first_observation"]["trigger"]]
-            from research_opportunities import priority
-            tier = min(tier, priority(opportunity, held)[0])
+            from research_opportunities import priority, upcoming_earnings
+            tier = min(tier, priority(opportunity, held, current=current)[0])
+            event = upcoming_earnings(opportunity, current)
+            if event:
+                reasons.append("scheduled_earnings_research_before_event")
+                gaps_for_event = ("earnings_expectations_and_priced_in_case", "event_downside_and_counterevidence")
+                for code in gaps_for_event:
+                    gap_id = canonical_sha256({"ticker": ticker, "kind": "reasoning", "reason_code": code})
+                    if gap_id not in {i["gap_id"] for i in ticker_items}:
+                        event_item = {"gap_id": gap_id, "ticker": ticker, "kind": "reasoning", "reason_code": code,
+                            "status": "pending_research", "completion_mode": "analyst_research_required",
+                            "source_as_of": event["first_detected_at"], "source_provenance": [],
+                            "first_seen_at": old_items.get(gap_id, {}).get("first_seen_at", current.isoformat()),
+                            "last_checked_at": current.isoformat(), "objective_fillability": "analyst_reasoning_required",
+                            "next_step": "Record expectations, priced-in valuation, countercase and event downside before the dated research deadline; existing entry gates remain required."}
+                        items.append(event_item); ticker_items.append(event_item); outstanding.append(event_item)
         from research_opportunities import negative_assessment_wait
         negative_wait = (not held_ticker and not material_reopen and negative_assessment_wait(opportunity,
             current=current, market_session_date=research.get("market_session_date")))
@@ -325,7 +340,8 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
             "priority_key": [tier, rank.get(ticker, 999), ticker],
             **({"attention_state": opportunity["state"], "attention_first_seen_at": opportunity["first_seen_at"],
                 "attention_queue_age_hours": opportunity.get("queue_age_hours"),
-                "attention_blockers": opportunity["blockers"], "evidence_scope": "canonical" if ticker in rows else "research_only_no_canonical_admission"} if opportunity else {})})
+                "attention_blockers": opportunity["blockers"], "evidence_scope": "canonical" if ticker in rows else "research_only_no_canonical_admission",
+                **({"upcoming_earnings": {k: event.get(k) for k in ("event_id", "event_date", "session", "event_at", "research_deadline_at", "first_detected_at", "date_confidence")}} if event else {})} if opportunity else {})})
     # Previously open numeric fields disappear from the current missing set
     # only when canonical data now supplies them; retain their resolution record.
     existing_ids = {r["gap_id"] for r in items}
@@ -341,13 +357,25 @@ def build_backlog(*, fundamentals: list[dict], positions: list[dict], research: 
             group["priority_reasons"].append("two_session_capital_escalation_research_priority")
     # This same issuer_queue drives the objective loop. Escalation changes the
     # order of existing work, never its evidence admission or processing budget.
-    groups.sort(key=lambda r: (escalation_rank.get(r["ticker"], len(escalation_rank)), *r["priority_key"]))
+    from research_opportunities import upcoming_earnings
+    upcoming = {ticker: upcoming_earnings(item, current) for ticker, item in attention.items()}
+    urgent_pool = any(event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+        for event in upcoming.values())
+    def work_key(group):
+        event = upcoming.get(group["ticker"])
+        urgent = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+        # Keep existing work order when no urgent event is competing. When
+        # time-sensitive work is present, held/adverse risk keeps first place.
+        bucket = 0 if urgent_pool and group["priority_key"][0] == 0 else 1 if urgent else 2
+        return (bucket, aware(event["research_deadline_at"]).isoformat() if urgent else "",
+            escalation_rank.get(group["ticker"], len(escalation_rank)), *group["priority_key"])
+    groups.sort(key=work_key)
     for i, row in enumerate(groups, 1):
         row["priority_rank"] = i
     return {"schema_version": "equity_research_backlog_v1", "generated_at": current.isoformat(), "status": "ready",
         "automatic_action_allowed": False, "work_budget_tickers": max_tickers,
-        "priority_basis": ("Active two-session escalation candidates first, then held/reopened research and the existing fundamental queue; workload order does not admit a trade."
-            if escalation_rank else "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking."),
+        "priority_basis": ("Urgent held/adverse risk precedes imminent earnings deadlines; ordinary work retains capital-escalation and fundamental order. Workload order does not admit a trade."
+            if escalation_rank or urgent_pool else "Held and reopened research, then existing fundamental queue; workload order is not an investment ranking."),
         "priority_queue": [r for r in groups if r["gap_ids"] and not r["assessment_waiting_for_change"] and (r["ticker"] in rows or r.get("attention_state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"})][:max_tickers], "issuer_queue": groups, "items": items,
         "counts": dict(Counter(r["status"] for r in items)), "network_requests": 0,
         "analyst_reviews_completed": 0, "valuation_assumptions_created": 0}
@@ -580,16 +608,41 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
                 dossiers[ticker] = {**dossier, "status": "unverified", "reason_code": "source_set_changed_requires_reassessment"}
         from capital_escalation import research_priorities
         escalation_priorities = research_priorities(input_root, current)
+        attention = attention_rows(input_root, current)
         initial = build_backlog(fundamentals=fundamentals, positions=positions, research=research,
             dossiers=dossiers, current=current, previous=previous, max_tickers=max_tickers,
-            opportunities=attention_rows(input_root, current), escalation_priorities=escalation_priorities)
+            opportunities=attention, escalation_priorities=escalation_priorities)
         by_ticker = {r["ticker"]: r for r in fundamentals}
+        # The following isolated issuer worker shares this work budget. Reserve
+        # its existing bounded external slots before ordinary canonical tasks
+        # consume them all; this does not increase total or network allowances.
+        from research_opportunities import upcoming_earnings
+        from opportunity_contract import POLICY_REL
+        external_limit = read_json(input_root / POLICY_REL, {}).get("external_issuers_per_fetch", 0)
+        if type(external_limit) is not int or not 0 <= external_limit <= 3:
+            raise ValueError("research_external_work_budget_invalid")
+        reserved_events = []
+        for item in attention:
+            event = upcoming_earnings(item, current)
+            if (item["ticker"] not in by_ticker and event
+                    and timedelta(0) < aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+                    and item.get("state") not in {"deferred_capacity", "expired", "rejected", "economics_failed"}
+                    and item.get("objective_status") != "source_bound"):
+                reserved_events.append((aware(event["research_deadline_at"]), item["ticker"]))
+        urgent_canonical = sum(group["priority_key"][0] == 0 and group["ticker"] in by_ticker
+            and last_attempts.get(group["ticker"], {}).get("source_fingerprint") != fingerprints.get(group["ticker"])
+            for group in initial["issuer_queue"])
+        reservation_limit = min(external_limit, max(0, max_tickers - urgent_canonical))
+        reserved_tickers = [ticker for _, ticker in sorted(reserved_events)[:reservation_limit]]
+        canonical_budget = max_tickers - len(reserved_tickers)
         attempts, receipts, pending = [], [], []
         run_id = canonical_sha256({"started_at": current.isoformat(), "previous_hash": records[-1]["record_hash"] if records else "",
             "fundamentals_sha256": original_sha})
         _append_history(output_root / HISTORY_REL, records, {"kind": "run_started", "run_id": run_id,
             "recorded_at": current.isoformat(), "automatic_action_allowed": False})
         for group in initial["issuer_queue"]:
+            if len(pending) >= canonical_budget:
+                break
             ticker = group["ticker"]
             if group.get("assessment_waiting_for_change"):
                 continue
@@ -663,6 +716,7 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             "recorded_at": current.isoformat(), "status": "success", "reason_code": "bounded_official_cache_research_completed",
             "objective_attempt_count": len(attempts), "automatic_action_allowed": False})
         report.update(attempts=attempts, attempts_latest_run=attempts, selected_tickers=[r["ticker"] for r in attempts],
+            reserved_external_event_tickers=reserved_tickers,
             history_records=len(records), history_head_hash=records[-1]["record_hash"],
             objective_dossiers_completed=sum(r["status"] == "objective_dossier_completed" for r in attempts),
             financial_fields_completed=sum(len(r["fields_completed"]) for r in attempts),

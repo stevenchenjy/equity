@@ -406,6 +406,15 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         actual = sha256_file(root / candidate) if (root / candidate).exists() else None
         if digest != actual:
             raise ValueError("workflow_inputs_changed_recompose_required")
+    if isinstance(decision.get("earnings_events"), dict):
+        # The top-level scan hash cannot establish integrity of its nested
+        # retained source bytes. Revalidate the research view before delivery;
+        # a recomposition can disclose failed coverage without freezing an
+        # unrelated company's canonical entry or risk review.
+        from earnings_events import summary as event_summary, publication_meaning
+        current_events = event_summary(root, current=current, capital=decision.get("capital_decision"))
+        if publication_meaning(current_events) != publication_meaning(decision["earnings_events"]):
+            raise ValueError("workflow_earnings_events_changed_recompose_required")
     current_context = load_plan_context(root, decision.get("held_positions", []), current)
     # Reapply the preserved baseline only to detect current conflicts, not to
     # change any persisted decision or economic fact during validation.

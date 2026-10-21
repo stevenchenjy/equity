@@ -31,14 +31,66 @@ def held_tickers(root: Path) -> set[str]:
     return result
 
 
-def priority(item: dict, held: set[str]) -> tuple:
+def upcoming_earnings(item: dict, current: datetime | None = None) -> dict | None:
+    """Nearest actionable research deadline, never an investment conclusion.
+
+    A real intake clock is required for a priority boost. Retained post-event,
+    contradictory or canceled leads remain evidence without urgent priority.
+    """
+    if current is None:
+        return None
+    candidates = []
+    observations = item.get("observations", [item])
+    # A later schedule observation supersedes its earlier schedule version.
+    # Keep every version in the journal instead of erasing changed dates.
+    latest = {}
+    for observation in observations:
+        if observation.get("trigger") == "upcoming_earnings_calendar":
+            event = observation.get("evidence", {}).get("event", {})
+            latest[event.get("event_id", observation.get("observation_id"))] = event
+    for event in latest.values():
+        try:
+            if (event.get("status") in {"schedule_conflict", "cancelled", "canceled", "unverified", "elapsed", "past", "elapsed_unreviewed"}
+                    or event.get("timing", "pre_event") != "pre_event" or event.get("blockers")):
+                continue
+            if event.get("date_confidence") in {"conflicting", "conflict", "unverified"}:
+                continue
+            deadline = aware(event["research_deadline_at"])
+            event_time = aware(event["event_at"]) if event.get("event_at") else None
+            if deadline <= current or event_time is not None and event_time <= current:
+                continue
+            # Unknown session times must not imply that an event is still
+            # upcoming after its dated research cutoff has elapsed.
+            if aware(event["first_detected_at"]) > current:
+                continue
+            candidates.append((deadline, event))
+        except (ValueError, KeyError, TypeError):
+            continue
+    return min(candidates, key=lambda pair: pair[0])[1] if candidates else None
+
+
+def priority(item: dict, held: set[str], *, current: datetime | None = None) -> tuple:
     """One authoritative attention priority used by intake and backlog adapter."""
     observations = item.get("observations", [item])
-    families = {p["family"] for p in observations}
+    event = upcoming_earnings(item, current)
+    families = {p["family"] for p in observations if p.get("trigger") != "upcoming_earnings_calendar"}
+    if event:
+        families.add("catalyst")
     adverse = any(p["family"] == "catalyst" and p["evidence"].get("event", {}).get("direction") == "negative" for p in observations)
     tier = 0 if item["ticker"] in held or adverse else 1 if "catalyst" in families else 2 if families & {"business", "request"} else 3
     rank = min((p["evidence"].get("metrics", {}).get("rank", 999) for p in observations), default=999)
-    return (tier, rank, item.get("first_seen_at", item.get("detected_at", "")), item["ticker"])
+    deadline = aware(event["research_deadline_at"]).isoformat() if event else "9999-12-31"
+    return (tier, deadline, rank, item.get("first_seen_at", item.get("detected_at", "")), item["ticker"])
+
+
+def work_priority(item: dict, held: set[str], *, current: datetime,
+                  escalation_rank: dict[str, int]) -> tuple:
+    """Urgent held risk, dated event work, then ordinary capital escalation."""
+    base = priority(item, held, current=current)
+    event = upcoming_earnings(item, current)
+    urgent = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+    bucket = 0 if base[0] == 0 else 1 if urgent else 2
+    return (bucket, base[1] if urgent else "", escalation_rank.get(item["ticker"], len(escalation_rank)), *base)
 
 
 def negative_assessment_wait(item: dict, *, current: datetime, market_session_date: str | None) -> bool:
@@ -103,7 +155,7 @@ def intake(root: Path, *, current: datetime) -> dict:
         seen = {p["observation_id"] for i in items.values() for p in i["observations"]}
         by_ticker = {i["ticker"]: identity for identity, i in items.items()}
         admitted = 0
-        for p in sorted(packets, key=lambda i: priority(i, held)):
+        for p in sorted(packets, key=lambda i: priority(i, held, current=current)):
             if p["observation_id"] in seen:
                 metrics["duplicate_packets_skipped"] += 1
                 continue
@@ -124,17 +176,22 @@ def intake(root: Path, *, current: datetime) -> dict:
         # Rank the complete pool before allocating scarce research attention.
         # A newly observed held/adverse item can displace lower-priority work;
         # its original evidence/unfinished task remains retained as deferred.
-        for item in sorted(replay(store).values(), key=lambda i: priority(i, held)):
+        for item in sorted(replay(store).values(), key=lambda i: priority(i, held, current=current)):
             if item["state"] != "deferred_capacity" or admitted >= policy["new_opportunities_per_run"]:
                 continue
             active = [i for i in replay(store).values() if i["state"] not in TERMINAL | {"deferred_capacity"}]
             if len(active) >= policy["active_capacity"]:
-                victims = [i for i in active if priority(i, held)[0] > 0 and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
-                if priority(item, held)[0] != 0 or not victims:
+                victims = [i for i in active if priority(i, held, current=current)[0] > 0
+                    and priority(i, held, current=current) > priority(item, held, current=current)
+                    and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+                event = upcoming_earnings(item, current)
+                urgent_event = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+                if not (priority(item, held, current=current)[0] == 0 or urgent_event) or not victims:
                     continue
-                victim = max(victims, key=lambda i: priority(i, held))
+                victim = max(victims, key=lambda i: priority(i, held, current=current))
                 transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
-                    reason="research_capacity_reserved_for_held_or_adverse_work", sources=victim["observations"][-1]["sources"],
+                    reason="research_capacity_reserved_for_held_or_adverse_work" if not urgent_event else "research_capacity_reserved_for_pre_earnings_deadline",
+                    sources=victim["observations"][-1]["sources"],
                     blockers=["bounded_research_capacity"], current=current)
             transition(store, item["opportunity_id"], "queued", owner="research_orchestration", reason="bounded_attention_admission",
                 sources=item["observations"][-1]["sources"], blockers=[], current=current)
@@ -161,7 +218,9 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         from research_backlog import MAX_WORK_BUDGET
         require(type(budget) is int and 1 <= budget <= MAX_WORK_BUDGET, "research_work_budget_invalid")
         backlog = read_json(root / "04_research/company_research/research_backlog.local.json", {})
-        completed = len(backlog.get("selected_tickers", [])) if backlog.get("generated_at", "")[:10] == current.date().isoformat() else 0
+        same_cycle = backlog.get("generated_at", "")[:10] == current.date().isoformat()
+        canonical_attempted = set(backlog.get("selected_tickers", [])) if same_cycle else set()
+        completed = len(canonical_attempted)
         remaining = max(0, budget-completed)
         rows = {r["ticker"]: r for r in read_csv(root / "03_source_data/equity_research/daily_fundamentals.csv")}
         market_session = latest_published_market_session(current).isoformat()
@@ -169,8 +228,14 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         prior_report = read_json(root / REPORT_REL, {})
         from capital_escalation import research_priorities
         escalation_rank = {ticker: i for i, ticker in enumerate(research_priorities(root, current))}
-        for item in sorted(replay(store).values(), key=lambda i:
-                (escalation_rank.get(i["ticker"], len(escalation_rank)), *priority(i, held))):
+        reserved = set(backlog.get("reserved_external_event_tickers", [])) if same_cycle else set()
+        def objective_priority(item):
+            base = work_priority(item, held, current=current, escalation_rank=escalation_rank)
+            # Canonical held work already performed must not consume the
+            # isolated external slots a second time through an attachment.
+            bucket = 0 if base[0] == 0 and item["ticker"] not in canonical_attempted else 1 if item["ticker"] in reserved else 2
+            return (bucket, *base)
+        for item in sorted(replay(store).values(), key=objective_priority):
             if item["state"] in TERMINAL | {"deferred_capacity"}:
                 continue
             if metrics["objective_items_processed"] >= remaining:
@@ -254,7 +319,11 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
             item["evidence_families"]["economics"]["status"] = view["valuation_status"]
             item["evidence_families"]["data_confidence"] = {"status": view["data_confidence"], "investment_conviction": view["investment_conviction"]}
         item["queue_age_hours"] = round((current-aware(item["first_seen_at"])).total_seconds()/3600, 4)
-        item["attention_priority_key"] = list(priority(item, held))
+        item["attention_priority_key"] = list(priority(item, held, current=current))
+        event = upcoming_earnings(item, current)
+        if event:
+            item["upcoming_earnings"] = {k: event.get(k) for k in ("event_id", "event_date", "session", "event_at",
+                "research_deadline_at", "first_detected_at", "date_confidence")}
         item["stage_durations_seconds"] = {
             "detection_to_research": (aware(item["research_started_at"])-aware(item["first_seen_at"])).total_seconds() if item["research_started_at"] else None,
             "research_to_objective": (aware(item["objective_completed_at"])-aware(item["research_started_at"])).total_seconds() if item["objective_completed_at"] and item["research_started_at"] else None,
@@ -305,13 +374,18 @@ def summary(root: Path, *, current: datetime) -> dict:
         report = read_report(root, current=current)
         return {"status": "ready", "generated_at": report["generated_at"], "report_path": str(MARKDOWN_REL),
             "store_sha256": report["store_sha256"], "metrics": report["metrics"],
-            "priority_queue": [{k: i[k] for k in ("ticker", "state", "first_seen_at", "queue_age_hours", "reason_code", "blockers", "owner")} for i in report["priority_queue"][:10]],
+            "priority_queue": [{**{k: i[k] for k in ("ticker", "state", "first_seen_at", "queue_age_hours", "reason_code", "blockers", "owner")},
+                **({"upcoming_earnings": i["upcoming_earnings"]} if i.get("upcoming_earnings") else {})}
+                for i in report["priority_queue"][:10]],
             # Work priority is bounded; final decision coverage is not limited
             # to the next ten research jobs. Keep every active candidate visible.
             "decision_candidates": [{**{k: i[k] for k in ("ticker", "state", "reason_code", "blockers", "owner")},
                 "instrument_kind": i.get("first_observation", {}).get("instrument_kind"),
-                "company_name": i.get("first_observation", {}).get("evidence", {}).get("metrics", {}).get("name"),
-                "identity_source_observation": i.get("first_observation", {}).get("observation_id")}
+                "company_name": (i.get("first_observation", {}).get("evidence", {}).get("metrics", {}).get("name")
+                    or i.get("first_observation", {}).get("evidence", {}).get("event", {}).get("company_name")),
+                "identity_source_observation": i.get("first_observation", {}).get("observation_id"),
+                "eligible_quantity": 0,
+                **({"upcoming_earnings": i["upcoming_earnings"]} if i.get("upcoming_earnings") else {})}
                 for i in report["priority_queue"]],
             "reassessment_queue": [{k: i[k] for k in ("ticker", "state", "last_evidence_at", "reason_code")} for i in report["reassessment_queue"]], **AUTHORITY}
     except (OSError, ValueError, KeyError, TypeError):

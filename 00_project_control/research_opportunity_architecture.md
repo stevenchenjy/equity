@@ -8,6 +8,12 @@ of a production run.
 
 ## Diagnosis and resulting flow
 
+The October 21 [independent earnings route](earnings_event_research.md) adds
+rolling exchange-calendar leads before intake, without the momentum top-ten
+cutoff or configured-issuer-news restriction. Deadline-aware attention and an
+event-specific assessment are separate from source-only dossiers and canonical
+entry eligibility. Coverage and actual first detection remain explicit.
+
 Broad discovery already ranks exchange-listed common stocks and ETFs independently
 of holdings. Its adjusted bars and heuristic strength/volume ranking are separate
 from the 31-symbol unadjusted canonical market contract. Before this change, the
