@@ -142,7 +142,17 @@ def presentation_case(view: dict, *, root: Path, current: datetime,
             bundle = read_json(path)
             receipts, _ = validate_and_materialize_bundle(bundle, packet_as_of=record['reviewed_at'],
                 active_tickers={record['ticker']}, project_root=root)
-            if len(receipts) != 1 or not receipts[0]['sufficiency']['scenario_sufficient']:
+            if len(receipts) != 1:
+                raise ValueError('research_model_inputs_incomplete')
+            sufficiency = receipts[0]['sufficiency']
+            # Source-valid cases also explain why a price is unattractive.
+            # Keep entry sufficiency unchanged in the valuation receipt and
+            # capital engine; only these relative-price failures may display.
+            price_failures = {'target_not_above_share_price', 'downside_not_below_share_price'}
+            displayable_price_rejection = (not sufficiency['missing_scenario_input_ids']
+                and bool(sufficiency['blocked_reasons'])
+                and set(sufficiency['blocked_reasons']) <= price_failures)
+            if not sufficiency['scenario_sufficient'] and not displayable_price_rejection:
                 raise ValueError('research_model_inputs_incomplete')
             original = next(r for r in bundle['records'] if r['ticker'] == record['ticker'])
             cases = {'bear': Decimal(original['inputs']['downside_price_assumption']['value']),

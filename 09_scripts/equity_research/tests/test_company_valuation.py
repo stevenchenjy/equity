@@ -210,6 +210,98 @@ class CompanyValuationTests(unittest.TestCase):
         self.assertEqual(expired['review_status'], 'reassessment_required')
         self.assertIn('scheduled_company_review_due', expired['pending_requirements'])
 
+    def test_verified_cases_remain_visible_when_price_fails_entry_sufficiency(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        from capital_decision import SCHEMA as CAPITAL_SCHEMA
+        from daily_common import canonical_sha256
+        from email_brief import render_email
+        from test_email_brief import decision_fixture
+        original_policy = deepcopy(self.policy)
+        for price in ('20', '15', '5'):
+            with self.subTest(observed_price=price):
+                bundle = read_json(self.root/self.model_rel)
+                record = bundle['records'][0]
+                record['inputs']['share_price']['value'] = price
+                source = next(s for s in record['sources']
+                              if s['source_type'] == 'public_market_valuation_observation')
+                text = f'share_price={price}; session=2026-10-09 close'
+                (self.root/source['relative_path']).write_text(text)
+                source.update(char_end=len(text), content_sha256=hashlib.sha256(text.encode()).hexdigest())
+                _write_bundle(self.root/self.model_rel, seal_bundle(bundle))
+                self.thesis['valuation_model']['sha256'] = sha256_file(self.root/self.model_rel)
+                self.thesis['conclusion'] = 'No additional shares; preserve the original company cases and entry gates.'
+                self.thesis = seal_review(self.thesis)
+                write_json(self.root, THESIS_REL, {'schema_version': THESIS_SCHEMA, 'records': [self.thesis]})
+                self.quote['last_price'] = price
+                write_csv(self.root, '03_source_data/equity_research/market_data_snapshot.csv', [self.quote])
+                self.record.update(model_sha256=self.thesis['valuation_model']['sha256'],
+                                   review_record_sha256=self.thesis['record_sha256'])
+                self.record = models.seal(self.record)
+                self.store['records'] = [self.record]
+                receipts, _ = validate_and_materialize_bundle(read_json(self.root/self.model_rel),
+                    packet_as_of=CURRENT.isoformat(), active_tickers={'ABC'}, project_root=self.root)
+                self.assertFalse(receipts[0]['sufficiency']['scenario_sufficient'])
+                self.assertFalse(receipts[0]['sufficiency']['decision_sufficient'])
+                view = self.views()['ABC']
+                case = presentation_case(view, root=self.root, current=CURRENT, quote=self.quote,
+                    minimum_reward_to_risk=Decimal('1.25'), admission=self.record)
+                self.assertEqual(case['scenario_prices'], {'bear': 8., 'base': 15., 'bull': 20.})
+                self.assertEqual(case['review_status'], 'current')
+                self.assertEqual(case['model_admission_status'], 'admitted_current')
+                self.assertFalse(case['automatic_action_allowed'])
+                if Decimal(price) >= 15:
+                    self.assertLessEqual(case['base_upside_pct'], 0)
+                rows_before, _ = self.project()
+                if Decimal(price) >= 15:
+                    self.assertEqual(rows_before[0]['reward_to_risk'], 0)
+                row = {'ticker':'ABC', 'decision':'NO_ACTION', 'shares':0, 'order_draft':None,
+                    'research_case':case, 'reasons':[case['conclusion']], 'blockers':[], 'dependencies':[]}
+                capital = {'schema_version':CAPITAL_SCHEMA, 'automatic_action_allowed':False,
+                    'broker_connected':False, 'order_placed':False, 'decisions':[row], 'dependencies':[],
+                    'planning_cash':4000, 'mandatory_reserve':0, 'global_blockers':[]}
+                capital['content_sha256'] = canonical_sha256(capital)
+                final = decision_fixture()
+                final.update(generated_at=CURRENT.isoformat(), capital_decision=capital,
+                    long_horizon_research={'candidate_views':{'ABC':view}},
+                    workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
+                _, plain, html = render_email(final)
+                for rendered in (plain, visible_html_text(html)):
+                    self.assertIn('$8.00 / $15.00 / $20.00', rendered)
+                    self.assertIn('当前新增订单股数：0 股', rendered)
+                    self.assertNotIn('原研究模型需要重新核验', rendered)
+                rows_after, _ = self.project()
+                self.assertEqual(rows_after, rows_before)
+                self.assertEqual(read_json(self.root/models.POLICY_REL), original_policy)
+
+    def test_underlying_scenario_source_corruption_still_hides_display_prices(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        view = self.views()['ABC']
+        bundle = read_json(self.root/self.model_rel)
+        source = next(s for s in bundle['records'][0]['sources']
+                      if s['source_type'] == 'human_valuation_scenario')
+        # Keep the model-file binding intact but corrupt its referenced source.
+        (self.root/source['relative_path']).write_text('{"cases": []}')
+        case = presentation_case(view, root=self.root, current=CURRENT, quote=self.quote,
+            minimum_reward_to_risk=Decimal('1.25'))
+        self.assertIsNone(case['scenario_prices'])
+        self.assertIn('research_model_source_unverified', case['pending_requirements'])
+
+    def test_missing_scenario_input_still_hides_display_prices(self):
+        from decimal import Decimal
+        from company_research_presentation import presentation_case
+        view = deepcopy(self.views()['ABC'])
+        bundle = read_json(self.root/self.model_rel)
+        del bundle['records'][0]['inputs']['target_price_assumption']
+        _write_bundle(self.root/self.model_rel, seal_bundle(bundle))
+        view['review_record']['valuation_model']['sha256'] = sha256_file(self.root/self.model_rel)
+        view['review_record'] = seal_review(view['review_record'])
+        case = presentation_case(view, root=self.root, current=CURRENT, quote=self.quote,
+            minimum_reward_to_risk=Decimal('1.25'))
+        self.assertIsNone(case['scenario_prices'])
+        self.assertIn('research_model_source_unverified', case['pending_requirements'])
+
     def test_partial_no_model_and_reopened_cases_render_exact_zero_reason_without_prices(self):
         from decimal import Decimal
         from company_research_presentation import presentation_case

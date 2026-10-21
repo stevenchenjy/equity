@@ -181,6 +181,7 @@ class MarketBackupTests(unittest.TestCase):
                 client=self.client(root,change)
                 with ExitStack() as stack:
                     fixture._patch_paths(stack,paths)
+                    stack.enter_context(patch.object(b2,'now_et',return_value=datetime.fromisoformat('2026-10-20T08:00:00-04:00')))
                     stack.enter_context(patch.object(b2.MassiveBasicEODClient,'from_environment',side_effect=MassiveB2Error(AUTH_MISSING_CODE)))
                     stack.enter_context(patch.object(backup,'NasdaqHistoricalClient',return_value=client))
                     self.assertEqual(b2.main(),1 if failed else 0)
