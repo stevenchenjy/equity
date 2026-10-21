@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 import json
 from pathlib import Path
 
@@ -189,7 +189,8 @@ def presentation_case(view: dict, *, root: Path, current: datetime,
                 model_admission_status='admitted_current' if admission else 'research_only_pending_admission')
             if valid_quote:
                 rr = (cases['base'] - price) / (price - cases['bear']) if price > cases['bear'] else None
-                ceiling = (cases['base'] + minimum_reward_to_risk * cases['bear']) / (1 + minimum_reward_to_risk)
+                ceiling = ((cases['base'] + minimum_reward_to_risk * cases['bear'])
+                    / (1 + minimum_reward_to_risk)).quantize(Decimal('0.01'), rounding=ROUND_FLOOR)
                 case.update(scenario_prices={k: float(v) for k, v in cases.items()},
                     base_upside_pct=float((cases['base'] / price - 1) * 100),
                     scenario_reward_to_risk=float(rr) if rr is not None else None,

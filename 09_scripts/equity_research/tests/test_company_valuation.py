@@ -250,6 +250,7 @@ class CompanyValuationTests(unittest.TestCase):
                 self.assertEqual(case['review_status'], 'current')
                 self.assertEqual(case['model_admission_status'], 'admitted_current')
                 self.assertFalse(case['automatic_action_allowed'])
+                self.assertEqual(case['valuation_only_review_ceiling'], 11.11)
                 if Decimal(price) >= 15:
                     self.assertLessEqual(case['base_upside_pct'], 0)
                 rows_before, _ = self.project()

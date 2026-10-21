@@ -1,16 +1,16 @@
 # Graph Report - equity  (2026-10-21)
 
 ## Corpus Check
-- 418 files · ~387,940 words
+- 418 files · ~387,944 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4733 nodes · 12786 edges · 281 communities (184 shown, 97 thin omitted)
+- 4733 nodes · 12786 edges · 282 communities (184 shown, 98 thin omitted)
 - Extraction: 79% EXTRACTED · 21% INFERRED · 0% AMBIGUOUS · INFERRED: 2729 edges (avg confidence: 0.79)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2026b066`
+- Built from commit: `8e98143e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -230,6 +230,7 @@
 - Equity Research — Account-State Policy
 - RuntimePreflightAlertTests
 - Risk Policy
+- InlineFacts
 - Active production configuration
 - Approved 30 percent core 70 percent stocks zero cash allocation
 - Capital deployment escalation configuration
@@ -322,7 +323,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (281 total, 97 thin omitted)
+## Communities (282 total, 98 thin omitted)
 
 ### Community 0 - "RuntimeSyncError"
 Cohesion: 0.12
@@ -405,8 +406,8 @@ Cohesion: 0.12
 Nodes (46): _effective_acceptance_map(), Return the immutable index plus every validated append-only extension., Validate extension hashes, chain continuity, and audit bindings., _validate_runtime_evidence_chain(), admit_unindexed_current_records(), _audit_row(), build_extension_artifact(), _core_record() (+38 more)
 
 ### Community 20 - "aware"
-Cohesion: 0.12
-Nodes (14): InlineFacts, parse_principal_facts(), project_relative_locator(), Any, datetime, HTMLParser, Path, ValueError (+6 more)
+Cohesion: 0.16
+Nodes (12): parse_principal_facts(), project_relative_locator(), Any, datetime, Path, ValueError, Extract narrowly scoped reported facts from original official SEC documents.  SE, Keep a portable audit locator, never a user's absolute cache location.      Exte (+4 more)
 
 ### Community 21 - "_support.py"
 Cohesion: 0.14
@@ -481,7 +482,7 @@ Cohesion: 0.16
 Nodes (24): complete_inputs(), item(), ValuationEvidenceV1Tests, build_valuation_evidence_v1(), _calculation_receipt(), _InputSpec, _normalize_input(), _parse_decimal() (+16 more)
 
 ### Community 40 - "momentum_experiment.py"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (4): atomic_write_csv(), negative_opportunity(), inline(), ResearchBacklogTests
 
 ### Community 41 - "investment_plans.py"
@@ -629,7 +630,7 @@ Cohesion: 0.26
 Nodes (19): _archive(), build_followthrough(), continuation_lines(), continuation_requires_reconciliation(), _displayed_actions(), _identity(), _positive(), Any (+11 more)
 
 ### Community 82 - "iso_now"
-Cohesion: 0.26
+Cohesion: 0.29
 Nodes (21): _append_history(), attention_rows(), build_backlog(), complete_objective_data(), _history(), numeric(), datetime, Path (+13 more)
 
 ### Community 83 - "evidence_scope.py"
@@ -897,7 +898,7 @@ Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
 ### Community 163 - "LimitedRefreshTests"
-Cohesion: 0.29
+Cohesion: 0.31
 Nodes (7): _bundle(), _input(), Path, _source(), ValuationInputBundleTests, _write_bundle(), _write_source()
 
 ### Community 164 - "Workflow reliability and performance evidence"
@@ -1055,14 +1056,14 @@ Nodes (3): main(), Path, run()
 ## Knowledge Gaps
 - **387 isolated node(s):** `activate_daily_after_verification.sh script`, `check_daily_scheduler_status.sh script`, `check_shadow_llm_evaluation_scheduler.sh script`, `clear_maintenance_inhibit.sh script`, `install_daily_schedulers.sh script` (+382 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **97 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **98 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `canonical_sha256()` connect `canonical_sha256` to `run_full_universe_market_data.py`, `CapitalDecisionTests`, `main`, `CapitalWorkQueueTests`, `read_json`, `Equity Research — MacBook → GitHub → Mac mini workflow`, `sec_acceptance.py`, `OwnerSnapshotTests`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `_DocumentPeriod`, `sec_acceptance_extensions.py`, `test_allocation_policy_migration.py`, `official_news.py`, `CapitalEscalationTests`, `thesis_evidence.py`, `shadow_llm_contract.py`, `test_manual_valuation_bootstrap.py`, `build_decision_evidence_packet.py`, `FeedbackError`, `run`, `apply_workflow_integrity`, `capital_presentation.py`, `momentum_experiment.py`, `investment_plans.py`, `SupplementalFactsTests`, `evaluate_shadow_llm_incremental_value.py`, `merge_news_context`, `main`, `ShadowLlmTests`, `ShadowProviderError`, `WorkflowPublicationTests`, `ledger`, `main`, `ledger_row`, `append_plan`, `validate_packet`, `earnings_incorporation.py`, `IssuerIsolationTests`, `iso_now`, `payloads`, `economic_packet`, `send_once`, `supplement_cached_latest_report`, `ReviewAndCorrectionTests`, `LimitedRefreshTests`, `ValuationResearchRetentionTests`, `test_allocation_policy_migration.py`, `payloads`, `WorkflowBlockerScopeTests`, `MarketCoverageRecompositionTests`, `decision_dependencies.py`?**
   _High betweenness centrality (0.100) - this node is a cross-community bridge._
-- **Why does `read_json()` connect `read_json` to `create_long_horizon_research.py`, `run_full_universe_market_data.py`, `main`, `Handler`, `sec_acceptance.py`, `production_strategies.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `OwnerSnapshotTests`, `sec_acceptance_extensions.py`, `aware`, `official_news.py`, `thesis_evidence.py`, `read_snapshot`, `build_decision_evidence_packet.py`, `migrate`, `LimitedRefreshTests`, `FeedbackError`, `run`, `apply_workflow_integrity`, `capital_presentation.py`, `momentum_experiment.py`, `SecPayload`, `main`, `merge_news_context`, `equity_naming.py`, `main`, `ledger_row`, `earnings_incorporation.py`, `WorkflowBlockerScopeTests`, `iso_now`, `payloads`, `ConcentratedAllocationTests`, `send_once`, `ReviewAndCorrectionTests`, `plan_summary.py`, `OfficialNewsScheduleTests`, `ValuationResearchRetentionTests`, `DeliveryWindowTests`, `payloads`, `MarketCoverageRecompositionTests`, `decision_dependencies.py`?**
+- **Why does `read_json()` connect `read_json` to `create_long_horizon_research.py`, `run_full_universe_market_data.py`, `main`, `Handler`, `sec_acceptance.py`, `production_strategies.py`, `OutcomeCoverageTests`, `refresh_daily_evidence.py`, `OwnerSnapshotTests`, `sec_acceptance_extensions.py`, `aware`, `official_news.py`, `thesis_evidence.py`, `read_snapshot`, `build_decision_evidence_packet.py`, `migrate`, `FeedbackError`, `run`, `apply_workflow_integrity`, `capital_presentation.py`, `momentum_experiment.py`, `SecPayload`, `main`, `merge_news_context`, `equity_naming.py`, `main`, `ledger_row`, `earnings_incorporation.py`, `WorkflowBlockerScopeTests`, `iso_now`, `payloads`, `ConcentratedAllocationTests`, `send_once`, `ReviewAndCorrectionTests`, `plan_summary.py`, `OfficialNewsScheduleTests`, `ValuationResearchRetentionTests`, `DeliveryWindowTests`, `payloads`, `MarketCoverageRecompositionTests`, `decision_dependencies.py`?**
   _High betweenness centrality (0.048) - this node is a cross-community bridge._
 - **Why does `render_email()` connect `render_email` to `email_brief.py`, `run_daily_refresh.py`, `CapitalDecisionTests`, `feedback.py`, `apply_workflow_integrity`, `Capital decision and manual execution contract`, `SupplementalFactsTests`, `create_research_questions.py`, `OutcomeCoverageTests`, `main`, `Handler`, `MarketCoverageRecompositionTests`, `refresh_handoff.py`, `ResearchRiskLimitsTests`, `Risk Policy`, `decision_dependencies.py`, `load_active_config`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._

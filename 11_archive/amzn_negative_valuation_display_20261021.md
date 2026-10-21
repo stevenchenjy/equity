@@ -20,6 +20,8 @@ prices are still checked. Missing inputs, corrupt sources and other failed
 receipt conditions remain excluded. The valuation receipt, company model,
 capital engine and entry calculations are unchanged. Showing a negative or
 flat valuation cannot grant shares, clear an entry gate or create an order.
+The display-only re-review ceiling rounds downward to a whole cent, matching
+the canonical condition and maintained plan instead of rounding above it.
 
 The four production adapter versions advance only to bind the changed
 presentation implementation. Their identities, authority, other source
