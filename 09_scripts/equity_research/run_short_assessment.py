@@ -18,7 +18,7 @@ def main() -> int:
     mode.add_argument("--claim", action="store_true", help="reserve a due 90-minute slot; locks never wait")
     mode.add_argument("--complete", action="store_true", help="validate a claim-bound analytical receipt")
     parser.add_argument("--root", type=Path, default=ROOT)
-    parser.add_argument("--refresh-public", action="store_true", help="with --claim, bounded explicit official-news/calendar reads only")
+    parser.add_argument("--refresh-public", action="store_true", help="with --claim, bounded official-news/calendar reads; changed publication bindings require the returned no-send recomposition before completion")
     parser.add_argument("--input", type=Path, help="completed private result proposal")
     args = parser.parse_args()
     if args.refresh_public and not args.claim:

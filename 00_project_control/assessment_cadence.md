@@ -35,6 +35,16 @@ accepted amendment, and inspect current final outputs. A failed or expired
 claim retains its history. The deterministic capital engine remains the
 only source of eligible quantities, prices and portfolio-changing drafts.
 
+Public collection can change exact publication bindings even when its news
+or calendar meaning is unchanged. A short claim reports this separately as
+`publication_recomposition_required`; it cannot retire itself as unchanged
+or complete a no-action result while those bindings are stale. Release
+mutation locks and run the same approved full no-send refresh before
+completion. A truthful degraded, zero-order publication can document the
+remaining public-data failure for a no-action result; it is not a passing
+research refresh or an accepted analytical amendment. Accepted amendments
+retain their stricter completion requirements.
+
 ## Two daily briefs
 
 The normal morning (09:30–10:30 ET) and afternoon (14:30–15:05 ET) windows

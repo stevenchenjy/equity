@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -31,6 +32,7 @@ class ShortAssessmentTests(unittest.TestCase):
         self.source = self.root / "08_reviews/source.txt"
         self.source.parent.mkdir()
         self.source.write_text("Dated primary source observation.")
+        self.typed_publication("09:20")
 
     def moment(self, clock, day="2026-10-22"):
         return datetime.fromisoformat(f"{day}T{clock}:00").replace(tzinfo=ET)
@@ -51,6 +53,55 @@ class ShortAssessmentTests(unittest.TestCase):
 
     def complete(self, result, clock="09:35"):
         return short.complete(self.root, result, self.moment(clock), runtime_lock=self.runtime_lock)
+
+    def typed_publication(self, clock, *, degraded=False):
+        from test_email_brief import decision_fixture
+        from delivery_assessments import delivery_policy_context, priority_review_context
+        from workflow_integrity import apply_workflow_integrity, validate_published_workflow
+        from earnings_events import summary
+        from email_brief import render_email
+        for relative, value in (
+                ("05_risk_and_positions/investment_plans.local.json", {"schema_version": "equity_investment_plans_v1", "records": []}),
+                ("05_risk_and_positions/current_open_orders.local.json", {"as_of": self.moment("09:20").isoformat(), "complete": True, "orders": []})):
+            if not (self.root / relative).exists():
+                atomic_write_json(self.root / relative, value)
+        value = decision_fixture()
+        value.update(generated_at=self.moment(clock).isoformat(), cycle_date="2026-10-22", held_positions=[])
+        value["account"].update(account_total_value="1000", cash_available="1000", cash_reserved="0")
+        if degraded:
+            value["market_gate"]["passed"] = False
+            value["decision_code"] = "data_gate_hold"
+        apply_workflow_integrity(value, root=self.root, current=self.moment(clock))
+        value["earnings_events"] = summary(self.root, current=self.moment(clock))
+        value["assessment_delivery_policy"] = delivery_policy_context(self.root)
+        value["analyst_priority_review"] = priority_review_context(self.root, self.moment(clock))
+        atomic_write_json(self.root / "04_research/company_research/daily_decision.json", value)
+        validate_published_workflow(value, root=self.root, current=self.moment(clock))
+        _subject, text, html = render_email(value)
+        directory = self.root / "07_automation/email_briefs"
+        directory.mkdir(parents=True, exist_ok=True)
+        (directory / "daily_email_brief.txt").write_text(text)
+        (directory / "daily_email_brief.html").write_text(html)
+        return value
+
+    def calendar(self, clock):
+        from earnings_events import refresh_events, POLICY_REL
+        from daily_common import ROOT
+        from test_earnings_events import feed
+        if not (self.root / POLICY_REL).exists():
+            (self.root / POLICY_REL).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / POLICY_REL, self.root / POLICY_REL)
+        return refresh_events(self.root, clock=lambda: self.moment(clock),
+                              fetcher=lambda day, policy: feed(day, []))
+
+    def refresh_receipt(self, started, completed, *, degraded=False):
+        from run_daily_refresh import STEP_SPECS
+        atomic_write_json(self.root / "00_project_control/run_logs/daily_refresh_state.local.json", {
+            "started_at": self.moment(started).isoformat(), "completed_at": self.moment(completed).isoformat(),
+            "outcome": "degraded_decision_created" if degraded else "passed", "decision_created": True,
+            "market_snapshot_mode": "reuse_validated_snapshot", "email_attempted": False, "email_sent": False,
+            "steps": [{"name": spec[0], "exit_code": 1 if degraded and spec[0] == "market_refresh" else 0}
+                      for spec in STEP_SPECS]})
 
     def test_slot_cadence_dst_and_no_catchup(self):
         for clock in short.SLOTS:
@@ -145,7 +196,7 @@ class ShortAssessmentTests(unittest.TestCase):
     def test_changed_account_starts_a_new_assessment_and_rejects_stale_completion(self):
         value = self.claim()
         account = self.root / short.ACCOUNT_MARKET[0]
-        account.parent.mkdir(parents=True)
+        account.parent.mkdir(parents=True, exist_ok=True)
         account.write_text("ticker,shares\nMETA,1\n")
         with self.assertRaisesRegex(ValueError, "account_or_market_changed"):
             self.complete(self.result(value))
@@ -175,12 +226,12 @@ class ShortAssessmentTests(unittest.TestCase):
         value = self.claim()
         path = short.MUTABLE_STORES[0]
         store = self.root / path
-        store.parent.mkdir(parents=True)
+        store.parent.mkdir(parents=True, exist_ok=True)
         record = {"recorded_at": self.moment("09:32").isoformat(), "plan_id": "accepted-plan-v2"}
         store.write_text(json.dumps({"records": [record]}))
         result = self.result(value, outcome="accepted_amendments", accepted_amendments=[{
             "path": path, "sha256": sha256_file(store), "record_identity": canonical_sha256(record)}])
-        with self.assertRaisesRegex(ValueError, "aware_timestamp_required"):
+        with self.assertRaisesRegex(ValueError, "post_amendment_recomposition_required"):
             self.complete(result)
         # A passing CLI, file edit or stale daily decision cannot complete the run.
         atomic_write_json(self.root / "04_research/company_research/daily_decision.json", {
@@ -210,7 +261,7 @@ class ShortAssessmentTests(unittest.TestCase):
             "email_attempted": False, "email_sent": False,
             "steps": [{"name": spec[0], "exit_code": 0} for spec in STEP_SPECS]})
         folder = self.root / "07_automation/email_briefs"
-        folder.mkdir(parents=True)
+        folder.mkdir(parents=True, exist_ok=True)
         (folder / "daily_email_brief.txt").write_text("actual text")
         (folder / "daily_email_brief.html").write_text("actual HTML")
         with patch("workflow_integrity.validate_published_workflow") as validate, patch(
@@ -272,7 +323,7 @@ class ShortAssessmentTests(unittest.TestCase):
         validate_published_workflow(decision, root=self.root, current=self.moment("09:35"))
         _subject, text, html = render_email(decision)
         directory = self.root / "07_automation/email_briefs"
-        directory.mkdir(parents=True)
+        directory.mkdir(parents=True, exist_ok=True)
         (directory / "daily_email_brief.txt").write_text(text)
         (directory / "daily_email_brief.html").write_text(html)
         atomic_write_json(self.root / "00_project_control/run_logs/daily_refresh_state.local.json", {
@@ -310,6 +361,100 @@ class ShortAssessmentTests(unittest.TestCase):
         handoff = value["receipt"]["context"]["public_handoff"]
         self.assertEqual(handoff["status"], "completed")
         self.assertEqual(len(handoff["children"]), 2)
+
+    def test_identical_calendar_refetch_requires_recomposition_even_with_unchanged_economics(self):
+        self.events.stop()  # Use real retained scans and the actual summary validator.
+        self.calendar("09:20")
+        self.typed_publication("09:20")
+        first = self.claim()
+        self.complete(self.result(first))
+
+        def collector(command, **kwargs):
+            if Path(command[1]).name == "refresh_earnings_events.py":
+                self.calendar("11:00")
+            return SimpleNamespace(returncode=0)
+
+        second = self.claim("11:00", refresh_public=True, runner=collector)
+        # The actual collector changes scan references and collection clocks,
+        # despite returning the same empty calendar on all ten dates.
+        self.assertEqual(first["receipt"]["context"]["input_fingerprint"],
+                         second["receipt"]["context"]["input_fingerprint"])
+        self.assertEqual(second["outcome"], "claimed")
+        self.assertTrue(second["publication_recomposition_required"])
+        self.assertEqual(second["required_next_step"]["operation"], "full_no_send_recomposition")
+        self.assertTrue(second["required_next_step"]["release_mutation_locks_first"])
+        self.assertIn("03_source_data/equity_research/earnings_events.local.json",
+                      second["receipt"]["publication_input_changes"])
+        for outcome in ("no_action", "unresolved"):
+            with self.assertRaisesRegex(ValueError, "post_public_handoff_recomposition_required"):
+                self.complete(self.result(second, outcome=outcome), "11:03")
+        self.typed_publication("11:03")
+        self.refresh_receipt("11:02", "11:04")
+        done = self.complete(self.result(second), "11:05")
+        self.assertEqual(done["status"], "completed")
+        self.assertTrue(done["publication"]["fully_passed_research"])
+        self.assertFalse(done["publication"]["email_sent"])
+        state = json.loads((self.root / short.STATE_REL).read_text())
+        self.assertNotIn("publication_recomposition_pending", state)
+
+    def test_public_recomposition_can_finish_as_truthful_degraded_zero_order_without_amendment(self):
+        self.events.stop()
+        self.calendar("09:20")
+        self.typed_publication("09:20")
+
+        def collector(command, **kwargs):
+            if Path(command[1]).name == "refresh_earnings_events.py":
+                self.calendar("09:30")
+            return SimpleNamespace(returncode=0)
+
+        value = self.claim(refresh_public=True, runner=collector)
+        self.assertTrue(value["publication_recomposition_required"])
+        decision = self.typed_publication("09:33", degraded=True)
+        self.refresh_receipt("09:32", "09:34", degraded=True)
+        self.assertFalse(decision["market_gate"]["passed"])
+        self.assertFalse(decision["eligible_new_position_review_candidates"])
+        done = self.complete(self.result(value))
+        self.assertEqual(done["publication"]["refresh_outcome"], "degraded_decision_created")
+        self.assertFalse(done["publication"]["fully_passed_research"])
+        self.assertTrue(done["publication"]["safe_degraded_zero_order"])
+        self.assertFalse(done["result"]["accepted_amendments"])
+
+    def test_expired_or_interrupted_public_repair_carries_into_the_next_slot(self):
+        def collector(command, **kwargs):
+            atomic_write_json(self.root / "03_source_data/equity_research/earnings_events_status.local.json",
+                              {"status": "partial", "generated_at": self.moment("09:30").isoformat()})
+            raise SystemExit("collector interrupted after its atomic publication")
+        with self.assertRaises(SystemExit):
+            self.claim(refresh_public=True, runner=collector)
+        state = json.loads((self.root / short.STATE_REL).read_text())
+        self.assertEqual(state["publication_recomposition_pending"]["status"], "public_refresh_in_progress")
+        value = self.claim("11:00")
+        self.assertEqual(value["outcome"], "claimed")
+        self.assertTrue(value["publication_recomposition_required"])
+
+    def test_stale_publication_before_claim_is_not_an_unchanged_success(self):
+        first = self.claim()
+        self.complete(self.result(first))
+        decision_path = self.root / "04_research/company_research/daily_decision.json"
+        value = json.loads(decision_path.read_text())
+        del value["workflow_integrity"]
+        atomic_write_json(decision_path, value)
+        second = self.claim("11:00")
+        self.assertEqual(second["outcome"], "claimed")
+        self.assertTrue(second["publication_recomposition_required"])
+        self.assertEqual(second["receipt"]["publication_validation_error"],
+                         "short_assessment_typed_current_publication_required")
+        self.assertFalse(second["receipt"]["publication_input_changes"])
+        with self.assertRaisesRegex(ValueError, "post_public_handoff_recomposition_required"):
+            self.complete(self.result(second), "11:03")
+
+    def test_every_no_action_completion_rechecks_actual_final_bodies(self):
+        value = self.claim()
+        self.assertFalse(value["publication_recomposition_required"])
+        body = self.root / "07_automation/email_briefs/daily_email_brief.txt"
+        body.write_text("A stale or different body.")
+        with self.assertRaisesRegex(ValueError, "final_email_recomposition_required"):
+            self.complete(self.result(value, outcome="no_action"))
 
     def test_public_timeout_failure_is_explicit_and_no_repeat_same_slot(self):
         def timeout(*args, **kwargs):

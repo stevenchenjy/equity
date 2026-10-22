@@ -21,6 +21,7 @@ from daily_common import (ET, ROOT, ExclusiveFileLock, atomic_write_json,
                           read_json, sha256_file)
 from investment_plans import CALENDAR_SOURCE, regular_close
 from account_access import ACCOUNT_INPUTS
+from workflow_inputs import WORKFLOW_INPUTS
 
 SCHEMA = "equity_short_assessment_v1"
 STATE_REL = Path("00_project_control/run_logs/short_assessment.local.json")
@@ -51,6 +52,32 @@ OTHER_INPUTS = (
     "04_research/company_research/issuer_news_review_queue.local.jsonl",
     "06_execution_records/dashboard_feedback_pending.local.json",
 )
+
+
+def _recomposition_step(root: Path) -> dict:
+    return {"operation": "full_no_send_recomposition", "release_mutation_locks_first": True,
+            "cwd": str(root), "argv": ["/usr/bin/env", "PHASE5R_FULL_REFRESH_REUSE_ONLY_20260901_7C31=1",
+                str(Path.home() / "Library/Application Support/EquityResearch/bin/dailyrefresh_launcher.py")],
+            "investment_amendment_required": False,
+            "then": "Inspect the typed current decision and exact final text/HTML, then complete this claim. A failed research gate remains effective."}
+
+
+def _validated_publication(root: Path, current: datetime) -> dict:
+    from workflow_integrity import validate_published_workflow
+    from delivery_assessments import delivery_policy_context, priority_review_context
+    from email_brief import render_email
+    decision = _read(root, "04_research/company_research/daily_decision.json")
+    if (decision.get("workflow_integrity", {}).get("schema_version") != "equity_workflow_integrity_v1"
+            or decision.get("assessment_delivery_policy") != delivery_policy_context(root)
+            or decision.get("analyst_priority_review") != priority_review_context(root, current=current)):
+        raise ValueError("short_assessment_typed_current_publication_required")
+    validate_published_workflow(decision, root=root, current=current)
+    _subject, text, html = render_email(decision)
+    for path, expected in (("07_automation/email_briefs/daily_email_brief.txt", text),
+                           ("07_automation/email_briefs/daily_email_brief.html", html)):
+        if _inside(root, path).read_text(encoding="utf-8") != expected:
+            raise ValueError("short_assessment_final_email_recomposition_required")
+    return decision
 
 
 def aware(value: Any) -> datetime:
@@ -325,25 +352,55 @@ def claim(root: Path, current: datetime, *, refresh_public: bool = False,
             row = {"claim_id": claim_id, "slot_id": result["slot_id"], "status": "claimed",
                    "started_at": current.isoformat(), "expires_at": expiry.isoformat(),
                    "scheduled_at": result["scheduled_at"], "session": result["session"]}
+            publication_before = _hashes(root, sorted(WORKFLOW_INPUTS))
+            prior_recomposition_pending = state.get("publication_recomposition_pending")
+            row["publication_inputs_before"] = publication_before
+            row["publication_recomposition_required"] = bool(prior_recomposition_pending)
             # Reserve before any public read; interruption retains this receipt.
             row = _transition(root, row, current)
             state["slots"][result["slot_id"]] = row
+            if refresh_public:
+                # A crash between a collector's atomic write and this parent's
+                # read-back cannot silently lose the publication repair duty.
+                state["publication_recomposition_pending"] = {"from_claim_id": claim_id,
+                    "observed_at": current.isoformat(), "status": "public_refresh_in_progress"}
             atomic_write_json(root / STATE_REL, state)
             handoff = refresh_public_handoff(root, current, runner=runner) if refresh_public else None
             observed = aware(clock()) if clock else current
+            publication_after = _hashes(root, sorted(WORKFLOW_INPUTS))
+            public_changes = {path: {"before": publication_before[path], "after": digest}
+                              for path, digest in publication_after.items() if publication_before[path] != digest}
+            try:
+                _validated_publication(root, observed)
+                publication_error = None
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                publication_error = str(error) or "current_publication_unverified"
+            required = bool(public_changes or prior_recomposition_pending or publication_error)
+            if required:
+                state["publication_recomposition_pending"] = {"from_claim_id": claim_id,
+                    "observed_at": observed.isoformat(), "changed_inputs": public_changes}
+            else:
+                state.pop("publication_recomposition_pending", None)
+            atomic_write_json(root / STATE_REL, state)
             context = build_context(root, observed, handoff=handoff)
             context["pending_work"] = state.get("pending_work")
-            row = _transition(root, row, observed, context=context)
+            row = _transition(root, row, observed, context=context,
+                publication_input_changes=public_changes, publication_recomposition_required=required,
+                publication_inputs_after=publication_after,
+                publication_validation_error=publication_error,
+                required_next_step=_recomposition_step(root) if required else None)
             if observed >= expiry:
                 row = _transition(root, row, observed, status="expired", ended_at=observed.isoformat(),
                                   reason="public_handoff_exhausted_assessment_budget")
             elif (context["input_fingerprint"] == state.get("last_completed_fingerprint")
-                  and not _resumable_work(state, observed)):
+                  and not _resumable_work(state, observed) and not required):
                 row = _transition(root, row, observed, status="unchanged", ended_at=observed.isoformat(),
                                   reason="no_changed_decision_relevant_inputs")
             state["slots"][result["slot_id"]] = row
             atomic_write_json(root / STATE_REL, state)
-            return {**result, "outcome": row["status"], "receipt": row}
+            return {**result, "outcome": row["status"], "receipt": row,
+                    "publication_recomposition_required": required,
+                    "required_next_step": row.get("required_next_step")}
 
 
 def _sources(root: Path, sources: Any, *, current: datetime) -> None:
@@ -369,6 +426,16 @@ def _accepted_record(root: Path, amendment: dict, *, started: datetime, current:
     recorded = record.get("recorded_at", record.get("reviewed_at", store.get("prepared_at_utc")))
     if not started <= aware(recorded) <= current:
         raise ValueError("short_assessment_accepted_record_not_from_this_claim")
+
+
+def _zero_order_publication(decision: dict) -> bool:
+    if decision.get("eligible_action_review_candidates") or decision.get("eligible_new_position_review_candidates"):
+        return False
+    if any(row.get("order_draft") for row in decision.get("capital_decision", {}).get("decisions", [])):
+        return False
+    if any(row.get("eligible") is True for row in decision.get("tactical_review", {}).get("drafts", [])):
+        return False
+    return True
 
 
 def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Path | None = None) -> dict:
@@ -423,7 +490,9 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
         if bool(changed) != (proposal["outcome"] == "accepted_amendments"):
             raise ValueError("short_assessment_actual_amendments_mismatch")
         publication = None
-        if changed:
+        publication_inputs_changed = (_hashes(root, sorted(WORKFLOW_INPUTS))
+                                      != row.get("publication_inputs_after", row.get("publication_inputs_before")))
+        if changed or row.get("publication_recomposition_required") or publication_inputs_changed:
             from workflow_integrity import validate_published_workflow
             from email_brief import render_email
             from run_daily_refresh import STEP_SPECS
@@ -431,7 +500,8 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
             decision = _read(root, "04_research/company_research/daily_decision.json")
             generated = aware(decision.get("generated_at"))
             if not aware(row["started_at"]) <= generated <= current:
-                raise ValueError("short_assessment_post_amendment_recomposition_required")
+                raise ValueError("short_assessment_post_amendment_recomposition_required" if changed else
+                                 "short_assessment_post_public_handoff_recomposition_required")
             if (decision.get("workflow_integrity", {}).get("schema_version") != "equity_workflow_integrity_v1"
                     or decision.get("assessment_delivery_policy") != delivery_policy_context(root)
                     or decision.get("analyst_priority_review") != priority_review_context(root, current=current)):
@@ -441,13 +511,16 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
             if str(PRIORITY_STORE) in changed and decision["analyst_priority_review"].get("status") != "current":
                 raise ValueError("short_assessment_accepted_priority_not_current_in_publication")
             refresh = _read(root, "00_project_control/run_logs/daily_refresh_state.local.json")
-            if (refresh.get("outcome") != "passed" or refresh.get("market_snapshot_mode") != "reuse_validated_snapshot"
+            passed = refresh.get("outcome") == "passed"
+            safe_degraded = (not changed and refresh.get("outcome") == "degraded_decision_created"
+                             and refresh.get("decision_created") is True and _zero_order_publication(decision))
+            if (not (passed or safe_degraded) or refresh.get("market_snapshot_mode") != "reuse_validated_snapshot"
                     or refresh.get("email_attempted") is not False or refresh.get("email_sent") is not False
                     or not aware(row["started_at"]) <= aware(refresh.get("started_at"))
                     <= generated <= aware(refresh.get("completed_at")) <= current
                     or {step["name"] for step in refresh.get("steps", [])} != {spec[0] for spec in STEP_SPECS}
-                    or any(step.get("exit_code") != 0 and not step.get("allowed_to_fail")
-                           for step in refresh.get("steps", []))):
+                    or (not safe_degraded and any(step.get("exit_code") != 0 and not step.get("allowed_to_fail")
+                           for step in refresh.get("steps", [])))):
                 raise ValueError("short_assessment_full_no_send_refresh_required")
             validate_published_workflow(decision, root=root, current=current)
             _subject, text, html = render_email(decision)
@@ -456,7 +529,13 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
                 if _inside(root, path).read_text(encoding="utf-8") != expected:
                     raise ValueError("short_assessment_final_email_recomposition_required")
             publication = {"decision_sha256": sha256_file(root / "04_research/company_research/daily_decision.json"),
-                           "generated_at": generated.isoformat(), "email_sent": False}
+                           "generated_at": generated.isoformat(), "email_sent": False,
+                           "refresh_outcome": refresh["outcome"], "fully_passed_research": passed,
+                           "safe_degraded_zero_order": safe_degraded}
+        # Even an unchanged/no-amendment result cannot retire work against a
+        # missing publication, externally changed input or newly expired gate.
+        if publication is None:
+            _validated_publication(root, current)
         # Nothing here sends email or claims that an analyst dossier completed a
         # valuation. The scheduled sender evaluates accepted current semantics.
         updated = _transition(root, row, current, status="completed", ended_at=current.isoformat(),
@@ -465,6 +544,8 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
         state["pending_work"] = {**continuation, "tickers": [item["ticker"] for item in items],
                                  "from_claim_id": row["claim_id"]}
         state["last_items_sha256"] = items_digest
+        if publication is not None:
+            state.pop("publication_recomposition_pending", None)
         state["last_completed_fingerprint"] = build_context(root, current,
             handoff=row["context"].get("public_handoff"))["input_fingerprint"]
         atomic_write_json(root / STATE_REL, state)

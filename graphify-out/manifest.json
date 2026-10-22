@@ -2200,13 +2200,13 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_short_assessment.py": {
-    "mtime": 1792627843.677124,
-    "ast_hash": "0bcae801a2daaa831c1fd7de8697cfd9",
+    "mtime": 1792629897.5841644,
+    "ast_hash": "7edb7e82182893b0f1aa5e7bf69fa619",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/short_assessment.py": {
-    "mtime": 1792628338.7747698,
-    "ast_hash": "63e66929535a5197a0efbc7f253fbadd",
+    "mtime": 1792629979.1240819,
+    "ast_hash": "dee61b62efaa909332fdf31aea762746",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_assessment_config_integration.py": {
@@ -2230,13 +2230,23 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_short_assessment.py": {
-    "mtime": 1792628338.776259,
-    "ast_hash": "d9d89087ec0a019c857737da8c543795",
+    "mtime": 1792629979.1246161,
+    "ast_hash": "94f4295ffccf28b1395838c1da00a561",
     "semantic_hash": ""
   },
   "00_project_control/assessment_cadence.md": {
-    "mtime": 1792628568.7286835,
-    "ast_hash": "b2f2dd0f0c2096b3a3b2901bac21e0f8",
+    "mtime": 1792629765.3289425,
+    "ast_hash": "458bac7f5894e4ea344fbe718df65f31",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v47.json": {
+    "mtime": 1792629142.808544,
+    "ast_hash": "2940bba152867be893dd18e04c4b1bb3",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v48.json": {
+    "mtime": 1792629142.8086524,
+    "ast_hash": "7941dea8c94a0137c9bb982bea73b5db",
     "semantic_hash": ""
   }
 }
