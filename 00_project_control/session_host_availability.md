@@ -37,6 +37,25 @@ proof that a power assertion was taken.
 
 This local guard cannot promise service while the Mac is powered off, the
 user is logged out, or deliberate manual sleep overrides an assertion. It
+also cannot start at 08:00 if the Mac is already asleep overnight: a launchd
+interval is not a hardware wake request. October 22 verification found no
+owner repeating morning wake in `pmset -g sched`; configuring one was not
+possible unattended because `sudo -n` required an administrator password.
+Do not request or store that password. On the existing local route, leave the
+Mac awake, logged in and Codex running, or have the owner configure a morning
+system wake. The suggested owner-run command is:
+
+```sh
+sudo pmset repeat wake MTWRF 07:55:00
+```
+
+Re-read `pmset -g sched` first: `pmset repeat` replaces the repeating set, so
+preserve any existing repeating owner requirements. This wake command does
+not supply power-on, login or app-launch guarantees. Apple one-shot events
+are separate. Future actual automatic claims and sends remain unverified
+until their receipts exist.
+
+The guard
 does not turn the workflow into a cloud service or replace Codex for analyst
 work. An unavailable host retains missed-slot evidence and existing late-send
 prohibitions. On resumption it must not replay expired analysis or renew
