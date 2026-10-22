@@ -1,11 +1,13 @@
 # Equity Research — current document entrypoints
 
-Reviewed 2026-10-19 ET. This index locates maintained guidance and generated
+Reviewed 2026-10-21 ET. This index locates maintained guidance and generated
 outputs; it does not freeze balances, test counts, call counts, schedules, or
 open-item counts. Verify the current branch, files, runtime timestamps and
 relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
+
+- [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and unchanged investment/duplicate-protection rules; effective October 22, 2026.
 
 - [Independent earnings-event research](earnings_event_research.md): rolling public calendar leads independent of momentum, deadline-aware research attention, event-specific assessments and unchanged capital gates; estimated dates and incomplete coverage remain explicit.
 

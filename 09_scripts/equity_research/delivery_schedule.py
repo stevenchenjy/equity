@@ -1,7 +1,7 @@
 """Stable owner-attention windows; clocks never confer trading eligibility."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, time
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -28,3 +28,26 @@ def active_delivery_window(notifications: dict[str, Any], current: datetime) -> 
 
 def delivery_window_by_id(notifications: dict[str, Any], slot: str) -> dict[str, str] | None:
     return next((row for row in configured_delivery_windows(notifications) if row["id"] == slot), None)
+
+
+def assessment_delivery_enabled(notifications: dict[str, Any], current: datetime, *, alerts: bool = False) -> bool:
+    """The dated contract is opt-in; its activation never causes a catch-up send."""
+    key = "intraday_alerts_enabled" if alerts else "mandatory_daily_briefs"
+    if notifications.get(key) is not True or current.tzinfo is None:
+        return False
+    try:
+        effective = date.fromisoformat(str(notifications.get("delivery_assessment_effective_from", "")))
+    except ValueError:
+        return False
+    return current.astimezone(ET).date() >= effective
+
+
+def intraday_alert_window_open(current: datetime) -> bool:
+    """Use the actual regular session, including holidays and early closes."""
+    from daily_common import is_us_market_session_date
+    from investment_plans import regular_close
+    if current.tzinfo is None:
+        return False
+    local = current.astimezone(ET)
+    return (is_us_market_session_date(local.date())
+            and datetime.combine(local.date(), time(9, 30), ET) <= local < regular_close(local.date().isoformat()))

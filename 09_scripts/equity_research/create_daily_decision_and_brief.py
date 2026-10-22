@@ -1196,6 +1196,9 @@ def main() -> int:
     from earnings_events import summary as earnings_event_summary
     decision["earnings_events"] = earnings_event_summary(
         ROOT, current=now_et(), capital=decision["capital_decision"])
+    from delivery_assessments import delivery_policy_context, priority_review_context
+    decision["assessment_delivery_policy"] = delivery_policy_context(ROOT)
+    decision["analyst_priority_review"] = priority_review_context(ROOT, current=now_et())
     publish_capital_decision(ROOT, decision["capital_decision"])
     publish_dependencies(ROOT, decision["capital_decision"])
     escalation_meaning = {key: decision["capital_deployment_escalation"].get(key) for key in (

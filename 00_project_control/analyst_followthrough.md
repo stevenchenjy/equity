@@ -368,6 +368,26 @@ late email or a renewed expired DAY draft. The existing sender checks every
 materially changed report. Machine/app availability and task runtime remain
 external dependencies.
 
+### Short assessments and mandatory briefs
+
+The [October 21 assessment-cadence approval](assessment_cadence.md), effective
+October 22, preserves both full reviews and adds ten-minute short checks at
+09:30, 11:00, 12:30, 14:00 and 15:30 ET while the exchange is open. Use the
+short worker's actual due/claim/context receipt before analytical work.
+Respect an active claim and nonblocking runtime/pipeline admission. Continue
+one or two decision-relevant items, retain durable unfinished work and avoid
+repeating unchanged completed narratives or unavailable external evidence.
+
+An accepted source-bound priority judgment may be alert-worthy even without
+an eligible trade. Record it with the priority writer; changing a raw score
+or local queue alone is insufficient. Full reviews should also record a
+substantive changed priority through that writer when justified. No priority
+judgment grants allocation or execution authority. Following accepted research
+or priority amendments, use the normal no-send recomposition and inspect
+actual final publication. The scheduled sender owns both mandatory daily
+briefs and deduplicated intraday action/priority alerts. Neither a short nor
+full analyst wake invokes SMTP or the owner-review delivery override.
+
 ## Early research opportunities
 
 ### Upcoming earnings

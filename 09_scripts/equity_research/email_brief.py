@@ -950,6 +950,26 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
     return {"title": "Upcoming earnings research", "body": "\n".join(lines), "sources": list(dict.fromkeys(review_sources)), "group": "background"}
 
 
+def priority_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
+    review = decision.get("analyst_priority_review", {})
+    if review.get("schema_version") != "equity_priority_review_context_v1" or not review.get("entries"):
+        return None
+    if review.get("status") != "current":
+        return {"title": "Research priorities — reassessment due", "group": "background",
+                "body": "The retained priority judgment requires reassessment. It supplies no new trading instruction.", "sources": []}
+    lines = ["Source-bound analyst research order; eligibility to trade is assessed separately.",
+             f"Reviewed: {review.get('reviewed_at')} · Recheck by: {review.get('next_review_at')}."]
+    sources = []
+    for rank, entry in enumerate(review["entries"], 1):
+        lines += [f"{rank}. {entry['ticker']}: {entry['reason']}", "Next research step: " + entry["next_step"]]
+        for source in entry.get("sources", []):
+            url = _safe_source(source.get("source_url", source.get("url", "")), _RESEARCH_HOSTS)
+            if url:
+                sources.append(url)
+    return {"title": "Research priorities — analyst review", "body": "\n".join(lines),
+            "sources": list(dict.fromkeys(sources)), "group": "background"}
+
+
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
@@ -964,6 +984,11 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
         background_index = next((index for index, card in enumerate(sections)
                                  if card.get("group") == "background"), len(sections))
         sections.insert(background_index, earnings_card)
+    priority_card = priority_research_card(decision)
+    if priority_card:
+        background_index = next((index for index, card in enumerate(sections)
+                                 if card.get("group") == "background"), len(sections))
+        sections.insert(background_index, priority_card)
     return _render_cards(email_subject(decision), sections, title=title,
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
         footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
@@ -1000,6 +1025,9 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
                         "上述自动短线情景未通过准入，本次新增 0 股。机械生成的观察价格和原始阻断代码仅保留在本地报告，不作为新的指令发送。"]
     sections.append(("订单与可复核方案", trade_lines))
     earnings_card = earnings_research_card(decision)
+    priority_card = priority_research_card(decision)
+    if priority_card:
+        sections.append((priority_card["title"], priority_card["body"].splitlines()))
     if earnings_card:
         sections.append((earnings_card["title"], earnings_card["body"].splitlines()))
     watch_lines = ["仅列本次确定性候选清单；不是全市场机会排名。"]
@@ -1177,6 +1205,11 @@ def _render_email_without_dashboard(decision: dict[str, Any]) -> tuple[str, str,
 
 
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
+    if "delivery_assessment" in decision:
+        # Immutable delivery envelopes describe exactly which current actions
+        # were shown. They do not mutate the canonical published decision.
+        from delivery_assessments import render_intraday_alert
+        return render_intraday_alert(decision)
     subject, plain, document = _render_email_without_dashboard(decision)
     from dashboard_publication import publication_id
     link=decision.get('dashboard_link',{})

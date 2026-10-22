@@ -6,6 +6,7 @@ from __future__ import annotations
 from equity_naming import brand_name, subject_prefix
 
 import argparse
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -22,7 +23,7 @@ from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
 from delivery_archive import archive_validated_delivery
-from delivery_schedule import active_delivery_window
+from delivery_schedule import active_delivery_window, assessment_delivery_enabled, intraday_alert_window_open
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -187,14 +188,13 @@ def _attempt_identity(row: dict[str, str]) -> tuple[str, ...] | None:
         return None
     # An owner's separate explicit request can share identical contents.
     scope = tuple(part for part in row.get("reason", "").split(";")
-                  if part.startswith(("scheduled_slot=", "owner_request_sha256=")))
+                  if part.startswith(("scheduled_slot=", "owner_request_sha256=", "delivery_purpose_v1=")))
     prefix = row.get("status", "").removesuffix("send_claimed").removesuffix("sent")
     return (prefix, *digests, *scope)
 
 
-def scheduled_window_is_blocked(rows: list[dict[str, str]], target_cycle: str,
-                                slot: str) -> tuple[bool, str]:
-    """New slots do not erase unknown sends or reinterpret historical receipts."""
+def unresolved_delivery_is_blocked(rows: list[dict[str, str]], target_cycle: str) -> tuple[bool, str]:
+    """Every ordinary purpose shares unresolved-claim and SMTP-unknown fences."""
     cycle_rows = _current_cycle_receipts(rows, target_cycle)
     if any(row.get("status", "").endswith("delivery_unknown") for row in cycle_rows):
         return True, "delivery_unknown"
@@ -207,6 +207,16 @@ def scheduled_window_is_blocked(rows: list[dict[str, str]], target_cycle: str,
             for later in cycle_rows[index + 1:])
         if not resolved:
             return True, "send_claimed"
+    return False, ""
+
+
+def scheduled_window_is_blocked(rows: list[dict[str, str]], target_cycle: str,
+                                slot: str) -> tuple[bool, str]:
+    """New slots do not erase unknown sends or reinterpret historical receipts."""
+    blocked, reason = unresolved_delivery_is_blocked(rows, target_cycle)
+    if blocked:
+        return blocked, reason
+    cycle_rows = _current_cycle_receipts(rows, target_cycle)
     for row in cycle_rows:
         if row.get("status", "").strip() != "sent":
             continue
@@ -489,7 +499,11 @@ def build_message(
     owner_review: bool = False,
     snapshot_briefs: dict[str, str] | None = None,
 ) -> EmailMessage:
-    if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
+    if decision.get("delivery_assessment") is not None:
+        from delivery_assessments import render_intraday_alert
+        purpose_subject, body_text, body_html = render_intraday_alert(decision)
+        subject = safe_header(purpose_subject, "subject")
+    elif decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
         subject = safe_header(
             email_subject(decision, correction=correction, owner_review=owner_review), "subject"
         )
@@ -503,7 +517,10 @@ def build_message(
     # retained for config compatibility, never used as the display authority.
     message["From"] = formataddr((safe_header(brand_name(), "display_brand"), config["smtp_username"]))
     message["To"] = config["recipient_email"]
-    if decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
+    if decision.get("delivery_assessment") is not None:
+        if snapshot_briefs is not None and (body_text != snapshot_briefs["text"] or body_html != snapshot_briefs["html"]):
+            raise ValueError("intraday_brief_snapshot_mismatch")
+    elif decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
         # All bound delivery modes render the validated in-memory decision.
         _, body_text, body_html = render_email(decision)
     elif snapshot_briefs is not None:
@@ -663,6 +680,45 @@ def routine_covered_by_owner_review(rows: list[dict[str, str]], decision: dict[s
     return True
 
 
+def capture_failure_brief(artifact: dict[str, Any], *, snapshot_hashes=None, snapshot_briefs=None,
+                          snapshot_bytes=None) -> dict[str, Any]:
+    """A current typed status observation carries no prices, positions or orders."""
+    from delivery_assessments import render_failure_brief, validate_failure_brief
+    validate_failure_brief(artifact, root=ROOT, current=now_et())
+    _, plain, document = render_failure_brief(artifact)
+    contents = {"decision_sha256": (json.dumps(artifact, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(),
+        "brief_text_sha256": plain.encode(), "brief_html_sha256": document.encode()}
+    if snapshot_hashes is not None:
+        snapshot_hashes.update({key: hashlib.sha256(raw).hexdigest() for key, raw in contents.items()})
+    if snapshot_briefs is not None:
+        snapshot_briefs.update(text=plain, html=document)
+    if snapshot_bytes is not None:
+        snapshot_bytes.update(contents)
+    return artifact
+
+
+def assessment_delivery_guard(mode: str, scheduled_slot: str | None) -> tuple[bool, str]:
+    """New routine purposes retain operation controls and have their own clocks."""
+    if mode not in {"scheduled_brief", "intraday_alert"}:
+        return False, "delivery_purpose_invalid"
+    current = now_et()
+    notifications = load_active_config()["notifications"]
+    if not assessment_delivery_enabled(notifications, current, alerts=mode == "intraday_alert"):
+        return False, "assessment_delivery_not_effective"
+    enabled, reason, _, _ = delivery_guard()
+    if not enabled and reason not in {"before_daily_decision_time", "outside_delivery_window"}:
+        return False, reason
+    if mode == "intraday_alert":
+        if scheduled_slot is not None:
+            return False, "intraday_alert_has_no_scheduled_slot"
+        return (True, "market_open_advice_check") if intraday_alert_window_open(current) else (False, "outside_regular_market_session")
+    window = active_delivery_window(notifications, current)
+    if (not enabled or not is_us_market_session_date(current.date())
+            or scheduled_slot is None or window is None or window["id"] != scheduled_slot):
+        return False, "outside_delivery_window"
+    return True, "scheduled_brief_window_open"
+
+
 def send_once(
     smtp_factory: Callable[..., Any] = smtplib.SMTP,
     *,
@@ -670,26 +726,34 @@ def send_once(
     owner_review_request_id: str | None = None,
     scheduled_slot: str | None = None,
     limited_status: bool = False,
+    delivery_mode: str | None = None,
+    failure_reason: str | None = None,
 ) -> int:
     owner_review = owner_review_request_id is not None
     if (correction and owner_review) or (scheduled_slot is not None and (correction or owner_review)):
         raise ValueError("delivery_modes_mutually_exclusive")
     if limited_status and (correction or owner_review or scheduled_slot is None):
         raise ValueError("limited_status_requires_scheduled_window")
+    if delivery_mode is not None and (correction or owner_review):
+        raise ValueError("routine_purpose_cannot_override_owner_or_correction")
+    if failure_reason is not None and (delivery_mode != "scheduled_brief" or limited_status):
+        raise ValueError("failure_brief_requires_scheduled_purpose")
 
     def check_limited_handoff():
-        if limited_status:
+        if limited_status and failure_reason is None:
             from run_daily_decision_pipeline import refresh_readiness
             ready, reason = refresh_readiness(scheduled_slot)
             if not ready or reason != "daily_refresh_limited_status_ready":
                 raise ValueError("limited_status_handoff_not_current")
     run_mode = ("explicit_owner_review" if owner_review
-                else "explicit_correction_resend" if correction else "send")
+                else "explicit_correction_resend" if correction else delivery_mode or "send")
     enabled, guard_reason, _, _ = delivery_guard()
+    if delivery_mode is not None:
+        enabled, guard_reason = assessment_delivery_guard(delivery_mode, scheduled_slot)
     if (correction or owner_review) and guard_reason in {"before_daily_decision_time", "outside_delivery_window"}:
         enabled = True
         guard_reason = "explicit_request_clock_override"
-    if scheduled_slot is not None:
+    if scheduled_slot is not None and delivery_mode is None:
         window = active_delivery_window(load_active_config()["notifications"], now_et())
         if window is None or window["id"] != scheduled_slot:
             enabled, guard_reason = False, "outside_delivery_window"
@@ -705,19 +769,31 @@ def send_once(
 
     try:
         check_limited_handoff()
-        decision = (validate_decision(owner_review_request_id=owner_review_request_id)
-                    if owner_review else validate_decision(correction=correction))
+        if failure_reason is not None:
+            from delivery_assessments import build_failure_brief
+            decision = capture_failure_brief(build_failure_brief(ROOT, now_et(), scheduled_slot, failure_reason))
+        else:
+            decision = (validate_decision(owner_review_request_id=owner_review_request_id)
+                        if owner_review else validate_decision(correction=correction))
     except (OSError, ValueError) as exc:
         reason = str(exc) if str(exc) else "decision_validation_failed"
-        log_daily_run(
-            component="daily_sender",
-            run_mode=run_mode,
-            outcome="blocked",
-            reason=reason,
-        )
-        print(f"email_sent=false reason={reason} smtp_config_read=false")
-        return 2
-    if not owner_review and decision.get("send_recommended") is not True:
+        if delivery_mode == "scheduled_brief" and failure_reason is None:
+            # A mandatory status checkpoint is not permission to reuse an old
+            # success. Build a new typed observation with no trading fields.
+            failure_reason = reason if re.fullmatch(r"[a-zA-Z0-9_:.-]{1,180}", reason) else "decision_validation_failed"
+            try:
+                from delivery_assessments import build_failure_brief
+                decision = capture_failure_brief(build_failure_brief(ROOT, now_et(), scheduled_slot, failure_reason))
+            except (OSError, ValueError, KeyError, TypeError) as fallback_error:
+                log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(fallback_error))
+                print(f"email_sent=false reason={fallback_error} smtp_config_read=false")
+                return 2
+            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="status_only", reason=reason)
+        else:
+            log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=reason)
+            print(f"email_sent=false reason={reason} smtp_config_read=false")
+            return 2
+    if not owner_review and delivery_mode is None and decision.get("send_recommended") is not True:
         log_daily_run(
             component="daily_sender",
             run_mode=run_mode,
@@ -734,9 +810,29 @@ def send_once(
     content_hashes: dict[str, str] = {}
     snapshot_briefs: dict[str, str] = {}
     snapshot_bytes: dict[str, bytes] = {}
+    purpose_evaluation: dict[str, Any] = {}
     with ExclusiveFileLock(DAILY_DELIVERY_LOCK_PATH):
         delivery_rows = read_csv(DAILY_DELIVERY_LEDGER_PATH)
-        if owner_review:
+        if delivery_mode is not None:
+            from delivery_assessments import delivery_eligibility
+            blocked, prior_status = unresolved_delivery_is_blocked(delivery_rows, target_cycle)
+            if not blocked:
+                try:
+                    purpose_evaluation = delivery_eligibility(decision, root=ROOT, current=now_et(),
+                        rows=delivery_rows, mode=delivery_mode, scheduled_slot=scheduled_slot)
+                    if (delivery_mode == "scheduled_brief" and purpose_evaluation.get("eligible") is not True
+                            and purpose_evaluation.get("purpose_completed") is not True and failure_reason is None):
+                        from delivery_assessments import build_failure_brief
+                        observed_reason = str(purpose_evaluation.get("reason", "current_publication_unverified"))
+                        failure_reason = observed_reason if re.fullmatch(r"[a-zA-Z0-9_:.-]{1,180}", observed_reason) else "current_publication_unverified"
+                        decision = capture_failure_brief(build_failure_brief(ROOT, now_et(), scheduled_slot, failure_reason))
+                        purpose_evaluation = delivery_eligibility(decision, root=ROOT, current=now_et(),
+                            rows=delivery_rows, mode=delivery_mode, scheduled_slot=scheduled_slot)
+                    blocked = purpose_evaluation.get("eligible") is not True
+                    prior_status = str(purpose_evaluation.get("reason", "delivery_purpose_not_eligible"))
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    blocked, prior_status = True, str(exc) or "delivery_assessment_invalid"
+        elif owner_review:
             allowed, prior_status = owner_review_eligibility(
                 delivery_rows, owner_review_request_id
             )
@@ -766,13 +862,18 @@ def send_once(
             print(
                 f"email_sent=false reason={prior_status if correction or owner_review else f'existing_{prior_status}'} "
                 "smtp_config_read=false"
+                + (" delivery_purpose_complete=true" if purpose_evaluation.get("purpose_completed") is True else "")
             )
             return 0
 
         try:
             check_limited_handoff()
-            revalidated = validate_decision(correction=correction, owner_review_request_id=owner_review_request_id,
-                snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
+            if failure_reason is not None:
+                revalidated = capture_failure_brief(decision, snapshot_hashes=content_hashes,
+                    snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
+            else:
+                revalidated = validate_decision(correction=correction, owner_review_request_id=owner_review_request_id,
+                    snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
             if revalidated != decision:
                 raise ValueError("owner_review_changed_before_claim" if owner_review else "decision_changed_before_claim")
         except (OSError, ValueError) as exc:
@@ -782,6 +883,23 @@ def send_once(
             return 2
 
         try:
+            if delivery_mode == "intraday_alert":
+                # Retain the exact original publication for provenance before
+                # archiving the separate, purpose-bound actual alert body.
+                archive_validated_delivery(DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
+                    contents=snapshot_bytes, hashes=content_hashes)
+                from delivery_assessments import delivery_envelope, render_intraday_alert, validate_envelope
+                envelope = delivery_envelope(decision, purpose_evaluation,
+                    canonical_decision_sha256=content_hashes["decision_sha256"], mode=delivery_mode)
+                decision = deepcopy(decision)
+                decision["delivery_assessment"] = envelope
+                validate_envelope(decision)
+                _, plain, document = render_intraday_alert(decision)
+                snapshot_briefs = {"text": plain, "html": document}
+                snapshot_bytes = {
+                    "decision_sha256": (json.dumps(decision, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(),
+                    "brief_text_sha256": plain.encode(), "brief_html_sha256": document.encode()}
+                content_hashes = {key: hashlib.sha256(raw).hexdigest() for key, raw in snapshot_bytes.items()}
             archive_validated_delivery(DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
                 contents=snapshot_bytes, hashes=content_hashes)
         except (OSError, ValueError):
@@ -815,9 +933,13 @@ def send_once(
             + ";" + owner_review_coverage_key(decision)
         ) if owner_review else ""
         request_suffix += ";" + delivery_meaning_key(decision)
+        if delivery_mode is not None:
+            request_suffix += ";delivery_mode=" + delivery_mode
+            request_suffix += ";delivery_purpose_v1=" + purpose_evaluation["purpose_key"]
+            request_suffix += ";" + purpose_evaluation["meaning_key"]
         if scheduled_slot is not None:
             request_suffix += ";scheduled_slot=" + scheduled_slot
-        if limited_status:
+        if limited_status and failure_reason is None:
             request_suffix += ";refresh_handoff=limited_status_only"
         # Claim one immutable account-version snapshot. Later fills belong to
         # the next publication; intake never waits for SMTP/network activity.
@@ -825,6 +947,8 @@ def send_once(
         with account_lock(ROOT, shared=True):
             try:
                 check_limited_handoff()
+                if failure_reason is not None:
+                    capture_failure_brief(decision)
                 if decision.get("workflow_integrity") is not None:
                     from workflow_integrity import validate_published_workflow
                     validate_published_workflow(decision, root=ROOT, current=now_et())
@@ -833,14 +957,31 @@ def send_once(
                 print(f"email_sent=false reason={exc} smtp_config_read=true")
                 return 2
             try:
-                from delivery_followthrough import validate_followthrough
-                validate_followthrough(decision, root=ROOT, current=now_et())
+                if failure_reason is None:
+                    from delivery_followthrough import validate_followthrough
+                    validate_followthrough(decision, root=ROOT, current=now_et())
             except (OSError, ValueError) as exc:
                 log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
                 print(f"email_sent=false reason={exc} smtp_config_read=true")
                 return 2
             # A long validation must not deliver after the owner's usable window.
-            if scheduled_slot is not None:
+            if delivery_mode is not None:
+                enabled_now, reason_now = assessment_delivery_guard(delivery_mode, scheduled_slot)
+                if not enabled_now:
+                    log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=reason_now)
+                    print(f"email_sent=false reason={reason_now} smtp_config_read=true")
+                    return 2
+                try:
+                    latest = delivery_eligibility(decision, root=ROOT, current=now_et(), rows=delivery_rows,
+                        mode=delivery_mode, scheduled_slot=scheduled_slot)
+                    if (latest.get("eligible") is not True or any(latest.get(key) != purpose_evaluation.get(key)
+                            for key in ("purpose_key", "meaning_key"))):
+                        raise ValueError(str(latest.get("reason", "delivery_assessment_changed_before_claim")))
+                except (OSError, ValueError, KeyError, TypeError) as exc:
+                    log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
+                    print(f"email_sent=false reason={exc} smtp_config_read=true")
+                    return 2
+            elif scheduled_slot is not None:
                 enabled_now, reason_now, _, _ = delivery_guard()
                 window = active_delivery_window(load_active_config()["notifications"], now_et())
                 if not enabled_now or window is None or window["id"] != scheduled_slot:
@@ -930,11 +1071,19 @@ def main() -> int:
                         help="Stable ordinary delivery purpose; never an arbitrary retry ID")
     parser.add_argument("--limited-status", action="store_true",
                         help="Internal: require exact current zero-order soft-failure handoff")
+    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert"),
+                        help="Internal ordinary assessment purpose; never an owner-review override")
+    parser.add_argument("--failure-status", metavar="REASON",
+                        help="Internal: a separately validated current failure brief, with no order instructions")
     args = parser.parse_args()
     if args.delivery_window and not args.send:
         parser.error("--delivery-window requires --send")
     if args.limited_status and not args.send:
         parser.error("--limited-status requires --send")
+    if (args.delivery_purpose or args.failure_status) and not args.send:
+        parser.error("assessment delivery purposes require --send")
+    if args.delivery_purpose == "intraday_alert" and args.delivery_window:
+        parser.error("intraday alerts do not have a scheduled delivery window")
     if args.check:
         enabled, reason, _, _ = delivery_guard()
         print(
@@ -943,14 +1092,18 @@ def main() -> int:
         )
         return 0
     slot = args.delivery_window
-    if args.send and slot is None:
+    purpose = args.delivery_purpose
+    if args.send and slot is None and purpose != "intraday_alert":
         window = active_delivery_window(load_active_config()["notifications"], now_et())
         if window is None:
             print("email_sent=false reason=outside_delivery_window smtp_config_read=false")
             return 2
         slot = window["id"]
+    if args.send and purpose is None and assessment_delivery_enabled(load_active_config()["notifications"], now_et()):
+        purpose = "scheduled_brief"
     return send_once(correction=args.resend_correction, owner_review_request_id=args.send_owner_review,
-                     scheduled_slot=slot, limited_status=args.limited_status)
+                     scheduled_slot=slot, limited_status=args.limited_status,
+                     delivery_mode=purpose, failure_reason=args.failure_status)
 
 
 if __name__ == "__main__":

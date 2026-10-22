@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from active_config import load_active_config
-from delivery_schedule import active_delivery_window, configured_delivery_windows
+from delivery_schedule import active_delivery_window, configured_delivery_windows, assessment_delivery_enabled, intraday_alert_window_open
 from daily_common import (
     DAILY_SCHEDULER_STATE_PATH, ROOT, RUNTIME_EXPECTED_CYCLE_DATE_ENV,
     atomic_write_json, clear_automation_alert, cycle_date, iso_now,
@@ -28,6 +28,78 @@ MAX_AUTOMATIC_ATTEMPTS = 2
 def _save_state(state: dict) -> None:
     state["updated_at"] = iso_now()
     atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
+
+
+def assessment_scheduler(current, notifications: dict) -> int:
+    """Mandatory checkpoints and independent market-open advice checks."""
+    state = read_json(DAILY_SCHEDULER_STATE_PATH,
+        {"schema_version": "phase5r_daily_scheduler_state_v1", "dates": {}})
+    date_state = state.setdefault("dates", {}).setdefault(cycle_date(), {})
+    slots = date_state.setdefault("delivery_windows", {})
+    alerts = date_state.setdefault("intraday_alerts", {})
+    if (date_state.get("decision_terminal_reason") == "delivery_status_unknown"
+            or alerts.get("decision_terminal_reason") == "delivery_status_unknown"
+            or any(row.get("decision_terminal_reason") == "delivery_status_unknown" for row in slots.values())):
+        print("scheduler_action=none reason=delivery_status_unknown pipeline_invoked=false")
+        return 0
+    changed = False
+    for window in configured_delivery_windows(notifications):
+        if current.strftime("%H:%M") > window["end"]:
+            prior = slots.setdefault(window["id"], {})
+            if not prior.get("decision_completed") and not prior.get("decision_terminal_failure"):
+                prior.update(decision_terminal_failure=True, decision_terminal_reason="mandatory_brief_window_missed",
+                    decision_window_closed_at=iso_now())
+                publish_automation_alert(component="daily_decision", reason="mandatory_brief_window_missed:" + window["id"])
+                changed = True
+    if changed:
+        _save_state(state)
+    window = active_delivery_window(notifications, current)
+    slot = window["id"] if window is not None else None
+    slot_state = slots.setdefault(slot, {}) if slot is not None else None
+    brief_due = (assessment_delivery_enabled(notifications, current) and slot_state is not None
+        and not slot_state.get("decision_completed") and not slot_state.get("decision_terminal_failure"))
+    if brief_due:
+        mode, selected = "scheduled_brief", slot_state
+    elif assessment_delivery_enabled(notifications, current, alerts=True) and intraday_alert_window_open(current):
+        mode, selected, slot = "intraday_alert", alerts, None
+    else:
+        print("scheduler_action=none reason=no_current_delivery_purpose pipeline_invoked=false")
+        return 0
+    arguments = [sys.executable, str(DECISION_PIPELINE), "--scheduled", "--delivery-purpose", mode]
+    if slot is not None:
+        arguments += ["--delivery-window", slot]
+    try:
+        result = subprocess.run(arguments, cwd=ROOT, text=True, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, timeout=520, check=False)
+    except subprocess.TimeoutExpired as exc:
+        partial = exc.stdout or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", errors="replace")
+        result = subprocess.CompletedProcess(arguments, 124, stdout=f"{partial}\ndecision_pipeline_timeout_seconds=520")
+    summary = " ".join(result.stdout.strip().split())[-750:]
+    selected.update(decision_checks=int(selected.get("decision_checks", 0) or 0) + 1,
+        decision_last_check_at=iso_now(), decision_last_check_exit_code=result.returncode,
+        decision_last_check_reason=summary)
+    unknown = delivery_status_is_unknown(summary)
+    sent = "email_sent=true" in summary
+    completed = "delivery_purpose_complete=true" in summary
+    if unknown:
+        selected.update(decision_terminal_failure=True, decision_terminal_reason="delivery_status_unknown")
+        date_state["decision_terminal_reason"] = "delivery_status_unknown"
+        publish_automation_alert(component="daily_decision", reason="delivery_status_unknown")
+    elif result.returncode == 0 and (sent or completed):
+        if mode == "scheduled_brief":
+            selected.update(decision_completed=True, decision_completed_at=iso_now())
+        if sent:
+            selected["decision_attempts"] = int(selected.get("decision_attempts", 0) or 0) + 1
+        clear_automation_alert(component="daily_decision")
+    elif result.returncode == REFRESH_NOT_READY_EXIT or not sent:
+        # Polls/validation waits are not SMTP attempts and cannot retire an
+        # unsent mandatory brief or permanently consume future alert purposes.
+        selected["decision_waits"] = int(selected.get("decision_waits", 0) or 0) + 1
+    _save_state(state)
+    print(f"scheduler_action={mode} delivery_window={slot or 'none'} exit_code={result.returncode} {summary}")
+    return result.returncode if unknown else 0
 
 
 def main() -> int:
@@ -58,6 +130,9 @@ def main() -> int:
     if not is_us_market_session_date(current.date()):
         print("scheduler_action=none reason=non_market_session pipeline_invoked=false")
         return 0
+    if (assessment_delivery_enabled(notifications, current)
+            or assessment_delivery_enabled(notifications, current, alerts=True)):
+        return assessment_scheduler(current, notifications)
     if current.strftime("%H:%M") < windows[0]["start"]:
         print("scheduler_action=none reason=before_daily_decision_time")
         return 0

@@ -9,7 +9,7 @@ import sys
 from datetime import datetime, timedelta
 
 from active_config import load_active_config
-from delivery_schedule import active_delivery_window, delivery_window_by_id
+from delivery_schedule import active_delivery_window, delivery_window_by_id, assessment_delivery_enabled, intraday_alert_window_open
 
 from daily_common import (
     DAILY_PIPELINE_LOCK_PATH,
@@ -144,7 +144,7 @@ def safe_check() -> int:
     return 0
 
 
-def execute(send: bool, scheduled_slot: str | None = None) -> int:
+def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | None = None) -> int:
     load_active_state()
     inhibit = load_inhibit()
     if send and bool(inhibit.get("active")):
@@ -154,6 +154,17 @@ def execute(send: bool, scheduled_slot: str | None = None) -> int:
         )
         return 2
     with ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH):
+        if delivery_mode is not None:
+            if delivery_mode not in {"scheduled_brief", "intraday_alert"}:
+                raise ValueError("delivery_purpose_invalid")
+            current = now_et()
+            if not assessment_delivery_enabled(load_active_config()["notifications"], current,
+                    alerts=delivery_mode == "intraday_alert"):
+                print("daily_pipeline_blocked=true reason=assessment_delivery_not_effective email_attempted=false")
+                return 2
+            if delivery_mode == "intraday_alert" and (scheduled_slot is not None or not intraday_alert_window_open(current)):
+                print("daily_pipeline_blocked=true reason=outside_regular_market_session email_attempted=false")
+                return 2
         if send and scheduled_slot is not None:
             window = active_delivery_window(load_active_config()["notifications"], now_et())
             if window is None or window["id"] != scheduled_slot:
@@ -161,7 +172,8 @@ def execute(send: bool, scheduled_slot: str | None = None) -> int:
                 return 2
         ready, readiness_reason = (refresh_readiness(scheduled_slot)
                                    if scheduled_slot is not None else refresh_readiness())
-        if not ready:
+        failure_status = not ready and send and delivery_mode == "scheduled_brief"
+        if not ready and not failure_status:
             log_daily_run(
                 component="daily_pipeline",
                 run_mode="scheduled_send" if send else "protected_no_send",
@@ -186,6 +198,12 @@ def execute(send: bool, scheduled_slot: str | None = None) -> int:
             )
             return 0
         sender_arguments = [sys.executable, str(SENDER_SCRIPT), "--send"]
+        if delivery_mode is not None:
+            sender_arguments += ["--delivery-purpose", delivery_mode]
+        if failure_status:
+            # The sender builds/validates a separate current failure artifact;
+            # an older successful decision is never used as its status body.
+            sender_arguments += ["--failure-status", readiness_reason]
         if readiness_reason == "daily_refresh_limited_status_ready":
             sender_arguments.append("--limited-status")
         if scheduled_slot is not None:
@@ -239,17 +257,18 @@ def main() -> int:
     mode.add_argument("--no-send", action="store_true")
     mode.add_argument("--safe-check", action="store_true")
     parser.add_argument("--delivery-window", help="Stable scheduled delivery purpose; never an arbitrary retry ID")
+    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert"))
     args = parser.parse_args()
     if args.safe_check:
         return safe_check()
     slot = args.delivery_window
-    if args.scheduled and slot is None:
+    if args.scheduled and slot is None and args.delivery_purpose != "intraday_alert":
         window = active_delivery_window(load_active_config()["notifications"], now_et())
         if window is None:
             print("daily_pipeline_blocked=true reason=outside_delivery_window email_attempted=false")
             return 2
         slot = window["id"]
-    return execute(send=args.scheduled, scheduled_slot=slot)
+    return execute(send=args.scheduled, scheduled_slot=slot, delivery_mode=args.delivery_purpose)
 
 
 if __name__ == "__main__":

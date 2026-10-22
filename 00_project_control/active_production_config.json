@@ -123,7 +123,18 @@
         "end": "15:05",
         "refresh_not_before": "13:30"
       }
-    ]
+    ],
+    "mandatory_daily_briefs": true,
+    "intraday_alerts_enabled": true,
+    "delivery_assessment_effective_from": "2026-10-22",
+    "short_assessment_slots_et": [
+      "09:30",
+      "11:00",
+      "12:30",
+      "14:00",
+      "15:30"
+    ],
+    "short_assessment_budget_minutes": 10
   },
   "model_policy": {
     "status": "removed_from_active_production",

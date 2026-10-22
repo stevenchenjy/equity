@@ -402,6 +402,8 @@ def main() -> int:
         "generated_at": iso_now(),
         "active_config": str(ACTIVE_CONFIG_PATH.relative_to(ROOT)),
         "git_commit": commit,
+        "assessment_delivery": decision.get("assessment_delivery_policy", {}),
+        "analyst_priority_review": decision.get("analyst_priority_review", {}),
         "deterministic_refresh": {
             "outcome": refresh.get("outcome", "missing"),
             "completed_at": refresh.get("completed_at", ""),
@@ -496,7 +498,8 @@ def main() -> int:
         f"- Deterministic refresh: `{status['deterministic_refresh']['outcome']}`.",
         f"- Market: `{status['market']['valid_rows']}/{status['market']['total_rows']}` valid rows; latest validated published close `{status['market']['latest_completed_session'] or 'none'}` (provider publication can lag the exchange calendar).",
         f"- SEC evidence: `{status['official_evidence']['status']}`; held coverage `{status['official_evidence']['held_coverage_complete']}`.",
-        f"- Decision: `{status['decision']['code']}`; research notification signal `{status['decision']['send_reason'] or 'not generated'}`; delivery comparison: `{'already covered; no repeat automatic email' if status['decision']['last_delivery_covers_content'] else 'not covered; remaining sender checks still apply'}`.",
+        f"- Decision: `{status['decision']['code']}`; research notification signal `{status['decision']['send_reason'] or 'not generated'}`; recommendation comparison: `{'already covered' if status['decision']['last_delivery_covers_content'] else 'not covered'}`. Mandatory brief and intraday alert purposes are checked separately by the scheduled sender.",
+        f"- Assessment delivery policy: `{status['assessment_delivery']}`. This is configured policy, not proof of a completed assessment or email delivery.",
         f"- Valuation: `{status['valuation']['complete_records']}/{status['valuation']['total_records']}` complete records.",
         f"- Outcome evidence: `{status['outcomes']['recommendation_snapshots']}` snapshots, `{status['outcomes']['evaluated_horizon_rows']}` evaluated horizon rows.",
         f"- Production model: retired; calls allowed `{status['model']['calls_allowed']}`; retired-pilot metered cost `${status['model']['metered_cost_usd']}`. These are not current SHADOW usage or costs; see `08_reviews/shadow_llm/reviews.local/evaluation.md`.",

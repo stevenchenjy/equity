@@ -192,6 +192,24 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
         or terminal_after != windows[-1]["end"]
     ):
         raise ActiveConfigError("owner delivery windows do not match approved schedule")
+    assessment_keys = {
+        "mandatory_daily_briefs", "intraday_alerts_enabled", "delivery_assessment_effective_from",
+        "short_assessment_slots_et", "short_assessment_budget_minutes",
+    }
+    if assessment_keys.intersection(notifications):
+        try:
+            assessment_effective = notifications["delivery_assessment_effective_from"]
+            parsed_effective = date.fromisoformat(assessment_effective)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ActiveConfigError("assessment delivery effective date is invalid") from exc
+        if (not assessment_keys.issubset(notifications)
+                or parsed_effective.isoformat() != assessment_effective
+                or notifications["mandatory_daily_briefs"] is not True
+                or notifications["intraday_alerts_enabled"] is not True
+                or notifications["short_assessment_slots_et"] != ["09:30", "11:00", "12:30", "14:00", "15:30"]
+                or type(notifications["short_assessment_budget_minutes"]) is not int
+                or notifications["short_assessment_budget_minutes"] != 10):
+            raise ActiveConfigError("assessment delivery cadence does not match owner approval")
     return config
 
 

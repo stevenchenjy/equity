@@ -22,6 +22,8 @@ graphify-out/reflections/
 
 # Durable research attention, primary receipts, assessments and forward studies.
 04_research/company_research/opportunities.local/
+04_research/company_research/priority_reviews.local.json
+04_research/company_research/priority_reviews.local/
 08_reviews/current/research_opportunities.local.md
 
 07_automation/email_delivery/email_config.local.json
@@ -210,3 +212,7 @@ graphify-out/reflections/
 03_source_data/equity_research/earnings_events.local.json
 03_source_data/equity_research/earnings_events_status.local.json
 00_project_control/run_logs/earnings_events.lock
+
+# Private bounded intraday analyst slot claims and completion state.
+00_project_control/run_logs/short_assessment.local.json
+00_project_control/run_logs/short_assessment.lock

@@ -1,5 +1,27 @@
 # Equity Research — Daily Delivery Policy
 
+## Mandatory daily briefs and intraday assessments (October 21 approval)
+
+Effective October 22, 2026, the owner-approved
+[assessment cadence](assessment_cadence.md) supersedes the quiet-window rule
+and the restriction of all routine mail to the two attention windows. Keep
+the full 08:45/13:45 ET reviews. Short research checks run every 90 minutes
+from 09:30 through the actual market close. The morning and afternoon windows
+each require one brief even with no action. Separately identified intraday
+alerts require a material action or source-bound analyst priority change;
+they do not require a positive allocation, and raw ranking churn stays quiet.
+
+These are separate delivery purposes under the existing single sender,
+durable claims, exact archives, follow-through and unknown-send fences.
+The unchanged legacy event-comparison fields are not permission to suppress
+a mandatory checkpoint or to send generic unchanged intraday status.
+A current typed status-only brief can truthfully disclose an unavailable
+handoff; it cannot revive stale orders or weaken investment gates. All
+historical receipts and prior policy semantics remain preserved. The older
+one-message-per-window limit continues to apply to each daily brief, while
+new intraday alert purposes use their own semantic duplicate protection.
+No manual resend or test message is authorized by this migration.
+
 ## Limited status continuity after source failure (2026-10-06)
 
 A failed full refresh remains failed and keeps its existing bounded recovery
@@ -156,7 +178,14 @@ The only authorized sender is `send_daily_email.py`. It requires:
 - all broker/order boundaries set to false;
 - no existing blocking delivery state for the ET cycle.
 
-## Frequency
+## Legacy notification comparison (retained for historical validation)
+
+The following fields describe the legacy recommendation-change signal.
+From October 22, the separate mandatory-brief and intraday-alert purposes in
+[assessment_cadence.md](assessment_cadence.md) govern routine delivery. They
+preserve the signal's original meaning without letting it suppress either
+required checkpoint. Historical one-message limits below apply to legacy
+ordinary delivery; new purpose identities still share all uncertainty fences.
 
 - The owner selected `regular_delivery_mode=watch_or_action_change` on
   2026-09-14: the then-current single-window emails sent only when the

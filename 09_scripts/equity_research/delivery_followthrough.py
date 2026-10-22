@@ -106,6 +106,20 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
     from investment_plans import regular_close
     if prior.get("owner_requested_research"):
         return [], True
+    shown_tickers = None
+    if "delivery_assessment" in prior:
+        from delivery_assessments import validate_envelope
+        from email_brief import render_email
+        try:
+            envelope = validate_envelope(prior)
+            _, expected_text, expected_html = render_email(prior)
+            if (text, html) != (expected_text, expected_html):
+                return [], True
+            shown_tickers = set(envelope["changed_action_tickers"])
+            if prior.get("capital_decision") is None:
+                return [], bool(shown_tickers)
+        except (KeyError, TypeError, ValueError):
+            return [], True
     actions = []
     incomplete = False
     proposal_tickers = set(prior.get("eligible_action_review_candidates", [])) | set(prior.get("eligible_new_position_review_candidates", []))
@@ -121,6 +135,8 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
             contract = prior["capital_decision"]
             validate(contract, current=sent_at)
             for row in contract["decisions"]:
+                if shown_tickers is not None and row.get("ticker") not in shown_tickers:
+                    continue
                 draft = row.get("order_draft")
                 if not draft:
                     continue
@@ -149,6 +165,8 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                     "source": "exact_displayed_capital_draft"})
         except (KeyError, TypeError, ValueError, InvalidOperation):
             return [], True
+        if shown_tickers is not None and {a["ticker"] for a in actions} != shown_tickers:
+            incomplete = True
         return actions, incomplete or len({a["ticker"] for a in actions}) != len(actions)
     for plan in prior.get("plan_continuity", {}).get("plans", []):
         draft = plan.get("historical_order_draft")

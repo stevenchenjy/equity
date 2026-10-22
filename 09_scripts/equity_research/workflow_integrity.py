@@ -406,6 +406,12 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         actual = sha256_file(root / candidate) if (root / candidate).exists() else None
         if digest != actual:
             raise ValueError("workflow_inputs_changed_recompose_required")
+    if "assessment_delivery_policy" in decision or "analyst_priority_review" in decision:
+        from delivery_assessments import delivery_policy_context, priority_review_context
+        if decision.get("assessment_delivery_policy") != delivery_policy_context(root):
+            raise ValueError("workflow_assessment_delivery_policy_changed_recompose_required")
+        if decision.get("analyst_priority_review") != priority_review_context(root, current=current):
+            raise ValueError("workflow_priority_review_changed_recompose_required")
     if isinstance(decision.get("earnings_events"), dict):
         # The top-level scan hash cannot establish integrity of its nested
         # retained source bytes. Revalidate the research view before delivery;

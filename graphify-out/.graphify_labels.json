@@ -282,19 +282,12 @@
   "280": "test_manual_valuation_bootstrap.py",
   "281": "admit_market_history_baseline.py",
   "282": "smoke_diagnostic_notes",
-  "283": "equity_naming.py",
   "284": "decision_dependencies.py",
   "285": "PacketMarketObservationTests",
-  "286": "IncorporationTests",
-  "287": "feedback.py",
   "288": "Equity Research — Core Allocation Policy",
   "289": "migrate",
   "290": "production_strategies.py",
   "291": "test_momentum_price_coverage.py",
   "292": "test_index_core_research_routing.py",
-  "293": "HeldCorePositionTests",
-  "294": "test_tactical_order_scopes.py",
-  "295": "OwnerSnapshotTests",
-  "296": "_DocumentPeriod",
-  "297": "run_stage"
+  "294": "test_tactical_order_scopes.py"
 }
