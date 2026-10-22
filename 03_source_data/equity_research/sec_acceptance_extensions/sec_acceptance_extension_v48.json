@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-10-21T20:29:02.000-04:00",
+  "artifact_sha256": "21e33219c1b887370fe5bb5b32f9603807f7d1e2f72ec8070f81543eaad80185",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v48",
+  "prior_extension_set_sha256": "be1001f0e1e0f0123bdca81256561a4ef65208d753424bbfd5c9ee81a42394dd",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-21T20:15:40.000+00:00",
+      "accession_number": "0001193125-26-427849",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-21T20:29:02.000-04:00",
+      "cik": "789019",
+      "entity_name": "MICROSOFT CORP",
+      "extension_record_sha256": "348fabb809551abf4c7040e0ce5292e1ee1c2ff13efa7ca98840b6d8474cdedd",
+      "extension_version": "v48",
+      "filing_date": "2026-10-21",
+      "form": "DEF 14A",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "8db6ee6f8fdfc744f8dfaa912125ad1f70398819e25864a80c1f9db6fe517b99",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "ticker": "MSFT"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
