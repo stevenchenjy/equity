@@ -216,3 +216,4 @@ graphify-out/reflections/
 # Private bounded intraday analyst slot claims and completion state.
 00_project_control/run_logs/short_assessment.local.json
 00_project_control/run_logs/short_assessment.lock
+/00_project_control/run_logs/short_publication_refresh.local.json
