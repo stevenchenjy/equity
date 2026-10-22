@@ -365,8 +365,8 @@ def sha256_bytes(value: bytes) -> str:
 
 
 def sha256_file(path: Path) -> str:
-    with path.open("rb") as handle:
-        return sha256_bytes(handle.read())
+    from validation_cache import sha256_file as validated_file_digest
+    return validated_file_digest(path)
 
 
 def canonical_sha256(payload: Any) -> str:

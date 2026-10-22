@@ -307,6 +307,33 @@ class DeliveryAssessmentTests(unittest.TestCase):
         atomic_write_json(model, {'fair_value': 130})
         self.assertEqual(delivery.priority_review_context(self.root, NOW)['status'], 'inputs_changed')
 
+    def test_calendar_row_reordering_is_not_a_priority_change_but_market_context_is(self):
+        from earnings_events import POLICY_REL, refresh_events
+        from daily_common import ROOT
+        from test_earnings_events import feed, row
+        policy = self.root / POLICY_REL
+        policy.parent.mkdir(parents=True, exist_ok=True)
+        policy.write_bytes((ROOT / POLICY_REL).read_bytes())
+        rows = [{**row('SYN'), 'marketCap': '$7,922,781,200'}, row('OTHER')]
+        def refresh(current, values):
+            return refresh_events(self.root, current=current, clock=lambda: current,
+                fetcher=lambda day, _: feed(day, values if day == NOW.date() else []))
+        refresh(NOW - timedelta(minutes=1), rows)
+        delivery.apply_priority_review(self.root, self.priority_proposal(), current=NOW, apply=True)
+        refresh(NOW + timedelta(minutes=1), list(reversed(rows)))
+        # The calendar's original bytes and parsed rows are still validated.
+        # Provider sorting alone changes row_index, not the company evidence.
+        self.assertEqual(delivery.priority_review_context(self.root, NOW + timedelta(minutes=1))['status'], 'current')
+        # These are the actual types of newly observed changes from October22;
+        # neither can be dismissed as a collector clock or journal append.
+        for key, value in [('marketCap', '$7,692,570,600'), ('noOfEsts', '6'),
+                           ('epsForecast', '$1.10'), ('time', 'time-pre-market')]:
+            with self.subTest(key=key):
+                changed = copy.deepcopy(rows); changed[0][key] = value
+                refresh(NOW + timedelta(minutes=2), changed)
+                self.assertEqual(delivery.priority_review_context(self.root, NOW + timedelta(minutes=2))['status'], 'inputs_changed')
+                refresh(NOW + timedelta(minutes=2), rows)
+
     def test_priority_survives_rss_channel_clock_but_changed_news_and_corruption_are_effective(self):
         from official_news import MANIFEST_PATH, load_manifest, refresh_news
         from test_official_news import SOURCE, feed

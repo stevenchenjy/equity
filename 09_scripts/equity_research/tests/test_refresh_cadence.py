@@ -824,7 +824,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
         self.assertEqual(result, 0)
         run.assert_called_once_with(
             [final_pipeline.sys.executable, str(final_pipeline.SENDER_SCRIPT), "--send"],
-            timeout=90,
+            timeout=180,
         )
         clear.assert_called_once_with(component="daily_decision")
 

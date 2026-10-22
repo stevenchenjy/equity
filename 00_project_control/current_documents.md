@@ -9,6 +9,8 @@ relevant checks before relying on any linked claim.
 
 - [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and unchanged investment/duplicate-protection rules; effective October 22, 2026.
 
+- [Local assessment host availability](session_host_availability.md): bounded AC power assertion for the existing operating day, installed-service checks and explicit limits of local scheduling.
+
 - [Independent earnings-event research](earnings_event_research.md): rolling public calendar leads independent of momentum, deadline-aware research attention, event-specific assessments and unchanged capital gates; estimated dates and incomplete coverage remain explicit.
 
 - [Company valuation admission](company_valuation_admission.md): owner-authorized October 12 bridge from individually reviewed immutable company cases to canonical decisions; current evidence and independent allocation/entry gates remain.

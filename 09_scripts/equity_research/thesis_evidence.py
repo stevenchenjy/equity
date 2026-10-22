@@ -9,6 +9,7 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import date, datetime, timezone
 import hashlib
+from functools import lru_cache
 from html.parser import HTMLParser
 import json
 from pathlib import Path
@@ -113,6 +114,19 @@ class _DocumentPeriod(HTMLParser):
                         continue
 
 
+@lru_cache(maxsize=8)
+def _document_period_values(raw: str) -> frozenset[str]:
+    """Pure parsing only; callers verify the actual filing bytes first.
+
+    The exact current text is the key, never a path, expected hash or receipt.
+    Changed bytes cannot reuse an old parse, and no identity/clock/provenance
+    validation is cached. Bound retained text to eight source documents.
+    """
+    parsed = _DocumentPeriod()
+    parsed.feed(raw)
+    return frozenset(parsed.values)
+
+
 def evidence_context(root: Path) -> dict[str, Any]:
     """Validate the retained official acceptance chain once per report."""
     index_path = root / ACCEPTANCE_REL
@@ -191,9 +205,8 @@ def validate_source(source: dict[str, Any], ticker: str, reviewed_at: datetime,
     _require(source["form"] in PERIODIC_FORMS, "company thesis source requires periodic filing")
     text = _validate_filing_bytes(source, ticker, reviewed_at, root, context, admission=admission)
     _require(_day(source["financial_period_end"]) <= _timestamp(source["published_at"]).date(), "financial period follows publication")
-    parsed = _DocumentPeriod()
-    parsed.feed(_inside(root, source["raw_path"]).read_text(encoding="utf-8"))
-    _require(set(parsed.values) == {source["financial_period_end"]}, "source financial period differs from filing")
+    values = _document_period_values(_inside(root, source["raw_path"]).read_text(encoding="utf-8"))
+    _require(values == {source["financial_period_end"]}, "source financial period differs from filing")
     return text
 
 

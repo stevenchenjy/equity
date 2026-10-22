@@ -61,6 +61,9 @@ for job_suffix in dailyrefresh dailydecision; do
     /bin/launchctl bootstrap "${launch_domain}" "${installed_plist}"
 done
 
+# A separate power assertion cannot invoke either scheduler or send mail.
+/bin/zsh "${project_root}/07_automation/scheduler/install_session_awake.sh"
+
 /usr/bin/printf '%s\n' \
     "daily_schedulers_installed=true" \
     "runtime_root=${project_root}" \

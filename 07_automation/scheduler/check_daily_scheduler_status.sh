@@ -17,7 +17,7 @@ for legacy_suffix in dailyrefresh dailydecision dailybrief weeklyconviction week
     fi
 done
 
-for job_suffix in dailyrefresh dailydecision; do
+for job_suffix in dailyrefresh dailydecision sessionawake; do
     job_label="com.steven.equity_research.${job_suffix}"
     template_plist="${project_root}/07_automation/scheduler/${job_label}.plist.template"
     installed_plist="${launch_agents_dir}/${job_label}.plist"

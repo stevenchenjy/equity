@@ -89,7 +89,8 @@ def _source_meaning(relative: str, raw: bytes, *, root: Path, current: datetime)
         dates = {}
         for scan in validated_scans(root, current=current):
             for row in scan.get('dates', []):
-                dates[row['date']] = {k: row.get(k) for k in ('status', 'events', 'reason', 'quarantine')}
+                dates[row['date']] = {**{k: row.get(k) for k in ('status', 'reason', 'quarantine')},
+                    'events': _calendar_priority_events(row.get('events', []))}
         return {'schema_version': json.loads(raw).get('schema_version'), 'latest_dates': dates}
     if relative.endswith('earnings_events_status.local.json'):
         value = json.loads(raw)
@@ -97,9 +98,20 @@ def _source_meaning(relative: str, raw: bytes, *, root: Path, current: datetime)
         return {'status': value.get('status'),
             'coverage': {k: coverage.get(k) for k in ('status', 'scope', 'horizon_start', 'horizon_end',
                 'days_requested', 'days_verified', 'failed_dates', 'full_market_coverage', 'issuer_confirmation')},
-            'events': [{k: v for k, v in event.items() if k not in {'last_observed_at', 'sources'}}
-                for event in value.get('events', [])]}
+            'events': _calendar_priority_events(value.get('events', []),
+                ignore={'last_observed_at', 'sources'})}
     return hashlib.sha256(raw).hexdigest()
+
+
+def _calendar_priority_events(events: list, *, ignore=frozenset()) -> list:
+    """Ignore provider ordering only after validated_scans checks original rows.
+
+    row_sha256 remains effective: changes to market cap, earnings expectations,
+    estimate count or any other original company field require reassessment.
+    Quarantined rows and actual schedule/review state are not normalized away.
+    """
+    return sorted([{k: v for k, v in event.items() if k not in {'row_index', *ignore}}
+        for event in events], key=lambda event: (str(event.get('event_id')), canonical_sha256(event)))
 
 
 def priority_input_bindings(root: Path, *, current: datetime) -> dict:

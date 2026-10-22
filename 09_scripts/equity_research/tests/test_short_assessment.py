@@ -161,6 +161,117 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertEqual(state["slots"]["2026-10-22/12:30"]["status"], "missed")
         self.assertEqual(state["slots"]["2026-10-22/14:00"]["status"], "missed")
 
+    def test_late_completion_expires_durably_before_any_next_slot(self):
+        value = self.claim()
+        with ExclusiveFileLock(self.runtime_lock):
+            with self.assertRaisesRegex(ValueError, "outside_budget"):
+                self.complete(self.result(value), "09:41")
+        state = json.loads((self.root / short.STATE_REL).read_text())
+        row = state["slots"]["2026-10-22/09:30"]
+        self.assertEqual(row["status"], "expired")
+        self.assertEqual(row["expires_at"], value["receipt"]["expires_at"])
+        self.assertNotIn("result", row)
+        self.assertEqual(row["rejected_completion"]["status"], "unvalidated_late_attempt")
+        self.assertFalse(row["rejected_completion"]["analytical_completion"])
+        self.assertTrue((self.root / row["receipt_path"]).exists())
+        self.assertEqual(short.check(self.root, self.moment("09:42"))["status"], "expired")
+
+    def test_non_due_wake_retires_elapsed_claim_without_replay_or_network(self):
+        value = self.claim()
+        with patch.object(short, "refresh_public_handoff") as collector:
+            result = self.claim("10:00", refresh_public=True)
+        collector.assert_not_called()
+        self.assertEqual(result["outcome"], "not_due")
+        state = json.loads((self.root / short.STATE_REL).read_text())
+        row = state["slots"]["2026-10-22/09:30"]
+        self.assertEqual(row["status"], "expired")
+        self.assertEqual(row["claim_id"], value["receipt"]["claim_id"])
+        self.assertEqual(len(state["slots"]), 1)
+
+    def journal_detection(self, clock="09:31"):
+        from opportunity_contract import empty_store, append_event
+        from opportunity_triggers import packet
+        store = json.loads((self.root / short.OPPORTUNITY_JOURNAL).read_text())
+        observation = packet(ticker="META", family="business", trigger="source_inspection",
+            evidence={"fact": "Synthetic source-bound observation"},
+            sources=[{"path": "08_reviews/source.txt", "sha256": sha256_file(self.source),
+                "available_at": self.moment("09:20").isoformat()}], current=self.moment(clock),
+            produced_by={"implementation_sha256": "1" * 64, "policy_sha256": "2" * 64})
+        identity = canonical_sha256({"first_observation_id": observation["observation_id"], "ticker": "META"})
+        append_event(store, {"kind": "detected", "opportunity_id": identity,
+            "recorded_at": self.moment(clock).isoformat(), "observation": observation,
+            "owner": "research_orchestration", "to_state": "queued",
+            "reason_code": "bounded_attention_admission", "blockers": []})
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, store)
+        return store, identity
+
+    def test_collector_journal_append_is_separate_from_an_accepted_analyst_amendment(self):
+        from opportunity_contract import empty_store, transition
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, empty_store())
+        self.typed_publication("09:20")
+        value = self.claim()
+        store, identity = self.journal_detection()
+        transition(store, identity, "researching", owner="objective_research",
+            reason="objective_source_inspection_started", current=self.moment("09:31"),
+            sources=self.result(value)["items"][0]["sources"], blockers=[])
+        transition(store, identity, "data_blocked", owner="objective_research",
+            reason="official_issuer_sources_not_cached_network_refresh_required", current=self.moment("09:32"),
+            sources=self.result(value)["items"][0]["sources"], blockers=["missing_current_source"])
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, store)
+        with self.assertRaisesRegex(ValueError, "post_public_handoff_recomposition_required"):
+            self.complete(self.result(value))
+        self.typed_publication("09:33")
+        self.refresh_receipt("09:32", "09:34")
+        done = self.complete(self.result(value))
+        self.assertEqual(done["status"], "completed")
+        self.assertFalse(done["result"]["accepted_amendments"])
+        self.assertEqual(done["collector_changes"][0]["appended_records"], 3)
+        self.assertFalse(done["collector_changes"][0]["analytical_completion"])
+        self.assertTrue(done["publication"]["fully_passed_research"])
+
+    def test_collector_classification_never_waives_analyst_journal_or_source_tamper(self):
+        from opportunity_contract import empty_store, transition
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, empty_store())
+        self.journal_detection("09:20")
+        self.typed_publication("09:20")
+        value = self.claim()
+        store = json.loads((self.root / short.OPPORTUNITY_JOURNAL).read_text())
+        identity = store["events"][0]["opportunity_id"]
+        transition(store, identity, "insufficient_evidence", owner="analyst_assessment",
+            reason="recorded_assessment:synthetic", current=self.moment("09:31"),
+            sources=self.result(value)["items"][0]["sources"], blockers=["valuation_unresolved"])
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, store)
+        self.assertIsNone(short._collector_journal_delta(self.root, value["receipt"], self.moment("09:35")))
+        with self.assertRaisesRegex(ValueError, "amendment_receipts_incomplete"):
+            self.complete(self.result(value))
+        # Even a legally owned collector append needs original source bytes.
+        store["events"].pop()
+        transition(store, identity, "researching", owner="objective_research",
+            reason="objective_source_inspection_started", current=self.moment("09:31"),
+            sources=self.result(value)["items"][0]["sources"], blockers=[])
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, store)
+        self.source.write_text("Corrupt retained original source")
+        self.assertIsNone(short._collector_journal_delta(self.root, value["receipt"], self.moment("09:35")))
+
+    def test_collector_classification_rejects_rewritten_history_even_with_new_hash_chain(self):
+        from opportunity_contract import empty_store, append_event
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, empty_store())
+        self.journal_detection("09:20")
+        self.typed_publication("09:20")
+        value = self.claim()
+        store = json.loads((self.root / short.OPPORTUNITY_JOURNAL).read_text())
+        event = store["events"][0]
+        event["reason_code"] = "changed historical reason"
+        event["record_hash"] = canonical_sha256({k: v for k, v in event.items() if k != "record_hash"})
+        append_event(store, {"kind": "transition", "opportunity_id": event["opportunity_id"],
+            "from_state": "queued", "to_state": "researching", "owner": "objective_research",
+            "reason_code": "objective_source_inspection_started", "blockers": [],
+            "sources": self.result(value)["items"][0]["sources"], "recorded_at": self.moment("09:31").isoformat()})
+        atomic_write_json(self.root / short.OPPORTUNITY_JOURNAL, store)
+        self.assertIsNone(short._collector_journal_delta(self.root, value["receipt"], self.moment("09:35")))
+        with self.assertRaisesRegex(ValueError, "amendment_receipts_incomplete"):
+            self.complete(self.result(value))
+
     def test_unchanged_completed_inputs_skip_without_repeat_analysis(self):
         value = self.claim()
         done = self.complete(self.result(value))
@@ -381,7 +492,7 @@ class ShortAssessmentTests(unittest.TestCase):
                          second["receipt"]["context"]["input_fingerprint"])
         self.assertEqual(second["outcome"], "claimed")
         self.assertTrue(second["publication_recomposition_required"])
-        self.assertEqual(second["required_next_step"]["operation"], "full_no_send_recomposition")
+        self.assertEqual(second["required_next_step"]["operation"], "short_publication_no_send_recomposition")
         self.assertTrue(second["required_next_step"]["release_mutation_locks_first"])
         self.assertIn("03_source_data/equity_research/earnings_events.local.json",
                       second["receipt"]["publication_input_changes"])
@@ -396,6 +507,50 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertFalse(done["publication"]["email_sent"])
         state = json.loads((self.root / short.STATE_REL).read_text())
         self.assertNotIn("publication_recomposition_pending", state)
+
+    def test_publication_closure_is_separate_from_full_accepted_amendment_refresh(self):
+        value = self.claim()
+        # A public binding change requires publication but not a new company model.
+        atomic_write_json(self.root / "03_source_data/equity_research/earnings_events_status.local.json",
+                          {"observed_at": self.moment("09:31").isoformat()})
+        self.typed_publication("09:33")
+        atomic_write_json(self.root / "00_project_control/run_logs/short_publication_refresh.local.json",
+                          {"claim_id": value["receipt"]["claim_id"]})
+        metadata = {"decision_sha256": sha256_file(self.root / "04_research/company_research/daily_decision.json"),
+                    "generated_at": self.moment("09:33").isoformat(), "email_sent": False,
+                    "refresh_outcome": "passed", "fully_passed_research": False,
+                    "publication_only": True}
+        # The standalone validator has separate real source-bound integration
+        # tests. Here prove completion invokes it and preserves its narrower claim.
+        with patch.dict("sys.modules", {"short_publication": SimpleNamespace(
+                validate_receipt=lambda root, row, current: metadata)}):
+            done = self.complete(self.result(value))
+        self.assertEqual(done["status"], "completed")
+        self.assertFalse(done["publication"]["fully_passed_research"])
+        self.assertTrue(done["publication"]["publication_only"])
+
+    def test_corrupt_short_publication_cannot_fallback_or_complete_accepted_amendment(self):
+        value = self.claim()
+        atomic_write_json(self.root / "03_source_data/equity_research/earnings_events_status.local.json", {"changed": True})
+        self.typed_publication("09:33")
+        self.refresh_receipt("09:32", "09:34")
+        atomic_write_json(self.root / "00_project_control/run_logs/short_publication_refresh.local.json",
+                          {"claim_id": value["receipt"]["claim_id"]})
+        def corrupt(*args):
+            raise ValueError("short_publication_corrupt_exact_bytes")
+        with patch.dict("sys.modules", {"short_publication": SimpleNamespace(validate_receipt=corrupt)}):
+            with self.assertRaisesRegex(ValueError, "short_publication_corrupt_exact_bytes"):
+                self.complete(self.result(value))
+        path = short.MUTABLE_STORES[0]
+        record = {"recorded_at": self.moment("09:31").isoformat(), "plan_id": "new-accepted-plan"}
+        atomic_write_json(self.root / path, {"records": [record]})
+        result = self.result(value, outcome="accepted_amendments", accepted_amendments=[{
+            "path": path, "sha256": sha256_file(self.root / path), "record_identity": canonical_sha256(record)}])
+        # A matching short-publication receipt never replaces the strict full
+        # refresh and actual post-amendment input binding for a plan/model edit.
+        with patch.dict("sys.modules", {"short_publication": SimpleNamespace(validate_receipt=corrupt)}):
+            with self.assertRaisesRegex(ValueError, "inputs_changed"):
+                self.complete(result)
 
     def test_public_recomposition_can_finish_as_truthful_degraded_zero_order_without_amendment(self):
         self.events.stop()

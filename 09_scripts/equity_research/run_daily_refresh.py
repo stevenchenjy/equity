@@ -153,6 +153,7 @@ def run_step(
     allowed_to_fail: bool,
     *,
     market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
+    maximum_child_seconds: float | None = None,
 ) -> dict[str, Any]:
     started_at = iso_now()
     start_clock = time.monotonic()
@@ -168,6 +169,10 @@ def run_step(
         if name == "capital_deployment_escalation"
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
+    if maximum_child_seconds is not None:
+        # A short publication may reduce a child's allowance, never extend the
+        # full-refresh allowance or the claim's fixed deadline.
+        timeout_seconds = min(timeout_seconds, max(0.01, maximum_child_seconds))
     extra_arguments = (
         (["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])
         if name == "earnings_event_discovery"

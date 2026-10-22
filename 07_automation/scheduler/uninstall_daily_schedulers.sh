@@ -4,7 +4,7 @@ set -euo pipefail
 launch_domain="gui/$(/usr/bin/id -u)"
 launch_agents_dir="/Users/messssi/Library/LaunchAgents"
 
-for job_suffix in dailyrefresh dailydecision; do
+for job_suffix in dailyrefresh dailydecision sessionawake; do
     job_label="com.steven.equity_research.${job_suffix}"
     installed_plist="${launch_agents_dir}/${job_label}.plist"
     if /bin/launchctl print "${launch_domain}/${job_label}" >/dev/null 2>&1; then

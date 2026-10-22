@@ -38,12 +38,35 @@ only source of eligible quantities, prices and portfolio-changing drafts.
 Public collection can change exact publication bindings even when its news
 or calendar meaning is unchanged. A short claim reports this separately as
 `publication_recomposition_required`; it cannot retire itself as unchanged
-or complete a no-action result while those bindings are stale. Release
-mutation locks and run the same approved full no-send refresh before
-completion. A truthful degraded, zero-order publication can document the
+or complete a no-action result while those bindings are stale. For public-only
+changes with unchanged account, market and analyst stores, release mutation
+locks and use the claim-bound offline publication refresh:
+
+```sh
+/Library/Frameworks/Python.framework/Versions/3.13/bin/python3 /Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_short_publication.py --root /Users/messssi/LocalRuntime/equity --claim-id CLAIM_ID
+```
+
+This rebuilds the existing downstream incorporation, valuation, portfolio,
+decision, risk and final publication closure without repeating SEC network
+collection, objective research, escalation or experiments. It preserves the
+ten-minute deadline and has a separate receipt; it is not a passed full research
+refresh or completed company analysis. Every final gate and exact email binding
+still passes. Changed account/market bytes, actual analyst amendments, corrupt
+sources or rewritten collector history cannot use this route. The opportunity
+journal is mixed: only append-only events passing the full existing source,
+hash-chain, owner and timestamp validation count as collector observations.
+Real analyst transitions still require accepted record receipts and the full
+25-stage no-send refresh. An elapsed claim becomes durably expired on the next
+claim/completion entry, including an out-of-window wake, without replay.
+
+A truthful degraded, zero-order full publication can document the
 remaining public-data failure for a no-action result; it is not a passing
 research refresh or an accepted analytical amendment. Accepted amendments
 retain their stricter completion requirements.
+
+The local host also needs actual operating-day availability; see
+[Local session availability](session_host_availability.md). An installed active
+schedule is not proof that a sleeping host ran or that SMTP accepted a message.
 
 ## Two daily briefs
 

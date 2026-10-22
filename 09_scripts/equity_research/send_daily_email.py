@@ -24,6 +24,7 @@ from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, re
 from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
 from delivery_archive import archive_validated_delivery
 from delivery_schedule import active_delivery_window, assessment_delivery_enabled, intraday_alert_window_open
+from validation_cache import file_hash_validation
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -284,6 +285,7 @@ def validate_owner_review(decision: dict[str, Any], request_id: str) -> None:
         raise ValueError("owner_review_requires_bound_brief")
 
 
+@file_hash_validation()
 def validate_decision(
     *, correction: bool = False, owner_review_request_id: str | None = None,
     snapshot_hashes: dict[str, str] | None = None,

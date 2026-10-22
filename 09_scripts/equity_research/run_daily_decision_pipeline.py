@@ -30,6 +30,14 @@ SCRIPT_DIR = ROOT / "09_scripts" / "equity_research"
 SENDER_SCRIPT = SCRIPT_DIR / "send_daily_email.py"
 REFRESH_NOT_READY_EXIT = 75
 DELIVERY_STATUS_UNKNOWN_EXIT = 76
+# The October 22 live sender needed about 85 seconds to reach its immutable
+# pre-claim archive. Its former 90-second child limit killed it before the
+# remaining final validation and the bounded SMTP operation could complete.
+# Keep a finite process ceiling alongside the publication-cache repair. The
+# sender still checks the actual window immediately before its durable claim;
+# this allowance extends neither a delivery window nor a short assessment's
+# ten-minute analytical budget. Interrupted claims remain fenced as unknown.
+SENDER_PROCESS_TIMEOUT_SECONDS = 180
 
 
 def delivery_status_is_unknown(summary: str) -> bool:
@@ -208,7 +216,7 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
             sender_arguments.append("--limited-status")
         if scheduled_slot is not None:
             sender_arguments += ["--delivery-window", scheduled_slot]
-        sender = run_command(sender_arguments, timeout=90)
+        sender = run_command(sender_arguments, timeout=SENDER_PROCESS_TIMEOUT_SECONDS)
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
         pipeline_outcome = (
