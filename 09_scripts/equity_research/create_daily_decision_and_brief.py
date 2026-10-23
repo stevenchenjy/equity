@@ -997,7 +997,7 @@ def main() -> int:
     decision = {
         "schema_version": "phase5r_daily_decision_v1",
         "account_input_version": account_input_version,
-        "generated_at": iso_now(),
+        "generated_at": now_et().isoformat(),
         "cycle_date": cycle_date(),
         "timezone": "America/New_York",
         "headline": headline,

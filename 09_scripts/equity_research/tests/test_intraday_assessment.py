@@ -113,3 +113,25 @@ class IntradayIntegrationTests(unittest.TestCase):
         self.assertEqual(decision["account"], original["account"])
         self.assertEqual(decision.get("capital_decision"), original.get("capital_decision"))
         self.assertEqual(receipt["assessment"]["new_order_quantities"], 0)
+
+    def test_offline_recompose_preserves_dated_observation_but_not_expired_live_marks(self):
+        self.snapshot()
+        first = integration.recompose(self.root, current=self.now)
+        later = self.now + timedelta(minutes=7)
+        second = integration.recompose(self.root, current=later)
+        self.assertEqual(second["assessment"], first["assessment"])
+        self.assertEqual(second["source"], first["source"])
+        self.assertEqual(integration.publication_context(self.root, later)["portfolio_nav"], 386)
+        self.assertEqual(integration.attention(self.root, later)["status"], "expired")
+        self.snapshot(broken="AAA")
+        failed = integration.recompose(self.root, current=self.now)
+        self.assertEqual(failed["assessment"]["status"], "partial")
+        self.assertIsNone(failed["assessment"]["portfolio_nav"])
+
+    def test_subsecond_observation_requires_truthful_full_precision_publication_clock(self):
+        self.now += timedelta(microseconds=500000)
+        self.snapshot()
+        integration.recompose(self.root, current=self.now)
+        truncated = self.now.replace(microsecond=0)
+        self.assertEqual(integration.publication_context(self.root, truncated)["status"], "unavailable")
+        self.assertEqual(integration.publication_context(self.root, self.now)["status"], "current")

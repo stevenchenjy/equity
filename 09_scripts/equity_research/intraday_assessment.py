@@ -85,7 +85,15 @@ def recompose(root: Path, *, current: datetime | None = None, collect: bool = Fa
         # Real HTTP may consume part of the five-minute age allowance. Never
         # measure post-network risk against the clock from before the requests.
         assessed_at = (current if client is not None or not collect else now_et())
-        assessment = risk.assess(root, snapshot, current=assessed_at)
+        # Keep validated immutable as-of facts through an offline recompose.
+        # Current dashboard projection independently expires live marks. New
+        # failed attempts or changed account/policy/source bytes fence reuse.
+        retained = publication_context(root, assessed_at) if not collect else None
+        if (retained and retained.get("assessment_sha256")
+                and retained.get("price_snapshot_binding", {}).get("sha256") == snapshot.get("snapshot_sha256")):
+            assessment = retained
+        else:
+            assessment = risk.assess(root, snapshot, current=assessed_at)
         if capture_version(root) != version:
             raise ValueError("intraday_account_changed_during_collection")
         receipt.update(assessment=assessment, source=_retain(root, assessment),
