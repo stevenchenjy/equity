@@ -14,13 +14,13 @@
     <key>WorkingDirectory</key>
     <string>/Users/messssi/LocalRuntime/equity</string>
     <key>RunAtLoad</key>
-    <true/>
+    <false/>
     <key>KeepAlive</key>
     <false/>
     <key>StartInterval</key>
     <integer>900</integer>
     <key>ProcessType</key>
-    <string>Background</string>
+    <string>Standard</string>
     <key>StandardOutPath</key>
     <string>/Users/messssi/Library/Logs/equity_research_dailydecision.out.log</string>
     <key>StandardErrorPath</key>

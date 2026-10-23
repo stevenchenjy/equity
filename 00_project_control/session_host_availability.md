@@ -61,3 +61,36 @@ work. An unavailable host retains missed-slot evidence and existing late-send
 prohibitions. On resumption it must not replay expired analysis or renew
 trading instructions. Actual live claims, completion receipts and exact
 SMTP archives remain necessary to prove research and delivery.
+
+## Deadline-bound delivery resource class
+
+October 23 live verification found a second, independent cause of missed
+morning delivery: the delivery LaunchAgent used the Darwin background resource
+class. Three installed attempts exhausted the 180-second allowance before a
+durable SMTP claim. A read-only reproduction of the same five validation
+stages took 197.516 seconds in that class and 39.572 seconds at ordinary
+priority; both validated the same publication. The host was awake with the
+operating-day power assertion active.
+
+The delivery agent therefore uses `ProcessType=Standard`. The refresh worker
+keeps its existing background class. The existing 180-second sender bound,
+actual pre-claim window checks, immutable publication validation, duplicate
+protection and unknown-send fences remain effective. A successful validation
+or deployed agent is not evidence of SMTP acceptance.
+
+The delivery agent has `RunAtLoad=false` and retains `StartInterval=900`.
+Installing or logging in does not immediately invoke the sender; its first
+normal poll can occur up to 15 minutes later. Use the dedicated delivery-agent
+installer only while that job is idle. It synchronizes through the existing
+runtime procedure, checks the exact no-immediate-run template and reloads only
+this agent. It does not restart the refresh worker or replay a closed brief
+window. The normal scheduler continues to own both mandatory briefs and only
+otherwise eligible action or priority alerts.
+
+```sh
+/bin/zsh /Users/messssi/LocalRuntime/equity/07_automation/scheduler/install_dailydecision_scheduler.sh
+```
+
+Verify the actual loaded resource class, unchanged interval and subsequent
+natural run receipts. Preserve any missed morning outcome; this repair does
+not authorize a late catch-up message.

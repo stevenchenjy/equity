@@ -109,6 +109,7 @@ NEW_PYTHON_FILES = (
 )
 SHELL_FILES = (
     "install_daily_schedulers.sh",
+    "install_dailydecision_scheduler.sh",
     "check_daily_scheduler_status.sh",
     "uninstall_daily_schedulers.sh",
     "activate_daily_after_verification.sh",
@@ -211,7 +212,11 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
         )
         invariant = (
             payload.get("Label") == label
-            and payload.get("RunAtLoad") is True
+            and payload.get("RunAtLoad") is (job_name != "dailydecision")
+            and (
+                job_name != "dailydecision"
+                or payload.get("ProcessType") == "Standard"
+            )
             and payload.get("KeepAlive") is False
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload
@@ -227,7 +232,9 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
             checks,
             f"{label}.invariants",
             invariant,
-            "RunAtLoad=true KeepAlive=false StartInterval=900 locked runtime-wrapper arguments",
+            "RunAtLoad=false/ProcessType=Standard for dailydecision; "
+            "RunAtLoad=true for dailyrefresh; KeepAlive=false StartInterval=900 "
+            "locked runtime-wrapper arguments",
         )
 
     model_label = "com.steven.phase5r.llmshadow"
