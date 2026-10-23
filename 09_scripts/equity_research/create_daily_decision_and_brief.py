@@ -1150,6 +1150,10 @@ def main() -> int:
         },
     }
     apply_workflow_integrity(decision, root=ROOT, current=current)
+    from intraday_assessment import publication_context as intraday_context
+    intraday_observation = intraday_context(ROOT, current)
+    if intraday_observation is not None:
+        decision["intraday_portfolio_risk"] = intraday_observation
     official_news = decision["evidence_coverage"]["official_news"]
     long_horizon_context = decision["long_horizon_research"]
     headline, decisive_advice, decision_code = (decision[key] for key in ("headline", "decisive_advice", "decision_code"))

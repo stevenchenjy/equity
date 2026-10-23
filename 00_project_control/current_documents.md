@@ -1,6 +1,6 @@
 # Equity Research — current document entrypoints
 
-Reviewed 2026-10-21 ET. This index locates maintained guidance and generated
+Reviewed 2026-10-22 ET. This index locates maintained guidance and generated
 outputs; it does not freeze balances, test counts, call counts, schedules, or
 open-item counts. Verify the current branch, files, runtime timestamps and
 relevant checks before relying on any linked claim.
@@ -8,6 +8,8 @@ relevant checks before relying on any linked claim.
 ## Authoritative policy and boundaries
 
 - [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and unchanged investment/duplicate-protection rules; effective October 22, 2026.
+
+- [Validated intraday observations and portfolio risk](market_intraday_risk.md): all-held Nasdaq Last Sale admission during actual short claims; bound prior closes, explicit expiry, fixed-inventory price-only change, existing risk conditions and separate email/dashboard freshness. No new investment or delivery thresholds.
 
 - [Local assessment host availability](session_host_availability.md): bounded AC power assertion for the existing operating day, installed-service checks and explicit limits of local scheduling.
 
@@ -53,6 +55,7 @@ in the authoring clone. Missing local reports are not assumed complete.
 - [Production status](/Users/messssi/LocalRuntime/equity/00_project_control/current_production_status.local.md).
 - [Experimental momentum observations and forward evaluation](/Users/messssi/LocalRuntime/equity/08_reviews/momentum_experiment.local/report.md): private frozen cohorts, costs, missed/expired setups and explicitly unverified execution. Check current status for failures; a historical report is not a current signal.
 - [Workflow evaluation and thesis-based learning](/Users/messssi/LocalRuntime/equity/08_reviews/current/workflow_evaluation.local.md): useful-method coverage, due original theses, separate process/business/price outcomes and qualitative shared exposures; adoption is not performance evidence.
+- [Latest optional intraday risk observation](/Users/messssi/LocalRuntime/equity/04_research/company_research/intraday_portfolio_risk.local.json): source/account-bound dated portfolio marks; inspect status, observation time, expiry and exact dependencies. The email is an immutable observation; the dashboard revalidates at read time. Missing or expired data does not establish a portfolio loss.
 - [Current daily research decision](/Users/messssi/LocalRuntime/equity/04_research/company_research/daily_decision.md).
 - [Current research opportunities](/Users/messssi/LocalRuntime/equity/08_reviews/current/research_opportunities.local.md): original observations, research timing, separated evidence families, blockers and prospective measurement; no buy/sell authority.
 - [Cash and recurring opportunity work](/Users/messssi/LocalRuntime/equity/08_reviews/capital_work_queue.local/report.md) and [prioritized research backlog](/Users/messssi/LocalRuntime/equity/08_reviews/current/research_backlog.local.md): check generated times and production health; pending work does not establish an eligible trade.

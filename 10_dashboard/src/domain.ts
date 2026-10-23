@@ -59,7 +59,27 @@ export type CapitalDeploymentEscalation = {
     required_work:DeploymentGate[];completed:boolean}[];
   explanation:string; automatic_action_allowed:false;
 };
+export type IntradayNumber = number | string | null;
+export type IntradayRisk = {
+  schema_version: 'intraday_portfolio_risk_v1'; status: string;
+  generated_at?: string; session_date?: string; mark_as_of?: string; expires_at?: string;
+  baseline_session?: string; portfolio_nav?: IntradayNumber; baseline_portfolio_nav?: IntradayNumber;
+  value_change_usd?: IntradayNumber; value_change_pct?: IntradayNumber; cash_usd?: IntradayNumber;
+  positions?: {ticker:string; shares:IntradayNumber; price:IntradayNumber; price_as_of?:string;
+    baseline_price?:IntradayNumber; price_change_pct?:IntradayNumber; market_value?:IntradayNumber;
+    weight_pct?:IntradayNumber; source?:string; delay_label?:string; status:string}[];
+  allocation?: {core_weight_pct?:IntradayNumber;stock_weight_pct?:IntradayNumber;cash_weight_pct?:IntradayNumber;
+    core_minimum_pct?:IntradayNumber;stock_maximum_pct?:IntradayNumber};
+  concentration?: {largest_stock_ticker?:string|null;largest_stock_weight_pct?:IntradayNumber;overlap_assessed?:boolean};
+  plan_conditions?: (string|{ticker?:string;condition?:string;message?:string;description?:string;status?:string;kind?:string;reference_price?:IntradayNumber;observed_price?:IntradayNumber})[];
+  reassessment_triggers?: (string|{ticker?:string;condition?:string;message?:string;description?:string;status?:string;kind?:string;reference_price?:IntradayNumber;observed_price?:IntradayNumber})[];
+  tactical_limits?: {ordinary_risk_pct?:IntradayNumber;event_risk_pct?:IntradayNumber;combined_risk_pct?:IntradayNumber;
+    max_position_pct?:IntradayNumber;min_reward_to_risk?:IntradayNumber;existing_planned_risk_usd?:IntradayNumber;
+    combined_planned_risk_pct?:IntradayNumber;existing_planned_risk_basis?:string;combined_status?:string};
+  dependencies?: string[]; limitations?: string[];
+};
 export type Snapshot = {
+  intraday_portfolio_risk?: IntradayRisk | null;
   earnings_events?: EarningsEventView;
   account_authority?:CapitalDecision['account_authority'];
   schema_version: string; mode: string; server_now: string; generated_at: string; cycle_date: string;

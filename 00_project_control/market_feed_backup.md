@@ -79,3 +79,8 @@ The deployed collector has no email sender or broker path. A full refresh and
 normal sender handoff are still required; backup availability does not establish
 an attractive company or rotation. Retained experimental outcome coverage is
 not replaced by the backup and remains separately reported.
+
+The separately approved [intraday observation overlay](market_intraday_risk.md)
+uses Nasdaq Last Sale for held-portfolio short checks. It is not an additional
+historical backup or permission to replace the admitted completed-close series.
+The EOD admission and freshness requirements above remain unchanged.

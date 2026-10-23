@@ -338,6 +338,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         "account": {**values, "last_updated": account_raw.get("last_updated"), "cash_basis": account.get("cash_basis"),
                     "settled_cash_verified": orders_raw.get("broker_balance_observation", {}).get("settled_cash_verified") is True},
         "positions": projected_positions, "allocation": allocation,
+        "intraday_portfolio_risk": intraday_risk_view(root, d, now),
         "plans": plans, "candidates": candidates,
         "orders": {"as_of": orders_raw.get("as_of"), "complete": orders_raw.get("complete") is True,
                    "fresh": bool(observed and 0 <= (now - observed).total_seconds() <= 86400),
@@ -350,6 +351,23 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         "earnings_events": earnings_event_view(root, now, capital=capital,
                                                current_contract=capital_status == "current"),
     }
+
+
+def intraday_risk_view(root: Path, decision: dict, current: datetime) -> dict | None:
+    """Project optional source-bound marks at read time; never alter ledger values."""
+    assessment = decision.get("intraday_portfolio_risk")
+    if not isinstance(assessment, dict):
+        return None
+    try:
+        from intraday_portfolio_risk import projection
+        return projection(root, assessment, current)
+    except (OSError, ValueError, KeyError, TypeError, ImportError):
+        return {"schema_version": "intraday_portfolio_risk_v1", "status": "unverified",
+                "generated_at": assessment.get("generated_at"), "session_date": assessment.get("session_date"),
+                "mark_as_of": assessment.get("mark_as_of"), "expires_at": assessment.get("expires_at"),
+                "baseline_session": assessment.get("baseline_session"), "positions": [],
+                "dependencies": ["The current account, retained source or freshness validation failed."],
+                "limitations": ["No current portfolio valuation or price-only loss can be established."]}
 
 
 def earnings_event_view(root: Path, current: datetime, *, capital: dict | None = None,
@@ -441,6 +459,7 @@ def current_snapshot(root, *, research_busy=False):
     if not result.get('research_ready'):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
         result['market_sources'] = d.get('market_gate', {}).get('data_sources', [])
+        result['intraday_portfolio_risk'] = intraday_risk_view(root, d, datetime.now(ET))
         project_core_roles(result['positions'], result['allocation'], 'role')
     from account_authority import load_authority
     try: result['account_authority']=load_authority(root,datetime.now(ET))

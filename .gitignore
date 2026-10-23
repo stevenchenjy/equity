@@ -1,4 +1,7 @@
 .DS_Store
+/03_source_data/equity_research/intraday_prices.local/
+/04_research/company_research/intraday_portfolio_risk.local.json
+/04_research/company_research/intraday_portfolio_risk.local/
 __pycache__/
 *.pyc
 .env

@@ -970,6 +970,76 @@ def priority_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
             "sources": list(dict.fromkeys(sources)), "group": "background"}
 
 
+def intraday_risk_card(decision: dict[str, Any]) -> dict[str, Any] | None:
+    """Display an admitted observation without granting action or delivery authority.
+
+    This is an immutable email snapshot, so its observation and expiry remain
+    explicit. The dashboard separately validates its source and expiry at read time.
+    """
+    report = decision.get("intraday_portfolio_risk")
+    if not isinstance(report, dict) or report.get("schema_version") != "intraday_portfolio_risk_v1":
+        return None
+    status = str(report.get("status", "unverified"))
+    try:
+        times = [datetime.fromisoformat(str(report.get(key, "")).replace("Z", "+00:00"))
+                 for key in ("mark_as_of", "generated_at", "expires_at")]
+        timing_valid = all(value.tzinfo is not None for value in times) and times[0] <= times[1] < times[2]
+    except (TypeError, ValueError):
+        timing_valid = False
+    validated = status in {"validated", "current"} and timing_valid
+    if status in {"validated", "current"} and not timing_valid:
+        status = "unverified observation timing"
+    observation_time = lambda value: _time(value).replace("待确认", "unverified")
+    lines = [
+        f"Observation status: {status}. Session: {report.get('session_date', 'unverified')}.",
+        f"Prices as of {observation_time(report.get('mark_as_of'))} ET; freshness expires {observation_time(report.get('expires_at'))} ET. This is a dated observation, not a live quote.",
+        f"Reference close: {report.get('baseline_session', 'unverified')}. Planning cash remains {money(report.get('cash_usd'))}; this assessment does not change the account record.",
+    ]
+    if validated:
+        lines.append(f"Portfolio marked value: {money(report.get('portfolio_nav'))}; same-inventory close value: {money(report.get('baseline_portfolio_nav'))}.")
+        lines.append(f"Price-only change: {money(report.get('value_change_usd'))} ({percent(report.get('value_change_pct'))}). Uses the current recorded shares and the same cash in both values; this is not the actual account's daily return.")
+    else:
+        lines.append("A complete current portfolio valuation and price-only change are unavailable; partial or expired prices do not establish a portfolio loss.")
+    positions = report.get("positions", [])
+    for row in positions if isinstance(positions, list) else []:
+        if not isinstance(row, dict):
+            continue
+        price = money(row.get("price")) if validated and row.get("status") in {"validated", "current"} else "unverified"
+        change = percent(row.get("price_change_pct")) if price != "unverified" else "unverified"
+        weight = percent(row.get("weight_pct")) if validated else "unverified"
+        lines.append(f"{row.get('ticker', 'Unknown')}: {shares(row.get('shares'))} recorded shares; observed price {price}; price change {change}; marked weight {weight}; source {row.get('source', 'unverified')}; {row.get('delay_label', 'delay unverified')}; as of {observation_time(row.get('price_as_of'))} ET; status {row.get('status', 'unverified')}.")
+    allocation = report.get("allocation", {})
+    if validated and isinstance(allocation, dict):
+        lines.append(f"Marked allocation: index core {percent(allocation.get('core_weight_pct'))}, individual stocks {percent(allocation.get('stock_weight_pct'))}, cash {percent(allocation.get('cash_weight_pct'))}. Existing allocation and risk rules remain unchanged.")
+    concentration = report.get("concentration", {})
+    if validated and isinstance(concentration, dict) and concentration.get("largest_stock_ticker"):
+        lines.append(f"Largest individual stock: {concentration.get('largest_stock_ticker')} at {percent(concentration.get('largest_stock_weight_pct'))}. No fixed single-stock cap; ETF/stock economic overlap is not measured by these weights.")
+    tactical = report.get("tactical_limits", {})
+    if isinstance(tactical, dict) and tactical:
+        lines.append(f"Existing tactical limits: ordinary {percent(tactical.get('ordinary_risk_pct'))}, event {percent(tactical.get('event_risk_pct'))}, combined {percent(tactical.get('combined_risk_pct'))}, tactical position maximum {percent(tactical.get('max_position_pct'))}, minimum reward/risk {number(tactical.get('min_reward_to_risk'))}R.")
+        if validated:
+            lines.append(f"Recorded planned tactical loss: {money(tactical.get('existing_planned_risk_usd'))}; {percent(tactical.get('combined_planned_risk_pct'))} of marked value. Planned risk is not a guaranteed maximum loss.")
+    for key, label in (("plan_conditions", "Existing plan condition"), ("reassessment_triggers", "Risk reassessment")):
+        entries = report.get(key, [])
+        for entry in entries if isinstance(entries, list) else []:
+            if isinstance(entry, str):
+                lines.append(label + ": " + entry)
+            elif isinstance(entry, dict):
+                message = entry.get("message") or entry.get("condition") or entry.get("description")
+                if message:
+                    state = str(entry.get('status', 'unverified')).replace('_', ' ')
+                    reference = (f" Reference {money(entry.get('reference_price'))}; observed {money(entry.get('observed_price'))}."
+                                 if validated and _decimal(entry.get('reference_price')) is not None else "")
+                    lines.append(f"{label}: {entry.get('ticker', 'Portfolio')} — {message} ({state})." + reference)
+    for key, label in (("dependencies", "Unverified dependency"), ("limitations", "Limit")):
+        entries = report.get(key, [])
+        for entry in entries if isinstance(entries, list) else []:
+            if isinstance(entry, str):
+                lines.append(label + ": " + entry)
+    lines.append("Price monitoring alone creates no buy/sell instruction and no extra email. Human execution and all existing entry gates still apply.")
+    return {"title": "Intraday portfolio risk — observed snapshot", "body": "\n".join(lines), "sources": [], "group": "background"}
+
+
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
@@ -989,6 +1059,11 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
         background_index = next((index for index, card in enumerate(sections)
                                  if card.get("group") == "background"), len(sections))
         sections.insert(background_index, priority_card)
+    intraday_card = intraday_risk_card(decision)
+    if intraday_card:
+        background_index = next((index for index, card in enumerate(sections)
+                                 if card.get("group") == "background"), len(sections))
+        sections.insert(background_index, intraday_card)
     return _render_cards(email_subject(decision), sections, title=title,
         stamp=f"{'Reference close' if verified else 'Unverified target session'}: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
         footer=("Research plan; human execution only. Prices are dated and conditional drafts require current checks. "
@@ -1211,6 +1286,13 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
         from delivery_assessments import render_intraday_alert
         return render_intraday_alert(decision)
     subject, plain, document = _render_email_without_dashboard(decision)
+    risk_card = intraday_risk_card(decision)
+    if risk_card and "Intraday portfolio risk — observed snapshot" not in plain:
+        plain += "\n" + risk_card["title"] + "\n" + risk_card["body"] + "\n"
+        risk_html = ('<section aria-label="Intraday portfolio risk" style="margin:24px 16px">'
+                     '<h2>' + html.escape(risk_card["title"]) + '</h2>'
+                     '<p style="white-space:pre-line;line-height:1.6">' + html.escape(risk_card["body"]) + '</p></section>')
+        document = document.replace('</body>', risk_html + '</body>')
     from dashboard_publication import publication_id
     link=decision.get('dashboard_link',{})
     url=link.get('url','') if isinstance(link,dict) else ''

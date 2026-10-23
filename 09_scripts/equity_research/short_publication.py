@@ -24,7 +24,7 @@ STEP_NAMES = ("market_refresh", "market_scoring", "earnings_event_discovery",
               "research_opportunity_intake", "earnings_incorporation",
               "current_research_baseline", "valuation_scenarios", "long_horizon_research",
               "research_backlog_view", "market_regime", "portfolio_outputs",
-              "price_aware_review", "daily_decision", "workflow_evaluation",
+              "price_aware_review", "intraday_risk_projection", "daily_decision", "workflow_evaluation",
               "capital_allocation_validation", "evidence_packet", "current_status")
 
 

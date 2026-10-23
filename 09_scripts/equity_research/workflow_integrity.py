@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 from daily_common import canonical_sha256, sha256_file, ExclusiveFileLock, atomic_write_json, atomic_write_text, read_json, read_csv
-from investment_plans import load_plan_context, apply_plan_context, semantic_state, render_plan_lines
+from investment_plans import load_plan_context, apply_plan_context, semantic_state, render_plan_lines, stamp
 from earnings_incorporation import read_earnings_incorporation_status
 from thesis_evidence import STORE_REL, evaluate_thesis, evidence_context, stable_news_event, substantive_news, apply_issuer_news_review
 from official_news import read_official_news_status
@@ -406,6 +406,11 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         actual = sha256_file(root / candidate) if (root / candidate).exists() else None
         if digest != actual:
             raise ValueError("workflow_inputs_changed_recompose_required")
+    if "intraday_portfolio_risk" in decision:
+        from intraday_assessment import publication_context as intraday_context
+        generated = stamp(decision.get("generated_at"))
+        if generated is None or decision["intraday_portfolio_risk"] != intraday_context(root, generated):
+            raise ValueError("workflow_intraday_observation_changed_recompose_required")
     if "assessment_delivery_policy" in decision or "analyst_priority_review" in decision:
         from delivery_assessments import delivery_policy_context, priority_review_context
         if decision.get("assessment_delivery_policy") != delivery_policy_context(root):

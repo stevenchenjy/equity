@@ -293,13 +293,22 @@ def _public_due(root: Path, current: datetime) -> bool:
     return False
 
 
-def refresh_public_handoff(root: Path, current: datetime, *, runner: Callable = subprocess.run) -> dict:
-    """Explicit bounded news/calendar GETs only; never Massive or a full refresh."""
-    if not _public_due(root, current):
+def refresh_public_handoff(root: Path, current: datetime, *, runner: Callable = subprocess.run,
+                           claim_id: str | None = None) -> dict:
+    """Bounded official context and held intraday marks; never full EOD fetch."""
+    public_due = _public_due(root, current)
+    if not public_due and claim_id is None:
         return {"status": "retained_recent_observations", "network_attempted": False, "children": []}
     children = []
-    for script, timeout in (("refresh_official_news.py", 90), ("refresh_earnings_events.py", 90)):
-        command = [sys.executable, str(root / "09_scripts/equity_research" / script), "--refresh"]
+    jobs = [("refresh_official_news.py", 90, ["--refresh"]),
+            ("refresh_earnings_events.py", 90, ["--refresh"])] if public_due else []
+    # Even a recent news/calendar poll is not a fresh price observation. Only
+    # the actual admitted claim starts this bounded, isolated collection.
+    if claim_id is not None:
+        jobs.append(("run_intraday_assessment.py", 105,
+            ["--root", str(root), "--collect", "--claim-id", claim_id]))
+    for script, timeout, arguments in jobs:
+        command = [sys.executable, str(root / "09_scripts/equity_research" / script), *arguments]
         try:
             child = runner(command, cwd=root, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                            timeout=timeout, check=False)
@@ -343,6 +352,8 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         upcoming = []
         errors.append("earnings_calendar_unverified")
     decision = _read(root, "04_research/company_research/daily_decision.json")
+    from intraday_assessment import attention as intraday_attention
+    intraday = intraday_attention(root, current)
     stores = _hashes(root, MUTABLE_STORES)
     stable = {"account_market": _hashes(root, ACCOUNT_MARKET), "stores": stores,
         "other_inputs": _hashes(root, OTHER_INPUTS), "news": news_value,
@@ -351,11 +362,20 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         "due_reviews": decision.get("workflow_evaluation", {}).get("thesis_review", {}),
         "capital_priorities": decision.get("capital_deployment_escalation", {}).get("research_priority_tickers", []),
         "public_handoff_failed": bool(handoff and handoff.get("status") == "failed_or_incomplete")}
+    # Only economic observations enter the resumable-work fingerprint; a
+    # refreshed clock or receipt hash alone is not a new risk conclusion.
+    stable["intraday_risk"] = {key: intraday.get(key) for key in (
+        "status", "session_date", "value_change_pct", "allocation",
+        "reassessment_triggers", "dependencies")}
+    stable["intraday_risk"]["positions"] = [{key: row.get(key) for key in (
+        "ticker", "shares", "sleeve", "price", "baseline_price", "price_change_pct",
+        "market_value", "weight_pct", "status")} for row in intraday.get("positions", [])]
     fingerprint = canonical_sha256(stable)
     return {"schema_version": SCHEMA, "observed_at": current.isoformat(),
         "input_fingerprint": fingerprint, "input_bindings": stable,
         "public_handoff": handoff or {"status": "offline_only", "network_attempted": False},
         "evidence_errors": errors, "market_data_is_intraday_quote": False,
+        "intraday_portfolio_risk": intraday,
         "attention_context": {"upcoming_earnings": [{k: event.get(k) for k in (
             "event_id", "ticker", "company_name", "research_deadline_at", "status", "blockers", "next_step", "sources")}
             for event in upcoming], "capital_priority_tickers": stable["capital_priorities"],
@@ -446,7 +466,7 @@ def claim(root: Path, current: datetime, *, refresh_public: bool = False,
                 state["publication_recomposition_pending"] = {"from_claim_id": claim_id,
                     "observed_at": current.isoformat(), "status": "public_refresh_in_progress"}
             atomic_write_json(root / STATE_REL, state)
-            handoff = refresh_public_handoff(root, current, runner=runner) if refresh_public else None
+            handoff = refresh_public_handoff(root, current, runner=runner, claim_id=claim_id) if refresh_public else None
             observed = aware(clock()) if clock else current
             publication_after = _hashes(root, sorted(WORKFLOW_INPUTS))
             public_changes = {path: {"before": publication_before[path], "after": digest}

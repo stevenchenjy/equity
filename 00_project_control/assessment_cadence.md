@@ -26,8 +26,13 @@ reservations and source-bound completion receipts. It does not wait an hour
 behind another refresh, overlap an active assessment, refetch the full EOD
 universe at every wake, send mail or execute trades. Bounded official-news
 and earnings-calendar checks supply fresh public context. Their success is
-not analyst completion. Prices remain validated completed-close context;
-this cadence does not add an intraday quote feed.
+not analyst completion. The October 22 owner-approved
+[intraday observation and risk overlay](market_intraday_risk.md) additionally
+collects all held symbols during a real admitted claim. It validates original
+Nasdaq Last Sale responses, explicit current trade clocks, complete coverage
+and a bound canonical prior close. These dated observations supplement the
+completed-close decision; they never replace its price history or entry gates.
+Missing, partial or expired marks cannot establish a current portfolio loss.
 
 Accepted research still uses the existing writers and lock order. Release
 mutation locks, run the full operator-safe no-send recomposition after an
@@ -55,8 +60,10 @@ still passes. Changed account/market bytes, actual analyst amendments, corrupt
 sources or rewritten collector history cannot use this route. The opportunity
 journal is mixed: only append-only events passing the full existing source,
 hash-chain, owner and timestamp validation count as collector observations.
-Real analyst transitions still require accepted record receipts and the full
-25-stage no-send refresh. An elapsed claim becomes durably expired on the next
+Real analyst transitions still require accepted record receipts and the
+full declared no-send refresh stage set, including the offline intraday risk
+projection. Completion checks derive that required set from the deployed code,
+not an older fixed stage count. An elapsed claim becomes durably expired on the next
 claim/completion entry, including an out-of-window wake, without replay.
 
 A truthful degraded, zero-order full publication can document the
@@ -102,7 +109,10 @@ The priority writer retains an ordered, bounded research judgment with actual
 authorship time, sources and validity. It grants no allocation, model,
 strategy-adoption or execution authority. Raw scores, watchlist movements,
 calendar polling, source-arrival titles alone, clock changes and unreviewed
-queue reshuffling do not independently authorize an alert.
+queue reshuffling do not independently authorize an alert. Intraday price polling,
+a changed observation timestamp, a portfolio price-only decline or an observed
+existing risk condition likewise requires the existing source-bound analytical
+and delivery eligibility; none creates a new loss threshold or email rule.
 
 Daily briefs and alerts have distinct durable purposes. Compare alert meaning
 with exact archived delivery context, including claimed and uncertain sends;

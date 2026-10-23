@@ -159,6 +159,41 @@ class SnapshotTests(unittest.TestCase):
         with self.assertRaisesRegex(SnapshotError, 'research_inputs_changed'):
             read_snapshot(self.root, self.now)
 
+    def test_intraday_snapshot_projection_is_optional_and_cannot_replace_closing_values(self):
+        import sys
+        import types
+        from unittest.mock import Mock
+        observation={'schema_version':'intraday_portfolio_risk_v1','status':'validated','portfolio_nav':1180}
+        self.decision['intraday_portfolio_risk']=observation
+        self.publish()
+        expected={'schema_version':'intraday_portfolio_risk_v1','status':'expired','portfolio_nav':None}
+        projection=Mock(return_value=expected)
+        with patch.dict(sys.modules,{'intraday_portfolio_risk':types.SimpleNamespace(projection=projection)}):
+            result=read_snapshot(self.root,self.now)
+        projection.assert_called_once_with(self.root,observation,self.now)
+        self.assertEqual(result['intraday_portfolio_risk'],expected)
+        self.assertEqual(result['account']['account_total_value'],1200)
+        self.assertEqual(result['account']['cash_available'],1000)
+        self.assertEqual(result['positions'][0]['price'],100)
+        self.decision.pop('intraday_portfolio_risk')
+        self.publish()
+        self.assertIsNone(read_snapshot(self.root,self.now)['intraday_portfolio_risk'])
+
+    def test_intraday_source_validation_failure_is_scoped_to_optional_observation(self):
+        import sys
+        import types
+        from unittest.mock import Mock
+        observation={'schema_version':'intraday_portfolio_risk_v1','status':'validated','portfolio_nav':1180}
+        self.decision['intraday_portfolio_risk']=observation
+        self.publish()
+        with patch.dict(sys.modules,{'intraday_portfolio_risk':types.SimpleNamespace(projection=Mock(side_effect=ValueError('source hash changed')))}):
+            result=read_snapshot(self.root,self.now)
+        self.assertEqual(result['intraday_portfolio_risk']['status'],'unverified')
+        self.assertNotIn('portfolio_nav',result['intraday_portfolio_risk'])
+        self.assertEqual(result['account']['account_total_value'],1200)
+        self.assertEqual(result['positions'][0]['price'],100)
+        self.assertEqual(result['global_blockers'],[])
+
     def test_broken_or_symlinked_presentation_notes_do_not_break_snapshot(self):
         from plan_summary import SUMMARY_PATH
         self.put(SUMMARY_PATH,'{broken')

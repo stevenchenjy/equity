@@ -461,17 +461,18 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertEqual(done["result"]["accepted_amendments"][0]["record_identity"], accepted["record_sha256"])
         self.assertEqual(done["publication"]["decision_sha256"], sha256_file(target))
 
-    def test_public_handoff_only_uses_news_and_calendar_reserved_before_network(self):
+    def test_public_handoff_binds_news_calendar_and_held_prices_after_reservation(self):
         def child(command, **kwargs):
             state = json.loads((self.root / short.STATE_REL).read_text())
             self.assertEqual(state["slots"]["2026-10-22/09:30"]["status"], "claimed")
-            self.assertIn(Path(command[1]).name, {"refresh_official_news.py", "refresh_earnings_events.py"})
-            self.assertEqual(kwargs["timeout"], 90)
+            name = Path(command[1]).name
+            self.assertIn(name, {"refresh_official_news.py", "refresh_earnings_events.py", "run_intraday_assessment.py"})
+            self.assertEqual(kwargs["timeout"], 105 if name == "run_intraday_assessment.py" else 90)
             return SimpleNamespace(returncode=0)
         value = self.claim(refresh_public=True, runner=child)
         handoff = value["receipt"]["context"]["public_handoff"]
         self.assertEqual(handoff["status"], "completed")
-        self.assertEqual(len(handoff["children"]), 2)
+        self.assertEqual(len(handoff["children"]), 3)
 
     def test_identical_calendar_refetch_requires_recomposition_even_with_unchanged_economics(self):
         self.events.stop()  # Use real retained scans and the actual summary validator.
@@ -622,10 +623,11 @@ class ShortAssessmentTests(unittest.TestCase):
         for path, field in (("03_source_data/equity_research/official_news_status.local.json", "last_attempt_at"),
                             ("03_source_data/equity_research/earnings_events.local/last_run.json", "completed_at")):
             atomic_write_json(self.root / path, {field: self.moment("09:20").isoformat()})
-        with patch.object(short.subprocess, "run") as child:
+        with patch.object(short.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as child:
             value = self.claim(refresh_public=True, runner=child)
-        child.assert_not_called()
-        self.assertEqual(value["receipt"]["context"]["public_handoff"]["status"], "retained_recent_observations")
+        child.assert_called_once()
+        self.assertEqual(Path(child.call_args.args[0][1]).name, "run_intraday_assessment.py")
+        self.assertEqual(value["receipt"]["context"]["public_handoff"]["status"], "completed")
         value = self.claim("11:00", runner=lambda *a, **k: SimpleNamespace(returncode=0),
                            clock=lambda: self.moment("11:11"))
         self.assertEqual(value["outcome"], "expired")

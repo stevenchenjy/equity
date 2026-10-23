@@ -86,6 +86,7 @@ STEP_SPECS = [
     # refresh race window without changing the result.
     ("portfolio_outputs", "regenerate_portfolio_outputs.py", False),
     ("price_aware_review", "create_price_aware_action_plan.py", True),
+    ("intraday_risk_projection", "run_intraday_assessment.py", False),
     (
         "daily_decision",
         "create_daily_decision_and_brief.py",
