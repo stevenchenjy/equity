@@ -338,7 +338,8 @@ class PostDeliveryPublicationTests(unittest.TestCase):
 
 
 class PipelineRecoveryBudgetTests(unittest.TestCase):
-    def invoke(self, summary='email_sent=true message_count=1', *, moment=NOW, seconds=(0, 100, 100, 180), slot=None):
+    def invoke(self, summary='email_sent=true message_count=1', *, moment=NOW, seconds=(0, 100, 100, 180), slot=None,
+               real_recovery=False):
         config = {'notifications': {'mandatory_daily_briefs': True, 'intraday_alerts_enabled': True,
             'delivery_assessment_effective_from': '2026-10-22', 'delivery_windows_et': [
                 {'id': 'morning', 'start': '09:30', 'end': '10:30', 'refresh_not_before': '08:00'},
@@ -352,8 +353,9 @@ class PipelineRecoveryBudgetTests(unittest.TestCase):
             clear = stack.enter_context(patch.object(pipeline, 'clear_automation_alert'))
             stack.enter_context(patch('daily_common.publish_automation_alert'))
             stack.enter_context(patch.object(pipeline.time, 'monotonic', side_effect=seconds))
-            recover = stack.enter_context(patch.object(repair, 'recover_locked',
-                return_value={'outcome': 'deferred', 'publication_pending': True}))
+            recovery_options = ({'wraps': repair.recover_locked} if real_recovery else
+                {'return_value': {'outcome': 'deferred', 'publication_pending': True}})
+            recover = stack.enter_context(patch.object(repair, 'recover_locked', **recovery_options))
             sender = stack.enter_context(patch.object(pipeline, 'run_command',
                 return_value=subprocess.CompletedProcess([], 0, stdout=summary)))
             output = io.StringIO()
@@ -376,6 +378,20 @@ class PipelineRecoveryBudgetTests(unittest.TestCase):
         _, recover, _, _, _ = self.invoke('email_sent=false reason=existing_completed_purpose',
             moment=NOW.replace(hour=10, minute=55), seconds=(0, 0))
         self.assertEqual(recover.call_args.kwargs['maximum_seconds'], 0)
+
+    def test_protected_post_send_defers_before_any_candidate_proof_or_stage(self):
+        with (patch.object(repair, '_read') as read,
+              patch.object(repair, '_candidate') as candidate,
+              patch.object(repair, '_store') as store,
+              patch('run_daily_refresh.run_step') as stage):
+            result, recover, sender, clear, output = self.invoke(
+                moment=NOW.replace(hour=10, minute=59), seconds=(0, 0, 0, 0), real_recovery=True)
+        self.assertEqual(result, 0); self.assertEqual(sender.call_count, 1)
+        self.assertEqual(recover.call_count, 2)
+        self.assertEqual([call.kwargs['maximum_seconds'] for call in recover.call_args_list], [0, 0])
+        read.assert_not_called(); candidate.assert_not_called(); store.assert_not_called(); stage.assert_not_called()
+        self.assertIn('email_sent=true', output); self.assertIn('post_delivery_publication_pending=true', output)
+        clear.assert_not_called()
 
     def test_near_mandatory_window_close_does_not_spend_sender_attempt_on_recovery(self):
         result, recover, sender, _, _ = self.invoke('email_sent=false reason=existing_completed_purpose',

@@ -201,11 +201,13 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         def recover_publication(*, before_sender: bool) -> None:
             nonlocal publication_remaining, publication_pending
             from post_delivery_publication import recover_locked
+            from run_daily_refresh_scheduler import short_window_conflict
             allowance = publication_remaining
-            if before_sender:
-                from run_daily_refresh_scheduler import short_window_conflict
-                if short_window_conflict(now_et(), maximum_seconds=allowance+SENDER_PROCESS_TIMEOUT_SECONDS):
-                    allowance = 0
+            sender_reserve = SENDER_PROCESS_TIMEOUT_SECONDS if before_sender else 0
+            if short_window_conflict(now_et(), maximum_seconds=allowance+sender_reserve):
+                # Both phases must defer before archive/render proof can hold
+                # the runtime lock across a protected short-check admission.
+                allowance = 0
             if before_sender and scheduled_slot is not None:
                 # Recovery cannot consume the remaining mandatory window. The
                 # unchanged sender still owns its own final clock/SMTP gates.
