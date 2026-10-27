@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta
 
 from active_config import load_active_config
@@ -38,6 +39,7 @@ DELIVERY_STATUS_UNKNOWN_EXIT = 76
 # this allowance extends neither a delivery window nor a short assessment's
 # ten-minute analytical budget. Interrupted claims remain fenced as unknown.
 SENDER_PROCESS_TIMEOUT_SECONDS = 180
+POST_DELIVERY_PUBLICATION_SECONDS = 180
 
 
 def delivery_status_is_unknown(summary: str) -> bool:
@@ -193,6 +195,51 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
                 "email_attempted=false"
             )
             return REFRESH_NOT_READY_EXIT
+        publication_remaining = float(POST_DELIVERY_PUBLICATION_SECONDS)
+        publication_pending = False
+
+        def recover_publication(*, before_sender: bool) -> None:
+            nonlocal publication_remaining, publication_pending
+            from post_delivery_publication import recover_locked
+            allowance = publication_remaining
+            if before_sender:
+                from run_daily_refresh_scheduler import short_window_conflict
+                if short_window_conflict(now_et(), maximum_seconds=allowance+SENDER_PROCESS_TIMEOUT_SECONDS):
+                    allowance = 0
+            if before_sender and scheduled_slot is not None:
+                # Recovery cannot consume the remaining mandatory window. The
+                # unchanged sender still owns its own final clock/SMTP gates.
+                current = now_et()
+                window = active_delivery_window(load_active_config()["notifications"], current)
+                if window is None or window["id"] != scheduled_slot:
+                    allowance = 0
+                else:
+                    end = current.replace(hour=int(window["end"][:2]), minute=int(window["end"][3:]), second=0, microsecond=0)
+                    allowance = min(allowance, max(0, (end-current).total_seconds()-SENDER_PROCESS_TIMEOUT_SECONDS-5))
+            started = time.monotonic()
+            try:
+                result = recover_locked(ROOT, maximum_seconds=allowance)
+            except (OSError, ValueError, KeyError, TypeError, RuntimeError):
+                result = {"outcome": "failed", "publication_pending": True, "alert_required": True}
+            publication_remaining = max(0, publication_remaining - (time.monotonic()-started))
+            publication_pending = result.get("publication_pending") is True
+            if result.get("alert_required") is True:
+                from daily_common import publish_automation_alert
+                publish_automation_alert(component="post_delivery_publication", reason="post_delivery_publication_recovery_failed")
+            elif result.get("outcome") in {"passed", "superseded_by_full_refresh"}:
+                from daily_common import AUTOMATION_ALERT_PATH
+                alert = read_json(AUTOMATION_ALERT_PATH, {})
+                if alert.get("active") is True and alert.get("component") == "post_delivery_publication":
+                    clear_automation_alert(component="post_delivery_publication")
+            print("post_delivery_publication=" + str(result.get("outcome", "failed"))
+                  + " post_delivery_publication_pending=" + str(publication_pending).lower(), flush=True)
+
+        routine_recovery = (ready and readiness_reason == "daily_refresh_ready"
+                            and delivery_mode in {"scheduled_brief", "intraday_alert"})
+        if send and routine_recovery:
+            # A previous successful send may have outlived its parent. This
+            # recovery happens before existing sender validation/deduplication.
+            recover_publication(before_sender=True)
         if not send:
             log_daily_run(
                 component="daily_pipeline",
@@ -219,6 +266,12 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         sender = run_command(sender_arguments, timeout=SENDER_PROCESS_TIMEOUT_SECONDS)
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
+        if (routine_recovery and sender.returncode == 0 and not delivery_status_unknown
+                and "email_sent=true" in sender_summary):
+            # Receipt/archive proof inside the helper, never stdout alone,
+            # authorizes the no-send closure. SMTP success stays durable even
+            # if a downstream publication stage fails or must be deferred.
+            recover_publication(before_sender=False)
         pipeline_outcome = (
             "delivery_unknown"
             if delivery_status_unknown
@@ -247,9 +300,10 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         )
         print(
             f"daily_pipeline_outcome={pipeline_outcome} "
-            f"sender_exit={sender.returncode} {sender_summary}"
+            f"sender_exit={sender.returncode} {sender_summary} "
+            f"post_delivery_publication_pending={str(publication_pending).lower()}"
         )
-        if sender.returncode == 0 and not delivery_status_unknown:
+        if sender.returncode == 0 and not delivery_status_unknown and not publication_pending:
             clear_automation_alert(component="daily_decision")
         return (
             DELIVERY_STATUS_UNKNOWN_EXIT

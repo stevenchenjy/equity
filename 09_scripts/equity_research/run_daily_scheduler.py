@@ -92,7 +92,8 @@ def assessment_scheduler(current, notifications: dict) -> int:
             selected.update(decision_completed=True, decision_completed_at=iso_now())
         if sent:
             selected["decision_attempts"] = int(selected.get("decision_attempts", 0) or 0) + 1
-        clear_automation_alert(component="daily_decision")
+        if "post_delivery_publication_pending=true" not in summary:
+            clear_automation_alert(component="daily_decision")
     elif result.returncode == REFRESH_NOT_READY_EXIT or not sent:
         # Polls/validation waits are not SMTP attempts and cannot retire an
         # unsent mandatory brief or permanently consume future alert purposes.

@@ -112,6 +112,42 @@ paragraph-format artifacts remain immutable and exactly verifiable. This visual
 change does not alter typed status admission, purposes, duplicate comparison,
 unknown-send protection or the two mandatory daily checkpoints.
 
+## Publication recovery after verified delivery
+
+A successful SMTP completion appends the delivery ledger that is also bound by
+current capital and follow-through outputs. The completed send remains immutable;
+its exact ledger change requires a new current publication. The existing decision
+scheduler performs a separate bounded offline closure through
+`post_delivery_publication.py` after proving the new durable claim, matching
+completion and original decision/text/HTML archive hashes. It rebuilds the daily
+decision, workflow evaluation, capital validation, evidence packet and current
+status. It does not repeat market collection, public research or objective work,
+create a research slot, or mark the full research refresh complete.
+
+The recovery preserves exact account, market and analyst inputs, the original
+ledger prefix and all delivery and unknown-send fences. A changed or corrupt
+input remains an explicit dependency. A pending recovery may resume on an
+existing natural scheduler poll only after its source proof and remaining
+protected time budget pass again. The combined pre/post recovery work has a
+180-second allowance, with each stage at most 75 seconds, within the existing
+parent process bound. An approaching short slot or active claim defers recovery;
+it does not admit an early claim or extend an existing one.
+
+A quantity withheld solely because its exact earlier delivered instruction still
+requires reconciliation is retained advice, not a new withdrawal. This existing
+quiet rule requires verified archive and follow-through evidence, unchanged
+account and workflow inputs, and identical capital source bindings except for
+the delivery ledger. A changed business, valuation, price, account or other
+nonclock condition retains the existing changed-action evaluation. A priority-only
+message does not imply that omitted canonical drafts were delivered.
+
+Recovery never invokes the sender. If publication fails after a verified send,
+the SMTP completion remains recorded once and a separate failed/pending recovery
+receipt retains the exact dependency. The dashboard continues to withhold an
+invalid capital card, and the failure is not relabelled as an unsent email or
+permission to retry SMTP. Inspect actual current artifacts and a naturally
+scheduled recovery receipt before calling this path live-verified.
+
 ## Two daily briefs
 
 The normal morning (09:30–10:30 ET) and afternoon (14:30–15:05 ET) windows

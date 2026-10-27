@@ -397,6 +397,74 @@ def validate_current_publication(decision: dict, *, root: Path, current: datetim
     validate_priority_context(decision, root=root, current=current)
 
 
+def _delivered_canonical(root: Path, baseline: dict) -> dict:
+    digest = baseline.get('decision_sha256')
+    path = inside(root, str(ARCHIVE_REL / (str(digest) + '.json')))
+    require(sha256_file(path) == digest, 'retained_instruction_archive_changed')
+    delivered = json.loads(path.read_bytes())
+    if delivered.get('delivery_assessment'):
+        envelope = validate_envelope(delivered)
+        digest = envelope['canonical_decision_sha256']
+        path = inside(root, str(ARCHIVE_REL / (digest + '.json')))
+        require(sha256_file(path) == digest, 'retained_instruction_canonical_archive_changed')
+        delivered = json.loads(path.read_bytes())
+    return delivered
+
+
+def _economic_rejection_changed(decision: dict, row: dict, baseline: dict, *, root: Path) -> bool:
+    """Canonical economic failures with changed evidence are not mere expiry."""
+    from capital_decision import CONDITION_FAILURES, INPUTS
+    if not any(reason in CONDITION_FAILURES for reason in row.get('reasons', [])):
+        return False
+    delivered = _delivered_canonical(root, baseline)
+    before = delivered.get('capital_decision', {}).get('source_bindings', {})
+    after = decision.get('capital_decision', {}).get('source_bindings', {})
+    return (set(before) == set(after) == INPUTS and any(before[path] != after[path] for path in before
+        if path != '07_automation/email_delivery/daily_delivery_ledger.csv'))
+
+
+def _retained_instruction_only(decision: dict, ticker: str, prior: dict, baseline: dict,
+                               *, root: Path, current: datetime) -> bool:
+    """A receipt-bound quantity hold is not a withdrawal of delivered advice."""
+    code = 'earlier_instruction_execution_unreconciled'
+    allowed = CLOCK_CODES | {code}
+    contract = decision.get('capital_decision', {})
+    row = next((row for row in contract.get('decisions', []) if row.get('ticker') == ticker), {})
+    blockers = set(row.get('blockers', []))
+    if (code not in blockers or not blockers <= allowed or decision.get('account_conflicts')
+            or not set(contract.get('global_blockers', [])) <= allowed
+            or not set(decision.get('workflow_integrity', {}).get('global_blockers', [])) <= allowed
+            or row.get('order_draft') is not None or row.get('shares') != 0):
+        return False
+    delivered = _delivered_canonical(root, baseline)
+    # Real valuation/entry failures can live in reasons rather than additional
+    # blocker codes. Quiet only the proven ledger-only continuation case.
+    prior_bindings = delivered.get('capital_decision', {}).get('source_bindings', {})
+    current_bindings = contract.get('source_bindings', {})
+    if (not prior_bindings or set(prior_bindings) != set(current_bindings)
+            or any(prior_bindings[p] != current_bindings[p] for p in prior_bindings
+                   if p != '07_automation/email_delivery/daily_delivery_ledger.csv')
+            or delivered.get('workflow_integrity', {}).get('input_hashes')
+                != decision.get('workflow_integrity', {}).get('input_hashes')
+            or delivered.get('account_input_version') != decision.get('account_input_version')):
+        return False
+    from delivery_followthrough import validate_followthrough
+    context = decision.get('delivery_followthrough', {})
+    # Independently rebuild from the exact archived bodies and unchanged
+    # account records. An added or forged continuation field cannot quiet mail.
+    validate_followthrough(decision, root=root, current=current)
+    if (context.get('status') != 'conditional_execution_followthrough'
+            or context.get('canonical_state_changed') is not False
+            or context.get('creates_trade_eligibility') is not False
+            or context.get('prior_receipt_sha256') != baseline.get('advice_receipt_sha256', baseline['receipt_sha256'])):
+        return False
+    actions = [action for action in context.get('actions', []) if action.get('ticker') == ticker]
+    return (len(actions) == 1 and actions[0].get('source') == 'exact_displayed_capital_draft'
+        and actions[0].get('quantity') == prior['shares']
+        and actions[0].get('side') == prior['order_draft']['side']
+        and actions[0].get('continuation') in {'execution_reconciliation_required', 'same_plan_do_not_repeat', 'expired_reconcile'})
+
+
 def _current_policy(decision, root, current):
     policy = delivery_policy_context(root)
     require(decision.get('assessment_delivery_policy') == policy, 'assessment_delivery_policy_changed')
@@ -453,7 +521,10 @@ def delivery_eligibility(decision: dict, *, root: Path, current: datetime, rows:
         removed = sorted(set(old_actions) - set(new_actions))
         # Expiry alone is a local status update, not another action email.
         actual_rows = {row['ticker']: row for row in decision.get('capital_decision', {}).get('decisions', [])}
-        removed = [t for t in removed if not set(actual_rows.get(t, {}).get('blockers', [])) <= CLOCK_CODES]
+        removed = [t for t in removed if not set(actual_rows.get(t, {}).get('blockers', [])) <= CLOCK_CODES
+                   or _economic_rejection_changed(decision, actual_rows.get(t, {}), baseline, root=root)]
+        removed = [t for t in removed if not _retained_instruction_only(
+            decision, t, old_actions[t], baseline, root=root, current=current)]
         priority_context = decision.get('analyst_priority_review', {})
         priority_changed = (priority_context.get('status') == 'current'
             and priority_context.get('change_basis') != 'unchanged_review' and before['priority'] != after['priority'])
