@@ -312,5 +312,15 @@
   "310": "Validated intraday observations and portfolio risk",
   "311": "Scoped blockers and recurring research work",
   "312": "Owner-approved allocation policy",
-  "316": "Equity Research — Core Allocation Policy"
+  "313": "Risk Policy",
+  "314": "Owner-approved allocation policy",
+  "315": "Company-specific valuation in production",
+  "316": "Equity Research — Core Allocation Policy",
+  "317": "Validated full-universe market backup",
+  "318": "Position purpose and reassessment",
+  "319": "feedback_blocker",
+  "320": "CompleteCandidatePublicationTests",
+  "321": "test_shadow_archive_isolation.py",
+  "322": "Local assessment host availability",
+  "323": "install_dailyrefresh_scheduler.sh"
 }
