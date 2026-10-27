@@ -100,6 +100,57 @@ class LocalRepositoryFixture:
 
 
 class RuntimeGitSyncTests(unittest.TestCase):
+    def test_exact_refresh_recovery_outputs_survive_strict_sync_but_unknown_code_and_logs_block(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="equity-recovery-ignore-") as directory:
+            fixture = LocalRepositoryFixture(Path(directory))
+            # Exercise the real maintained ignore policy in a real Git clone,
+            # rather than mocking status or weakening the runtime validator.
+            ignore = SCRIPT_DIR.parents[1] / '.gitignore'
+            (fixture.author / '.gitignore').write_bytes(ignore.read_bytes())
+            _git(fixture.author, 'add', '.gitignore')
+            _git(fixture.author, 'commit', '-m', 'synthetic maintained ignore policy')
+            _git(fixture.author, 'push', 'origin', 'main')
+            sync_runtime_repository(fixture.runtime, expected_remote_url=str(fixture.remote))
+            generated = [
+                '00_project_control/run_logs/daily_refresh_progress.local.json',
+                '00_project_control/run_logs/market_admission.local.json',
+                '00_project_control/run_logs/market_admissions.local/' + 'a' * 64 + '.json',
+                '00_project_control/run_logs/daily_refresh_deferral.local.json',
+                '00_project_control/run_logs/runtime_short_deferral.local.json',
+            ]
+            hashes = {}
+            for relative in generated:
+                path = fixture.runtime / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('{"synthetic_private_receipt":true}\n')
+                hashes[relative] = hashlib.sha256(path.read_bytes()).hexdigest()
+                _git(fixture.runtime, 'check-ignore', '--quiet', '--', relative)
+            observed = inspect_runtime_repository(fixture.runtime, expected_remote_url=str(fixture.remote))
+            self.assertEqual(observed.runtime_evidence_changes, ())
+            remote_head = fixture.push_author_change('new code after private receipts\n')
+            result = sync_runtime_repository(fixture.runtime, expected_remote_url=str(fixture.remote))
+            self.assertEqual(result.commit, remote_head)
+            self.assertEqual({relative: hashlib.sha256((fixture.runtime / relative).read_bytes()).hexdigest()
+                for relative in generated}, hashes)
+            # Similar names and arbitrary local logs/code must remain visible
+            # to the unchanged untracked-worktree admission check.
+            for relative in [
+                '00_project_control/run_logs/daily_refresh_progress.local.json.py',
+                '00_project_control/run_logs/market_admission.local.json.unreviewed',
+                '00_project_control/run_logs/market_admissions.local.py',
+                '00_project_control/run_logs/daily_refresh_deferral.local.json.rogue',
+                '00_project_control/run_logs/runtime_short_deferral.local.json.py',
+                '00_project_control/run_logs/rogue.local.json',
+                '09_scripts/equity_research/unapproved.py',
+            ]:
+                with self.subTest(relative=relative):
+                    path = fixture.runtime / relative
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text('synthetic unexpected content\n')
+                    with self.assertRaisesRegex(RuntimeSyncError, 'untracked_worktree_unsafe'):
+                        inspect_runtime_repository(fixture.runtime, expected_remote_url=str(fixture.remote))
+                    path.unlink()
+
     def test_git_child_never_receives_massive_authentication(self) -> None:
         canary = "offline-git-boundary-canary"
         completed = runtime_wrapper.subprocess.CompletedProcess(

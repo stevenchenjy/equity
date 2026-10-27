@@ -48,6 +48,11 @@ graphify-out/reflections/
 03_source_data/equity_research/daily_evidence_state.local.json
 00_project_control/run_logs/daily_decision_state.local.json
 00_project_control/run_logs/daily_refresh_state.local.json
+/00_project_control/run_logs/daily_refresh_progress.local.json
+/00_project_control/run_logs/market_admission.local.json
+/00_project_control/run_logs/market_admissions.local/
+/00_project_control/run_logs/daily_refresh_deferral.local.json
+/00_project_control/run_logs/runtime_short_deferral.local.json
 00_project_control/run_logs/daily_scheduler_state.local.json
 00_project_control/run_logs/automation_alert.local.json
 00_project_control/run_logs/rate_limit_state.local.json
