@@ -168,6 +168,36 @@ class MarketRecoveryTests(unittest.TestCase):
 
 
 class SchedulingRecoveryTests(unittest.TestCase):
+    def test_actual_darwin_normal_zero_exit_with_only_zombie_group_passes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = processes.run_stage([scheduler.sys.executable, "-c", "pass"],
+                cwd=Path(directory), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
+            self.assertEqual(result.returncode, 0)
+
+    def test_normal_zero_exit_cleans_surviving_live_grandchild(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "normal-orphan"
+            launched = root / "launched"
+            code = "import pathlib,time; pathlib.Path("+repr(str(launched))+").write_text('live'); time.sleep(.7); pathlib.Path("+repr(str(marker))+").write_text('unexpected')"
+            parent = "import subprocess,sys,pathlib,time; subprocess.Popen([sys.executable,'-c',"+repr(code)+"]); p=pathlib.Path("+repr(str(launched))+");\nwhile not p.exists(): time.sleep(.01)"
+            result = processes.run_stage([scheduler.sys.executable, "-c", parent], cwd=root,
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=3)
+            self.assertEqual(result.returncode, 0)
+            self.assertTrue(launched.exists())
+            time.sleep(.8)
+            self.assertFalse(marker.exists())
+
+    def test_live_group_permission_failure_is_not_silently_ignored(self):
+        with patch.object(processes, "_live_group_members", return_value=[123]), \
+             patch.object(processes.os, "killpg", side_effect=PermissionError()):
+            with self.assertRaises(PermissionError):
+                processes._kill_group(123, 456)
+        # A proved last recipient exiting between the check and signal is safe.
+        with patch.object(processes, "_live_group_members", side_effect=[[123], []]), \
+             patch.object(processes.os, "killpg", side_effect=PermissionError()):
+            processes._kill_group(123, 456)
+
     def test_scheduled_public_work_is_independent_of_eod_reuse_and_operator_offline(self):
         for name, script in (("market_refresh", "market.py"), ("earnings_event_discovery", "calendar.py"),
                              ("research_opportunity_objective", "objective.py"), ("market_discovery", "discovery.py")):
@@ -291,6 +321,41 @@ class SchedulingRecoveryTests(unittest.TestCase):
             time.sleep(.8)
             self.assertFalse(marker.exists())
 
+    def test_parent_stops_before_stage_death_can_launch_another_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            marker = root / "escaped-next-stage"
+            script = root / "pipeline.py"
+            # If cleanup kills the first stage while this coordinator is
+            # alive, it immediately launches the next independent PGID.
+            next_code = "import pathlib,time; time.sleep(.4); pathlib.Path("+repr(str(marker))+").write_text('escaped')"
+            script.write_text("import subprocess,sys\n"
+                "first=subprocess.Popen([sys.executable,'-c','import time;time.sleep(30)'],process_group=0)\n"
+                "first.wait()\nsubprocess.Popen([sys.executable,'-c',"+repr(next_code)+"],process_group=0)\n")
+            order = []
+            original = processes._kill_group
+            class StageGroupsFirst(set):
+                def __iter__(self):
+                    # Force the formerly unordered inventory toward the later
+                    # stage PID, rather than relying on this run's set order.
+                    return iter(sorted(super().__iter__(), reverse=True))
+            def record(group, session):
+                order.append((group, session))
+                original(group, session)
+                # Deliberately widen the interval that allowed the coordinator
+                # to advance after its first stage had been killed.
+                time.sleep(.1)
+            with patch.object(scheduler, "ROOT", root), patch.object(scheduler, "REFRESH_PIPELINE", script), \
+                 patch.object(scheduler, "DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS", .3), \
+                 patch.object(processes, "set", StageGroupsFirst, create=True), \
+                 patch.object(processes, "_kill_group", side_effect=record):
+                result = scheduler._run_refresh_pipeline(scheduler.MARKET_SNAPSHOT_REUSE)
+            self.assertEqual(result.returncode, 124)
+            self.assertTrue(order)
+            self.assertEqual(order[0][0], order[0][1])
+            time.sleep(.6)
+            self.assertFalse(marker.exists())
+
     def test_pipeline_interrupt_cleans_owned_groups_before_releasing_caller(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -307,6 +372,33 @@ class SchedulingRecoveryTests(unittest.TestCase):
                     scheduler._run_refresh_pipeline(scheduler.MARKET_SNAPSHOT_REUSE)
             time.sleep(.8)
             self.assertFalse(marker.exists())
+
+    def test_crashed_parent_progress_finishes_only_owned_current_invocation(self):
+        for owned in (True, False):
+            with self.subTest(owned=owned), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                progress = root / refresh.PROGRESS_REL
+                progress.parent.mkdir(parents=True)
+                script = root / "pipeline.py"
+                expected_session = scheduler.latest_published_market_session(scheduler.now_et()).isoformat()
+                payload = {"schema_version": "equity_daily_refresh_progress_v1", "expected_market_session": expected_session,
+                    "market_snapshot_mode": "reuse_validated_snapshot", "outcome": "in_progress",
+                    "running_stage": "market_refresh", "steps": [], "research_passed": False}
+                script.write_text("import json,os,pathlib,datetime\nfrom zoneinfo import ZoneInfo\n"
+                    "stamp=datetime.datetime.now(ZoneInfo('America/New_York')).replace(microsecond=0).isoformat()\n"
+                    "payload="+repr(payload)+"\npayload.update(pipeline_pid="+("os.getpid()" if owned else "1")+",cycle_date=stamp[:10],started_at=stamp)\n"
+                    "pathlib.Path("+repr(str(progress))+").write_text(json.dumps(payload))\nraise SystemExit(3)\n")
+                with patch.object(scheduler, "ROOT", root), patch.object(scheduler, "REFRESH_PIPELINE", script):
+                    result = scheduler._run_refresh_pipeline(scheduler.MARKET_SNAPSHOT_REUSE)
+                self.assertEqual(result.returncode, 3)
+                observed = json.loads(progress.read_text())
+                self.assertEqual(observed["outcome"], "parent_failed" if owned else "in_progress")
+                self.assertEqual(observed["running_stage"], "market_refresh")
+                self.assertEqual(observed["steps"], [])
+                self.assertFalse(observed["research_passed"])
+                if owned:
+                    self.assertEqual(observed["pipeline_exit_code"], 3)
+                    self.assertIn("finished_at", observed)
 
 
 if __name__ == "__main__":

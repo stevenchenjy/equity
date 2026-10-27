@@ -7,6 +7,7 @@ This pipeline never imports or invokes an email sender.
 from __future__ import annotations
 
 import argparse
+import os
 from account_access import research_context, publication_guard, capture_version, CHECKPOINT
 import subprocess
 import sys
@@ -357,6 +358,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     expected_market_session = latest_published_market_session(now_et()).isoformat()
     deadline = time.monotonic() + FULL_REFRESH_MAX_SECONDS
     progress = {"schema_version": "equity_daily_refresh_progress_v1",
+        "pipeline_pid": os.getpid(),
         "cycle_date": refresh_cycle_date, "expected_market_session": expected_market_session,
         "started_at": started_at, "market_snapshot_mode": market_snapshot_mode,
         "scheduled_public_refresh": refresh_public is True,

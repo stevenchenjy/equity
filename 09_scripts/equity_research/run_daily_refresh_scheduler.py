@@ -93,16 +93,23 @@ def _run_refresh_pipeline(snapshot_mode: str, *, refresh_public: bool = False) -
     command = [sys.executable, str(REFRESH_PIPELINE), "--run", "--market-snapshot-mode", snapshot_mode]
     if refresh_public:
         command.append("--refresh-public")
+    invoked_at = iso_now()
+    expected_cycle = cycle_date()
+    expected_session = latest_published_market_session(now_et()).isoformat()
     child = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL, start_new_session=True)
     from bounded_refresh_process import terminate_session, wait_unreaped
     timed_out = False
+    interrupted = False
     try:
         wait_unreaped(child, DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS)
     except subprocess.TimeoutExpired:
         # This process created this session and owns its group. Never terminate
         # a lock holder or another independently launched worker.
         timed_out = True
+    except BaseException:
+        interrupted = True
+        raise
     finally:
         try:
             try:
@@ -115,6 +122,20 @@ def _run_refresh_pipeline(snapshot_mode: str, *, refresh_public: bool = False) -
             # WNOWAIT held this exact PID/SID through cleanup, including normal
             # exit and KeyboardInterrupt/SystemExit. Reap only after cleanup.
             code = child.wait()
+        # The operator reuse path also enters this helper, so do not leave its
+        # crashed child's last stage looking active until another scheduler
+        # poll. Match the owned PID AND invocation before updating diagnostics.
+        if (isinstance(progress, dict) and progress.get("pipeline_pid") == child.pid
+                and progress.get("schema_version") == "equity_daily_refresh_progress_v1"
+                and progress.get("market_snapshot_mode") == snapshot_mode
+                and progress.get("outcome") == "in_progress"
+                and _refresh_state_matches_attempt(progress, expected_cycle_date=expected_cycle,
+                    expected_market_session=expected_session, not_before=invoked_at)
+                and (timed_out or interrupted or code != 0)):
+            progress.update(outcome="parent_timed_out" if timed_out else "parent_interrupted" if interrupted else "parent_failed",
+                pipeline_exit_code=124 if timed_out else code, finished_at=iso_now(),
+                owned_process_group_terminated=True, research_passed=False)
+            atomic_write_json(ROOT / "00_project_control/run_logs/daily_refresh_progress.local.json", progress)
     return subprocess.CompletedProcess(command, 124 if timed_out else code)
 
 
