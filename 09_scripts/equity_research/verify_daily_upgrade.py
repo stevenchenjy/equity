@@ -213,10 +213,7 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
         invariant = (
             payload.get("Label") == label
             and payload.get("RunAtLoad") is (job_name != "dailydecision")
-            and (
-                job_name != "dailydecision"
-                or payload.get("ProcessType") == "Standard"
-            )
+            and payload.get("ProcessType") == "Standard"
             and payload.get("KeepAlive") is False
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload
@@ -232,7 +229,7 @@ def plist_checks(checks: list[dict[str, str]]) -> None:
             checks,
             f"{label}.invariants",
             invariant,
-            "RunAtLoad=false/ProcessType=Standard for dailydecision; "
+            "ProcessType=Standard for both jobs; RunAtLoad=false for dailydecision; "
             "RunAtLoad=true for dailyrefresh; KeepAlive=false StartInterval=900 "
             "locked runtime-wrapper arguments",
         )

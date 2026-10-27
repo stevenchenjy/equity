@@ -75,6 +75,43 @@ The local host also needs actual operating-day availability; see
 [Local session availability](session_host_availability.md). An installed active
 schedule is not proof that a sleeping host ran or that SMTP accepted a message.
 
+## Refresh recovery and short-slot protection (October 26 repair)
+
+The scheduled refresh validates a separate immutable market-stage admission
+receipt before choosing the existing snapshot-reuse path. The receipt binds the
+complete configured and current held-symbol coverage, exact latest completed
+session, canonical output bytes, retained unadjusted history and source lineage.
+Every reuse revalidates those inputs. Changed, missing, corrupt or stale evidence
+requires normal collection; a saved readiness flag never establishes success.
+Market admission does not pass research, complete a company model or authorize
+publication or email. Interrupted and failed downstream stages remain failed.
+Normal scheduled full refreshes still perform their bounded public news,
+calendar, discovery and objective work independently of EOD snapshot reuse; an
+unchanged close is not evidence that company or event research is current.
+
+Before news collection or reserving a refresh slot, the refresh scheduler checks
+whether its bounded run could overlap an exchange-open short-assessment slot or
+that slot's existing admission and work budget. A conflict returns promptly with
+a durable deferral and consumes no refresh slot. A later normal poll can perform
+still-due refresh work inside its existing useful window. This does not replay
+short checks, extend their grace or change either daily brief window. Actual
+host and app availability remain necessary for an automatic analyst wake.
+
+Full refreshes retain incremental stage progress, an internal total work budget
+and a separate final reporting allowance within the unchanged parent bound.
+An unrun required stage is recorded as budget-exhausted, never inherited as a
+prior success. If the parent deadline is reached, the scheduler terminates its
+own process session and stage groups, then waits for cleanup before releasing
+the runtime lock. No independent worker is terminated. The refresh-only installer and
+Standard resource class are documented in session_host_availability.md; their
+installation is separate from proof of a natural scheduled run.
+
+Status-only briefs use the same visual card shell as full briefs while retaining
+an explicit status-only label and no trading instruction. Historical sent
+paragraph-format artifacts remain immutable and exactly verifiable. This visual
+change does not alter typed status admission, purposes, duplicate comparison,
+unknown-send protection or the two mandatory daily checkpoints.
+
 ## Two daily briefs
 
 The normal morning (09:30–10:30 ET) and afternoon (14:30–15:05 ET) windows

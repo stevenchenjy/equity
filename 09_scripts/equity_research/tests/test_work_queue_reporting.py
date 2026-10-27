@@ -149,7 +149,7 @@ class WorkQueueReportingTests(unittest.TestCase):
         self.assertLess(names.index('earnings_incorporation'), names.index('daily_decision'))
         self.assertLess(names.index('long_horizon_research'), names.index('research_backlog_view'))
         self.assertLess(names.index('research_backlog_view'), names.index('daily_decision'))
-        with patch.object(refresh_pipeline.subprocess, 'run') as child, patch.object(refresh_pipeline, '_record_work_step', side_effect=lambda result: result):
+        with patch.object(refresh_pipeline, 'run_stage') as child, patch.object(refresh_pipeline, '_record_work_step', side_effect=lambda result: result):
             child.return_value.returncode = 0
             refresh_pipeline.run_step('research_backlog_view', 'create_research_backlog.py', True)
             args = child.call_args.args[0]

@@ -72,8 +72,8 @@ stages took 197.516 seconds in that class and 39.572 seconds at ordinary
 priority; both validated the same publication. The host was awake with the
 operating-day power assertion active.
 
-The delivery agent therefore uses `ProcessType=Standard`. The refresh worker
-keeps its existing background class. The existing 180-second sender bound,
+The delivery agent therefore uses `ProcessType=Standard`. The existing
+180-second sender bound,
 actual pre-claim window checks, immutable publication validation, duplicate
 protection and unknown-send fences remain effective. A successful validation
 or deployed agent is not evidence of SMTP acceptance.
@@ -94,3 +94,35 @@ otherwise eligible action or priority alerts.
 Verify the actual loaded resource class, unchanged interval and subsequent
 natural run receipts. Preserve any missed morning outcome; this repair does
 not authorize a late catch-up message.
+
+## Refresh resource class and isolated installation
+
+The October 26 refresh repair also gives the refresh agent
+`ProcessType=Standard`, preserving its 900-second interval and
+`RunAtLoad=true`. This removes the avoidable Darwin background resource
+restriction from the deadline-bound refresh. The delivery timing comparison
+above does not establish an equivalent refresh speedup, and this resource
+change alone does not prove that a failed stage, redundant market fetch or
+missed short assessment is repaired. Actual stage, publication and subsequent
+scheduled claim receipts remain required.
+
+After verified source deployment, install only an idle refresh agent with:
+
+```sh
+/bin/zsh /Users/messssi/LocalRuntime/equity/07_automation/scheduler/install_dailyrefresh_scheduler.sh
+```
+
+This dedicated installer checks the target before and after runtime
+synchronization and preflight, validates the exact template, and replaces only
+the refresh launcher and LaunchAgent. It refuses a running or unknown target
+state; it never restarts or invokes the delivery agent. Existing runtime locks,
+source validation, stage failure states, email windows and duplicate protection
+remain effective.
+
+Because refresh retains `RunAtLoad=true`, bootstrap can immediately invoke its
+existing due-state scheduler. An installation-time run is operator-initiated;
+it is not evidence of a later natural scheduled run. Install while idle, then
+separately inspect the loaded resource class, unchanged interval and actual
+natural run receipts. An after-window no-op verifies neither a market recovery
+nor a short assessment. Live scheduled verification remains pending until the
+applicable actual receipts exist; closed windows are never replayed.

@@ -333,7 +333,10 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
             require(hashlib.sha256(body).hexdigest() == body_digest, 'baseline_body_hash_mismatch')
             bodies.append(body.decode('utf-8'))
         if old.get('schema_version') == 'equity_mandatory_status_brief_v1':
-            require(tuple(bodies) == render_failure_brief(old)[1:], 'baseline_status_render_mismatch')
+            # Presentation may evolve; exact older archived bodies still bind
+            # the original advice chain. Never regenerate or rewrite history.
+            require(tuple(bodies) in (render_failure_brief(old)[1:],
+                _render_legacy_failure_brief(old)[1:]), 'baseline_status_render_mismatch')
             return {'status': 'status_only', 'receipt_sha256': canonical_sha256(row)}
         projection = advice_projection(old)
         if old.get('delivery_assessment'):
@@ -559,7 +562,8 @@ def validate_failure_brief_archive(artifact: dict) -> dict:
     return artifact
 
 
-def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
+def _render_legacy_failure_brief(artifact: dict) -> tuple[str, str, str]:
+    """Exact pre-card format, admitted only when verifying retained archives."""
     validate_failure_brief_archive(artifact)
     from equity_naming import subject_prefix
     lines = [artifact['headline'], 'Observed: ' + artifact['generated_at'], artifact['status_summary'],
@@ -569,6 +573,25 @@ def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
     document = ('<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body>'
         + ''.join('<p>' + html.escape(line) + '</p>' for line in lines) + '</body></html>\n')
     return subject_prefix() + ' ' + artifact['headline'] + ' — ' + artifact['cycle_date'], plain, document
+
+
+def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
+    """Use the current brief shell while keeping the typed status scope explicit."""
+    validate_failure_brief_archive(artifact)
+    from email_brief import _render_cards
+    from equity_naming import subject_prefix
+    subject = subject_prefix() + ' ' + artifact['headline'] + ' — ' + artifact['cycle_date']
+    sections = [
+        {'title': 'Status only — no current trading instruction', 'kind': 'inactive',
+            'body': 'Reason: ' + artifact['status_summary'] + '\n' + artifact['verification_scope'],
+            'sources': []},
+        {'title': 'Next step',
+            'body': 'Await a validated research publication; unresolved data and research requirements remain effective.',
+            'sources': []},
+    ]
+    return _render_cards(subject, sections, title='Research status',
+        stamp=f"Mandatory {artifact['scheduled_slot']} brief · Observed: {artifact['generated_at']}",
+        footer='No earlier price, DAY order or trading quantity is renewed by this status update.')
 
 
 def delivery_envelope(decision: dict, eligibility: dict, *, canonical_decision_sha256: str,

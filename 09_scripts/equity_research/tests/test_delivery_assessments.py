@@ -224,6 +224,61 @@ class DeliveryAssessmentTests(unittest.TestCase):
         atomic_write_json(self.root / delivery.REFRESH_REL, {'new_current_fact': True})
         with self.assertRaises(ValueError):delivery.validate_failure_brief(artifact, root=self.root, current=morning)
 
+    def test_status_brief_uses_current_brand_shell_without_changing_typed_scope(self):
+        artifact = delivery.build_failure_brief(self.root, NOW.replace(hour=9, minute=45),
+            'morning', 'capital_decision_inputs_changed_recompose_required')
+        original = copy.deepcopy(artifact)
+        subject, text, document = delivery.render_failure_brief(artifact)
+        visible = visible_html_text(document)
+        self.assertIn('max-width:600px', document)
+        self.assertIn('<meta name="viewport"', document)
+        self.assertIn('<h1', document)
+        self.assertIn('Research status', visible)
+        self.assertIn('Mandatory morning brief', visible)
+        for message in [artifact['status_summary'], artifact['verification_scope'],
+                'Status only — no current trading instruction',
+                'No earlier price, DAY order or trading quantity is renewed by this status update.']:
+            self.assertIn(message, text)
+            self.assertIn(message, visible)
+        self.assertEqual(artifact, original)
+        self.assertEqual(subject, delivery._render_legacy_failure_brief(artifact)[0])
+        self.assertNotIn('capital_decision', artifact)
+        self.assertNotIn('held_positions', artifact)
+        self.assertNotIn('BUY —', visible)
+        self.assertNotIn('SELL —', visible)
+        self.assertNotIn('HOLD —', visible)
+        self.assertEqual(hashlib.sha256(text.encode()).hexdigest(),
+            hashlib.sha256(delivery.render_failure_brief(artifact)[1].encode()).hexdigest())
+        self.assertEqual(hashlib.sha256(document.encode()).hexdigest(),
+            hashlib.sha256(delivery.render_failure_brief(artifact)[2].encode()).hexdigest())
+
+    def test_exact_legacy_status_bodies_remain_verified_but_rehashed_tampering_does_not(self):
+        import html
+        artifact = delivery.build_failure_brief(self.root, NOW - timedelta(hours=1),
+            'morning', 'refresh_not_ready')
+        lines = [artifact['headline'], 'Observed: ' + artifact['generated_at'], artifact['status_summary'],
+            artifact['verification_scope'], 'No earlier price, DAY order or trading quantity is renewed by this status update.',
+            'Next: await a validated research publication; unresolved data and research requirements remain effective.']
+        legacy_text = '\n\n'.join(lines) + '\n'
+        legacy_html = ('<!doctype html><html lang="en"><head><meta charset="utf-8"></head><body>'
+            + ''.join('<p>' + html.escape(line) + '</p>' for line in lines) + '</body></html>\n')
+        row = self.archive(artifact)
+        for key, suffix, body in [('brief_text_sha256', '.txt', legacy_text),
+                ('brief_html_sha256', '.html', legacy_html)]:
+            digest = hashlib.sha256(body.encode()).hexdigest()
+            (self.root / delivery.ARCHIVE_REL / (digest + suffix)).write_text(body)
+            row[key] = digest
+        self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'status_only')
+        self.assertNotEqual(row['brief_html_sha256'],
+            hashlib.sha256(delivery.render_failure_brief(artifact)[2].encode()).hexdigest())
+        # A new filename/ledger hash cannot make altered trading text a typed
+        # status archive. Keep exact historical format verification effective.
+        forged = legacy_html.replace('</body>', '<p>BUY — SYN, 1 share</p></body>')
+        digest = hashlib.sha256(forged.encode()).hexdigest()
+        (self.root / delivery.ARCHIVE_REL / (digest + '.html')).write_text(forged)
+        row['brief_html_sha256'] = digest
+        self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'unverified')
+
     def test_alert_envelope_exact_action_render_scope_and_original_archive(self):
         baseline = self.archive()
         current = copy.deepcopy(self.decision); current['capital_decision']['decisions'] = [action_row()]

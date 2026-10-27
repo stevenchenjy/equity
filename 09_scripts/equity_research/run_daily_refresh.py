@@ -12,8 +12,10 @@ import subprocess
 import sys
 import time
 from contextlib import nullcontext
+from datetime import datetime
 from pathlib import Path
 from typing import Any
+from bounded_refresh_process import run_stage
 
 from portfolio_archive import snapshot_active_portfolio
 
@@ -42,6 +44,11 @@ MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
 # time, process startup, local validation, and commit; all other children
 # retain the historical short timeout.
 DEFAULT_CHILD_TIMEOUT_SECONDS = 240
+# Keep the child tree within the scheduler's unchanged 1,080-second bound.
+# A stage that exhausts this allowance remains failed; no required stage can
+# disappear from the completion contract or inherit an older passing result.
+FULL_REFRESH_MAX_SECONDS = 1020
+FINAL_REPORT_RESERVE_SECONDS = 30
 EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 # Daily reference pagination plus one new grouped day is paced at 13 seconds.
 # Cold 21-session bootstrap uses the separate no-send 900-second entrypoint.
@@ -117,6 +124,52 @@ CURRENT_STATUS_SPEC = (
     "generate_current_status.py",
     True,
 )
+PROGRESS_REL = "00_project_control/run_logs/daily_refresh_progress.local.json"
+
+
+def _progress_step(progress: dict[str, Any] | None, spec: tuple, market_snapshot_mode: str,
+                   *, deadline: float | None = None, refresh_public: bool | None = None) -> dict:
+    """Persist the active child and completed stages before another can be killed.
+
+    This separate diagnostic can never satisfy daily-refresh readiness. The
+    authoritative full state is still published only after all required stages.
+    """
+    if progress is not None:
+        progress["running_stage"] = spec[0]
+        progress["running_stage_pid"] = None
+        progress["outcome"] = "in_progress"
+        atomic_write_json(ROOT / PROGRESS_REL, progress)
+    remaining = None if deadline is None else deadline - time.monotonic()
+    if remaining is not None and remaining <= 0:
+        stamp = iso_now()
+        result = {"name": spec[0], "script": spec[1], "allowed_to_fail": spec[2],
+                  "started_at": stamp, "completed_at": stamp, "duration_seconds": 0,
+                  "exit_code": 124, "outcome": "not_run_budget_exhausted",
+                  "result_code": "full_refresh_total_budget_exhausted"}
+    else:
+        def started(pid):
+            if progress is not None:
+                progress["running_stage_pid"] = pid
+                atomic_write_json(ROOT / PROGRESS_REL, progress)
+        result = run_step(*spec, market_snapshot_mode=market_snapshot_mode,
+                          maximum_child_seconds=remaining, refresh_public=refresh_public,
+                          on_child_started=started)
+    if result["name"] == "market_refresh" and result["exit_code"] == 0:
+        from market_admission import capture
+        try:
+            result["market_admission"] = capture(ROOT,
+                current=datetime.fromisoformat(result["completed_at"]), stage=result)
+        except (OSError, ValueError, KeyError, TypeError):
+            # The downstream market gates still govern research. Failure to
+            # retain this additional receipt cannot manufacture reusable data.
+            result["market_admission_unavailable"] = True
+    if progress is not None:
+        progress["steps"].append(result)
+        progress["running_stage"] = None
+        progress["running_stage_pid"] = None
+        progress["last_completed_stage_at"] = result.get("completed_at")
+        atomic_write_json(ROOT / PROGRESS_REL, progress)
+    return result
 
 
 def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
@@ -155,6 +208,8 @@ def run_step(
     *,
     market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
     maximum_child_seconds: float | None = None,
+    refresh_public: bool | None = None,
+    on_child_started=None,
 ) -> dict[str, Any]:
     started_at = iso_now()
     start_clock = time.monotonic()
@@ -174,11 +229,14 @@ def run_step(
         # A short publication may reduce a child's allowance, never extend the
         # full-refresh allowance or the claim's fixed deadline.
         timeout_seconds = min(timeout_seconds, max(0.01, maximum_child_seconds))
+    # Reusing an exact EOD close cannot suppress the independently due public
+    # company/calendar/discovery work of a normal scheduled full refresh.
+    public_network = market_snapshot_mode == MARKET_SNAPSHOT_FETCH if refresh_public is None else refresh_public
     extra_arguments = (
-        (["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])
+        (["--refresh"] if public_network else [])
         if name == "earnings_event_discovery"
         else
-        ["--stage", "objective", *(["--refresh"] if market_snapshot_mode == MARKET_SNAPSHOT_FETCH else [])]
+        ["--stage", "objective", *(["--refresh"] if public_network else [])]
         if name == "research_opportunity_objective"
         else
         ["--apply-objective-updates"]
@@ -190,14 +248,14 @@ def run_step(
         else
         ["--refresh"]
         if name == "sec_filing_artifacts" or (
-            name == "market_discovery" and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
+            name == "market_discovery" and public_network
         )
         else ["--build"]
         if name == "evidence_packet"
         else []
     )
     try:
-        completed = subprocess.run(
+        completed = run_stage(
             [sys.executable, str(SCRIPT_DIR / script_name), *extra_arguments,
              *(["--no-lock"] if name == "market_refresh" else [])],
             cwd=ROOT,
@@ -209,6 +267,7 @@ def run_step(
             stderr=subprocess.DEVNULL,
             timeout=timeout_seconds,
             check=False,
+            on_start=on_child_started,
         )
     except subprocess.TimeoutExpired:
         return _record_work_step({
@@ -254,7 +313,7 @@ def safe_check() -> int:
     return 0
 
 
-def consistent_steps(market_snapshot_mode):
+def consistent_steps(market_snapshot_mode, *, progress=None, deadline=None, refresh_public=None):
     """Retry only account-dependent work; never repeat objective/network quota.
 
     Continuous intake remains available even through retries. After two bounded
@@ -265,7 +324,8 @@ def consistent_steps(market_snapshot_mode):
     for attempt in range(3):
         with research_context(ROOT) as version:
             specs = STEP_SPECS if attempt==0 else STEP_SPECS[boundary:]
-            results = [run_step(*spec, market_snapshot_mode=market_snapshot_mode) for spec in specs]
+            results = [_progress_step(progress, spec, market_snapshot_mode, deadline=deadline,
+                                      refresh_public=refresh_public) for spec in specs]
             if attempt==0:
                 steps=results
             else:
@@ -285,7 +345,8 @@ def consistent_steps(market_snapshot_mode):
     return steps, retries, False
 
 
-def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH) -> int:
+def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
+                *, refresh_public: bool | None = None) -> int:
     load_active_state()
     load_inhibit()
     if market_snapshot_mode not in MARKET_SNAPSHOT_MODES:
@@ -294,10 +355,18 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     started_at = iso_now()
     refresh_cycle_date = cycle_date()
     expected_market_session = latest_published_market_session(now_et()).isoformat()
+    deadline = time.monotonic() + FULL_REFRESH_MAX_SECONDS
+    progress = {"schema_version": "equity_daily_refresh_progress_v1",
+        "cycle_date": refresh_cycle_date, "expected_market_session": expected_market_session,
+        "started_at": started_at, "market_snapshot_mode": market_snapshot_mode,
+        "scheduled_public_refresh": refresh_public is True,
+        "outcome": "in_progress", "running_stage": None, "steps": [],
+        "research_passed": False, "email_attempted": False}
     with lock_context:
         snapshot_active_portfolio(ROOT)
         try:
-            steps, account_recompositions, account_current = consistent_steps(market_snapshot_mode)
+            steps, account_recompositions, account_current = consistent_steps(market_snapshot_mode,
+                progress=progress, deadline=deadline - FINAL_REPORT_RESERVE_SECONDS, refresh_public=refresh_public)
         finally:
             snapshot_active_portfolio(ROOT)
     hard_failures = [
@@ -340,6 +409,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
         "advisory_failures": advisory_failures,
         "decision_created": decision_completed,
         "market_snapshot_mode": market_snapshot_mode,
+        "scheduled_public_refresh": refresh_public is True,
         "steps": steps,
         "account_recompositions": account_recompositions,
         "account_publication_current": account_current,
@@ -370,6 +440,9 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
             state["limited_status_handoff_reason"] = (str(exc) if str(exc) in known
                                                        else "limited_status_source_or_contract_validation_failed")
     atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
+    progress.update(outcome="finished", running_stage=None, completed_at=state["completed_at"],
+                    full_refresh_outcome=outcome)
+    atomic_write_json(ROOT / PROGRESS_REL, progress)
     from workflow_evaluation import record_refresh
     record_refresh(state)
     # The earlier evaluation step cannot see its own unfinished refresh in the
@@ -378,6 +451,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     state["workflow_evaluation_update"] = run_step(
         "workflow_evaluation_final", "create_workflow_evaluation.py", True,
         market_snapshot_mode=market_snapshot_mode,
+        maximum_child_seconds=max(0.01, deadline - time.monotonic()),
     )
     atomic_write_json(DAILY_REFRESH_STATE_PATH, state)
     # The status report must observe this run's final outcome rather than the
@@ -387,6 +461,7 @@ def run_refresh(no_lock: bool, market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH
     status_step = run_step(
         *CURRENT_STATUS_SPEC,
         market_snapshot_mode=market_snapshot_mode,
+        maximum_child_seconds=max(0.01, deadline - time.monotonic()),
     )
     state["current_status_update"] = status_step
     state["completed_at"] = iso_now()
@@ -428,12 +503,14 @@ def main() -> int:
         default=MARKET_SNAPSHOT_FETCH,
         help="internal: either fetch public data or reuse an exact validated local close",
     )
+    parser.add_argument("--refresh-public", action="store_true", default=None,
+                        help="internal: scheduled public company/calendar work independent of EOD reuse")
     args = parser.parse_args()
     if args.safe_check:
         if args.no_lock:
             raise ValueError("--no-lock is valid only with --run")
         return safe_check()
-    return run_refresh(args.no_lock, args.market_snapshot_mode)
+    return run_refresh(args.no_lock, args.market_snapshot_mode, refresh_public=args.refresh_public)
 
 
 if __name__ == "__main__":

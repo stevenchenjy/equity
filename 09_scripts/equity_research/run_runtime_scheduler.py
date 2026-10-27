@@ -19,6 +19,8 @@ import re
 import stat
 import subprocess
 import sys
+import time
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -59,6 +61,11 @@ VERIFIED_DEPLOYMENT_RELATIVE_PATH = Path(
 VERIFIED_DEPLOYMENT_MAX_AGE = timedelta(hours=24)
 FETCH_TIMEOUT_SECONDS = 180
 GIT_TIMEOUT_SECONDS = 60
+# Normal scheduled refreshes must leave time for the shared short windows.
+# This caps aggregate Git subprocess time, not CPU/filesystem availability.
+NORMAL_REFRESH_GIT_PREFLIGHT_SECONDS = FETCH_TIMEOUT_SECONDS + GIT_TIMEOUT_SECONDS
+_GIT_PREFLIGHT_DEADLINE = ContextVar("runtime_git_preflight_deadline", default=None)
+SHORT_DEFERRAL_RELATIVE_PATH = Path("00_project_control/run_logs/runtime_short_deferral.local.json")
 # A pathological but still bounded holder can consume the individual Git
 # command budgets plus the refresh scheduler's 1080-second deterministic child.
 # One hour exceeds that aggregate budget with margin while surfacing a stuck
@@ -148,6 +155,12 @@ def _run_git_process(
     *,
     timeout: int = GIT_TIMEOUT_SECONDS,
 ) -> subprocess.CompletedProcess[str]:
+    deadline = _GIT_PREFLIGHT_DEADLINE.get()
+    if deadline is not None:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeSyncError("runtime_preflight_git_budget_exhausted")
+        timeout = min(timeout, remaining)
     environment = os.environ.copy()
     # The Keychain launcher scopes Massive authentication to the production
     # scheduler. Git synchronization never needs or receives the credential.
@@ -166,6 +179,8 @@ def _run_git_process(
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
+        if deadline is not None and time.monotonic() >= deadline:
+            raise RuntimeSyncError("runtime_preflight_git_budget_exhausted") from exc
         raise RuntimeSyncError("git_command_timeout", "git operation timed out") from exc
     except OSError as exc:
         raise RuntimeSyncError("git_command_unavailable", exc.__class__.__name__) from exc
@@ -830,6 +845,80 @@ def _best_effort_preflight_alert(root: Path, *, job: str) -> None:
         pass
 
 
+def _normal_scheduled_refresh(args, *, current: datetime | None = None) -> bool:
+    if args.job != "dailyrefresh" or args.safe_check or args.sync_only:
+        return False
+    import run_daily_refresh_scheduler as refresh
+    if any(os.environ.get(name) == "1" for name in (
+        refresh.MASSIVE_AUTH_PRESENCE_PROBE_ENV, refresh.SEC_REFRESH_ONLY_ENV,
+        refresh.MARKET_REFRESH_ONLY_ENV, refresh.MARKET_DISCOVERY_ONLY_ENV,
+        refresh.FULL_REFRESH_REUSE_ONLY_ENV)):
+        return False
+    # Preserve the pre-adoption contract, including older policy fixtures.
+    if current is not None:
+        if current.date() < date(2026, 10, 22):
+            return False
+        try:
+            effective = load_active_config()["notifications"].get("delivery_assessment_effective_from")
+            if effective is None:
+                return False
+            return current.date() >= date.fromisoformat(effective)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+            raise RuntimeSyncError("runtime_short_policy_unverified") from exc
+    return True
+
+
+def _defer_normal_refresh(root: Path, *, current: datetime, phase: str,
+                          include_git_budget: bool = True) -> bool:
+    """A finite deferral never authorizes code execution or claims a research slot."""
+    if phase not in {"before_runtime_lock", "after_runtime_lock", "after_git_preflight"}:
+        raise RuntimeSyncError("runtime_short_guard_phase_invalid")
+    import run_daily_refresh_scheduler as refresh
+    maximum = refresh.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS + refresh.SCHEDULED_NEWS_ALLOWANCE_SECONDS
+    if include_git_budget:
+        maximum += NORMAL_REFRESH_GIT_PREFLIGHT_SECONDS
+    try:
+        conflict = refresh.short_window_conflict(current, maximum_seconds=maximum)
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        conflict = {"reason": "exchange_calendar_unverified"}
+    if conflict is None:
+        return False
+    if conflict.get("reason") not in {"short_assessment_window_protected", "exchange_calendar_unverified"}:
+        raise RuntimeSyncError("runtime_short_guard_invalid")
+    # No Git probe here: this path defers the preflight itself. The separate
+    # owned regular receipt contains only finite scheduler observation fields.
+    target = root / SHORT_DEFERRAL_RELATIVE_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.parent.resolve() != target.parent.absolute() or not target.parent.resolve().is_relative_to(root.resolve()):
+        raise RuntimeSyncError("runtime_short_deferral_parent_unsafe")
+    if target.exists() or target.is_symlink():
+        metadata = target.lstat()
+        if (not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1
+                or metadata.st_uid != os.getuid()):
+            raise RuntimeSyncError("runtime_short_deferral_file_unsafe")
+    receipt = {"schema_version": "equity_runtime_short_deferral_v1", "observed_at": current.isoformat(),
+        "phase": phase, "reason": conflict["reason"],
+        **{key: conflict[key] for key in ("slot", "protected_from", "protected_until") if key in conflict},
+        "refresh_slot_consumed": False, "git_preflight_completed": phase == "after_git_preflight",
+        "runtime_execution_authorized": False,
+        "pipeline_invoked": False, "email_attempted": False}
+    temporary = target.with_name(target.name + f".{os.getpid()}.tmp")
+    descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            json.dump(receipt, handle, sort_keys=True)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    print("runtime_preflight=deferred reason=" + conflict["reason"]
+          + " pipeline_invoked=false refresh_slot_consumed=false", flush=True)
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--job", required=True, choices=sorted(SCHEDULER_SCRIPTS))
@@ -842,11 +931,15 @@ def main() -> int:
     invocation_started_at = datetime.now(ET)
     try:
         assert_non_icloud_runtime_root(root)
+        normal_refresh = _normal_scheduled_refresh(args, current=invocation_started_at)
+        if normal_refresh and _defer_normal_refresh(root, current=invocation_started_at, phase="before_runtime_lock"):
+            return 0
         with ExclusiveFileLock(
             RUNTIME_LOCK_PATH,
             wait_timeout_seconds=RUNTIME_LOCK_WAIT_TIMEOUT_SECONDS,
             poll_interval_seconds=RUNTIME_LOCK_POLL_INTERVAL_SECONDS,
         ) as lock:
+            budget_token = None
             try:
                 acquired_at = datetime.now(ET)
                 if lock.contention_observed:
@@ -865,6 +958,8 @@ def main() -> int:
                             f"started_at={invocation_started_at.isoformat()} "
                             f"acquired_at={acquired_at.isoformat()}",
                         )
+                if normal_refresh and _defer_normal_refresh(root, current=acquired_at, phase="after_runtime_lock"):
+                    return 0
                 if args.safe_check:
                     inspect_runtime_repository(root)
                     process = subprocess.run(
@@ -879,6 +974,9 @@ def main() -> int:
                     )
                     return process.returncode
 
+                if normal_refresh:
+                    budget_token = _GIT_PREFLIGHT_DEADLINE.set(
+                        time.monotonic() + NORMAL_REFRESH_GIT_PREFLIGHT_SECONDS)
                 result = sync_runtime_for_job(root, job=args.job, sync_only=args.sync_only)
                 if args.sync_only:
                     _append_execution_record(
@@ -903,6 +1001,9 @@ def main() -> int:
                         f"started_at={invocation_started_at.isoformat()} "
                         f"ready_at={ready_at.isoformat()}",
                     )
+                if normal_refresh and _defer_normal_refresh(root, current=ready_at,
+                        phase="after_git_preflight", include_git_budget=False):
+                    return 0
                 _exec_scheduler(
                     root,
                     args.job,
@@ -916,6 +1017,9 @@ def main() -> int:
                 if not args.safe_check and not args.sync_only:
                     _best_effort_preflight_alert(root, job=args.job)
                 raise
+            finally:
+                if budget_token is not None:
+                    _GIT_PREFLIGHT_DEADLINE.reset(budget_token)
     except RuntimeSyncError as exc:
         print(
             f"runtime_preflight=blocked reason={exc.code} detail={exc.detail}",

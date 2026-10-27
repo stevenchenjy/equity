@@ -216,7 +216,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
     def test_eod_market_child_timeout_covers_bounded_import_budget(self) -> None:
         completed = daily_refresh.subprocess.CompletedProcess(["child"], 0)
         with patch.object(
-            daily_refresh.subprocess, "run", return_value=completed
+            daily_refresh, "run_stage", return_value=completed
         ) as run:
             result = daily_refresh.run_step(
                 "market_refresh",
@@ -341,6 +341,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
 
         completed = refresh_scheduler.subprocess.CompletedProcess(["refresh"], 0)
         with ExitStack() as stack:
+            stack.enter_context(patch("market_admission.current_admission", return_value={"expected_market_session": "2026-08-05"}))
             stack.enter_context(
                 patch.object(
                     refresh_scheduler,
@@ -359,7 +360,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
             run = stack.enter_context(
-                patch.object(refresh_scheduler.subprocess, "run", return_value=completed)
+                patch.object(refresh_scheduler, "_run_refresh_pipeline", return_value=completed)
             )
             stack.enter_context(
                 patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"])
@@ -368,13 +369,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
 
         self.assertEqual(result, 0)
         self.assertEqual(run.call_count, 1)
-        arguments = run.call_args.args[0]
-        self.assertIn("--market-snapshot-mode", arguments)
-        self.assertIn(refresh_scheduler.MARKET_SNAPSHOT_REUSE, arguments)
-        self.assertEqual(
-            run.call_args.kwargs["timeout"],
-            refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
-        )
+        run.assert_called_once_with(refresh_scheduler.MARKET_SNAPSHOT_REUSE, refresh_public=True)
 
     def test_failed_publication_refresh_never_starts_a_second_child(self) -> None:
         """A failed child reserves its slot and waits for the next retry slot."""
@@ -403,7 +398,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(patch.object(refresh_scheduler, "read_json", return_value=scheduler_state))
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
             run = stack.enter_context(
-                patch.object(refresh_scheduler.subprocess, "run", return_value=refresh)
+                patch.object(refresh_scheduler, "_run_refresh_pipeline", return_value=refresh)
             )
             stack.enter_context(
                 patch.object(refresh_scheduler.sys, "argv", ["daily_refresh_scheduler.py"])
@@ -413,8 +408,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
 
         self.assertEqual(result, 0)
         self.assertEqual(run.call_count, 1)
-        command = run.call_args.args[0]
-        self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), command)
+        run.assert_called_once_with(refresh_scheduler.MARKET_SNAPSHOT_FETCH, refresh_public=True)
         date_state = scheduler_state["dates"]["2026-08-06"]
         self.assertIn(
             refresh_scheduler.FIRST_EOD_PUBLICATION_RETRY_SLOT,
@@ -499,8 +493,8 @@ class B2RefreshCadenceTests(unittest.TestCase):
             stack.enter_context(patch.object(refresh_scheduler, "atomic_write_json"))
             run = stack.enter_context(
                 patch.object(
-                    refresh_scheduler.subprocess,
-                    "run",
+                    refresh_scheduler,
+                    "_run_refresh_pipeline",
                     return_value=completed,
                 )
             )
@@ -590,8 +584,8 @@ class B2RefreshCadenceTests(unittest.TestCase):
                 clear=True,
             ),
             patch.object(
-                refresh_scheduler.subprocess,
-                "run",
+                refresh_scheduler,
+                "_run_refresh_pipeline",
                 return_value=completed,
             ) as run,
             redirect_stdout(stdout),
@@ -600,20 +594,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
             result = refresh_scheduler.main()
 
         self.assertEqual(result, 0)
-        run.assert_called_once_with(
-            [
-                refresh_scheduler.sys.executable,
-                str(refresh_scheduler.REFRESH_PIPELINE),
-                "--run",
-                "--market-snapshot-mode",
-                refresh_scheduler.MARKET_SNAPSHOT_REUSE,
-            ],
-            cwd=refresh_scheduler.ROOT,
-            stdout=refresh_scheduler.subprocess.DEVNULL,
-            stderr=refresh_scheduler.subprocess.DEVNULL,
-            timeout=refresh_scheduler.DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
-            check=False,
-        )
+        run.assert_called_once_with(refresh_scheduler.MARKET_SNAPSHOT_REUSE)
         self.assertEqual(stdout.getvalue(), "")
         self.assertEqual(stderr.getvalue(), "")
 
@@ -693,7 +674,7 @@ class B2RefreshCadenceTests(unittest.TestCase):
     def test_refresh_pipeline_propagates_reuse_mode_only_to_b2(self) -> None:
         completed = daily_refresh.subprocess.CompletedProcess(["child"], 0)
         with patch.object(
-            daily_refresh.subprocess, "run", return_value=completed
+            daily_refresh, "run_stage", return_value=completed
         ) as run:
             result = daily_refresh.run_step(
                 "market_refresh",

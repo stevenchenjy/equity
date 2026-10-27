@@ -376,10 +376,7 @@ def _plist_issues() -> list[str]:
         if not (
             payload.get("Label") == label
             and payload.get("RunAtLoad") is (job_name != "dailydecision")
-            and (
-                job_name != "dailydecision"
-                or payload.get("ProcessType") == "Standard"
-            )
+            and payload.get("ProcessType") == "Standard"
             and payload.get("KeepAlive") is False
             and payload.get("StartInterval") == 900
             and "StartCalendarInterval" not in payload

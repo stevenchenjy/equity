@@ -17,7 +17,7 @@
     <key>StartInterval</key>
     <integer>900</integer>
     <key>ProcessType</key>
-    <string>Background</string>
+    <string>Standard</string>
     <key>StandardOutPath</key>
     <string>/Users/messssi/Library/Logs/equity_research_dailyrefresh.out.log</string>
     <key>StandardErrorPath</key>

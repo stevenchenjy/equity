@@ -7,7 +7,7 @@ import argparse
 import os
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 from active_config import load_active_config
 from daily_common import (
@@ -84,6 +84,82 @@ FULL_REFRESH_REUSE_ONLY_ENV = (
 # finite allowance for the existing local refresh steps. Retry slots are
 # separate launchd cycles and stop as soon as a full current refresh passes.
 DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 1080
+# Existing independent-news child150s plus its noncanonical status child20s.
+SCHEDULED_NEWS_ALLOWANCE_SECONDS = 170
+
+
+def _run_refresh_pipeline(snapshot_mode: str, *, refresh_public: bool = False) -> subprocess.CompletedProcess:
+    """Bound the entire owned child group, including a stage still running."""
+    command = [sys.executable, str(REFRESH_PIPELINE), "--run", "--market-snapshot-mode", snapshot_mode]
+    if refresh_public:
+        command.append("--refresh-public")
+    child = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, start_new_session=True)
+    from bounded_refresh_process import terminate_session, wait_unreaped
+    timed_out = False
+    try:
+        wait_unreaped(child, DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS)
+    except subprocess.TimeoutExpired:
+        # This process created this session and owns its group. Never terminate
+        # a lock holder or another independently launched worker.
+        timed_out = True
+    finally:
+        try:
+            try:
+                progress = read_json(ROOT / "00_project_control/run_logs/daily_refresh_progress.local.json", {})
+            except (OSError, ValueError, TypeError):
+                progress = {}
+            stage_pid = progress.get("running_stage_pid") if isinstance(progress, dict) else None
+            terminate_session(child.pid, known_stage_pid=stage_pid if type(stage_pid) is int else None)
+        finally:
+            # WNOWAIT held this exact PID/SID through cleanup, including normal
+            # exit and KeyboardInterrupt/SystemExit. Reap only after cleanup.
+            code = child.wait()
+    return subprocess.CompletedProcess(command, 124 if timed_out else code)
+
+
+def short_window_conflict(current: datetime, maximum_seconds: int = DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS) -> dict | None:
+    """Reserve the existing short admission+work windows before taking long work.
+
+    A deferral consumes no refresh slot and never waits behind a short claim.
+    Closed exchanges and slots after an early close have no protected window.
+    """
+    from short_assessment import SLOTS, SLOT_GRACE, MAX_DURATION, aware, market_session
+    local = aware(current)
+    session = market_session(local)
+    if session.get("reason") == "exchange_calendar_unverified":
+        return {"reason": "exchange_calendar_unverified"}
+    if not session.get("close_at"):
+        return None
+    close = aware(session["close_at"])
+    for clock in SLOTS:
+        start = datetime.combine(local.date(), time.fromisoformat(clock), local.tzinfo)
+        if start >= close:
+            continue
+        end = min(start + SLOT_GRACE, close) + MAX_DURATION
+        if local < end and local + timedelta(seconds=maximum_seconds) > start:
+            return {"reason": "short_assessment_window_protected", "slot": clock,
+                    "protected_from": start.isoformat(), "protected_until": end.isoformat()}
+    return None
+
+
+def _defer_for_short(current: datetime, notifications: dict,
+                     *, maximum_seconds: int = DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS) -> bool:
+    effective = notifications.get("delivery_assessment_effective_from")
+    if not effective or current.date().isoformat() < effective:
+        return False
+    from short_assessment import SLOTS
+    if notifications.get("short_assessment_slots_et") != list(SLOTS):
+        raise ValueError("short_assessment_configuration_invalid")
+    conflict = short_window_conflict(current, maximum_seconds)
+    if not conflict:
+        return False
+    atomic_write_json(ROOT / "00_project_control/run_logs/daily_refresh_deferral.local.json", {
+        "schema_version": "equity_refresh_short_deferral_v1", "observed_at": current.isoformat(),
+        **conflict, "refresh_slot_consumed": False, "pipeline_invoked": False,
+        "email_attempted": False})
+    print("scheduler_action=deferred reason=" + conflict["reason"] + " refresh_slot_consumed=false")
+    return True
 
 
 def due_slots(current: datetime) -> list[str]:
@@ -242,24 +318,7 @@ def _run_market_discovery_only() -> int:
 def _run_full_refresh_reuse_only() -> int:
     """Run one full no-send refresh against the validated local close."""
 
-    try:
-        completed = subprocess.run(
-            [
-                sys.executable,
-                str(REFRESH_PIPELINE),
-                "--run",
-                "--market-snapshot-mode",
-                MARKET_SNAPSHOT_REUSE,
-            ],
-            cwd=ROOT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        return 124
-    return completed.returncode
+    return _run_refresh_pipeline(MARKET_SNAPSHOT_REUSE).returncode
 
 
 def _safe_refresh_child_status(returncode: int) -> str:
@@ -332,6 +391,10 @@ def main() -> int:
         )
         return 0
     current = now_et()
+    notifications = load_active_config()["notifications"]
+    if _defer_for_short(current, notifications,
+                        maximum_seconds=DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS + SCHEDULED_NEWS_ALLOWANCE_SECONDS):
+        return 0
     # Independent news cadence survives successful morning EOD completion.
     # The parent runtime lock serializes these checks; maintenance/safe-check
     # returns above never invoke the network.
@@ -342,6 +405,11 @@ def main() -> int:
             print("official_news_check=degraded research_refresh_continues=true")
     except (OSError, ValueError, TypeError, AttributeError):
         print("official_news_check=degraded reason=news_state_error research_refresh_continues=true")
+    # Public polling/preflight can consume real time. Never use its earlier
+    # clock to admit a long run across a now-approaching short window.
+    current = now_et()
+    if _defer_for_short(current, notifications):
+        return 0
     due = due_slots(current)
     if not due:
         print("scheduler_action=none reason=no_refresh_slot_due")
@@ -376,16 +444,21 @@ def main() -> int:
         print("scheduler_action=none reason=refresh_slots_already_completed")
         return 0
     required_market_session = latest_published_market_session(current).isoformat()
-    market_ready = bool(
-        date_state.get("eod_publication_market_ready")
-        and date_state.get("eod_publication_market_session")
-        == required_market_session
-    )
+    from market_admission import current_admission
+    admission = current_admission(ROOT, current=current)
+    market_ready = admission is not None
+    # Previously saved readiness flags are historical observations. They can
+    # never authorize reuse after a changed source, scope or required session.
+    date_state["eod_publication_market_ready"] = market_ready
+    date_state["eod_publication_market_session"] = required_market_session if market_ready else ""
+    date_state["market_admission"] = admission
     snapshot_mode = market_snapshot_mode(
         current,
         pending,
         market_ready=market_ready,
     )
+    if _defer_for_short(now_et(), notifications):
+        return 0
     refresh_started_at = iso_now()
     # Reserve every currently due slot before the child. A failed child waits
     # for the next configured slot instead of running every 15 minutes, while
@@ -412,47 +485,26 @@ def main() -> int:
         date_state["eod_publication_market_attempt_status"] = "reserved_before_child"
     state["updated_at"] = refresh_started_at
     atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
-    try:
-        completed_process = subprocess.run(
-            [
-                sys.executable,
-                str(REFRESH_PIPELINE),
-                "--run",
-                "--market-snapshot-mode",
-                snapshot_mode,
-            ],
-            cwd=ROOT,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            timeout=DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS,
-            check=False,
-        )
-    except subprocess.TimeoutExpired:
-        completed_process = subprocess.CompletedProcess(
-            [
-                sys.executable,
-                str(REFRESH_PIPELINE),
-                "--run",
-                "--market-snapshot-mode",
-                snapshot_mode,
-            ],
-            124,
-        )
+    completed_process = _run_refresh_pipeline(snapshot_mode, refresh_public=True)
     date_state["refresh_last_attempt_at"] = iso_now()
     date_state["refresh_last_exit_code"] = completed_process.returncode
     date_state["market_snapshot_mode"] = snapshot_mode
     refresh_state = read_json(DAILY_REFRESH_STATE_PATH, {})
-    market_passed = _market_step_passed(
-        refresh_state,
-        expected_cycle_date=cycle_date(),
-        expected_market_session=required_market_session,
-        not_before=refresh_started_at,
-    )
+    admission = current_admission(ROOT, current=now_et(), not_before=refresh_started_at)
+    market_passed = admission is not None
+    date_state["market_admission"] = admission
     if market_passed:
         date_state["eod_publication_market_ready"] = True
-        date_state["eod_publication_market_session"] = refresh_state.get(
-            "expected_market_session", ""
-        )
+        date_state["eod_publication_market_session"] = admission["expected_market_session"]
+    if completed_process.returncode == 124:
+        progress_path = ROOT / "00_project_control/run_logs/daily_refresh_progress.local.json"
+        progress = read_json(progress_path, {})
+        if (_refresh_state_matches_attempt(progress, expected_cycle_date=cycle_date(),
+                expected_market_session=required_market_session, not_before=refresh_started_at)
+                and progress.get("outcome") == "in_progress"):
+            progress.update(outcome="parent_timed_out", interrupted_at=iso_now(),
+                            owned_process_group_terminated=True, research_passed=False)
+            atomic_write_json(progress_path, progress)
     if snapshot_mode == MARKET_SNAPSHOT_FETCH:
         date_state["eod_publication_market_attempt_status"] = "child_returned"
         date_state["eod_publication_market_attempt_exit_code"] = (

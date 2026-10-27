@@ -353,7 +353,7 @@ class OpportunityTests(unittest.TestCase):
     def test_fetch_stage_only_and_refresh_pipeline_has_no_sender(self):
         # Exercise the real marker writer inside the fixture, never the
         # authoring or production checkout used to run this test suite.
-        with patch.object(refresh, "ROOT", self.root), patch.object(refresh.subprocess, "run") as run:
+        with patch.object(refresh, "ROOT", self.root), patch.object(refresh, "run_stage") as run:
             run.return_value.returncode = 0
             refresh.run_step("research_opportunity_objective", "create_research_opportunities.py", True, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE)
             self.assertNotIn("--refresh", run.call_args.args[0])

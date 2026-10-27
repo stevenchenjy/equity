@@ -18,7 +18,7 @@ class EarningsWorkflowTests(unittest.TestCase):
     def test_explicit_fetch_and_offline_reuse_do_not_invoke_a_sender(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
-            with patch.object(refresh,'ROOT',root),patch.object(refresh.subprocess,'run',return_value=SimpleNamespace(returncode=0)) as run:
+            with patch.object(refresh,'ROOT',root),patch.object(refresh,'run_stage',return_value=SimpleNamespace(returncode=0)) as run:
                 refresh.run_step('earnings_event_discovery','refresh_earnings_events.py',True,market_snapshot_mode=refresh.MARKET_SNAPSHOT_FETCH)
                 self.assertIn('--refresh',run.call_args.args[0])
                 refresh.run_step('earnings_event_discovery','refresh_earnings_events.py',True,market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE)

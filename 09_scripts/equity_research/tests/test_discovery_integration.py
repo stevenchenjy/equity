@@ -66,7 +66,7 @@ class IndependentDiscoveryIntegrationTests(unittest.TestCase):
         self.assertIn("no verified event", scores[0]["score_explanation"])
 
     def test_only_fetch_cycle_requests_discovery_network(self):
-        with patch.object(refresh.subprocess, "run") as run:
+        with patch.object(refresh, "run_stage") as run:
             run.return_value.returncode = 0
             for mode, should_fetch in ((refresh.MARKET_SNAPSHOT_FETCH, True),
                                        (refresh.MARKET_SNAPSHOT_REUSE, False)):

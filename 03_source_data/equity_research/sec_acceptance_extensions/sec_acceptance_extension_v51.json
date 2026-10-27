@@ -1,0 +1,66 @@
+{
+  "admitted_at": "2026-10-26T08:16:55.000-04:00",
+  "artifact_sha256": "35e76ff03f9b27fc94cfd07978e3d89f1b3a3ae943f815cf7fdda04f92a2eb46",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v51",
+  "prior_extension_set_sha256": "f3a700d1fca4f6bd7a8e50e0219d9f3467409bb81f51eb55e615ae8f5361b821",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-26T10:41:26.000+00:00",
+      "accession_number": "0001193125-26-431009",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-26T08:16:55.000-04:00",
+      "cik": "1326801",
+      "entity_name": "Meta Platforms, Inc.",
+      "extension_record_sha256": "850dce52733ad70ed3ad4353e148221418ccd0885e763f6fe2c7e3c3c2d3d369",
+      "extension_version": "v51",
+      "filing_date": "2026-10-26",
+      "form": "S-3ASR",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "63a2241ddfa59b168517df049318f089397d7bb893bd45323706a26c033be891",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "ticker": "META"
+    },
+    {
+      "accepted_at": "2026-10-26T11:56:09.000+00:00",
+      "accession_number": "0001193125-26-431040",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-26T08:16:55.000-04:00",
+      "cik": "1326801",
+      "entity_name": "Meta Platforms, Inc.",
+      "extension_record_sha256": "c57141fc7d4bd711c59cd3344ac06c9c8b87c5a725222603f6b4af7c3319f7ea",
+      "extension_version": "v51",
+      "filing_date": "2026-10-26",
+      "form": "424B5",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "2638f26299f3225b0156139d5d4f6a3a189df48a8e96d7158c2bd35f5b8db0c3",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "ticker": "META"
+    },
+    {
+      "accepted_at": "2026-10-26T12:04:56.000+00:00",
+      "accession_number": "0001193125-26-431043",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-26T08:16:55.000-04:00",
+      "cik": "1326801",
+      "entity_name": "Meta Platforms, Inc.",
+      "extension_record_sha256": "5ae1efb9c77b1b355613773857601dfe8900556f634f06b20cc07185890cee1f",
+      "extension_version": "v51",
+      "filing_date": "2026-10-26",
+      "form": "424B5",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "f8f8fb3931bfc2dbe1f8736efe72fd509766947a91f23b3f5ccd8cbb36287067",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "ticker": "META"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

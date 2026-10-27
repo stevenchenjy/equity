@@ -205,20 +205,21 @@ class DailydecisionVerifierTests(unittest.TestCase):
                 self.assertEqual(guard._plist_issues(), [])
                 checks = []; upgrade.plist_checks(checks)
                 self.assertTrue(all(item["result"] == "PASS" for item in checks), checks)
-                for field, value in (("ProcessType", "Background"), ("RunAtLoad", True)):
-                    with self.subTest(field=field):
-                        target = scheduler / f"{LABEL}.plist.template"
-                        current = plistlib.loads(target.read_bytes())
-                        original = current[field]
-                        current[field] = value
-                        raw = plistlib.dumps(current)
-                        target.write_bytes(raw); (installed / f"{LABEL}.plist").write_bytes(raw)
-                        self.assertIn(f"{LABEL}:invariants", guard._plist_issues())
-                        checks = []; upgrade.plist_checks(checks)
-                        self.assertEqual(next(item for item in checks if item["id"] == f"{LABEL}.invariants")["result"], "FAIL")
-                        current[field] = original
-                        raw = plistlib.dumps(current)
-                        target.write_bytes(raw); (installed / f"{LABEL}.plist").write_bytes(raw)
+                for label in (LABEL, REFRESH_LABEL):
+                    for field, value in (("ProcessType", "Background"), ("RunAtLoad", label == LABEL)):
+                        with self.subTest(label=label, field=field):
+                            target = scheduler / f"{label}.plist.template"
+                            current = plistlib.loads(target.read_bytes())
+                            original = current[field]
+                            current[field] = value
+                            raw = plistlib.dumps(current)
+                            target.write_bytes(raw); (installed / f"{label}.plist").write_bytes(raw)
+                            self.assertIn(f"{label}:invariants", guard._plist_issues())
+                            checks = []; upgrade.plist_checks(checks)
+                            self.assertEqual(next(item for item in checks if item["id"] == f"{label}.invariants")["result"], "FAIL")
+                            current[field] = original
+                            raw = plistlib.dumps(current)
+                            target.write_bytes(raw); (installed / f"{label}.plist").write_bytes(raw)
 
 
 if __name__ == "__main__":
