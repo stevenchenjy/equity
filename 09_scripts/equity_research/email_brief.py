@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 
-EMAIL_BRIEF_VERSION = "equity_action_email_v3"
+EMAIL_BRIEF_VERSION = "equity_attention_email_v4"
 _NUMBER = r"-?\d+(?:\.\d+)?"
 _SOURCE_HOSTS = {"sec.gov", "www.sec.gov", "data.sec.gov"}
 _RESEARCH_HOSTS = _SOURCE_HOSTS | {
@@ -808,6 +808,9 @@ def email_subject(
     if decision.get("workflow_integrity"):
         if decision.get("capital_decision") and decision.get("evidence_gate", {}).get("passed") is False:
             return f"{prefix} Limited evidence update | {view['cycle']}"
+        if decision.get("email_brief_version") == "equity_attention_email_v4" and decision.get("capital_decision"):
+            from attention_email import subject_label
+            return f"{prefix} {subject_label(decision)} | {view['cycle']}"
         return f"{prefix} Action plan | {view['cycle']}"
     return f"{prefix} {view['label']}｜{view['cycle']}"
 
@@ -1041,6 +1044,20 @@ def intraday_risk_card(decision: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
+    if decision.get("email_brief_version") == "equity_attention_email_v4" and decision.get("capital_decision"):
+        from attention_email import cards, intraday_card, subject_label
+        sections = cards(decision)
+        if decision.get("evidence_gate", {}).get("passed") is False:
+            sections.insert(0, {"title": "Limited evidence update", "kind": "status", "group": "action",
+                "body": "Official-source validation is incomplete. New-capital drafts remain subject to their exact admission gates. Any separately admitted sell/protection draft below retains its own current conditions, original deadline and account checks.",
+                "sources": []})
+        risk = intraday_card(decision)
+        if risk:
+            sections.append(risk)
+        session = decision.get("market_gate", {}).get("expected_market_session", "unconfirmed")
+        return _render_cards(email_subject(decision), sections, title=subject_label(decision),
+            stamp=f"Dated reference session: {session} · Not live · Generated: {decision.get('generated_at', 'unconfirmed')}",
+            footer="Human execution only. Check current executable quotes, available shares/funds, orders and unrecorded changes. No order or fill is assumed; expired drafts are never renewed by this email.")
     from scheduled_email import cards
     session = decision.get('market_gate', {}).get('expected_market_session', 'unconfirmed')
     verified = decision.get('market_gate', {}).get('passed') is True

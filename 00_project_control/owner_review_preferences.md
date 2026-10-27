@@ -22,6 +22,26 @@ return or justify an unsupported concentration.
 
 ## Action-first regular email (2026-09-29)
 
+October 27 attention correction: an email must help the owner decide what is
+worth attention, rather than reproduce the research log. Lead with every current
+validated conditional action, preserving its whole-share size, session/time
+window, trigger, maximum or minimum price, invalidation, reassessment and skip
+conditions. When there is no admitted order draft, label the message "No new
+trade" and aggregate unchanged holdings once; a HOLD maintenance review is not a
+new opportunity. Show at most three current source-bound attention judgments,
+with their reason, countercase or failed gate and next decisive condition. Do
+not present a raw screen, internal work queue or an expired model as a list of
+high-potential investments. Keep full company cases and blocked-candidate
+diagnostics on the dashboard and in local reports. Completed negative or
+price-rejected cases must be distinguished from unfinished analysis. Preserve
+material account/risk failures, protective or exit drafts and unresolved earlier
+instructions. Do not substitute a valuation-review level or dated close for an
+admitted order price. This correction does not change numerical investment
+thresholds, allocation/risk limits, execution authority, delivery eligibility or
+the existing daily-brief cadence; any separately approved cadence change must be
+recorded and verified independently. Retain historical delivery bytes and their
+original rendering version.
+
 September 30 clarification: put BUY and SELL in prominent, separate leading
 cards, with whole-share quantity, maximum/limit/trigger price, applicable
 session and deadline, execution conditions and skip/failure rules together.

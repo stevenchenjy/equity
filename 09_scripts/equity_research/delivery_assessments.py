@@ -739,6 +739,15 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
     if isinstance(url, str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[a-f0-9]{64}', url):
         lines += ['', 'Private dashboard: ' + url]
     plain = '\n'.join(lines) + '\n'
+    if decision.get('email_brief_version') == 'equity_attention_email_v4':
+        # New presentation only. Historical v3 delivery envelopes retain their
+        # exact plain HTML for immutable archive/follow-through verification.
+        from email_brief import _render_cards
+        return _render_cards(subject, [{'title': subject.removeprefix('[Equity] '),
+            'body': '\n'.join(lines[1:]), 'sources': [], 'group': 'action'}],
+            title=subject.removeprefix('[Equity] '),
+            stamp='Dated research update · ' + str(decision.get('generated_at', '')),
+            footer='Human execution only. This system has submitted no order or trade.')
     body = '<html><body>' + ''.join('<p>' + html.escape(line) + '</p>' for line in lines if line) + '</body></html>'
     return subject, plain, body
 
