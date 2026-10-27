@@ -304,7 +304,6 @@
   "302": "test_index_core_research_routing.py",
   "303": "ActionEmailTests",
   "304": "InlineFacts",
-  "305": "update_manual_account.py",
   "306": "IntradayRiskPresentationTests",
   "307": "_DocumentPeriod",
   "308": "Equity Research — Dynamic Weight Policy",
@@ -319,8 +318,6 @@
   "317": "Validated full-universe market backup",
   "318": "Position purpose and reassessment",
   "319": "feedback_blocker",
-  "320": "CompleteCandidatePublicationTests",
-  "321": "test_shadow_archive_isolation.py",
   "322": "Local assessment host availability",
   "323": "install_dailyrefresh_scheduler.sh"
 }
