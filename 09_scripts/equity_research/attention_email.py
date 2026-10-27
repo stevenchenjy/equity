@@ -7,7 +7,9 @@ an investment opportunity or turns a review ceiling into an order price.
 from __future__ import annotations
 
 from collections import Counter
-from datetime import datetime
+from datetime import date, datetime
+from urllib.parse import urlsplit
+from zoneinfo import ZoneInfo
 
 from capital_decision import validate
 from capital_presentation import action_lines, optional_rotation_cards
@@ -34,6 +36,90 @@ def subject_label(decision):
     if any(card.get("kind") in {"buy", "sell"} for card in optional_rotation_cards(decision)):
         return "Conditional rotation review"
     return "Company attention" if current_priorities(decision) else "No new trade"
+
+
+def held_earnings_card(decision):
+    """Nearest retained held-company catalysts, never the raw calendar queue."""
+    report = decision.get("earnings_events", {})
+    if report.get("schema_version") != "equity_earnings_event_view_v1":
+        return None
+    try:
+        current = datetime.fromisoformat(decision["generated_at"])
+        if current.tzinfo is None:
+            return None
+        current = current.astimezone(ZoneInfo("America/New_York"))
+    except (KeyError, TypeError, ValueError):
+        return None
+    held = {row["ticker"] for row in decision.get("held_positions", [])}
+    upcoming = []
+    unresolved_timing = []
+    for row in report.get("events", []):
+        if (not isinstance(row, dict) or row.get("ticker") not in held
+                or row.get("status") == "cancelled" or row.get("timing") not in {None, "pre_event"}):
+            continue
+        try:
+            event_date = date.fromisoformat(row["event_date"])
+        except (KeyError, TypeError, ValueError):
+            unresolved_timing.append(row)
+            continue
+        if event_date < current.date():
+            continue
+        try:
+            event_at = datetime.fromisoformat(str(row.get("event_at", "")).replace("Z", "+00:00"))
+            if event_at.tzinfo is None:
+                event_at = None
+        except ValueError:
+            event_at = None
+        if event_at is not None and event_at <= current:
+            continue
+        upcoming.append((event_date, event_at.timestamp() if event_at else float("inf"), row, event_at))
+    if not upcoming and not unresolved_timing:
+        return None
+    upcoming.sort(key=lambda item: (item[0], item[1], str(item[2].get("ticker")), str(item[2].get("event_id", ""))))
+    lines = ["Held-company event risk; a calendar date is not a buy signal or a confirmed release time."]
+    sources = []
+    selected = upcoming[:3]
+    for event_date, _, row, event_at in selected:
+        timing = ("recorded event time " + str(row["event_at"]) if event_at else
+                  "exact event time unverified (" + str(row.get("session") or "session unverified").replace("_", " ") + ")")
+        confidence = str(row.get('date_confidence') or 'unverified').replace('_', ' ')
+        lines.append(f"{row['ticker']}: {event_date.isoformat()}; {timing}; date confidence: {confidence}.")
+        deadline = row.get("research_deadline_at")
+        due = row.get("status") in {"review_due", "reassessment_due"} or "earnings_event_review_due" in row.get("blockers", [])
+        try:
+            parsed = datetime.fromisoformat(str(deadline).replace("Z", "+00:00"))
+            due = due or (parsed.tzinfo is not None and parsed <= current)
+        except ValueError:
+            pass
+        state = str(row.get("status") or "unverified").replace("_", " ")
+        if row.get("status") == "eligible_conditional_plan":
+            state = "event review recorded; any current draft is shown separately in action cards"
+        lines.append(f"Research state: {state}; {'recheck due' if due else 'no due recheck recorded'}. "
+                     f"Research deadline: {deadline or 'unverified'}; this is not the event release time or a holding-plan extension.")
+        from email_brief import _safe_source
+        retained = [*row.get("sources", []), *(row.get("event_review") or {}).get("sources", [])]
+        event_links = []
+        for source in retained:
+            url = source.get("source_url", source.get("url", "")) if isinstance(source, dict) else ""
+            try:
+                host = urlsplit(url).hostname
+            except (TypeError, ValueError):
+                continue
+            safe = _safe_source(url, {host}) if host else ""
+            if safe and safe not in event_links:
+                event_links.append(safe)
+        sources.extend(event_links[:2])
+    if unresolved_timing:
+        remaining = 3 - len(selected)
+        shown_unknown = unresolved_timing[:remaining]
+        names = "; ".join(str(row["ticker"]) + " — event date/time unverified; research deadline "
+                          + str(row.get("research_deadline_at") or "unverified") for row in shown_unknown)
+        if names:
+            lines.append("Timing dependency: " + names + ". Verify the retained schedule before relying on it.")
+        if len(unresolved_timing) > len(shown_unknown):
+            lines.append(f"Additional unresolved held-event timing records: {len(unresolved_timing) - len(shown_unknown)}; verify the retained schedules on the dashboard.")
+    lines.append("Detailed expectations, downside cases and all retained source receipts remain on the dashboard. No trigger, price or order is created by this event warning.")
+    return section("Upcoming events in your holdings", lines, group="attention", sources=sources)
 
 
 def cards(decision):
@@ -100,6 +186,10 @@ def cards(decision):
         result.append(section("Opportunity shortlist", [
             "No current source-bound analyst shortlist is available. The analyst must complete the selection; a screen or unfinished queue is not a high-potential recommendation.",
         ], group="attention"))
+
+    held_events = held_earnings_card(decision)
+    if held_events:
+        result.append(held_events)
 
     holds = [row for row in rows if row["decision"] == "HOLD" and not row.get("order_draft")]
     if holds:

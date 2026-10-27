@@ -15,7 +15,7 @@ from _support import SCRIPT_DIR  # noqa: F401
 from daily_common import canonical_sha256
 from capital_presentation import action_lines
 from email_brief import EMAIL_BRIEF_VERSION, render_email
-from attention_email import cards
+from attention_email import cards, held_earnings_card
 import test_capital_decision as capital_tests
 from test_assessment_presentation import envelope
 import delivery_followthrough as follow
@@ -195,6 +195,73 @@ class AttentionEmailTests(unittest.TestCase):
             self.assertIn(row['reasons'][0], body)
             self.assertNotIn('Holding decision incomplete — TEST', body)
             self.assertNotIn('BUY — TEST', body)
+
+    def test_only_three_nearest_current_or_future_held_catalysts_keep_uncertainty_and_deadlines(self):
+        self.no_entry()
+        self.decision['held_positions'] = [{'ticker':ticker,'current_shares':1} for ticker in ('MSFT','AMZN','NVDA','FOUR','OLD')]
+        self.decision['generated_at'] = '2026-10-27T15:50:00-04:00'
+        def event(ticker, day, **extra):
+            return {'ticker':ticker,'event_date':day,'timing':'pre_event','status':'reviewed_without_entry',
+                    'date_confidence':'exchange_calendar_estimate','event_at':None,'session':'after_close',
+                    'research_deadline_at':day+'T16:00:00-04:00','blockers':[],
+                    'sources':[{'source_url':'https://api.nasdaq.com/api/calendar/earnings?date='+day}], **extra}
+        self.decision['earnings_events'] = {'schema_version':'equity_earnings_event_view_v1','status':'ready',
+            'events':[event('UNHELD'+str(i),'2026-10-27') for i in range(80)] + [
+                event('OLD','2026-10-26'),
+                event('MSFT','2026-10-28',status='review_due',blockers=['earnings_event_review_due']),
+                event('AMZN','2026-10-29'),
+                event('NVDA','2026-10-30',date_confidence='issuer_confirmed',event_at='2026-10-30T17:00:00-04:00'),
+                event('FOUR','2026-11-01'),
+                event('OLD','2026-10-27',event_at='2026-10-27T09:00:00-04:00'),
+            ]}
+        before = copy.deepcopy(self.decision)
+        card = held_earnings_card(self.decision)
+        self.assertEqual(card['group'], 'attention')
+        self.assertIn('MSFT: 2026-10-28; exact event time unverified', card['body'])
+        self.assertIn('AMZN: 2026-10-29', card['body'])
+        self.assertIn('NVDA: 2026-10-30; recorded event time 2026-10-30T17:00:00-04:00', card['body'])
+        self.assertIn('date confidence: exchange calendar estimate', card['body'])
+        self.assertIn('Research state: review due; recheck due', card['body'])
+        self.assertIn('Research deadline: 2026-10-28T16:00:00-04:00', card['body'])
+        for absent in ('UNHELD','OLD:','FOUR:'):
+            self.assertNotIn(absent, card['body'])
+        self.assertEqual(len(card['sources']), 3)
+        self.assertLess(len(card['body']), 2000)
+        self.assertNotIn('Entry: LIMIT', card['body'])
+        self.assertEqual(before, self.decision)
+
+    def test_held_event_warning_keeps_only_safe_retained_links_without_inventing_schedule(self):
+        self.decision['held_positions'] = [{'ticker':'MSFT','current_shares':1}]
+        self.decision['earnings_events'] = {'schema_version':'equity_earnings_event_view_v1','events':[
+            {'ticker':'MSFT','event_date':'2026-09-23','status':'detected','date_confidence':'exchange_calendar_estimate',
+             'sources':[{'source_url':'javascript:alert(1)'},{'source_url':'https://user:secret@example.test/private'},
+                        {'source_url':'https://www.sec.gov/Archives/report.htm'}]}]}
+        card = held_earnings_card(self.decision)
+        self.assertIn('exact event time unverified', card['body'])
+        self.assertIn('Research deadline: unverified', card['body'])
+        self.assertEqual(card['sources'], ['https://www.sec.gov/Archives/report.htm'])
+
+    def test_unknown_held_event_date_remains_an_explicit_timing_dependency(self):
+        self.decision['held_positions'] = [{'ticker':'MSFT','current_shares':1}]
+        self.decision['earnings_events'] = {'schema_version':'equity_earnings_event_view_v1','events':[
+            {'ticker':'MSFT','event_date':None,'status':'schedule_conflict','event_at':None,
+             'research_deadline_at':'2026-09-23T16:00:00-04:00'}]}
+        card = held_earnings_card(self.decision)
+        self.assertIn('Timing dependency: MSFT — event date/time unverified', card['body'])
+        self.assertIn('2026-09-23T16:00:00-04:00', card['body'])
+        self.assertNotIn('no event', card['body'].lower())
+
+    def test_known_and_unknown_held_events_share_the_three_named_event_budget(self):
+        self.decision['held_positions'] = [{'ticker':ticker,'current_shares':1} for ticker in ('ONE','TWO','THREE','UNKONE','UNKTWO','UNKTHREE')]
+        known = [{'ticker':ticker,'event_date':'2026-09-23','status':'detected'} for ticker in ('ONE','TWO','THREE')]
+        unknown = [{'ticker':ticker,'event_date':None,'status':'schedule_conflict'} for ticker in ('UNKONE','UNKTWO','UNKTHREE')]
+        self.decision['earnings_events'] = {'schema_version':'equity_earnings_event_view_v1','events':known+unknown}
+        card = held_earnings_card(self.decision)
+        for ticker in ('ONE','TWO','THREE'):
+            self.assertIn(ticker+': 2026-09-23', card['body'])
+        for ticker in ('UNKONE','UNKTWO','UNKTHREE'):
+            self.assertNotIn(ticker, card['body'])
+        self.assertIn('Additional unresolved held-event timing records: 3', card['body'])
 
     def test_v4_alert_uses_shared_shell_and_preserves_withdrawal(self):
         alert = envelope(self.decision, removed=['OLD'], priority=False)
