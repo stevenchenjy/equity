@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import subprocess
 import sys
+import time
 
 from daily_common import ROOT, now_et
 from swing_observer import MAX_WORKER_SECONDS, due_window, run, _receipt
@@ -21,8 +22,17 @@ def main() -> int:
                           "email_sent": False, "trade_placed": False}))
         return 0
     if args.worker:
+        started = time.monotonic()
         try:
             value = run(args.root)
+            if value.get("status") == "observed":
+                from swing_benchmark_quotes import after_observer
+                remaining = max(0, MAX_WORKER_SECONDS - (time.monotonic() - started) - 1)
+                try:
+                    value["paired_benchmark_collection"] = after_observer(args.root, remaining_seconds=remaining, observer_result=value)
+                except (OSError, ValueError, KeyError, TypeError, RuntimeError):
+                    value["paired_benchmark_collection"] = {"status": "unavailable", "failure": "paired_benchmark_source_or_admission_unverified",
+                                                             "capital_authority": False, "email_sent": False, "trade_placed": False}
         except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
             value = {"status": "unavailable", "failure": str(exc), "email_sent": False, "trade_placed": False}
         print(json.dumps(value))

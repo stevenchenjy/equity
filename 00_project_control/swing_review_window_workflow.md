@@ -90,6 +90,46 @@ portfolio capacity, drawdowns, adverse regimes and untouched holdout evidence
 require review. A count, favorable mean or software pass cannot promote a
 version. Exact strategy review and explicit owner adoption remain necessary.
 
+### Separately versioned matched benchmarks
+
+`01_policies/swing_benchmarks.json` and `swing_benchmarks.py` define a separate,
+zero-capital SPY and QQQM comparison protocol. They do not change the frozen v1
+or v2 signal definitions, original observations, or their implementation hashes.
+Future-opening stock paths compare with the same entry session, exit session,
+horizon and predeclared cost scenario. A daily opening price cannot stand in
+for an owner-window or delayed entry. Such comparisons require original paired
+stock and ETF last sales, with explicit clocks and the maximum permitted span.
+Missing, delayed or mismatched observations remain visible dependencies.
+
+The existing observer may make at most two supplemental ETF requests for new
+source-valid stock entry observations, within its unchanged 75-second worker
+budget. It makes no benchmark request when there is no new eligible entry or
+insufficient remaining budget. Supplemental receipts are isolated under
+`03_source_data/equity_research/swing_benchmark_quotes.local/`; they never replace
+the held-risk batch or canonical account prices. The separate append-only
+comparison history lives under `08_reviews/swing_benchmarks.local/`.
+
+Raw unadjusted price comparisons and source-reviewed fixed-horizon modeled
+paths remain distinct. Both legs require exact source coverage and applicable
+corporate-action review before qualification. Neither is total-return alpha,
+an actual fill, a managed stop-strategy return or sufficient adoption evidence.
+The dashboard revalidates the comparison's own proof at read time, reports
+unique outcome denominators separately from overlapping horizons and scenarios,
+and withholds results whose source or protocol proof fails.
+
+The separate `swing_benchmark_review.py --root ROOT --input PROPOSAL` path
+validates a forward-window-only ETF corporate-action review; `--apply` appends
+the accepted review under the existing runtime-then-pipeline lock discipline.
+Its documented schema binds the exact immutable comparison, protocol, forward
+bars and paired quote source. It requires retained issuer/SEC and independent
+exchange evidence, authored reasoning, coverage and limitations after the exit
+session. A distribution before entry cannot by itself invalidate this narrower
+benchmark-path review. An unsupported split or distribution inside the evaluated
+window remains a dependency. This review does not clear the original stock
+signal history; the stock leg still needs its independent existing review.
+Accepted research reviews require the normal full no-send recomposition, with
+no additional delivery purpose or analyst slot.
+
 At existing analyst reviews, inspect the handoff and outside research tasks
 after urgent held risks and imminent events. Complete a sourced growth/company/
 countercase/timing judgment through maintained writers, or retain its precise

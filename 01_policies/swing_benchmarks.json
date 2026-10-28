@@ -1,0 +1,33 @@
+{
+  "schema_version": "equity_swing_benchmark_policy_v1",
+  "version": "spy-qqqm-matched-paths-v1-20261028",
+  "registered_at": "2026-10-28T00:42:38.823680-04:00",
+  "benchmarks": [
+    "SPY",
+    "QQQM"
+  ],
+  "horizons_sessions": [
+    5,
+    10,
+    14
+  ],
+  "one_way_cost_bps": [
+    10,
+    25,
+    50
+  ],
+  "commission_per_share_usd": 0.0,
+  "paired_mark_max_span_seconds": 120,
+  "research_only": true,
+  "capital_authority": false,
+  "actionable_quantity": 0,
+  "automatic_action_allowed": false,
+  "execution_quote": false,
+  "future_open_rule": "Use the same first future regular-session open and named horizon close as the immutable stock outcome, using exact source-admitted benchmark bars in that original outcome dataset. Never select an entry after observing returns.",
+  "owner_window_rule": "Require an independently admitted supplemental pair linked to the exact original stock entry-observation record. Use actual paired SPY/QQQM last-sale marks within120seconds; never substitute09:30open or the stock mark for a missing benchmark. These are bounded-asynchronous observations, not simultaneous executable fills.",
+  "qualification_rule": "Raw unadjusted price-path/cost differences are not economic total returns. Reviewed fixed-path comparisons require exact source-bound stock AND benchmark split/distribution/corporate-action reviews covering the named path. The existing swing_outcome_review.review remains required for the exact stock leg. The separate swing_benchmark_review.review validates the exact immutable comparison, protocol, ETF forward OHLCV hash, paired-mark source where applicable, and independent retained official evidence over entry through exit only. It supports an explicit authored no-forward-actions judgment; actions before that forward window do not automatically block it and it never clears original stock setup history. Unsupported forward split/dividend adjustments remain unresolved. An independently reviewed ETF future-open outcome may alternatively supply only corporate-action coverage when ticker, horizon and every forward OHLCV bar/date match; its original entry price or performance is never reused. Risk-managed strategy qualification, alpha, statistical significance and profitability remain unestablished.",
+  "denominator_rule": "Count distinct stock-outcome hashes separately from benchmark pairs and overlapping horizon/method/cohort groups. Delay variants and two benchmarks are not independent trades. Retain missed, failed, unselected, corrected and unpaired cases.",
+  "prospective_rule": "If this comparison protocol was registered after entry, label the measurement retrospective and never count it as prospective evidence.",
+  "adverse_regime_rule": "Original authored regime remains unrecorded when absent and cannot satisfy an adverse-cohort adoption requirement. A separate fixed supplemental descriptor uses the original observed SPY close and original 20/50-session arithmetic means: close<SMA20<SMA50 is adverse_price_trend, close>SMA20>SMA50 is positive_price_trend, otherwise mixed_price_trend; missing original full scope is unknown. It never infers adversity from later losses, and is prospective only when this protocol predates entry. This descriptor is not original strategy authorship or an adoption qualification.",
+  "promotion": "No strategy/capital adoption or risk-limit change. Exact pairing and positive raw/reviewed price differences cannot authorize a trade."
+}

@@ -230,7 +230,8 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
         result = dict(schema_version='equity_strategy_framework_v1', generated_at=raw.get('generated_at'),
             status='unverified', automatic_action_allowed=False, strategies=[], decisions=[], analyst_handoff=[],
             validation_error='Current readiness source, capital or implementation proof is unverified.',
-            swing_research=raw.get('swing_research'), swing_coverage=raw.get('swing_coverage'))
+            swing_research=raw.get('swing_research'), swing_coverage=raw.get('swing_coverage'),
+            swing_benchmarks=raw.get('swing_benchmarks'))
     swing = result.get('swing_research')
     if isinstance(swing, dict):
         try:
@@ -252,6 +253,15 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
             result['swing_coverage'] = dict(schema_version='equity_swing_coverage_v1',
                 status='unavailable', candidates=[], analyst_handoff=[], capital_authority=False,
                 actionable_quantity=0, blockers=['Broad research history and current source coverage are unverified.'])
+    if isinstance(result.get('swing_benchmarks'), dict):
+        try:
+            from swing_benchmarks import revalidate_projection as revalidate_benchmarks
+            result['swing_benchmarks'] = revalidate_benchmarks(root, result['swing_benchmarks'], current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            result['swing_benchmarks'] = dict(schema_version='equity_swing_benchmarks_v1',
+                status='unverified', research_only=True, capital_authority=False,
+                actionable_quantity=0, comparisons=[], profitability_established=False,
+                dependencies=['Current benchmark protocol, original stock observations or benchmark sources are unverified.'])
     actions = {r.get('ticker'): r for r in (capital or {}).get('decisions', [])}
     for row in result.get('decisions', []):
         action = actions.get(row.get('ticker'), {})

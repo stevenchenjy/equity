@@ -502,6 +502,46 @@ class SnapshotTests(unittest.TestCase):
         self.assertFalse(value['capital_authority'])
         self.assertTrue(value.get('blockers') or value.get('dependencies'))
 
+    def test_benchmark_evaluation_uses_independent_read_time_proof(self):
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        from copy import deepcopy
+        value = dict(schema_version='equity_swing_benchmarks_v1', status='experimental',
+                     comparisons=[], capital_authority=False, actionable_quantity=0)
+        framework = dict(schema_version='equity_strategy_framework_v1', decisions=[],
+                         analyst_handoff=[], swing_benchmarks=value)
+        before = deepcopy(framework)
+        projected = {**value, 'read_time': self.now.isoformat()}
+        validator = Mock(return_value=projected)
+        with patch('decision_readiness.validate_projection'), \
+             patch.dict('sys.modules', {'swing_benchmarks': Mock(revalidate_projection=validator)}):
+            result = strategy_framework_view(self.root, {'strategy_framework': framework}, self.now,
+                                             capital=None, market_current=True)
+        validator.assert_called_once_with(self.root, value, self.now)
+        self.assertEqual(result['swing_benchmarks'], projected)
+        self.assertEqual(framework, before)
+        self.assertEqual(result['decisions'], [])
+
+    def test_invalid_benchmark_sources_suppress_claimed_results(self):
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        framework = dict(schema_version='equity_strategy_framework_v1', decisions=[],
+            swing_benchmarks=dict(schema_version='equity_swing_benchmarks_v1',
+                comparisons=[{'ticker': 'FAKE', 'excess_return_pct': 50}],
+                profitability_established=True, capital_authority=True))
+        with patch('decision_readiness.validate_projection'), \
+             patch.dict('sys.modules', {'swing_benchmarks': Mock(revalidate_projection=Mock(
+                 side_effect=ValueError('changed_original_benchmark_source')))}):
+            result = strategy_framework_view(self.root, {'strategy_framework': framework}, self.now,
+                                             capital=None, market_current=True)
+        value = result['swing_benchmarks']
+        self.assertEqual(value['status'], 'unverified')
+        self.assertEqual(value['comparisons'], [])
+        self.assertFalse(value['capital_authority'])
+        self.assertFalse(value['profitability_established'])
+        self.assertEqual(value['actionable_quantity'], 0)
+        self.assertTrue(value['dependencies'])
+
     def test_unverified_readiness_cannot_restore_authored_tasks_or_accepted_records(self):
         from server import strategy_framework_view
         framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,

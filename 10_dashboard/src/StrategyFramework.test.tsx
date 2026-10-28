@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
 import StrategyFrameworkPanel, {swingReviewState} from './StrategyFramework';
 import {CapitalActions} from './CapitalActions';
-import type {Snapshot, StrategyFramework, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage} from './domain';
+import type {Snapshot, StrategyFramework, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks} from './domain';
 
 const now=Date.parse('2026-10-28T08:00:00-04:00');
 const framework:StrategyFramework={schema_version:'equity_strategy_framework_v1',generated_at:'2026-10-28T09:45:00-04:00',
@@ -218,4 +218,84 @@ test('complete cached adjusted files remain provisional rather than becoming adm
   assert.match(html,/Provisional provider-adjusted histories: 2/);
   assert.match(html,/excluded from technical-history admission/);
   assert.doesNotMatch(html,/Independently admitted research histories: 2|History admitted for experimental research/);
+});
+const benchmarkZero:SwingBenchmarks={schema_version:'equity_swing_benchmarks_v1',generated_at:'2026-10-28T08:00:00-04:00',status:'pending_forward_evidence',
+  protocol:{version:'synthetic-benchmark-v1',sha256:'a'.repeat(64),benchmarks:['SPY','QQQM'],horizons:[5,10,14],costs_bps:[10,25,50]},
+  stock_source:{path:'08_reviews/synthetic/stock-ledger.jsonl',sha256:'b'.repeat(64),records:33,observations:33,outcomes:0},
+  summary:{unique_stock_outcomes:0,unique_matched_stock_outcomes:0,comparison_pairs:0,raw_pairs:0,reviewed_pairs:0,unique_reviewed_stock_outcomes:0,
+    pending_stock_horizons:3,unmatched_pairs:0,missed_or_skipped_windows:0,qualified_strategy_paths:0,genuine_entry_count:0,paired_entry_count:0,unpaired_entry_count:0},
+  groups:[{benchmark:'SPY',entry_method:'benchmark_future_open',horizon_sessions:5,cohort:'selected',raw_pairs:0,reviewed_pairs:0,
+    raw_mean_excess_price_path_pct_by_cost_bps:{'10':null,'25':null,'50':null},reviewed_mean_excess_price_path_pct_by_cost_bps:{'10':null,'25':null,'50':null}}],
+  dependencies:[{code:'forward_horizon_pending',count:3}],profitability_established:false,reliable_win_rate:null,research_only:true,
+  automatic_action_allowed:false,capital_authority:false,actionable_quantity:0,execution_quote:false};
+const renderBenchmark=(view:SwingBenchmarks,unavailable=false)=>renderToStaticMarkup(<StrategyFrameworkPanel
+  data={{...snapshot,strategy_framework:{...framework,swing_benchmarks:view}}} now={now} unavailable={unavailable}/>);
+test('zero-matured benchmark evidence has explicit pending counts and no invented zero excess return',()=>{
+  const html=renderBenchmark(benchmarkZero);
+  for(const text of ['Matched SPY / QQQM evaluation','No matured stock-horizon outcome','Pending stock horizons: 3',
+    'Qualified strategy execution paths: 0','Unestablished','forward_horizon_pending'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/0\.00 pp|win rate: 0|BUY LIMIT|SELL STOP/);
+});
+test('benchmark counts use unique source denominators rather than sums across overlapping groups',()=>{
+  const group={...benchmarkZero.groups![0],raw_pairs:1,raw_mean_excess_price_path_pct_by_cost_bps:{'10':1.25,'25':.75,'50':-.3}};
+  const view={...benchmarkZero,status:'raw_comparisons_available' as const,
+    summary:{...benchmarkZero.summary!,unique_stock_outcomes:1,unique_matched_stock_outcomes:1,comparison_pairs:2,raw_pairs:2},
+    groups:[group,{...group,cohort:'all_common_stocks'},{...group,benchmark:'QQQM'},{...group,benchmark:'QQQM',cohort:'all_common_stocks'}]};
+  const html=renderBenchmark(view);
+  assert.match(html,/<dt>Source\/time-matched pairs<\/dt><dd>2<\/dd>/);
+  assert.match(html,/Distinct matched stock-horizon outcomes: 1/);
+  for(const text of ['+1.25 pp','+0.75 pp','-0.30 pp','percentage points','groups overlap'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/\+1\.25%|win rate:|BUY LIMIT/);
+});
+test('reviewed fixed paths remain separate from qualified strategy execution and adoption',()=>{
+  const view={...benchmarkZero,status:'reviewed_comparisons_available' as const,
+    summary:{...benchmarkZero.summary!,unique_stock_outcomes:1,unique_matched_stock_outcomes:1,comparison_pairs:2,reviewed_pairs:2,unique_reviewed_stock_outcomes:1},
+    groups:benchmarkZero.groups!.map(group=>({...group,reviewed_pairs:2,reviewed_mean_excess_price_path_pct_by_cost_bps:{'10':.5,'25':0,'50':-.5}}))};
+  const html=renderBenchmark(view);
+  for(const text of ['Reviewed fixed-path pairs','+0.50 pp','0.00 pp','-0.50 pp','Qualified strategy execution paths: 0',
+    'strategy promotion remain unestablished'])assert.ok(html.includes(text),text);
+});
+test('read-time benchmark overlay is labelled and leaves original sealed summary unchanged',()=>{
+  const view={...benchmarkZero,read_time_summary:{...benchmarkZero.summary!,unique_stock_outcomes:1,unique_matched_stock_outcomes:1,comparison_pairs:2,raw_pairs:2},
+    read_time_groups:[],read_time_dependencies:[{code:'owner_window_pair_missing',count:1}],
+    read_time_proof:{generated_at:'2026-10-28T14:50:00-04:00',stock_ledger_sha256:'c'.repeat(64),comparison_ledger_sha256:'d'.repeat(64),
+      protocol_sha256:'a'.repeat(64),original_projection_sha256:'e'.repeat(64)}};
+  const before=JSON.stringify(view);const html=renderBenchmark(view);
+  assert.match(html,/<dt>Source\/time-matched pairs<\/dt><dd>2<\/dd>/);
+  assert.match(html,/Comparison counts were revalidated/);assert.match(html,/original sealed publication/);
+  assert.ok(html.includes('owner_window_pair_missing'));assert.equal(JSON.stringify(view),before);
+});
+test('unmatched owner-window data cannot acquire assumed benchmark entries or zero returns',()=>{
+  const view={...benchmarkZero,summary:{...benchmarkZero.summary!,unique_stock_outcomes:2,pending_stock_horizons:0,unmatched_pairs:4,missed_or_skipped_windows:1},
+    groups:[],dependencies:[{code:'owner_window_pair_span_exceeds_120_seconds',count:1},{code:'paired_quote_missing',count:3}]};
+  const html=renderBenchmark(view);
+  for(const text of ['source/time-matched benchmark comparison remains unavailable','unmatched matured comparisons: 4',
+    'missed or skipped owner windows: 1','owner_window_pair_span_exceeds_120_seconds','paired_quote_missing'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/0\.00 pp|Matched stock-versus-benchmark paths are available/);
+});
+test('benchmark proof failure and failed dashboard read withhold old comparison results',()=>{
+  for(const [view,unavailable] of [[{...benchmarkZero,status:'unverified',summary:{...benchmarkZero.summary!,comparison_pairs:999}},false],[benchmarkZero,true]] as const){
+    const html=renderBenchmark(view as SwingBenchmarks,unavailable);
+    assert.match(html,/Current benchmark source proof is unavailable/);assert.match(html,/Unverified/);
+    assert.doesNotMatch(html,/<dd>999<\/dd>|0\.00 pp|Raw excess price path/);
+  }
+});
+test('unpaired genuine owner-window entries remain visible before any outcome matures',()=>{
+  const view={...benchmarkZero,summary:{...benchmarkZero.summary!,genuine_entry_count:1,paired_entry_count:0,unpaired_entry_count:1,nonqualifying_window_transitions:2},
+    supplemental_poll:{status:'waiting_on_paired_observations',failure:'paired_quote_missing',completed_at:'2026-10-28T09:49:00-04:00',source:{path:'08_reviews/synthetic/poll.json',sha256:'c'.repeat(64)}}};
+  const html=renderBenchmark(view);
+  assert.match(html,/<dt>Entries missing matched benchmark observations<\/dt><dd>1<\/dd>/);
+  assert.match(html,/<dt>Unique stock-horizon outcomes<\/dt><dd>0<\/dd>/);
+  for(const text of ['waiting_on_paired_observations','paired_quote_missing','08_reviews/synthetic/poll.json','c'.repeat(64),
+    'Retained nonqualifying window transitions: 2','Pairing gaps are visible before','b'.repeat(64)])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/undefined|0\.00 pp|win rate: 0/);
+});
+test('latest source-bound paired poll overlays an earlier pending publication without inventing a mature outcome',()=>{
+  const view={...benchmarkZero,read_time_summary:{...benchmarkZero.summary!,genuine_entry_count:1,paired_entry_count:1,unpaired_entry_count:0},
+    supplemental_poll:{status:'waiting_on_paired_observations'},read_time_supplemental_poll:{status:'paired',completed_at:'2026-10-28T14:50:00-04:00',source:{path:'08_reviews/synthetic/latest-poll.json',sha256:'d'.repeat(64)}},
+    read_time_proof:{generated_at:'2026-10-28T14:50:00-04:00',stock_ledger_sha256:'b'.repeat(64),comparison_ledger_sha256:'e'.repeat(64),protocol_sha256:'a'.repeat(64),original_projection_sha256:'f'.repeat(64)}};
+  const html=renderBenchmark(view);
+  assert.match(html,/Latest read-time poll.*status: paired/);
+  assert.match(html,/<dt>Entries with matched benchmark observations<\/dt><dd>1<\/dd>/);
+  assert.match(html,/No matured stock-horizon outcome/);assert.doesNotMatch(html,/status: waiting_on_paired_observations|undefined/);
 });

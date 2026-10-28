@@ -380,6 +380,15 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         swing_coverage = swing_coverage_build(root, current=current)
     except (ImportError, OSError, ValueError, KeyError, TypeError):
         swing_coverage = {"status": "unavailable", "analyst_handoff": [], "blockers": ["outside_universe_source_coverage_unverified"]}
+    benchmark_context = framework.get("swing_benchmarks", {})
+    if isinstance(benchmark_context, dict) and benchmark_context:
+        try:
+            from swing_benchmarks import revalidate_projection as validate_benchmarks
+            benchmark_context = validate_benchmarks(root, benchmark_context, current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            benchmark_context = {"status": "unverified", "capital_authority": False}
+    else:
+        benchmark_context = {"status": "not_yet_published", "capital_authority": False}
     from intraday_assessment import attention as intraday_attention
     intraday = intraday_attention(root, current)
     stores = _hashes(root, MUTABLE_STORES)
@@ -415,6 +424,8 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
                 "swing_candidates": swing_context.get("candidates", [])[:3],
                 "outside_universe_handoff": swing_coverage.get("analyst_handoff", [])[:3],
                 "swing_coverage_status": swing_coverage.get("status", "unavailable"),
+                "swing_benchmark_status": benchmark_context.get("status", "unverified"),
+                "swing_benchmark_dependencies": benchmark_context.get("dependencies", [])[:5],
                 "authority": "Research continuity only; revalidate current sources and existing capital rules before any amendment.",
                 "capital_authority": False,
             },

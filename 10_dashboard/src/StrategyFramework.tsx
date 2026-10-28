@@ -1,4 +1,4 @@
-import type {Snapshot, StrategyReadiness, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage} from './domain';
+import type {Snapshot, StrategyReadiness, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks} from './domain';
 import {money, timeLabel} from './domain';
 
 const readinessLabels:Record<StrategyReadiness['classification'],string>={
@@ -129,6 +129,83 @@ function SwingCoveragePanel({view,unavailable}:{view:SwingCoverage;unavailable:b
   </section>;
 }
 
+function BenchmarkEvaluation({view,unavailable}:{view:SwingBenchmarks;unavailable:boolean}) {
+  if(view.schema_version!=='equity_swing_benchmarks_v1')return null;
+  const allowed=view.research_only===true&&view.capital_authority===false&&view.actionable_quantity===0
+    &&view.automatic_action_allowed===false&&view.execution_quote===false&&view.profitability_established===false;
+  const protocol=view.protocol;
+  const protocolVerified=Array.isArray(protocol?.benchmarks)&&protocol.benchmarks.length===2&&protocol.benchmarks.includes('SPY')&&protocol.benchmarks.includes('QQQM')
+    &&Array.isArray(protocol.horizons)&&protocol.horizons.length>0&&protocol.horizons.every(value=>Number.isFinite(value)&&value>0)
+    &&Array.isArray(protocol.costs_bps)&&protocol.costs_bps.length>0&&protocol.costs_bps.every(value=>Number.isFinite(value)&&value>=0);
+  const current=allowed&&protocolVerified&&!unavailable&&['pending_forward_evidence','raw_comparisons_available','reviewed_comparisons_available'].includes(view.status);
+  const readTime=Boolean(view.read_time_summary&&view.read_time_proof);
+  const summary=current?(readTime?view.read_time_summary:view.summary):undefined;
+  const groups=current?(readTime?view.read_time_groups:view.groups)??[]:[];
+  const dependencies=(readTime?view.read_time_dependencies:view.dependencies)??[];
+  const poll=readTime?view.read_time_supplemental_poll:view.supplemental_poll;
+  const metric=(value:unknown)=>count(value)===null?'Unverified':String(count(value));
+  const excess=(value:unknown,pairs:number)=>pairs>0&&typeof value==='number'&&Number.isFinite(value)
+    ?`${value>0?'+':''}${value.toFixed(2)} pp`:'Unestablished';
+  const costs=Array.isArray(protocol?.costs_bps)?protocol.costs_bps:[];
+  const matched=count(summary?.comparison_pairs);
+  const available=count(summary?.unique_stock_outcomes);
+  const methodLabels:Record<string,string>={benchmark_future_open:'First future open (modeled)',
+    observed_owner_window_mark_not_fill:'Matched owner-window marks',
+    observed_owner_window_delay_3_minutes_mark_not_fill:'Owner window + 3 minutes',
+    observed_owner_window_delay_5_minutes_mark_not_fill:'Owner window + 5 minutes',
+    observed_owner_window_delay_10_minutes_mark_not_fill:'Owner window + 10 minutes'};
+  return <section className="matched-benchmarks" aria-label="Matched SPY and QQQM evaluation">
+    <h3>Matched SPY / QQQM evaluation</h3>
+    {!current?<p role="status">Current benchmark source proof is unavailable. Comparison results are withheld until the stock path, benchmark history and timing can be validated.</p>
+      :available===null||matched===null?<p>The current source ledger does not establish the comparison counts. Results remain unverified.</p>
+      :available===0?<p>No matured stock-horizon outcome is available for a matched comparison yet. Investment effectiveness remains unestablished.</p>
+      :matched===0?<p>Matured stock-horizon outcomes exist; a source/time-matched benchmark comparison remains unavailable.</p>
+      :<p>Matched stock-versus-benchmark paths are available for research review. Realized portfolio performance and investment edge remain unestablished.</p>}
+    <dl className="benchmark-summary benchmark-entry-summary" aria-label="Owner-window entry pairing">
+      <div><dt>Observed qualifying entry variants</dt><dd>{metric(summary?.genuine_entry_count)}</dd></div>
+      <div><dt>Entries with matched benchmark observations</dt><dd>{metric(summary?.paired_entry_count)}</dd></div>
+      <div><dt>Entries missing matched benchmark observations</dt><dd>{metric(summary?.unpaired_entry_count)}</dd></div>
+    </dl>
+    <p className="form-hint">Pairing gaps are visible before the 5 / 10 / 14-session outcomes mature. These source-bound entry variants are observations, not independent trades or fills.</p>
+    <dl className="benchmark-summary">
+      <div><dt>Unique stock-horizon outcomes</dt><dd>{metric(summary?.unique_stock_outcomes)}</dd></div>
+      <div><dt>Source/time-matched pairs</dt><dd>{metric(summary?.comparison_pairs)}</dd></div>
+      <div><dt>Raw pairs awaiting joint review</dt><dd>{metric(summary?.raw_pairs)}</dd></div>
+      <div><dt>Reviewed fixed-path pairs</dt><dd>{metric(summary?.reviewed_pairs)}</dd></div>
+    </dl>
+    <p className="form-hint">Distinct matched stock-horizon outcomes: {metric(summary?.unique_matched_stock_outcomes)} · distinct reviewed stock-horizon outcomes: {metric(summary?.unique_reviewed_stock_outcomes)}.</p>
+    <p className="form-hint">Counts use the source ledger's distinct stock-outcome identities. Per-benchmark, entry-method and horizon groups overlap; adding the rows would not produce a count of independent trades.</p>
+    <p>Pending stock horizons: {metric(summary?.pending_stock_horizons)} · unmatched matured comparisons: {metric(summary?.unmatched_pairs)} · missed or skipped owner windows: {metric(summary?.missed_or_skipped_windows)}.</p>
+    {summary?.nonqualifying_window_transitions!==undefined?<p className="form-hint">Retained nonqualifying window transitions: {metric(summary.nonqualifying_window_transitions)}. A later qualifying observation can recover a window without erasing its earlier transition.</p>:null}
+    <p>Qualified strategy execution paths: {metric(summary?.qualified_strategy_paths)}. A reliable win rate, profitability and strategy promotion remain unestablished. Capital authority remains zero.</p>
+    {current&&readTime?<small>Comparison counts were revalidated at {timeLabel(view.read_time_proof?.generated_at)}. The original sealed publication and its source observations remain unchanged.</small>:null}
+    <p className="form-hint">Raw excess values are stock-minus-benchmark price-path differences in percentage points under the declared cost sensitivities. Reviewed comparisons require both stock and benchmark source/corporate-action review. Matched owner-window marks require the protocol's timing proof and do not establish execution fills.</p>
+    {groups.length?<details><summary>Matched horizons, entry methods and cost sensitivities</summary>
+      <p>One-way cost assumptions: {costs.map(cost=>`${cost} bps`).join(' / ')} for each side of both paths. Horizons stay separate.</p>
+      <div className="table-scroll benchmark-table-scroll" tabIndex={0} aria-label="Benchmark comparison groups"><table className="benchmark-table"><thead><tr>
+        <th>Benchmark / horizon</th><th>Entry method / cohort</th><th>Raw / reviewed pairs</th><th>Raw excess price path</th><th>Reviewed fixed-path excess</th>
+      </tr></thead><tbody>{groups.map((group,index)=><tr key={`${group.benchmark}:${group.entry_method}:${group.horizon_sessions}:${group.cohort}:${index}`}>
+        <td>{group.benchmark} · {group.horizon_sessions} sessions</td><td>{methodLabels[group.entry_method]??group.entry_method.replaceAll('_',' ')}<br/>{group.cohort.replaceAll('_',' ')}</td>
+        <td>{group.raw_pairs} / {group.reviewed_pairs}</td>
+        <td>{costs.map(cost=><div key={cost}>{cost} bps: {excess(group.raw_mean_excess_price_path_pct_by_cost_bps?.[String(cost)],group.raw_pairs)}</div>)}</td>
+        <td>{costs.map(cost=><div key={cost}>{cost} bps: {excess(group.reviewed_mean_excess_price_path_pct_by_cost_bps?.[String(cost)],group.reviewed_pairs)}</div>)}</td>
+      </tr>)}</tbody></table></div>
+    </details>:null}
+    {dependencies.length?<details><summary>Unmatched owner-window and source dependencies</summary><ul>{dependencies.map((item,index)=><li key={`${item.code}:${index}`}>{item.code} · {item.count}</li>)}</ul><p>Unmatched or missing observations retain their dependency. They do not acquire an assumed benchmark entry or a zero return.</p></details>:null}
+    <details><summary>Supplemental paired-observation poll</summary>
+      <p>{readTime?'Latest read-time poll':'Original publication poll'} status: {current?poll?.status??'not_yet_verified':'unverified at this read'}.</p>
+      {poll?.completed_at?<small>Dated poll completed {timeLabel(poll.completed_at)}. This is an operational receipt, not proof of a fill or a matured outcome.</small>:null}
+      {poll?.failure?<p>Retained poll dependency: {poll.failure}</p>:null}
+      {poll?.source?<small>Retained poll source {poll.source.path} · SHA-256 {poll.source.sha256}</small>:null}
+      {poll?.observer_source?<small>Original stock-observer source {poll.observer_source.path} · SHA-256 {poll.observer_source.sha256}</small>:null}
+    </details>
+    {protocolVerified&&protocol?<details><summary>Comparison protocol and source proof</summary><p>{protocol.version} · horizons {protocol.horizons.join(' / ')} trading sessions.</p><small>Original comparison publication {timeLabel(view.generated_at)} · protocol SHA-256 {protocol.sha256}</small>
+      {view.stock_source?<small>Original stock ledger SHA-256 {view.stock_source.sha256} · {view.stock_source.records} records.</small>:null}
+      {readTime?<small>Read-time stock ledger {view.read_time_proof?.stock_ledger_sha256} · comparison ledger {view.read_time_proof?.comparison_ledger_sha256}.</small>:null}
+    </details>:null}
+  </section>;
+}
+
 function ReadinessRow({row,unavailable=false}:{row:StrategyReadiness;unavailable?:boolean}) {
   const pending=unavailable&&row.classification==='valid_action';
   const waiting=pending||['plan_expired','data_unavailable','research_incomplete','strategy_not_adopted'].includes(row.classification);
@@ -228,5 +305,6 @@ export default function StrategyFrameworkPanel({data,now,unavailable=false}:{dat
     <HeldPurpose data={data} now={now} unavailable={unavailable}/>
     {view.swing_coverage?<SwingCoveragePanel view={view.swing_coverage} unavailable={unavailable}/>:null}
     {view.swing_research?<SwingSetups view={view.swing_research} data={data} now={now} unavailable={unavailable}/>:null}
+    {view.swing_benchmarks?<BenchmarkEvaluation view={view.swing_benchmarks} unavailable={unavailable}/>:null}
   </section>;
 }

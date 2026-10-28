@@ -683,10 +683,12 @@ def compose_strategy_research(decision: dict[str, Any], *, root: Path,
     from decision_readiness import build as build_decision_readiness
     from swing_research_v2 import build as build_swing_research
     from swing_coverage import build as build_swing_coverage
+    from swing_benchmarks import build as build_swing_benchmarks
     view = build_decision_readiness(root, decision, current=current)
     view["swing_research"] = build_swing_research(
         root, current=current, capture=capture, baseline=decision)
     view["swing_coverage"] = build_swing_coverage(root, current=current)
+    view["swing_benchmarks"] = build_swing_benchmarks(root, current=current, capture=capture)
     decision["strategy_framework"] = view
 
 

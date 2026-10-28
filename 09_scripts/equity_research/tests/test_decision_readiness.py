@@ -222,6 +222,7 @@ class DecisionReadinessTests(unittest.TestCase):
         implementation.parent.mkdir(parents=True)
         implementation.write_bytes(Path(decision_readiness.__file__).read_bytes())
         view["swing_research"] = {"separate_binding": "owned by its validator"}
+        view["swing_benchmarks"] = {"separate_binding": "requires its independent source validation"}
         validate_projection(self.root, view, d["capital_decision"], NOW.replace(hour=17))
         self.assertEqual(view["decisions"][0]["order_draft"]["entry_window"]["ends_at"], "2026-10-27T16:00:00-04:00")
         broken = copy.deepcopy(view)

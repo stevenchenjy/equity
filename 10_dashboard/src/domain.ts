@@ -81,6 +81,33 @@ export type StrategyFramework = {
   analyst_handoff:{ticker:string;classification?:string;reason?:string;next_step:string;resolver:string;review_at?:string|null}[];
   swing_research?:SwingResearch;
   swing_coverage?:SwingCoverage;
+  swing_benchmarks?:SwingBenchmarks;
+};
+export type SwingBenchmarkSummary = {
+  unique_stock_outcomes:number;unique_matched_stock_outcomes:number;comparison_pairs:number;raw_pairs:number;reviewed_pairs:number;
+  unique_reviewed_stock_outcomes:number;pending_stock_horizons:number;unmatched_pairs:number;
+  missed_or_skipped_windows:number;qualified_strategy_paths:number;
+  genuine_entry_count?:number;paired_entry_count?:number;unpaired_entry_count?:number;nonqualifying_window_transitions?:number;
+};
+export type SwingBenchmarkGroup = {
+  benchmark:string;entry_method:string;horizon_sessions:number;cohort:string;raw_pairs:number;reviewed_pairs:number;
+  raw_mean_excess_price_path_pct_by_cost_bps:Record<string,number|null>;
+  reviewed_mean_excess_price_path_pct_by_cost_bps:Record<string,number|null>;
+};
+export type SwingBenchmarkDependency = {code:string;count:number};
+export type SwingBenchmarkPoll = {status:string;failure?:string;started_at?:string;completed_at?:string;request_count?:number|null;paired_entries?:number;
+  source?:{path:string;sha256:string};observer_source_status?:string;observer_source?:{path:string;sha256:string}|null};
+export type SwingBenchmarks = {
+  schema_version:'equity_swing_benchmarks_v1';generated_at:string;
+  status:'pending_forward_evidence'|'raw_comparisons_available'|'reviewed_comparisons_available'|'unavailable'|'unverified';
+  protocol?:{version:string;sha256:string;benchmarks:string[];horizons:number[];costs_bps:number[]};
+  stock_source?:{path?:string;sha256:string;records:number;observations:number;outcomes:number};
+  summary?:SwingBenchmarkSummary;groups?:SwingBenchmarkGroup[];dependencies?:SwingBenchmarkDependency[];
+  read_time_summary?:SwingBenchmarkSummary;read_time_groups?:SwingBenchmarkGroup[];read_time_dependencies?:SwingBenchmarkDependency[];
+  read_time_proof?:{generated_at:string;stock_ledger_sha256:string;comparison_ledger_sha256:string;protocol_sha256:string;original_projection_sha256:string};
+  supplemental_poll?:SwingBenchmarkPoll|null;read_time_supplemental_poll?:SwingBenchmarkPoll|null;
+  profitability_established:false;reliable_win_rate:null;research_only:true;automatic_action_allowed:false;
+  capital_authority:false;actionable_quantity:0;execution_quote:false;
 };
 export type SwingCoverage = {
   schema_version:'equity_swing_coverage_v1';generated_at:string;status:string;
