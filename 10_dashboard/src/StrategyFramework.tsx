@@ -201,7 +201,7 @@ function BenchmarkEvaluation({view,unavailable}:{view:SwingBenchmarks;unavailabl
     </details>
     {protocolVerified&&protocol?<details><summary>Comparison protocol and source proof</summary><p>{protocol.version} · horizons {protocol.horizons.join(' / ')} trading sessions.</p><small>Original comparison publication {timeLabel(view.generated_at)} · protocol SHA-256 {protocol.sha256}</small>
       {view.stock_source?<small>Original stock ledger SHA-256 {view.stock_source.sha256} · {view.stock_source.records} records.</small>:null}
-      {readTime?<small>Read-time stock ledger {view.read_time_proof?.stock_ledger_sha256} · comparison ledger {view.read_time_proof?.comparison_ledger_sha256}.</small>:null}
+      {readTime?<small>Read-time stock ledger {view.read_time_proof?.stock_ledger_sha256} · comparison ledger {view.read_time_proof?.comparison_ledger_sha256??'not yet created (no matched outcomes)'}.</small>:null}
     </details>:null}
   </section>;
 }

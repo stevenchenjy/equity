@@ -299,3 +299,12 @@ test('latest source-bound paired poll overlays an earlier pending publication wi
   assert.match(html,/<dt>Entries with matched benchmark observations<\/dt><dd>1<\/dd>/);
   assert.match(html,/No matured stock-horizon outcome/);assert.doesNotMatch(html,/status: waiting_on_paired_observations|undefined/);
 });
+test('comparison source proof labels a not-yet-created ledger and retains a present full hash',()=>{
+  const proof={generated_at:'2026-10-28T14:50:00-04:00',stock_ledger_sha256:'b'.repeat(64),protocol_sha256:'a'.repeat(64),original_projection_sha256:'f'.repeat(64)};
+  for(const comparison_ledger_sha256 of [null,undefined]){
+    const html=renderBenchmark({...benchmarkZero,read_time_summary:benchmarkZero.summary,read_time_proof:{...proof,comparison_ledger_sha256}});
+    assert.match(html,/comparison ledger not yet created \(no matched outcomes\)/);assert.doesNotMatch(html,/comparison ledger \.|undefined/);
+  }
+  const html=renderBenchmark({...benchmarkZero,read_time_summary:benchmarkZero.summary,read_time_proof:{...proof,comparison_ledger_sha256:'e'.repeat(64)}});
+  assert.ok(html.includes('comparison ledger '+'e'.repeat(64)));assert.doesNotMatch(html,/not yet created/);
+});

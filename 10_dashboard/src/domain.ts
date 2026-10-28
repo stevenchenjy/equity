@@ -104,7 +104,7 @@ export type SwingBenchmarks = {
   stock_source?:{path?:string;sha256:string;records:number;observations:number;outcomes:number};
   summary?:SwingBenchmarkSummary;groups?:SwingBenchmarkGroup[];dependencies?:SwingBenchmarkDependency[];
   read_time_summary?:SwingBenchmarkSummary;read_time_groups?:SwingBenchmarkGroup[];read_time_dependencies?:SwingBenchmarkDependency[];
-  read_time_proof?:{generated_at:string;stock_ledger_sha256:string;comparison_ledger_sha256:string;protocol_sha256:string;original_projection_sha256:string};
+  read_time_proof?:{generated_at:string;stock_ledger_sha256:string;comparison_ledger_sha256?:string|null;protocol_sha256:string;original_projection_sha256:string};
   supplemental_poll?:SwingBenchmarkPoll|null;read_time_supplemental_poll?:SwingBenchmarkPoll|null;
   profitability_established:false;reliable_win_rate:null;research_only:true;automatic_action_allowed:false;
   capital_authority:false;actionable_quantity:0;execution_quote:false;
