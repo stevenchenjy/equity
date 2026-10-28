@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import StrategyFrameworkPanel from './StrategyFramework';
+import StrategyFrameworkPanel, {swingReviewState} from './StrategyFramework';
 import {CapitalActions} from './CapitalActions';
-import type {Snapshot, StrategyFramework, SwingResearch} from './domain';
+import type {Snapshot, StrategyFramework, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage} from './domain';
 
 const now=Date.parse('2026-10-28T08:00:00-04:00');
 const framework:StrategyFramework={schema_version:'equity_strategy_framework_v1',generated_at:'2026-10-28T09:45:00-04:00',
@@ -74,4 +74,148 @@ test('older publications without framework remain compatible and invalid authori
   assert.equal(renderToStaticMarkup(<StrategyFrameworkPanel data={{} as Snapshot} now={now}/>),'');
   const invalid={...framework,automatic_action_allowed:true} as unknown as StrategyFramework;
   assert.equal(renderToStaticMarkup(<StrategyFrameworkPanel data={{...snapshot,strategy_framework:invalid}} now={now}/>),'');
+});
+test('recorded holdings retain exact purpose and invalidation without renewing an expired instruction',()=>{
+  const purpose={strategy:'Original multi-quarter cash-return case.',holding_period_justification:'Hold only while the recorded cash thesis survives.',
+    failure_condition:'Reassess verified funding impairment.',exit_rule:'A supported adverse conclusion needs a fresh priced exit draft.',
+    entry_validity:'No addition without an independently supported plan.'};
+  const data={...snapshot,positions:[{ticker:'HELD',shares:2,price:100,weight:5,role:'growth'}],
+    plans:[{ticker:'HELD',plan_id:'synthetic-held-7',version:7,record_hash:'a'.repeat(64),action:'hold',status:'current',
+      expires_at:'2026-10-28T09:45:00-04:00',purpose,blockers:[],instruction:'Synthetic bounded holding review.',
+      reason:'Original sourced purpose.',counterargument:'Cash return could disappoint.',sources:[],draft:null,historical_draft:null,eligible_quantity:0}]} as Snapshot;
+  const before=JSON.stringify(data);
+  const current=renderToStaticMarkup(<StrategyFrameworkPanel data={data} now={now}/>);
+  assert.match(current,/Current bounded purpose record|2 recorded shares/);
+  for(const text of Object.values(purpose))assert.ok(current.includes(text),text);
+  const after=renderToStaticMarkup(<StrategyFrameworkPanel data={data} now={Date.parse('2026-10-28T09:45:00-04:00')}/>);
+  assert.match(after,/Reassessment required — retained purpose is historical/);
+  assert.doesNotMatch(after,/Current bounded purpose record|BUY LIMIT|SELL LIMIT/);
+  assert.equal(JSON.stringify(data),before);
+});
+
+const reviewWindows:SwingReviewWindow[]=[{id:'morning',starts_at:'2026-10-28T09:45:00-04:00',ends_at:'2026-10-28T10:45:00-04:00'},
+  {id:'afternoon',starts_at:'2026-10-28T14:45:00-04:00',ends_at:'2026-10-28T15:20:00-04:00'}];
+const reviewCandidate:SwingResearchCandidate={...swing.candidates[0],review_deadline:'2026-10-28T15:20:00-04:00',
+  validity:{session:'2026-10-28',starts_at:reviewWindows[0].starts_at,ends_at:reviewWindows[1].ends_at},
+  timing:{state:'before_review_window',review_windows:reviewWindows,current_quote_status:'unavailable',required_conditions:['A current last sale must meet the frozen entry band.'],last_evaluated_at:'2026-10-28T08:00:00-04:00'}};
+const reviewView:SwingResearch={...swing,schema_version:'equity_swing_research_v2',version:'daily-swing-review-windows-v2-20261028',
+  review_windows:reviewWindows,candidates:[reviewCandidate],performance:{observations:31,outcomes:0,performance_eligible_paths:0,corporate_action_review_required:0}};
+const renderReview=(view:SwingResearch,clock:string,unavailable=false,expected='2026-10-27')=>renderToStaticMarkup(
+  <StrategyFrameworkPanel data={{...snapshot,expected_market_session:expected,strategy_framework:{...framework,swing_research:view}}}
+    now={Date.parse(clock)} unavailable={unavailable}/>);
+test('v2 premarket blueprint retains dated conditions and actual owner review windows without current price claims',()=>{
+  const html=renderReview(reviewView,'2026-10-28T08:00:00-04:00');
+  for(const text of ['Before the review window','Morning review:','09:45','10:45','Afternoon review:','14:45','15:20',
+    '$101.23','Dated daily reference trigger','Current entry price is unverified','Not sized for execution · zero approved shares'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/Validated last-sale observation|BUY LIMIT|capital-buy/);
+});
+test('v2 post-open reference remains useful in the morning window with a separately validated quote condition',()=>{
+  const row={...reviewCandidate,timing:{...reviewCandidate.timing!,state:'condition_observed' as const,current_quote_status:'current',
+    quote_observation:{price:101.55,trade_at:'2026-10-28T09:49:00-04:00',observed_at:'2026-10-28T09:49:01-04:00',expires_at:'2026-10-28T09:54:00-04:00',execution_quote:false as const}}};
+  const view={...reviewView,candidates:[row]};
+  const html=renderReview(view,'2026-10-28T09:50:00-04:00');
+  for(const text of ['Entry-band condition observed','$101.55','$101.23','Current review: morning','not an executable bid/ask or a fill'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/entry window expired|BUY LIMIT|SELL LIMIT/);
+});
+test('v2 midday retains a bounded blueprint and names the afternoon review instead of inventing an elapsed fill',()=>{
+  const html=renderReview(reviewView,'2026-10-28T12:30:00-04:00');
+  assert.match(html,/Between review windows/);assert.match(html,/Next review begins 10\/28 14:45 ET/);
+  assert.match(html,/\$101\.23/);assert.match(html,/current execution quotes/);
+  assert.doesNotMatch(html,/before the first future open|Validated last-sale observation|BUY LIMIT/);
+});
+test('v2 browser clock progress expires quote indications before daily reference conditions and then expires the blueprint',()=>{
+  const row={...reviewCandidate,timing:{...reviewCandidate.timing!,state:'condition_observed' as const,current_quote_status:'current',
+    quote_observation:{price:101.55,trade_at:'2026-10-28T09:49:00-04:00',observed_at:'2026-10-28T09:49:01-04:00',expires_at:'2026-10-28T09:54:00-04:00',execution_quote:false as const}}};
+  const before=JSON.stringify(row);
+  assert.equal(swingReviewState(row,Date.parse('2026-10-28T09:53:59-04:00'),'2026-10-27').state,'condition_observed');
+  assert.equal(swingReviewState(row,Date.parse('2026-10-28T09:54:00-04:00'),'2026-10-27').state,'awaiting_fresh_quote');
+  const quoteExpired=renderReview({...reviewView,candidates:[row]},'2026-10-28T09:54:00-04:00');
+  assert.match(quoteExpired,/\$101\.23|Current entry price is unverified/);
+  assert.doesNotMatch(quoteExpired,/\$101\.55|Entry-band condition observed/);
+  const expired=renderReview({...reviewView,candidates:[row]},'2026-10-28T15:20:00-04:00');
+  assert.match(expired,/research entry window expired/);
+  assert.doesNotMatch(expired,/\$101\.23|\$101\.55|\$97\.31|\$109\.07/);
+  assert.equal(JSON.stringify(row),before);
+});
+test('v2 stale source and failed-refresh states withhold levels independently of an available prior quote',()=>{
+  const stale=renderReview(reviewView,'2026-10-28T10:00:00-04:00',false,'2026-10-28');
+  assert.match(stale,/source session or timing is unverified/);assert.doesNotMatch(stale,/\$101\.23|BUY LIMIT/);
+  const failed=renderReview(reviewView,'2026-10-28T10:00:00-04:00',true);
+  assert.match(failed,/Current source\/session validation is unavailable/);assert.doesNotMatch(failed,/\$101\.23|BUY LIMIT/);
+});
+test('v2 no-opportunity keeps review windows and zero qualified evidence explicit without fabricated setup prices',()=>{
+  const html=renderReview({...reviewView,candidates:[]},'2026-10-28T14:50:00-04:00');
+  for(const text of ['No qualifying setup','Morning review:','Afternoon review:','31 recorded ticker/session observations',
+    '0 matured horizon records','Effectiveness-qualified paths: 0'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/SETUP|\$101\.23|BUY LIMIT|31 wins|31 trades/);
+});
+test('v2 unverified or future quotes never become validated marks; retained adverse observations require reassessment',()=>{
+  for(const change of [{current_quote_status:'unavailable'},
+    {quote_observation:{price:101.55,trade_at:'2026-10-28T10:01:00-04:00',observed_at:'2026-10-28T10:01:01-04:00',expires_at:'2026-10-28T10:06:00-04:00',execution_quote:false as const}}]){
+    const row={...reviewCandidate,timing:{...reviewCandidate.timing!,state:'condition_observed' as const,...change}};
+    const html=renderReview({...reviewView,candidates:[row]},'2026-10-28T10:00:00-04:00');
+    assert.doesNotMatch(html,/Validated last-sale observation|\$101\.55/);
+  }
+  const row={...reviewCandidate,timing:{...reviewCandidate.timing!,state:'invalidation_observed' as const}};
+  const html=renderReview({...reviewView,candidates:[row]},'2026-10-28T10:00:00-04:00');
+  assert.match(html,/prior invalidation observation is retained/);assert.match(html,/requires reassessment/);
+});
+test('v2 keeps frozen entry and exit rules distinct from an adopted execution instruction',()=>{
+  const row={...reviewCandidate,entry_rule:'Synthetic source rule: evaluate the captured morning or afternoon band.',
+    exit_rule:'Synthetic source rule: compare the stop, hypothetical 2R and 5/10/14-session exits.'};
+  const html=renderReview({...reviewView,candidates:[row]},'2026-10-28T10:00:00-04:00');
+  assert.ok(html.includes(row.entry_rule));assert.ok(html.includes(row.exit_rule));
+  assert.match(html,/do not establish an order, a fill or an adopted stop-loss instruction/);
+  assert.doesNotMatch(html,/BUY LIMIT|SELL STOP/);
+});
+const outsideCoverage:SwingCoverage={schema_version:'equity_swing_coverage_v1',generated_at:'2026-10-28T08:00:00-04:00',status:'waiting_on_data',
+  research_only:true,capital_authority:false,actionable_quantity:0,automatic_action_allowed:false,current_discovery_status:'unavailable',
+  latest_provider_failure:{failure_code:'authentication_failed',http_status:403},coverage:{required_session:'2026-10-27',required_history_sessions:51,cached_grouped_files:51},
+  admitted_history_tickers:['OUT1','OUT2'],blockers:['current_broad_discovery_unavailable:authentication_failed'],candidates:[{
+    ticker:'OUT1',name:'Synthetic outside issuer',discovery_session:'2026-10-20',first_seen_at:'2026-10-21T09:00:00-04:00',dated_screen_rank:7,
+    source_status:'dated_market_strength_lead',history_status:'admitted_unadjusted_research_only',next_step:'Review the independently recovered history and issuer countercase.',
+    resolver:'experimental_swing_research',source_ids:['retained-original-source-id'],current_price:null,research_only:true,capital_authority:false,actionable_quantity:0},
+  {ticker:'OLD',discovery_session:'2026-10-19',dated_screen_rank:10,source_status:'dated_market_strength_lead',history_status:'current_51_session_history_unavailable',
+    next_step:'Obtain a source-bound current history.',resolver:'public_data',source_ids:[],current_price:null,research_only:true,capital_authority:false,actionable_quantity:0}]};
+test('coverage separates focused admitted research histories from failed broad discovery and dated leads',()=>{
+  const html=renderToStaticMarkup(<StrategyFrameworkPanel data={{...snapshot,strategy_framework:{...framework,swing_coverage:outsideCoverage}}} now={now}/>);
+  for(const text of ['Broad daily-screen status:','unavailable','authentication_failed','HTTP 403','Independently admitted research histories: 2',
+    'Focused history recovery does not establish complete broad-market coverage','History admitted for experimental research',
+    'Dated research lead — current setup evidence remains unverified','dated screen position 7','retained-original-source-id',
+    'current_broad_discovery_unavailable:authentication_failed'])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/BUY LIMIT|best stock|high-potential|\$0\.00/);
+});
+test('failed current read cannot reuse admitted coverage or cached file counts as current opportunity proof',()=>{
+  const html=renderToStaticMarkup(<StrategyFrameworkPanel data={{...snapshot,strategy_framework:{...framework,swing_coverage:outsideCoverage}}} now={now} unavailable/>);
+  assert.match(html,/Current admitted research-history count is unverified/);
+  assert.match(html,/unverified at this read/);
+  assert.doesNotMatch(html,/Independently admitted research histories: 2|History admitted for experimental research/);
+  assert.match(html,/File counts do not establish current admission/);
+});
+test('sticky source-day invalidation is not revived by a later window or a fresh quote',()=>{
+  const row={...reviewCandidate,timing:{...reviewCandidate.timing!,state:'invalidation_observed' as const,permanent_for_signal_day:true,
+    current_quote_status:'not_used_after_day_invalidation',quote_observation:null,
+    historical_invalidation:{recorded_at:'2026-10-28T09:50:00-04:00',record_hash:'d'.repeat(64),observed_at:'2026-10-28T09:49:59-04:00',price:97.2}}};
+  const html=renderReview({...reviewView,candidates:[row]},'2026-10-28T14:50:00-04:00');
+  for(const text of ['signal was invalidated for its source day','later bounce or a fresh quote cannot renew','No further entry window remains',
+    'historical evidence, not a current mark','d'.repeat(64)])assert.ok(html.includes(text),text);
+  assert.doesNotMatch(html,/Entry-band condition observed|Validated last-sale observation|\$97\.20|BUY LIMIT/);
+});
+test('latest read-time study counts are labelled separately and do not rewrite the original publication',()=>{
+  const view={...reviewView,read_time_performance:{observations:33,outcomes:2,performance_eligible_paths:1,corporate_action_review_required:1},
+    read_time_study_proof:{record_count:45,ledger_sha256:'e'.repeat(64),original_projection_generated_at:'2026-10-28T08:00:00-04:00',original_projection_sha256:'f'.repeat(64)}};
+  const before=JSON.stringify(view);
+  const html=renderReview(view,'2026-10-28T14:50:00-04:00');
+  for(const text of ['33 recorded ticker/session observations','2 matured horizon records','Effectiveness-qualified paths: 1',
+    'source-validated at this read','original publication remains dated'])assert.ok(html.includes(text),text);
+  assert.equal(JSON.stringify(view),before);
+  assert.match(renderReview(view,'2026-10-28T14:50:00-04:00',true),/last successful read and have not been revalidated now/);
+});
+test('complete cached adjusted files remain provisional rather than becoming admitted technical histories',()=>{
+  const view={...outsideCoverage,admitted_history_tickers:[],provisional_history_tickers:['OUT1','OUT2'],provisional_technical_history_admitted:false as const};
+  const html=renderToStaticMarkup(<StrategyFrameworkPanel data={{...snapshot,strategy_framework:{...framework,swing_coverage:view}}} now={now}/>);
+  assert.match(html,/Independently admitted research histories: 0/);
+  assert.match(html,/Provisional provider-adjusted histories: 2/);
+  assert.match(html,/excluded from technical-history admission/);
+  assert.doesNotMatch(html,/Independently admitted research histories: 2|History admitted for experimental research/);
 });

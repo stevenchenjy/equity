@@ -1,0 +1,85 @@
+{
+  "schema_version": "equity_swing_research_policy_v2",
+  "version": "daily-swing-review-windows-v2-20261028",
+  "status": "experimental",
+  "research_only": true,
+  "capital_authority": false,
+  "actionable_quantity": 0,
+  "automatic_action_allowed": false,
+  "holding_sessions": [
+    5,
+    10,
+    14
+  ],
+  "one_way_cost_bps": [
+    10,
+    25,
+    50
+  ],
+  "commission_per_share_usd": 0.0,
+  "maximum_gap_r": 0.25,
+  "hypothetical_profit_reference_r": 2.0,
+  "stop_lookback_sessions": 5,
+  "strategies": {
+    "breakout": "Completed close exceeds every prior 19-session high and prior close; signal daily volume is at least twice the prior 19-session mean.",
+    "pullback_reclaim": "SMA20 exceeds SMA50; prior close is at or below its own prior SMA20; current close reclaims SMA20 and exceeds the prior daily high.",
+    "trend_continuation": "SMA20 exceeds SMA50; current and prior closes exceed their respective SMA20; current close exceeds the prior daily high but remains below the prior 19-session high; daily volume is at least its prior 19-session mean."
+  },
+  "entry_rule": "Retain dated daily reference conditions through the named next-session owner windows. Require an admitted current last sale within a window and after actual first capture. Preserve all verified condition-state transitions; an out-of-band observation is not an entry and may later recover within its original window. Freeze only the first qualifying in-band observation per window as a nominal price-path benchmark. A verified price at or below the frozen invalidation permanently invalidates this source signal for its DAY; recovery cannot silently renew it. Last-sale benchmarks do not establish NBBO, a fill or practical owner response timing.",
+  "exit_rule": "Preserve separate5/10/14-session fixed-horizon paths and gap/stop assumptions. Delayed-window fixed-horizon paths use the actual retained quote timestamp; entry-day stop/target sequence stays unverified without post-entry evidence. Corporate-action review must qualify any economic interpretation.",
+  "threshold_basis": "Fixed prospective exploratory hypotheses, not optimized on the retained history or selected to explain past winners. Horizons are trading sessions, not calendar days. This study does not change the existing five-session tactical capital policy.",
+  "adoption": {
+    "automatic_promotion": false,
+    "owner_adoption_required": true,
+    "capital_and_risk_review_required": true,
+    "criteria": [
+      "Retain consecutive point-in-time observations, unselected names, failures, missed entries, corrections and unavailable outcomes.",
+      "Review distinct nonoverlapping forward cohorts and unfavorable regimes; overlapping ticker/date paths are not independent trials.",
+      "Require independent source-bound split, dividend, distribution and corporate-action review before treating unadjusted price paths as economic performance; retain unreviewed raw paths and keep effectiveness-qualified counts at zero.",
+      "Compare selection and execution separately with the unchanged canonical baseline, identical horizons and predeclared cost sensitivities.",
+      "Establish feasible execution timing, quoted spreads, gaps, whole shares, cash commitments, event coverage and owner response timing.",
+      "Assess portfolio capacity, drawdowns and tail losses; a positive mean or sample count alone never earns adoption.",
+      "Keep subsequent holdout evidence unseen during parameter selection and version every change before its first observation.",
+      "Obtain explicit reviewed strategy and capital-risk authority before any positive quantity or extension of the live tactical holding limit.",
+      "Source-bound reviewed fixed-horizon price paths are distinct from fully reviewed risk-managed strategy performance; delayed-window entry-day exit ordering remains unresolved until evidence supports it."
+    ]
+  },
+  "review_windows": [
+    {
+      "id": "morning",
+      "start": "09:45",
+      "end": "10:45"
+    },
+    {
+      "id": "afternoon",
+      "start": "14:45",
+      "end": "15:20"
+    }
+  ],
+  "signal_validity": "Only the exchange session immediately following the source close, until its last available owner review window. Never roll an expired source signal into another day.",
+  "growth_stock_scope": "Canonical common stocks and separately admitted source-bound outside common-stock histories. ETF observations remain benchmark-only, never growth-stock setup cards.",
+  "promotion_review": {
+    "minimum_distinct_forward_sessions": 60,
+    "minimum_reviewed_modeled_setups": 50,
+    "minimum_issuers": 10,
+    "minimum_adverse_regime_cohorts": 3,
+    "minimum_owner_window_timing_coverage_pct": 90,
+    "all_thresholds_are_review_floors_not_statistical_sufficiency": true,
+    "automatic_promotion": false,
+    "requires": [
+      "Positive predeclared cost-sensitive benchmark-relative forward evidence without choosing a winner after outcomes.",
+      "Independent nonoverlapping cohorts, adverse regimes, drawdowns, tail losses, missingness and execution-delay review.",
+      "Source-bound corporate-action and entry-day barrier review for the claimed evaluation scope.",
+      "Actual owner-window observation availability, quote expiry, missed entries and feasible human execution.",
+      "Portfolio-capacity/whole-share/cash/event-risk and existing capital-risk review.",
+      "Separate explicit owner strategy adoption; no count or positive mean automatically grants capital."
+    ],
+    "review_floor_rationale": "These prospectively chosen minimums are coverage and review-workload floors, not a power calculation, estimated win probability, confidence guarantee or automatic adoption rule. Sixty sessions broadens date coverage; fifty distinct setup/windows and ten issuers reduce single-case dependence; three adverse cohorts require explicit unfavorable-condition review. Delay/horizon variants never count as independent setups. Independent statistical, regime, cost, drawdown, capacity and owner reviews remain necessary regardless of counts."
+  },
+  "owner_response_delay_status": "Predeclared3/5/10-minute observation-delay sensitivities use only actual retained fresh source marks at or after the target delay, with actual elapsed time retained. Missing, invalidated or out-of-band delayed observations are skipped; no original mark or elapsed open substitutes. These are nominal last-sale benchmarks, not verified human response, executable entries or fills.",
+  "delayed_observation_minutes": [
+    3,
+    5,
+    10
+  ]
+}

@@ -54,6 +54,7 @@ EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 # Daily reference pagination plus one new grouped day is paced at 13 seconds.
 # Cold 21-session bootstrap uses the separate no-send 900-second entrypoint.
 MARKET_DISCOVERY_TIMEOUT_SECONDS = 360
+SWING_CANDIDATE_HISTORY_TIMEOUT_SECONDS = 210
 CAPITAL_ESCALATION_TIMEOUT_SECONDS = 900
 STEP_SPECS = [
     ("market_refresh", "run_full_universe_market_data.py", False),
@@ -88,6 +89,10 @@ STEP_SPECS = [
     # Earnings incorporation can replace financial selections after objective
     # work. Bind the final attention view without consuming its budget twice.
     ("research_backlog_view", "create_research_backlog.py", True),
+    # Isolated outside-universe research history, at most two retained leads.
+    # Public scheduled runs may collect once per date/source; operator reuse
+    # and publication-only closure remain offline. No canonical universe grows.
+    ("swing_candidate_history", "run_swing_candidate_history.py", True),
     ("market_regime", "create_market_regime.py", False),
     # portfolio_outputs owns the account/weight/action/cash child sequence.
     # Running those children here as well duplicated C9 work and widened the
@@ -119,7 +124,8 @@ STEP_SPECS = [
     ("momentum_experiment_review", "create_momentum_experiment_review.py", True),
 ]
 ADVISORY_STEPS = {"market_discovery", "momentum_experiment", "momentum_experiment_review",
-    "earnings_event_discovery", "research_opportunity_intake", "research_opportunity_objective", "capital_deployment_escalation"}
+    "earnings_event_discovery", "research_opportunity_intake", "research_opportunity_objective", "capital_deployment_escalation",
+    "swing_candidate_history"}
 CURRENT_STATUS_SPEC = (
     "current_status",
     "generate_current_status.py",
@@ -222,6 +228,8 @@ def run_step(
         and market_snapshot_mode == MARKET_SNAPSHOT_FETCH
         else MARKET_DISCOVERY_TIMEOUT_SECONDS
         if name == "market_discovery"
+        else SWING_CANDIDATE_HISTORY_TIMEOUT_SECONDS
+        if name == "swing_candidate_history"
         else CAPITAL_ESCALATION_TIMEOUT_SECONDS
         if name == "capital_deployment_escalation"
         else DEFAULT_CHILD_TIMEOUT_SECONDS
@@ -234,6 +242,9 @@ def run_step(
     # company/calendar/discovery work of a normal scheduled full refresh.
     public_network = market_snapshot_mode == MARKET_SNAPSHOT_FETCH if refresh_public is None else refresh_public
     extra_arguments = (
+        (["--root", str(ROOT), "--pipeline-coordinated", *(["--collect"] if public_network else [])])
+        if name == "swing_candidate_history"
+        else
         (["--refresh"] if public_network else [])
         if name == "earnings_event_discovery"
         else

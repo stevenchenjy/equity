@@ -53,6 +53,9 @@ ACTIVE_CONFIG_PATH = CONTROL_DIR / "active_production_config.json"
 # first receipt or analyst review exists. Optionality is a closed path/type
 # contract, never a registry-controlled exemption for other required inputs.
 OPTIONAL_ACTIVE_INPUTS = {
+    "08_reviews/swing_research_v2.local/ledger.jsonl": "optional_append_only",
+    "03_source_data/equity_research/swing_candidate_quotes.local/current.json": "optional_public_source_receipt",
+    "00_project_control/run_logs/swing_observer.local/current.json": "optional_generated_research",
     "08_reviews/swing_research.local/ledger.jsonl": "optional_append_only",
     "03_source_data/equity_research/intraday_prices.local/current.json": "optional_public_source_receipt",
     "04_research/company_research/intraday_portfolio_risk.local.json": "optional_generated_research",
@@ -86,6 +89,10 @@ OPTIONAL_ACTIVE_INPUTS = {
     "03_source_data/equity_research/official_news_status.local.json": "optional_generated_research",
 }
 OPTIONAL_ACTIVE_PATTERNS = {
+    "08_reviews/swing_research_v2.local/**/*": "optional_private_research_history",
+    "03_source_data/equity_research/swing_candidate_quotes.local/**/*.json": "optional_public_source_receipt",
+    "03_source_data/equity_research/swing_candidate_history.local/**/*": "optional_public_source_receipt",
+    "00_project_control/run_logs/swing_observer.local/receipts/*.json": "optional_generated_research",
     "08_reviews/swing_research.local/**/*": "optional_private_research_history",
     "03_source_data/equity_research/intraday_prices.local/**/*.json": "optional_public_source_receipt",
     "03_source_data/equity_research/intraday_prices.local/responses/*.bin": "optional_public_source_receipt",

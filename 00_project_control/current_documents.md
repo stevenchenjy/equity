@@ -7,6 +7,10 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Swing research during owner review windows](swing_review_window_workflow.md):
+  separately versioned timing, public-only observations, focused outside-universe
+  history, forward qualification and unchanged capital/analyst/delivery authority.
+
 - [Multi-strategy research and decision readiness](multi_strategy_workflow.md):
   separate approved growth/core/tactical capital decisions from prospective
   five-, ten- and fourteen-session swing research; exact next analytical work,

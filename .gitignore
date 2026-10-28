@@ -228,3 +228,7 @@ graphify-out/reflections/
 
 # Private prospective swing observations, retained originals and failed attempts.
 /08_reviews/swing_research.local/
+/08_reviews/swing_research_v2.local/
+/03_source_data/equity_research/swing_candidate_quotes.local/
+/03_source_data/equity_research/swing_candidate_history.local/
+/00_project_control/run_logs/swing_observer.local/

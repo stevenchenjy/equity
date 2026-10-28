@@ -12,6 +12,15 @@ research from the existing chat without requiring a new owner prompt. Unproven
 5–14-day methods stay experimental until exact reviewed adoption; preserve the
 existing capital-risk limits and human-only execution.
 
+The [review-window swing workflow](swing_review_window_workflow.md) adds a
+separately versioned zero-capital study and focused outside-universe history.
+Inspect current `swing_candidates` and `outside_universe_handoff` in the short
+context when selecting useful company work. A technical setup still requires a
+sourced growth case, countercase, event review and feasible entry/risk judgment.
+The public-only window observer adds no analyst slot, completed conclusion or
+email purpose. Preserve its original observation clocks and failed attempts;
+never substitute a daily opening price for a later owner-window observation.
+
 For an active `daily_decision.json:capital_deployment_escalation`, immediately
 prioritize its `research_priority_tickers` and exact evidence/valuation gates.
 Compare quality holding additions, the strongest researched growth case and

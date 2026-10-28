@@ -1,4 +1,4 @@
-import type {Snapshot, StrategyReadiness, SwingResearch} from './domain';
+import type {Snapshot, StrategyReadiness, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage} from './domain';
 import {money, timeLabel} from './domain';
 
 const readinessLabels:Record<StrategyReadiness['classification'],string>={
@@ -11,6 +11,123 @@ const actionLabels:Record<string,string>={ACTIONABLE_BUY:'BUY',ACTIONABLE_ADD:'A
 const setupLabels:Record<string,string>={breakout:'Breakout',pullback_reclaim:'Pullback reclaim',trend_continuation:'Trend continuation'};
 const price=(value:number|null)=>typeof value==='number'&&Number.isFinite(value)&&value>0?money(value):'Not established';
 const count=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0?value:null;
+
+export function swingReviewState(row:SwingResearchCandidate,now:number,expectedSession:string|undefined) {
+  const authority=row.research_only===true&&row.capital_authority===false&&row.actionable_quantity===0;
+  const validity=row.validity;
+  const windows=(row.timing?.review_windows??[]).filter(window=>Number.isFinite(Date.parse(window.starts_at))
+    &&Number.isFinite(Date.parse(window.ends_at))&&Date.parse(window.starts_at)<Date.parse(window.ends_at));
+  const start=Date.parse(validity?.starts_at??'');
+  const end=Date.parse(validity?.ends_at??'');
+  const valid=authority&&Number.isFinite(now)&&row.source_session===expectedSession&&validity?.session===row.entry_session
+    &&Number.isFinite(start)&&Number.isFinite(end)&&start<end&&windows.length>0;
+  const currentWindow=windows.find(window=>now>=Date.parse(window.starts_at)&&now<Date.parse(window.ends_at));
+  const nextWindow=windows.find(window=>now<Date.parse(window.starts_at));
+  if(!valid)return {state:'unverified',referenceLevelsVisible:false,quoteCurrent:false,currentWindow,nextWindow};
+  if(now>=end)return {state:'expired',referenceLevelsVisible:false,quoteCurrent:false,currentWindow,nextWindow};
+  if(row.timing?.permanent_for_signal_day===true&&row.timing.state==='invalidation_observed')
+    return {state:'invalidation_observed',referenceLevelsVisible:true,quoteCurrent:false,currentWindow,nextWindow};
+  if(now<start)return {state:'before_review_window',referenceLevelsVisible:true,quoteCurrent:false,currentWindow,nextWindow};
+  if(!currentWindow)return {state:'between_review_windows',referenceLevelsVisible:true,quoteCurrent:false,currentWindow,nextWindow};
+  const quote=row.timing?.quote_observation;
+  const quoteCurrent=Boolean(row.timing?.current_quote_status==='current'&&quote&&quote.execution_quote===false&&Number.isFinite(quote.price)&&quote.price>0
+    &&Number.isFinite(Date.parse(quote.trade_at))&&Number.isFinite(Date.parse(quote.observed_at))
+    &&Date.parse(quote.trade_at)<=now&&Date.parse(quote.observed_at)<=now&&now<Date.parse(quote.expires_at));
+  const state=row.timing?.state==='invalidation_observed'?'invalidation_observed'
+    :quoteCurrent&&['condition_observed','outside_entry_band'].includes(row.timing?.state??'')?row.timing!.state:'awaiting_fresh_quote';
+  return {state,referenceLevelsVisible:true,quoteCurrent,currentWindow,nextWindow};
+}
+
+function ReviewWindows({windows}:{windows:SwingReviewWindow[]}) {
+  return <ul className="swing-review-windows">{windows.map(window=><li key={window.id}>
+    <strong>{window.id==='morning'?'Morning':'Afternoon'} review:</strong> {timeLabel(window.starts_at)} — {timeLabel(window.ends_at)}
+  </li>)}</ul>;
+}
+
+function SwingTimingStatus({row,now,expectedSession}:{row:SwingResearchCandidate;now:number;expectedSession:string|undefined}) {
+  const state=swingReviewState(row,now,expectedSession);
+  const labels:Record<string,string>={before_review_window:'Before the review window — dated research conditions retained',
+    between_review_windows:'Between review windows — reassess at the next available window',
+    awaiting_fresh_quote:'Review window open — current quote and entry verification required',
+    condition_observed:'Entry-band condition observed — research review still required',
+    outside_entry_band:'WAIT — observed price is outside the entry conditions',
+    invalidation_observed:'WAIT — observed invalidation requires reassessment',
+    expired:'WAIT — the research entry window expired',unverified:'WAIT — source session or timing is unverified'};
+  const invalidated=row.timing?.permanent_for_signal_day===true&&state.state==='invalidation_observed';
+  return <div className={`swing-timing${invalidated?' swing-invalidated':''}`} role="status"><strong>{invalidated?'WAIT — this signal was invalidated for its source day':labels[state.state]}</strong>
+    {row.timing?.review_windows?<ReviewWindows windows={row.timing.review_windows}/>:null}
+    {invalidated?<p>No further entry window remains for this source-day signal.</p>
+      :state.currentWindow?<p>Current review: {state.currentWindow.id}. This clock state does not authorize an order.</p>
+      :state.nextWindow?<p>Next review begins {timeLabel(state.nextWindow.starts_at)}.</p>:null}
+    {state.quoteCurrent&&row.timing?.quote_observation?<p>Validated last-sale observation {money(row.timing.quote_observation.price)} at {timeLabel(row.timing.quote_observation.trade_at)}; expires {timeLabel(row.timing.quote_observation.expires_at)}.{row.timing.quote_observation.source_label?` Source: ${row.timing.quote_observation.source_label}.`:''} It is not an executable bid/ask or a fill.</p>
+      :invalidated?<p>A later bounce or a fresh quote cannot renew this source-day setup. A new source-day observation and reassessment are required.</p>
+      :<p>Current entry price is unverified. Frozen daily reference conditions do not establish a live rebound, execution price or available funds.</p>}
+    {row.timing?.state==='invalidation_observed'&&!state.quoteCurrent?<p>A prior invalidation observation is retained for reassessment; its expired quote is not a current mark.</p>:null}
+    {row.timing?.required_conditions.length?<ul>{row.timing.required_conditions.map(condition=><li key={condition}>{condition}</li>)}</ul>:null}
+    {row.timing?.historical_invalidation?<small>Retained invalidation observation: {timeLabel(row.timing.historical_invalidation.observed_at)} · source record {row.timing.historical_invalidation.record_hash}. This is historical evidence, not a current mark.</small>:null}
+    {row.timing?.last_evaluated_at?<small>Price-condition projection evaluated {timeLabel(row.timing.last_evaluated_at)}; this timestamp does not establish completed analyst research.</small>:null}
+  </div>;
+}
+
+function HeldPurpose({data,now,unavailable}:{data:Snapshot;now:number;unavailable:boolean}) {
+  const held=(data.positions??[]).filter(row=>Number.isFinite(row.shares)&&row.shares>0);
+  if(!held.length)return null;
+  const plans=new Map((data.plans??[]).map(plan=>[plan.ticker,plan]));
+  const fields=[['strategy','Original investment purpose'],['holding_period_justification','Original holding rationale'],
+    ['failure_condition','Original evidence / invalidation conditions'],['exit_rule','Original exit and reassessment rule'],
+    ['entry_validity','Original addition conditions']] as const;
+  return <details className="held-purpose"><summary>Original purpose and management conditions for recorded holdings</summary>
+    <p>Recorded ownership, a maintained investment purpose and a current trade proposal are separate. Expiry requires reassessment; it does not prove a sale or renew a HOLD instruction.</p>
+    {held.map(position=>{
+      const plan=plans.get(position.ticker);
+      const end=plan?.expires_at?Date.parse(plan.expires_at):NaN;
+      const current=!unavailable&&plan?.status==='current'&&Number.isFinite(end)&&now<end;
+      const purpose=plan?.purpose??{};
+      const available=fields.filter(([key])=>typeof purpose[key]==='string'&&String(purpose[key]).trim());
+      return <article className="held-purpose-row" key={position.ticker}>
+        <h4>{position.ticker} · {position.shares} recorded share{position.shares===1?'':'s'}</h4>
+        <p><strong>{current?'Current bounded purpose record':'Reassessment required — retained purpose is historical'}</strong></p>
+        {plan?<small>Original review / validity deadline: {timeLabel(plan.expires_at)} · plan version {plan.version}. These source conditions do not create a new order.</small>
+          :<p>No maintained purpose record is available in this verified view. The scheduled analyst must establish it; ownership alone does not complete the investment case.</p>}
+        {available.length?<dl>{available.map(([key,label])=><div key={key}><dt>{label}</dt><dd>{String(purpose[key])}</dd></div>)}</dl>
+          :plan?<p>The retained record does not establish structured purpose and management conditions.</p>:null}
+      </article>;
+    })}
+  </details>;
+}
+
+function SwingCoveragePanel({view,unavailable}:{view:SwingCoverage;unavailable:boolean}) {
+  if(view.schema_version!=='equity_swing_coverage_v1')return null;
+  const authority=view.research_only===true&&view.capital_authority===false&&view.actionable_quantity===0
+    &&view.automatic_action_allowed===false;
+  const current=authority&&!unavailable;
+  const required=view.required_session??view.coverage?.required_session;
+  const admitted=current&&Array.isArray(view.admitted_history_tickers)?view.admitted_history_tickers:null;
+  const leads=authority?(view.candidates??[]).slice(0,3):[];
+  return <section className="swing-coverage" aria-label="Market coverage and outside-universe research">
+    <h3>Market coverage and outside-universe research</h3>
+    <p><strong>Broad daily-screen status:</strong> {current?view.current_discovery_status??view.status:'unverified at this read'}{required?` · required close ${required}`:''}.</p>
+    {view.latest_provider_failure?.failure_code?<p><strong>Latest provider dependency:</strong> {view.latest_provider_failure.failure_code}{view.latest_provider_failure.http_status?` · HTTP ${view.latest_provider_failure.http_status}`:''}.</p>:null}
+    {view.latest_provider_failure?.original_http_evidence==='not_retained_by_older_collector'?<p className="form-hint">An older provider attempt lacks retained original HTTP evidence; no successful fetch is inferred.</p>:null}
+    <p>{admitted===null?'Current admitted research-history count is unverified.':`Independently admitted research histories: ${admitted.length}${admitted.length&&required?` · admitted close ${required}`:''}.`} Focused history recovery does not establish complete broad-market coverage, reviewed company quality or capital eligibility.</p>
+    {view.coverage?.cached_grouped_files!==undefined?<p className="form-hint">Retained grouped-history files: {view.coverage.cached_grouped_files}{view.coverage.required_history_sessions?` / ${view.coverage.required_history_sessions}`:''}. File counts do not establish current admission.</p>:null}
+    {current&&view.focused_recovery_status?<p className="form-hint">Focused recovery status: {view.focused_recovery_status}.</p>:null}
+    {view.provisional_history_tickers?.length?<p>Provisional provider-adjusted histories: {view.provisional_history_tickers.length}. Cross-fetch basis consistency remains unverified; these are excluded from technical-history admission.</p>:null}
+    {!current?<p role="status">Current coverage is unverified. Retained leads below remain dated research work; they are not current trade opportunities.</p>:null}
+    {leads.length?<><h4>Bounded outside-universe research leads</h4><p className="form-hint">These are research leads in retained screen order, not a ranking of expected investment returns.</p>{leads.map(row=>{
+      const historyCurrent=current&&admitted?.includes(row.ticker)&&row.research_only===true&&row.capital_authority===false&&row.actionable_quantity===0;
+      return <article key={row.ticker} className="outside-research-lead"><h4>{row.ticker}{row.name?` · ${row.name}`:''}</h4>
+        <p><strong>{historyCurrent?'History admitted for experimental research — company and entry review still required':'Dated research lead — current setup evidence remains unverified'}</strong></p>
+        <small>Discovery session {row.discovery_session??'unverified'}{row.first_seen_at?` · first retained detection ${timeLabel(row.first_seen_at)}`:''}{typeof row.dated_screen_rank==='number'?` · dated screen position ${row.dated_screen_rank}`:''}.</small>
+        <p>{row.next_step}</p><small>Research resolver: {row.resolver}. No current price or capital quantity is supplied by this coverage view.</small>
+        {row.history_status||row.source_ids?.length?<details><summary>Retained history dependency and source identities</summary>
+          {row.history_status?<p>{row.history_status}</p>:null}{row.source_ids?.length?<ul>{row.source_ids.map((id,index)=><li key={`${id}:${index}`}>{id}</li>)}</ul>:null}
+        </details>:null}
+      </article>;
+    })}</>:<p>No verified outside-universe lead is available in this bounded coverage view. Missing coverage does not establish that no opportunity exists.</p>}
+    {view.blockers?.length?<details><summary>Exact coverage dependencies</summary><ul>{view.blockers.map(reason=><li key={reason}>{reason}</li>)}</ul></details>:null}
+  </section>;
+}
 
 function ReadinessRow({row,unavailable=false}:{row:StrategyReadiness;unavailable?:boolean}) {
   const pending=unavailable&&row.classification==='valid_action';
@@ -26,42 +143,59 @@ function ReadinessRow({row,unavailable=false}:{row:StrategyReadiness;unavailable
 }
 
 function SwingSetups({view,data,now,unavailable}:{view:SwingResearch;data:Snapshot;now:number;unavailable:boolean}) {
-  const authorizedResearch=view.schema_version==='equity_swing_research_v1'&&view.research_only===true
+  const reviewWindowsVersion=view.schema_version==='equity_swing_research_v2';
+  const authorizedResearch=['equity_swing_research_v1','equity_swing_research_v2'].includes(view.schema_version)&&view.research_only===true
     &&view.capital_authority===false&&view.actionable_quantity===0;
   const current=authorizedResearch&&view.status==='experimental_current'&&!unavailable;
   const candidates=current?view.candidates:[];
   const expired=count(view.expired_candidates_suppressed)??0;
   const elapsedObservations=count(view.coverage?.expired_entry_observations)??0;
-  const observations=count(view.performance?.observations);
-  const outcomes=count(view.performance?.outcomes);
+  const performance=view.read_time_performance??view.performance;
+  const observations=count(performance?.observations);
+  const outcomes=count(performance?.outcomes);
+  const qualified=count(performance?.performance_eligible_paths);
+  const actionReview=count(performance?.corporate_action_review_required);
   const blockers=[...new Set([...(view.blockers??[]),...(view.dependencies??[])])];
   return <section className="swing-research" aria-label="Experimental swing research">
     <div className="strategy-section-heading"><h3>5–14-session swing research</h3><span className="status amber">Experimental · no capital authority</span></div>
     <p>These are prospective daily-bar research setups. No shares are authorized, no orders are assumed, and a setup is not a recommendation to trade.</p>
+    {reviewWindowsVersion?<p>Daily reference conditions may remain useful after the open during their named review windows. A fresh last sale can verify a current price condition; it cannot prove an intraday rebound path, bid/ask execution or a broker fill.</p>:null}
+    {reviewWindowsVersion&&view.review_windows?.length?<ReviewWindows windows={view.review_windows}/>:null}
+    {reviewWindowsVersion?<p className="form-hint">{view.selection_basis??'Selected setups follow the frozen daily-bar screen. Their order is not a ranking of expected profit.'} Business quality, catalyst direction and executable position size still require their own review.</p>:null}
     {!current?<p role="status"><strong>WAIT:</strong> Current source/session validation is unavailable. Setup price levels are withheld.</p>
       :!candidates.length?<p><strong>WAIT:</strong> {expired?'Previously captured setups have elapsed entry windows; none remains current.':'No qualifying setup is retained for the current validated source session.'} No trade is forced.</p>:null}
     {expired?<p>{expired} expired setup card{expired===1?' was':'s were'} suppressed at read time. Expired entries are not replayed.</p>:null}
     {elapsedObservations?<p className="form-hint">{elapsedObservations} captured ticker/session observation{elapsedObservations===1?' has':'s have'} an elapsed first-entry open. This count includes screened observations and is not a count of trades.</p>:null}
     <p className="swing-evidence"><strong>Prospective evidence:</strong> {observations===null?'Observation count unavailable':`${observations} recorded ticker/session observations`}; {outcomes===null?'matured horizon count unavailable':`${outcomes} matured horizon records`}. Profitability and a reliable win rate remain unestablished. Repeated horizons are not independent trades.</p>
+    {view.read_time_performance?<p className="form-hint">{unavailable?'Retained study counts come from the last successful read and have not been revalidated now.':'These study counts were source-validated at this read.'} The original publication remains dated{view.read_time_study_proof?.original_projection_generated_at?` ${timeLabel(view.read_time_study_proof.original_projection_generated_at)}`:''}; no earlier email or observation is rewritten.</p>:null}
+    {qualified!==null?<p className="form-hint">Effectiveness-qualified paths: {qualified}.{actionReview!==null?` Corporate-action reviews still required: ${actionReview}.`:''} Unadjusted price paths and software passes are not verified economic returns.</p>:null}
     {candidates.map(row=>{
       const end=Date.parse(row.review_deadline);
-      const fresh=row.research_only===true&&row.capital_authority===false&&row.actionable_quantity===0
+      const legacyFresh=row.research_only===true&&row.capital_authority===false&&row.actionable_quantity===0
         &&row.source_session===data.expected_market_session&&Number.isFinite(end)&&now<end;
+      const timing=reviewWindowsVersion?swingReviewState(row,now,data.expected_market_session):null;
+      const levelsVisible=timing?timing.referenceLevelsVisible:legacyFresh;
       return <article className="swing-setup" key={`${row.ticker}:${row.setup}`}>
         <h4>{row.ticker} · {setupLabels[row.setup]??row.setup}</h4>
-        <p><strong>{fresh?'Research setup — WAIT for review':'WAIT — dated setup requires reassessment'}</strong></p>
+        <p><strong>{levelsVisible?'Research setup — WAIT for a validated capital proposal':'WAIT — dated setup requires reassessment'}</strong></p>
         <p>{row.thesis}</p>
-        <p className="form-hint">Source close {row.source_session} · {row.horizon_sessions.join(' / ')} trading-session evaluation horizons · next possible entry session {row.entry_session}.</p>
-        {fresh?<dl className="condition-grid">
-          <div><dt>Observed entry trigger</dt><dd>{price(row.entry_trigger)}</dd><dd>Maximum research entry {price(row.max_entry)}; skip a gap above it.</dd></div>
+        <p className="form-hint">Source close {row.source_session} · {row.horizon_sessions.join(' / ')} trading-session evaluation horizons · research entry session {row.entry_session}.</p>
+        {reviewWindowsVersion?<SwingTimingStatus row={row} now={now} expectedSession={data.expected_market_session}/>:null}
+        {levelsVisible?<dl className="condition-grid">
+          <div><dt>{reviewWindowsVersion?'Dated daily reference trigger':'Observed entry trigger'}</dt><dd>{price(row.entry_trigger)}</dd><dd>Maximum research entry {price(row.max_entry)}; skip above it. These are research conditions, not current execution quotes.</dd></div>
           <div><dt>Price invalidation</dt><dd>{price(row.invalidation)}</dd><dd>Daily bars do not prove intraday sequencing or a fill.</dd></div>
           <div><dt>Profit reference</dt><dd>{price(row.profit_reference)}</dd><dd>Hypothetical 2R evaluation reference; not a forecast or observed resistance.</dd></div>
-          <div><dt>Setup review deadline</dt><dd>{timeLabel(row.review_deadline)}</dd><dd>Review before the first future open. An elapsed entry window is not replayed.</dd></div>
+          <div><dt>Setup review deadline</dt><dd>{timeLabel(row.review_deadline)}</dd><dd>{reviewWindowsVersion?'The dated blueprint ends at its named deadline. Recheck current price and every unresolved condition within a valid review window.':'Review before the first future open. An elapsed entry window is not replayed.'}</dd></div>
+          {reviewWindowsVersion?<div><dt>Capital position size</dt><dd>Not sized for execution · zero approved shares</dd><dd>Strategy adoption, current cash, allocation, risk and a separate complete human-review proposal remain required.</dd></div>:null}
         </dl>:<p>Expired or unverified levels are withheld. This does not renew the setup.</p>}
-        {fresh&&row.time_exits?.length?<p>Prospective time exits: {row.time_exits.map(exit=>`${exit.holding_sessions} sessions → ${exit.session}`).join('; ')}. These are comparison horizons, not assumed holdings.</p>:null}
+        {levelsVisible&&row.time_exits?.length?<p>Prospective time exits: {row.time_exits.map(exit=>`${exit.holding_sessions} sessions → ${exit.session}`).join('; ')}. These are comparison horizons, not assumed holdings.</p>:null}
         {row.skip_reasons.length?<p><strong>Skip conditions:</strong> {row.skip_reasons.join('; ')}</p>:null}
         <p className="form-hint">Evidence: {row.evidence_quality.replaceAll('_',' ')}. Catalyst: {row.catalyst_status.replaceAll('_',' ')}.</p>
         {row.uncertainty.length?<details><summary>Uncertainty and execution limits</summary><ul>{row.uncertainty.map(v=><li key={v}>{v}</li>)}</ul></details>:null}
+        {reviewWindowsVersion&&(row.entry_rule||row.exit_rule)?<details><summary>Frozen entry and exit evaluation rules</summary>
+          {row.entry_rule?<p>{row.entry_rule}</p>:null}{row.exit_rule?<p>{row.exit_rule}</p>:null}
+          <p>These research rules do not establish an order, a fill or an adopted stop-loss instruction.</p>
+        </details>:null}
       </article>;
     })}
     {blockers.length?<ul>{blockers.map(v=><li key={v}>{v}</li>)}</ul>:null}
@@ -91,6 +225,8 @@ export default function StrategyFrameworkPanel({data,now,unavailable=false}:{dat
     {shown.map(row=><ReadinessRow row={row} unavailable={unavailable} key={`${row.ticker}:${row.strategy_id}`}/>)}
     {remaining.length?<details><summary>Other research states and dependencies</summary>{remaining.map(row=><ReadinessRow row={row} unavailable={unavailable} key={`${row.ticker}:${row.strategy_id}`}/>)}</details>:null}
     {view.analyst_handoff.length?<details className="analyst-handoff"><summary>What the scheduled analyst must resolve next</summary><ol>{view.analyst_handoff.map((task,i)=><li key={`${task.ticker}:${i}`}><strong>{task.ticker}</strong> — {task.next_step}{task.reason?<p>{task.reason}</p>:null}<small>{task.resolver}{task.review_at?` · review ${timeLabel(task.review_at)}`:''}</small></li>)}</ol><p>Queued work is not completed analysis or an investment recommendation.</p></details>:null}
+    <HeldPurpose data={data} now={now} unavailable={unavailable}/>
+    {view.swing_coverage?<SwingCoveragePanel view={view.swing_coverage} unavailable={unavailable}/>:null}
     {view.swing_research?<SwingSetups view={view.swing_research} data={data} now={now} unavailable={unavailable}/>:null}
   </section>;
 }

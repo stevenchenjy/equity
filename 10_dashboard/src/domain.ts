@@ -41,18 +41,37 @@ export type StrategyReadiness = {
   canonical_decision:string;eligible_quantity:number;blockers:string[];reason:string;next_step:string;
   resolver:string;review_at:string|null;accepted_records?:unknown[];price_levels_current?:boolean;
 };
+export type SwingReviewWindow = {id:'morning'|'afternoon';starts_at:string;ends_at:string};
+export type SwingTiming = {
+  state:'before_review_window'|'within_review_window'|'between_review_windows'|'expired'|'condition_observed'
+    |'awaiting_fresh_quote'|'outside_entry_band'|'invalidation_observed';
+  review_windows:SwingReviewWindow[];current_window?:unknown;next_window?:unknown;current_quote_status:string;
+  quote_observation?:{price:number;trade_at:string;observed_at:string;expires_at:string;execution_quote:false;source_label?:string}|null;
+  permanent_for_signal_day?:boolean;
+  historical_invalidation?:{recorded_at:string;record_hash:string;observed_at:string;price:number};
+  required_conditions:string[];last_evaluated_at:string;
+};
+export type SwingResearchCandidate = {
+  ticker:string;setup:string;state:string;horizon_sessions:number[];source_session:string;
+  first_observed_at:string;entry_session:string;entry_trigger:number|null;max_entry:number|null;
+  invalidation:number|null;profit_reference:number|null;profit_reference_kind:string;review_deadline:string;
+  time_exits?:{holding_sessions:number;session:string}[];
+  entry_rule?:string;exit_rule?:string;growth_quality_status?:string;
+  validity?:{starts_at:string;ends_at:string;session:string};timing?:SwingTiming;
+  skip_reasons:string[];evidence_quality:string;thesis:string;catalyst_status:string;uncertainty:string[];
+  actionable_quantity:0;capital_authority:false;research_only:true;
+};
 export type SwingResearch = {
-  schema_version:'equity_swing_research_v1';status:'experimental_current'|'waiting_on_data'|'failed';
+  schema_version:'equity_swing_research_v1'|'equity_swing_research_v2';status:'experimental_current'|'waiting_on_data'|'failed';
+  version?:string;
+  review_windows?:SwingReviewWindow[];rank_status?:string;selection_basis?:string;
   research_only:true;capital_authority:false;actionable_quantity:0;generated_at?:string;
   dependencies?:string[];limitations?:string[];
   blockers?:string[];expired_candidates_suppressed?:number;additional_setup_count?:number;
   coverage?:Record<string,unknown>;counts?:Record<string,unknown>;performance?:Record<string,unknown>;adoption?:Record<string,unknown>;
-  candidates:{ticker:string;setup:string;state:string;horizon_sessions:number[];source_session:string;
-    first_observed_at:string;entry_session:string;entry_trigger:number|null;max_entry:number|null;
-    invalidation:number|null;profit_reference:number|null;profit_reference_kind:string;review_deadline:string;
-    time_exits?:{holding_sessions:number;session:string}[];
-    skip_reasons:string[];evidence_quality:string;thesis:string;catalyst_status:string;uncertainty:string[];
-    actionable_quantity:0;capital_authority:false;research_only:true}[];
+  read_time_performance?:Record<string,unknown>;
+  read_time_study_proof?:{record_count:number;ledger_sha256:string;original_projection_generated_at:string;original_projection_sha256:string};
+  candidates:SwingResearchCandidate[];
 };
 export type StrategyFramework = {
   schema_version:'equity_strategy_framework_v1';generated_at:string;status:string;automatic_action_allowed:false;
@@ -61,6 +80,21 @@ export type StrategyFramework = {
   decisions:StrategyReadiness[];
   analyst_handoff:{ticker:string;classification?:string;reason?:string;next_step:string;resolver:string;review_at?:string|null}[];
   swing_research?:SwingResearch;
+  swing_coverage?:SwingCoverage;
+};
+export type SwingCoverage = {
+  schema_version:'equity_swing_coverage_v1';generated_at:string;status:string;
+  research_only:true;capital_authority:false;actionable_quantity:0;automatic_action_allowed:false;
+  current_discovery_status?:string;required_session?:string;
+  latest_provider_failure?:{failure_code?:string;http_status?:number;provider_status?:string;original_http_evidence?:string}|null;
+  coverage?:{required_session?:string;required_history_sessions?:number;cached_grouped_files?:number;missing_grouped_sessions?:string[];
+    focused_admitted_history_count?:number;focused_scope_is_not_whole_market_coverage?:boolean};
+  admitted_history_tickers?:string[];blockers?:string[];
+  provisional_history_tickers?:string[];provisional_technical_history_admitted?:false;focused_recovery_status?:string;
+  candidates:{ticker:string;name?:string;discovery_session?:string;first_seen_at?:string|null;dated_screen_rank?:number;
+    source_status:string;history_status?:string;state?:string;next_step:string;resolver:string;source_ids?:string[];
+    current_price:null;research_only:true;capital_authority:false;actionable_quantity:0}[];
+  analyst_handoff?:{ticker:string;next_step:string;resolver:string;source_ids?:string[]}[];
 };
 export type DeploymentGate = {
   code:string; category:'evidence'|'valuation'|'price'|'risk'|'policy'|'account';

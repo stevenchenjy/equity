@@ -230,17 +230,28 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
         result = dict(schema_version='equity_strategy_framework_v1', generated_at=raw.get('generated_at'),
             status='unverified', automatic_action_allowed=False, strategies=[], decisions=[], analyst_handoff=[],
             validation_error='Current readiness source, capital or implementation proof is unverified.',
-            swing_research=raw.get('swing_research'))
+            swing_research=raw.get('swing_research'), swing_coverage=raw.get('swing_coverage'))
     swing = result.get('swing_research')
     if isinstance(swing, dict):
         try:
-            from swing_research import revalidate_projection
+            if swing.get('schema_version') == 'equity_swing_research_v2':
+                from swing_research_v2 import revalidate_projection
+            else:
+                from swing_research import revalidate_projection
             result['swing_research'] = revalidate_projection(root, swing, current)
         except (ImportError, OSError, ValueError, KeyError, TypeError):
-            result['swing_research'] = dict(schema_version='equity_swing_research_v1',
+            result['swing_research'] = dict(schema_version=swing.get('schema_version', 'equity_swing_research_v1'),
                 status='waiting_on_data', research_only=True, capital_authority=False,
                 actionable_quantity=0, candidates=[],
                 dependencies=['Current source and session validation is unavailable; no setup levels are current.'])
+    if isinstance(result.get('swing_coverage'), dict):
+        try:
+            from swing_coverage import build as build_swing_coverage
+            result['swing_coverage'] = build_swing_coverage(root, current=current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            result['swing_coverage'] = dict(schema_version='equity_swing_coverage_v1',
+                status='unavailable', candidates=[], analyst_handoff=[], capital_authority=False,
+                actionable_quantity=0, blockers=['Broad research history and current source coverage are unverified.'])
     actions = {r.get('ticker'): r for r in (capital or {}).get('decisions', [])}
     for row in result.get('decisions', []):
         action = actions.get(row.get('ticker'), {})

@@ -461,6 +461,47 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['swing_research']['actionable_quantity'], 0)
         self.assertFalse(result['swing_research']['capital_authority'])
 
+    def test_review_window_swing_projection_uses_v2_validator_without_reinterpreting_frozen_v1(self):
+        from copy import deepcopy
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        swing = dict(schema_version='equity_swing_research_v2', version='daily-swing-review-windows-v2-20261028',
+            status='experimental_current', research_only=True, capital_authority=False, actionable_quantity=0,
+            candidates=[dict(ticker='NEW',entry_trigger=101,validity={'ends_at':'2026-09-30T15:20:00-04:00'})])
+        framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,
+            decisions=[], analyst_handoff=[], swing_research=swing)
+        before = deepcopy(framework)
+        projected = {**swing, 'read_time':self.now.isoformat()}
+        validator = Mock(return_value=projected)
+        with patch('decision_readiness.validate_projection'), \
+             patch.dict('sys.modules', {'swing_research_v2':Mock(revalidate_projection=validator)}), \
+             patch('swing_research.revalidate_projection') as legacy:
+            result = strategy_framework_view(self.root, {'strategy_framework':framework}, self.now,
+                                             capital=None, market_current=True)
+        validator.assert_called_once_with(self.root, swing, self.now)
+        legacy.assert_not_called()
+        self.assertEqual(result['swing_research'], projected)
+        self.assertEqual(framework, before)
+        self.assertEqual(result['decisions'], [])
+
+    def test_review_window_projection_failure_preserves_version_and_withholds_all_levels(self):
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,
+            decisions=[], swing_research={'schema_version':'equity_swing_research_v2',
+                'candidates':[{'ticker':'NEW','entry_trigger':123}], 'capital_authority':False})
+        with patch('decision_readiness.validate_projection'), \
+             patch.dict('sys.modules', {'swing_research_v2':Mock(revalidate_projection=Mock(side_effect=ValueError('changed_source')))}):
+            result = strategy_framework_view(self.root, {'strategy_framework':framework}, self.now,
+                                             capital=None, market_current=True)
+        value = result['swing_research']
+        self.assertEqual(value['schema_version'], 'equity_swing_research_v2')
+        self.assertEqual(value['status'], 'waiting_on_data')
+        self.assertEqual(value['candidates'], [])
+        self.assertEqual(value['actionable_quantity'], 0)
+        self.assertFalse(value['capital_authority'])
+        self.assertTrue(value.get('blockers') or value.get('dependencies'))
+
     def test_unverified_readiness_cannot_restore_authored_tasks_or_accepted_records(self):
         from server import strategy_framework_view
         framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,

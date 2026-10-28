@@ -21,7 +21,7 @@ import re
 import time
 from typing import Any, Callable
 from urllib.error import HTTPError, URLError
-from urllib.parse import parse_qs, urlencode, urlsplit
+from urllib.parse import parse_qs, unquote, urlencode, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from daily_common import (ET, ROOT, atomic_write_json,
@@ -31,6 +31,7 @@ SCHEMA = "phase5r_market_discovery_v1"
 BASE = "https://api.massive.com"
 CACHE_RELATIVE = Path("03_source_data/equity_research/market_discovery.local")
 MAX_BYTES = 16 * 1024 * 1024
+MAX_ERROR_BYTES = 64 * 1024
 MAX_CALLS = 50
 MAX_PAGES = 25
 MAX_ROWS = 40000
@@ -51,14 +52,41 @@ FAILURES = {"authentication_missing", "authentication_failed", "rate_limited",
     "request_failed", "response_oversize", "invalid_response", "invalid_pagination",
     "request_budget_exceeded", "metadata_incomplete", "bars_incomplete",
     "cache_invalid", "benchmark_missing", "local_unavailable", "local_stale",
-    "unexpected_failure", "rate_state_invalid", "coverage_incomplete"}
+    "unexpected_failure", "rate_state_invalid", "coverage_incomplete", "evidence_write_failed"}
 PRICE_BASIS = "Massive Stocks Basic published EOD grouped OHLCV; adjusted=true (split-adjusted), include_otc=false; separate from unadjusted canonical order-price data"
 
 
 class DiscoveryError(RuntimeError):
-    def __init__(self, code: str):
+    def __init__(self, code: str, *, http_status: int | None = None,
+                 response_bytes: bytes | None = None, truncated: bool = False):
         self.code = code if code in FAILURES else "unexpected_failure"
+        self.http_status = http_status
+        self.response_bytes = response_bytes
+        self.truncated = truncated
         super().__init__(self.code)
+
+
+class _HTTPPayload(dict):
+    """Parsed public data plus transient exact transport bytes for retention."""
+    def __init__(self, value: dict, raw: bytes, status: int):
+        super().__init__(value)
+        self.response_bytes, self.http_status = raw, status
+
+
+def _retain_original(path: Path, raw: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        raise OSError("discovery_evidence_linked")
+    try:
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    except FileExistsError:
+        if path.read_bytes() != raw:
+            raise OSError("discovery_evidence_conflict") from None
+        return
+    with os.fdopen(descriptor, "wb") as handle:
+        handle.write(raw)
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 class NoRedirect(HTTPRedirectHandler):
@@ -71,18 +99,27 @@ def _http_get(path: str, headers: dict[str, str], timeout: float) -> Any:
         with build_opener(NoRedirect()).open(
             Request(BASE + path, headers=headers), timeout=timeout
         ) as response:
-            if response.status != 200:
-                raise DiscoveryError("request_failed")
+            status = response.status
+            if status != 200:
+                raise DiscoveryError("request_failed", http_status=status)
             raw = response.read(MAX_BYTES + 1)
     except HTTPError as error:
         code = "authentication_failed" if error.code in {401, 403} else "rate_limited" if error.code == 429 else "request_failed"
-        raise DiscoveryError(code) from None
+        try:
+            body = error.read(MAX_ERROR_BYTES + 1)
+        except (OSError, ValueError):
+            body = None
+        truncated = body is not None and len(body) > MAX_ERROR_BYTES
+        raise DiscoveryError(code, http_status=error.code,
+                             response_bytes=body[:MAX_ERROR_BYTES] if body is not None else None,
+                             truncated=truncated) from None
     except (OSError, URLError):
         raise DiscoveryError("request_failed") from None
     if len(raw) > MAX_BYTES:
         raise DiscoveryError("response_oversize")
     try:
-        return json.loads(raw)
+        value = json.loads(raw)
+        return _HTTPPayload(value, raw, status) if isinstance(value, dict) else value
     except (ValueError, UnicodeError):
         raise DiscoveryError("invalid_response") from None
 
@@ -158,6 +195,7 @@ class DiscoveryClient:
         self._key, self._http_get = api_key, http_get
         self._clock, self._sleep, self._state_path = clock, sleep, state_path
         self.calls = 0
+        self.http_receipts: list[dict] = []
         # A different existing provider client may just have finished. Always
         # wait a full interval on process start as well as preserving our state.
         self._last = clock()
@@ -177,7 +215,7 @@ class DiscoveryClient:
     def request(self, path: str) -> dict[str, Any]:
         if self.calls >= MAX_CALLS:
             raise DiscoveryError("request_budget_exceeded")
-        if not path.startswith(("/v3/reference/tickers?", "/v2/aggs/grouped/locale/us/market/stocks/")):
+        if not path.startswith(("/v3/reference/tickers?", "/v2/aggs/grouped/locale/us/market/stocks/", "/v2/aggs/ticker/")):
             raise DiscoveryError("request_failed")
         delay = PACE_SECONDS - (self._clock() - self._last)
         if delay > 0:
@@ -188,13 +226,73 @@ class DiscoveryClient:
         try:
             payload = self._http_get(path, {"Accept": "application/json", "Authorization": "Bearer " + self._key,
                 "User-Agent": "Equity-Market-Discovery/1.0"}, TIMEOUT_SECONDS)
-        except DiscoveryError:
+        except DiscoveryError as error:
+            self._record_http(path, status=error.http_status, code=error.code,
+                              body=error.response_bytes, truncated=error.truncated)
             raise
         except Exception:
+            self._record_http(path, status=None, code="request_failed", body=None)
             raise DiscoveryError("request_failed") from None
-        if not isinstance(payload, dict) or payload.get("status") != "OK":
+        statuses = {"OK", "DELAYED"} if path.startswith("/v2/aggs/ticker/") else {"OK"}
+        self._record_http(path, status=getattr(payload, "http_status", None),
+                          code="none" if isinstance(payload, dict) and payload.get("status") in statuses else "invalid_response",
+                          body=getattr(payload, "response_bytes", None))
+        if not isinstance(payload, dict) or payload.get("status") not in statuses:
             raise DiscoveryError("invalid_response")
         return payload
+
+    def _record_http(self, path: str, *, status: int | None, code: str,
+                     body: bytes | None, truncated: bool = False) -> None:
+        """Never retain auth headers, query values, exceptions or an echoed key."""
+        endpoint = urlsplit(path).path
+        family = ("grouped_prices" if endpoint.startswith("/v2/aggs/grouped/") else
+                  "custom_bars" if endpoint.startswith("/v2/aggs/ticker/") else "reference_metadata")
+        receipt = {"schema_version": "equity_discovery_http_receipt_v1",
+                   "requested_at": datetime.fromtimestamp(self._last, timezone.utc).isoformat(),
+                   "endpoint_family": family, "endpoint": BASE + endpoint,
+                   "http_status": status, "failure_code": code, "request_number": self.calls,
+                   "credential_headers_retained": False, "query_values_retained": False,
+                   "response_truncated": truncated, "response_sha256": hashlib.sha256(body).hexdigest() if body is not None else None,
+                   "response_bytes": len(body) if body is not None else None,
+                   "response_path": None, "provider_status": None, "provider_message": None,
+                   "interpretation": ("HTTP 403: this endpoint denied authorization; credential validity, entitlement and publication policy are separate possibilities."
+                                      if status == 403 else "HTTP 401: this endpoint rejected authentication."
+                                      if status == 401 else "Endpoint-specific observation; no cross-endpoint availability inference.")}
+        decoded = body.decode("utf-8", errors="replace") if body is not None else ""
+        try:
+            parsed_text = json.dumps(json.loads(decoded), ensure_ascii=False)
+        except ValueError:
+            parsed_text = decoded
+        echoed = bool(body is not None and (self._key in decoded or self._key in parsed_text
+            or self._key in unquote(decoded)
+            or any(marker in decoded.lower() for marker in ("authorization", "bearer ", "apikey", "api_key"))))
+        receipt["response_retention"] = "omitted_credential_echo" if echoed else "bounded_prefix" if truncated else "original_bytes" if body is not None else "transport_did_not_supply_original_bytes"
+        directory = self._state_path.parent
+        if body is not None and not echoed:
+            relative = Path("http_originals") / (hashlib.sha256(body).hexdigest() + ".bin")
+            try:
+                _retain_original(directory / relative, body)
+            except OSError:
+                raise DiscoveryError("evidence_write_failed") from None
+            receipt["response_path"] = str(relative)
+            if not truncated:
+                try:
+                    value = json.loads(body)
+                    if isinstance(value, dict):
+                        receipt["provider_status"] = str(value.get("status", ""))[:80]
+                        receipt["provider_message"] = str(value.get("message", value.get("error", "")))[:600]
+                except (ValueError, UnicodeError):
+                    pass
+        digest = _digest(receipt)
+        relative = Path("http_receipts") / (digest + ".json")
+        receipt_raw = (json.dumps(receipt, sort_keys=True, indent=2) + "\n").encode()
+        try:
+            _retain_original(directory / relative, receipt_raw)
+        except OSError:
+            raise DiscoveryError("evidence_write_failed") from None
+        self.http_receipts.append({**receipt, "receipt_path": str(relative),
+                                   "receipt_sha256": hashlib.sha256(receipt_raw).hexdigest(),
+                                   "receipt_content_sha256": digest})
 
     def fetch_metadata(self, session: date) -> dict[str, Any]:
         rows: dict[str, dict[str, Any]] = {}
@@ -402,8 +500,21 @@ def build_report(metadata: dict[str, Any], bars_by_session: dict[str, dict[str, 
             "Completeness sanity floors: at least 2,000 common stocks, 1,000 ETFs and 5,000 grouped rows per session; a reference-population decline over 20% requires investigation."]}
 
 
+def _publish_discovery_attempt(directory: Path, report: dict, client: DiscoveryClient | None, *, initial_calls: int = 0, initial_receipts: int = 0) -> dict:
+    report["provider_requests_this_run"] = client.calls-initial_calls if client else 0
+    report["provider_http_receipts"] = list(getattr(client, "http_receipts", []))[initial_receipts:] if client else []
+    report["failure_detail"] = (report["provider_http_receipts"][-1]
+                                 if report.get("complete") is not True and report["provider_http_receipts"] else None)
+    raw = (json.dumps(report, sort_keys=True, indent=2) + "\n").encode()
+    _retain_original(directory / "attempts" / (hashlib.sha256(raw).hexdigest() + ".json"), raw)
+    _cache_write(directory / "latest.local.json", report)
+    return report
+
+
 def refresh_discovery(root: Path = ROOT, current: datetime | None = None, *, client: DiscoveryClient | None = None) -> dict[str, Any]:
     current = current or now_et()
+    initial_calls = client.calls if client else 0
+    initial_receipts = len(getattr(client,"http_receipts",[])) if client else 0
     sessions = published_sessions(current)
     session = sessions[-1]
     directory = root / CACHE_RELATIVE
@@ -439,15 +550,19 @@ def refresh_discovery(root: Path = ROOT, current: datetime | None = None, *, cli
                                   for row in csv.DictReader(handle) if row.get("ticker", "").strip())
         report = build_report(metadata, history, session, legacy)
         report["fetched_at"] = current.isoformat(timespec="seconds")
-        report["provider_requests_this_run"] = client.calls if client else 0
-        _cache_write(directory / "latest.local.json", report)
-        return report
+        return _publish_discovery_attempt(directory, report, client, initial_calls=initial_calls, initial_receipts=initial_receipts)
     except Exception as error:
         code = error.code if isinstance(error, DiscoveryError) else "unexpected_failure"
         report = _empty(session, "unavailable", code)
         report["fetched_at"] = current.isoformat(timespec="seconds")
-        _cache_write(directory / "latest.local.json", report)
-        return report
+        try:
+            return _publish_discovery_attempt(directory, report, client, initial_calls=initial_calls, initial_receipts=initial_receipts)
+        except OSError:
+            # Retain existing originals; never report successful evidence when
+            # its immutable attempt could not be written.
+            report.update(failure_code="evidence_write_failed", complete=False, status="unavailable")
+            _cache_write(directory / "latest.local.json", report)
+            return report
 
 
 def load_discovery(root: Path = ROOT, current: datetime | None = None) -> dict[str, Any]:

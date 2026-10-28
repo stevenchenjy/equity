@@ -3,10 +3,13 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime, timedelta
 import json
+import io
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.error import HTTPError
 
 import _support
 import market_discovery as md
@@ -231,6 +234,74 @@ class DiscoveryTests(unittest.TestCase):
             with self.assertRaises(md.DiscoveryError) as ctx: md._http_get("/v3/reference/tickers?x=y", {}, 1)
             self.assertEqual(str(ctx.exception), "response_oversize")
         self.assertIsNone(md.NoRedirect().redirect_request(None,None,302,"",{},"https://evil.example"))
+
+    def test_http_denial_keeps_endpoint_status_and_original_public_body(self):
+        body = b'{"status":"NOT_AUTHORIZED","message":"This endpoint is not included in the plan."}'
+        class Opener:
+            def open(self, *args, **kwargs):
+                raise HTTPError("https://api.massive.com/private?apiKey=DO_NOT_RETAIN", 403, "Forbidden", {}, io.BytesIO(body))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            client = md.DiscoveryClient("OWNER_SECRET", state_path=root/"pace.json", clock=lambda: 1000, sleep=lambda n: None)
+            with patch.object(md, "build_opener", return_value=Opener()):
+                with self.assertRaises(md.DiscoveryError) as ctx:
+                    client.request("/v2/aggs/grouped/locale/us/market/stocks/2026-09-21?adjusted=true&include_otc=false")
+            self.assertEqual(ctx.exception.http_status, 403)
+            receipt = client.http_receipts[0]
+            self.assertEqual(receipt["endpoint_family"], "grouped_prices")
+            self.assertEqual(receipt["provider_status"], "NOT_AUTHORIZED")
+            self.assertIn("entitlement", receipt["interpretation"])
+            self.assertEqual((root/receipt["response_path"]).read_bytes(), body)
+            self.assertEqual(hashlib.sha256((root/receipt["receipt_path"]).read_bytes()).hexdigest(), receipt["receipt_sha256"])
+            for path in root.rglob("*"):
+                if path.is_file():
+                    self.assertNotIn(b"OWNER_SECRET", path.read_bytes())
+                    self.assertNotIn(b"DO_NOT_RETAIN", path.read_bytes())
+                    self.assertNotIn(b"Authorization", path.read_bytes())
+
+    def test_echoed_credential_error_body_is_not_persisted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            def denied(*args):
+                raise md.DiscoveryError("authentication_failed", http_status=401,
+                    response_bytes=b'{"message":"Rejected Bearer OWNER_SECRET"}')
+            client = md.DiscoveryClient("OWNER_SECRET", state_path=root/"pace.json", http_get=denied,
+                clock=lambda: 1000, sleep=lambda n: None)
+            with self.assertRaises(md.DiscoveryError): client.request("/v3/reference/tickers?apiKey=OWNER_SECRET")
+            receipt = client.http_receipts[0]
+            self.assertEqual(receipt["http_status"], 401)
+            self.assertEqual(receipt["response_retention"], "omitted_credential_echo")
+            self.assertIsNone(receipt["response_path"])
+            self.assertIsNone(receipt["provider_message"])
+            self.assertNotIn("?", receipt["endpoint"])
+            self.assertTrue(all(b"OWNER_SECRET" not in p.read_bytes() for p in root.rglob("*") if p.is_file()))
+
+    def test_failed_refresh_retains_current_endpoint_receipt_and_prior_attempt(self):
+        meta, days = fixtures()
+        class Fake:
+            calls = 0
+            def fetch_metadata(self, day): self.calls += 1; return deepcopy(meta)
+            def fetch_grouped(self, day): self.calls += 1; return deepcopy(days[str(day)])
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            first = md.refresh_discovery(root, NOW, client=Fake())
+            originals = {p.name: p.read_bytes() for p in (root/md.CACHE_RELATIVE/"attempts").glob("*.json")}
+            (root/md.CACHE_RELATIVE/f"grouped-{DAYS[-1]}.local.json").unlink()
+            def denied(*args):
+                raise md.DiscoveryError("authentication_failed", http_status=403,
+                    response_bytes=b'{"status":"NOT_AUTHORIZED","message":"Publication window denied."}')
+            client = md.DiscoveryClient("OWNER_SECRET", state_path=root/md.CACHE_RELATIVE/"pace.json",
+                http_get=denied, clock=lambda: 1000, sleep=lambda n: None)
+            failed = md.refresh_discovery(root, NOW + timedelta(minutes=1), client=client)
+            self.assertTrue(first["complete"])
+            self.assertFalse(failed["complete"])
+            self.assertEqual(failed["failure_code"], "authentication_failed")
+            self.assertEqual(failed["provider_requests_this_run"], 1)
+            self.assertEqual(failed["failure_detail"]["endpoint_family"], "grouped_prices")
+            self.assertEqual(failed["failure_detail"]["http_status"], 403)
+            self.assertEqual(failed["top_stocks"], [])
+            for name, raw in originals.items(): self.assertEqual((root/md.CACHE_RELATIVE/"attempts"/name).read_bytes(), raw)
+            self.assertEqual(len(list((root/md.CACHE_RELATIVE/"attempts").glob("*.json"))), 2)
 
 
 if __name__ == "__main__": unittest.main()

@@ -6,6 +6,11 @@ interest in 5–14-day swings. This authorizes research/workflow improvements an
 a bounded experimental pathway, not an automatic change to capital-risk policy
 or promotion of an experimental strategy.
 
+The [review-window swing workflow](swing_review_window_workflow.md) documents the
+separate v2 timing study, public observer, focused outside-universe history and
+outcome qualification. Frozen v1 observations remain retained; new conventions
+cannot reinterpret their original entries or results.
+
 ## Strategy and horizon separation
 
 | Route | Current authority | Appropriate decision evidence |

@@ -364,6 +364,22 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
     research_tasks = [task for task in research_tasks if isinstance(task, dict)][:8] if isinstance(research_tasks, list) else []
     swing_context = framework.get("swing_research", {})
     swing_context = swing_context if isinstance(swing_context, dict) else {}
+    # Revalidate optional research at this actual claim clock. A dated daily
+    # card is not proof that a newer public observation or setup is still valid.
+    if swing_context.get("schema_version") in {"equity_swing_research_v1", "equity_swing_research_v2"}:
+        try:
+            if swing_context["schema_version"] == "equity_swing_research_v2":
+                from swing_research_v2 import revalidate_projection as validate_swing
+            else:
+                from swing_research import revalidate_projection as validate_swing
+            swing_context = validate_swing(root, swing_context, current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            swing_context = {"status": "waiting_on_data", "candidates": [], "capital_authority": False}
+    try:
+        from swing_coverage import build as swing_coverage_build
+        swing_coverage = swing_coverage_build(root, current=current)
+    except (ImportError, OSError, ValueError, KeyError, TypeError):
+        swing_coverage = {"status": "unavailable", "analyst_handoff": [], "blockers": ["outside_universe_source_coverage_unverified"]}
     from intraday_assessment import attention as intraday_attention
     intraday = intraday_attention(root, current)
     stores = _hashes(root, MUTABLE_STORES)
@@ -396,6 +412,9 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
                 "status": framework.get("status", "not_yet_published"),
                 "analyst_handoff": research_tasks,
                 "swing_research_status": swing_context.get("status", "not_yet_published"),
+                "swing_candidates": swing_context.get("candidates", [])[:3],
+                "outside_universe_handoff": swing_coverage.get("analyst_handoff", [])[:3],
+                "swing_coverage_status": swing_coverage.get("status", "unavailable"),
                 "authority": "Research continuity only; revalidate current sources and existing capital rules before any amendment.",
                 "capital_authority": False,
             },

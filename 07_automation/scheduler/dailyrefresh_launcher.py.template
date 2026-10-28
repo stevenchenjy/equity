@@ -58,7 +58,9 @@ def keychain_value(service: str) -> bytes | None:
 
 def main() -> int:
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--feedback-refresh',action='store_true',help='Internal no-send refresh; dashboard caller owns runtime/daily locks')
+    mode=parser.add_mutually_exclusive_group()
+    mode.add_argument('--feedback-refresh',action='store_true',help='Internal no-send refresh; dashboard caller owns runtime/daily locks')
+    mode.add_argument('--swing-candidate-history',action='store_true',help='Bounded research-only history collection; collector owns nonblocking locks')
     parser.add_argument('--market-snapshot-mode',choices=['fetch','reuse_validated_snapshot'],default='fetch')
     args=parser.parse_args()
     os.umask(0o077)
@@ -73,7 +75,10 @@ def main() -> int:
         # Missing primary authentication is a finite collector failure. Let the
         # verified runtime try its owner-approved credential-free backup; it
         # still fails closed if the retained baseline or backup is unavailable.
-    arguments = ([PYTHON, '/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_daily_refresh.py',
+    arguments = ([PYTHON, '/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_swing_candidate_history.py',
+                  '--root','/Users/messssi/LocalRuntime/equity','--collect']
+                 if args.swing_candidate_history else
+                 [PYTHON, '/Users/messssi/LocalRuntime/equity/09_scripts/equity_research/run_daily_refresh.py',
                   '--run','--no-lock','--market-snapshot-mode',args.market_snapshot_mode]
                  if args.feedback_refresh else [PYTHON,RUNTIME_SCHEDULER,'--job','dailyrefresh'])
     try:

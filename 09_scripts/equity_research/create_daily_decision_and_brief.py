@@ -681,10 +681,12 @@ def compose_strategy_research(decision: dict[str, Any], *, root: Path,
                               current: datetime, capture: bool = False) -> None:
     """Attach optional research without changing capital or notification meaning."""
     from decision_readiness import build as build_decision_readiness
-    from swing_research import build as build_swing_research
+    from swing_research_v2 import build as build_swing_research
+    from swing_coverage import build as build_swing_coverage
     view = build_decision_readiness(root, decision, current=current)
     view["swing_research"] = build_swing_research(
         root, current=current, capture=capture, baseline=decision)
+    view["swing_coverage"] = build_swing_coverage(root, current=current)
     decision["strategy_framework"] = view
 
 

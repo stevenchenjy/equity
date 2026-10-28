@@ -274,7 +274,9 @@ def validate_projection(root: Path, view: dict, capital: dict, current: datetime
     from capital_decision import validate
     if not isinstance(view, dict) or view.get("schema_version") != SCHEMA:
         raise ValueError("strategy_framework_schema_invalid")
-    payload = {k: v for k, v in view.items() if k not in {"content_sha256", "swing_research"}}
+    # Optional research projections carry their own independently rederived
+    # source proofs. They cannot become capital authority by joining this view.
+    payload = {k: v for k, v in view.items() if k not in {"content_sha256", "swing_research", "swing_coverage"}}
     if view.get("content_sha256") != canonical_sha256(payload):
         raise ValueError("strategy_framework_content_invalid")
     if view.get("automatic_action_allowed") is not False or view.get("changes_canonical_decisions") is not False:
