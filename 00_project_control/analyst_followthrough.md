@@ -2,6 +2,16 @@
 
 Account planning authority now follows [the October 9 owner-approved local-record policy](account_record_authority.md). When its private approval is active, use local cash, holdings and known order commitments for conditional manual plans. Do not request a fresh broker snapshot solely for age, completeness flags or estimated-cash labels; preserve those facts as execution checks. Actual arithmetic/order/feedback contradictions and company/strategy requirements remain effective.
 
+The October 27 [multi-strategy workflow](multi_strategy_workflow.md) separates
+growth, index-core, the existing five-session tactical route and experimental
+swing research. Inspect the current decision's source-bound strategy-framework
+`analyst_handoff` alongside the authoritative queues below. It explains existing
+outcomes and names bounded next work; it cannot admit a trade, clear a blocker,
+extend a plan or replace a maintained conclusion. Continue independently useful
+research from the existing chat without requiring a new owner prompt. Unproven
+5–14-day methods stay experimental until exact reviewed adoption; preserve the
+existing capital-risk limits and human-only execution.
+
 For an active `daily_decision.json:capital_deployment_escalation`, immediately
 prioritize its `research_priority_tickers` and exact evidence/valuation gates.
 Compare quality holding additions, the strongest researched growth case and

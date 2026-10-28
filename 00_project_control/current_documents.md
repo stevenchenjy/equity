@@ -7,6 +7,11 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Multi-strategy research and decision readiness](multi_strategy_workflow.md):
+  separate approved growth/core/tactical capital decisions from prospective
+  five-, ten- and fourteen-session swing research; exact next analytical work,
+  source-bound conditions, outcome measurement and explicit adoption boundaries.
+
 - [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and unchanged investment/duplicate-protection rules; effective October 22, 2026.
 
 - [Validated intraday observations and portfolio risk](market_intraday_risk.md): all-held Nasdaq Last Sale admission during actual short claims; bound prior closes, explicit expiry, fixed-inventory price-only change, existing risk conditions and separate email/dashboard freshness. No new investment or delivery thresholds.

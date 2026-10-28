@@ -85,6 +85,43 @@ class CapitalWorkQueueTests(unittest.TestCase):
             self.assertEqual(row["next_review_at"],"2026-09-28T09:45:00-04:00")
         self.assertFalse(result["automatic_action_allowed"])
 
+    def test_local_ledger_expiry_routes_to_analyst_without_waiving_execution_checks(self):
+        d = decision()
+        d["account_authority"] = {"local_planning_enabled": True}
+        before = copy.deepcopy(d)
+        result = self.build(d)
+        for row in result["plan_reassessment_queue"]:
+            self.assertEqual(row["review_owner"], "scheduled_research_then_owner_if_eligible")
+            self.assertIn("elapsed research deadline alone", row["next_step"])
+            self.assertIn("owner must check executable funds", row["next_step"])
+            self.assertIn("Do not renew", row["next_step"])
+            self.assertEqual(row["state"], "blocked")
+            self.assertEqual(row["eligible_quantity"], 0)
+            self.assertEqual(row["original_time_exit_at"], "2026-09-25T15:45:00-04:00")
+        self.assertEqual(d, before)
+
+    def test_local_ledger_actual_conflicts_and_uncertain_prior_orders_keep_owner_route(self):
+        for context in ({"account_conflicts": ["cash_arithmetic_conflict"]},
+                        {"delivery_followthrough": {"status": "prior_delivery_uncertain"}}):
+            d = decision()
+            d["account_authority"] = {"local_planning_enabled": True}
+            d.update(context)
+            result = self.build(d)
+            self.assertTrue(all(row["review_owner"] == "owner_account_check_then_research"
+                                for row in result["plan_reassessment_queue"]))
+        d = decision()
+        d["account_authority"] = {"local_planning_enabled": True}
+        d["plan_continuity"]["plans"][0]["blockers"] = ["order_commitment_unbounded"]
+        result = self.build(d)
+        row = next(r for r in result["plan_reassessment_queue"] if r["ticker"] == "SMTC")
+        self.assertEqual(row["review_owner"], "owner_account_check_then_research")
+        self.assertEqual(row["blockers"], ["order_commitment_unbounded"])
+
+    def test_without_private_local_ledger_authority_account_verification_route_remains(self):
+        result = self.build()
+        self.assertTrue(all(row["review_owner"] == "owner_account_check_then_research"
+                            for row in result["plan_reassessment_queue"]))
+
     def test_unchanged_refresh_no_ticket_or_event_duplicates_and_no_deadline_roll(self):
         first=self.build()
         d=decision(); d["generated_at"]="2026-09-29T13:00:00-04:00"

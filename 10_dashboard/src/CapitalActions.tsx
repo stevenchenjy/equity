@@ -51,12 +51,14 @@ function DeploymentEscalation({summary,draftTickers=[]}:{summary:CapitalDeployme
     {allGates.length>globalGates.length?<details><summary>完整现金保留门槛（证据 / 估值 / 价格 / 风险 / 政策 / 账户）</summary><DeploymentGates gates={allGates} attributeTicker/></details>:null}
   </section>;
 }
-export function CapitalActions({data}:{data:Snapshot}) {
+export function CapitalActions({data,unavailable=false}:{data:Snapshot;unavailable?:boolean}) {
   const c=data.capital_decision;
   const escalation=data.capital_deployment_escalation;
+  if(unavailable)return <section className="capital-actions" aria-label="Current action verification"><h2>Current action verification</h2><strong>WAIT — the latest dashboard read is unavailable.</strong><p>Previously displayed quantities and prices are withheld until current account, evidence and plan bindings can be verified. Retained instructions and recorded holdings are unchanged.</p></section>;
   if(!c)return <section className="capital-actions"><h2>今天做什么</h2><strong>暂无当前有效的完整交易草案</strong><p>等待完整决策重算；不要沿用历史数量或过期 DAY 委托。</p>{escalation?<DeploymentEscalation summary={escalation}/>:null}</section>;
   const actionable=c.decisions.filter(r=>r.order_draft);
   const held=new Set(data.positions.map(r=>r.ticker));
+  const readiness=new Map(data.strategy_framework?.decisions.map(row=>[row.ticker,row]));
   const primary=c.decisions.filter(r=>r.order_draft||held.has(r.ticker));
   const dependencies=c.dependencies?.filter(d=>d.scope==='global')??[];
   const accountCheck=dependencies.some(d=>d.category==='C')||c.global_blockers.some(b=>/account|cash|order_inventory|earlier_instruction_execution/.test(b));
@@ -71,6 +73,7 @@ export function CapitalActions({data}:{data:Snapshot}) {
       <dl className="condition-grid"><div><dt>委托条件</dt><dd>{r.order_draft.side==='sell'?'SELL':'BUY'} {r.order_draft.entry_order_type} {r.order_draft.side==='sell'&&r.order_draft.entry_order_type!=='STOP'?'≥':'≤'} {money(r.order_draft.side==='sell'?r.order_draft.exit_price:r.order_draft.entry_limit)} · {r.order_draft.time_in_force}</dd></div><div><dt>有效时间</dt><dd>{timeLabel(r.order_draft.entry_window.starts_at)} — {timeLabel(r.order_draft.entry_window.ends_at)}</dd></div>
       <div><dt>失效与风险</dt><dd>{r.order_draft.side==='sell'?'卖出限价不保护下跌；止损可能跳空':r.order_draft.invalidation_price===null?'核心用途没有价格止损；全部本金仍有风险':`失效价 ${money(r.order_draft.invalidation_price)}`}</dd><dd>计划风险 {money(r.order_draft.planned_total_loss)} · {r.order_draft.planned_account_risk_pct}%</dd></div>
       <div><dt>仓位与现金</dt><dd>{r.order_draft.portfolio_weight_before}% → {r.order_draft.portfolio_weight_after}%</dd><dd>{money(r.order_draft.cash_before)} → 约 {money(r.order_draft.estimated_cash_after)}（费用前）</dd></div></dl>
+      {readiness.has(r.ticker)?<p className="form-hint">Strategy: {readiness.get(r.ticker)?.strategy_id} · Horizon: {readiness.get(r.ticker)?.horizon}</p>:null}
       <p>{r.order_draft.trigger_rule}</p><p>复核：{r.order_draft.initial_reassessment_price===null?'':money(r.order_draft.initial_reassessment_price)+' · '}{r.order_draft.reassessment_rule}</p>
       <ul>{r.order_draft.cancel_conditions.map(v=><li key={v}>{v}</li>)}</ul><p>{r.thesis_summary}</p><small>{r.order_draft.cost_assumption}</small>
     </>:<><p>{r.reasons.join('；')}</p>{r.dependencies.length?<details><summary>缺少的具体证据与处理方</summary><ul>{r.dependencies.map((v,i)=><li key={v.code+i}>{v.category} · {v.evidence_required}</li>)}</ul></details>:null}</>}</article>)}

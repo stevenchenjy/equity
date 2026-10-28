@@ -9,6 +9,7 @@ import ResearchSection from './ResearchSection';
 import CompanyCase from './CompanyCase';
 import EarningsEvents from './EarningsEvents';
 import IntradayRiskPanel from './IntradayRisk';
+import StrategyFrameworkPanel from './StrategyFramework';
 import { useUiVersion } from './uiVersion';
 import { preparePreview, waitForResearch } from './feedbackRequest';
 import type { RequestPayload, Preview } from './feedbackRequest';
@@ -393,9 +394,10 @@ export default function App() {
       {page!=='feedback'&&data?.market_current===false?<div className="notice" role="status"><Clock3 size={19}/><span>Close validation pending for {data.expected_market_session}. Prices below remain dated {data.market_session}, not live. Read each plan's add, hold and exit conditions; no current quote is implied.</span></div>:null}
       {runtimeUpdating?(page!=='feedback'?<div className="notice" role="status"><Clock3 size={19}/><span>{error} 下方暂留上次读取的数据。</span></div>:null):error ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>当前视图未能更新</strong><p>{error} {data ? '下方保留上次读取的数据，当前数量方案暂停展示。' : ''}</p></div></div> : null}
       {storageError ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>试填记录存储异常</strong><p>{storageError}。可以在记录历史中清除损坏的试填存储。</p></div></div> : null}
-      {page!=='feedback'&&data?.stale ? <div className="error-banner"><Clock3 size={19} /><p>这份研究生成于 {timeLabel(data.generated_at)}，并非今日研究。方案需重新复审。</p></div> : null}
+      {page!=='feedback'&&data?.stale ? <div className="error-banner"><Clock3 size={19} /><p>This publication was generated {timeLabel(data.generated_at)}. Current-session evidence or reassessment is required; dated research does not renew an action plan.</p></div> : null}
       {page === 'today' ? <>
-        {data ? <CapitalActions data={data} /> : null}
+        {data ? <CapitalActions data={data} unavailable={Boolean(error)}/> : null}
+        {data ? <StrategyFrameworkPanel data={data} now={now} unavailable={Boolean(error)||data.research_ready===false}/> : null}
         {data ? <IntradayRiskPanel data={data} now={now} unavailable={Boolean(error)}/> : null}
         {data ? <Summary data={data} /> : <div className="empty">{loading ? '正在读取生产研究快照…' : '当前没有可展示的完整研究快照。'}</div>}
         <div className="workspace"><section className="plan-column"><h2>当前方案</h2>

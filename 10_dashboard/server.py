@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 import csv
 import fcntl
 import hashlib
@@ -26,6 +27,7 @@ from tactical_review import _validated_bars
 from dashboard_publication import publication_id
 from workflow_inputs import WORKFLOW_INPUTS
 from plan_summary import SUMMARY_PATH, catalog, matching_summary
+from daily_common import canonical_sha256, latest_published_market_session
 
 ET = ZoneInfo("America/New_York")
 DEFAULT_ROOT = Path("/Users/messssi/LocalRuntime/equity")
@@ -183,6 +185,83 @@ def project_core_roles(rows: list[dict], allocation: dict | None, field: str) ->
             row[field] = "unverified"
 
 
+def dated_capital_projection(capital: dict, required_session: str, reference_session: str | None) -> dict:
+    """Withhold stale new capital without cancelling independently valid exits.
+
+    The original validated contract stays immutable. This explicitly labelled
+    dashboard projection is not another canonical capital contract.
+    """
+    result = deepcopy(capital)
+    source_hash = result.pop('content_sha256', None)
+    code = 'required_completed_close_unverified'
+    explanation = (f'The required completed close is {required_session}; retained prices are dated '
+                   f'{reference_session or "unverified"}. Revalidate before proposing new capital.')
+    for row in result.get('decisions', []):
+        draft = row.get('order_draft') or {}
+        if row.get('decision') in {'ACTIONABLE_BUY', 'ACTIONABLE_ADD'} or draft.get('side') == 'buy':
+            row.update(decision='BLOCKED', shares=0, estimated_notional=0, order_draft=None)
+            row['blockers'] = list(dict.fromkeys([*row.get('blockers', []), code]))
+            row['reasons'] = [explanation, *row.get('reasons', [])]
+    result['action'] = 'REVIEW_HELD_RISK' if any((r.get('order_draft') or {}).get('side') == 'sell'
+                                               for r in result.get('decisions', [])) else 'NO_NEW_POSITION'
+    result['global_blockers'] = list(dict.fromkeys([*result.get('global_blockers', []), code]))
+    result['dependencies'] = [*result.get('dependencies', []), dict(category='A', code=code,
+                                scope='global', evidence_required=explanation)]
+    result['read_time_projection'] = dict(status='dated_research', source_content_sha256=source_hash,
+        required_market_session=required_session, reference_market_session=reference_session,
+        canonical_contract=False, protective_exit_rules_unchanged=True)
+    result['projection_sha256'] = canonical_sha256(result)
+    return result
+
+
+def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
+                            capital: dict | None, market_current: bool) -> dict | None:
+    """Project bound research at read time; never capture an experiment here."""
+    raw = decision.get('strategy_framework')
+    if not isinstance(raw, dict) or raw.get('schema_version') != 'equity_strategy_framework_v1':
+        return None
+    # Validate the original generation-time proof, then independently overlay
+    # current draft availability. Swing carries its own source validation.
+    try:
+        from decision_readiness import validate_projection
+        validate_projection(root, raw, decision.get('capital_decision') or {}, current=current)
+        result = deepcopy(raw)
+    except (ImportError, OSError, ValueError, KeyError, TypeError):
+        result = dict(schema_version='equity_strategy_framework_v1', generated_at=raw.get('generated_at'),
+            status='unverified', automatic_action_allowed=False, strategies=[], decisions=[], analyst_handoff=[],
+            validation_error='Current readiness source, capital or implementation proof is unverified.',
+            swing_research=raw.get('swing_research'))
+    swing = result.get('swing_research')
+    if isinstance(swing, dict):
+        try:
+            from swing_research import revalidate_projection
+            result['swing_research'] = revalidate_projection(root, swing, current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            result['swing_research'] = dict(schema_version='equity_swing_research_v1',
+                status='waiting_on_data', research_only=True, capital_authority=False,
+                actionable_quantity=0, candidates=[],
+                dependencies=['Current source and session validation is unavailable; no setup levels are current.'])
+    actions = {r.get('ticker'): r for r in (capital or {}).get('decisions', [])}
+    for row in result.get('decisions', []):
+        action = actions.get(row.get('ticker'), {})
+        row['eligible_quantity'] = action.get('shares', 0) if action.get('order_draft') else 0
+        if action.get('order_draft'):
+            row['order_draft'] = deepcopy(action['order_draft'])
+        else:
+            row.pop('order_draft', None)
+        if row.get('classification') == 'valid_action' and not action.get('order_draft'):
+            row.update(classification='data_unavailable', next_step='Recompose and verify a current complete capital draft.')
+        deadline = stamp(row.get('review_at'))
+        if (deadline and current >= deadline and not action.get('order_draft')
+                and row.get('canonical_decision') == 'HOLD'):
+            row.update(classification='plan_expired', next_step='Reassess the dated holding instruction; expiry does not prove a sale.')
+        if not market_current and (action.get('order_draft') or {}).get('side') != 'sell':
+            row['price_levels_current'] = False
+            for field in ('entry_trigger', 'max_entry', 'invalidation', 'profit_reference'):
+                row.pop(field, None)
+    return result
+
+
 def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     """Capture retained bytes, verify publication fingerprints, then read back.
 
@@ -228,9 +307,13 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         raise SnapshotError("decision_timestamp_invalid")
     rows = {r["ticker"]: r for r in csv.DictReader(io.StringIO(raws[MARKET].decode()))}
     gate = d.get("market_gate", {})
-    expected_session = gate.get("expected_market_session")
-    reference_session = expected_session
-    market_current = gate.get('passed') is not False
+    published_expected_session = gate.get("expected_market_session")
+    required_session = latest_published_market_session(now).isoformat()
+    # A pre-close publication cannot certify yesterday's close indefinitely.
+    # Retain its original dated values, but re-evaluate freshness at read time.
+    expected_session = max(published_expected_session or required_session, required_session)
+    reference_session = published_expected_session
+    market_current = gate.get('passed') is not False and reference_session == required_session
     # A failed new-session collection may publish a correctly dated held-risk
     # review using the retained close. Verify its explicit per-holding dates
     # against the bound CSV; never relabel old prices as the required session.
@@ -241,7 +324,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                 and all(row.get('data_quality_label') == 'ok' for row in rows.values())):
             retained = next(iter(sessions))
             try:
-                if date.fromisoformat(retained) < date.fromisoformat(expected_session):
+                if date.fromisoformat(retained) < date.fromisoformat(published_expected_session):
                     reference_session = retained
             except (ValueError, TypeError):
                 pass  # The normal mismatch check remains effective.
@@ -251,7 +334,7 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                 or market.get("market_session_date") != reference_session
                 or number(market.get("last_price")) != number(row.get("current_price"))):
             raise SnapshotError("decision_price_snapshot_mismatch")
-    stale = d.get("cycle_date") != now.date().isoformat()
+    stale = d.get("cycle_date") != now.date().isoformat() or reference_session != required_session
     try:
         summaries = catalog(safe_read(root, SUMMARY_PATH))
     except (SnapshotError, OSError):
@@ -310,6 +393,9 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
         try:
             validate_capital(capital, root=root, current=now)
             capital_status = "current"
+            if not market_current:
+                capital = dated_capital_projection(capital, expected_session, reference_session)
+                capital_status = "dated_research"
         except (ValueError, KeyError, TypeError):
             capital = None
             capital_status = "recompose_required"
@@ -348,6 +434,8 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                             d.get("workflow_integrity", {}).get("global_blockers", [])),
         "capital_decision": capital, "capital_decision_status": capital_status,
         "capital_deployment_escalation": escalation_view(d, current_contract=capital_status == "current"),
+        "strategy_framework": strategy_framework_view(root, d, now, capital=capital,
+                                                     market_current=market_current),
         "earnings_events": earnings_event_view(root, now, capital=capital,
                                                current_contract=capital_status == "current"),
     }
@@ -441,20 +529,24 @@ def current_snapshot(root, *, research_busy=False):
         d = json.loads(safe_read(root,DECISION))
         # A collector can replace prices before the completed publication moves
         # to its new session. Never label incoming marks as the preceding close.
-        expected_session=d.get('market_gate',{}).get('expected_market_session')
+        reference_session=d.get('market_gate',{}).get('expected_market_session')
+        required_session=latest_published_market_session(datetime.now(ET)).isoformat()
+        expected_session=max(reference_session or required_session,required_session)
         market={ticker:r for ticker,r in market.items() if r.get('data_quality_label')=='ok'
-                and expected_session and r.get('market_session_date')==expected_session}
+                and reference_session and r.get('market_session_date')==reference_session}
         known = all(market.get(r['ticker'],{}).get('data_quality_label')=='ok' for r in positions)
         invested = sum(float(r['shares_optional'])*float(market[r['ticker']]['last_price']) for r in positions) if known else None
         total = float(a['cash_available'])+invested if known else None
         result = dict(schema_version='equity_dashboard_snapshot_v1', server_now=datetime.now(ET).isoformat(), generated_at=d.get('generated_at'),
-            cycle_date=d.get('cycle_date'), market_session=d.get('market_gate',{}).get('expected_market_session'),stale=d.get('cycle_date')!=datetime.now(ET).date().isoformat(),
+            cycle_date=d.get('cycle_date'), market_session=reference_session,expected_market_session=expected_session,
+            market_current=False,stale=d.get('cycle_date')!=datetime.now(ET).date().isoformat() or reference_session!=required_session,
             snapshot_id=digest(safe_read(root,DECISION)),account_version=version(root),research_ready=False,
             account=dict(account_total_value=total,cash_available=a['cash_available'],invested_capital=invested,last_updated=a['last_updated'],cash_basis=a.get('cash_basis'),settled_cash_verified=False),
             positions=[dict(ticker=r['ticker'],shares=float(r['shares_optional']),price=number(market.get(r['ticker'],{}).get('last_price')) if market.get(r['ticker'],{}).get('data_quality_label')=='ok' else None,
                 weight=float(r['shares_optional'])*float(market[r['ticker']]['last_price'])/total*100 if known and total else None,role='待研究') for r in positions],
             plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'],
             capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False),
+            strategy_framework=strategy_framework_view(root,d,datetime.now(ET),capital=None,market_current=False),
             earnings_events=earnings_event_view(root, datetime.now(ET), current_contract=False))
     if not result.get('research_ready'):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])

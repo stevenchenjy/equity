@@ -1,0 +1,38 @@
+{
+  "schema_version": "equity_swing_research_policy_v1",
+  "version": "daily-swing-forward-v1-20261027",
+  "status": "experimental",
+  "research_only": true,
+  "capital_authority": false,
+  "actionable_quantity": 0,
+  "automatic_action_allowed": false,
+  "holding_sessions": [5, 10, 14],
+  "one_way_cost_bps": [10, 25, 50],
+  "commission_per_share_usd": 0.0,
+  "maximum_gap_r": 0.25,
+  "hypothetical_profit_reference_r": 2.0,
+  "stop_lookback_sessions": 5,
+  "strategies": {
+    "breakout": "Completed close exceeds every prior 19-session high and prior close; signal daily volume is at least twice the prior 19-session mean.",
+    "pullback_reclaim": "SMA20 exceeds SMA50; prior close is at or below its own prior SMA20; current close reclaims SMA20 and exceeds the prior daily high.",
+    "trend_continuation": "SMA20 exceeds SMA50; current and prior closes exceed their respective SMA20; current close exceeds the prior daily high but remains below the prior 19-session high; daily volume is at least its prior 19-session mean."
+  },
+  "entry_rule": "Model only the first regular-session open strictly after actual first observation. Enter only when that open is between the frozen signal close and its 0.25R maximum. Otherwise retain a skipped/unfilled setup; no retrospective open or intraday rebound is assumed.",
+  "exit_rule": "Compare separate 5-, 10- and 14-session paths. Model an initial observed five-session-low invalidation, a hypothetical 2R full-profit exit, and the named time exit. Gaps through the stop use the worse open; stop wins ambiguous same-day stop/target touches. These are paper assumptions, never executable protection.",
+  "threshold_basis": "Fixed prospective exploratory hypotheses, not optimized on the retained history or selected to explain past winners. Horizons are trading sessions, not calendar days. This study does not change the existing five-session tactical capital policy.",
+  "adoption": {
+    "automatic_promotion": false,
+    "owner_adoption_required": true,
+    "capital_and_risk_review_required": true,
+    "criteria": [
+      "Retain consecutive point-in-time observations, unselected names, failures, missed entries, corrections and unavailable outcomes.",
+      "Review distinct nonoverlapping forward cohorts and unfavorable regimes; overlapping ticker/date paths are not independent trials.",
+      "Require independent source-bound split, dividend, distribution and corporate-action review before treating unadjusted price paths as economic performance; retain unreviewed raw paths and keep effectiveness-qualified counts at zero.",
+      "Compare selection and execution separately with the unchanged canonical baseline, identical horizons and predeclared cost sensitivities.",
+      "Establish feasible execution timing, quoted spreads, gaps, whole shares, cash commitments, event coverage and owner response timing.",
+      "Assess portfolio capacity, drawdowns and tail losses; a positive mean or sample count alone never earns adoption.",
+      "Keep subsequent holdout evidence unseen during parameter selection and version every change before its first observation.",
+      "Obtain explicit reviewed strategy and capital-risk authority before any positive quantity or extension of the live tactical holding limit."
+    ]
+  }
+}

@@ -108,6 +108,31 @@ def _plan_needed(plan: dict) -> bool:
         or plan.get("setup_status") in {"failed", "expired", "missed"})
 
 
+def _plan_reassessment_route(decision: dict, plan: dict) -> tuple[str, str]:
+    """Expiry is analyst work; actual unresolved execution remains owner work.
+
+    Approved local-ledger planning does not certify executable funds or fills.
+    It permits research from the local inventory without demanding another
+    broker observation merely because a research deadline elapsed.
+    """
+    from delivery_followthrough import continuation_requires_reconciliation
+    local = decision.get("account_authority", {}).get("local_planning_enabled") is True
+    actual_conflict = bool(decision.get("account_conflicts")) or continuation_requires_reconciliation(
+        decision.get("delivery_followthrough", {}))
+    conflict_terms = ("execution_conflict", "remaining_shares", "order_commitment_unbounded",
+                      "unknown_order", "conflicting_order", "contradiction", "account_state_conflict")
+    actual_conflict = actual_conflict or any(any(term in code for term in conflict_terms) for code in _blockers(plan))
+    ticker, role = str(plan.get("ticker", "")), plan.get("role") or "recorded"
+    if not local or actual_conflict:
+        return (f"Resolve the recorded {ticker} account/order verification dependency, including actual fills, cancellations and remaining shares; "
+                f"then reassess the original {role} purpose against current evidence and record maintain/reduce/close or an explicitly justified new mandate. "
+                "No replacement order before reconciliation.", "owner_account_check_then_research")
+    return (f"Use the approved local holdings, cash and known orders to reassess the original {ticker} {role} purpose against current evidence; "
+            "record maintain/reduce/close or a justified new mandate through the source-bound plan writer. An elapsed research deadline alone does not require a new broker snapshot. "
+            "Before any manual submission, the owner must check executable funds, remaining shares, pending orders and unrecorded changes. Do not renew the expired instruction automatically.",
+            "scheduled_research_then_owner_if_eligible")
+
+
 def _core_coverage(decision: dict, config: dict | None) -> dict:
     """Current marked holdings only; proposed core additions are not holdings."""
     policy = (config or {}).get("account", {})
@@ -175,6 +200,7 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
         ticker, status = str(plan.get("ticker", "")), str(plan.get("status", ""))
         identity = f"plan:{plan_id}:v{version}"
         tactical = plan.get("role") == "tactical" or "time_exit" in status
+        next_step, review_owner = _plan_reassessment_route(decision, plan)
         desired[identity] = {"item_id": identity, "kind": "plan_reassessment", "ticker": ticker,
             "state": "blocked", "evidence_status": "current", "priority": 1 if tactical else 2, "source_status": status,
             "setup_outcome": plan.get("setup_status"), "blockers": _blockers(plan),
@@ -182,9 +208,8 @@ def build_capital_work_queue(decision: dict, previous: dict | None = None, *, cu
             "preserved_purpose": plan.get("purpose") or plan.get("role"),
             "original_review_at": plan.get("review_at"), "original_time_exit_at": plan.get("time_exit_at"),
             "condition": "Record a sourced reassessment of the existing mandate; an elapsed date does not renew the plan.",
-            "next_step": (f"Verify {ticker} fills, cancellations and available shares in one brief account check; then reassess the original "
-                          f"{plan.get('role') or 'recorded'} purpose against current evidence and record maintain/reduce/close or an explicitly justified new mandate. No replacement order before reconciliation."),
-            "next_review_at": _next_check(current, plan=True), "review_owner": "owner_account_check_then_research",
+            "next_step": next_step,
+            "next_review_at": _next_check(current, plan=True), "review_owner": review_owner,
             "automatic_action_allowed": False, "eligible_quantity": 0,
             "source_refs": copy.deepcopy(plan.get("sources", [])), "evidence": source}
     # Canonical candidates only. Research backlog prioritizes work, never admits an order.

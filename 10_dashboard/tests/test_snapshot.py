@@ -376,6 +376,117 @@ class SnapshotTests(unittest.TestCase):
         self.assertTrue(result['stale'])
         self.assertEqual(result['plans'][0]['status'], 'expired')
 
+    def test_same_day_close_boundary_revalidates_market_without_relabelling_retained_prices(self):
+        before = (self.root / DECISION).read_bytes()
+        earlier = read_snapshot(self.root, datetime.fromisoformat('2026-09-30T16:14:59-04:00'))
+        self.assertTrue(earlier['market_current'])
+        later = read_snapshot(self.root, datetime.fromisoformat('2026-09-30T16:15:00-04:00'))
+        self.assertEqual(later['expected_market_session'], '2026-09-30')
+        self.assertEqual(later['market_session'], '2026-09-29')
+        self.assertFalse(later['market_current'])
+        self.assertTrue(later['stale'])
+        self.assertEqual(later['positions'][0]['price'], 100)
+        self.assertEqual(later['account']['cash_available'], 1000)
+        self.assertEqual(later['account']['account_total_value'], 1200)
+        self.assertEqual(later['candidates'][0]['quantity'], 0)
+        self.assertIsNone(later['candidates'][0]['maximum_review_price'])
+        self.assertEqual((self.root / DECISION).read_bytes(), before)
+
+    def test_next_morning_requires_previous_close_and_weekend_does_not_require_weekend_prices(self):
+        self.put(MARKET, 'ticker,last_price,market_session_date,data_quality_label\nABC,100,2026-10-02,ok\n')
+        self.decision.update(generated_at='2026-10-02T16:30:00-04:00', cycle_date='2026-10-02')
+        self.decision['market_gate']['expected_market_session'] = '2026-10-02'
+        self.publish()
+        weekend = read_snapshot(self.root, datetime.fromisoformat('2026-10-03T09:00:00-04:00'))
+        self.assertEqual(weekend['expected_market_session'], '2026-10-02')
+        self.assertTrue(weekend['market_current'])
+        self.assertTrue(weekend['stale'])
+        self.assertEqual(weekend['plans'][0]['eligible_quantity'], 0)
+
+    def test_dated_capital_projection_withholds_buys_and_preserves_independent_protective_exit(self):
+        from copy import deepcopy
+        from server import dated_capital_projection
+        buy = dict(ticker='NEW', decision='ACTIONABLE_BUY', shares=2, estimated_notional=200,
+                   order_draft={'side': 'buy', 'entry_limit': 100}, reasons=['Reviewed purchase'], blockers=[])
+        sell = dict(ticker='HELD', decision='REDUCE_REVIEW', shares=1, estimated_notional=90,
+                    order_draft={'side': 'sell', 'entry_order_type': 'STOP', 'exit_price': 90},
+                    reasons=['Reviewed protective exit'], blockers=[])
+        original = dict(content_sha256='a' * 64, decisions=[buy, sell], global_blockers=[], dependencies=[])
+        before = deepcopy(original)
+        projected = dated_capital_projection(original, '2026-09-30', '2026-09-29')
+        self.assertEqual(original, before)
+        self.assertEqual(projected['decisions'][0]['decision'], 'BLOCKED')
+        self.assertEqual(projected['decisions'][0]['shares'], 0)
+        self.assertIsNone(projected['decisions'][0]['order_draft'])
+        self.assertEqual(projected['decisions'][1], sell)
+        self.assertNotIn('content_sha256', projected)
+        self.assertEqual(projected['read_time_projection']['source_content_sha256'], 'a' * 64)
+        self.assertFalse(projected['read_time_projection']['canonical_contract'])
+        self.assertEqual(projected['action'], 'REVIEW_HELD_RISK')
+
+    def test_strategy_readiness_read_time_projection_withholds_old_buy_and_expires_hold(self):
+        from copy import deepcopy
+        from server import strategy_framework_view
+        framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,
+            decisions=[dict(ticker='NEW', classification='valid_action', canonical_decision='ACTIONABLE_BUY',
+                            eligible_quantity=9, order_draft={'side':'buy','entry_limit':100}, entry_trigger=100),
+                       dict(ticker='OLD', classification='justified_no_action', canonical_decision='HOLD',
+                            eligible_quantity=0, review_at='2026-09-30T13:00:00-04:00')])
+        from daily_common import canonical_sha256
+        framework['content_sha256'] = canonical_sha256(framework)
+        before = deepcopy(framework)
+        with patch('decision_readiness.validate_projection'):
+            result = strategy_framework_view(self.root, {'strategy_framework': framework}, self.now,
+                                             capital=None, market_current=False)
+        self.assertEqual(framework, before)
+        self.assertEqual(result['decisions'][0]['eligible_quantity'], 0)
+        self.assertNotIn('order_draft', result['decisions'][0])
+        self.assertNotIn('entry_trigger', result['decisions'][0])
+        self.assertEqual(result['decisions'][0]['classification'], 'data_unavailable')
+        self.assertEqual(result['decisions'][1]['classification'], 'plan_expired')
+
+    def test_swing_projection_failure_never_retains_old_setup_levels(self):
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,
+            decisions=[], swing_research={'schema_version':'equity_swing_research_v1',
+                'candidates':[{'ticker':'NEW','entry_trigger':123}], 'capital_authority':False})
+        from daily_common import canonical_sha256
+        framework['content_sha256'] = canonical_sha256({k:v for k,v in framework.items() if k!='swing_research'})
+        with patch('decision_readiness.validate_projection'), patch.dict('sys.modules', {'swing_research': Mock(revalidate_projection=Mock(side_effect=ValueError('bad binding')))}):
+            result = strategy_framework_view(self.root, {'strategy_framework':framework}, self.now,
+                                             capital=None, market_current=True)
+        self.assertEqual(result['swing_research']['status'], 'waiting_on_data')
+        self.assertEqual(result['swing_research']['candidates'], [])
+        self.assertEqual(result['swing_research']['actionable_quantity'], 0)
+        self.assertFalse(result['swing_research']['capital_authority'])
+
+    def test_unverified_readiness_cannot_restore_authored_tasks_or_accepted_records(self):
+        from server import strategy_framework_view
+        framework = dict(schema_version='equity_strategy_framework_v1', automatic_action_allowed=False,
+            decisions=[{'ticker':'FAKE','eligible_quantity':999}], analyst_handoff=[{'ticker':'FAKE','next_step':'Unverified'}])
+        result = strategy_framework_view(self.root, {'strategy_framework':framework}, self.now,
+                                         capital=None, market_current=True)
+        self.assertEqual(result['status'], 'unverified')
+        self.assertEqual(result['decisions'], [])
+        self.assertEqual(result['analyst_handoff'], [])
+
+    def test_validated_capital_contract_becomes_explicit_dated_projection_after_close_boundary(self):
+        from capital_decision import binding, SCHEMA
+        from daily_common import canonical_sha256
+        from account_authority import load_authority
+        capital = dict(schema_version=SCHEMA, generated_at=self.decision['generated_at'], decisions=[],
+            action='NO_NEW_POSITION', account_authority=load_authority(self.root, self.now),
+            source_bindings=binding(self.root), automatic_action_allowed=False, broker_connected=False,
+            order_placed=False)
+        capital['content_sha256'] = canonical_sha256(capital)
+        self.decision['capital_decision'] = capital
+        self.publish()
+        result = read_snapshot(self.root, datetime.fromisoformat('2026-09-30T17:00:00-04:00'))
+        self.assertEqual(result['capital_decision_status'], 'dated_research')
+        self.assertEqual(result['capital_decision']['read_time_projection']['source_content_sha256'], capital['content_sha256'])
+        self.assertFalse(result['capital_decision']['read_time_projection']['canonical_contract'])
+
     def test_changed_account_cannot_mix_with_old_decision(self):
         self.put(ACCOUNT, {'cash_available': 900})
         with self.assertRaisesRegex(SnapshotError, 'research_inputs_changed'):

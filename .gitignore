@@ -225,3 +225,6 @@ graphify-out/reflections/
 00_project_control/run_logs/short_assessment.local.json
 00_project_control/run_logs/short_assessment.lock
 /00_project_control/run_logs/short_publication_refresh.local.json
+
+# Private prospective swing observations, retained originals and failed attempts.
+/08_reviews/swing_research.local/

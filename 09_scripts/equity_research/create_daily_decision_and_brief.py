@@ -677,6 +677,17 @@ def compose_capital_contracts(decision: dict[str, Any], *, root: Path) -> None:
             root, decision, decision["capital_decision"], current=capital_current)
 
 
+def compose_strategy_research(decision: dict[str, Any], *, root: Path,
+                              current: datetime, capture: bool = False) -> None:
+    """Attach optional research without changing capital or notification meaning."""
+    from decision_readiness import build as build_decision_readiness
+    from swing_research import build as build_swing_research
+    view = build_decision_readiness(root, decision, current=current)
+    view["swing_research"] = build_swing_research(
+        root, current=current, capture=capture, baseline=decision)
+    decision["strategy_framework"] = view
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
@@ -1200,6 +1211,10 @@ def main() -> int:
     from earnings_events import summary as earnings_event_summary
     decision["earnings_events"] = earnings_event_summary(
         ROOT, current=now_et(), capital=decision["capital_decision"])
+    # Explain the existing capital contract and independently study short-term
+    # setups. This optional research view never enters the capital fingerprint,
+    # eligible quantities, strategy adoption or delivery-purpose comparison.
+    compose_strategy_research(decision, root=ROOT, current=now_et(), capture=True)
     from delivery_assessments import delivery_policy_context, priority_review_context
     decision["assessment_delivery_policy"] = delivery_policy_context(ROOT)
     decision["analyst_priority_review"] = priority_review_context(ROOT, current=now_et())

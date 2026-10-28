@@ -352,6 +352,18 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         upcoming = []
         errors.append("earnings_calendar_unverified")
     decision = _read(root, "04_research/company_research/daily_decision.json")
+    framework = decision.get("strategy_framework", {})
+    framework = framework if isinstance(framework, dict) else {}
+    if framework:
+        try:
+            from decision_readiness import validate_projection
+            validate_projection(root, framework, decision.get("capital_decision", {}), current)
+        except (OSError, ValueError, KeyError, TypeError):
+            framework = {"status": "publication_unverified"}
+    research_tasks = framework.get("analyst_handoff", [])
+    research_tasks = [task for task in research_tasks if isinstance(task, dict)][:8] if isinstance(research_tasks, list) else []
+    swing_context = framework.get("swing_research", {})
+    swing_context = swing_context if isinstance(swing_context, dict) else {}
     from intraday_assessment import attention as intraday_attention
     intraday = intraday_attention(root, current)
     stores = _hashes(root, MUTABLE_STORES)
@@ -379,6 +391,14 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         "attention_context": {"upcoming_earnings": [{k: event.get(k) for k in (
             "event_id", "ticker", "company_name", "research_deadline_at", "status", "blockers", "next_step", "sources")}
             for event in upcoming], "capital_priority_tickers": stable["capital_priorities"],
+            "strategy_research": {
+                "source_decision_generated_at": decision.get("generated_at"),
+                "status": framework.get("status", "not_yet_published"),
+                "analyst_handoff": research_tasks,
+                "swing_research_status": swing_context.get("status", "not_yet_published"),
+                "authority": "Research continuity only; revalidate current sources and existing capital rules before any amendment.",
+                "capital_authority": False,
+            },
             "account_market_paths": list(ACCOUNT_MARKET),
             "official_news_events_path": "03_source_data/equity_research/official_news_events.local.json",
             "full_earnings_store_path": "03_source_data/equity_research/earnings_events.local.json"},

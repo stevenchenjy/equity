@@ -24,6 +24,8 @@ export type CapitalDecision = {
   action:string; generated_at:string; market_data_timestamp:string; planning_cash:number; mandatory_reserve:number;
   global_blockers:string[];
   account_authority?:{mode:string;local_planning_enabled:boolean;execution_checks?:string[]};
+  read_time_projection?:{status:'dated_research';source_content_sha256:string|null;required_market_session:string;
+    reference_market_session:string|null;canonical_contract:false;protective_exit_rules_unchanged:true};
   dependencies?:{category:string;code:string;scope:string;evidence_required:string}[];
   decisions:{ticker:string;decision:string;shares:number;estimated_notional:number;reasons:string[];blockers:string[];thesis_summary:string;
     research_case?:CompanyResearchCase;
@@ -32,6 +34,33 @@ export type CapitalDecision = {
       invalidation_price:number|null;invalidation_rule:string;planned_total_loss:number;planned_account_risk_pct:number;risk_model:string;
       initial_reassessment_price:number|null;reassessment_rule:string;portfolio_weight_before:number;portfolio_weight_after:number;
       cash_before:number;estimated_cash_after:number;trigger_rule:string;cancel_conditions:string[];cost_assumption:string};}[];
+};
+export type StrategyReadiness = {
+  ticker:string;strategy_id:string;horizon:string;
+  classification:'valid_action'|'justified_no_action'|'research_incomplete'|'plan_expired'|'data_unavailable'|'strategy_not_adopted';
+  canonical_decision:string;eligible_quantity:number;blockers:string[];reason:string;next_step:string;
+  resolver:string;review_at:string|null;accepted_records?:unknown[];price_levels_current?:boolean;
+};
+export type SwingResearch = {
+  schema_version:'equity_swing_research_v1';status:'experimental_current'|'waiting_on_data'|'failed';
+  research_only:true;capital_authority:false;actionable_quantity:0;generated_at?:string;
+  dependencies?:string[];limitations?:string[];
+  blockers?:string[];expired_candidates_suppressed?:number;additional_setup_count?:number;
+  coverage?:Record<string,unknown>;counts?:Record<string,unknown>;performance?:Record<string,unknown>;adoption?:Record<string,unknown>;
+  candidates:{ticker:string;setup:string;state:string;horizon_sessions:number[];source_session:string;
+    first_observed_at:string;entry_session:string;entry_trigger:number|null;max_entry:number|null;
+    invalidation:number|null;profit_reference:number|null;profit_reference_kind:string;review_deadline:string;
+    time_exits?:{holding_sessions:number;session:string}[];
+    skip_reasons:string[];evidence_quality:string;thesis:string;catalyst_status:string;uncertainty:string[];
+    actionable_quantity:0;capital_authority:false;research_only:true}[];
+};
+export type StrategyFramework = {
+  schema_version:'equity_strategy_framework_v1';generated_at:string;status:string;automatic_action_allowed:false;
+  validation_error?:string|null;
+  strategies:{strategy_id:string;label?:string;name?:string;horizon:string;status:string;capital_authority:boolean;description?:string}[];
+  decisions:StrategyReadiness[];
+  analyst_handoff:{ticker:string;classification?:string;reason?:string;next_step:string;resolver:string;review_at?:string|null}[];
+  swing_research?:SwingResearch;
 };
 export type DeploymentGate = {
   code:string; category:'evidence'|'valuation'|'price'|'risk'|'policy'|'account';
@@ -79,6 +108,7 @@ export type IntradayRisk = {
   dependencies?: string[]; limitations?: string[];
 };
 export type Snapshot = {
+  strategy_framework?:StrategyFramework|null;
   intraday_portfolio_risk?: IntradayRisk | null;
   earnings_events?: EarningsEventView;
   account_authority?:CapitalDecision['account_authority'];

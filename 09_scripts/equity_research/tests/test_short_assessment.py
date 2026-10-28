@@ -130,6 +130,35 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertEqual(short.check(self.root, self.moment("09:30"))["outcome"], "due")
         self.assertFalse((self.root / short.STATE_REL).exists())
 
+    def test_short_context_carries_bounded_analytical_next_steps_without_capital_authority(self):
+        publication = self.typed_publication("09:20")
+        publication["strategy_framework"] = {
+            "status": "ready", "analyst_handoff": [
+                {"ticker": "META", "next_step": "Assess the retained filing countercase.",
+                 "resolver": "recurring_analyst"} for _ in range(12)],
+            "swing_research": {"status": "experimental_current"}}
+        atomic_write_json(self.root / "04_research/company_research/daily_decision.json", publication)
+        with patch("decision_readiness.validate_projection") as proof:
+            context = short.build_context(self.root, self.moment("09:30"))
+        proof.assert_called_once()
+        research = context["attention_context"]["strategy_research"]
+        self.assertEqual(len(research["analyst_handoff"]), 8)
+        self.assertEqual(research["source_decision_generated_at"], self.moment("09:20").isoformat())
+        self.assertEqual(research["swing_research_status"], "experimental_current")
+        self.assertIs(research["capital_authority"], False)
+        self.assertFalse((self.root / short.STATE_REL).exists())
+
+    def test_unverified_strategy_handoff_does_not_leak_into_short_research(self):
+        publication = self.typed_publication("09:20")
+        publication["strategy_framework"] = {"status": "ready", "analyst_handoff": [
+            {"ticker": "META", "next_step": "This unbound task must be withheld."}]}
+        atomic_write_json(self.root / "04_research/company_research/daily_decision.json", publication)
+        context = short.build_context(self.root, self.moment("09:30"))
+        research = context["attention_context"]["strategy_research"]
+        self.assertEqual(research["status"], "publication_unverified")
+        self.assertEqual(research["analyst_handoff"], [])
+        self.assertFalse(research["capital_authority"])
+
     def test_claim_is_durable_duplicate_safe_and_has_ten_minute_scope(self):
         value = self.claim()
         row = value["receipt"]
