@@ -15,6 +15,10 @@ def main():
     mode=parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--preview',action='store_true')
     mode.add_argument('--apply',action='store_true')
+    mode.add_argument('--preview-historical-reconciliation',action='store_true',
+        help='Preview a source-bound owner-local-ledger historical fill/date correction; never a broker snapshot')
+    mode.add_argument('--apply-historical-reconciliation',action='store_true',
+        help='Apply the exact previewed historical reconciliation once through the durable coordinator')
     mode.add_argument('--request-review',action='store_true',help='Queue an owner research request; no email or account write')
     mode.add_argument('--list-reviews',action='store_true')
     mode.add_argument('--claim-review',metavar='REQUEST_ID')
@@ -28,16 +32,19 @@ def main():
     # This is a one-shot operator command, not the background intake worker.
     # An explicit --refresh must run before the process exits.
     store=Store(DEFAULT_ROOT,RUNTIME_LOCK,intake_quiet_seconds=0)
-    if args.preview or args.apply or args.request_review:
+    if args.preview or args.apply or args.request_review or args.preview_historical_reconciliation or args.apply_historical_reconciliation:
         if not args.request_file: parser.error('this mode requires a private request JSON file')
         with open(args.request_file) as handle: payload=json.load(handle)
     elif args.request_file: parser.error('this mode does not accept a request JSON file')
-    if args.refresh and not args.apply: parser.error('--refresh only applies to --apply feedback')
+    if args.refresh and not (args.apply or args.apply_historical_reconciliation):
+        parser.error('--refresh only applies to an apply mode')
     if args.rebind_current and not args.claim_review: parser.error('--rebind-current only applies to --claim-review')
     if args.receipt and not (args.complete_review or args.block_review): parser.error('--receipt only applies to completion or block')
     try:
         if args.preview: result=store.preview(payload)
         elif args.apply: result=store.submit(payload)
+        elif args.preview_historical_reconciliation: result=store.historical_preview(payload)
+        elif args.apply_historical_reconciliation: result=store.historical_submit(payload)
         elif args.request_review: result=store.request_review(payload)
         elif args.list_reviews: result={'requests':store.reviews()}
         elif args.claim_review: result=store.claim_review(args.claim_review,rebind_current=args.rebind_current)
@@ -49,7 +56,7 @@ def main():
         print(json.dumps({'error':exc.code,'details':exc.details},ensure_ascii=False,indent=2))
         return 1
     print(json.dumps(result,ensure_ascii=False,indent=2))
-    if args.apply and args.refresh: store.work_once()
+    if (args.apply or args.apply_historical_reconciliation) and args.refresh: store.work_once()
     return 0
 
 

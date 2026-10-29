@@ -97,6 +97,16 @@ test('Earlier sparse CLI fills remain searchable and editable without inventing 
   assert.equal(r.feedback.fee_status,'unknown'); // Original historical record remains intact.
 });
 
+test('corrected execution history is searchable by both effective and original date and its audit reference',()=>{
+  const r={id:'old-purchase',stage:'applied',feedback:{...defaults('TST','2026-09-10'),amount:'20'},effective_date:'2026-09-15',
+    execution_date_correction:{original_date:'2026-09-10',corrected_date:'2026-09-15',record_id:'date-review-3',revision:3,recorded_at:'2026-10-29T11:00:00-04:00',reason:'Owner clarified the earlier saved date.',owner_source:{path:'private/source.json',sha256:'a'.repeat(64)}}} as FormalRecord;
+  assert.equal(matchesHistory(r,'tst 2026-09-15','filled','applied'),true);
+  assert.equal(matchesHistory(r,'tst 2026-09-10','filled','applied'),true);
+  assert.equal(matchesHistory(r,'date-review-3','all','all'),true);
+  assert.equal(matchesHistory(r,'2026-09-16','all','all'),false);
+  assert.equal(r.feedback.date,'2026-09-10');
+});
+
 test('A new holding without a versioned plan does not create an invalid plan reference', () => {
   assert.equal(planReference(undefined),null);
   assert.equal(planReference({ticker:"NEW",plan_id:null,version:null,record_hash:null} as unknown as Plan),null);

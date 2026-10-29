@@ -67,3 +67,29 @@ Stopping a preview changes no account record. A timed-out or interrupted save
 keeps its original durable request ID for recovery; it is never automatically
 resubmitted as a new transaction. Existing duplicate, stale-version, incomplete
 account-write and unknown-result checks remain effective.
+
+## Saved pending records and historical reconciliation
+
+A saved pending receipt is a completed intake, not a running request and not an
+applied financial transition. Research completion does not change that financial
+status. The form shows the saved receipt with visible history and review actions
+instead of leaving a disabled edit form as a dead end. Reviewing a pending record
+uses its latest acknowledged record identity and revision. A deliberately changed
+revision uses a new request UUID; recovery of an uncertain unchanged save keeps
+the original UUID and payload.
+
+Ordinary browser and CLI submissions retain the backdated-fill guard. When the
+owner explicitly identifies an omitted historical fill and a correction to a
+previously applied fill date, the operator-only historical-reconciliation path
+can preview and apply that exact source-bound batch through the same durable
+prepare/recover journal. It is not an HTTP bypass or a new account observation.
+It requires active owner-local-ledger authority, exact account/input versions,
+the pending record and revision, the referenced applied execution, and retained
+owner instruction bytes. A stale input or changed reference rejects the batch.
+
+The batch retains original request/event bytes and before/after projections,
+records the corrected effective date separately, and applies the omitted fill's
+current-ledger delta exactly once. Reconciliation cash balances are explicitly
+current ledger values, not reconstructed balances on the historical fill date.
+It does not assert broker inventory, settled funds or order-list completeness,
+write a synthetic full-account observation, change investment gates, or send mail.

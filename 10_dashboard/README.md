@@ -98,3 +98,18 @@ Use **Stop waiting** to release the form while preserving its input. If a save
 result is unknown, use the original request recovery control and inspect formal
 history; do not create another entry for the same action. A preview alone does
 not update cash, holdings, orders or the execution journal.
+
+A successfully saved pending entry now shows its receipt, financial status and
+research status separately. **Review saved record** reopens that record's latest
+pending revision; **View saved history** returns to its durable history. These
+controls remain available after saving from an existing pending-record editor.
+An acknowledged pending receipt is not a network spinner or an unknown save.
+
+An explicitly reported omitted historical fill and a corrected applied-fill date
+use the narrow operator-only historical-reconciliation preview/apply path in
+`record_feedback.py`. The ordinary form's chronology guard remains in force.
+The batch binds the retained owner instruction, current account and execution
+fingerprints, the original applied execution and the existing pending revision.
+Original history remains available alongside the effective corrected date. This
+is a reconciliation of approved local records, not a broker observation or an
+order. See [the intake contract](../00_project_control/feedback_intake.md).

@@ -45,6 +45,10 @@ PENDING = '06_execution_records/dashboard_feedback_pending.local.json'
 JOURNAL = '06_execution_records/dashboard_feedback.local/journal.sqlite3'
 MARKET = '03_source_data/equity_research/market_data_snapshot.csv'
 MANUAL = '05_risk_and_positions/manual_account_snapshot.local.json'
+HISTORICAL_SCHEMA = 'equity_owner_historical_fill_reconciliation_v1'
+HISTORICAL_INPUTS = (ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED,
+                     PENDING, MANUAL, MARKET,
+                     '05_risk_and_positions/account_record_policy.local.json')
 SYMBOL = re.compile(r'[A-Z][A-Z0-9.\-]{0,11}')
 CENT = Decimal('.01')
 # Keep a short intake window after an accepted record so the next human fill
@@ -210,12 +214,23 @@ class Store:
         with self.db() as con:
             result = [json.loads(r['body']) for r in con.execute('SELECT body FROM records ORDER BY rowid DESC LIMIT 500')]
             corrections = {}
+            dates = {}
             for row in con.execute('SELECT body FROM records'):
                 record = json.loads(row['body'])
                 if record['stage'] == 'applied' and record.get('correction'):
                     corrections.setdefault(record['correction']['record_id'], []).append(record['id'])
+                reconciliation = record.get('historical_reconciliation')
+                if record['stage'] == 'applied' and reconciliation:
+                    change = reconciliation['date_correction']
+                    dates[change['record_id']] = dict(original_date=change['expected_date'],
+                        corrected_date=change['corrected_date'], record_id=record['id'],
+                        revision=record['revision'], recorded_at=record['recorded_at'],
+                        reason=change['reason'], owner_source=reconciliation['owner_instruction'])
             for record in result:
                 record['corrected_by'] = corrections.get(record['id'], [])
+                if record['id'] in dates:
+                    record['effective_date'] = dates[record['id']]['corrected_date']
+                    record['execution_date_correction'] = dates[record['id']]
         return result
 
     def events(self, record_id):
@@ -271,9 +286,11 @@ class Store:
             expected=self.export(con)
             if read(self.root,PENDING,optional=True)!=expected: atomic(self.root,PENDING,expected)
 
-    def proposal(self, payload, con=None):
+    def proposal(self, payload, con=None, *, historical=None):
         if not isinstance(payload, dict) or not isinstance(payload.get('feedback'), dict):
             raise FeedbackError('invalid_request')
+        if payload.get('historical_reconciliation') is not None and historical is None:
+            raise FeedbackError('historical_reconciliation_cli_required')
         if payload.get('account_version') != version(self.root):
             raise FeedbackError('account_version_changed', {'account_version': version(self.root)}, 409)
         f = dict(payload['feedback'])
@@ -373,7 +390,7 @@ class Store:
             if f['amount_mode'] not in {'price','gross','net'}: raise FeedbackError('invalid_amount_mode')
             if f.get('not_in_account') is not True: missing.append('确认这笔成交尚未计入当前账户')
             prior_dates = [r.get('fill_date','') for r in rows(read(self.root,CONFIRMED,optional=True)) if r.get('canonical_state_applied')=='yes']
-            if prior_dates and f['date'] < max(prior_dates):
+            if prior_dates and f['date'] < max(prior_dates) and historical is None:
                 missing.append('较晚成交已计入账户；先完整账户核对，避免倒序重复应用')
             if f['order_type'] not in {'LIMIT','MARKET','STOP','STOP_LIMIT','UNSPECIFIED'}: raise FeedbackError('invalid_order_type')
             if status == 'partial':
@@ -471,6 +488,9 @@ class Store:
             changes['valuation_complete'] = valuation_complete
             fields = next(csv.reader(io.StringIO(read(self.root,POSITIONS).decode())))
             writes[POSITIONS], writes[ACCOUNT] = csv_bytes(list(positions.values()),fields), encoded(account)
+        if historical is not None:
+            changes['balance_basis'] = 'current_local_ledger_reconciliation_not_historical_balance'
+            changes['execution_date_correction'] = historical['date_correction']
         # Do not publish changes from an incomplete submission.
         return f, sorted(set(missing)), changes, writes, orders, now, price
 
@@ -480,17 +500,170 @@ class Store:
                     thesis='Owner-reported holding; thesis review pending',horizon_class='long_horizon',
                     planned_review_date=day,invalidation_rule='Analyst review pending; no automatic exit')
 
+    def historical_context(self, payload, con):
+        """Validate a source-bound operator request, never a browser bypass flag.
+
+        This narrow path settles one already-saved unlinked historical full
+        fill and one date-only correction. It derives today's local-ledger
+        delta; it makes no historical cash or broker-account observation.
+        """
+        def require(ok, reason):
+            if not ok:
+                raise FeedbackError('historical_reconciliation_invalid', {'reason': reason}, 409)
+
+        require(isinstance(payload, dict), 'request')
+        require(isinstance(payload.get('record_id'), str) and type(payload.get('revision')) is int
+            and payload['revision'] > 0, 'pending_record_reference')
+        h = payload.get('historical_reconciliation')
+        require(isinstance(h, dict) and set(h) == {'schema_version', 'owner_instruction',
+            'pending_record_sha256', 'original_record_sha256', 'input_hashes', 'date_correction'}
+            and h['schema_version'] == HISTORICAL_SCHEMA, 'schema')
+        try:
+            from account_authority import load_authority
+            authority = load_authority(self.root, datetime.now(ET))
+        except (OSError, ValueError, KeyError, TypeError):
+            authority = {}
+        require(authority.get('mode') == 'owner_local_ledger'
+            and authority.get('local_planning_enabled') is True, 'owner_local_ledger_required')
+        require(payload.get('account_version') == version(self.root), 'account_version_changed')
+        require(not payload.get('correction') and not payload.get('plan')
+            and not payload.get('email_version_id'), 'unlinked_operator_request_required')
+        expected = h['input_hashes']
+        require(isinstance(expected, dict) and set(expected) == set(HISTORICAL_INPUTS), 'input_hash_scope')
+        for rel in HISTORICAL_INPUTS:
+            raw = read(self.root, rel, optional=True)
+            actual = sha(raw) if (self.root / rel).exists() else None
+            require(expected[rel] == actual, 'input_changed:' + rel)
+        source = h['owner_instruction']
+        require(isinstance(source, dict) and set(source) == {'path', 'sha256'}
+            and isinstance(source['path'], str)
+            and not Path(source['path']).is_absolute() and '..' not in Path(source['path']).parts
+            and re.fullmatch('[0-9a-f]{64}', str(source['sha256'])) is not None, 'owner_source')
+        original_source = read(self.root, source['path'])
+        require(sha(original_source) == source['sha256'], 'owner_source_changed')
+        try:
+            facts = json.loads(original_source)
+        except (ValueError, TypeError):
+            raise FeedbackError('historical_reconciliation_invalid', {'reason': 'owner_source_facts'}, 409)
+        require(isinstance(facts, dict) and isinstance(facts.get('confirmed_facts'), dict), 'owner_source_facts')
+        try:
+            observed = datetime.fromisoformat(facts['recorded_at'])
+            additional = facts['confirmed_facts']['additional_purchase']
+            old_fact = facts['confirmed_facts']['existing_purchase_correction']
+        except (ValueError, TypeError, KeyError):
+            raise FeedbackError('historical_reconciliation_invalid', {'reason': 'owner_source_facts'}, 409)
+        require(observed.tzinfo is not None and observed <= datetime.now(ET), 'owner_source_clock')
+        require(all(facts.get(k) is False for k in ('broker_observation_claimed', 'trade_placed', 'email_sent')),
+            'owner_source_authority')
+        require(isinstance(additional, dict) and isinstance(old_fact, dict), 'owner_source_facts')
+        pending = con.execute('SELECT body FROM records WHERE id=?', (payload.get('record_id'),)).fetchone()
+        require(pending is not None, 'pending_record_missing')
+        require(sha(pending['body'].encode()) == h['pending_record_sha256'], 'pending_record_changed')
+        pending = json.loads(pending['body'])
+        require(pending['stage'] == 'pending' and pending.get('production_effect') is False
+            and pending['revision'] == payload.get('revision')
+            and facts.get('existing_pending_record_id') == pending['id'], 'pending_record_identity')
+        f = payload.get('feedback')
+        require(isinstance(f, dict) and f.get('entry_mode') == 'simple_total'
+            and f.get('status') == 'filled' and f.get('side') == 'buy'
+            and f.get('order_type', 'UNSPECIFIED') == 'UNSPECIFIED'
+            and f.get('not_in_account') is True and not f.get('linked_order')
+            and f.get('order_link_mode', 'auto') in {'auto', 'independent'}, 'historical_full_buy_required')
+        require(all(f.get(k) == pending['feedback'].get(k) for k in ('ticker', 'side', 'status', 'shares', 'date')),
+            'pending_fill_identity_changed')
+        require(additional.get('ticker') == f['ticker'] and additional.get('side') == f['side']
+            and additional.get('date') == f['date']
+            and dec(additional.get('shares'), 'owner_shares', integer=True) == dec(f['shares'], 'shares', integer=True)
+            and dec(additional.get('total_amount_usd'), 'owner_total') == dec(f.get('amount'), 'amount'),
+            'additional_fill_differs_from_owner')
+        change = h['date_correction']
+        require(isinstance(change, dict) and set(change) == {'record_id', 'execution_id',
+            'expected_date', 'corrected_date', 'reason'} and all(isinstance(v, str) for v in change.values())
+            and 1 <= len(change['reason'].strip()) <= 1500, 'date_correction')
+        original = con.execute('SELECT body FROM records WHERE id=?', (change['record_id'],)).fetchone()
+        require(original is not None and sha(original['body'].encode()) == h['original_record_sha256'],
+            'original_record_changed')
+        original = json.loads(original['body'])
+        require(original['stage'] == 'applied' and original.get('production_effect') is True
+            and original['feedback']['status'] == 'filled' and original['feedback']['side'] == 'buy'
+            and not original['feedback'].get('linked_order')
+            and original['feedback']['ticker'] == f['ticker']
+            and original.get('execution_id') == change['execution_id']
+            and original['feedback']['date'] == change['expected_date']
+            and original['id'] != pending['id'], 'original_fill_identity')
+        try:
+            new_date = datetime.strptime(change['corrected_date'], '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            raise FeedbackError('historical_reconciliation_invalid', {'reason': 'corrected_date'}, 409)
+        require(new_date <= datetime.now(ET).date() and change['corrected_date'] != change['expected_date'],
+            'corrected_date')
+        require(old_fact.get('record_id') == original['id'] and old_fact.get('ticker') == f['ticker']
+            and old_fact.get('corrected_date') == change['corrected_date']
+            and dec(old_fact.get('shares'), 'owner_old_shares', integer=True) == dec(original['feedback']['shares'], 'old_shares')
+            and dec(old_fact.get('total_amount_usd'), 'owner_old_total') ==
+                dec(original['changes']['fill_price'], 'old_price') * dec(original['feedback']['shares'], 'old_shares')
+                + dec(original['changes']['fees'], 'old_fees', zero=True), 'date_correction_differs_from_owner')
+        for record in (json.loads(r['body']) for r in con.execute('SELECT body FROM records')):
+            prior = record.get('historical_reconciliation')
+            require(not (record['stage'] == 'applied' and prior
+                and prior['date_correction']['record_id'] == original['id']), 'original_date_already_corrected')
+        for rel in (LEDGER, CONFIRMED):
+            matched = [r for r in rows(read(self.root, rel)) if r['execution_id'] == change['execution_id']]
+            require(len(matched) == 1, 'execution_reference:' + rel)
+            row = matched[0]
+            validate_execution_row(row)
+            require(row['fill_date'] == change['expected_date'] and row['ticker'] == f['ticker']
+                and row['side'] == 'buy' and row['order_status'] == 'filled'
+                and dec(row['shares'], 'old_shares') == dec(original['feedback']['shares'], 'old_shares')
+                and dec(row['fill_price'], 'old_price') == dec(original['changes']['fill_price'], 'old_price')
+                and dec(row['fees'], 'old_fees', zero=True) == dec(original['changes']['fees'], 'old_fees', zero=True)
+                and all(dec(row[k], 'old_' + k, zero=True) == dec(original['changes'][k], 'old_' + k, zero=True)
+                    for k in ('shares_before', 'shares_after', 'cash_before', 'cash_after')),
+                'execution_facts_changed:' + rel)
+            if rel == CONFIRMED:
+                require(row.get('canonical_state_applied') == 'yes', 'original_execution_not_applied')
+        orders = json.loads(read(self.root, ORDERS))
+        require(not any(r.get('ticker') == f['ticker'] and r.get('status') in
+            {'open', 'pending', 'partial_fill', 'partially_filled'} for r in orders['orders']),
+            'known_ticker_order_requires_separate_reconciliation')
+        retained = '06_execution_records/dashboard_feedback.local/owner_facts/' + source['sha256'] + '.json'
+        existing = read(self.root, retained, optional=True)
+        require(not (self.root / retained).exists() or existing == original_source, 'retained_owner_source_conflict')
+        return dict(schema_version=HISTORICAL_SCHEMA, owner_instruction=dict(path=retained,
+            sha256=source['sha256'], original_locator=source['path']), date_correction=change,
+            input_hashes=expected, pending_record_sha256=h['pending_record_sha256'],
+            original_record_sha256=h['original_record_sha256'],
+            authority='owner_local_ledger', broker_observation_claimed=False,
+            reconstructed_historical_cash_claimed=False, source_bytes=original_source)
+
     def preview(self, payload):
+        return self._preview(payload)
+
+    def historical_preview(self, payload):
+        return self._preview(payload, historical=True)
+
+    def _preview(self, payload, *, historical=False):
         with self.locked(), self.db() as con:
             self.recover(con)
-            f, missing, changes, *_ = self.proposal(payload, con)
+            context = self.historical_context(payload, con) if historical else None
+            f, missing, changes, *_ = self.proposal(payload, con, historical=context)
+            if historical and missing:
+                raise FeedbackError('historical_reconciliation_incomplete', {'missing': missing})
             if payload.get('correction') and missing:
                 raise FeedbackError('complete_account_correction_required', {'missing': missing})
             return dict(missing=missing, changes=None if missing else changes,
                         preview_hash=sha(encoded({'payload':payload,'missing':missing,'changes':changes})))
 
     def submit(self, payload):
+        return self._submit(payload)
+
+    def historical_submit(self, payload):
+        return self._submit(payload, historical=True)
+
+    def _submit(self, payload, *, historical=False):
         if not isinstance(payload, dict): raise FeedbackError('invalid_request')
+        if not historical and payload.get('historical_reconciliation') is not None:
+            raise FeedbackError('historical_reconciliation_cli_required')
         request_id = payload.get('request_id')
         try: uuid.UUID(request_id)
         except (ValueError, TypeError, AttributeError): raise FeedbackError('invalid_request_id')
@@ -512,7 +685,10 @@ class Store:
             if previous:
                 if previous['payload'] != body: raise FeedbackError('request_id_reused',status=409)
                 return json.loads(con.execute('SELECT body FROM records WHERE id=?',(previous['record_id'],)).fetchone()[0])
-            f, missing, changes, writes, orders, now, price = self.proposal(payload, con)
+            context = self.historical_context(payload, con) if historical else None
+            f, missing, changes, writes, orders, now, price = self.proposal(payload, con, historical=context)
+            if historical and missing:
+                raise FeedbackError('historical_reconciliation_incomplete', {'missing': missing})
             if payload.get('correction') and missing:
                 raise FeedbackError('complete_account_correction_required', {'missing': missing})
             preview_payload = {k:v for k,v in payload.items() if k != 'preview_hash'}
@@ -532,6 +708,9 @@ class Store:
             record['research_requested_at'] = now.isoformat()
             record['email_version_id']=payload.get('email_version_id') or (old.get('email_version_id') if old else None)
             record['correction'] = payload.get('correction')
+            if context is not None:
+                record['historical_reconciliation'] = {k:v for k,v in context.items() if k != 'source_bytes'}
+                writes[context['owner_instruction']['path']] = context['source_bytes']
             if not missing:
                 status = f['status']
                 if status=='pending':
@@ -546,11 +725,11 @@ class Store:
                     linked = next(r for r in orders['orders'] if r.get('order_id')==f['linked_order'])
                     linked['remaining_quantity'] = int(f['remaining']) if status=='partial' else 0
                     linked['status'] = 'partial_fill' if status=='partial' else 'cancelled' if status=='cancelled' else 'filled'
-                if status in {'pending','filled','partial','cancelled'}:
+                if status in {'pending','filled','partial','cancelled'} and context is None:
                     orders['complete'] = False
                     orders.pop('current_inventory_observation',None)
                     orders.pop('broker_balance_observation',None)
-                if status!='skipped': writes[ORDERS] = encoded(orders)
+                if status!='skipped' and context is None: writes[ORDERS] = encoded(orders)
                 if status in {'filled','partial'}:
                     eid = 'dashboard-'+rid
                     row = {field:'' for field in EXECUTION_FIELDS}
@@ -559,6 +738,9 @@ class Store:
                         shares_before=str(changes['shares_before']),shares_after=str(changes['shares_after']),cash_before=str(changes['cash_before']),
                         cash_after=str(changes['cash_after']),account_total_after='',source='owner_dashboard',
                         notes='actual filled shares; '+f['notes']+'; record='+rid)
+                    if context is not None:
+                        row['source'] = 'owner_local_ledger_historical_reconciliation'
+                        row['notes'] += '; cash_before/after are current local-ledger reconciliation balances, not historical broker balances'
                     validate_execution_row(row)
                     ledger = rows(read(self.root,LEDGER,optional=True))
                     if any(r['execution_id']==eid for r in ledger): raise FeedbackError('execution_already_recorded',status=409)
@@ -576,6 +758,21 @@ class Store:
                         notes='Human facts applied by durable dashboard coordinator; public valuation and research are separate.')
                     writes[RECONCILED] = csv_bytes(rows(read(self.root,RECONCILED,optional=True))+[recon],RECONCILIATION_FIELDS)
                     record['execution_id'] = eid
+                    if context is not None:
+                        change = context['date_correction']
+                        for rel, fields in ((LEDGER, EXECUTION_FIELDS), (CONFIRMED, CONFIRMED_FIELDS)):
+                            revised = rows(writes[rel])
+                            old_row = next(r for r in revised if r['execution_id'] == change['execution_id'])
+                            old_row['fill_date'] = change['corrected_date']
+                            old_row['notes'] += '; owner date correction recorded by ' + rid + ': ' + change['expected_date'] + ' -> ' + change['corrected_date']
+                            validate_execution_row(old_row)
+                            writes[rel] = csv_bytes(revised, fields)
+                        # The separate reconciliation audit states what the new
+                        # current-ledger delta means; historical cash is unknown.
+                        latest = rows(writes[RECONCILED])
+                        latest[-1]['cash_before_source'] = 'current_owner_local_ledger_historical_reconciliation'
+                        latest[-1]['notes'] += ' Historical fill date retained; balances are the current local-ledger application, not a reconstructed broker history.'
+                        writes[RECONCILED] = csv_bytes(latest, RECONCILIATION_FIELDS)
                 if status=='account':
                     observation='06_execution_records/dashboard_feedback.local/observations/'+rid+'-v'+str(record['revision'])+'.json'
                     observed=encoded({'record_id':rid,'revision':record['revision'],'observed_at':now.isoformat(),'feedback':f,'correction':record['correction']})
@@ -590,6 +787,10 @@ class Store:
                     manual.update(source={'path':observation,'sha256':sha(observed)},correction=record['correction'])
                     writes[MANUAL]=encoded(manual)
             if f['status']!='skipped': writes.update(self.pending_brief(writes,now))
+            if context is not None:
+                # Recheck the exact source/account/CSV/record fingerprints at
+                # the prepare boundary, after deriving every intended byte.
+                self.historical_context(payload, con)
             final = record['stage']
             record['stage'],record['final_stage'] = 'applying',final
             con.execute('INSERT OR REPLACE INTO records VALUES(?,?)',(rid,encoded(record).decode()))

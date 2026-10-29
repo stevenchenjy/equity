@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm,FeedbackReceipt,ResearchReadStatus,readFeedbackSnapshot} from './App';
+import {FeedbackForm,FeedbackReceipt,FeedbackDate,ResearchReadStatus,readFeedbackSnapshot,currentFeedbackRecord,pendingFeedbackForEdit} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
 import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
 
@@ -55,6 +55,55 @@ test('accepted receipt follows durable research status without confusing failure
   }
   const fallback=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[{...saved,id:'other-fill',research_status:'passed'},{...saved,revision:1,research_status:'passed'}]}/>);
   assert.match(fallback,/等待重算/);
+});
+
+test('a saved pending edit has recovery controls and does not imply that research applied the account',()=>{
+  const saved={id:'synthetic-pending-record',revision:2,stage:'pending',production_effect:false,
+    missing:['A later transaction is already accounted for; reconcile the current account first.'],research_status:'passed'} as unknown as FormalRecord;
+  const html=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[]} onEditPending={()=>{}} onViewHistory={()=>{}}/>);
+  assert.match(html,/Record saved — account not updated/);
+  assert.match(html,/It has not changed cash or shares/);
+  assert.match(html,/Research refresh completed; account application is still pending/);
+  assert.match(html,/<button class="secondary" type="button">Review saved record<\/button>/);
+  assert.match(html,/<button class="text-button" type="button">View saved history<\/button>/);
+  assert.match(html,/Record synthetic-pending-record · revision 2/);
+  assert.doesNotMatch(html,/账户记录已应用|处理中|disabled/);
+});
+
+test('resuming acknowledged pending feedback retains its record identity and latest durable revision',()=>{
+  const saved={id:'saved-record',revision:2,stage:'pending'} as FormalRecord;
+  const newer={...saved,revision:4};
+  const records=[{...saved,revision:3},{...newer,id:'unrelated-record',revision:20},newer];
+  assert.equal(currentFeedbackRecord(saved,records),newer);
+  assert.equal(pendingFeedbackForEdit(saved,records),newer);
+  assert.equal(pendingFeedbackForEdit(saved,records)?.id,'saved-record');
+  assert.equal(pendingFeedbackForEdit(saved,records)?.revision,4);
+  assert.equal(pendingFeedbackForEdit(saved,[{...saved,revision:1}]),saved);
+});
+
+test('a later applied receipt cannot be reopened as a pending edit',()=>{
+  const saved={id:'saved-record',revision:2,stage:'pending',production_effect:false,missing:['old missing detail'],research_status:'passed'} as unknown as FormalRecord;
+  const applied={...saved,revision:3,stage:'applied',production_effect:true,missing:[]} as FormalRecord;
+  assert.equal(pendingFeedbackForEdit(saved,[applied]),null);
+  const html=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[applied]} onEditPending={()=>{}} onViewHistory={()=>{}}/>);
+  assert.match(html,/账户记录已应用/);
+  assert.match(html,/View saved history/);
+  assert.doesNotMatch(html,/Review saved record|account application is still pending/);
+});
+
+test('owner-corrected execution date is visible without rewriting the original feedback date',()=>{
+  const record={id:'old-applied-record',revision:1,feedback:{...defaults('TST','2026-09-10'),shares:'1',amount:'20'},effective_date:'2026-09-15',
+    execution_date_correction:{original_date:'2026-09-10',corrected_date:'2026-09-15',record_id:'owner-reconciliation',revision:3,recorded_at:'2026-10-29T11:00:00-04:00',reason:'Owner corrected the date of the existing purchase.',owner_source:{path:'private/owner-receipt.json',sha256:'a'.repeat(64)}}} as FormalRecord;
+  const original=JSON.stringify(record.feedback);
+  const html=renderToStaticMarkup(<FeedbackDate record={record}/>);
+  assert.match(html,/Event date 2026-09-15/);
+  assert.match(html,/Owner-corrected execution date/);
+  assert.match(html,/2026-09-10 → 2026-09-15/);
+  assert.match(html,/original saved date remains/);
+  assert.match(html,/Correction record owner-reconciliation · revision 3/);
+  assert.equal(JSON.stringify(record.feedback),original);
+  const old=renderToStaticMarkup(<FeedbackDate record={{...record,effective_date:undefined,execution_date_correction:undefined}}/>);
+  assert.match(old,/Event date 2026-09-10/);assert.doesNotMatch(old,/Owner-corrected/);
 });
 
 test('feedback bootstrap reads only the lightweight committed-account endpoint',async()=>{

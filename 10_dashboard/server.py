@@ -658,7 +658,9 @@ def chart(root, ticker, records):
     session = datetime.fromisoformat(market['market_session_date']).date()
     bars, errors = _validated_bars(history,ticker,session,digest(raw),market['last_price'])
     if errors: raise SnapshotError(errors[0])
-    fills = [dict(id=r['id'],date=r['feedback']['date'],time=r['feedback']['time'],side=r['feedback']['side'],shares=r['feedback']['shares'],price=r['changes']['fill_price'],account_corrected_by=r.get('corrected_by',[]))
+    fills = [dict(id=r['id'],date=r.get('effective_date',r['feedback']['date']),original_date=r['feedback']['date'],
+        execution_date_correction=r.get('execution_date_correction'),time=r['feedback']['time'],side=r['feedback']['side'],
+        shares=r['feedback']['shares'],price=r['changes']['fill_price'],account_corrected_by=r.get('corrected_by',[]))
         for r in records if r['stage']=='applied' and r['feedback']['ticker']==ticker and r['feedback']['status'] in {'filled','partial'}]
     if (root/CONFIRMED).exists() and (root/RECONCILED).exists():
         reconciled={r['execution_id'] for r in csv.DictReader(io.StringIO(safe_read(root,RECONCILED).decode())) if r.get('reconciliation_status')=='applied'}

@@ -244,6 +244,9 @@ export type FormalRecord = {
   email_version_id?:string|null;
   correction?: {record_id:string;reason:string}|null;
   corrected_by?:string[];
+  effective_date?:string;
+  execution_date_correction?:{original_date:string;corrected_date:string;record_id:string;revision:number;recorded_at:string;reason:string;owner_source:{path:string;sha256:string}};
+  historical_reconciliation?:{schema_version:'equity_owner_historical_fill_reconciliation_v1';[key:string]:unknown};
 };
 export type ReviewRequest = {
   id:string; status:'queued'|'running'|'blocked'|'completed'; question:string; tickers:string[];
@@ -285,11 +288,11 @@ export function orderLabel(r:Record<string,unknown>):string {
   const date=typeof r.session_date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.session_date)?` · ${r.session_date}`:'';
   return `${r.ticker} ${r.side==='buy'?'买入':'卖出'} · 剩余 ${r.remaining_quantity??r.quantity} 股 · ${r.order_type??''}${price?` $${price}`:''}${stop?` / 触发 $${stop}`:''} · ${r.time_in_force??''}${date}`;
 }
-export function matchesHistory(record:Pick<FormalRecord,'id'|'feedback'|'stage'|'correction'>,query:string,status:string,stage:string):boolean {
+export function matchesHistory(record:Pick<FormalRecord,'id'|'feedback'|'stage'|'correction'|'effective_date'|'execution_date_correction'>,query:string,status:string,stage:string):boolean {
   if(status!=='all'&&record.feedback.status!==status || stage!=='all'&&record.stage!==stage)return false;
   const f=record.feedback;
   const haystack=[record.id,f.ticker,f.date,f.time,f.notes,statusNames[f.status],f.side==='buy'?'买入':'卖出',
-    ...(f.holdings??[]).map(h=>h.ticker),record.correction?.reason??''].join(' ').toLocaleLowerCase();
+    ...(f.holdings??[]).map(h=>h.ticker),record.correction?.reason??'',record.effective_date??'',record.execution_date_correction?.original_date??'',record.execution_date_correction?.record_id??'',record.execution_date_correction?.reason??''].join(' ').toLocaleLowerCase();
   return query.trim().toLocaleLowerCase().split(/\s+/).every(word=>haystack.includes(word));
 }
 export function easternDate(now = Date.now()): string {
