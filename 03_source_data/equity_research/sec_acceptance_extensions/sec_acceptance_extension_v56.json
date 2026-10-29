@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-10-28T08:12:29.000-04:00",
+  "artifact_sha256": "ddd29808d63e997ebc49a215114b1dcf61c6ad0d63bb2d0d2343ba034de2f69c",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v56",
+  "prior_extension_set_sha256": "130ccdace52dc1a79f4da95226af681c435807f68357a9e18d62b85f4e6632aa",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-28T10:02:00.000+00:00",
+      "accession_number": "0001628280-26-067707",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-28T08:12:29.000-04:00",
+      "cik": "1674101",
+      "entity_name": "Vertiv Holdings Co",
+      "extension_record_sha256": "4c1288629b491d5faece044dab6534cd791bf660151467ce3a90004eb4263382",
+      "extension_version": "v56",
+      "filing_date": "2026-10-28",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "3af64b408273db7fc2ed5e7ecd6ab0d6ac75bdb21a72f90a4b67ed7a2607515f",
+      "source_url": "https://data.sec.gov/submissions/CIK0001674101.json",
+      "ticker": "VRT"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

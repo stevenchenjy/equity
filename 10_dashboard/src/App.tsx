@@ -11,7 +11,7 @@ import EarningsEvents from './EarningsEvents';
 import IntradayRiskPanel from './IntradayRisk';
 import StrategyFrameworkPanel from './StrategyFramework';
 import { useUiVersion } from './uiVersion';
-import { preparePreview, waitForResearch } from './feedbackRequest';
+import { preparePreview, requestJSON, waitForResearch } from './feedbackRequest';
 import type { RequestPayload, Preview } from './feedbackRequest';
 
 type Page = 'today' | 'account' | 'feedback' | 'history' | 'detail';
@@ -46,18 +46,22 @@ const formalErrors: Record<string,string> = {
 const researchNames:Record<string,string>={queued:'等待重算',running:'正在重算',passed:'重算完成',degraded:'重算有缺口',failed:'重算失败，可重试',not_needed:'无需重算'};
 const reviewNames:Record<string,string>={queued:'等待分析师复审',running:'分析师处理中',blocked:'有待解决的条件',completed:'复审完成'};
 const reviewStorage='equity-dashboard-review-request-v1';
-async function post(path:string,payload:unknown) {
-  const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  const result=await response.json(); if(!response.ok) throw Object.assign(new Error((formalErrors[result.error] ?? `登记未确认：${result.error}`)+(Array.isArray(result.details?.missing)?' 待补齐：'+result.details.missing.join('、'):'') ),{code:result.error});
+async function post(path:string,payload:unknown,signal?:AbortSignal) {
+  const {ok,body:result}=await requestJSON<any>(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)},{signal,mutation:path!=='/api/feedback/preview'});
+  if(!ok) throw Object.assign(new Error((formalErrors[result.error] ?? `登记未确认：${result.error}`)+(Array.isArray(result.details?.missing)?' 待补齐：'+result.details.missing.join('、'):'') ),{code:result.error});
   return result;
 }
 const PENDING_REQUEST='equity-dashboard-submission-v1';
 
-async function readCurrentSnapshot():Promise<Snapshot> {
-  const response=await fetch('/api/snapshot',{cache:'no-store'});
-  const result=await response.json();
-  if(!response.ok)throw Object.assign(new Error(errorNames[result.error]??'当前账户暂不可用，请稍后重试。'),{code:result.error});
+async function readCurrentSnapshot(signal?:AbortSignal,path='/api/snapshot'):Promise<Snapshot> {
+  const {ok,body:result}=await requestJSON<any>(path,{cache:'no-store'},{signal});
+  if(!ok)throw Object.assign(new Error(errorNames[result.error]??'当前账户暂不可用，请稍后重试。'),{code:result.error});
   if(result.schema_version!=='equity_dashboard_snapshot_v1')throw new Error('当前快照格式不匹配。');
+  return result;
+}
+export async function readFeedbackSnapshot(signal?:AbortSignal) {
+  const result=await readCurrentSnapshot(signal,'/api/feedback/snapshot');
+  if(result.feedback_context_only!==true)throw new Error('The account preview format does not match. Please update the view.');
   return result;
 }
 
@@ -185,14 +189,14 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, onSnapshot,
           // Account corrections use their separate complete-snapshot path.
           const payload:RequestPayload={request_id:crypto.randomUUID(),feedback:{...form,...(filled?{not_in_account:true}:{})},account_version:base.current.account_version,snapshot_id:base.current.snapshot_id,
             plan:planReference(plan),...(correction?{correction:{record_id:correction.id,reason:correctionReason.trim()}}:{}),email_version_id:editing?(editing.email_version_id??null):(emailVersion??null),...(editing?{record_id:editing.id,revision:editing.revision}:{})};
-          const result=await preparePreview(payload,readCurrentSnapshot,p=>post('/api/feedback/preview',p) as Promise<Preview>,retry);
+          const result=await preparePreview(payload,readFeedbackSnapshot,(p,signal)=>post('/api/feedback/preview',p,signal) as Promise<Preview>,retry);
           controller.signal.throwIfAborted();
           base.current=result.snapshot;onSnapshot?.(result.snapshot);
           pending.current=result.payload;setPreview(result.preview);return;
         }
         const payload=pending.current;
         localStorage.setItem(PENDING_REQUEST,JSON.stringify(payload));setUnconfirmed(payload);onDirty(false);
-        const record=await waitForResearch(()=>post('/api/feedback',payload) as Promise<FormalRecord>,retry);
+        const record=await waitForResearch(()=>post('/api/feedback',payload,controller.signal) as Promise<FormalRecord>,retry);
         localStorage.removeItem(PENDING_REQUEST);setUnconfirmed(null);pending.current=null;setPreview(null);setFormalReceipt(record);onDirty(false);onFormalSaved();
       }
     } catch (e) {
@@ -246,7 +250,7 @@ export function FeedbackForm({ data, ticker, onSaved, onFormalSaved, onSnapshot,
     </details>
     </fieldset>
     {preview?<div className="submission-preview" role="status"><strong>{preview.missing.length?'将保存为待补全记录':'核对本次登记'}</strong>{preview.missing.length?<p>待补全：{preview.missing.join('、')}。当前现金和持仓暂不改变。</p>:preview.changes?<><p>现金 {money(preview.changes.cash_before)} → {money(preview.changes.cash_after)}</p>{filled?<p>{form.side==='buy'?'买入':'卖出'} {form.shares} 股 · 每股 {money(preview.changes.fill_price)}</p>:null}{preview.changes.linked_order?<p>关联挂单：{orderLabel(preview.changes.linked_order)}</p>:null}{preview.changes.ticker?<p>{preview.changes.ticker}：{preview.changes.shares_before} → {preview.changes.shares_after} 股</p>:<p>完整持仓：{preview.changes.holdings_after.map(r=>`${r.ticker} ${r.shares} 股`).join('；')||'全现金'}</p>}</>:null}<button className="text-button" type="button" disabled={busy||Boolean(unconfirmed)} onClick={()=>{pending.current=null;setPreview(null)}}>返回修改</button></div>:null}
-    {waiting?<div className="notice" role="status"><span>Finishing the previous research update · {waitSeconds}s. Your entry is kept and will continue automatically.</span><button className="text-button" type="button" onClick={()=>activeRequest.current?.abort()}>停止等待</button></div>:null}
+    {busy?<div className="notice" role="status"><span>{waiting?`The account is busy · ${waitSeconds}s. Your entry is kept and will continue automatically.`:'Checking your request. Your input is kept; you can stop waiting.'}</span><button className="text-button" type="button" onClick={()=>activeRequest.current?.abort()}>Stop waiting</button></div>:null}
     {unconfirmed&&!formalReceipt&&!waiting?<p className="notice">提交结果尚未确认。请用原请求重试；刷新后仍可恢复这个请求。</p>:null}
     {errors.save ? <p className="field-error" role="alert">{errors.save}</p> : null}
     <button className="primary save-button" type="submit" disabled={busy || (demo&&Boolean(storageError)) || Boolean(receipt)||Boolean(formalReceipt)||(!demo&&!data&&!unconfirmed)}>{waiting?'等待更新完成…':busy?'处理中…':demo?'保存试填记录':unconfirmed?'用原请求重试':preview?(filled&&!preview.missing.length?'确认新增成交':'确认保存正式记录'):'预览登记结果'}</button>
@@ -308,6 +312,11 @@ function PlanDetail({ plan, now, offline, revision }: { plan: Plan; now: number;
 export default function App() {
   const [page, setPage] = useState<Page>('today');
   const [data, setData] = useState<Snapshot | null>(null);
+  // Intake has its own short account read. It must remain available while a
+  // full research snapshot is pending, without promoting that account-only
+  // response into the research/action-card state.
+  const [accountData,setAccountData]=useState<Snapshot|null>(null);
+  const [accountError,setAccountError]=useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
@@ -332,11 +341,28 @@ export default function App() {
   const clock = useRef({ time: Date.now(), captured: performance.now() });
   const request = useRef(0);
   const mounted = useRef(true);
+  const snapshotInFlight=useRef(false),accountRequest=useRef(0);
+  const accountController=useRef<AbortController|null>(null);
+  const acceptAccountSnapshot=(snapshot:Snapshot)=>{
+    // A fresh preview supersedes any older bootstrap still in flight.
+    accountRequest.current++;accountController.current?.abort();
+    setAccountData(snapshot);setAccountError('');
+  };
+  const loadAccount=async()=>{
+    accountController.current?.abort();
+    const controller=new AbortController();accountController.current=controller;
+    const id=++accountRequest.current;
+    try {const result=await readFeedbackSnapshot(controller.signal);if(mounted.current&&id===accountRequest.current){setAccountData(result);setAccountError('')}}
+    catch(e){if(mounted.current&&id===accountRequest.current&&!controller.signal.aborted)setAccountError(e instanceof Error?e.message:'The account preview is unavailable. Your input is kept.')}
+    finally {if(accountController.current===controller)accountController.current=null}
+  };
   const acceptSnapshot=(snapshot:Snapshot)=>{
     clock.current={time:Date.parse(snapshot.server_now),captured:performance.now()};
     setNow(clock.current.time);setData(snapshot);setError('');
   };
   const load = async () => {
+    if(snapshotInFlight.current)return;
+    snapshotInFlight.current=true;
     const id = ++request.current;
     setLoading(true);
     try {
@@ -344,7 +370,7 @@ export default function App() {
       if (id !== request.current || !mounted.current) return;
       acceptSnapshot(result);
     } catch (e) { if (id === request.current && mounted.current) setError(e instanceof TypeError ? '无法连接工作台。请检查 Mac 服务与 Tailscale 连接。' : e instanceof Error ? e.message : '无法连接工作台。'); }
-    finally { if (id === request.current && mounted.current) setLoading(false); }
+    finally { snapshotInFlight.current=false;if (id === request.current && mounted.current) setLoading(false); }
   };
   const runtimeUpdating=error===errorNames.runtime_refresh_in_progress;
   useEffect(()=>{
@@ -353,16 +379,16 @@ export default function App() {
     return()=>clearInterval(timer);
   },[runtimeUpdating]);
   useEffect(() => {
-    mounted.current = true; void load();
+    mounted.current = true; void load();void loadAccount();
     const poll = setInterval(() => { void load(); }, 60000);
     const tick = setInterval(() => setNow(clock.current.time + performance.now() - clock.current.captured), 1000);
-    return () => { mounted.current = false; clearInterval(poll); clearInterval(tick); };
+    return () => { mounted.current = false;accountController.current?.abort();clearInterval(poll); clearInterval(tick); };
   }, []);
   useEffect(()=>{void loadRecords();void loadReviews();const poll=setInterval(()=>{void loadRecords();void loadReviews()},15000);return()=>clearInterval(poll)},[]);
   useEffect(()=>{if(page==='history'){fetch('/api/email-versions').then(r=>{if(!r.ok)throw new Error();return r.json()}).then(r=>setVersions(r.versions??[])).catch(()=>setEmailError('邮件版本读取失败'))}},[page]);
   useEffect(()=>{const key=new URLSearchParams(window.location.search).get('version');if(key){setPage('history');void openVersion(key)}else{const pub=new URLSearchParams(window.location.search).get('publication');if(pub){setPage('history');fetch('/api/email-publication?id='+encodeURIComponent(pub)).then(async r=>{const v=await r.json();if(!r.ok)throw new Error('该邮件版本尚未从发送台账确认，或归档绑定不唯一。');setOldVersion(v)}).catch(e=>setEmailError(e.message))}}},[]);
   const openVersion=async(id:string)=>{const generation=++versionRequest.current;setOldVersion(null);try{const r=await fetch('/api/email-version?id='+encodeURIComponent(id));const v=await r.json();if(!r.ok)throw new Error('邮件归档未通过校验。');if(generation!==versionRequest.current||!mounted.current)return;setOldVersion(v);setEmailError('')}catch(e){if(generation!==versionRequest.current)return;setEmailError(e instanceof Error?e.message:'邮件版本不可用')}};
-  const formalSaved=()=>{void loadRecords();void load()};
+  const formalSaved=()=>{void loadRecords();void loadAccount();void load()};
   useEffect(() => {
     const read = () => { try { setRecords(parseRecords(localStorage.getItem(STORAGE_KEY))); setStorageError(''); } catch (e) { setStorageError(e instanceof Error ? e.message : '浏览器存储不可用'); } };
     read(); const changed = (event: StorageEvent) => { if (event.key === STORAGE_KEY) read(); };
@@ -387,7 +413,7 @@ export default function App() {
     <aside className="sidebar"><div className="brand">Equity Research</div><nav aria-label="主导航">{pages.map(item => <button key={item.id} className={page === item.id || (page === 'detail' && item.id === 'today') ? 'selected' : ''} onClick={() => navigate(item.id)} aria-current={page === item.id ? 'page' : undefined}><item.icon size={21} /><span>{item.name}</span></button>)}</nav><div className="sidebar-footer">私人工作台<small>查看 · 登记 · 核对</small></div></aside>
     <div className="mobile-brand"><span className="brand">Equity Research</span><span>私人工作台</span></div>
     <main id="main-content" tabIndex={-1}>
-      <header className="page-header"><div><h1>{title}</h1><p>{new Intl.DateTimeFormat('zh-CN', { timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric' }).format(now)}</p></div><button className="secondary refresh-button" onClick={() => { void load();void loadRecords();void loadReviews(); }} disabled={loading}><RefreshCw size={18} className={loading ? 'spin' : ''} /><span>{loading ? '读取中' : '更新视图'}</span></button></header>
+      <header className="page-header"><div><h1>{title}</h1><p>{new Intl.DateTimeFormat('zh-CN', { timeZone: 'America/New_York', year: 'numeric', month: 'long', day: 'numeric' }).format(now)}</p></div><button className="secondary refresh-button" onClick={() => { void load();void loadAccount();void loadRecords();void loadReviews(); }} disabled={loading}><RefreshCw size={18} className={loading ? 'spin' : ''} /><span>{loading ? '读取中' : '更新视图'}</span></button></header>
       {updateAvailable?<div className="notice" role="status">新版已就绪，当前输入已保留。<a href={window.location.href} target="_blank" rel="noopener noreferrer">打开新版</a></div>:null}
       <>{pendingNavigation?<div className="unsaved-confirm" role="alert"><p>表单有尚未保存的内容。离开后，这些内容会被清除。</p><button className="secondary" onClick={()=>setPendingNavigation(null)}>继续填写</button><button className="secondary" onClick={()=>{setDirty(false);pendingNavigation();setPendingNavigation(null)}}>放弃内容并离开</button></div>:null}</>{data?.mode==='verification'?<div className="notice neutral"><ClipboardList size={18}/><span>隔离验收账户 · 以下记录是模拟数据，不影响真实持仓。</span></div>:null}
       {page!=='feedback'&&data?.research_ready===false?<div className="notice"><Clock3 size={19}/><span>下方显示最新账户记录。研究尚未完成重算，旧数量方案已暂停。</span></div>:null}
@@ -404,10 +430,10 @@ export default function App() {
           {data?.plans.length ? data.plans.map(p => { const old = expired(p, now) || Boolean(error); return <article className="plan-row" key={`${p.ticker}:${p.plan_id??'unversioned'}`}><div className="plan-symbol"><button onClick={() => openDetail(p.ticker)}>{p.ticker}</button><span>{planRoleLabel(p)}</span><small>{data.positions.find(v => v.ticker === p.ticker)?.shares ?? '—'} 股已记录</small></div><div className="plan-state"><span className={`status ${old ? 'amber' : ''}`}>{old ? '需复审' : p.status === 'pending' ? '条件待核对' : p.status === 'unverified' ? '依据待核对' : '当前计划'}</span><p>{old ? '计划已到复审时间' : p.blockers.length ? '先核对价格、剩余股数与挂单' : actionNames[p.action] ?? '以当前研究依据为准'}</p><small>复审 {timeLabel(p.expires_at)}</small></div><button className="secondary" onClick={() => openDetail(p.ticker)}>查看依据</button></article>; }) : <p className="empty compact">没有可展示的维护计划。</p>}
           {data ? <div className="addition-summary">{additions.length ? additions.map(c => <p key={c.ticker}><strong>{c.ticker} · {data.capital_decision?'条件草稿':'新增复核'}</strong><span>{data.capital_decision?`${c.quantity} 股 · LIMIT ≤ ${money(c.maximum_review_price)}`:`最多 ${c.quantity} 股 · 最高复核价 ${money(c.maximum_review_price)}`}</span><button className="text-button" onClick={() => openDetail(c.ticker)}>查看完整条件</button></p>) : <p>当前没有仍在有效期内的新增方案。</p>}</div> : null}
           {data ? <div className="candidate-section"><h2>观察名单</h2><div className="table-scroll"><table><thead><tr><th>股票</th><th>状态</th><th>主要缺口</th><th className="hide-small">参考收盘</th></tr></thead><tbody>{(showAll ? watched : watched.slice(0, 3)).map(c => <tr key={c.ticker}><td><button className="ticker-link" onClick={() => openDetail(c.ticker)}>{c.ticker}</button></td><td><span className="status">观察</span></td><td>{blockerText(c.blockers)}</td><td className="hide-small">{money(c.price)}</td></tr>)}</tbody></table></div>{watched.length > 3 ? <button className="text-button expand-button" onClick={() => setShowAll(v => !v)}>{showAll ? '收起观察名单' : `展开全部 ${watched.length} 个观察标的`}<ArrowUpRight size={16} /></button> : null}</div> : null}
-        </section><aside className="feedback-panel"><h2>快速反馈</h2><p className="panel-lead">登记你已发生的操作。</p><FeedbackForm data={data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptSnapshot} formalRecords={formalRecords} onDirty={setDirty} storageError={storageError} /></aside></div>
+        </section><aside className="feedback-panel"><h2>快速反馈</h2><p className="panel-lead">登记你已发生的操作。</p>{accountError?<p role="alert" className="field-error">{accountError}</p>:null}<FeedbackForm data={accountData??data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptAccountSnapshot} formalRecords={formalRecords} onDirty={setDirty} storageError={storageError} /></aside></div>
         {data?.earnings_events?<EarningsEvents data={data} unavailable={Boolean(error)||data.research_ready===false}/>:null}
       </> : null}
-      {page === 'feedback' ? <div className="standalone-form"><FeedbackForm key={editing?.id??correction?.id??formStatus} data={data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptSnapshot} formalRecords={formalRecords} onDirty={setDirty} initialStatus={formStatus} correction={correction} editing={editing} emailVersion={emailContext} wide storageError={storageError} /></div> : null}
+      {page === 'feedback' ? <div className="standalone-form">{accountError?<p role="alert" className="field-error">{accountError}</p>:null}<FeedbackForm key={editing?.id??correction?.id??formStatus} data={accountData??data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptAccountSnapshot} formalRecords={formalRecords} onDirty={setDirty} initialStatus={formStatus} correction={correction} editing={editing} emailVersion={emailContext} wide storageError={storageError} /></div> : null}
       {page === 'account' && data ? <><Summary data={data} /><IntradayRiskPanel data={data} now={now} unavailable={Boolean(error)}/><div className="section-heading"><h2>当前记录的持仓</h2><button className="secondary" onClick={() => navigate('feedback','account')}><PencilLine size={16} />核对当前账户</button></div><div className="table-scroll"><table><thead><tr><th>股票</th><th>股数</th><th>参考收盘</th><th>持仓市值</th><th>占账户</th></tr></thead><tbody>{data.positions.map(p => <tr key={p.ticker}><td><button className="ticker-link" onClick={() => openDetail(p.ticker)}>{p.ticker}</button></td><td>{p.shares}</td><td>{money(p.price)}</td><td>{money(p.price===null?null:p.shares * p.price)}</td><td>{p.weight===null?'待估值':p.weight.toFixed(2)+'%'}</td></tr>)}</tbody></table></div><div className="account-notes"><p><span>账户最后更新</span>{timeLabel(data.account.last_updated)}</p><p><span>资金依据</span>{data.account.cash_basis === 'owner_recorded' ? '所有者记录' : '台账估算'} · 结算资金{data.account.settled_cash_verified ? '已核对' : '未核验'}</p><p><span>挂单最后核对</span>{timeLabel(data.orders.as_of)} · {data.orders.complete ? '当时列表完整' : '列表不完整'} · {orderObservationNote(data)}</p></div><ReviewPanel data={data} requests={reviewRequests} error={reviewError} onSaved={()=>void loadReviews()} onDirty={setDirty}/><h2 className="orders-title">记录中的订单</h2>{data.orders.rows.length ? <div className="order-list">{data.orders.rows.map((r, i) => <div key={String(r.order_id??i)}><strong>{String(r.ticker??'—')} · {r.side==='buy'?'买入':'卖出'}</strong><span>状态 {String(r.status??'未知')} · 委托 {String(r.quantity??'未知')} 股 · 剩余 {String(r.remaining_quantity??'未知')} 股</span><small>订单编号 {String(r.order_id??'未记录')}</small></div>)}</div> : <p className="empty compact">上次核对时没有记录中的订单；该观察不代表此刻的券商状态。</p>}</> : page === 'account' ? <p className="empty">当前账户快照不可用。</p> : null}
       {page === 'detail' ? <><button className="text-button back-button" onClick={() => navigate('today')}><ArrowLeft size={17} />返回今日方案</button>{plan ? <PlanDetail plan={plan} now={now} offline={Boolean(error)} revision={`${data?.snapshot_id}:${data?.account_version}`} /> : <PriceChart ticker={selected} now={now} offline={Boolean(error)} revision={`${data?.snapshot_id}:${data?.account_version}`}/>}{data?.capital_decision?.decisions.find(row=>row.ticker===selected)?.research_case?<CompanyCase row={data.capital_decision.decisions.find(row=>row.ticker===selected)!}/>:!plan?<p className="empty">该标的没有当前维护中的持仓计划或已核验的公司估值判断。</p>:null}</> : null}
       {page === 'history' ? <>

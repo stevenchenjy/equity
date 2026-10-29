@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm,FeedbackReceipt} from './App';
+import {FeedbackForm,FeedbackReceipt,readFeedbackSnapshot} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
 import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
 
@@ -55,4 +55,35 @@ test('accepted receipt follows durable research status without confusing failure
   }
   const fallback=renderToStaticMarkup(<FeedbackReceipt saved={saved} records={[{...saved,id:'other-fill',research_status:'passed'},{...saved,revision:1,research_status:'passed'}]}/>);
   assert.match(fallback,/等待重算/);
+});
+
+test('feedback bootstrap reads only the lightweight committed-account endpoint',async()=>{
+  const originalFetch=globalThis.fetch;const calls:string[]=[];
+  const account={...data,schema_version:'equity_dashboard_snapshot_v1',feedback_context_only:true,account_version:'new-committed-account',snapshot_id:'exact-current-decision',research_ready:false};
+  try {
+    globalThis.fetch=async input=>{
+      calls.push(String(input));
+      // The slow research route must never be a prerequisite for intake.
+      if(String(input)==='/api/snapshot')return new Promise<Response>(()=>{});
+      assert.equal(String(input),'/api/feedback/snapshot');
+      return new Response(JSON.stringify(account),{status:200});
+    };
+    const current=await readFeedbackSnapshot();
+    assert.deepEqual(calls,['/api/feedback/snapshot']);assert.equal(current.account_version,'new-committed-account');
+    for(const wide of [false,true]){
+      const html=renderToStaticMarkup(<FeedbackForm data={current} ticker="ABC" wide={wide} onSaved={()=>{}} onFormalSaved={()=>{}} onDirty={()=>{}} storageError=""/>);
+      assert.match(html,/<button class="primary save-button" type="submit">预览登记结果/);
+      assert.doesNotMatch(html,/正式记录已接纳|核对本次登记/);
+    }
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('an unverified account response cannot enable a new preview',async()=>{
+  const originalFetch=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>new Response(JSON.stringify({...data,schema_version:'equity_dashboard_snapshot_v1'}),{status:200});
+    await assert.rejects(readFeedbackSnapshot(),/account preview format does not match/);
+    const html=renderToStaticMarkup(<FeedbackForm data={null} ticker="ABC" onSaved={()=>{}} onFormalSaved={()=>{}} onDirty={()=>{}} storageError=""/>);
+    assert.match(html,/<button class="primary save-button" type="submit" disabled="">预览登记结果/);
+  } finally {globalThis.fetch=originalFetch}
 });

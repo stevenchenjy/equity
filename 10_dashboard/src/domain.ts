@@ -169,6 +169,7 @@ export type IntradayRisk = {
   dependencies?: string[]; limitations?: string[];
 };
 export type Snapshot = {
+  feedback_context_only?:boolean;
   strategy_framework?:StrategyFramework|null;
   intraday_portfolio_risk?: IntradayRisk | null;
   earnings_events?: EarningsEventView;

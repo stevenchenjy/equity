@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaults } from './domain';
 import type { Snapshot } from './domain';
-import { preparePreview, waitForResearch } from './feedbackRequest';
+import { errorCode, preparePreview, requestJSON, waitForResearch } from './feedbackRequest';
 import type { RequestPayload, Preview } from './feedbackRequest';
 
 const busy=()=>Object.assign(new Error('research busy'),{code:'runtime_refresh_in_progress'});
@@ -76,4 +76,62 @@ test('busy status reports actual elapsed time without changing the original requ
       {...options(),onWaiting:seconds=>elapsed.push(seconds),delay:async()=>{now+=3000}});
     assert.equal(result,'saved');assert.deepEqual(elapsed,[0,3]);
   } finally {Date.now=originalNow}
+});
+
+test('a stalled fetch is bounded even when the network implementation ignores abort',async()=>{
+  const originalFetch=globalThis.fetch;let requestSignal:AbortSignal|undefined;
+  try {
+    globalThis.fetch=async(_input,init)=>{requestSignal=init?.signal??undefined;return new Promise<Response>(()=>{})};
+    await assert.rejects(requestJSON('/api/feedback/snapshot',{}, {timeoutMs:15}),e=>errorCode(e)==='request_timeout');
+    assert.equal(requestSignal?.aborted,true);
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('a response with a stalled JSON body has the same finite deadline',async()=>{
+  const originalFetch=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>({ok:true,status:200,json:()=>new Promise(()=>{})}) as Response;
+    await assert.rejects(requestJSON('/api/snapshot',{}, {timeoutMs:15}),e=>errorCode(e)==='request_timeout');
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('timed-out confirmed saves retain the identical original payload and are not retried',async()=>{
+  const originalFetch=globalThis.fetch,submitted={...payload(),preview_hash:'owner-confirmed'};
+  const original=JSON.stringify(submitted);let calls=0;
+  try {
+    globalThis.fetch=async(_input,init)=>{calls++;assert.equal(init?.body,original);return new Promise<Response>(()=>{})};
+    await assert.rejects(waitForResearch(()=>requestJSON('/api/feedback',{method:'POST',body:JSON.stringify(submitted)},{timeoutMs:15,mutation:true}),options()),
+      e=>errorCode(e)==='feedback_result_unknown_retry_same_request');
+    assert.equal(calls,1);assert.equal(JSON.stringify(submitted),original);
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('stop cancels a hanging preview read before any preview or save request',async()=>{
+  const originalFetch=globalThis.fetch,controller=new AbortController();let previews=0,calls=0;
+  try {
+    globalThis.fetch=async()=>{calls++;return new Promise<Response>(()=>{})};
+    const task=preparePreview(payload(),async signal=>{
+      const result=await requestJSON<Snapshot>('/api/feedback/snapshot',{}, {signal,timeoutMs:1000});return result.body;
+    },async()=>{previews++;return preview},{...options(),signal:controller.signal});
+    controller.abort();
+    await assert.rejects(task,e=>e instanceof Error&&e.name==='AbortError');
+    assert.equal(calls,1);assert.equal(previews,0);
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('an already stopped request cannot start network activity',async()=>{
+  const originalFetch=globalThis.fetch,controller=new AbortController();let calls=0;controller.abort();
+  try {
+    globalThis.fetch=async()=>{calls++;throw new Error('must not run')};
+    await assert.rejects(requestJSON('/api/feedback/snapshot',{}, {signal:controller.signal}),e=>e instanceof Error&&e.name==='AbortError');
+    assert.equal(calls,0);
+  } finally {globalThis.fetch=originalFetch}
+});
+
+test('preview propagates one abort signal through the lightweight read and preview',async()=>{
+  const controller=new AbortController();
+  const result=await preparePreview(payload(),async signal=>{assert.equal(signal,controller.signal);return snapshot()},async(p,signal)=>{
+    assert.equal(signal,controller.signal);assert.equal(p.request_id,'same-original-request');return preview;
+  },{...options(),signal:controller.signal});
+  assert.equal(result.payload.preview_hash,'verified-preview');
 });

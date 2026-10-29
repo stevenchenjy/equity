@@ -22,7 +22,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit, parse_qs
 from zoneinfo import ZoneInfo
 from feedback import Store, FeedbackError, version, PENDING, CONFIRMED, RECONCILED
-from account_access import account_lock, validate_account_publication
+from account_access import account_lock, input_version, validate_account_publication
 from tactical_review import _validated_bars
 from dashboard_publication import publication_id
 from workflow_inputs import WORKFLOW_INPUTS
@@ -582,6 +582,73 @@ def current_snapshot(root, *, research_busy=False):
     return result
 
 
+def feedback_snapshot(root: Path, now: datetime | None = None) -> dict:
+    """Committed account facts and optional plan references for human intake.
+
+    Caller holds the short account lock. Research projections, price histories
+    and growing opportunity journals are deliberately absent: a human record
+    does not need a fresh investment recommendation. Preview/submit still
+    revalidate the exact account version and any retained plan reference.
+    """
+    now = now or datetime.now(ET)
+    raw_account = safe_read(root, ACCOUNT)
+    raw_positions = safe_read(root, POSITIONS)
+    raw_orders = safe_read(root, ORDERS)
+    account, orders = json.loads(raw_account), json.loads(raw_orders)
+    if not isinstance(account, dict) or not isinstance(orders, dict):
+        raise SnapshotError('account_inputs_invalid')
+    cash = number(account.get('cash_available'))
+    if cash is None or cash < 0 or not isinstance(orders.get('orders'), list):
+        raise SnapshotError('account_inputs_invalid')
+    positions, seen = [], set()
+    for row in csv.DictReader(io.StringIO(raw_positions.decode())):
+        ticker, shares = row.get('ticker'), number(row.get('shares_optional'))
+        if (not isinstance(ticker, str) or re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,11}', ticker) is None
+                or ticker in seen or shares is None or shares < 0 or shares != int(shares)):
+            raise SnapshotError('account_inputs_invalid')
+        seen.add(ticker)
+        positions.append(dict(ticker=ticker, shares=shares, price=None, weight=None, role='unverified'))
+    if (root / PENDING).exists():
+        pending = json.loads(safe_read(root, PENDING))
+        if (not isinstance(pending, dict) or not isinstance(pending.get('records'), list)
+                or any(not isinstance(row, dict) for row in pending['records'])):
+            raise SnapshotError('account_write_recovery_required')
+        if any(row.get('stage') in {'applying', 'recovery_conflict'} for row in pending.get('records', [])):
+            raise SnapshotError('account_write_recovery_required')
+    # A retained plan is an audit reference only. No draft, price, eligibility
+    # or current research claim crosses this lightweight account boundary.
+    decision_path = root / DECISION
+    decision_raw = safe_read(root, DECISION) if decision_path.exists() or decision_path.is_symlink() else b''
+    try:
+        decision = json.loads(decision_raw) if decision_raw else {}
+    except (ValueError, TypeError):
+        decision = {}
+    if not isinstance(decision, dict):
+        decision = {}
+    plans = []
+    continuity = decision.get('plan_continuity', {})
+    references = continuity.get('plans', []) if isinstance(continuity, dict) else []
+    for row in references if isinstance(references, list) else []:
+        if (not isinstance(row, dict) or not isinstance(row.get('ticker'), str)
+                or not isinstance(row.get('plan_id'), str) or type(row.get('version')) is not int
+                or not isinstance(row.get('record_hash'), str)
+                or re.fullmatch('[0-9a-f]{64}', row['record_hash']) is None):
+            continue
+        plans.append(dict(ticker=row['ticker'], plan_id=row['plan_id'], version=row['version'],
+            record_hash=row['record_hash'], action='reference_only', status='unverified', expires_at=None,
+            blockers=['account_context_only'], instruction='', reason='', counterargument='', purpose={},
+            sources=[], draft=None, historical_draft=None, eligible_quantity=0))
+    return dict(schema_version='equity_dashboard_snapshot_v1', mode='formal_feedback',
+        feedback_context_only=True, server_now=now.isoformat(), generated_at=now.isoformat(),
+        cycle_date=now.date().isoformat(), market_session='', market_current=False, stale=True,
+        snapshot_id=digest(decision_raw), account_version=version(root), research_ready=False,
+        account=dict(account_total_value=None, cash_available=cash, invested_capital=None,
+            last_updated=account.get('last_updated'), cash_basis=account.get('cash_basis'), settled_cash_verified=False),
+        positions=positions, plans=plans, candidates=[],
+        orders=dict(as_of=orders.get('as_of'), complete=orders.get('complete') is True, fresh=False, rows=orders['orders']),
+        global_blockers=['account_context_only'], capital_decision=None, capital_decision_status='not_evaluated')
+
+
 def chart(root, ticker, records):
     if re.fullmatch(r'[A-Z][A-Z0-9.\-]{0,11}', ticker) is None: raise SnapshotError('invalid_ticker')
     raw = safe_read(root,MARKET)
@@ -683,7 +750,13 @@ class Handler(BaseHTTPRequestHandler):
             try:
                 # A long research lock changes recommendation availability,
                 # never availability of the latest committed account facts.
-                with account_lock(self.server.runtime_root, shared=True), RUNTIME_LOCK.open("rb") as lock:
+                # Capture/recheck account identity under short locks. Expensive
+                # research validation must never hold up preview/submit's
+                # exclusive account transaction. A concurrent accepted record
+                # invalidates this response instead of exposing mixed facts.
+                with account_lock(self.server.runtime_root, shared=True):
+                    account_before = input_version(self.server.runtime_root)
+                with RUNTIME_LOCK.open("rb") as lock:
                     try:
                         fcntl.flock(lock.fileno(), fcntl.LOCK_SH | fcntl.LOCK_NB)
                         research_busy=False
@@ -695,6 +768,9 @@ class Handler(BaseHTTPRequestHandler):
                         if research_busy: raise BlockingIOError()
                         result=read_snapshot(self.server.runtime_root)
                     if getattr(self.server,'verification',False): result['mode']='verification'
+                with account_lock(self.server.runtime_root, shared=True):
+                    if input_version(self.server.runtime_root) != account_before:
+                        raise SnapshotError('snapshot_changed_during_read')
                 return self.respond(200, json.dumps(result, ensure_ascii=False, allow_nan=False).encode(), "application/json; charset=utf-8")
             except BlockingIOError:
                 return self.error_json(503, "runtime_refresh_in_progress")
@@ -703,6 +779,10 @@ class Handler(BaseHTTPRequestHandler):
                 return self.error_json(503, reason)
         try:
             query = parse_qs(urlsplit(self.path).query)
+            if path == '/api/feedback/snapshot' and hasattr(self.server, 'store'):
+                with account_lock(self.server.runtime_root, shared=True):
+                    result = feedback_snapshot(self.server.runtime_root)
+                return self.respond(200, json.dumps(result, ensure_ascii=False, allow_nan=False).encode(), 'application/json')
             if path == '/api/feedback' and hasattr(self.server,'store'):
                 return self.respond(200,json.dumps({'records':self.server.store.history()},ensure_ascii=False).encode(),'application/json')
             if path == '/api/feedback/events' and hasattr(self.server,'store'):

@@ -45,3 +45,25 @@ queued entry, now batches research only. It never delays trade intake. Explicit
 Legacy account writers and allocation migrations share the account lock; their
 transaction and recovery checks remain effective. Deployment retains the
 runtime/daily locks, and service replacement must preserve the durable journal.
+
+
+## Bounded account preview
+
+Action-log previews use `GET /api/feedback/snapshot`, a small committed-account
+context independent of the full research dashboard. It carries the current
+account version, decision identity and optional retained plan references for
+audit. It supplies no current valuation, price, eligible quantity or trading
+authority. Preview and confirmation still validate the original account/version,
+plan reference, preview hash and request identity through the same writer.
+
+The full research snapshot captures and rechecks account identity under short
+account locks; its expensive research validation runs outside that lock. A
+concurrent account change rejects that response instead of blocking intake or
+combining old research with new facts. The form retains a separate account
+context and never promotes it into the research cards.
+
+Requests have a 15-second network-and-body deadline and a Stop waiting control.
+Stopping a preview changes no account record. A timed-out or interrupted save
+keeps its original durable request ID for recovery; it is never automatically
+resubmitted as a new transaction. Existing duplicate, stale-version, incomplete
+account-write and unknown-result checks remain effective.

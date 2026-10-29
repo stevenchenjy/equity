@@ -39,7 +39,7 @@ concurrency, bounded recomposition, recovery and email-claim semantics are in
 
 新标的缺少公开价格时仍可记录人工事实。旧总额仅作参考，页面显示待估值，旧决策不会混入新账户。
 
-Codex 根据用户明确报告的事实登记时，用同一个 `record_feedback.py`。私人 JSON 使用当前 `/api/snapshot` 的账户版本和唯一 UUID；先 `--preview`，核对变化，把返回的 `preview_hash` 保留在同一个请求内，再 `--apply --refresh`。旧 reconciliation writer 保留兼容用途；新标的、清仓用共同协调器。
+Codex 根据用户明确报告的事实登记时，用同一个 `record_feedback.py`。私人 JSON 使用当前 `/api/feedback/snapshot` 的账户版本和唯一 UUID；先 `--preview`，核对变化，把返回的 `preview_hash` 保留在同一个请求内，再 `--apply --refresh`。旧 reconciliation writer 保留兼容用途；新标的、清仓用共同协调器。
 
 ## 发布和服务
 
@@ -84,3 +84,17 @@ python3 connect_private.py
 CSV 批量导入、分钟线和真实收益率统计留作有明确数据契约的独立扩展；当前日常表单无需这些功能。
 
 录入金额协议使用独立的 `simple_total` 版本；旧 `simple` 请求仍按每股单价解析，旧页面重试和历史记录不会被误乘或误除股数。新版本的未知订单类型只影响成交事实登记，不改变挂单所需的类型 / 价格 / 有效期校验。
+
+
+## Action-log loading and recovery
+
+The sidebar and full-page action forms read the lightweight
+`/api/feedback/snapshot` account context. They remain available when the full
+research snapshot is slow or unavailable. Retained plan identities are audit
+references only; the account context cannot display a current trading draft.
+
+Each preview/save request has a 15-second deadline, including response parsing.
+Use **Stop waiting** to release the form while preserving its input. If a save
+result is unknown, use the original request recovery control and inspect formal
+history; do not create another entry for the same action. A preview alone does
+not update cash, holdings, orders or the execution journal.
