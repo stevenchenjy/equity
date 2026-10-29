@@ -94,6 +94,9 @@ research snapshot is slow or unavailable. Retained plan identities are audit
 references only; the account context cannot display a current trading draft.
 
 Each preview/save request has a 15-second deadline, including response parsing.
+The separate full research read has a finite 90-second deadline because its
+source and publication validation can exceed the intake deadline. This does
+not extend account-preview or save deadlines, retry a save, or relax validation.
 Use **Stop waiting** to release the form while preserving its input. If a save
 result is unknown, use the original request recovery control and inspect formal
 history; do not create another entry for the same action. A preview alone does

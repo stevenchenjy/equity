@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm,FeedbackReceipt,FeedbackDate,ResearchReadStatus,readFeedbackSnapshot,currentFeedbackRecord,pendingFeedbackForEdit} from './App';
+import {FeedbackForm,FeedbackReceipt,FeedbackDate,ResearchReadStatus,readCurrentSnapshot,readFeedbackSnapshot,currentFeedbackRecord,pendingFeedbackForEdit} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
 import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
+import {errorCode,requestJSON} from './feedbackRequest';
 
 const data={server_now:'2026-10-17T10:00:00-04:00',account:{cash_available:4000},positions:[],candidates:[],plans:[],orders:{rows:[]}} as unknown as Snapshot;
 function markup(status:FeedbackStatus='filled',wide=false,rows:Record<string,unknown>[]=[]){
@@ -135,6 +136,47 @@ test('an unverified account response cannot enable a new preview',async()=>{
     const html=renderToStaticMarkup(<FeedbackForm data={null} ticker="ABC" onSaved={()=>{}} onFormalSaved={()=>{}} onDirty={()=>{}} storageError=""/>);
     assert.match(html,/<button class="primary save-button" type="submit" disabled="">预览登记结果/);
   } finally {globalThis.fetch=originalFetch}
+});
+
+test('healthy research slower than the intake deadline can finish without blocking account intake',async context=>{
+  const originalFetch=globalThis.fetch;context.mock.timers.enable({apis:['setTimeout']});
+  const research={...data,schema_version:'equity_dashboard_snapshot_v1',snapshot_id:'slow-valid-research'};
+  const account={...research,feedback_context_only:true,snapshot_id:'fast-committed-account'};
+  let researchSettled=false;
+  try {
+    globalThis.fetch=async input=>String(input)==='/api/snapshot'
+      ? new Promise<Response>(resolve=>setTimeout(()=>resolve(new Response(JSON.stringify(research),{status:200})),33727))
+      : new Response(JSON.stringify(account),{status:200});
+    const result=readCurrentSnapshot().then(value=>{researchSettled=true;return {value,error:null}},error=>{researchSettled=true;return {value:null,error}});
+    assert.equal((await readFeedbackSnapshot()).snapshot_id,'fast-committed-account');
+    context.mock.timers.tick(15000);
+    for(let i=0;i<6;i++)await Promise.resolve();
+    assert.equal(researchSettled,false);
+    context.mock.timers.tick(18727);
+    const completed=await result;
+    assert.equal(completed.error,null);assert.equal(completed.value?.snapshot_id,'slow-valid-research');
+  } finally {globalThis.fetch=originalFetch;context.mock.timers.reset()}
+});
+
+test('only full research gets 90s; stalled intake and save bodies retain the 15s boundary',async context=>{
+  const originalFetch=globalThis.fetch;context.mock.timers.enable({apis:['setTimeout']});
+  const cases=[
+    {url:'/api/snapshot',limit:90000,load:()=>readCurrentSnapshot(),code:'request_timeout'},
+    {url:'/api/feedback/snapshot',limit:15000,load:()=>readFeedbackSnapshot(),code:'request_timeout'},
+    {url:'/api/feedback',limit:15000,load:()=>requestJSON('/api/feedback',{method:'POST',body:'synthetic-original-request'},{mutation:true}),code:'feedback_result_unknown_retry_same_request'},
+  ];
+  try {
+    for(const item of cases){
+      let signal:AbortSignal|null|undefined;let settled=false;let calls=0;
+      globalThis.fetch=async(input,init)=>{calls++;assert.equal(String(input),item.url);signal=init?.signal;return {ok:true,status:200,json:()=>new Promise(()=>{})} as Response};
+      const result=item.load().then(()=>{settled=true;return null},error=>{settled=true;return error});
+      context.mock.timers.tick(item.limit-1);
+      for(let i=0;i<6;i++)await Promise.resolve();
+      assert.equal(settled,false);
+      context.mock.timers.tick(1);
+      assert.equal(errorCode(await result),item.code);assert.equal(signal?.aborted,true);assert.equal(calls,1);
+    }
+  } finally {globalThis.fetch=originalFetch;context.mock.timers.reset()}
 });
 
 test('a research read failure does not label available feedback intake as broken',()=>{

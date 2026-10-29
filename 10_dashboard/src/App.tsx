@@ -53,8 +53,10 @@ async function post(path:string,payload:unknown,signal?:AbortSignal) {
 }
 const PENDING_REQUEST='equity-dashboard-submission-v1';
 
-async function readCurrentSnapshot(signal?:AbortSignal,path='/api/snapshot'):Promise<Snapshot> {
-  const {ok,body:result}=await requestJSON<any>(path,{cache:'no-store'},{signal});
+export async function readCurrentSnapshot(signal?:AbortSignal,path='/api/snapshot'):Promise<Snapshot> {
+  // Full research validation is slower than committed-account intake. Keep its
+  // read budget separate; feedback reads and mutations retain their 15s bound.
+  const {ok,body:result}=await requestJSON<any>(path,{cache:'no-store'},{signal,...(path==='/api/snapshot'?{timeoutMs:90000}:{})});
   if(!ok)throw Object.assign(new Error(errorNames[result.error]??'当前账户暂不可用，请稍后重试。'),{code:result.error});
   if(result.schema_version!=='equity_dashboard_snapshot_v1')throw new Error('当前快照格式不匹配。');
   return result;
