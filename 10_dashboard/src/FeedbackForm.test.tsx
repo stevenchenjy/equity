@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm,FeedbackReceipt,readFeedbackSnapshot} from './App';
+import {FeedbackForm,FeedbackReceipt,ResearchReadStatus,readFeedbackSnapshot} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
 import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
 
@@ -86,4 +86,18 @@ test('an unverified account response cannot enable a new preview',async()=>{
     const html=renderToStaticMarkup(<FeedbackForm data={null} ticker="ABC" onSaved={()=>{}} onFormalSaved={()=>{}} onDirty={()=>{}} storageError=""/>);
     assert.match(html,/<button class="primary save-button" type="submit" disabled="">预览登记结果/);
   } finally {globalThis.fetch=originalFetch}
+});
+
+test('a research read failure does not label available feedback intake as broken',()=>{
+  for(const runtimeUpdating of [false,true]){
+    const html=renderToStaticMarkup(<ResearchReadStatus feedbackPage accountAvailable error="Research request timed out" runtimeUpdating={runtimeUpdating} hasResearchData={false}/>);
+    assert.match(html,/role="status"/);assert.match(html,/Research view has not updated\. Your recorded account is available for action logging\./);
+    assert.doesNotMatch(html,/role="alert"|error-banner|当前视图未能更新/);
+  }
+  for(const [feedbackPage,accountAvailable] of [[false,true],[true,false]]){
+    const html=renderToStaticMarkup(<ResearchReadStatus feedbackPage={feedbackPage} accountAvailable={accountAvailable} error="Research request timed out" runtimeUpdating={false} hasResearchData={false}/>);
+    assert.match(html,/role="alert"/);assert.match(html,/Research request timed out/);
+    assert.doesNotMatch(html,/Your recorded account is available/);
+  }
+  assert.equal(renderToStaticMarkup(<ResearchReadStatus feedbackPage accountAvailable error="" runtimeUpdating={false} hasResearchData={false}/>),'');
 });

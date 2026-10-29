@@ -65,6 +65,13 @@ export async function readFeedbackSnapshot(signal?:AbortSignal) {
   return result;
 }
 
+export function ResearchReadStatus({feedbackPage,accountAvailable,error,runtimeUpdating,hasResearchData}:{feedbackPage:boolean;accountAvailable:boolean;error:string;runtimeUpdating:boolean;hasResearchData:boolean}) {
+  if(!error)return null;
+  if(feedbackPage&&accountAvailable)return <div className="notice" role="status"><Clock3 size={19}/><span>Research view has not updated. Your recorded account is available for action logging.</span></div>;
+  if(runtimeUpdating)return feedbackPage?null:<div className="notice" role="status"><Clock3 size={19}/><span>{error} 下方暂留上次读取的数据。</span></div>;
+  return <div className="error-banner" role="alert"><AlertCircle size={19}/><div><strong>当前视图未能更新</strong><p>{error} {hasResearchData?'下方保留上次读取的数据，当前数量方案暂停展示。':''}</p></div></div>;
+}
+
 function AuditTrail({id,review=false}:{id:string;review?:boolean}) {
   const [events,setEvents]=useState<Record<string,unknown>[]|null>(null),[error,setError]=useState('');
   const load=async()=>{try{const r=await fetch(`${review?'/api/review-requests':'/api/feedback'}/events?id=${encodeURIComponent(id)}`,{cache:'no-store'});if(!r.ok)throw new Error();const body=await r.json();setEvents(body.events);setError('')}catch{setError('审计记录暂时无法读取。')}};
@@ -418,7 +425,7 @@ export default function App() {
       <>{pendingNavigation?<div className="unsaved-confirm" role="alert"><p>表单有尚未保存的内容。离开后，这些内容会被清除。</p><button className="secondary" onClick={()=>setPendingNavigation(null)}>继续填写</button><button className="secondary" onClick={()=>{setDirty(false);pendingNavigation();setPendingNavigation(null)}}>放弃内容并离开</button></div>:null}</>{data?.mode==='verification'?<div className="notice neutral"><ClipboardList size={18}/><span>隔离验收账户 · 以下记录是模拟数据，不影响真实持仓。</span></div>:null}
       {page!=='feedback'&&data?.research_ready===false?<div className="notice"><Clock3 size={19}/><span>下方显示最新账户记录。研究尚未完成重算，旧数量方案已暂停。</span></div>:null}
       {page!=='feedback'&&data?.market_current===false?<div className="notice" role="status"><Clock3 size={19}/><span>Close validation pending for {data.expected_market_session}. Prices below remain dated {data.market_session}, not live. Read each plan's add, hold and exit conditions; no current quote is implied.</span></div>:null}
-      {runtimeUpdating?(page!=='feedback'?<div className="notice" role="status"><Clock3 size={19}/><span>{error} 下方暂留上次读取的数据。</span></div>:null):error ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>当前视图未能更新</strong><p>{error} {data ? '下方保留上次读取的数据，当前数量方案暂停展示。' : ''}</p></div></div> : null}
+      <ResearchReadStatus feedbackPage={page==='feedback'} accountAvailable={Boolean(accountData)} error={error} runtimeUpdating={runtimeUpdating} hasResearchData={Boolean(data)}/>
       {storageError ? <div className="error-banner" role="alert"><AlertCircle size={19} /><div><strong>试填记录存储异常</strong><p>{storageError}。可以在记录历史中清除损坏的试填存储。</p></div></div> : null}
       {page!=='feedback'&&data?.stale ? <div className="error-banner"><Clock3 size={19} /><p>This publication was generated {timeLabel(data.generated_at)}. Current-session evidence or reassessment is required; dated research does not renew an action plan.</p></div> : null}
       {page === 'today' ? <>
