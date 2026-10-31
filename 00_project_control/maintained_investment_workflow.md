@@ -176,6 +176,18 @@ proof, conflicting identities or altered request metadata fail closed; a
 retained request alone is not a verified artifact or completed review. Do not
 backdate collection or change a filing's source class to bypass provenance.
 
+Changed raw responses or normalized text use content-hash version paths;
+historical files and signed review receipts are preserved. A new review must
+use the current indexed receipt. Historical reviews still rehash their exact
+retained bytes, and changed current filing text reopens the effective view.
+For an already overwritten historical file, the collector's
+`--recover-historical-version SOURCE_ID --retained-raw PATH --retained-normalized PATH`
+mode previews exact recovery against the existing signed review chain. Apply
+only after inspecting that proof under the established locks; the operation
+archives the current version and metadata before restoring the historical
+bytes. It does not edit the active index. Run the ordinary artifact refresh
+and check afterward, then revalidate both historical and current receipts.
+
 Private records are ignored by Git and must not enter source-control commits:
 
 | Record | Purpose | Update path |

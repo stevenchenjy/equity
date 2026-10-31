@@ -235,3 +235,5 @@ graphify-out/reflections/
 /03_source_data/equity_research/swing_candidate_quotes.local/
 /03_source_data/equity_research/swing_candidate_history.local/
 /00_project_control/run_logs/swing_observer.local/
+# Historical private quote receipts retained by immutable model references.
+03_source_data/equity_research/valuation_observations.local/

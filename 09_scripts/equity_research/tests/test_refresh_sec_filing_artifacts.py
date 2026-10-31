@@ -500,6 +500,133 @@ class ExplicitReviewSourceTests(unittest.TestCase):
                 self.assertEqual(index.read_bytes() if index.exists() else None,before)
 
 
+class ImmutableArtifactVersionTests(unittest.TestCase):
+    def test_missing_current_version_refetch_cannot_clobber_historical_canonical_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);ledger=root/'ledger.csv';write_ledger(ledger,[ledger_row()])
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',project_root=root,
+                user_agent='Test contact@example.com')
+            current=b'<p>Current verified response</p>'
+            first=artifacts.refresh_artifacts(**args,fetcher=lambda *_:artifacts.FetchResult(current,'text/html','utf-8'))
+            raw=root/first['artifacts'][0]['raw_path'];text=root/first['artifacts'][0]['normalized_path']
+            historical=b'<p>Historical original response</p>';historical_text=b'Historical original response'
+            raw.write_bytes(historical);text.write_bytes(historical_text)
+            second=artifacts.refresh_artifacts(**args,fetcher=lambda *_:artifacts.FetchResult(current,'text/html','utf-8'))
+            self.assertEqual(second['network_fetch_count'],1)
+            self.assertEqual(raw.read_bytes(),historical)
+            self.assertEqual(text.read_bytes(),historical_text)
+            active=second['artifacts'][0]
+            self.assertNotEqual(root/active['raw_path'],raw)
+            self.assertEqual((root/active['raw_path']).read_bytes(),current)
+            self.assertEqual(artifacts.check_artifacts(**{k:v for k,v in args.items() if k!='user_agent'})['complete_cache'],1)
+
+    def test_oversized_corrupt_candidate_is_rejected_before_reading_bytes(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);ledger=root/'ledger.csv';write_ledger(ledger,[ledger_row()])
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',project_root=root)
+            first=artifacts.refresh_artifacts(**args,user_agent='Test contact@example.com',
+                fetcher=lambda *_:artifacts.FetchResult(b'<p>Verified source</p>','text/html','utf-8'))
+            raw=root/first['artifacts'][0]['raw_path']
+            with raw.open('wb') as handle:handle.truncate(artifacts.MAX_RAW_BYTES+1)
+            original_read=Path.read_bytes
+            def guarded_read(path):
+                if path==raw:raise AssertionError('oversized source must not be read into memory')
+                return original_read(path)
+            with patch.object(Path,'read_bytes',guarded_read):
+                self.assertEqual(artifacts.check_artifacts(**args)['missing_cache'],1)
+
+    def test_refetched_new_content_preserves_original_and_reuses_one_current_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);ledger=root/'ledger.csv';write_ledger(ledger,[ledger_row()])
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',project_root=root,
+                user_agent='Test contact@example.com')
+            old=b'<html><p>Original complete document.</p></html>'
+            first=artifacts.refresh_artifacts(**args,fetcher=lambda *_:artifacts.FetchResult(old,'text/html','utf-8'))
+            original=first['artifacts'][0];old_raw=(root/original['raw_path']).read_bytes();old_text=(root/original['normalized_path']).read_bytes()
+            # A source that rotates out of selection may later need collecting
+            # again. Its signed historical fixed paths remain immutable.
+            evicted={**first,'artifacts':[]};args['index_path'].write_text(json.dumps(evicted))
+            for new in [old+b'\n<!-- Cosmetic current response -->',b'<html><p>New substantive document.</p></html>']:
+                second=artifacts.refresh_artifacts(**args,fetcher=lambda *_:artifacts.FetchResult(new,'text/html','utf-8'))
+                current=second['artifacts'][0]
+                self.assertNotEqual(current['raw_path'],original['raw_path'])
+                self.assertEqual((root/original['raw_path']).read_bytes(),old_raw)
+                self.assertEqual((root/original['normalized_path']).read_bytes(),old_text)
+                self.assertEqual((root/current['raw_path']).read_bytes(),new)
+                self.assertIn('prior_index_version',second)
+                retained=second['prior_index_version'];self.assertEqual(artifacts.sha256_bytes((root/retained['path']).read_bytes()),retained['sha256'])
+                def forbidden(*_):raise AssertionError('immutable current cache must not refetch')
+                third=artifacts.refresh_artifacts(**args,fetcher=forbidden)
+                self.assertEqual(third['cache_hit_count'],1)
+                self.assertEqual(third['network_fetch_count'],0)
+                self.assertEqual(len(third['artifacts']),1)
+                self.assertEqual(artifacts.check_artifacts(**{k:v for k,v in args.items() if k!='user_agent'})['complete_cache'],1)
+                args['index_path'].write_text(json.dumps({**third,'artifacts':[]}))
+
+    def recovery_fixture(self, root):
+        from test_thesis_evidence import fixture,ACCESSION
+        import thesis_evidence as thesis
+        record,_=fixture(root)
+        row=ledger_row(ticker='ABC',cik='1',filing_date='2026-08-01',accession=ACCESSION,document='abc.htm')
+        normalized=artifacts.normalize_ledger_row(row);identity=normalized['source_id']
+        record=json.loads(json.dumps(record).replace('abc-q2',identity));record=thesis.seal_review(record)
+        ledger=root/'03_source_data/equity_research/daily_evidence_ledger.csv';write_ledger(ledger,[row])
+        ExplicitReviewSourceTests().acceptance(root,[row])
+        store_path=root/thesis.STORE_REL;store_path.parent.mkdir(parents=True,exist_ok=True)
+        store_path.write_text(json.dumps({'schema_version':thesis.SCHEMA,'records':[record]}))
+        _,raw,text=artifacts.artifact_paths(root/'02_filings/issuer_filings',normalized)
+        saved_raw=root/'before.raw';saved_text=root/'before.txt';saved_raw.write_bytes(raw.read_bytes());saved_text.write_bytes(text.read_bytes())
+        new_raw=raw.read_bytes()+b'\n<!-- Current source response -->'
+        result=artifacts.FetchResult(new_raw,'text/html','utf-8')
+        entry,current_text=artifacts.build_entry(normalized,result,raw_path=raw,text_path=text,project_root=root,
+            fetched_at=artifacts.utc_now(),cache_status='fetched')
+        raw.write_bytes(new_raw);text.write_text(current_text)
+        index=root/'03_source_data/equity_research/sec_filing_artifact_index.json'
+        index.write_text(json.dumps(artifacts._index_payload(ledger_path=ledger,project_root=root,artifacts=[entry],cache_hits=0,reparsed=0,network_fetches=1)))
+        return dict(source_id=identity,retained_raw=saved_raw,retained_normalized=saved_text,project_root=root,
+                    ledger_path=ledger,artifact_root=root/'02_filings/issuer_filings',index_path=index),record,store_path,entry
+
+    def test_supported_restore_preserves_current_version_then_ordinary_refresh_admits_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);args,record,store,current=self.recovery_fixture(root)
+            private=store.read_bytes();index_before=args['index_path'].read_bytes()
+            raw_before=(root/current['raw_path']).read_bytes()
+            preview=artifacts.recover_historical_artifact_version(**args)
+            self.assertEqual(preview['status'],'preview_verified')
+            self.assertEqual((root/current['raw_path']).read_bytes(),raw_before)
+            self.assertFalse((args['artifact_root']/'_version_recoveries').exists())
+            receipt=artifacts.recover_historical_artifact_version(**args,apply=True)
+            self.assertEqual(receipt['status'],'restored_pending_ordinary_index_refresh')
+            self.assertEqual(store.read_bytes(),private)
+            self.assertEqual(args['index_path'].read_bytes(),index_before)
+            for field,saved in [('raw_path','retained_raw'),('normalized_path','retained_normalized')]:
+                self.assertEqual((root/current[field]).read_bytes(),args[saved].read_bytes())
+            def forbidden(*_):raise AssertionError('retained exact current observation needs no network')
+            refresh={k:v for k,v in args.items() if k not in {'source_id','retained_raw','retained_normalized'}}
+            indexed=artifacts.refresh_artifacts(**refresh,user_agent='Test contact@example.com',fetcher=forbidden)
+            entry=indexed['artifacts'][0]
+            self.assertEqual(indexed['network_fetch_count'],0)
+            self.assertNotEqual(entry['raw_path'],current['raw_path'])
+            self.assertNotEqual(entry['normalized_path'],current['normalized_path'])
+            self.assertEqual(artifacts.check_artifacts(**refresh)['complete_cache'],1)
+            self.assertEqual(store.read_bytes(),private)
+
+    def test_recovery_rejects_changed_proof_or_review_hash_chain_without_mutation(self):
+        for failure in ['raw_proof','text_proof','review_chain']:
+            with self.subTest(failure=failure),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);args,record,store,current=self.recovery_fixture(root)
+                if failure=='raw_proof':args['retained_raw'].write_bytes(b'wrong old source')
+                if failure=='text_proof':args['retained_normalized'].write_bytes(b'wrong old source')
+                if failure=='review_chain':
+                    value=json.loads(store.read_text());value['records'][0]['conclusion']='Changed without resealing';store.write_text(json.dumps(value))
+                old_index=args['index_path'].read_bytes();old_raw=(root/current['raw_path']).read_bytes();old_text=(root/current['normalized_path']).read_bytes()
+                with self.assertRaises(artifacts.ArtifactError):artifacts.recover_historical_artifact_version(**args)
+                self.assertEqual(args['index_path'].read_bytes(),old_index)
+                self.assertEqual((root/current['raw_path']).read_bytes(),old_raw)
+                self.assertEqual((root/current['normalized_path']).read_bytes(),old_text)
+
+
 class CacheTests(unittest.TestCase):
     def test_network_cache_misses_are_paced_below_sec_ceiling(self) -> None:
         with tempfile.TemporaryDirectory() as directory_name:
@@ -662,7 +789,8 @@ class CacheTests(unittest.TestCase):
             self.assertEqual(reparsed["cache_hit_count"], 0)
             self.assertEqual(reparsed["reparsed_count"], 1)
             repaired_entry = reparsed["artifacts"][0]
-            repaired_text = normalized_path.read_text(encoding="utf-8")
+            self.assertEqual(normalized_path.read_text(encoding="utf-8"),"tampered")
+            repaired_text = (project_root / repaired_entry["normalized_path"]).read_text(encoding="utf-8")
             self.assertNotEqual(repaired_text, "tampered")
             self.assertEqual(
                 artifacts.sha256_text(repaired_text),

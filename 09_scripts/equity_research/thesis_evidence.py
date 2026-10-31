@@ -191,7 +191,14 @@ def _validate_filing_bytes(source: dict[str, Any], ticker: str, reviewed_at: dat
     if admission:
         _require(active_artifact is not None, "new review source is not in verified artifact index")
     if active_artifact is not None:
-        for key in ("ticker", "accession", "url", "normalized_path", "normalized_sha256", "raw_path", "raw_sha256", "form", "primary_document"):
+        # A later HTTP response can rotate physical artifact versions without
+        # changing the SEC document. Signed historical receipts keep their own
+        # exact bytes and original retrieval clock; new reviews must use the
+        # current indexed version, including its actual retrieval timestamp.
+        fields = ("ticker", "accession", "url", "form", "primary_document")
+        if admission:
+            fields += ("normalized_path", "normalized_sha256", "raw_path", "raw_sha256", "fetched_at")
+        for key in fields:
             _require(source[key] == active_artifact.get(key), f"source index differs: {key}")
     # The index selects current documents and may rotate old ones out. Retained
     # bytes and the immutable acceptance chain keep historical reviews auditable.
@@ -250,6 +257,22 @@ def verified_reviewed_accessions(record: dict[str, Any]) -> set[str]:
     """Call only after full review validation; a bare accession is not a review."""
     return {source["accession"] for source in record["sources"]} | {
         receipt["accession"] for receipt in record.get("reviewed_material_filings", [])}
+
+
+def _current_filing_content_changes(record: dict[str, Any], root: Path,
+                                    context: dict[str, Any], observed_at: datetime) -> list[str]:
+    """Keep old analysis readable without clearing newly changed filing text."""
+    reasons = []
+    for source in record["sources"] + record.get("reviewed_material_filings", []):
+        artifact = context.get("artifacts", {}).get(source["source_id"])
+        if artifact is None:
+            continue  # Rolling index removal does not erase verified history.
+        current = {key: artifact[key] for key in FILING_RECEIPT_FIELDS - {"published_at"}}
+        current["published_at"] = context["acceptance"][artifact["accession"]]["accepted_at"]
+        _validate_filing_bytes(current, record["ticker"], observed_at, root, context, admission=True)
+        if current["normalized_sha256"] != source["normalized_sha256"]:
+            reasons.append("reviewed_filing_content_changed:"+source["source_id"])
+    return reasons
 
 
 def seal_review(record: dict[str, Any]) -> dict[str, Any]:
@@ -535,6 +558,7 @@ def evaluate_thesis(store: dict[str, Any] | None, ticker: str, observed_at: str,
         reasons += ["reviewed_material_filing_requires_reassessment:"+receipt["accession"]
                     for receipt in record.get("reviewed_material_filings", [])
                     if receipt["disposition"] == "reassessment_required"]
+        reasons += _current_filing_content_changes(record, evidence_root, context, now)
         if now >= _timestamp(record["next_review_at"]):
             reasons.append("scheduled_company_review_due")
         if incorporation is None or incorporation.get("status") != "incorporated":

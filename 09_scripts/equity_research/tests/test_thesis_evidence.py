@@ -181,6 +181,92 @@ class MaintainedThesisTests(unittest.TestCase):
         self.assertIn("source content hash differs", result["validation_errors"][0])
         self.assertEqual(result["conclusion"], "")
 
+    def rotate_artifact(self, source_id, *, text=None):
+        """Model a later fetch of the same SEC document, retaining old bytes."""
+        artifact = self.context["artifacts"][source_id]
+        raw_path = self.root / artifact["raw_path"]
+        raw = raw_path.read_bytes() + b"\n<!-- new HTTP response tail -->"
+        normalized = (self.root / artifact["normalized_path"]).read_bytes() if text is None else text.encode()
+        raw_hash = hashlib.sha256(raw).hexdigest()
+        normalized_hash = hashlib.sha256(normalized).hexdigest()
+        next_raw = raw_path.parent / f"primary_document.{raw_hash}.raw"
+        next_text = raw_path.parent / f"normalized_text.{normalized_hash}.txt"
+        next_raw.write_bytes(raw)
+        next_text.write_bytes(normalized)
+        current = artifact | {"raw_path": next_raw.relative_to(self.root).as_posix(),
+            "raw_sha256": raw_hash, "normalized_path": next_text.relative_to(self.root).as_posix(),
+            "normalized_sha256": normalized_hash, "fetched_at": "2026-09-24T21:05:00+00:00"}
+        self.context["artifacts"][source_id] = current
+        return current
+
+    def test_same_document_raw_version_preserves_history_but_new_admission_is_current(self):
+        from thesis_evidence import validate_source
+        current = self.rotate_artifact("abc-q2")
+        observed = "2026-09-24T21:10:00+00:00"
+        result = self.evaluate(observed_at=observed)
+        self.assertEqual(result["status"], "reviewed")
+        self.assertEqual(result["review_record"], self.record)
+        self.assertEqual(result["reopen_reasons"], [])
+        with self.assertRaisesRegex(ThesisValidationError, "source index differs"):
+            validate_source(self.record["sources"][0], "ABC", datetime.fromisoformat(observed),
+                            self.root, self.context, admission=True)
+        receipt = source_receipt(current, self.context, PERIOD)
+        validate_source(receipt, "ABC", datetime.fromisoformat(observed), self.root, self.context, admission=True)
+        with self.assertRaisesRegex(ThesisValidationError, "retrieved/published after review"):
+            validate_source(receipt, "ABC", datetime.fromisoformat(AS_OF), self.root, self.context, admission=True)
+        receipt["fetched_at"] = self.record["sources"][0]["fetched_at"]
+        with self.assertRaisesRegex(ThesisValidationError, "source index differs: fetched_at"):
+            validate_source(receipt, "ABC", datetime.fromisoformat(observed), self.root, self.context, admission=True)
+
+    def test_changed_normalized_periodic_content_reopens_readable_historical_review(self):
+        self.rotate_artifact("abc-q2", text="Revenue fell 20 percent. Share compensation remains a material cost.")
+        validate_review(self.record, self.root, self.context, "2026-09-24T21:10:00+00:00")
+        result = self.evaluate(observed_at="2026-09-24T21:10:00+00:00")
+        self.assertEqual(result["status"], "reassess")
+        self.assertIn("reviewed_filing_content_changed:abc-q2", result["reopen_reasons"])
+        self.assertEqual(result["review_record"], self.record)
+        self.assertEqual(result["conclusion"], self.record["conclusion"])
+        self.assertFalse(result["recommendation_authority"])
+
+    def test_same_document_material_versions_preserve_history_and_reopen_changed_text(self):
+        receipt = material_fixture(self.root, self.context)
+        record = deepcopy(self.record)
+        record["reviewed_material_filings"] = [receipt]
+        record["reviewed_material_accessions"].append(receipt["accession"])
+        record = seal_review(record)
+        store = {"schema_version": SCHEMA, "records": [record]}
+        self.rotate_artifact(receipt["source_id"])
+        result = self.evaluate(store=store, observed_at="2026-09-24T21:10:00+00:00")
+        self.assertEqual(result["status"], "reviewed")
+        self.rotate_artifact(receipt["source_id"], text="Item 5.02: The chief executive resigned. A successor has not been named.")
+        result = self.evaluate(store=store, observed_at="2026-09-24T21:10:00+00:00")
+        self.assertEqual(result["status"], "reassess")
+        self.assertIn("reviewed_filing_content_changed:"+receipt["source_id"], result["reopen_reasons"])
+        self.assertEqual(result["review_record"], record)
+
+    def test_version_rotation_never_waives_old_or_current_byte_or_identity_checks(self):
+        for tamper in ("old_raw", "old_text", "current_raw", "current_text", "current_identity", "future_fetch"):
+            with self.subTest(tamper=tamper), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                record, context = fixture(root)
+                with patch.object(self, "root", root), patch.object(self, "context", context):
+                    current = self.rotate_artifact("abc-q2")
+                    if tamper == "current_identity":
+                        current["primary_document"] = "different.htm"
+                    elif tamper == "future_fetch":
+                        current["fetched_at"] = "2026-09-24T22:00:00+00:00"
+                    else:
+                        receipt = record["sources"][0] if tamper.startswith("old_") else current
+                        key = "raw_path" if tamper.endswith("raw") else "normalized_path"
+                        path = root / receipt[key]
+                        path.write_bytes(path.read_bytes()+b"tampered")
+                    result = self.evaluate(store={"schema_version": SCHEMA, "records": [record]},
+                                           observed_at="2026-09-24T21:10:00+00:00")
+                    self.assertEqual(result["status"], "unresolved")
+                    self.assertTrue(result["validation_errors"])
+                    self.assertIsNone(result["review_record"])
+                    self.assertEqual(result["conclusion"], "")
+
     def test_bare_material_accession_cannot_claim_completed_review(self):
         receipt = material_fixture(self.root, self.context)
         record = deepcopy(self.record)

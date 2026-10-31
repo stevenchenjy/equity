@@ -135,6 +135,21 @@ class WorkflowPublicationTests(unittest.TestCase):
         self.assertNotIn("latest_earnings_pending_incorporation", decision["watch_candidates"][0]["gate_blockers"])
         self.assertEqual(decision["eligible_new_position_review_candidates"], [])
 
+    def test_held_sector_fund_is_exempt_without_exempting_a_held_company(self):
+        decision = self.decision()
+        decision['held_positions'].append({'ticker':'XLI','asset_role':'etf_research_candidate',
+            'current_shares':'2','action':'hold','reason':'existing sector fund'})
+        self.incorporation['companies'] = {}
+        self.news.update(required_coverage_complete=False, sources=[])
+        with patch('workflow_integrity.is_fund', side_effect=lambda ticker, **_: ticker == 'XLI'):
+            self.publish(decision)
+        views=decision['long_horizon_research']['views']
+        self.assertNotIn('XLI',views)
+        blocks=decision['workflow_integrity']['ticker_blockers']
+        for code in ('latest_earnings_pending_incorporation','issuer_news_coverage_incomplete'):
+            self.assertNotIn(code,blocks.get('XLI',[]))
+            self.assertIn(code,blocks['ABC'])
+
     def test_current_adverse_company_case_is_complete_without_positive_eligibility(self):
         view = dict(status='reviewed', business_case_status='mixed', valuation_readiness='reviewed_scenarios',
                     validation_errors=[], reopen_reasons=[], news_review=dict(status='current', coverage_complete=True))

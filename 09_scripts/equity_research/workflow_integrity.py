@@ -16,6 +16,7 @@ from issuer_news_queue import QUEUE_REL, merge_news_context, record_review_state
 from execution_common import allocation_policy_proof_hashes
 from account_authority import load_authority
 from plan_source_resolutions import proof_hashes as plan_source_resolution_proof_hashes
+from instrument_metadata import is_fund
 
 from workflow_inputs import WORKFLOW_INPUTS
 
@@ -140,6 +141,7 @@ def current_thesis_views(decision: dict[str, Any], *, root: Path, current: datet
                    if row.get("asset_role") != "core_allocation")
     if candidate_tickers is not None:
         tickers = set(candidate_tickers)
+    tickers = {ticker for ticker in tickers if not is_fund(ticker, root=root)}
     try:
         store = read_json(root / STORE_REL, None)
     except (OSError, ValueError):
@@ -217,13 +219,15 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
     allocation.setdefault("baseline_research_projection", deepcopy({
         key: value for key, value in allocation.items() if key != "baseline_research_projection"}))
     held = decision.get("held_positions", [])
+    held_companies = [row for row in held if row.get("asset_role") != "core_allocation"
+                      and not is_fund(row["ticker"], root=root)]
     plans = load_plan_context(root, held, current)
     apply_plan_context(held, plans)
     try:
         incorporation = read_earnings_incorporation_status(root=root, now=current)
     except (OSError, ValueError, TypeError, KeyError):
         incorporation = {"schema_version": "earnings_incorporation_v1", "companies": {},
-                         "held_pending_tickers": [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"],
+                         "held_pending_tickers": [row["ticker"] for row in held_companies],
                          "status": "invalid"}
     authority = load_authority(root, current)
     decision["account_authority"] = authority
@@ -253,16 +257,16 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
     if plans.get("block_new_capital") and not plans.get("global_blockers"):
         blockers.append("legacy_plan_scope_unverified")
     companies = incorporation.get("companies", {})
-    held_pending = [row["ticker"] for row in held if row.get("asset_role") != "core_allocation"
-                    and companies.get(row["ticker"], {}).get("positive_decision_eligible") is not True]
+    held_pending = [row["ticker"] for row in held_companies
+                    if companies.get(row["ticker"], {}).get("positive_decision_eligible") is not True]
     for ticker in held_pending:
         local(ticker, "latest_earnings_pending_incorporation")
     news = current_news_context(decision, root=root, current=current, persist_queue=True)
     decision.setdefault("evidence_coverage", {})["official_news"] = news
     views = current_thesis_views(decision, root=root, current=current, incorporation=incorporation, news=news)
     if news.get("required_coverage_complete") is not True:
-        for row in held:
-            if row.get("asset_role") != "core_allocation" and views.get(row["ticker"], {}).get("news_review", {}).get("coverage_complete") is not True:
+        for row in held_companies:
+            if views.get(row["ticker"], {}).get("news_review", {}).get("coverage_complete") is not True:
                 local(row["ticker"], "issuer_news_coverage_incomplete")
     decision.setdefault("long_horizon_research", {})["views"] = views
     eligible = set(decision.get("eligible_new_position_review_candidates", []))

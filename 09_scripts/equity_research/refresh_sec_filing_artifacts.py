@@ -663,6 +663,74 @@ def display_path(path: Path, project_root: Path) -> str:
         return path.resolve().as_posix()
 
 
+def _content_version_path(path: Path, digest: str) -> Path:
+    if re.fullmatch(r"[0-9a-f]{64}", str(digest)) is None:
+        raise ArtifactError("SEC artifact version hash is invalid")
+    stem = "primary_document" if path.suffix == ".raw" else "normalized_text"
+    return path.with_name(f"{stem}.{digest}{path.suffix}")
+
+
+def cache_artifact_paths(artifact_root: Path, row: dict[str, str], entry: dict[str, Any],
+                         project_root: Path) -> tuple[Path, Path, Path, dict[str, Any]]:
+    """Use only canonical or exact content-hash versions from the same filing.
+
+    A retained current observation can be found at its immutable version after
+    an audited historical restoration. Only the ordinary collector publishes
+    the updated index path; a read-only check never edits metadata.
+    """
+    directory, raw, text = artifact_paths(artifact_root, row)
+    result = dict(entry)
+    chosen = []
+    for field, digest_field, default in (("raw_path", "raw_sha256", raw),
+                                         ("normalized_path", "normalized_sha256", text)):
+        digest = entry.get(digest_field)
+        if re.fullmatch(r"[0-9a-f]{64}", str(digest)) is None:
+            return directory, raw, text, {}
+        version = _content_version_path(default, digest)
+        allowed = {display_path(path, project_root): path for path in (default, version)}
+        declared = allowed.get(entry.get(field))
+        if declared is None:
+            return directory, raw, text, {}
+        path = declared
+        for candidate in (declared, version, default):
+            if candidate.is_symlink():
+                raise ArtifactError("SEC artifact version cannot be a symlink")
+            if (candidate.is_file() and candidate.stat().st_size <= MAX_RAW_BYTES
+                    and sha256_bytes(candidate.read_bytes()) == digest):
+                path = candidate
+                break
+        chosen.append(path)
+        result[field] = display_path(path, project_root)
+    return directory, chosen[0], chosen[1], result
+
+
+def _preserving_content_path(path: Path, content: bytes) -> Path:
+    if path.is_symlink():
+        raise ArtifactError("SEC artifact version cannot be a symlink")
+    if path.exists() and path.stat().st_size > MAX_RAW_BYTES:
+        raise ArtifactError("SEC existing artifact exceeds size cap")
+    digest = sha256_bytes(content)
+    if path.exists() and path.read_bytes() != content:
+        path = _content_version_path(path, digest)
+        if path.is_symlink() or (path.exists() and
+                (path.stat().st_size > MAX_RAW_BYTES or path.read_bytes() != content)):
+            raise ArtifactError("SEC immutable artifact version conflicts")
+    return path
+
+
+def _retain_index_bytes(index_path: Path, artifact_root: Path) -> dict[str, str] | None:
+    if not index_path.exists():
+        return None
+    raw = index_path.read_bytes()
+    digest = sha256_bytes(raw)
+    target = artifact_root / "_index_history" / (digest + ".json")
+    if target.is_symlink() or (target.exists() and target.read_bytes() != raw):
+        raise ArtifactError("SEC retained index version conflicts")
+    if not target.exists():
+        atomic_write_bytes(target, raw)
+    return {"path": str(target), "sha256": digest}
+
+
 def fetch_sec_document(
     url: str, user_agent: str, max_bytes: int = MAX_RAW_BYTES
 ) -> FetchResult:
@@ -783,6 +851,7 @@ def complete_cache_entry(
         or entry.get("parser_version") != PARSER_VERSION
         or not raw_cache_is_valid(entry, raw_path)
         or not text_path.is_file()
+        or text_path.stat().st_size > MAX_RAW_BYTES
     ):
         return None
     try:
@@ -813,8 +882,8 @@ def schedule_exhibits(
     """
     chosen, cached_count, reserved = [], 0, 0
     for row in candidates[:MAX_EXHIBITS_PER_FILING]:
-        _, raw_path, text_path = artifact_paths(artifact_root, row)
-        entry = prior_by_id.get(row['source_id'], {})
+        _, raw_path, text_path, entry = cache_artifact_paths(
+            artifact_root, row, prior_by_id.get(row['source_id'], {}), project_root)
         verified = (_entry_identity_matches(entry, row, raw_path, text_path, project_root)
                     and raw_cache_is_valid(entry, raw_path))
         if verified:
@@ -894,6 +963,10 @@ def materialize_entry(
         fetched_at=fetched_at,
         cache_status=cache_status,
     )
+    if write_raw:
+        raw_path = _preserving_content_path(raw_path, result.raw_bytes)
+    text_path = _preserving_content_path(text_path, normalized_text.encode("utf-8"))
+    entry.update(raw_path=display_path(raw_path, project_root), normalized_path=display_path(text_path, project_root))
     if write_raw:
         atomic_write_bytes(raw_path, result.raw_bytes)
     atomic_write_bytes(text_path, normalized_text.encode("utf-8"))
@@ -989,8 +1062,8 @@ def refresh_artifacts(
                                   "coverage": "explicit_linked_ex99_only_not_all_exhibits"})
 
     for row in selected:
-        _, raw_path, text_path = artifact_paths(artifact_root, row)
-        prior_entry = prior_by_id.get(row["source_id"], {})
+        _, raw_path, text_path, prior_entry = cache_artifact_paths(
+            artifact_root, row, prior_by_id.get(row["source_id"], {}), project_root)
         cached = complete_cache_entry(
             prior_entry, row, raw_path, text_path, project_root
         )
@@ -1022,7 +1095,7 @@ def refresh_artifacts(
             )
             artifacts.append(entry)
             reparsed += 1
-            queue_exhibits(row, entry, raw_path)
+            queue_exhibits(row, entry, project_root / entry["raw_path"])
             continue
 
         if row.get('artifact_kind') == 'exhibit':
@@ -1058,7 +1131,7 @@ def refresh_artifacts(
         )
         artifacts.append(entry)
         network_fetches += 1
-        queue_exhibits(row, entry, raw_path)
+        queue_exhibits(row, entry, project_root / entry["raw_path"])
 
     payload = _index_payload(
         ledger_path=ledger_path,
@@ -1076,6 +1149,17 @@ def refresh_artifacts(
     if review_requests:
         payload["explicit_review_source_policy"] = "validated_ledger_and_acceptance_identity_v1"
         payload["explicit_review_sources"] = review_requests
+    if prior.get("prior_index_version"):
+        payload["prior_index_version"] = prior["prior_index_version"]
+    if any(entry.get(key) != prior_by_id.get(entry["source_id"], {}).get(key)
+           for entry in artifacts if entry["source_id"] in prior_by_id
+           for key in ("raw_path", "normalized_path")) or any(
+            entry["source_id"] not in prior_by_id and
+            (re.search(r"\.[0-9a-f]{64}\.(raw|txt)$", entry["raw_path"])
+             or re.search(r"\.[0-9a-f]{64}\.(raw|txt)$", entry["normalized_path"])) for entry in artifacts):
+        retained = _retain_index_bytes(index_path, artifact_root)
+        if retained:
+            payload["prior_index_version"] = {**retained, "path": display_path(Path(retained["path"]), project_root)}
     atomic_write_json(index_path, payload)
     return payload
 
@@ -1104,8 +1188,8 @@ def check_artifacts(
     missing = 0
     queued_exhibits = 0
     for row in selected:
-        _, raw_path, text_path = artifact_paths(artifact_root, row)
-        entry = prior_by_id.get(row["source_id"], {})
+        _, raw_path, text_path, entry = cache_artifact_paths(
+            artifact_root, row, prior_by_id.get(row["source_id"], {}), project_root)
         if (
             complete_cache_entry(entry, row, raw_path, text_path, project_root)
             is not None
@@ -1133,11 +1217,117 @@ def check_artifacts(
     }
 
 
+def recover_historical_artifact_version(source_id: str, retained_raw: Path, retained_normalized: Path, *,
+        project_root: Path = ROOT, ledger_path: Path = EVIDENCE_LEDGER_PATH,
+        artifact_root: Path = ARTIFACT_ROOT, index_path: Path = INDEX_PATH, apply: bool = False) -> dict[str, Any]:
+    """Restore only exact historical bytes proved by the unchanged thesis chain.
+
+    The caller owns runtime/daily locks. The current observed version and its
+    metadata are retained first. All matching historical receipts must agree
+    on one canonical byte pair. This operation never edits the active index;
+    the ordinary refresh then selects its verified content version cache.
+    """
+    from thesis_evidence import STORE_REL, validate_store
+    store_path = project_root / STORE_REL
+    store_raw = store_path.read_bytes()
+    store = json.loads(store_raw)
+    try:
+        validate_store(store)
+    except (ValueError, KeyError, TypeError):
+        raise ArtifactError("SEC historical review chain is invalid") from None
+    prior = load_index(index_path)
+    rows = read_evidence_ledger(ledger_path)
+    selected_rows_with_review_requests(rows, prior, project_root=project_root,
+        as_of=date.fromisoformat(cycle_date()), material_lookback_days=7, include_source_ids=[source_id])
+    row = next(normalize_ledger_row(value) for value in rows if normalize_ledger_row(value)["source_id"] == source_id)
+    _, canonical_raw, canonical_text = artifact_paths(artifact_root, row)
+    receipts, record_hashes = [], []
+    def visit(value):
+        if isinstance(value, dict):
+            if value.get("source_id") == source_id and {"raw_path", "raw_sha256", "normalized_path", "normalized_sha256"} <= set(value):
+                receipts.append(value)
+            for child in value.values(): visit(child)
+        elif isinstance(value, list):
+            for child in value: visit(child)
+    for record in store["records"]:
+        count = len(receipts)
+        visit(record)
+        if len(receipts) > count: record_hashes.append(record["record_sha256"])
+    if not receipts:
+        raise ArtifactError("SEC historical version has no signed retained receipt")
+    for path in (retained_raw, retained_normalized):
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_RAW_BYTES:
+            raise ArtifactError("SEC historical recovery proof is invalid")
+    old_raw, old_text = retained_raw.read_bytes(), retained_normalized.read_bytes()
+    for receipt in receipts:
+        if (any(receipt.get(key) != row[key] for key in ("ticker", "accession", "url", "form", "primary_document"))
+                or receipt["raw_path"] != display_path(canonical_raw, project_root)
+                or receipt["normalized_path"] != display_path(canonical_text, project_root)
+                or receipt["raw_sha256"] != sha256_bytes(old_raw)
+                or receipt["normalized_sha256"] != sha256_bytes(old_text)):
+            raise ArtifactError("SEC historical recovery differs from signed receipt")
+    active = next((entry for entry in prior["artifacts"] if entry.get("source_id") == source_id), {})
+    _, current_raw, current_text, current_entry = cache_artifact_paths(artifact_root, row, active, project_root)
+    if complete_cache_entry(current_entry, row, current_raw, current_text, project_root) is None:
+        raise ArtifactError("SEC current version must validate before historical recovery")
+    current_bytes = {canonical_raw: current_raw.read_bytes(), canonical_text: current_text.read_bytes()}
+    versions = {}
+    for canonical, content in current_bytes.items():
+        version = _content_version_path(canonical, sha256_bytes(content))
+        if version.is_symlink() or (version.exists() and
+                (version.stat().st_size > MAX_RAW_BYTES or version.read_bytes() != content)):
+            raise ArtifactError("SEC current version archive conflicts")
+        versions[display_path(version, project_root)] = sha256_bytes(content)
+    if not apply:
+        return {"status": "preview_verified", "source_id": source_id,
+            "historical_record_hashes": sorted(set(record_hashes)), "thesis_store_sha256": sha256_bytes(store_raw),
+            "preserved_current_versions": versions, "restored_raw_sha256": sha256_bytes(old_raw),
+            "restored_normalized_sha256": sha256_bytes(old_text), "active_index_changed": False,
+            "network_used": False, "files_written": False}
+    for relative in versions:
+        target = project_root / relative
+        content = current_bytes[canonical_raw if target.suffix == ".raw" else canonical_text]
+        if not target.exists(): atomic_write_bytes(target, content)
+    metadata = _retain_index_bytes(index_path, artifact_root)
+    if metadata:
+        metadata = {**metadata, "path": display_path(Path(metadata["path"]), project_root)}
+    receipt = {"schema_version": "equity_sec_historical_artifact_recovery_v1", "source_id": source_id,
+        "prepared_at": utc_now(), "status": "prepared", "historical_record_hashes": sorted(set(record_hashes)),
+        "thesis_store_sha256": sha256_bytes(store_raw), "preserved_current_versions": versions,
+        "preserved_index": metadata, "restored_raw_sha256": sha256_bytes(old_raw),
+        "restored_normalized_sha256": sha256_bytes(old_text), "active_index_changed": False,
+        "network_used": False, "email_used": False, "broker_used": False}
+    identity = sha256_bytes(json.dumps(receipt, sort_keys=True).encode())
+    proof_path = artifact_root / "_version_recoveries" / (identity + ".json")
+    atomic_write_json(proof_path, receipt)
+    before = {path: path.read_bytes() for path in current_bytes}
+    try:
+        if store_path.read_bytes() != store_raw:
+            raise ArtifactError("SEC historical review store changed during recovery")
+        atomic_write_bytes(canonical_raw, old_raw)
+        atomic_write_bytes(canonical_text, old_text)
+        if canonical_raw.read_bytes() != old_raw or canonical_text.read_bytes() != old_text:
+            raise ArtifactError("SEC historical restore readback differs")
+    except Exception:
+        for path, original in before.items(): atomic_write_bytes(path, original)
+        receipt["status"] = "rolled_back"
+        atomic_write_json(proof_path, receipt)
+        raise
+    receipt.update(status="restored_pending_ordinary_index_refresh", completed_at=utc_now())
+    atomic_write_json(proof_path, receipt)
+    return {**receipt, "receipt_path": display_path(proof_path, project_root)}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--refresh", action="store_true")
+    mode.add_argument("--recover-historical-version", metavar="SOURCE_ID",
+        help="Operator-locked restoration from exact historical receipt proofs; ordinary refresh follows")
+    parser.add_argument("--retained-raw", type=Path)
+    parser.add_argument("--retained-normalized", type=Path)
+    parser.add_argument("--apply", action="store_true", help="Apply the otherwise read-only historical version recovery")
     parser.add_argument("--include-source-id", action="append", default=[],
         help="Retain an exact existing official ledger/acceptance identity for explicit research; repeat up to the bounded limit")
     parser.add_argument(
@@ -1149,7 +1339,16 @@ def main() -> int:
         help="SEC-compliant public-research User-Agent; never treated as a secret",
     )
     args = parser.parse_args()
+    if args.recover_historical_version and (not args.retained_raw or not args.retained_normalized):
+        parser.error("historical recovery requires both retained proof paths")
+    if not args.recover_historical_version and (args.retained_raw or args.retained_normalized or args.apply):
+        parser.error("retained proof paths are only valid for historical recovery")
     try:
+        if args.recover_historical_version:
+            result = recover_historical_artifact_version(args.recover_historical_version,
+                args.retained_raw, args.retained_normalized, apply=args.apply)
+            print("sec_artifact_historical_recovery=" + result["status"] + " index_changed=false network_used=false")
+            return 0
         current_cycle = date.fromisoformat(cycle_date())
         material_lookback_days = load_active_config()["notifications"][
             "new_filing_lookback_calendar_days"
