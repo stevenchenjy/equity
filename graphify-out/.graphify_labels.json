@@ -360,14 +360,9 @@
   "358": "test_swing_pipeline_boundary.py",
   "359": "Independent earnings-event discovery and research",
   "360": "Multi-strategy research and decision workflow",
-  "361": "test_swing_benchmark_wrapper.py",
+  "361": "publication_meaning",
   "362": "Company-specific valuation in production",
-  "363": "notification_meaning",
-  "364": "Equity Research — Core Allocation Policy",
-  "365": "Trade recording during research refresh",
-  "366": "publication_meaning",
+  "363": "IndexCoreReportRegressionTests",
   "367": "dated_capital_projection",
-  "368": "install_swing_observer.sh",
-  "369": "NoRedirect",
-  "370": "main"
+  "368": "install_swing_observer.sh"
 }
