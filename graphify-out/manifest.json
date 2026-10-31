@@ -1655,9 +1655,9 @@
     "semantic_hash": "4d67473fca0e1aa5687a6c22e5b15b3e"
   },
   "09_scripts/equity_research/opportunity_contract.py": {
-    "mtime": 1792719027.600602,
-    "ast_hash": "45dcb3bffadcf6f6d10ebd8c09fc856d",
-    "semantic_hash": "45dcb3bffadcf6f6d10ebd8c09fc856d"
+    "mtime": 1793416599.4835114,
+    "ast_hash": "4e27e95593b068fe3023f2ce98b8df89",
+    "semantic_hash": ""
   },
   "09_scripts/equity_research/opportunity_evidence.py": {
     "mtime": 1792719027.601244,
@@ -1675,13 +1675,13 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/research_opportunities.py": {
-    "mtime": 1792608044.5395715,
-    "ast_hash": "eb418684ea99cc1e596120240de0ae2e",
+    "mtime": 1793416507.3120077,
+    "ast_hash": "372637a31d5a5cc29205a0c2f24a60ee",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_research_opportunities.py": {
-    "mtime": 1793065727.3438132,
-    "ast_hash": "b412a291e7ccf94a435672c94b01e867",
+    "mtime": 1793416599.4845576,
+    "ast_hash": "197bd972dfdc68d2e66265152a3b21bc",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/update_experiment_research_approval.py": {
@@ -1705,8 +1705,8 @@
     "semantic_hash": "13cb84203d3339b1700e3b16228ba277"
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1793415764.810103,
-    "ast_hash": "e4a663a4751eb29e3b7fe71e73f8f9de",
+    "mtime": 1793416681.27106,
+    "ast_hash": "5ec17929c8438f375bcc2b5374d70494",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -1715,8 +1715,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/capital_decision.py": {
-    "mtime": 1793414884.793849,
-    "ast_hash": "0490000a09ed4ba738b36de63b78cacd",
+    "mtime": 1793416397.8498652,
+    "ast_hash": "c24b728762776dc7e505ddd2765c4299",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/capital_presentation.py": {
@@ -1740,8 +1740,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_capital_decision.py": {
-    "mtime": 1793414884.794412,
-    "ast_hash": "35cddc5b7f792f2534c6a604cc8d3c24",
+    "mtime": 1793416397.8508139,
+    "ast_hash": "07826776625795e6662fb2a753360bdd",
     "semantic_hash": ""
   },
   "10_dashboard/src/CapitalActions.test.tsx": {
