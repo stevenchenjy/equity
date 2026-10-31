@@ -1,0 +1,20 @@
+{
+  "schema_version": "equity_supplemental_instrument_metadata_v1",
+  "scope": "Public instrument classification only; no candidate membership, core approval, entry strategy or position size is granted.",
+  "instruments": [
+    {
+      "ticker": "RBRK",
+      "asset_class": "stocks",
+      "name": "Rubrik, Inc. Class A common stock",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1943896/000194389626000060/rbrk-20260731.htm",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "ticker": "VGT",
+      "asset_class": "etf",
+      "name": "Vanguard Information Technology ETF",
+      "source_url": "https://fund-docs.vanguard.com/F0958.pdf",
+      "reviewed_on": "2026-10-30"
+    }
+  ]
+}

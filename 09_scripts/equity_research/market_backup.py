@@ -20,7 +20,7 @@ from urllib.parse import urlencode, quote
 from urllib.request import Request, build_opener
 
 from daily_common import atomic_write_json, atomic_write_text, is_us_market_session_date, now_et, sha256_file
-from market_data_adapter import _NoRedirectHandler
+from market_data_adapter import MassiveB2Error, _NoRedirectHandler
 
 SOURCE = "massive_unadjusted_history_nasdaq_eod_extension"
 PRIMARY = "massive_stocks_basic_eod"
@@ -93,7 +93,7 @@ def enabled(root: Path) -> bool:
     return policy.get("backup_enabled") is True
 
 
-def load_baseline(root: Path, tickers: list[str]) -> dict:
+def _load_retained_baseline(root: Path) -> dict:
     pointer = json.loads((root / CURRENT).read_text())
     name = pointer.get("history_path", "")
     if (pointer.get("schema_version") != "equity_market_history_pointer_v1"
@@ -103,11 +103,67 @@ def load_baseline(root: Path, tickers: list[str]) -> dict:
     path = root / REL / name
     if path.is_symlink() or sha256_file(path) != pointer.get("history_sha256"):
         raise BackupError("backup_history_hash_mismatch")
-    bundle = checked_bundle(json.loads(path.read_text()), tickers)
+    value = json.loads(path.read_text())
+    if not isinstance(value, dict) or not isinstance(value.get("tickers"), dict):
+        raise BackupError("backup_baseline_scope_or_basis_invalid")
+    bundle = checked_bundle(value, list(value["tickers"]))
     if pointer.get("snapshot_sha256") != bundle.get("snapshot_sha256"):
         raise BackupError("backup_snapshot_binding_invalid")
     verify_history_sources(root, bundle)
     return bundle
+
+
+def load_baseline(root: Path, tickers: list[str]) -> dict:
+    return checked_bundle(_load_retained_baseline(root), tickers)
+
+
+def _seed_held_primary_history(root: Path, base: dict, tickers: list[str],
+                               held_only_tickers: list[str] | tuple[str, ...], primary_client) -> tuple[dict, list[dict]]:
+    """Extend in-memory scope using complete primary unadjusted observations.
+
+    The retained pointer and canonical files are untouched. Newly held symbols
+    cannot inherit Nasdaq's historical adjustment basis or enter the candidate
+    universe. Their original primary observations remain bound to the eventual
+    whole-batch publication alongside the existing baseline lineage.
+    """
+    retained, requested = set(base["tickers"]), set(tickers)
+    missing = requested - retained
+    if requested == retained and len(requested) == len(tickers):
+        return base, []
+    if (not retained < requested or len(requested) != len(tickers)
+            or not missing <= set(held_only_tickers) or primary_client is None):
+        raise BackupError("backup_baseline_scope_or_basis_invalid")
+    result, receipts = copy.deepcopy(base), []
+    end = date.fromisoformat(base["market_session"])
+    start = end - timedelta(weeks=52)
+    for ticker in sorted(missing):
+        if re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker) is None:
+            raise BackupError("backup_primary_seed_scope_invalid")
+        try:
+            observed = primary_client.fetch_daily_bars(ticker, start_date=start, end_date=end)
+        except MassiveB2Error as exc:
+            raise BackupError("backup_primary_seed_" + exc.code) from None
+        bars = [{"session_date": str(bar["session_date"]),
+                 **{key: bar[key] for key in FIELDS}} for bar in observed]
+        checked_bars(bars, end)
+        url = f"https://api.massive.com/v2/aggs/ticker/{ticker}/range/1/day/{start}/{end}?adjusted=false"
+        observation = {"schema_version": "equity_primary_held_history_seed_v1", "ticker": ticker,
+            "kind": "labelled_normalized_provider_observation_not_original_http_response",
+            "price_basis": "unadjusted", "source_url": url, "observed_at": now_et().isoformat(),
+            "market_session": str(end), "bars": bars}
+        raw = (json.dumps(observation, indent=2, sort_keys=True) + "\n").encode()
+        digest = hashlib.sha256(raw).hexdigest()
+        path = root / REL / "responses" / (digest + ".json")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if path.is_symlink() or (path.exists() and path.read_bytes() != raw):
+            raise BackupError("backup_primary_seed_observation_conflict")
+        if not path.exists():
+            path.write_bytes(raw)
+        receipts.append({"ticker": ticker, "source_url": url, "observed_at": observation["observed_at"],
+            "path": str(path.relative_to(root)), "sha256": digest, "price_basis": "unadjusted",
+            "kind": observation["kind"]})
+        result["tickers"][ticker] = {"source_url": url, "bars": bars}
+    return checked_bundle(result, tickers), receipts
 
 
 def verify_history_sources(root: Path, bundle: dict) -> None:
@@ -226,11 +282,13 @@ class NasdaqHistoricalClient:
         return normalize(payload, ticker, start, end), url
 
 
-def recover(root: Path, tickers: list[str], asset_classes: dict[str, str], end: date, *, client=None) -> dict:
-    base = load_baseline(root, tickers)
+def recover(root: Path, tickers: list[str], asset_classes: dict[str, str], end: date, *, client=None,
+            primary_client=None, held_only_tickers: list[str] | tuple[str, ...] = ()) -> dict:
+    base = _load_retained_baseline(root)
     baseline_end = date.fromisoformat(base["market_session"])
     if baseline_end >= end:
         raise BackupError("backup_requires_a_new_session")
+    base, primary_receipts = _seed_held_primary_history(root, base, tickers, held_only_tickers, primary_client)
     client = client or NasdaqHistoricalClient(root)
     result = copy.deepcopy(base)
     result.update(data_source=SOURCE, market_session=str(end), generated_at=now_et().isoformat(),
@@ -250,7 +308,10 @@ def recover(root: Path, tickers: list[str], asset_classes: dict[str, str], end: 
         bars = [b for b in bars if date.fromisoformat(b["session_date"]) >= end - timedelta(weeks=52)]
         checked_bars(bars, end)
         result["tickers"][ticker] = {"source_url": url, "bars": bars}
-    result["observations"] = client.receipts
+    result["observations"] = [*primary_receipts, *client.receipts]
+    result.pop("held_only_primary_scope_additions", None)
+    if primary_receipts:
+        result["held_only_primary_scope_additions"] = sorted(row["ticker"] for row in primary_receipts)
     result["generated_at"] = now_et().isoformat()
     return checked_bundle(result, tickers)
 

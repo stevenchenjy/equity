@@ -79,6 +79,60 @@ class MarketBackupTests(unittest.TestCase):
                 backup.recover(root,['SPY','QQQM'],{'SPY':'etf','QQQM':'etf'},END,client=client)
             self.assertEqual(client.receipts,[])
 
+    def primary(self, transform=lambda values: values):
+        class Primary:
+            def __init__(self): self.calls=[]
+            def fetch_daily_bars(self, ticker, *, start_date, end_date):
+                self.calls.append((ticker,start_date,end_date))
+                return transform([{**bar,'session_date':date.fromisoformat(bar['session_date'])}
+                                  for bar in bars(start_date,min(end_date,BASE))])
+        return Primary()
+
+    def test_new_held_history_uses_primary_before_current_full_scope_extension(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);original=self.baseline(root,['SPY']);before=(root/backup.CURRENT).read_bytes()
+            primary=self.primary()
+            result=backup.recover(root,['SPY','RBRK','VGT'],{'SPY':'etf','RBRK':'stocks','VGT':'etf'},END,
+                client=self.client(root),primary_client=primary,held_only_tickers=['RBRK','VGT'])
+            self.assertEqual([call[0] for call in primary.calls],['RBRK','VGT'])
+            self.assertTrue(all(call[2]==BASE for call in primary.calls))
+            self.assertEqual(result['held_only_primary_scope_additions'],['RBRK','VGT'])
+            self.assertEqual(set(result['tickers']),{'SPY','RBRK','VGT'})
+            self.assertEqual(result['tickers']['SPY']['bars'][:-1],
+                [bar for bar in original['tickers']['SPY']['bars'] if bar['session_date']>='2025-10-20'])
+            self.assertEqual((root/backup.CURRENT).read_bytes(),before)
+            self.assertEqual(len(result['observations']),5)
+            atomic_write_json(root/backup.CURRENT,backup.pointer_for(root,result,'b'*64))
+            backup.load_baseline(root,['SPY','RBRK','VGT'])
+            primary_receipt=next(r for r in result['observations'] if r.get('price_basis')=='unadjusted')
+            (root/primary_receipt['path']).write_text('changed primary seed')
+            with self.assertRaisesRegex(backup.BackupError,'retained_source_changed'):
+                backup.load_baseline(root,['SPY','RBRK','VGT'])
+
+    def test_primary_seed_requires_held_only_scope_and_complete_original_sessions(self):
+        for failure in ['not_held','missing','duplicate','adjusted','new_session_missing']:
+            with self.subTest(failure=failure),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);self.baseline(root,['SPY']);before=(root/backup.CURRENT).read_bytes()
+                def transform(values):
+                    if failure=='missing':values.pop(30)
+                    if failure=='duplicate':values[30]=values[29]
+                    if failure=='adjusted':
+                        from market_data_adapter import MassiveB2Error,ADJUSTMENT_MISMATCH_CODE
+                        raise MassiveB2Error(ADJUSTMENT_MISMATCH_CODE)
+                    return values
+                primary=self.primary(transform)
+                def nasdaq(value):
+                    if failure=='new_session_missing' and value['data']['symbol']=='VGT':
+                        value['data']['tradesTable']['rows'].pop(0)
+                        value['data']['totalRecords']-=1
+                    return value
+                client=self.client(root,nasdaq)
+                with self.assertRaises(backup.BackupError):
+                    backup.recover(root,['SPY','VGT'],{'SPY':'etf','VGT':'etf'},END,client=client,
+                        primary_client=primary,held_only_tickers=[] if failure=='not_held' else ['VGT'])
+                self.assertEqual((root/backup.CURRENT).read_bytes(),before)
+                if failure!='new_session_missing':self.assertEqual(client.receipts,[])
+
     def test_bad_schema_dates_numeric_values_and_pagination_rejected(self):
         start=date(2026,10,15);p=payload('SPY',start,END)
         changes=[lambda x:x['data'].update(symbol='WRONG'),lambda x:x['data'].update(totalRecords=100),
@@ -157,14 +211,15 @@ class MarketBackupTests(unittest.TestCase):
         from test_market_refresh_failure_commit import B2MarketRefreshFailureCommitTests, B2_TICKERS, _seed, _quality_row, _candidate_row, UNIVERSE_TICKERS
         from market_data_adapter import MassiveB2Error, AUTH_MISSING_CODE
         from daily_common import now_et
-        for failed in (False, True):
-            with self.subTest(failed=failed), tempfile.TemporaryDirectory() as tmp:
+        for failed, newly_held in ((False,False),(True,False),(False,True),(True,True)):
+            with self.subTest(failed=failed,newly_held=newly_held), tempfile.TemporaryDirectory() as tmp:
                 root=Path(tmp);fixture=B2MarketRefreshFailureCommitTests();paths=fixture._paths(root)
                 seeds=[_seed(t) for t in UNIVERSE_TICKERS]
-                base=bundle(B2_TICKERS)
+                baseline_tickers=UNIVERSE_TICKERS if newly_held else B2_TICKERS
+                base=bundle(baseline_tickers)
                 normalized=[{**b,'session_date':date.fromisoformat(b['session_date'])} for b in base['tickers']['SPY']['bars']]
                 old_now=datetime.fromisoformat('2026-10-19T08:00:00-04:00')
-                rows=[b2.market_row_from_massive_bars(t,normalized,old_now.isoformat(),old_now) for t in B2_TICKERS]
+                rows=[b2.market_row_from_massive_bars(t,normalized,old_now.isoformat(),old_now) for t in baseline_tickers]
                 by={r['ticker']:r for r in rows}
                 b2.write_csv(paths['data']/'universe_seed.csv',seeds,list(seeds[0]))
                 b2.write_csv(paths['positions'],[{'ticker':'IOT'},{'ticker':'RBRK'}],['ticker'])
@@ -182,8 +237,12 @@ class MarketBackupTests(unittest.TestCase):
                 with ExitStack() as stack:
                     fixture._patch_paths(stack,paths)
                     stack.enter_context(patch.object(b2,'now_et',return_value=datetime.fromisoformat('2026-10-20T08:00:00-04:00')))
-                    stack.enter_context(patch.object(b2.MassiveBasicEODClient,'from_environment',side_effect=MassiveB2Error(AUTH_MISSING_CODE)))
+                    primary=self.primary()
+                    stack.enter_context(patch.object(b2.MassiveBasicEODClient,'from_environment',
+                        **({'return_value':primary} if newly_held else {'side_effect':MassiveB2Error(AUTH_MISSING_CODE)})))
                     stack.enter_context(patch.object(backup,'NasdaqHistoricalClient',return_value=client))
+                    stack.enter_context(patch.object(b2,'backup_asset_classes',return_value={
+                        ticker:'stocks' for ticker in B2_TICKERS}))
                     self.assertEqual(b2.main(),1 if failed else 0)
                     if failed:
                         self.assertEqual(fixture._trio_bytes(paths),old)
@@ -193,6 +252,8 @@ class MarketBackupTests(unittest.TestCase):
                         self.assertEqual({r['market_session_date'] for r in quoted},{'2026-10-19'})
                         self.assertEqual({r['data_source'] for r in quoted},{backup.SOURCE})
                         self.assertTrue(backup.verify_binding(root,B2_TICKERS,quoted,sha256_file(paths['snapshot'])))
+                        if newly_held:
+                            self.assertEqual({call[0] for call in primary.calls if call[2]==BASE},{'IOT','RBRK'})
                         recovered=fixture._trio_bytes(paths)
                         with patch.object(backup,'NasdaqHistoricalClient',side_effect=AssertionError('already-current backup must not request again')):
                             self.assertEqual(b2.main(),0)

@@ -1231,6 +1231,14 @@ def main(argv: list[str] | None = None) -> int:
         return _run_main(args)
 
 
+def backup_asset_classes(root: Path, universe: list[dict[str, str]], tickers: list[str]) -> dict[str, str]:
+    from instrument_metadata import asset_class
+    classes = {ticker: asset_class(ticker, root=root, universe=universe) for ticker in tickers}
+    if any(value not in {"stocks", "etf"} for value in classes.values()):
+        raise market_backup.BackupError("backup_asset_class_unverified")
+    return classes
+
+
 def _run_main(args: argparse.Namespace) -> int:
     market_backup.recover_interrupted_publications(SNAPSHOT_PATH.parents[2])
     universe = read_csv(UNIVERSE_PATH)
@@ -1418,10 +1426,10 @@ def _run_main(args: argparse.Namespace) -> int:
                 "complete", f"primary_failure_code={primary_failure}; latest_required_session_already_validated=yes; no_new_observation_claimed=yes")
             return reuse_validated_snapshot(universe=universe, tickers=tickers, held_tickers=held_tickers)
         try:
-            classes = {r["ticker"]: "etf" if r.get("sector") == "ETF" else "stocks" for r in universe}
-            classes.update({t: "stocks" for t in held_tickers if t not in classes})
+            classes = backup_asset_classes(SNAPSHOT_PATH.parents[2], universe, tickers)
             history_bundle = market_backup.recover(SNAPSHOT_PATH.parents[2], tickers, classes,
-                latest_published_market_session(refresh_time))
+                latest_published_market_session(refresh_time), primary_client=client,
+                held_only_tickers=[ticker for ticker in held_tickers if ticker not in {row["ticker"] for row in universe}])
             market_rows = []
             tactical_history = {}
             now = timestamp()
