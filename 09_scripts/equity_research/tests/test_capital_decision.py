@@ -161,6 +161,14 @@ class CapitalDecisionTests(unittest.TestCase):
         draft['starts_at']='2026-11-02T09:45:00-05:00'
         authored=self.build()['decisions'][0]['order_draft']['entry_window']
         self.assertEqual(authored['starts_at'],'2026-11-02T09:45:00-05:00')
+        plan=self.d['plan_continuity']['plans'][0]
+        plan['instruction']='Verify settlement; skip new adverse issuer news; cancel any unfilled remainder at10:30.'
+        plan['purpose']={'exit_rule':'Do not carry the draft into another session.','failure_condition':'Skip changed available shares.'}
+        current=self.build()['decisions'][0]
+        self.assertIn(plan['instruction'],current['order_draft']['trigger_rule'])
+        rendered='\n'.join(__import__('capital_presentation').action_lines(current))
+        for condition in (plan['instruction'],plan['purpose']['exit_rule'],plan['purpose']['failure_condition']):
+            self.assertIn(condition,rendered)
         draft['starts_at']='2026-11-02T09:45:00-04:00'
         self.assertIsNone(self.build()['decisions'][0]['order_draft'])
     def test_core_addition_expires_at_earlier_maintained_review_without_invented_stop(self):
