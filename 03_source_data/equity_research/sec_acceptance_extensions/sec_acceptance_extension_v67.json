@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-10-30T20:26:26.000-04:00",
+  "artifact_sha256": "5d699a387ce406d01fb52642bc71842b486f7f3539c0638699fe96cb4529bdd4",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v67",
+  "prior_extension_set_sha256": "aa09eb4021126a40376b06fcfd72ffbbaefdfd06a51db0a80d5331ce05c109e0",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-10-30T20:43:38.000+00:00",
+      "accession_number": "0001104659-26-120710",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-30T20:26:26.000-04:00",
+      "cik": "1297996",
+      "entity_name": "DIGITAL REALTY TRUST, INC.",
+      "extension_record_sha256": "4ee3e0ad390f218c26debc983281d324d11954872139306a423d968f76d1b20c",
+      "extension_version": "v67",
+      "filing_date": "2026-10-30",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "cd74023d1929d65525a8720f4321bda998f6c685bbfe382b495e19d0e8613441",
+      "source_url": "https://data.sec.gov/submissions/CIK0001297996.json",
+      "ticker": "DLR"
+    },
+    {
+      "accepted_at": "2026-10-30T21:28:54.000+00:00",
+      "accession_number": "0001193125-26-441892",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-10-30T20:26:26.000-04:00",
+      "cik": "1297996",
+      "entity_name": "DIGITAL REALTY TRUST, INC.",
+      "extension_record_sha256": "991e5ba2bd6420c6325d0c913c06527cc38e14521d9e7cc57ead820a41057823",
+      "extension_version": "v67",
+      "filing_date": "2026-10-30",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "e81c78cae6a1773d0a838472c4f611cc00ffab1d8a7fa86bc76e8770c35525ae",
+      "source_url": "https://data.sec.gov/submissions/CIK0001297996.json",
+      "ticker": "DLR"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
