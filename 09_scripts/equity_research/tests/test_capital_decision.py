@@ -150,6 +150,19 @@ class CapitalDecisionTests(unittest.TestCase):
         self.d['eligible_new_position_review_candidates']=[];self.d['watch_candidates']=[]
         self.d['research_opportunities']={'priority_queue':[{'ticker':'MXL','state':'research_supported','blockers':['company_specific_valuation']}]}
         r=self.build()['decisions'][0];self.assertEqual(r['decision'],'BLOCKED');self.assertEqual(r['shares'],0)
+    def test_future_exit_preserves_authored_start_and_session_dst(self):
+        self.d['eligible_new_position_review_candidates']=[];self.d['watch_candidates']=[]
+        self.d['held_positions']=[dict(ticker='TEST',current_shares=2,current_price=101,asset_role='active_stock')]
+        draft={'side':'sell','type':'LIMIT','quantity':1,'limit_price':102,'time_in_force':'DAY','session_date':'2026-11-02'}
+        self.d['plan_continuity']={'plans':[dict(ticker='TEST',status='maintained',action='trim_review',instruction='Reviewed one-share reduction',blockers=[],review_at='2026-11-02T11:00:00-05:00',valid_until='2026-11-02T10:30:00-05:00',historical_order_draft=draft)]}
+        default=self.build()['decisions'][0]['order_draft']['entry_window']
+        self.assertEqual(default['starts_at'],'2026-11-02T09:30:00-05:00')
+        self.assertEqual(default['ends_at'],'2026-11-02T10:30:00-05:00')
+        draft['starts_at']='2026-11-02T09:45:00-05:00'
+        authored=self.build()['decisions'][0]['order_draft']['entry_window']
+        self.assertEqual(authored['starts_at'],'2026-11-02T09:45:00-05:00')
+        draft['starts_at']='2026-11-02T09:45:00-04:00'
+        self.assertIsNone(self.build()['decisions'][0]['order_draft'])
     def test_core_addition_expires_at_earlier_maintained_review_without_invented_stop(self):
         self._session_decision()
         self.d['account']['cash_basis']='owner_recorded';self.v['open_orders']['cash_confirmed']=True

@@ -41,6 +41,16 @@ def evaluate(payload=None, when="2026-09-24T12:05:00-04:00", shares=4, orders=No
 
 
 class InvestmentPlanTests(unittest.TestCase):
+    def test_authored_draft_start_requires_reviewed_exchange_window(self):
+        proposal = record(role="long_term_growth")
+        proposal.update(review_at="2026-11-02T10:30:00-05:00", valid_until="2026-11-02T10:00:00-05:00")
+        proposal["order_draft"].update(session_date="2026-11-02", starts_at="2026-11-02T09:45:00-05:00")
+        append_plan({"schema_version": SCHEMA, "records": []}, proposal)
+        for invalid in ("2026-11-02T09:45:00-04:00", "2026-11-02T10:00:00-05:00", "2026-11-03T09:45:00-05:00"):
+            proposal["order_draft"]["starts_at"] = invalid
+            with self.assertRaisesRegex(ValueError, "start_outside"):
+                append_plan({"schema_version": SCHEMA, "records": []}, proposal)
+
     def test_versions_are_append_only_and_hash_bound(self):
         first = ledger()
         proposal = record()

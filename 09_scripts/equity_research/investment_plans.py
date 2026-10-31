@@ -324,7 +324,15 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None,
                 or draft.get("time_in_force") != "DAY"
                 or _whole(draft.get("quantity")) != quantity or quantity == 0):
             raise ValueError("plan_draft_invalid")
-        regular_close(draft.get("session_date", ""))
+        close = regular_close(draft.get("session_date", ""))
+        if draft.get("starts_at") is not None:
+            start = stamp(draft["starts_at"])
+            opening = datetime.combine(close.date(), time(9, 30), ET)
+            end = min(close, stamp(row["review_at"]))
+            if row.get("valid_until"):
+                end = min(end, stamp(row["valid_until"]))
+            if not opening <= start < end:
+                raise ValueError("plan_draft_start_outside_reviewed_session")
         for field in ("limit_price", "stop_price"):
             if draft.get(field) is not None:
                 from math import isfinite

@@ -15,7 +15,7 @@ from daily_common import canonical_sha256, sha256_file, read_json, read_csv, ato
 from production_strategies import REGISTRY, select
 from decision_dependencies import classify
 from tactical_review import review_open_orders
-from investment_plans import regular_close
+from investment_plans import regular_close, stamp
 from workflow_integrity import reviewed_candidate_ready, company_review_complete
 from core_entry import eligible_core_tranche
 from account_authority import POLICY_REL, load_authority
@@ -180,8 +180,14 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     kind=raw['type']; price=num(raw['stop_price'] if kind=='STOP' else raw['limit_price'])
                     close=regular_close(raw['session_date']); review=datetime.fromisoformat(p['review_at'])
                     end=min(close,review)
+                    if p.get('valid_until'):
+                        end=min(end,stamp(p['valid_until']))
+                    opening=close.replace(hour=9,minute=30)
+                    start=stamp(raw['starts_at']) if raw.get('starts_at') is not None else opening
                     if p.get('status')!='maintained' or raw.get('side')!='sell' or kind not in {'LIMIT','MARKETABLE_LIMIT','STOP'} or raw.get('time_in_force')!='DAY' or not 0<qty<=existing or qty!=qty.to_integral_value() or price<=0 or current>=end:
                         raise ValueError('maintained_exit_draft_invalid')
+                    if not opening<=start<end:
+                        raise ValueError('maintained_exit_draft_window_invalid')
                     if kind=='STOP' and price>=reference:exit_issues.append('exit_stop_already_breached_reassessment_required')
                     if not exit_issues:
                         loss_per=max(Decimal(0),reference-price) if kind=='STOP' else reference
@@ -189,7 +195,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         row.update(shares=int(qty),estimated_notional=money(amount),strategy_source={'strategy_id':exit_strategy['strategy_id'],'version':exit_strategy['version'],'adapter':'maintained_exit','authority':exit_strategy['authority']},
                             thesis_summary=p.get('reason') or p['instruction'],key_evidence=[str(p.get('record_hash','validated maintained plan'))],
                             order_draft=dict(side='sell',entry_order_type=kind,entry_limit=None,exit_price=money(price),
-                             entry_window={'session':raw['session_date'],'starts_at':datetime.fromisoformat(raw['session_date']+'T09:30:00').replace(tzinfo=current.tzinfo).isoformat(),'ends_at':end.isoformat()},time_in_force='DAY',
+                             entry_window={'session':raw['session_date'],'starts_at':start.isoformat(),'ends_at':end.isoformat()},time_in_force='DAY',
                              invalidation_price=money(price) if kind=='STOP' else None,
                              risk_model='conditional_exit_stop' if kind=='STOP' else 'conditional_exit_limit_no_downside_protection',
                              planned_loss_per_share=money(loss_per),planned_total_loss=money(loss),planned_account_risk_pct=round(float(loss/total*100),4),
