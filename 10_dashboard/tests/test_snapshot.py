@@ -333,6 +333,50 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(result['candidates'][0]['quantity'], 1)
         self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob('*') if p.is_file()})
 
+    def test_primary_snapshot_defers_optional_replay_without_waiving_publication_checks(self):
+        with patch('server.strategy_framework_view',side_effect=AssertionError('strategy replay blocked primary read')),patch('server.earnings_event_view',side_effect=AssertionError('calendar replay blocked primary read')):
+            result=read_snapshot(self.root,self.now,include_research_details=False)
+            self.assertEqual(result['positions'][0]['shares'],2)
+            self.assertNotIn('strategy_framework',result)
+            self.assertNotIn('earnings_events',result)
+            self.put(POSITIONS,'ticker,shares_optional\nABC,3\n')
+            with self.assertRaisesRegex(SnapshotError,'research_inputs_changed'):
+                read_snapshot(self.root,self.now,include_research_details=False)
+
+    def test_retained_plan_source_tamper_with_unchanged_registry_withholds_research(self):
+        import investment_plans
+        import plan_source_resolutions as recovery
+        from server import current_snapshot
+        now=self.now
+        old=b'old retained research';logical='synthetic-current.txt';retained='08_reviews/synthetic.local/old.txt'
+        self.put(logical,old.decode());self.put(retained,old.decode())
+        proposal=dict(ticker='ABC',role='long_term_growth',plan_id='ABC-synthetic-source',recorded_at=now.isoformat(),
+            effective_at=now.isoformat(),valid_until='2026-09-30T16:00:00-04:00',action='hold',
+            expected_shares=2,proposed_change_shares=0,instruction='Hold pending source-bound review.',
+            reason='Synthetic business evidence.',counterargument='Synthetic downside risk.',
+            reviewer='Synthetic analyst',change_reason='Initial source-bound synthetic plan.',state='maintained',
+            account_observed_at=now.isoformat(),review_at='2026-09-30T16:00:00-04:00',
+            sources=[dict(path=logical,sha256=hashlib.sha256(old).hexdigest())],
+            order_draft=None,automatic_action_allowed=False)
+        ledger=investment_plans.append_plan({'schema_version':investment_plans.SCHEMA,'records':[]},proposal,root=None)
+        self.put(PLANS,ledger);self.put(logical,'current replacement')
+        resolution=dict(plan_id=proposal['plan_id'],plan_version=1,plan_record_hash=ledger['records'][0]['record_hash'],
+            logical_path=logical,expected_sha256=hashlib.sha256(old).hexdigest(),retained_path=retained,
+            reason='Exact historical input retained before replacement.',reviewer='Synthetic analyst')
+        registry,_=recovery.append_resolutions({'schema_version':recovery.SCHEMA,'records':[]},[resolution],ledger,root=self.root,current=now)
+        self.put(recovery.RELATIVE_PATH,registry)
+        self.decision['workflow_integrity']['input_hashes'][PLANS]=hashlib.sha256((self.root/PLANS).read_bytes()).hexdigest()
+        self.decision['workflow_integrity']['plan_source_resolution_proof_hashes']=recovery.proof_hashes(self.root)
+        self.publish()
+        result=read_snapshot(self.root,now,include_research_details=False)
+        self.assertEqual(result['positions'][0]['shares'],2)
+        self.put(retained,'tampered retained bytes')
+        with self.assertRaisesRegex(SnapshotError,'research_inputs_changed'):
+            read_snapshot(self.root,now,include_research_details=False)
+        fallback=current_snapshot(self.root,include_research_details=False)
+        self.assertFalse(fallback['research_ready']);self.assertIsNone(fallback['capital_decision'])
+        self.assertEqual(fallback['plans'],[])
+
     def test_large_hash_bound_research_report_preserves_the_genuine_account_snapshot(self):
         relative = '04_research/company_research/opportunities.local/report.json'
         payload = json.dumps({'retained_research': 'x' * 12_100_000}).encode()

@@ -97,7 +97,7 @@ def main() -> int:
         for path in (RUNTIME_LOCK, root / "00_project_control/run_logs/daily_pipeline.lock"):
             handle = stack.enter_context(path.open("a+"))
             fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        plans = read_snapshot(root)["plans"]
+        plans = read_snapshot(root, include_research_details=False)["plans"]
         if args.template:
             payload = {"schema_version": SCHEMA, "entries": [
                 {**dict(zip(("ticker", "plan_id", "version", "record_hash"), binding(p))),

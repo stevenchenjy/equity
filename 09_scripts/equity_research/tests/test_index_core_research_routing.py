@@ -43,7 +43,7 @@ class IndexCoreResearchRoutingTests(unittest.TestCase):
                 return [dict(ticker=t, market_session_date="2026-10-16", last_price="100",
                              data_quality_label="ok", data_source="fixture") for t in tickers]
             if path == baseline.UNIVERSE_PATH:
-                return [dict(ticker=t, is_benchmark="yes") for t in tickers]
+                return [dict(ticker=t, is_benchmark="yes", sector="ETF") for t in tickers]
             return []
 
         with (patch.object(baseline, "read_csv", side_effect=rows),

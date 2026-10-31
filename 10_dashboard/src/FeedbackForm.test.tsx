@@ -1,12 +1,31 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {FeedbackForm,FeedbackReceipt,FeedbackDate,ResearchReadStatus,readCurrentSnapshot,readFeedbackSnapshot,currentFeedbackRecord,pendingFeedbackForEdit} from './App';
+import {FeedbackForm,FeedbackReceipt,FeedbackDate,ResearchReadStatus,readCurrentSnapshot,readFeedbackSnapshot,currentFeedbackRecord,pendingFeedbackForEdit,matchingResearch,currentAccountView,AccountHoldings} from './App';
 import {defaults, editableFeedback, matchingOrders, orderLabel} from './domain';
 import type {FeedbackStatus, FormalRecord, Snapshot} from './domain';
 import {errorCode,requestJSON} from './feedbackRequest';
 
 const data={server_now:'2026-10-17T10:00:00-04:00',account:{cash_available:4000},positions:[],candidates:[],plans:[],orders:{rows:[]}} as unknown as Snapshot;
+
+test('committed holdings render before research and changed inventory never inherits old marks or actions',()=>{
+  const committed={...data,feedback_context_only:true,account_version:'new-account',snapshot_id:'retained-decision',
+    account:{cash_available:58.58,account_total_value:null,invested_capital:null,last_updated:'2026-10-30T20:12:00-04:00',cash_basis:'owner_recorded',settled_cash_verified:false},
+    positions:[{ticker:'RBRK',shares:4,price:null,weight:null,role:'unverified'}],orders:{as_of:'2026-10-30T20:11:00-04:00',complete:true,fresh:false,rows:[]}} as Snapshot;
+  const old={...committed,feedback_context_only:false,account_version:'old-account',positions:[{ticker:'OLD',shares:1,price:999,weight:25,role:'active_stock'}],
+    capital_decision:{decisions:[{ticker:'OLD',shares:10,order_draft:{side:'buy'}}]}} as Snapshot;
+  for(const research of [null,old]){
+    assert.equal(matchingResearch(research,committed),null);
+    const current=currentAccountView(research,committed);assert.equal(current,committed);
+    const html=renderToStaticMarkup(<AccountHoldings data={current!} onDetail={()=>{}} onReconcile={()=>{}}/>);
+    assert.match(html,/RBRK/);assert.match(html,/<td>4<\/td>/);assert.match(html,/58\.58/);
+    assert.match(html,/Prices and portfolio weights will appear after matching research validates/);
+    assert.doesNotMatch(html,/OLD|999\.00/);
+  }
+  const matched={...committed,feedback_context_only:false};
+  assert.equal(matchingResearch(matched,committed),matched);
+  assert.equal(currentAccountView(matched,committed),matched);
+});
 function markup(status:FeedbackStatus='filled',wide=false,rows:Record<string,unknown>[]=[]){
   return renderToStaticMarkup(<FeedbackForm data={{...data,orders:{...data.orders,rows}}} ticker="ABC" initialStatus={status} wide={wide} onSaved={()=>{}} onFormalSaved={()=>{}} onDirty={()=>{}} storageError=""/>);
 }

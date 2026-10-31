@@ -283,7 +283,8 @@ def _validate_append_transition(payload: dict[str, Any], latest: dict[str, dict[
             raise ValueError("plan_changed_purpose_or_extension_requires_strategy_horizon")
 
 
-def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
+def validate_record(row: dict[str, Any], *, root: Path | None = None,
+                    source_resolutions: dict | None = None) -> None:
     if not isinstance(row, dict):
         raise ValueError("plan_record_invalid")
     for key in ("plan_id", "ticker", "role", "action", "recorded_at", "effective_at",
@@ -345,11 +346,8 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None) -> None:
         if path.is_absolute() or ".." in path.parts:
             raise ValueError("plan_source_path_invalid")
         if root is not None:
-            target = (root / path).resolve()
-            if not target.is_relative_to(root.resolve()) or not target.is_file():
-                raise ValueError("plan_source_missing")
-            if hashlib.sha256(target.read_bytes()).hexdigest() != source["sha256"]:
-                raise ValueError("plan_source_hash_mismatch")
+            from plan_source_resolutions import validate_source
+            validate_source(root, row, source, source_resolutions)
     if "setup_status" in row:
         if not isinstance(row["setup_status"], str) or row["setup_status"] not in {"active", "failed", "expired", "unverified"}:
             raise ValueError("plan_setup_status_invalid")
@@ -366,8 +364,10 @@ def validate_ledger(payload: dict[str, Any], *, root: Path | None = None) -> dic
         raise ValueError("plan_ledger_schema_invalid")
     latest: dict[str, dict[str, Any]] = {}
     chain = ""
+    from plan_source_resolutions import load as load_source_resolutions
+    resolutions = load_source_resolutions(root, payload) if root is not None else None
     for row in payload["records"]:
-        validate_record(row, root=root)
+        validate_record(row, root=root, source_resolutions=resolutions)
         prior = latest.get(row["plan_id"])
         if (row.get("version") != (prior["version"] + 1 if prior else 1)
                 or row.get("supersedes") != (prior["record_hash"] if prior else None)

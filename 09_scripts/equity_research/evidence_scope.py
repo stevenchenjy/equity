@@ -10,7 +10,7 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 # These funds have no operating-company SEC fundamentals admission contract.
-NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI"})
+NONCOMPANY_BENCHMARKS = frozenset({"SPY", "QQQ", "QQQM", "XLK", "XLI", "VGT"})
 
 
 def shared_integrity_passed(status: dict[str, Any]) -> bool:

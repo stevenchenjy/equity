@@ -15,6 +15,7 @@ from official_news import read_official_news_status
 from issuer_news_queue import QUEUE_REL, merge_news_context, record_review_states
 from execution_common import allocation_policy_proof_hashes
 from account_authority import load_authority
+from plan_source_resolutions import proof_hashes as plan_source_resolution_proof_hashes
 
 from workflow_inputs import WORKFLOW_INPUTS
 
@@ -365,6 +366,7 @@ def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: d
         "new_capital_allowed": not blockers, "current_instruction_authority": "versioned_plans_reconciled_with_observed_facts",
         "input_hashes": {path: sha256_file(root / path) if (root / path).exists() else None for path in sorted(WORKFLOW_INPUTS)},
         "allocation_policy_proof_hashes": allocation_policy_proof_hashes(root),
+        "plan_source_resolution_proof_hashes": plan_source_resolution_proof_hashes(root),
         "historical_baseline_is_current_instruction": False, "automatic_action_allowed": False}
     if retained_new and not blockers and baseline_code == "fundamental_weakening_review" and weakening:
         decision["decision_code"] = "action_review_candidate"
@@ -399,6 +401,8 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         raise ValueError("workflow_input_bindings_incomplete")
     if contract.get("allocation_policy_proof_hashes", {}) != allocation_policy_proof_hashes(root):
         raise ValueError("workflow_allocation_policy_proof_changed_recompose_required")
+    if contract.get("plan_source_resolution_proof_hashes", {}) != plan_source_resolution_proof_hashes(root):
+        raise ValueError("workflow_plan_source_resolution_changed_recompose_required")
     for path, digest in contract.get("input_hashes", {}).items():
         candidate = Path(path)
         if candidate.is_absolute() or ".." in candidate.parts:

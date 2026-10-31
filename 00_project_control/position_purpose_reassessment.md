@@ -36,3 +36,36 @@ The object requires:
 Changing `plan_id` cannot bypass continuity. Another active plan for the same ticker blocks authoring a new plan. First reconcile and record the old plan's terminal state, then link the replacement to the latest terminal record with a reassessment. A retired older plan ID cannot be reopened after a newer lineage exists. Pre-existing multiple-active-plan histories still load and remain explicit reconciliation conflicts.
 
 Use the existing `update_investment_plan.py --input <proposal.json>` preview, inspect validation, and append with `--apply` only as an authorized research update. The original rows, instructions, source hashes, failed/expired outcomes and deadlines stay in the ledger. No automatic renewal or daily mandate change was introduced. The plan can remain expired/unverified when evidence or owner execution observations are missing.
+
+## Exact historical source recovery
+
+A historical plan may have bound a mutable logical source path whose current
+bytes have legitimately changed. Preserve the original plan ledger, record
+hashes and current source. If an exact retained copy exists, register it with
+`register_plan_source_resolution.py`; this is source recovery, not a new plan
+review or permission to renew an expired instruction.
+
+The private input JSON contains a `resolutions` array. Each entry has exactly
+`plan_id`, `plan_version`, `plan_record_hash`, `logical_path`, `expected_sha256`,
+`retained_path`, `reason` and `reviewer`. The named plan record must already
+exist with a valid immutable hash and explicitly bind that logical path/hash.
+The retained regular file must be inside the same checkout, with no symlink
+components, and match the original SHA-256 exactly. Each file is limited to
+32 MB. There is no archive search or nearest/newer source substitution.
+
+```sh
+python3 09_scripts/equity_research/register_plan_source_resolution.py --root /path/to/runtime --input /path/to/private-resolution-proposal.json
+python3 09_scripts/equity_research/register_plan_source_resolution.py --root /path/to/runtime --input /path/to/private-resolution-proposal.json --apply
+```
+
+Preview validates without publishing. Apply uses the plan writer's lock and
+appends chained receipts to `05_risk_and_positions/plan_source_resolutions.local.json`;
+an identical retry is a no-op. It never rewrites the plan ledger or either
+source file. Registry tampering, missing/changed retained bytes, unsafe paths
+and a different plan record fail closed. New plan proposals must bind their
+own direct retained sources; an older record's resolution cannot authorize
+them. Workflow, capital and dashboard publication checks revalidate the
+registry and the explicitly registered retained bytes. Recompose the complete
+decision after registration, then append any separately researched plan via
+the ordinary maintained writer. Research dates, expiry, economics, allocation,
+strategy admission and human-only execution remain unchanged.

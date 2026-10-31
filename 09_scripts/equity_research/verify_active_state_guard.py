@@ -79,6 +79,7 @@ OPTIONAL_ACTIVE_INPUTS = {
     "04_research/company_research/research_backlog_history.local.jsonl": "optional_append_only",
     "08_reviews/capital_work_queue.local/state.json": "optional_generated_research",
     "05_risk_and_positions/investment_plans.local.json": "optional_versioned_private",
+    "05_risk_and_positions/plan_source_resolutions.local.json": "optional_append_only",
     "04_research/company_research/thesis_dossiers.local.json": "optional_versioned_private",
     "03_source_data/equity_research/earnings_incorporation_status.local.json": "optional_generated_research",
     "08_reviews/current/workflow_evaluation.local.json": "optional_generated_research",

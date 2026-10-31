@@ -7,9 +7,8 @@ import type { DemoRecord, Feedback, FeedbackStatus, FormalRecord, Plan, ReviewRe
 import PriceChart from './PriceChart';
 import ResearchSection from './ResearchSection';
 import CompanyCase from './CompanyCase';
-import EarningsEvents from './EarningsEvents';
+import ResearchDetails from './ResearchDetails';
 import IntradayRiskPanel from './IntradayRisk';
-import StrategyFrameworkPanel from './StrategyFramework';
 import { useUiVersion } from './uiVersion';
 import { preparePreview, requestJSON, waitForResearch } from './feedbackRequest';
 import type { RequestPayload, Preview } from './feedbackRequest';
@@ -67,6 +66,16 @@ export async function readFeedbackSnapshot(signal?:AbortSignal) {
   return result;
 }
 
+export function matchingResearch(research:Snapshot|null,account:Snapshot|null):Snapshot|null {
+  // A new committed account must immediately withdraw old prices/quantities.
+  // The lightweight account is never promoted into the action-card state.
+  return research&&(!account||research.account_version===account.account_version)?research:null;
+}
+
+export function currentAccountView(research:Snapshot|null,account:Snapshot|null):Snapshot|null {
+  return matchingResearch(research,account)??account;
+}
+
 export function ResearchReadStatus({feedbackPage,accountAvailable,error,runtimeUpdating,hasResearchData}:{feedbackPage:boolean;accountAvailable:boolean;error:string;runtimeUpdating:boolean;hasResearchData:boolean}) {
   if(!error)return null;
   if(feedbackPage&&accountAvailable)return <div className="notice" role="status"><Clock3 size={19}/><span>Research view has not updated. Your recorded account is available for action logging.</span></div>;
@@ -122,6 +131,19 @@ export function Summary({ data }: { data: Snapshot }) {
     <div><span>已投资</span><strong>{money(data.account.invested_capital)}</strong></div>
     <p>研究与账户数据均有独立时间。<small>{data.account.cash_basis==='ledger_estimate'?'现金按成交台账推算':'现金为所有者记录'}，结算资金{data.account.settled_cash_verified ? '已核对' : '待核对'}。</small></p>
   </div>{data.allocation ? <div className="account-notes" aria-label="配置规则"><p><span>指数底仓（{data.allocation.core_tickers.join(' + ')}）≥{data.allocation.core_minimum_pct}%</span>当前合计 {data.allocation.core_weight_pct === null ? '待估值' : data.allocation.core_weight_pct.toFixed(2)+'%'} · 个股合计上限 {data.allocation.stock_maximum_pct}%</p></div> : null}</>;
+}
+
+export function AccountHoldings({data,onDetail,onReconcile}:{data:Snapshot;onDetail:(ticker:string)=>void;onReconcile:()=>void}) {
+  return <>
+    <Summary data={data}/>
+    {data.feedback_context_only?<p className="summary-context" role="status">Current cash, shares and orders are available. Prices and portfolio weights will appear after matching research validates.</p>:null}
+    <div className="section-heading"><h2>当前记录的持仓</h2><button className="secondary" onClick={onReconcile}><PencilLine size={16}/>核对当前账户</button></div>
+    <div className="table-scroll"><table><thead><tr><th>股票</th><th>股数</th><th>参考收盘</th><th>持仓市值</th><th>占账户</th></tr></thead><tbody>{data.positions.map(p=><tr key={p.ticker}>
+      <td><button className="ticker-link" onClick={()=>onDetail(p.ticker)}>{p.ticker}</button></td><td>{p.shares}</td><td>{money(p.price)}</td><td>{money(p.price===null?null:p.shares*p.price)}</td><td>{p.weight===null?'待估值':p.weight.toFixed(2)+'%'}</td>
+    </tr>)}</tbody></table></div>
+    <div className="account-notes"><p><span>账户最后更新</span>{timeLabel(data.account.last_updated)}</p><p><span>资金依据</span>{data.account.cash_basis==='owner_recorded'?'所有者记录':'台账估算'} · 结算资金{data.account.settled_cash_verified?'已核对':'未核验'}</p><p><span>挂单最后核对</span>{timeLabel(data.orders.as_of)} · {data.orders.complete?'当时列表完整':'列表不完整'} · {orderObservationNote(data)}</p></div>
+    <h2 className="orders-title">记录中的订单</h2>{data.orders.rows.length?<div className="order-list">{data.orders.rows.map((r,i)=><div key={String(r.order_id??i)}><strong>{String(r.ticker??'—')} · {r.side==='buy'?'买入':'卖出'}</strong><span>状态 {String(r.status??'未知')} · 委托 {String(r.quantity??'未知')} 股 · 剩余 {String(r.remaining_quantity??'未知')} 股</span><small>订单编号 {String(r.order_id??'未记录')}</small></div>)}</div>:<p className="empty compact">上次核对时没有记录中的订单；该观察不代表此刻的券商状态。</p>}
+  </>;
 }
 
 export function planRoleLabel(plan:Plan):string {
@@ -353,11 +375,13 @@ function PlanDetail({ plan, now, offline, revision }: { plan: Plan; now: number;
 
 export default function App() {
   const [page, setPage] = useState<Page>('today');
-  const [data, setData] = useState<Snapshot | null>(null);
+  const [researchData, setData] = useState<Snapshot | null>(null);
   // Intake has its own short account read. It must remain available while a
   // full research snapshot is pending, without promoting that account-only
   // response into the research/action-card state.
   const [accountData,setAccountData]=useState<Snapshot|null>(null);
+  const data=matchingResearch(researchData,accountData);
+  const accountView=currentAccountView(researchData,accountData);
   const [accountError,setAccountError]=useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -422,7 +446,7 @@ export default function App() {
   },[runtimeUpdating]);
   useEffect(() => {
     mounted.current = true; void load();void loadAccount();
-    const poll = setInterval(() => { void load(); }, 60000);
+    const poll = setInterval(() => { void load();void loadAccount(); }, 60000);
     const tick = setInterval(() => setNow(clock.current.time + performance.now() - clock.current.captured), 1000);
     return () => { mounted.current = false;accountController.current?.abort();clearInterval(poll); clearInterval(tick); };
   }, []);
@@ -465,18 +489,17 @@ export default function App() {
       {page!=='feedback'&&data?.stale ? <div className="error-banner"><Clock3 size={19} /><p>This publication was generated {timeLabel(data.generated_at)}. Current-session evidence or reassessment is required; dated research does not renew an action plan.</p></div> : null}
       {page === 'today' ? <>
         {data ? <CapitalActions data={data} unavailable={Boolean(error)}/> : null}
-        {data ? <StrategyFrameworkPanel data={data} now={now} unavailable={Boolean(error)||data.research_ready===false}/> : null}
         {data ? <IntradayRiskPanel data={data} now={now} unavailable={Boolean(error)}/> : null}
-        {data ? <Summary data={data} /> : <div className="empty">{loading ? '正在读取生产研究快照…' : '当前没有可展示的完整研究快照。'}</div>}
+        {accountView ? <><Summary data={accountView}/>{!data?<p className="summary-context" role="status">Your committed account is available. Decision sources are still being validated; current trade quantities are withheld.</p>:null}</> : <div className="empty">{loading ? '正在读取生产研究快照…' : '当前没有可展示的完整研究快照。'}</div>}
         <div className="workspace"><section className="plan-column"><h2>当前方案</h2>
           {data?.plans.length ? data.plans.map(p => { const old = expired(p, now) || Boolean(error); return <article className="plan-row" key={`${p.ticker}:${p.plan_id??'unversioned'}`}><div className="plan-symbol"><button onClick={() => openDetail(p.ticker)}>{p.ticker}</button><span>{planRoleLabel(p)}</span><small>{data.positions.find(v => v.ticker === p.ticker)?.shares ?? '—'} 股已记录</small></div><div className="plan-state"><span className={`status ${old ? 'amber' : ''}`}>{old ? '需复审' : p.status === 'pending' ? '条件待核对' : p.status === 'unverified' ? '依据待核对' : '当前计划'}</span><p>{old ? '计划已到复审时间' : p.blockers.length ? '先核对价格、剩余股数与挂单' : actionNames[p.action] ?? '以当前研究依据为准'}</p><small>复审 {timeLabel(p.expires_at)}</small></div><button className="secondary" onClick={() => openDetail(p.ticker)}>查看依据</button></article>; }) : <p className="empty compact">没有可展示的维护计划。</p>}
           {data ? <div className="addition-summary">{additions.length ? additions.map(c => <p key={c.ticker}><strong>{c.ticker} · {data.capital_decision?'条件草稿':'新增复核'}</strong><span>{data.capital_decision?`${c.quantity} 股 · LIMIT ≤ ${money(c.maximum_review_price)}`:`最多 ${c.quantity} 股 · 最高复核价 ${money(c.maximum_review_price)}`}</span><button className="text-button" onClick={() => openDetail(c.ticker)}>查看完整条件</button></p>) : <p>当前没有仍在有效期内的新增方案。</p>}</div> : null}
           {data ? <div className="candidate-section"><h2>观察名单</h2><div className="table-scroll"><table><thead><tr><th>股票</th><th>状态</th><th>主要缺口</th><th className="hide-small">参考收盘</th></tr></thead><tbody>{(showAll ? watched : watched.slice(0, 3)).map(c => <tr key={c.ticker}><td><button className="ticker-link" onClick={() => openDetail(c.ticker)}>{c.ticker}</button></td><td><span className="status">观察</span></td><td>{blockerText(c.blockers)}</td><td className="hide-small">{money(c.price)}</td></tr>)}</tbody></table></div>{watched.length > 3 ? <button className="text-button expand-button" onClick={() => setShowAll(v => !v)}>{showAll ? '收起观察名单' : `展开全部 ${watched.length} 个观察标的`}<ArrowUpRight size={16} /></button> : null}</div> : null}
         </section><aside className="feedback-panel"><h2>快速反馈</h2><p className="panel-lead">登记你已发生的操作。</p>{accountError?<p role="alert" className="field-error">{accountError}</p>:null}<FeedbackForm data={accountData??data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptAccountSnapshot} onViewHistory={()=>navigate('history')} formalRecords={formalRecords} onDirty={setDirty} storageError={storageError} /></aside></div>
-        {data?.earnings_events?<EarningsEvents data={data} unavailable={Boolean(error)||data.research_ready===false}/>:null}
+        {data?<ResearchDetails key={`${data.account_version}:${data.snapshot_id}`} data={data} now={now} unavailable={Boolean(error)||data.research_ready===false}/>:null}
       </> : null}
       {page === 'feedback' ? <div className="standalone-form">{accountError?<p role="alert" className="field-error">{accountError}</p>:null}<FeedbackForm key={editing?.id??correction?.id??formStatus} data={accountData??data} ticker={selected} onSaved={save} onFormalSaved={formalSaved} onSnapshot={acceptAccountSnapshot} onViewHistory={()=>navigate('history')} formalRecords={formalRecords} onDirty={setDirty} initialStatus={formStatus} correction={correction} editing={editing} emailVersion={emailContext} wide storageError={storageError} /></div> : null}
-      {page === 'account' && data ? <><Summary data={data} /><IntradayRiskPanel data={data} now={now} unavailable={Boolean(error)}/><div className="section-heading"><h2>当前记录的持仓</h2><button className="secondary" onClick={() => navigate('feedback','account')}><PencilLine size={16} />核对当前账户</button></div><div className="table-scroll"><table><thead><tr><th>股票</th><th>股数</th><th>参考收盘</th><th>持仓市值</th><th>占账户</th></tr></thead><tbody>{data.positions.map(p => <tr key={p.ticker}><td><button className="ticker-link" onClick={() => openDetail(p.ticker)}>{p.ticker}</button></td><td>{p.shares}</td><td>{money(p.price)}</td><td>{money(p.price===null?null:p.shares * p.price)}</td><td>{p.weight===null?'待估值':p.weight.toFixed(2)+'%'}</td></tr>)}</tbody></table></div><div className="account-notes"><p><span>账户最后更新</span>{timeLabel(data.account.last_updated)}</p><p><span>资金依据</span>{data.account.cash_basis === 'owner_recorded' ? '所有者记录' : '台账估算'} · 结算资金{data.account.settled_cash_verified ? '已核对' : '未核验'}</p><p><span>挂单最后核对</span>{timeLabel(data.orders.as_of)} · {data.orders.complete ? '当时列表完整' : '列表不完整'} · {orderObservationNote(data)}</p></div><ReviewPanel data={data} requests={reviewRequests} error={reviewError} onSaved={()=>void loadReviews()} onDirty={setDirty}/><h2 className="orders-title">记录中的订单</h2>{data.orders.rows.length ? <div className="order-list">{data.orders.rows.map((r, i) => <div key={String(r.order_id??i)}><strong>{String(r.ticker??'—')} · {r.side==='buy'?'买入':'卖出'}</strong><span>状态 {String(r.status??'未知')} · 委托 {String(r.quantity??'未知')} 股 · 剩余 {String(r.remaining_quantity??'未知')} 股</span><small>订单编号 {String(r.order_id??'未记录')}</small></div>)}</div> : <p className="empty compact">上次核对时没有记录中的订单；该观察不代表此刻的券商状态。</p>}</> : page === 'account' ? <p className="empty">当前账户快照不可用。</p> : null}
+      {page === 'account' && accountView ? <><AccountHoldings data={accountView} onDetail={openDetail} onReconcile={()=>navigate('feedback','account')}/>{data?<IntradayRiskPanel data={data} now={now} unavailable={Boolean(error)}/>:null}<ReviewPanel data={accountView} requests={reviewRequests} error={reviewError} onSaved={()=>void loadReviews()} onDirty={setDirty}/></> : page === 'account' ? <p className="empty">{accountError||'Reading current account records…'}</p> : null}
       {page === 'detail' ? <><button className="text-button back-button" onClick={() => navigate('today')}><ArrowLeft size={17} />返回今日方案</button>{plan ? <PlanDetail plan={plan} now={now} offline={Boolean(error)} revision={`${data?.snapshot_id}:${data?.account_version}`} /> : <PriceChart ticker={selected} now={now} offline={Boolean(error)} revision={`${data?.snapshot_id}:${data?.account_version}`}/>}{data?.capital_decision?.decisions.find(row=>row.ticker===selected)?.research_case?<CompanyCase row={data.capital_decision.decisions.find(row=>row.ticker===selected)!}/>:!plan?<p className="empty">该标的没有当前维护中的持仓计划或已核验的公司估值判断。</p>:null}</> : null}
       {page === 'history' ? <>
         <div className="section-heading"><div><h2>正式记录</h2><p className="panel-lead">Mac 与手机共用，显示最近 {formalRecords.length} 条（最多 500 条）。记录应用与研究完成分别显示。</p></div></div>

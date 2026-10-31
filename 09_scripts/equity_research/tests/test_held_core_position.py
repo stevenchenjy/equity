@@ -48,6 +48,7 @@ class HeldCorePositionTests(unittest.TestCase):
                     "ticker": "SPY",
                     "theme": "Benchmark ETF",
                     "is_benchmark": "yes",
+                    "sector": "ETF",
                 }]
             if path == baseline.POSITIONS_PATH:
                 return [{

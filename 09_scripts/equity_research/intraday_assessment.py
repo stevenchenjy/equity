@@ -26,9 +26,11 @@ def held_symbols(root: Path) -> dict[str, str]:
     with (root / "05_risk_and_positions/current_positions.local.csv").open() as stream:
         rows = list(csv.DictReader(stream))
     selected = {}
+    from instrument_metadata import asset_class
     for row in rows:
         ticker = row["ticker"]
-        if ticker in selected or ticker not in metadata:
+        instrument = asset_class(ticker, root=root, universe=metadata)
+        if ticker in selected or instrument is None:
             raise ValueError("intraday_instrument_metadata_missing_or_duplicate:" + ticker)
         try:
             quantity = Decimal(row["shares_optional"])
@@ -36,7 +38,7 @@ def held_symbols(root: Path) -> dict[str, str]:
             raise ValueError("intraday_inventory_invalid:" + ticker) from None
         if not quantity.is_finite() or quantity <= 0:
             raise ValueError("intraday_positive_inventory_required:" + ticker)
-        selected[ticker] = "etf" if metadata[ticker].get("sector", "").upper() == "ETF" else "stocks"
+        selected[ticker] = instrument
     if not selected:
         raise ValueError("intraday_equity_inventory_empty")
     return dict(sorted(selected.items()))

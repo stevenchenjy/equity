@@ -32,6 +32,7 @@ INPUTS = {
  REGISTRY, '00_project_control/active_production_config.json', '01_policies/tactical_trade_policy.json',
  '05_risk_and_positions/current_account_state.local.json','05_risk_and_positions/current_positions.local.csv',
  '05_risk_and_positions/current_open_orders.local.json','05_risk_and_positions/investment_plans.local.json',
+ '05_risk_and_positions/plan_source_resolutions.local.json',
  '04_research/company_research/thesis_dossiers.local.json','04_data/equity_research/valuation_scenarios.local.json',
  '04_data/equity_research/company_valuation_admissions.local.json',
  '04_data/equity_research/company_valuation_admission_status.local.json',
@@ -67,7 +68,9 @@ def codes(value: Any) -> list[str]:
 
 
 def binding(root: Path) -> dict:
-    return {p:sha256_file(root/p) if (root/p).is_file() else None for p in sorted(INPUTS)}
+    from plan_source_resolutions import proof_hashes
+    proofs = proof_hashes(root)
+    return {**{p:sha256_file(root/p) if (root/p).is_file() else None for p in sorted(INPUTS)}, **proofs}
 
 
 def meaning(contract: dict) -> dict:

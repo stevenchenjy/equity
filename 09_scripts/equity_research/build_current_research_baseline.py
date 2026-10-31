@@ -23,6 +23,7 @@ from daily_common import (
 
 from account_common import approved_core_tickers, is_core_allocation_ticker
 from long_horizon_research import fundamentals_candidate_queue
+from instrument_metadata import is_fund
 from run_full_universe_market_data import APPROVED_CANDIDATE_TICKERS
 
 
@@ -185,10 +186,7 @@ def main() -> int:
             raise ValueError(f"current research baseline lacks a valid completed close for {ticker}")
         score_row = scores.get(ticker, {})
         fundamental = fundamentals.get(ticker, {})
-        is_benchmark = (
-            universe.get(ticker, {}).get("is_benchmark", "").strip().lower()
-            == "yes"
-        )
+        is_benchmark = is_fund(ticker, root=ROOT, universe=universe)
         if (
             ticker in held
             and not is_benchmark
@@ -220,7 +218,7 @@ def main() -> int:
         theme = universe.get(ticker, {}).get("theme", "Current holding") or "Current holding"
         position = position_rows.get(ticker, {})
         role = (
-            "current_position" if ticker in held else
+            "current_position" if ticker in held and (not is_benchmark or is_core_allocation_ticker(ticker)) else
             "core_allocation_candidate" if is_core_allocation_ticker(ticker) else
             "etf_research_candidate" if is_benchmark else
             "individual_stock_candidate"

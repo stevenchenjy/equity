@@ -88,6 +88,21 @@ CSV 批量导入、分钟线和真实收益率统计留作有明确数据契约�
 
 ## Action-log loading and recovery
 
+My Account and the account summary use the lightweight committed-account read
+while the current decision is loading. Prices and portfolio weights appear only
+from research with the exact same account version. A newly accepted account
+immediately withholds the former research quantities and marks until matching
+publication validation finishes.
+
+`/api/snapshot` validates the current account, publication inputs and capital
+contract without replaying the optional strategy studies and full earnings
+calendar. **Load detailed research** reads those independently through
+`/api/research-details`; its response is accepted only for the exact displayed
+account and decision identities. That route retains the same source, publication
+and account-change checks. A slow or failed detail read does not prevent viewing
+holdings, decision cards, history or account-entry forms. It cannot restore a
+superseded action. Both routes are read-only.
+
 The sidebar and full-page action forms read the lightweight
 `/api/feedback/snapshot` account context. They remain available when the full
 research snapshot is slow or unavailable. Retained plan identities are audit

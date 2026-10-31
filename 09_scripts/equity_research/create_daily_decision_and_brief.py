@@ -57,6 +57,7 @@ from daily_common import (
     weekly_summary_due_for_published_session,
 )
 from account_common import POSITION_REQUIRED_FIELDS, is_core_allocation_ticker, load_account_state
+from instrument_metadata import is_fund
 from active_config import load_active_config
 from execution_common import applied_reconciliation_matches_current_state
 from email_brief import EMAIL_BRIEF_VERSION, build_discovery_view, render_email
@@ -532,7 +533,7 @@ def held_research_context(
         companies = {}
     warnings = []
     for row in held_rows:
-        if row.get("asset_role") == "core_allocation":
+        if row.get("asset_role") == "core_allocation" or is_fund(row["ticker"], root=ROOT):
             continue
         ticker = row["ticker"]
         company = companies.get(ticker, {})
@@ -563,7 +564,7 @@ def held_research_context(
         "market_session_date": report.get("market_session_date", ""),
         "warnings": warnings,
         "views": {row["ticker"]: companies.get(row["ticker"], {}).get("maintained_view", {}) for row in held_rows
-                  if row.get("asset_role") != "core_allocation"},
+                  if row.get("asset_role") != "core_allocation" and not is_fund(row["ticker"], root=ROOT)},
         "action_authority": False,
     }
 
@@ -821,7 +822,7 @@ def main() -> int:
         and (bool(held_rows) or (not read_csv(EXACT_ACTION_PATH) and portfolio_cash_current())))
     held_company_tickers = [
         ticker for ticker in held_tickers
-        if not is_core_allocation_ticker(ticker)
+        if not is_fund(ticker, root=ROOT)
     ]
     if args.check:
         print(
@@ -876,7 +877,7 @@ def main() -> int:
     if "global_integrity_passed" in evidence_status:
         required = set(held_company_tickers) | {
             row.get("ticker", "").upper() for row in candidate_recommendations
-            if not is_core_allocation_ticker(row.get("ticker", ""))
+            if not is_fund(row.get("ticker", ""), root=ROOT)
             and row.get("valuation_applicability") != "not_applicable_broad_market_etf"
         }
         for ticker, codes in required_issuer_blockers(evidence_status, required).items():

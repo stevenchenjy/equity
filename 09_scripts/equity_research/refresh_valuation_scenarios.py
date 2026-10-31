@@ -35,6 +35,7 @@ from valuation_input_bundle import (
 from valuation_research_inputs import compose_research_inputs
 from account_common import is_core_allocation_ticker
 from evidence_scope import NONCOMPANY_BENCHMARKS
+from instrument_metadata import is_fund
 
 
 BASELINE_PATH = (
@@ -204,7 +205,7 @@ def main() -> int:
                 "fundamental_source_url": fundamentals.get(ticker, {}).get("source_url", ""),
             })
             continue
-        if ticker in NONCOMPANY_BENCHMARKS:
+        if ticker in NONCOMPANY_BENCHMARKS or is_fund(ticker, root=ROOT):
             classification = "index_core_candidate" if is_core_allocation_ticker(ticker) else "etf_research_candidate"
             row["valuation_check"] = classification + "; individual-company EV/revenue model not applicable"
             row["valuation_reasonableness_score"] = "5.0"

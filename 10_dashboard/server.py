@@ -283,7 +283,7 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
     return result
 
 
-def read_snapshot(root: Path, now: datetime | None = None) -> dict:
+def read_snapshot(root: Path, now: datetime | None = None, *, include_research_details: bool = True) -> dict:
     """Capture retained bytes, verify publication fingerprints, then read back.
 
     Production callers also hold the existing runtime lock. Imported contract
@@ -310,6 +310,12 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                 if (streamed[path][0] if path in streamed else digest(raws[path]) if path in raws else None) != expected]
     if mismatch:
         raise SnapshotError("research_inputs_changed")
+    from plan_source_resolutions import proof_hashes as plan_source_resolution_proof_hashes
+    try:
+        if d.get('workflow_integrity', {}).get('plan_source_resolution_proof_hashes', {}) != plan_source_resolution_proof_hashes(root):
+            raise ValueError('changed')
+    except (OSError, ValueError, TypeError, KeyError):
+        raise SnapshotError('research_inputs_changed')
     if (safe_read(root, DECISION) != decision_raw or any(safe_read(root, p) != b for p, b in raws.items())
             or any(streamed_input_fingerprint(root, path) != value for path, value in streamed.items())):
         raise SnapshotError("snapshot_changed_during_read")
@@ -460,10 +466,10 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
                             d.get("workflow_integrity", {}).get("global_blockers", [])),
         "capital_decision": capital, "capital_decision_status": capital_status,
         "capital_deployment_escalation": escalation_view(d, current_contract=capital_status == "current"),
-        "strategy_framework": strategy_framework_view(root, d, now, capital=capital,
-                                                     market_current=market_current),
-        "earnings_events": earnings_event_view(root, now, capital=capital,
-                                               current_contract=capital_status == "current"),
+        **({"strategy_framework": strategy_framework_view(root,d,now,capital=capital,market_current=market_current),
+            "earnings_events": earnings_event_view(root, now, capital=capital,
+                                                   current_contract=capital_status == "current")}
+           if include_research_details else {}),
     }
 
 
@@ -539,11 +545,11 @@ def escalation_view(decision, *, current_contract):
     return result
 
 
-def current_snapshot(root, *, research_busy=False):
+def current_snapshot(root, *, research_busy=False, include_research_details=True):
     """Show accepted account facts while its former research is superseded."""
     try:
         if research_busy: raise SnapshotError('research_refresh_in_progress')
-        result = read_snapshot(root)
+        result = read_snapshot(root, include_research_details=include_research_details)
         result['research_ready'] = True
     except SnapshotError as exc:
         if str(exc) not in {'research_refresh_in_progress','research_inputs_changed','decision_cash_differs_from_account','decision_shares_differ_from_account','decision_price_snapshot_mismatch','current_holdings_recomposition_required'}:
@@ -572,8 +578,9 @@ def current_snapshot(root, *, research_busy=False):
                 weight=float(r['shares_optional'])*float(market[r['ticker']]['last_price'])/total*100 if known and total else None,role='待研究') for r in positions],
             plans=[],candidates=[],orders=dict(as_of=o.get('as_of'),complete=o.get('complete') is True,fresh=False,rows=o.get('orders',[])),global_blockers=['account_recomposition_pending'],
             capital_decision=None,capital_decision_status='recompose_required',capital_deployment_escalation=escalation_view(d,current_contract=False),
-            strategy_framework=strategy_framework_view(root,d,datetime.now(ET),capital=None,market_current=False),
-            earnings_events=earnings_event_view(root, datetime.now(ET), current_contract=False))
+            **({'strategy_framework':strategy_framework_view(root,d,datetime.now(ET),capital=None,market_current=False),
+                'earnings_events':earnings_event_view(root, datetime.now(ET), current_contract=False)}
+               if include_research_details else {}))
     if not result.get('research_ready'):
         result['allocation'] = core_allocation_view(root, result['positions'], result['account']['account_total_value'])
         result['market_sources'] = d.get('market_gate', {}).get('data_sources', [])
@@ -753,7 +760,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.respond(200,json.dumps({'entry_script':entry[1]}).encode(),'application/json')
             except OSError:
                 return self.error_json(503,'ui_build_unavailable')
-        if path == "/api/snapshot":
+        if path in {"/api/snapshot", "/api/research-details"}:
             try:
                 # A long research lock changes recommendation availability,
                 # never availability of the latest committed account facts.
@@ -770,11 +777,22 @@ class Handler(BaseHTTPRequestHandler):
                     except BlockingIOError:
                         research_busy=True
                     if hasattr(self.server,'store'):
-                        result=current_snapshot(self.server.runtime_root,research_busy=research_busy)
+                        result=current_snapshot(self.server.runtime_root,research_busy=research_busy,
+                            include_research_details=path=='/api/research-details')
                     else:
                         if research_busy: raise BlockingIOError()
-                        result=read_snapshot(self.server.runtime_root)
+                        result=read_snapshot(self.server.runtime_root,include_research_details=path=='/api/research-details')
                     if getattr(self.server,'verification',False): result['mode']='verification'
+                    if path == '/api/research-details':
+                        # The growing calendar and opportunity replay are an
+                        # independent read, never a prerequisite for cash,
+                        # holdings, forms or current capital action cards.
+                        # Retain the same strict publication validation above
+                        # and bind the optional result to those exact versions.
+                        result=dict(schema_version='equity_dashboard_research_response_v1',
+                            account_version=result['account_version'], snapshot_id=result['snapshot_id'],
+                            strategy_framework=result.get('strategy_framework'),
+                            earnings_events=result.get('earnings_events'))
                 with account_lock(self.server.runtime_root, shared=True):
                     if input_version(self.server.runtime_root) != account_before:
                         raise SnapshotError('snapshot_changed_during_read')

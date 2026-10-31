@@ -44,6 +44,7 @@ from account_common import (
     write_text,
 )
 from portfolio_construction import individual_sizing_decision, remaining_core_floor_cost
+from instrument_metadata import is_fund
 from build_current_research_baseline import (
     PRICE_UNVERIFIED_ROLE, requested_coverage_tickers, requested_only_price_unverified,
 )
@@ -458,7 +459,8 @@ def main() -> None:
         if ticker in price_unverified:
             new_rows.append(price_unverified_recommendation(ticker, packets[ticker]))
             continue
-        if packets[ticker].get("research_role") == "etf_research_candidate":
+        if (packets[ticker].get("research_role") == "etf_research_candidate"
+                or (is_fund(ticker, root=ROOT) and not is_core_allocation_ticker(ticker))):
             new_rows.append(etf_research_recommendation(ticker, packets[ticker], score,
                                                       market_by_ticker.get(ticker, {})))
             continue

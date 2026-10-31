@@ -37,9 +37,9 @@ class FeedbackSnapshotTests(unittest.TestCase):
         self.addCleanup(self.http.shutdown)
         self.origin = 'http://127.0.0.1:' + str(self.http.server_port)
 
-    def request(self, method, path, payload=None):
+    def request(self, method, path, payload=None, headers=None):
         con = http.client.HTTPConnection('127.0.0.1', self.http.server_port, timeout=5)
-        headers = {'Origin': self.origin, 'Content-Type': 'application/json'} if payload is not None else {}
+        headers = headers if headers is not None else {'Origin': self.origin, 'Content-Type': 'application/json'} if payload is not None else {}
         con.request(method, path, body=json.dumps(payload) if payload is not None else None, headers=headers)
         response = con.getresponse()
         status, data = response.status, json.loads(response.read())
@@ -93,6 +93,58 @@ class FeedbackSnapshotTests(unittest.TestCase):
                 release.set()
                 reader.join(5)
         self.assertEqual(result[0][0], 200)
+
+    def test_slow_earnings_read_does_not_gate_decision_account_or_intake(self):
+        entered, release = threading.Event(), threading.Event()
+        result = []
+        view = {'schema_version':'equity_dashboard_snapshot_v1','account_version':'exact-account',
+                'snapshot_id':'exact-publication','capital_decision_status':'recompose_required'}
+
+        def slow_details(*_args, **kwargs):
+            if kwargs['include_research_details']:
+                entered.set()
+                release.wait(4)
+                return {**view,'earnings_events':{'schema_version':'equity_earnings_event_view_v1','status':'unverified','events':[]}}
+            return view
+
+        with patch('server.current_snapshot', side_effect=slow_details) as snapshot:
+            reader=threading.Thread(target=lambda:result.append(self.request('GET','/api/research-details')),daemon=True)
+            reader.start()
+            try:
+                self.assertTrue(entered.wait(1))
+                before=time.monotonic()
+                code,core=self.request('GET','/api/snapshot')
+                self.assertEqual(code,200)
+                self.assertNotIn('earnings_events',core)
+                self.assertEqual(self.request('GET','/api/feedback/snapshot')[0],200)
+                self.assertEqual(self.request('POST','/api/feedback/preview',self.fixture.payload())[0],200)
+                self.assertLess(time.monotonic()-before,1)
+                self.assertFalse(release.is_set())
+                self.assertEqual([call.kwargs['include_research_details'] for call in snapshot.call_args_list],[True,False])
+            finally:
+                release.set();reader.join(5)
+        self.assertEqual(result[0][0],200)
+        self.assertEqual((result[0][1]['account_version'],result[0][1]['snapshot_id']),('exact-account','exact-publication'))
+
+    def test_account_change_during_deferred_earnings_rejects_entire_result(self):
+        def changed_details(*_args, **_kwargs):
+            with account_lock(self.root):
+                account=json.loads((self.root/ACCOUNT).read_text());account['cash_available']=999
+                self.fixture.put(ACCOUNT,account)
+            return {**view,'earnings_events':{'status':'ready','events':[{'status':'eligible_conditional_plan'}]}}
+        view={'account_version':'before','snapshot_id':'old-publication','capital_decision_status':'current'}
+        with patch('server.current_snapshot',side_effect=changed_details):
+            code,result=self.request('GET','/api/research-details')
+        self.assertEqual((code,result['error']),(503,'snapshot_changed_during_read'))
+        self.assertNotIn('earnings_events',result)
+
+    def test_deferred_earnings_retains_origin_and_publication_checks(self):
+        self.assertEqual(self.request('GET','/api/research-details',headers={'Host':'untrusted.example'})[0],403)
+        from server import SnapshotError
+        with patch('server.current_snapshot',side_effect=SnapshotError('publication_fingerprints_missing')),patch('server.earnings_event_view') as events:
+            code,result=self.request('GET','/api/research-details')
+        self.assertEqual((code,result['error']),(503,'publication_fingerprints_missing'))
+        events.assert_not_called()
 
     def test_account_change_during_slow_research_is_rejected(self):
         entered, release = threading.Event(), threading.Event()
