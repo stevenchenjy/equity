@@ -11,7 +11,7 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
     canonical_sha256, is_us_market_session_date, latest_published_market_session,
     read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
-    MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, publish_store,
+    MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, transition_batch, publish_store,
     retain_input, validate_policy, validate_observation, require)
 from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
@@ -146,11 +146,15 @@ def intake(root: Path, *, current: datetime) -> dict:
         items = replay(previous, root=root, current=current)
         store, metrics = copy.deepcopy(previous), _base_metrics()
         held = held_tickers(root)
+        expirations = []
         for identity, item in items.items():
             if item["state"] not in TERMINAL and item["ticker"] not in held and elapsed_sessions(item["last_evidence_at"], current) >= policy["stale_after_market_sessions"]:
-                transition(store, identity, "expired", owner="research_orchestration", reason="research_evidence_stale_without_reassessment",
-                    sources=item["first_observation"]["sources"], blockers=["new_evidence_and_recorded_reassessment_required"], current=current)
+                expirations.append({"identity": identity, "target": "expired", "owner": "research_orchestration",
+                    "reason": "research_evidence_stale_without_reassessment", "sources": item["first_observation"]["sources"],
+                    "blockers": ["new_evidence_and_recorded_reassessment_required"]})
                 metrics["expired"] += 1
+        if expirations:
+            transition_batch(store, expirations, root=root, current=current)
         packets, diagnostics = collect_triggers(root, current=current, policy=policy)
         seen = {p["observation_id"] for i in items.values() for p in i["observations"]}
         by_ticker = {i["ticker"]: identity for identity, i in items.items()}

@@ -164,14 +164,26 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                  thesis_summary='',key_evidence=[],strategy_source=None)
         if h:
             status=p.get('status')
-            if status=='maintained' and p.get('action') in {'hold','hold_watch','maintain','watch'} and not local:
+            view=decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{})
+            # Entry qualification is not the mandate for an existing holding
+            # or a reduction. Only a plan explicitly tied to the current,
+            # verified company review can separate those two entry-only codes.
+            purpose_reviewed=(bool(p.get('thesis_id')) and p['thesis_id']==view.get('review_id')
+                and view.get('status') in {'reviewed','monitor'}
+                and view.get('business_case_status') in {'provisionally_supported','mixed','challenged','rejected'}
+                and not view.get('validation_errors') and not view.get('reopen_reasons')
+                and view.get('news_review',{}).get('status')=='current'
+                and view.get('news_review',{}).get('coverage_complete') is True)
+            held_local=[code for code in local if not (purpose_reviewed and code in
+                {'reviewed_business_case_not_supported','maintained_company_research_incomplete'})]
+            if status=='maintained' and p.get('action') in {'hold','hold_watch','maintain','watch'} and not held_local:
                 row.update(decision='HOLD',reasons=[p.get('instruction') or 'Maintain the source-bound existing purpose through its recorded review.'],
                            thesis_summary=p.get('reason',''),reassessment_rule=p.get('purpose',{}).get('exit_rule',''),review_at=p.get('review_at'))
             elif p.get('action') in {'exit_review','sell_review','trim_review','reduce_review','protect_review'}:
                 row['decision']='EXIT_REVIEW' if p['action'] in {'exit_review','sell_review'} else 'REDUCE_REVIEW'
                 row['reasons']=[p.get('instruction','Review the evidenced held-position risk.')]
                 exit_strategy, exit_errors = select(root,'maintained_exit',strategies)
-                exit_issues = [c for c in local if c != 'fresh_quote_and_available_shares_required'] + order_review['global_blockers'] + exit_errors
+                exit_issues = [c for c in held_local if c != 'fresh_quote_and_available_shares_required'] + order_review['global_blockers'] + exit_errors
                 exit_issues += [c for c in global_codes if 'account' in c or c == 'earlier_instruction_execution_unreconciled']
                 if ticker in order_review['active_tickers']: exit_issues.append('existing_order_requires_reconciliation')
                 raw=p.get('order_draft') or p.get('historical_order_draft') or {}
@@ -208,8 +220,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                              price_basis='Source-bound maintained exit level, not a live quote.',cost_assumption='Proceeds at the stated price are an estimate before costs, not a fill or settled buying power.',automatic_action_allowed=False))
                 except (KeyError,ValueError,TypeError,InvalidOperation,ZeroDivisionError):exit_issues.append('maintained_exit_draft_requires_current_shares_price_and_validity')
                 row['blockers']=sorted(set(exit_issues))
-            elif status != 'maintained' or local:
-                row.update(decision='BLOCKED',blockers=sorted(set(local or ['current_held_plan_reassessment_required'])),
+            elif status != 'maintained' or held_local:
+                row.update(decision='BLOCKED',blockers=sorted(set(held_local or ['current_held_plan_reassessment_required'])),
                            reasons=([p.get('instruction') or 'The current maintained holding plan remains recorded.', 'Current verification checks remain; the purpose review is complete.'] if status == 'maintained' else ['No fresh bounded holding instruction; the scheduled analyst must reassess the original purpose. Expiry does not prove a sale.']),
                            thesis_summary=p.get('reason',''), review_at=p.get('review_at'))
             else:

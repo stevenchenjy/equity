@@ -189,6 +189,87 @@ class OpportunityTests(unittest.TestCase):
         self.assertEqual(len(first["opportunities"]), len(later["opportunities"]))
         self.assertTrue(all(i["state"] == "expired" for i in later["opportunities"]))
 
+    def deferred_store(self, count=40):
+        from opportunity_contract import append_event
+        store = empty_store()
+        source = retain_input(self.root, self.root / CACHE_RELATIVE / "latest.local.json",
+                              available_at=NOW.isoformat())
+        for index in range(count):
+            observation = packet(ticker=f"STALE{index}", family="request", trigger="owner_requested_research",
+                evidence={"question": f"Synthetic stale research question {index}"}, sources=[source],
+                current=NOW, produced_by={"implementation_sha256": "a"*64, "policy_sha256": "b"*64})
+            identity = canonical_sha256({"first_observation_id": observation["observation_id"],
+                                         "ticker": observation["ticker"]})
+            append_event(store, {"kind": "detected", "opportunity_id": identity,
+                "recorded_at": NOW.isoformat(), "observation": observation, "owner": "research_orchestration",
+                "to_state": "deferred_capacity", "reason_code": "research_capacity_wait",
+                "blockers": ["bounded_research_capacity"]})
+        return store
+
+    def test_bulk_expiry_preserves_exact_serial_events_without_replaying_per_lead(self):
+        import opportunity_contract as contract
+        store = self.deferred_store()
+        expected = copy.deepcopy(store)
+        current = NOW+timedelta(days=10)
+        for identity, item in replay(store).items():
+            transition(expected, identity, "expired", owner="research_orchestration",
+                reason="research_evidence_stale_without_reassessment", sources=item["first_observation"]["sources"],
+                blockers=["new_evidence_and_recorded_reassessment_required"], current=current)
+        atomic_write_json(self.root / STORE_REL, store)
+        with patch.object(contract, "replay", wraps=contract.replay) as calls, \
+                patch("research_opportunities.replay", calls), \
+                patch("research_opportunities.collect_triggers", return_value=([], {})):
+            report = intake(self.root, current=current)
+        self.assertEqual(read_json(self.root / STORE_REL), expected)
+        self.assertEqual(report["metrics"]["expired"], 40)
+        self.assertTrue(all(i["state"] == "expired" for i in report["opportunities"]))
+        self.assertLessEqual(calls.call_count, 8)
+
+    def test_expiry_batch_invalid_changes_or_sources_preserve_original_journal(self):
+        from opportunity_contract import transition_batch
+        current = NOW+timedelta(days=10)
+        for fault in ("owner", "state", "repeated_identity", "clock", "source", "missing_source", "hash_chain", "missing_root"):
+            with self.subTest(fault=fault):
+                store = self.deferred_store(2)
+                changes = [{"identity": identity, "target": "expired", "owner": "research_orchestration",
+                    "reason": "research_evidence_stale_without_reassessment",
+                    "sources": item["first_observation"]["sources"],
+                    "blockers": ["new_evidence_and_recorded_reassessment_required"]}
+                    for identity, item in replay(store).items()]
+                if fault == "owner": changes[-1]["owner"] = "analyst_assessment"
+                if fault == "state": changes[-1]["target"] = "research_supported"
+                if fault == "repeated_identity": changes[-1]["identity"] = changes[0]["identity"]
+                if fault == "hash_chain": store["events"][-1]["record_hash"] = "0"*64
+                source = self.root / changes[0]["sources"][0]["path"]
+                original = source.read_bytes()
+                if fault == "source": source.write_bytes(b"tampered")
+                if fault == "missing_source": source.unlink()
+                before = copy.deepcopy(store)
+                try:
+                    with self.assertRaises((ValueError, OSError)):
+                        transition_batch(store, changes, root=None if fault == "missing_root" else self.root,
+                                         current=NOW-timedelta(seconds=1) if fault == "clock" else current)
+                    self.assertEqual(store, before)
+                finally:
+                    source.write_bytes(original)
+
+    def test_expiry_batch_rechecks_source_after_initial_validation(self):
+        import opportunity_contract as contract
+        store = self.deferred_store(2)
+        changes = [{"identity": identity, "target": "expired", "owner": "research_orchestration",
+            "reason": "research_evidence_stale_without_reassessment", "sources": item["first_observation"]["sources"],
+            "blockers": ["new_evidence_and_recorded_reassessment_required"]}
+            for identity, item in replay(store).items()]
+        before = copy.deepcopy(store)
+        original_append = contract.append_event
+        def change_source(candidate, event):
+            original_append(candidate, event)
+            (self.root / event["sources"][0]["path"]).write_bytes(b"changed during expiry batch")
+        with patch.object(contract, "append_event", side_effect=change_source):
+            with self.assertRaisesRegex(ValueError, "research_source_changed"):
+                contract.transition_batch(store, changes, root=self.root, current=NOW+timedelta(days=10))
+        self.assertEqual(store, before)
+
     def test_missing_data_is_blocked_not_rejected_and_no_network(self):
         intake(self.root, current=NOW)
         with patch("urllib.request.OpenerDirector.open", side_effect=AssertionError("network forbidden")):

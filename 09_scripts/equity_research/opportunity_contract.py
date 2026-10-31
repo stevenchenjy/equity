@@ -190,6 +190,35 @@ def transition(store: dict, identity: str, target: str, *, owner: str, reason: s
     replay(store)
 
 
+def transition_batch(store: dict, changes: list[dict], *, root: Path, current: datetime) -> None:
+    """Append exact transitions with full validation at both batch boundaries.
+
+    Keep the caller's journal unchanged until every event and retained source
+    validates. Only the candidate event list is extended; existing event bytes
+    and the ordinary single-transition contract remain unchanged.
+    """
+    require(isinstance(root, Path), "research_transition_batch_source_root_missing")
+    items = replay(store, root=root, current=current)
+    require(isinstance(changes, list), "research_transition_batch_invalid")
+    candidate = {**store, "events": list(store["events"])}
+    for change in changes:
+        require(isinstance(change, dict) and set(change) == {
+            "identity", "target", "owner", "reason", "sources", "blockers"}, "research_transition_batch_invalid")
+        identity, target = change["identity"], change["target"]
+        require(identity in items and target in TRANSITIONS, "research_transition_invalid")
+        owner, allowed = TRANSITIONS[target]
+        item = items[identity]
+        require(change["owner"] == owner and item["state"] in allowed,
+                "research_transition_owner_or_state_invalid")
+        append_event(candidate, {"kind": "transition", "opportunity_id": identity,
+            "from_state": item["state"], "to_state": target, "owner": change["owner"],
+            "reason_code": change["reason"], "sources": change["sources"], "blockers": change["blockers"],
+            "recorded_at": current.isoformat()})
+        item["state"] = target
+    replay(candidate, root=root, current=current)
+    store["events"].extend(candidate["events"][len(store["events"]):])
+
+
 def publish_store(root: Path, store: dict, *, previous: dict, current: datetime) -> None:
     require(store["events"][:len(previous["events"])] == previous["events"], "research_history_rewrite_forbidden")
     replay(store, root=root, current=current)

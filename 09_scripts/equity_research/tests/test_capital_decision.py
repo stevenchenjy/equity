@@ -138,6 +138,34 @@ class CapitalDecisionTests(unittest.TestCase):
         self.d['held_positions']=[dict(ticker='TEST',current_shares=1,current_price=101,asset_role='active_stock')]
         self.d['plan_continuity']={'plans':[dict(ticker='TEST',status='maintained',role='fundamental',action='hold',blockers=[])]}
         r=self.build()['decisions'][0];self.assertEqual(r['shares'],0);self.assertIn('position_purpose_change_requires_recorded_reassessment',r['blockers'])
+    def test_current_held_review_separates_entry_gates_without_clearing_real_failures(self):
+        self.d['eligible_new_position_review_candidates']=[]
+        self.d['held_positions']=[dict(ticker='TEST',current_shares=2,current_price=101,asset_role='active_stock')]
+        plan=dict(ticker='TEST',status='maintained',action='hold',thesis_id='current-review',instruction='Hold existing2; add0.',blockers=[])
+        self.d['plan_continuity']={'plans':[plan]}
+        view=dict(review_id='current-review',status='reviewed',business_case_status='mixed',valuation_readiness='unresolved',validation_errors=[],reopen_reasons=[],news_review=dict(status='current',coverage_complete=True))
+        self.d['long_horizon_research']['views']={'TEST':view}
+        self.d['workflow_integrity']['ticker_blockers']={'TEST':['reviewed_business_case_not_supported','maintained_company_research_incomplete']}
+        row=self.build()['decisions'][0]
+        self.assertEqual(row['decision'],'HOLD');self.assertIsNone(row['order_draft'])
+        plan.update(action='trim_review',review_at='2026-09-23T10:30:00-04:00',historical_order_draft=dict(side='sell',type='LIMIT',quantity=1,limit_price=102,time_in_force='DAY',session_date='2026-09-23'))
+        row=self.build()['decisions'][0]
+        self.assertEqual(row['shares'],1);self.assertEqual(row['order_draft']['side'],'sell')
+        for genuine in ('latest_earnings_pending_incorporation','issuer_news_coverage_incomplete','remaining_quantity_changed'):
+            self.d['workflow_integrity']['ticker_blockers']['TEST'].append(genuine)
+            self.assertIsNone(self.build()['decisions'][0]['order_draft'])
+            self.d['workflow_integrity']['ticker_blockers']['TEST'].pop()
+        view['reopen_reasons']=['new_filing'];self.assertIsNone(self.build()['decisions'][0]['order_draft']);view['reopen_reasons']=[]
+        view['status']='unresolved';self.assertIsNone(self.build()['decisions'][0]['order_draft']);view['status']='reviewed'
+        view['business_case_status']='unresolved';self.assertIsNone(self.build()['decisions'][0]['order_draft']);view['business_case_status']='mixed'
+        view['news_review']['coverage_complete']=False;self.assertIsNone(self.build()['decisions'][0]['order_draft']);view['news_review']['coverage_complete']=True
+        plan['thesis_id']='old-review';self.assertIsNone(self.build()['decisions'][0]['order_draft']);plan['thesis_id']='current-review'
+        # The same current-purpose review cannot clear a purchase gate.
+        plan.update(action='hold',role='long_term_growth');plan.pop('historical_order_draft')
+        self.d['eligible_action_review_candidates']=['TEST']
+        row=self.build()['decisions'][0]
+        self.assertNotIn(row['decision'],{'ACTIONABLE_BUY','ACTIONABLE_ADD'})
+        self.assertFalse(row['order_draft'] and row['order_draft']['side']=='buy')
     def test_current_dated_exit_has_complete_sell_draft_without_assumed_proceeds_funding_buys(self):
         self.d['eligible_new_position_review_candidates']=[];self.d['watch_candidates']=[]
         self.d['held_positions']=[dict(ticker='TEST',current_shares=2,current_price=101,asset_role='active_stock')]
