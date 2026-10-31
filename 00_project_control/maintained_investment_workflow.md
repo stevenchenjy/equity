@@ -158,6 +158,24 @@ review timestamp cannot backdate newly written reasoning.
 
 ## Private records and operator updates
 
+### Retaining an older official filing for a current review
+
+The ordinary SEC artifact collector keeps its current selection and may also
+retain an exact historical filing needed by an authored review. Use
+`refresh_sec_filing_artifacts.py --refresh --include-source-id SOURCE_ID`
+through the existing identified public-collection launcher. The source must
+already exist in the official evidence ledger and match the immutable SEC
+acceptance index or an admitted acceptance extension. This option cannot admit
+an arbitrary URL or a different issuer, accession or filing date.
+
+Up to eight explicit review-source requests are retained in the artifact
+index. Later ordinary refreshes and checks revalidate and include them without
+removing current filings or broadening the recency window. The normal fetch,
+raw/normalized hashes and artifact validation still apply. Missing acceptance
+proof, conflicting identities or altered request metadata fail closed; a
+retained request alone is not a verified artifact or completed review. Do not
+backdate collection or change a filing's source class to bypass provenance.
+
 Private records are ignored by Git and must not enter source-control commits:
 
 | Record | Purpose | Update path |
