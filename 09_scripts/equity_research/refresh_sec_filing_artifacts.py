@@ -69,6 +69,7 @@ MAX_EXHIBITS_PER_FILING = 2
 # New exhibit requests per refresh. Verified retained sources do not consume
 # this network budget or disappear from the next index.
 MAX_EXHIBITS_PER_REFRESH = 8
+MAX_REVIEW_SOURCE_REQUESTS = 8
 SAFE_PATH_TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 ACCESSION_PATTERN = re.compile(r"\d{10}-\d{2}-\d{6}")
 CIK_PATTERN = re.compile(r"\d{1,10}")
@@ -552,6 +553,90 @@ def select_filing_rows(
     )
 
 
+def selected_rows_with_review_requests(
+    rows: list[dict[str, str]], prior: dict[str, Any], *, project_root: Path,
+    as_of: date | None, material_lookback_days: int,
+    include_source_ids: Iterable[str] = (),
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    """Retain explicitly requested historical research without changing recency.
+
+    Each identity must already be in the official ledger and independently
+    accepted for that issuer. Requests persist in the collector's index, are
+    revalidated on every refresh/check, and never remove normal current rows.
+    They grant source availability only, not an investment conclusion.
+    """
+    selected = select_filing_rows(rows, as_of=as_of, material_lookback_days=material_lookback_days)
+    incoming = list(include_source_ids)
+    retained = prior.get("explicit_review_sources", [])
+    if (not isinstance(retained, list) or any(not isinstance(value, str) for value in incoming)
+            or len(incoming) != len(set(incoming))):
+        raise ArtifactError("SEC review-source request is invalid")
+    if retained and prior.get("explicit_review_source_policy") != "validated_ledger_and_acceptance_identity_v1":
+        raise ArtifactError("SEC retained review-source policy is invalid")
+    fields = {"source_id", "ticker", "cik", "accession", "filing_date", "url", "requested_at"}
+    previous = {}
+    for request in retained:
+        if (not isinstance(request, dict) or set(request) != fields
+                or not isinstance(request.get("source_id"), str) or request["source_id"] in previous):
+            raise ArtifactError("SEC retained review-source request is invalid")
+        try:
+            requested_at = datetime.fromisoformat(request["requested_at"])
+            if requested_at.tzinfo is None or requested_at > datetime.now(timezone.utc):
+                raise ValueError()
+        except (ValueError, TypeError):
+            raise ArtifactError("SEC retained review-source clock is invalid") from None
+        previous[request["source_id"]] = request
+    wanted = set(incoming) | set(previous)
+    if len(wanted) > MAX_REVIEW_SOURCE_REQUESTS:
+        raise ArtifactError("SEC review-source request bound exceeded")
+    if not wanted:
+        return selected, []
+    normalized = {}
+    for raw in rows:
+        row = normalize_ledger_row(raw)
+        if as_of is None or date.fromisoformat(row["filing_date"]) <= as_of:
+            existing = normalized.get(row["source_id"])
+            if existing and any(existing[key] != row[key] for key in fields - {"requested_at"}):
+                raise ArtifactError("SEC review source has conflicting ledger identities")
+            if existing is None or row["detected_at"] > existing["detected_at"]:
+                normalized[row["source_id"]] = row
+    if wanted - normalized.keys():
+        raise ArtifactError("SEC review source is unavailable in the current official ledger")
+    try:
+        from sec_acceptance import load_immutable_acceptance_index
+        from sec_acceptance_extensions import load_extension_artifacts, validate_extension_admission_audit
+        base = project_root / "03_source_data/equity_research"
+        acceptance_path = base / "sec_submission_acceptance_index.json"
+        accepted = load_immutable_acceptance_index(acceptance_path)
+        extensions = load_extension_artifacts(historical_index_sha256=sha256_bytes(acceptance_path.read_bytes()),
+            directory=base / "sec_acceptance_extensions")
+        if validate_extension_admission_audit(extensions,
+                path=base / "sec_acceptance_extension_admission_audit.csv", directory=base / "sec_acceptance_extensions"):
+            raise ValueError("unadmitted acceptance extension")
+        identities = {row["accession_number"]: row for row in
+            [*accepted["records"], *(record for extension in extensions for record in extension["records"]) ]}
+    except (OSError, ValueError, KeyError, TypeError):
+        raise ArtifactError("SEC review source acceptance proof is unavailable or invalid") from None
+    requests = []
+    combined = {row["source_id"]: row for row in selected}
+    for identity in sorted(wanted):
+        row = normalized[identity]
+        official = identities.get(row["accession"], {})
+        if (official.get("ticker") != row["ticker"] or str(official.get("cik")) != row["cik"]
+                or official.get("filing_date") != row["filing_date"]):
+            raise ArtifactError("SEC review source differs from accepted issuer identity")
+        request = {key: row[key] for key in fields - {"requested_at"}}
+        if identity in previous:
+            if any(previous[identity][key] != value for key, value in request.items()):
+                raise ArtifactError("SEC retained review-source identity changed")
+            request["requested_at"] = previous[identity]["requested_at"]
+        else:
+            request["requested_at"] = utc_now()
+        requests.append(request)
+        combined[identity] = row
+    return sorted(combined.values(), key=lambda row: (row["ticker"], row["filing_date"], row["accession"], row["url"])), requests
+
+
 def artifact_paths(
     artifact_root: Path, row: dict[str, str]
 ) -> tuple[Path, Path, Path]:
@@ -866,15 +951,14 @@ def refresh_artifacts(
     sleeper: Callable[[float], None] = time.sleep,
     as_of: date | None = None,
     material_lookback_days: int = 7,
+    include_source_ids: Iterable[str] = (),
 ) -> dict[str, Any]:
     if request_interval_seconds < 0:
         raise ArtifactError("SEC request interval is invalid")
-    selected = select_filing_rows(
-        read_evidence_ledger(ledger_path),
-        as_of=as_of,
-        material_lookback_days=material_lookback_days,
-    )
     prior = load_index(index_path)
+    selected, review_requests = selected_rows_with_review_requests(
+        read_evidence_ledger(ledger_path), prior, project_root=project_root, as_of=as_of,
+        material_lookback_days=material_lookback_days, include_source_ids=include_source_ids)
     prior_by_id = {
         str(entry.get("source_id")): entry
         for entry in prior.get("artifacts", [])
@@ -989,6 +1073,9 @@ def refresh_artifacts(
     payload['exhibit_new_fetch_budget_charges'] = queued_exhibits
     payload['exhibit_request_attempt_count'] = exhibit_requests_started
     payload['exhibit_deferred_after_cache_change'] = deferred_after_cache_change
+    if review_requests:
+        payload["explicit_review_source_policy"] = "validated_ledger_and_acceptance_identity_v1"
+        payload["explicit_review_sources"] = review_requests
     atomic_write_json(index_path, payload)
     return payload
 
@@ -1001,13 +1088,12 @@ def check_artifacts(
     project_root: Path = ROOT,
     as_of: date | None = None,
     material_lookback_days: int = 7,
+    include_source_ids: Iterable[str] = (),
 ) -> dict[str, int]:
-    selected = select_filing_rows(
-        read_evidence_ledger(ledger_path),
-        as_of=as_of,
-        material_lookback_days=material_lookback_days,
-    )
     prior = load_index(index_path)
+    selected, _ = selected_rows_with_review_requests(
+        read_evidence_ledger(ledger_path), prior, project_root=project_root, as_of=as_of,
+        material_lookback_days=material_lookback_days, include_source_ids=include_source_ids)
     prior_by_id = {
         str(entry.get("source_id")): entry
         for entry in prior.get("artifacts", [])
@@ -1052,6 +1138,8 @@ def main() -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--refresh", action="store_true")
+    parser.add_argument("--include-source-id", action="append", default=[],
+        help="Retain an exact existing official ledger/acceptance identity for explicit research; repeat up to the bounded limit")
     parser.add_argument(
         "--user-agent",
         default=os.environ.get(
@@ -1070,6 +1158,7 @@ def main() -> int:
             summary = check_artifacts(
                 as_of=current_cycle,
                 material_lookback_days=material_lookback_days,
+                include_source_ids=args.include_source_id,
             )
             print(
                 "sec_artifact_check=passed "
@@ -1084,6 +1173,7 @@ def main() -> int:
             user_agent=args.user_agent,
             as_of=current_cycle,
             material_lookback_days=material_lookback_days,
+            include_source_ids=args.include_source_id,
         )
         print(
             "sec_artifact_refresh=passed "

@@ -428,6 +428,78 @@ class SelectionAndValidationTests(unittest.TestCase):
             artifacts.normalize_ledger_row(unsafe_ticker)
 
 
+class ExplicitReviewSourceTests(unittest.TestCase):
+    def rows(self):
+        old=ledger_row(form='424B3',filing_date='2026-09-18',accession='0001234567-26-000018',
+            document='historical-counterevidence.htm',material_event='yes')
+        current=ledger_row(filing_date='2026-10-27',accession='0001234567-26-000027',document='current.htm')
+        return old,current
+
+    def acceptance(self, root, rows, *, ticker=None):
+        from sec_acceptance import make_acceptance_record,build_acceptance_index
+        records=[make_acceptance_record(accession_number=row['accession_number'],ticker=ticker or row['ticker'],
+            cik=row['cik'],filing_date=row['filing_date'],accepted_at=row['filing_date']+'T20:00:00+00:00',
+            source_url='https://data.sec.gov/submissions/CIK'+row['cik'].zfill(10)+'.json') for row in rows]
+        target=root/'03_source_data/equity_research/sec_submission_acceptance_index.json'
+        target.parent.mkdir(parents=True,exist_ok=True)
+        target.write_text(json.dumps(build_acceptance_index(new_records=records,generated_at='2026-10-28T00:00:00+00:00')))
+
+    def test_explicit_historical_source_persists_without_evicting_current_or_refetching(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);old,current=self.rows();ledger=root/'ledger.csv';write_ledger(ledger,[old,current]);self.acceptance(root,[old,current])
+            args=dict(ledger_path=ledger,artifact_root=root/'filings',index_path=root/'index.json',project_root=root,
+                user_agent='Test research contact@example.com',as_of=date(2026,10,30))
+            calls=[]
+            def fetch(url,*_):calls.append(url);return artifacts.FetchResult(b'<html><p>Verified official document.</p></html>','text/html','utf-8')
+            first=artifacts.refresh_artifacts(**args,fetcher=fetch)
+            self.assertEqual([row['accession'] for row in first['artifacts']],[current['accession_number']])
+            identity=artifacts.normalize_ledger_row(old)['source_id']
+            second=artifacts.refresh_artifacts(**args,fetcher=fetch,include_source_ids=[identity])
+            self.assertEqual({row['accession'] for row in second['artifacts']},{old['accession_number'],current['accession_number']})
+            self.assertEqual(second['network_fetch_count'],1)
+            self.assertEqual(second['explicit_review_sources'][0]['source_id'],identity)
+            requested_at=second['explicit_review_sources'][0]['requested_at']
+            def forbidden(*_):raise AssertionError('verified retained source must not refetch')
+            third=artifacts.refresh_artifacts(**args,fetcher=forbidden)
+            self.assertEqual(third['explicit_review_sources'][0]['requested_at'],requested_at)
+            self.assertEqual({row['source_id'] for row in third['artifacts']},{row['source_id'] for row in second['artifacts']})
+            self.assertEqual(third['network_fetch_count'],0)
+            checked=artifacts.check_artifacts(**{k:v for k,v in args.items() if k!='user_agent'})
+            self.assertEqual(checked['complete_cache'],2)
+            self.assertEqual(len(calls),2)
+
+    def test_invalid_unavailable_or_mismatched_requests_fail_before_network_or_index_write(self):
+        for failure in ['unknown','duplicate','wrong_issuer','acceptance_missing','acceptance_tamper','future_source','retained_identity','retained_clock','conflicting_ledger']:
+            with self.subTest(failure=failure),tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);old,current=self.rows();ledger=root/'ledger.csv';rows=[old,current]
+                self.acceptance(root,rows,ticker='OTHER' if failure=='wrong_issuer' else None)
+                identity=artifacts.normalize_ledger_row(old)['source_id']
+                incoming=[identity];prior={}
+                if failure=='unknown':incoming=['sec-1234567-0001234567-26-999999-'+'a'*16]
+                if failure=='duplicate':incoming=[identity,identity]
+                if failure=='acceptance_missing':(root/'03_source_data/equity_research/sec_submission_acceptance_index.json').unlink()
+                if failure=='acceptance_tamper':
+                    proof=root/'03_source_data/equity_research/sec_submission_acceptance_index.json'
+                    value=json.loads(proof.read_text());value['records'][0]['ticker']='OTHER';proof.write_text(json.dumps(value))
+                if failure=='future_source':rows=[{**old,'filing_date':'2026-11-01'},current]
+                if failure=='conflicting_ledger':rows.append({**old,'ticker':'OTHER'})
+                if failure.startswith('retained_'):
+                    n=artifacts.normalize_ledger_row(old)
+                    request={key:n[key] for key in ['source_id','ticker','cik','accession','filing_date','url']}
+                    request['requested_at']='2026-09-19T00:00:00+00:00'
+                    request['ticker']='OTHER' if failure=='retained_identity' else request['ticker']
+                    if failure=='retained_clock':request['requested_at']='2099-01-01T00:00:00+00:00'
+                    prior={'explicit_review_source_policy':'validated_ledger_and_acceptance_identity_v1','explicit_review_sources':[request]}
+                write_ledger(ledger,rows);index=root/'index.json'
+                if prior:index.write_text(json.dumps({'schema_version':artifacts.INDEX_SCHEMA_VERSION,'artifacts':[],**prior}))
+                before=index.read_bytes() if index.exists() else None
+                def forbidden(*_):raise AssertionError('invalid source must not make a network request')
+                with self.assertRaises(artifacts.ArtifactError):
+                    artifacts.refresh_artifacts(ledger_path=ledger,artifact_root=root/'filings',index_path=index,project_root=root,
+                        user_agent='Test research contact@example.com',as_of=date(2026,10,30),include_source_ids=incoming,fetcher=forbidden)
+                self.assertEqual(index.read_bytes() if index.exists() else None,before)
+
+
 class CacheTests(unittest.TestCase):
     def test_network_cache_misses_are_paced_below_sec_ceiling(self) -> None:
         with tempfile.TemporaryDirectory() as directory_name:
