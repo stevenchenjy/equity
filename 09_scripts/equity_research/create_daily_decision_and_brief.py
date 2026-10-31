@@ -11,6 +11,7 @@ from __future__ import annotations
 from equity_naming import report_heading
 
 import argparse
+import csv
 from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -55,7 +56,7 @@ from daily_common import (
     log_daily_run,
     weekly_summary_due_for_published_session,
 )
-from account_common import is_core_allocation_ticker, load_account_state
+from account_common import POSITION_REQUIRED_FIELDS, is_core_allocation_ticker, load_account_state
 from active_config import load_active_config
 from execution_common import applied_reconciliation_matches_current_state
 from email_brief import EMAIL_BRIEF_VERSION, build_discovery_view, render_email
@@ -278,13 +279,105 @@ def material_events_for_cycle(
     return events
 
 
+def portfolio_cash_current() -> bool:
+    account = read_json(ACCOUNT_STATE_PATH, {})
+    summaries = read_csv(PORTFOLIO_SUMMARY_PATH)
+    if len(summaries) != 1:
+        return False
+    try:
+        for key in ("cash_available", "cash_reserved"):
+            actual = Decimal(str(account.get(key)))
+            calculated = Decimal(str(summaries[0].get(key)))
+            if not actual.is_finite() or not calculated.is_finite() or actual < 0 or actual != calculated:
+                return False
+    except (InvalidOperation, TypeError, ValueError):
+        return False
+    return True
+
+
 def normalized_held_rows() -> list[dict[str, Any]]:
+    # Account intake can succeed while a later price/portfolio stage fails.
+    # Derived action files must never shrink or change the observed inventory.
+    position_path = ROOT / "05_risk_and_positions/current_positions.local.csv"
+    if position_path.is_symlink() or not position_path.is_file():
+        raise ValueError("current_position_inventory_missing_or_invalid")
+    with position_path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        if not POSITION_REQUIRED_FIELDS <= set(reader.fieldnames or []):
+            raise ValueError("current_position_inventory_missing_or_invalid")
+        positions = list(reader)
+    inventory: dict[str, tuple[dict[str, Any], Decimal]] = {}
+    for position in positions:
+        ticker = position.get("ticker", "").strip().upper()
+        try:
+            shares = Decimal(str(position.get("shares_optional", "")))
+            if not ticker or ticker in inventory or not shares.is_finite() or shares <= 0:
+                raise ValueError("current_position_inventory_invalid")
+        except (InvalidOperation, TypeError) as exc:
+            raise ValueError("current_position_inventory_invalid") from exc
+        inventory[ticker] = (position, shares)
+    exact = read_csv(EXACT_ACTION_PATH)
+    derived: dict[str, Decimal] = {}
+    coherent = True
+    for row in exact:
+        ticker = row.get("ticker", "").strip().upper()
+        try:
+            shares = Decimal(str(row.get("current_shares", "")))
+            if not ticker or ticker in derived or not shares.is_finite() or shares <= 0:
+                raise ValueError("derived_position_inventory_invalid")
+            derived[ticker] = shares
+        except (InvalidOperation, TypeError, ValueError):
+            coherent = False
+    coherent = coherent and derived == {ticker: shares for ticker, (_, shares) in inventory.items()}
+    # A cash-only intake also invalidates old weights and action sizing.
+    coherent = coherent and portfolio_cash_current()
+    if not coherent:
+        # These are inventory disclosures, not renewed holding instructions.
+        # Canonical marks may be shown individually; an incomplete portfolio
+        # has no verified NAV, weights or capital draft. Never use UI marks here.
+        quotes: dict[str, list[dict[str, str]]] = {}
+        for quote in read_csv(MARKET_SNAPSHOT_PATH):
+            quotes.setdefault(quote.get("ticker", "").strip().upper(), []).append(quote)
+        current = now_et()
+        expected = latest_published_market_session(current).isoformat()
+        rows = []
+        for ticker, (position, shares) in inventory.items():
+            matches = quotes.get(ticker, [])
+            price = ""
+            if len(matches) == 1:
+                quote = matches[0]
+                try:
+                    mark = Decimal(str(quote.get("last_price", "")))
+                    observed = datetime.fromisoformat(quote.get("data_timestamp", ""))
+                    if (mark.is_finite() and mark > 0 and observed.tzinfo is not None and observed <= current
+                            and quote.get("data_quality_label") == "ok"
+                            and quote.get("market_session_date") == expected
+                            and quote.get("data_source")):
+                        price = quote["last_price"]
+                except (InvalidOperation, TypeError, ValueError):
+                    pass
+            rows.append({
+                "ticker": ticker,
+                "asset_role": "core_allocation" if is_core_allocation_ticker(ticker) else "active_stock",
+                "action": "hold_pending_research", "current_shares": str(shares),
+                "current_price": price, "current_weight_pct": "", "target_shares": str(shares),
+                "whole_shares_to_change": "0", "confidence": "unverified",
+                "reason": "Current account inventory is recorded; portfolio outputs do not match it. Complete price coverage and recomposition are required before a current holding instruction or capital draft.",
+                "invalidation": "Current source-bound risk and purpose review required; no expired instruction is renewed.",
+                "holding_horizon": position.get("horizon_class", ""),
+                **{key: "" for key in ("valuation_bear_price", "valuation_base_price", "valuation_bull_price",
+                    "expected_upside_pct", "reward_to_risk_estimate", "strongest_positive_evidence",
+                    "strongest_negative_evidence", "valuation_source", "valuation_method", "valuation_horizon")},
+                "company_valuation_admission": "{}", "human_confirmation_required": "no",
+                "automatic_action_allowed": "no", "derived_position_status": "portfolio_outputs_mismatch",
+            })
+        return rows
     rows: list[dict[str, Any]] = []
     recommendations = {
         row.get("ticker", "").strip().upper(): row
         for row in read_csv(POSITION_RECOMMENDATION_PATH)
     }
-    for row in read_csv(EXACT_ACTION_PATH):
+    for row in exact:
         action = row.get("recommended_action", "").strip().lower() or "hold"
         recommendation = recommendations.get(row.get("ticker", "").strip().upper(), {})
         rows.append(
@@ -316,6 +409,7 @@ def normalized_held_rows() -> list[dict[str, Any]]:
                     "yes" if is_action_transition(action) else "no"
                 ),
                 "automatic_action_allowed": "no",
+                "derived_position_status": "current",
             }
         )
     return rows
@@ -591,11 +685,28 @@ def action_review_display(row: dict[str, Any]) -> str:
     )
 
 
+def report_number(value: Any, *, prefix: str = "", suffix: str = "") -> str:
+    """Unknown valuations remain unknown in the retained Markdown report."""
+    try:
+        number = Decimal(str(value))
+        if number.is_finite():
+            return f"{prefix}{number}{suffix}"
+    except (InvalidOperation, ValueError, TypeError):
+        pass
+    return "unavailable"
+
+
+def current_post_action(rows: list[dict[str, Any]], *, held_outputs_current: bool) -> dict[str, Any]:
+    if not held_outputs_current:
+        return {"retained_cash_reason": "Prior derived cash scenarios are unavailable because portfolio outputs do not match the current recorded inventory."}
+    return next((row for row in rows if row.get("scenario") == "after_position_and_core_reviews"), {})
+
+
 def held_position_summary(row: dict[str, Any]) -> str:
     review_detail = action_review_display(row)
     return (
         f"{plain_action(row['action'])}; "
-        f"现价 ${row['current_price'] or 'n/a'}，{row['current_shares']} 股，约占 {row['current_weight_pct']}%；"
+        f"现价 {report_number(row['current_price'], prefix='$')}，{row['current_shares']} 股，约占 {report_number(row['current_weight_pct'], suffix='%')}；"
         f"估值区间 ${row['valuation_bear_price'] or 'n/a'}/${row['valuation_base_price'] or 'n/a'}/${row['valuation_bull_price'] or 'n/a'}；"
         f"{review_detail + '；' if review_detail else ''}"
         f"期限 {row['holding_horizon'] or 'n/a'}；反证：{row['invalidation'] or 'n/a'}；"
@@ -706,6 +817,8 @@ def main() -> int:
     if not held_rows and read_csv(ROOT / "05_risk_and_positions/current_positions.local.csv"):
         raise RuntimeError("C9 exact action plan contains no held positions")
     held_tickers = [row["ticker"] for row in held_rows]
+    held_outputs_current = (all(row.get("derived_position_status") == "current" for row in held_rows)
+        and (bool(held_rows) or (not read_csv(EXACT_ACTION_PATH) and portfolio_cash_current())))
     held_company_tickers = [
         ticker for ticker in held_tickers
         if not is_core_allocation_ticker(ticker)
@@ -722,6 +835,9 @@ def main() -> int:
     official_news = official_news_context(current, held_company_tickers)
     account = read_json(ACCOUNT_STATE_PATH)
     market_gate = load_market_gate(current, held_tickers)
+    if not held_outputs_current:
+        market_gate["failures"].append("current_holdings_portfolio_outputs_not_recomposed")
+        market_gate.update(passed=False, complete_close_verified=False, bar_state="intraday_or_unverified")
     long_horizon_context = held_research_context(
         read_json(LONG_HORIZON_PATH, {}), held_rows, market_gate["expected_market_session"],
     )
@@ -993,17 +1109,15 @@ def main() -> int:
     next_review_date = (current.date() + timedelta(days=days_to_friday)).isoformat()
 
     portfolio_summaries = read_csv(PORTFOLIO_SUMMARY_PATH)
-    if len(portfolio_summaries) != 1:
+    if len(portfolio_summaries) != 1 and held_outputs_current:
         raise RuntimeError("dynamic portfolio summary must contain one row")
-    portfolio_summary = portfolio_summaries[0]
+    portfolio_summary = portfolio_summaries[0] if len(portfolio_summaries) == 1 else {}
+    if not held_outputs_current:
+        portfolio_summary = {key: None for key in ("account_total_value", "current_holdings_value",
+            "current_cash_pct", "current_core_weight_pct")}
+        portfolio_summary.update(cash_available=account.get("cash_available"), cash_reserved=account.get("cash_reserved"))
     post_action_rows = read_csv(POST_ACTION_PORTFOLIO_PATH)
-    post_action = next(
-        (
-            row for row in post_action_rows
-            if row.get("scenario") == "after_position_and_core_reviews"
-        ),
-        {},
-    )
+    post_action = current_post_action(post_action_rows, held_outputs_current=held_outputs_current)
     proposed_deployment = sum(
         float(row.get("current_price", 0) or 0)
         * float(row.get("suggested_whole_shares", 0) or 0)
@@ -1021,6 +1135,9 @@ def main() -> int:
         "decision_fingerprint": decision_fingerprint,
         "decision_changed": decision_changed,
         "held_positions": held_rows,
+        "holdings_coverage": {"source": "05_risk_and_positions/current_positions.local.csv",
+            "status": "current" if held_outputs_current else "portfolio_recomposition_required",
+            "tickers": held_tickers},
         "long_horizon_research": long_horizon_context,
         "held_research_warnings": long_horizon_context["warnings"],
         "research_review_required": bool(long_horizon_context["warnings"]) or any(
@@ -1087,12 +1204,14 @@ def main() -> int:
             "account_total_value": portfolio_summary.get("account_total_value"),
             "reported_account_total_reference": account.get("account_total_value"),
             "invested_capital": portfolio_summary.get("current_holdings_value"),
-            "invested_pct": f"{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}",
-            "cash_available": portfolio_summary.get("cash_available"),
+            "invested_pct": (f"{100.0 - float(portfolio_summary['current_cash_pct']):.4f}"
+                if portfolio_summary.get("current_cash_pct") not in (None, "") else None),
+            "cash_available": account.get("cash_available"),
             "cash_pct": portfolio_summary.get("current_cash_pct"),
-            "cash_reserved": portfolio_summary.get("cash_reserved"),
+            "cash_reserved": account.get("cash_reserved"),
             "investment_horizon_years": account.get("investment_horizon_years"),
-            "valuation_basis": "manual cash plus current shares at canonical public close; reported total is reconciliation reference",
+            "valuation_basis": ("manual cash plus current shares at canonical public close; reported total is reconciliation reference"
+                if held_outputs_current else "Current cash and shares recorded; canonical portfolio valuation and weights unverified pending recomposition. Reported total remains a separate reference."),
             "last_updated": account.get("last_updated"),
             "cash_basis": account.get("cash_basis", "owner_recorded"),
             "planning_capital_min": account.get("planning_capital_min"),
@@ -1305,11 +1424,11 @@ def main() -> int:
 
 ## 账户与新资本
 
-- 动态账户总值：${portfolio_summary.get('account_total_value', 'n/a')}。
-- 已投资：${portfolio_summary.get('current_holdings_value', 'n/a')}（{100.0 - float(portfolio_summary.get('current_cash_pct', 0) or 0):.4f}%）。
-- 现金：${portfolio_summary.get('cash_available', 'n/a')}（{portfolio_summary.get('current_cash_pct', 'n/a')}%）；其中战略储备 ${portfolio_summary.get('cash_reserved', 'n/a')}。
+- 动态账户总值：{report_number(portfolio_summary.get('account_total_value'), prefix='$')}。
+- 已投资：{report_number(portfolio_summary.get('current_holdings_value'), prefix='$')}（{report_number(decision['account']['invested_pct'], suffix='%')}）。
+- 现金：{report_number(portfolio_summary.get('cash_available'), prefix='$')}（{report_number(portfolio_summary.get('current_cash_pct'), suffix='%')}）；其中战略储备 {report_number(portfolio_summary.get('cash_reserved'), prefix='$')}。
 - 当前证据支持的新增复核金额：${proposed_deployment:.2f}；任何真实操作仍需人工决定。
-- 底层 C9 诊断情景的假设现金（不是当前计划或已成交结果）：${post_action.get('resulting_cash', 'n/a')}（{post_action.get('cash_weight_pct', 'n/a')}%）。
+- 底层 C9 诊断情景的假设现金（不是当前计划或已成交结果）：{report_number(post_action.get('resulting_cash'), prefix='$')}（{report_number(post_action.get('cash_weight_pct'), suffix='%')}）。
 - 底层现金情景说明（不覆盖当前计划）：{post_action.get('retained_cash_reason', 'n/a')}
 
 {report_section(decision)}

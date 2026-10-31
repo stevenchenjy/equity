@@ -121,7 +121,12 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                 global_codes.append('current_account_snapshot_stale')
         except (KeyError,TypeError,ValueError):global_codes.append('current_account_snapshot_time_unverified')
     except (KeyError,ValueError,TypeError,InvalidOperation):
-        total,cash,reserve=Decimal(0),Decimal(0),Decimal(0);global_codes.append('shared_account_values_unverified')
+        total=Decimal(0)
+        try:
+            cash,reserve=(num(account[k]) for k in ('cash_available','cash_reserved'))
+            if not 0<=reserve<=cash:raise ValueError('invalid_cash_arithmetic')
+        except (KeyError,ValueError,TypeError,InvalidOperation):cash,reserve=Decimal(0),Decimal(0)
+        global_codes.append('shared_account_values_unverified')
     global_codes=sorted(set(global_codes))
     cash_remaining=max(Decimal(0),cash-reserve-num(order_review['cash_reservation_usd']))
     tactical={r['ticker']:r for r in decision.get('tactical_review',{}).get('drafts',[])}
@@ -130,8 +135,16 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     except (ValueError,InvalidOperation):risk_remaining=Decimal(0)
     from active_config import validate_core_allocation_tickers
     approved_core = set(validate_core_allocation_tickers(config['account']))
-    active_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if not (r.get('asset_role')=='core_allocation' and r.get('ticker') in approved_core))
-    core_value=sum(num(r.get('current_price',0))*num(r.get('current_shares',0)) for r in held.values() if r.get('asset_role')=='core_allocation' and r.get('ticker') in approved_core)
+    try:
+        values={ticker:num(r['current_price'])*num(r['current_shares']) for ticker,r in held.items()}
+        if any(num(r['current_price'])<=0 or num(r['current_shares'])<=0 for r in held.values()):
+            raise ValueError('held_position_amount_invalid')
+        core_value=sum((value for ticker,value in values.items() if held[ticker].get('asset_role')=='core_allocation' and ticker in approved_core),Decimal(0))
+        active_value=sum(values.values(),Decimal(0))-core_value
+    except (KeyError,ValueError,TypeError,InvalidOperation):
+        active_value=core_value=Decimal(0)
+        global_codes.append('held_position_prices_unverified')
+    global_codes=sorted(set(global_codes))
     cfg=config['account']; rows=[]; dependencies=[]
     for code in global_codes: dependencies.append(classify(code,scope='global'))
     eligible=set(decision.get('eligible_new_position_review_candidates',[]))|set(decision.get('eligible_action_review_candidates',[]))

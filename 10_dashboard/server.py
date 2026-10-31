@@ -326,6 +326,11 @@ def read_snapshot(root: Path, now: datetime | None = None) -> dict:
     generated = stamp(d.get("generated_at"))
     if generated is None or generated > now:
         raise SnapshotError("decision_timestamp_invalid")
+    if d.get('holdings_coverage', {}).get('status') == 'portfolio_recomposition_required':
+        # The bound account inventory is current, but its derived research is
+        # explicitly incomplete. Keep strict research admission and let the
+        # existing account-only view show the accepted cash/shares instead.
+        raise SnapshotError('current_holdings_recomposition_required')
     rows = {r["ticker"]: r for r in csv.DictReader(io.StringIO(raws[MARKET].decode()))}
     gate = d.get("market_gate", {})
     published_expected_session = gate.get("expected_market_session")
@@ -541,7 +546,7 @@ def current_snapshot(root, *, research_busy=False):
         result = read_snapshot(root)
         result['research_ready'] = True
     except SnapshotError as exc:
-        if str(exc) not in {'research_refresh_in_progress','research_inputs_changed','decision_cash_differs_from_account','decision_shares_differ_from_account','decision_price_snapshot_mismatch'}:
+        if str(exc) not in {'research_refresh_in_progress','research_inputs_changed','decision_cash_differs_from_account','decision_shares_differ_from_account','decision_price_snapshot_mismatch','current_holdings_recomposition_required'}:
             raise
         a = json.loads(safe_read(root,ACCOUNT))
         o = json.loads(safe_read(root,ORDERS))

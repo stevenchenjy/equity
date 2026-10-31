@@ -156,6 +156,15 @@ def cards(decision, view=None):
         immediate=[r['ticker'] for r in escalation['research_requests'] if r['urgency']=='immediate']
         lines.append('Immediate priority research: '+(', '.join(immediate) or 'No active escalation request; account/data checks or normal research remain.')+' Queued work is not completed analysis.')
         result.append(dict(title='CAPITAL DEPLOYMENT ESCALATION',group='background',kind='inactive',headline='',body='\n'.join(lines),sources=[]))
+    if decision.get('holdings_coverage', {}).get('status') == 'portfolio_recomposition_required':
+        inventory = []
+        for row in decision.get('held_positions', []):
+            reference = row.get('current_price')
+            mark = f"${Decimal(str(reference)):.2f}" if reference not in (None, '') else 'unavailable'
+            inventory.append(f"{row['ticker']}: {row['current_shares']} recorded shares; retained canonical mark {mark}; portfolio weight unverified.")
+        inventory.append('Current cash and shares are recorded. Canonical portfolio value and weights remain unverified until complete price coverage and recomposition pass; these marks are not order prices or live quotes.')
+        result.append(dict(title='Current holdings — valuation incomplete', group='background', kind='inactive',
+                           headline='', body='\n'.join(inventory), sources=[]))
     for row in c['decisions']:
         if row['decision'] in {'NO_ACTION','BLOCKED'} and row['ticker'] in {r['ticker'] for r in decision.get('held_positions',[])}:
             result.append(dict(title=f"{row['decision']} — {row['ticker']}",group='action',kind='inactive',headline='0 new shares; no renewed expired order',body='\n'.join(action_lines(row)),sources=[]))

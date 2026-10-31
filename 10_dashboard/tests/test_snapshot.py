@@ -14,6 +14,51 @@ from server import ACCOUNT, CORE_INPUTS, DECISION, MARKET, ORDERS, PLANS, POSITI
 
 
 class SnapshotTests(unittest.TestCase):
+    def test_incomplete_current_inventory_uses_account_view_with_missing_or_complete_marks(self):
+        from server import current_snapshot
+        inventory = [('ABC', 2), ('DEF', 3), ('GHI', 4), ('JKL', 5), ('MNO', 6)]
+        for complete_prices in (False, True):
+            with self.subTest(complete_prices=complete_prices):
+                self.put(POSITIONS, 'ticker,shares_optional\n' + ''.join(f'{t},{q}\n' for t, q in inventory))
+                marked = inventory if complete_prices else inventory[:2]
+                self.put(MARKET, 'ticker,last_price,market_session_date,data_quality_label\n'
+                    + ''.join(f'{t},100,2026-09-29,ok\n' for t, _ in marked))
+                self.decision['held_positions'] = [dict(ticker=t, current_shares=q,
+                    current_price='100' if (t, q) in marked else '', current_weight_pct='') for t, q in inventory]
+                self.decision['holdings_coverage'] = {'status': 'portfolio_recomposition_required'}
+                self.decision['account'].update(account_total_value=None, invested_capital=None)
+                self.decision['workflow_integrity']['input_hashes'] = {
+                    p: hashlib.sha256((self.root / p).read_bytes()).hexdigest() for p in CORE_INPUTS}
+                self.publish()
+                with self.assertRaisesRegex(SnapshotError, 'current_holdings_recomposition_required'):
+                    read_snapshot(self.root, self.now)
+                snapshot = current_snapshot(self.root)
+                self.assertFalse(snapshot['research_ready'])
+                self.assertIsNone(snapshot['capital_decision'])
+                self.assertEqual(snapshot['plans'], [])
+                self.assertEqual(snapshot['candidates'], [])
+                self.assertEqual([(p['ticker'], p['shares']) for p in snapshot['positions']], inventory)
+                self.assertEqual(snapshot['account']['cash_available'], 1000)
+                self.assertFalse(snapshot['market_current'])
+                if complete_prices:
+                    self.assertEqual(snapshot['account']['account_total_value'], 3000)
+                    self.assertTrue(all(p['price'] == 100 for p in snapshot['positions']))
+                else:
+                    self.assertIsNone(snapshot['account']['account_total_value'])
+                    self.assertTrue(all(p['weight'] is None for p in snapshot['positions']))
+                    self.assertTrue(all(p['price'] is None for p in snapshot['positions'][2:]))
+
+    def test_incomplete_inventory_flag_cannot_bypass_source_or_share_checks(self):
+        self.decision['holdings_coverage'] = {'status': 'portfolio_recomposition_required'}
+        self.publish()
+        self.put(POSITIONS, 'ticker,shares_optional\nABC,3\n')
+        with self.assertRaisesRegex(SnapshotError, 'research_inputs_changed'):
+            read_snapshot(self.root, self.now)
+        self.decision['workflow_integrity']['input_hashes'][POSITIONS] = hashlib.sha256((self.root / POSITIONS).read_bytes()).hexdigest()
+        self.publish()
+        with self.assertRaisesRegex(SnapshotError, 'decision_shares_differ_from_account'):
+            read_snapshot(self.root, self.now)
+
     def core_policy(self):
         config = json.loads((Path(__file__).resolve().parents[2] / '00_project_control/active_production_config.json').read_text())
         config['account']['core_allocation_tickers'] = ['SPY', 'QQQM']
