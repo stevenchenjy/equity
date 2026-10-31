@@ -8,11 +8,187 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import date, datetime
+from decimal import Decimal
+import re
 from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from capital_decision import validate
 from capital_presentation import action_lines, optional_rotation_cards
+
+
+DIRECT_VERSION = "equity_direct_action_email_v5"
+
+
+def _quantity(value):
+    return format(Decimal(str(value)).normalize(), "f")
+
+
+def _readable_execution(text):
+    """Repair joined English words/numbers without changing any numeric token."""
+    text = re.sub(r"\b(selling|sell|buying|buy|from|to|the|all|with|only|minimum|below|above|at|after|before|leave|remain|remainder|filled|limit|expired|old|October|November)(?=\d)",
+                  r"\1 ", text, flags=re.IGNORECASE)
+    text = re.sub(r"(?<=\d)(?=(?:EST|EDT|stop|close|shares?|only)\b)", " ", text)
+    text = re.sub(r"\bA(?=\d+-share)", "A ", text)
+    text = re.sub(r"(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)(?=[A-Z][a-z]+\d)", r"\1, ", text)
+    text = re.sub(r"(January|February|March|April|May|June|July|August|September|October|November|December)(?=\d)", r"\1 ", text)
+    text = re.sub(r"(?<=\w)([<>]=?)(?=\d)", r" \1 ", text)
+    text = text.replace("pending-settlement footnote", "pending-settlement (P) footnote")
+    return text
+
+
+def direct_action(decision, row):
+    """Exact email-only execution projection; authored conditions are not cut.
+
+    The full capital presentation remains unchanged. Unknown future conditions
+    survive verbatim, rather than being summarized by a length limit.
+    """
+    draft = row.get("order_draft") or {}
+    if not draft:
+        label = {"ACTIONABLE_BUY": "BUY", "ACTIONABLE_ADD": "ADD",
+                 "REDUCE_REVIEW": "REDUCE REVIEW", "EXIT_REVIEW": "EXIT REVIEW"}[row["decision"]]
+        return label + " — " + row["ticker"], action_lines(row)
+    selling = draft["side"] == "sell"
+    stopping = draft["entry_order_type"] == "STOP"
+    price = draft["exit_price"] if selling else draft["entry_limit"]
+    quantity = _quantity(row["shares"])
+    title = f"{draft['side'].upper()} {quantity} {row['ticker']} — {draft['entry_order_type']} {'≤' if stopping or not selling else '≥'} ${price:.2f} · {draft['time_in_force']}"
+    start = datetime.fromisoformat(draft["entry_window"]["starts_at"]).astimezone(ZoneInfo("America/New_York"))
+    end = datetime.fromisoformat(draft["entry_window"]["ends_at"]).astimezone(ZoneInfo("America/New_York"))
+    window = f"{start:%b} {start.day}, {start:%Y} · {start:%H:%M}–{end:%H:%M} {end:%Z}"
+    if start.date() != end.date():
+        window = f"{start:%Y-%m-%d %H:%M %Z}–{end:%Y-%m-%d %H:%M %Z}"
+    lines = ["When: " + window + ". Conditional manual order in Chase."]
+    # Remove only exact engine-generated wrappers. Authored sentences, including
+    # future company-specific exceptions, survive intact on separate lines.
+    wrappers = (
+        f"SELL LIMIT at or above ${price:.2f}; verify current quote and available shares before submission. ",
+        "；仅为未提交的研究计划，先核验报价、订单和剩余股数。",
+        " A target limit does not protect a decline. Stop execution can gap below the trigger.",
+        " Reassess by " + draft["entry_window"]["ends_at"] + "; if no fill, the remaining exposure and original purpose persist.",
+    )
+    for key in ("trigger_rule", "invalidation_rule", "reassessment_rule"):
+        text = draft[key]
+        for wrapper in wrappers:
+            if text.startswith(wrapper):
+                text = text[len(wrapper):]
+            elif text.endswith(wrapper):
+                text = text[:-len(wrapper)]
+        for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", text):
+            if sentence and sentence not in lines:
+                lines.append(_readable_execution(sentence))
+    if selling:
+        lines.append("Risk: A stop can gap below its trigger." if stopping else "Risk: A sell limit gives no downside protection.")
+    elif draft["risk_model"] in {"observed_price_invalidation", "reviewed_thesis_invalidation"}:
+        lines.append(f"Risk: invalidate ${draft['invalidation_price']:.2f}; planned loss ${draft['planned_total_loss']:.2f} "
+                     f"({draft['planned_account_risk_pct']:.2f}%); gaps can exceed it.")
+        lines.append(f"Target / review: ${draft['initial_reassessment_price']:.2f}.")
+    else:
+        lines.append(f"Risk: no price stop; full ${draft['planned_total_loss']:.2f} principal "
+                     f"({draft['planned_account_risk_pct']:.2f}%) remains exposed.")
+    if row.get("position_purpose", {}).get("time_exit_session"):
+        lines.append("Time exit session: " + row["position_purpose"]["time_exit_session"] + ".")
+    # These engine-owned guards are rendered together once. Additional authored
+    # cancellation conditions are retained exactly and cannot disappear.
+    standard = {
+        "Skip if current holdings or order inventory differs, or shares are already reserved.",
+        "Never duplicate a pending exit; confirm cancellation before replacement.",
+        "This draft expires at " + draft["entry_window"]["ends_at"] + ".",
+        "Expected proceeds are conditional and unsettled; no new purchase is funded by an assumed sale.",
+    }
+    lines += ["Additional condition: " + value for value in draft["cancel_conditions"] if value not in standard]
+    lines.append(("Verify actual holdings, sellable shares, settlement and orders; skip changed or reserved shares. " if selling else
+                  "Verify executable funds, current holdings and orders; skip if the entry conditions or available funds fail. ") +
+                 "Do not duplicate or replace a pending order without confirming cancellation. "
+                 "No fill or spendable proceeds are assumed.")
+    standard_exit_cost = "Proceeds at the stated price are an estimate before costs, not a fill or settled buying power."
+    if draft["cost_assumption"] == standard_exit_cost:
+        lines.append("Estimated proceeds exclude costs.")
+    else:
+        lines.append("Costs: " + draft["cost_assumption"])
+    return title, lines
+
+
+def displayed_action(decision, row):
+    """Version-bound exact strings required by both delivery receipt readers."""
+    if decision.get("email_brief_version") == DIRECT_VERSION:
+        return direct_action(decision, row)
+    label = {"ACTIONABLE_BUY": "BUY", "ACTIONABLE_ADD": "ADD",
+             "REDUCE_REVIEW": "REDUCE REVIEW", "EXIT_REVIEW": "EXIT REVIEW"}[row["decision"]]
+    return label + " — " + row["ticker"], action_lines(row)
+
+
+def direct_subject(decision):
+    rows = [row for row in decision["capital_decision"]["decisions"] if row.get("order_draft")]
+    if rows:
+        return " / ".join(direct_action(decision, row)[0] for row in rows)
+    rotations = optional_rotation_cards(decision)
+    if any(card.get("kind") in {"buy", "sell"} for card in rotations):
+        return rotations[0]["title"] + " · " + rotations[0].get("headline", "")
+    return "No new trade"
+
+
+def direct_cards(decision):
+    """Action, one unchanged inventory, bounded reason and material blockers."""
+    contract = decision["capital_decision"]
+    validate(contract, current=datetime.fromisoformat(decision["generated_at"]))
+    rows = contract["decisions"]
+    held = {row["ticker"]: row for row in decision.get("held_positions", [])}
+    result = []
+    actionable = [row for row in rows if row.get("order_draft")]
+    for row in actionable:
+        title, lines = direct_action(decision, row)
+        result.append(section(title, lines, group="action",
+                              kind="sell" if row["order_draft"]["side"] == "sell" else "buy"))
+    rotations = optional_rotation_cards(decision)
+    if not actionable and not any(card.get("kind") in {"buy", "sell"} for card in rotations):
+        result.append(section("No new trade", ["Buy/add 0; no current priced order passes the required checks."],
+                              group="action", kind="inactive"))
+    result.extend(rotations)
+    checks = ["Current blocker: " + str(code).replace("_", " ") for code in contract.get("global_blockers", [])]
+    checks += ["Required: " + item["evidence_required"] for item in contract.get("dependencies", [])
+               if item.get("scope") == "global"]
+    if checks:
+        result.append(section("Required checks", list(dict.fromkeys(checks)), group="action", kind="inactive"))
+    for row in rows:
+        if row["ticker"] in held and not row.get("order_draft") and row["decision"] in {"BLOCKED", "NO_ACTION", "REDUCE_REVIEW", "EXIT_REVIEW"}:
+            result.append(section(row["decision"].replace("_", " ") + " — " + row["ticker"], action_lines(row),
+                                  group="action", kind="inactive"))
+    from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
+    continuity = decision.get("delivery_followthrough", {})
+    if continuation_requires_reconciliation(continuity):
+        result.append(section("Earlier order — reconcile before replacing", continuation_lines(continuity),
+                              group="action", kind="inactive"))
+    holds = [row for row in rows if row["decision"] == "HOLD" and not row.get("order_draft") and row["ticker"] in held]
+    if holds:
+        inventory = "; ".join(row["ticker"] + " " + _quantity(held[row["ticker"]]["current_shares"])
+                              + (" share" if Decimal(str(held[row["ticker"]]["current_shares"])) == 1 else " shares") for row in holds)
+        result.append(section("Unchanged holdings", [inventory + ". Add 0 / sell 0 for these holdings."]))
+    reasons = []
+    for row in actionable:
+        # Only complete short authored sentences qualify for the compact reason;
+        # longer analysis stays in the report. Execution conditions above are
+        # never subject to this presentation budget.
+        for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", str(row.get("thesis_summary", "")))[:1]:
+            if sentence and len(sentence.split()) <= 28 and sentence not in reasons:
+                reasons.append(_readable_execution(sentence))
+            if len(reasons) == 2:
+                break
+        if len(reasons) == 2:
+            break
+    if reasons:
+        result[-1]["body"] += "\n" + " ".join(reasons)
+    # Genuine triggered portfolio conditions remain visible; unavailable or
+    # untriggered monitoring diagnostics are retained only in the full report.
+    risk = decision.get("intraday_portfolio_risk", {})
+    material = [entry for key in ("plan_conditions", "reassessment_triggers")
+                for entry in risk.get(key, []) if isinstance(entry, dict)
+                and entry.get("status") in {"triggered", "breached", "requires_reassessment"}]
+    if material:
+        result.append(section("Risk condition — reassess", [str(entry.get("ticker", "Portfolio")) + ": "
+            + str(entry.get("message") or entry.get("condition") or entry.get("description") or "Current plan requires reassessment.")
+            for entry in material], group="action", kind="inactive"))
+    return result
 
 
 def section(title, lines, *, group="background", kind="", headline="", sources=()):

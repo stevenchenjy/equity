@@ -18,7 +18,7 @@ from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 
-EMAIL_BRIEF_VERSION = "equity_attention_email_v4"
+EMAIL_BRIEF_VERSION = "equity_direct_action_email_v5"
 _NUMBER = r"-?\d+(?:\.\d+)?"
 _SOURCE_HOSTS = {"sec.gov", "www.sec.gov", "data.sec.gov"}
 _RESEARCH_HOSTS = _SOURCE_HOSTS | {
@@ -798,6 +798,10 @@ def email_subject(
     decision: dict[str, Any], *, correction: bool = False, owner_review: bool = False
 ) -> str:
     view = build_email_view(decision)
+    if (decision.get("email_brief_version") == "equity_direct_action_email_v5"
+            and decision.get("capital_decision")):
+        from attention_email import direct_subject
+        return f"{subject_prefix(correction=correction)} {direct_subject(decision)}"
     if owner_review:
         review = decision.get("owner_requested_research", {})
         review_date = _time(review.get("reviewed_at"))[:10]
@@ -806,6 +810,9 @@ def email_subject(
         return f"{subject_prefix(owner_review=True)} 持仓计划与观察机会｜{review_date}"
     prefix = subject_prefix(correction=correction)
     if decision.get("workflow_integrity"):
+        if decision.get("email_brief_version") == "equity_direct_action_email_v5" and decision.get("capital_decision"):
+            from attention_email import direct_subject
+            return f"{prefix} {direct_subject(decision)}"
         if decision.get("capital_decision") and decision.get("evidence_gate", {}).get("passed") is False:
             return f"{prefix} Limited evidence update | {view['cycle']}"
         if decision.get("email_brief_version") == "equity_attention_email_v4" and decision.get("capital_decision"):
@@ -816,18 +823,23 @@ def email_subject(
 
 
 def _render_cards(subject: str, sections: list[dict[str, Any]], *, title: str,
-                  stamp: str, footer: str, note: str = "") -> tuple[str, str, str]:
+                  stamp: str, footer: str, note: str = "", action_first: bool = False) -> tuple[str, str, str]:
     """Shared text and HTML layout for automatic and requested reviews."""
     esc = lambda value: html.escape(str(value), quote=True)
     lines = [subject, stamp] + ([note] if note else [])
     content = [f'<p style="color:#526170;font-size:12px;margin:0 0 10px">{esc(brand_name())}</p>',
                f'<h1 style="font-size:26px;line-height:1.2;margin:0 0 12px">{esc(title)}</h1>',
                f'<p style="font-size:13px;color:#526170;margin:0 0 12px">{esc(stamp)}</p>']
+    if action_first:
+        lines = [subject]
+        first = sections[0] if sections else {"title": title, "body": ""}
+        preheader = first["title"] + " · " + first["body"].splitlines()[0] if first["body"] else first["title"]
+        content = [f'<div style="display:none;max-height:0;overflow:hidden;mso-hide:all">{esc(preheader)}</div>']
     if note:
         content.append(f'<p style="font-size:13px;line-height:1.5;color:#526170">{esc(note)}</p>')
     background_started = False
     for index, section in enumerate(sections):
-        if section.get('group') == 'background' and not background_started:
+        if section.get('group') == 'background' and not background_started and not action_first:
             background_started = True
             heading = 'Supporting information — separate from actions'
             lines.extend(['', '=' * 48, heading, '=' * 48])
@@ -839,7 +851,8 @@ def _render_cards(subject: str, sections: list[dict[str, Any]], *, title: str,
         background, accent = palette.get(kind, ('#eef5f8' if index == 0 else '#ffffff', '#172b3a'))
         border = f'border-left:6px solid {accent};' if kind in palette else ''
         content.append(f'<div data-email-group="{esc(section.get("group", ""))}" data-action-kind="{esc(kind)}" style="background:{background};border:1px solid #dbe4e9;{border}border-radius:10px;padding:18px;margin:18px 0">')
-        content.append(f'<h2 style="font-size:{23 if kind in {"buy", "sell"} else 19}px;color:{accent};line-height:1.35;margin:0 0 12px">{esc(section["title"])}</h2>')
+        tag = 'h1' if action_first and index == 0 else 'h2'
+        content.append(f'<{tag} style="font-size:{23 if kind in {"buy", "sell"} else 19}px;color:{accent};line-height:1.35;margin:0 0 12px">{esc(section["title"])}</{tag}>')
         if section.get('headline'):
             lines.append(section['headline'])
             content.append(f'<p style="font-size:22px;font-weight:700;line-height:1.4;margin:0 0 16px;color:{accent}">{esc(section["headline"])}</p>')
@@ -862,6 +875,9 @@ def _render_cards(subject: str, sections: list[dict[str, Any]], *, title: str,
                 lines.append(f'Source [{i}]: {url}')
             content.append('<p style="font-size:12px;line-height:1.5;margin:14px 0 0;color:#526170">' + ' · '.join(links) + '</p>')
         content.append('</div>')
+    if action_first:
+        lines.extend(['', stamp])
+        content.append(f'<p style="font-size:12px;color:#526170;margin-top:20px">{esc(stamp)}</p>')
     lines.extend(['', footer])
     content.append(f'<p style="font-size:12px;line-height:1.6;color:#526170;margin-top:24px">{esc(footer)}</p>')
     document = ('<!doctype html><html lang="en"><head><meta charset="utf-8">'
@@ -1044,6 +1060,13 @@ def intraday_risk_card(decision: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any]) -> tuple[str, str, str]:
+    if decision.get("email_brief_version") == "equity_direct_action_email_v5" and decision.get("capital_decision"):
+        from attention_email import direct_cards, direct_subject
+        contract = decision["capital_decision"]
+        session = decision.get("market_gate", {}).get("expected_market_session", "unverified")
+        return _render_cards(email_subject(decision), direct_cards(decision), title=direct_subject(decision),
+            stamp=f"Source close: {session} (not live). Recorded planning cash: ${contract['planning_cash']:.2f}; not verified buying power.",
+            footer="Human execution only. Details and sources: dashboard/local report.", action_first=True)
     if decision.get("email_brief_version") == "equity_attention_email_v4" and decision.get("capital_decision"):
         from attention_email import cards, intraday_card, subject_label
         sections = cards(decision)
@@ -1168,6 +1191,8 @@ def _render_compact_scheduled(decision: dict[str, Any], view: dict[str, Any]) ->
 def _render_email_without_dashboard(decision: dict[str, Any]) -> tuple[str, str, str]:
     view = build_email_view(decision)
     owner_research = _owner_research(decision)
+    if decision.get("email_brief_version") == "equity_direct_action_email_v5" and decision.get("capital_decision"):
+        return _render_maintained_scheduled(decision, view)
     review = decision.get("owner_requested_research", {})
     if owner_research and review.get("presentation") == "compact":
         return _render_compact_owner(decision, owner_research)
@@ -1304,7 +1329,8 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
         return render_intraday_alert(decision)
     subject, plain, document = _render_email_without_dashboard(decision)
     risk_card = intraday_risk_card(decision)
-    if risk_card and "Intraday portfolio risk — observed snapshot" not in plain:
+    if (risk_card and decision.get("email_brief_version") != "equity_direct_action_email_v5"
+            and "Intraday portfolio risk — observed snapshot" not in plain):
         plain += "\n" + risk_card["title"] + "\n" + risk_card["body"] + "\n"
         risk_html = ('<section aria-label="Intraday portfolio risk" style="margin:24px 16px">'
                      '<h2>' + html.escape(risk_card["title"]) + '</h2>'
@@ -1316,7 +1342,11 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     if isinstance(url,str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[0-9a-f]{64}',url):
         parsed=urlsplit(url)
         url='https://'+parsed.hostname+'/?publication='+publication_id(decision)
-        plain+='\nPrivate dashboard: '+url+'\nView this email version, check current conditions, and record your actual operations.\n'
-        addition='<p style="margin:24px;color:#496351"><a href="'+html.escape(url,quote=True)+'">Open private dashboard</a><br>View this email version, check current conditions, and record your actual operations.</p>'
+        if decision.get('email_brief_version') == 'equity_direct_action_email_v5':
+            plain+='\nDetails: '+url+'\n'
+            addition='<p style="margin:24px;color:#496351"><a href="'+html.escape(url,quote=True)+'">Details and sources</a></p>'
+        else:
+            plain+='\nPrivate dashboard: '+url+'\nView this email version, check current conditions, and record your actual operations.\n'
+            addition='<p style="margin:24px;color:#496351"><a href="'+html.escape(url,quote=True)+'">Open private dashboard</a><br>View this email version, check current conditions, and record your actual operations.</p>'
         document=document.replace('</body>',addition+'</body>')
     return subject,plain,document

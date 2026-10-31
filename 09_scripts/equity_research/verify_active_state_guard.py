@@ -255,6 +255,19 @@ def _smtp_stat() -> tuple[int, int, int] | str:
     )
 
 
+def _safe_optional_entry(path: Path, *, directory: bool = False, absent: bool = False) -> bool:
+    """Allow real registered containers without following input symlinks."""
+    try:
+        ancestor = ROOT
+        for part in path.relative_to(ROOT).parts:
+            ancestor /= part
+            if ancestor.is_symlink():
+                return False
+        return path.is_file() or (directory and path.is_dir()) or (absent and not path.exists())
+    except (OSError, ValueError):
+        return False
+
+
 def _registry_paths(
     rows: list[dict[str, str]],
     *, include_runtime: bool = True,
@@ -298,12 +311,21 @@ def _registry_paths(
             continue  # All registry permission/forbidden checks above still run.
         if path_kind == "exact":
             target = ROOT / path_spec
-            absent_optional = optional and not target.exists() and not target.is_symlink()
-            if not target.is_file() and not absent_optional:
+            if (optional and not _safe_optional_entry(target, absent=True)) or (
+                not optional and not target.is_file()
+            ):
                 missing.append(path_spec)
         elif path_kind == "pattern":
             matches = list(ROOT.glob(path_spec))
-            if (optional and any(not path.is_file() or path.is_symlink() for path in matches)) or (
+            container = ROOT
+            for part in Path(path_spec).parts:
+                if any(marker in part for marker in "*?["):
+                    break
+                container /= part
+            if (optional and (
+                not _safe_optional_entry(container, directory=True, absent=True)
+                or any(not _safe_optional_entry(path, directory=path_spec.endswith("/**/*")) for path in matches)
+            )) or (
                 not optional and not any(path.is_file() for path in matches)
             ):
                 missing.append(path_spec)

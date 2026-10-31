@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import tempfile
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -69,6 +70,51 @@ class OptionalActiveInputTests(unittest.TestCase):
         row = registry_row(path, freshness) | {"allowed_as_active_input": "no"}
         with tempfile.TemporaryDirectory() as directory, patch.object(guard, "ROOT", Path(directory)):
             self.assertIn("TEST:not_explicitly_allowed", guard._registry_paths([row])[1])
+
+    def test_registered_recursive_optional_patterns_allow_directory_containers(self) -> None:
+        for pattern, freshness in guard.OPTIONAL_ACTIVE_PATTERNS.items():
+            if not pattern.endswith("/**/*"):
+                continue
+            with self.subTest(pattern=pattern), tempfile.TemporaryDirectory() as directory, \
+                    patch.object(guard, "ROOT", Path(directory)):
+                nested = Path(directory) / pattern.removesuffix("/**/*") / "history" / "session"
+                nested.mkdir(parents=True)
+                row = registry_row(pattern, freshness, kind="pattern")
+                self.assertEqual(guard._registry_paths([row]), ([], []))
+                (nested / "receipt.json").write_text("{}")
+                self.assertEqual(guard._registry_paths([row]), ([], []))
+
+    def test_registered_optional_patterns_reject_unsafe_entries_and_container_links(self) -> None:
+        pattern = "08_reviews/swing_benchmarks.local/**/*"
+        row = registry_row(pattern, guard.OPTIONAL_ACTIVE_PATTERNS[pattern], kind="pattern")
+        for kind in ("file_link", "directory_link", "broken_link", "fifo", "container_link", "broken_container_link"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory, \
+                    patch.object(guard, "ROOT", Path(directory)):
+                root = Path(directory)
+                base = root / pattern.removesuffix("/**/*")
+                base.parent.mkdir(parents=True)
+                safe = root / "safe"
+                safe.mkdir()
+                (safe / "receipt.json").write_text("{}")
+                if kind in {"container_link", "broken_container_link"}:
+                    base.symlink_to(safe if kind == "container_link" else root / "missing")
+                else:
+                    base.mkdir()
+                    entry = base / "entry"
+                    if kind == "fifo": os.mkfifo(entry)
+                    else: entry.symlink_to(safe / "receipt.json" if kind == "file_link" else
+                                          safe if kind == "directory_link" else root / "missing")
+                self.assertEqual(guard._registry_paths([row])[0], [pattern])
+
+    def test_optional_exact_file_symlink_remains_unsafe(self) -> None:
+        path, freshness = next(iter(guard.OPTIONAL_ACTIVE_INPUTS.items()))
+        with tempfile.TemporaryDirectory() as directory, patch.object(guard, "ROOT", Path(directory)):
+            target = Path(directory) / path
+            target.parent.mkdir(parents=True)
+            original = Path(directory) / "source.json"
+            original.write_text("{}")
+            target.symlink_to(original)
+            self.assertEqual(guard._registry_paths([registry_row(path, freshness)])[0], [path])
 
 
 if __name__ == "__main__":

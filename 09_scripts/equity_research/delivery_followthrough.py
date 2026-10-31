@@ -104,7 +104,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
     """
     from email_brief import money, shares
     from investment_plans import regular_close
-    if prior.get("owner_requested_research"):
+    if prior.get("owner_requested_research") and prior.get("email_brief_version") != "equity_direct_action_email_v5":
         return [], True
     shown_tickers = None
     if "delivery_assessment" in prior:
@@ -130,7 +130,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
         # New publications have one authoritative draft. Never fall back to a
         # legacy ceiling when the archived capital contract is invalid/omitted.
         from capital_decision import validate
-        from capital_presentation import action_lines
+        from attention_email import displayed_action
         try:
             contract = prior["capital_decision"]
             validate(contract, current=sent_at)
@@ -142,12 +142,11 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                     continue
                 ticker, qty = row["ticker"], _positive(row["shares"])
                 side = draft["side"]
-                label = {"ACTIONABLE_BUY": "BUY", "ACTIONABLE_ADD": "ADD",
-                         "REDUCE_REVIEW": "REDUCE REVIEW", "EXIT_REVIEW": "EXIT REVIEW"}[row["decision"]]
+                label, required_lines = displayed_action(prior, row)
                 if (not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,14}", ticker)
                         or side not in {"buy", "sell"} or qty != qty.to_integral_value()
-                        or not displayed(f"{label} — {ticker}")
-                        or not all(displayed(line) for line in action_lines(row))):
+                        or not displayed(label)
+                        or not all(displayed(line) for line in required_lines)):
                     incomplete = True
                     continue
                 holding = next((h for h in prior.get("held_positions", []) if h.get("ticker") == ticker), {})
@@ -418,7 +417,7 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
 
 def validate_followthrough(decision: dict[str, Any], *, root: Path, current: datetime) -> None:
     context = decision.get("delivery_followthrough")
-    if decision.get("owner_requested_research"):
+    if decision.get("owner_requested_research") and decision.get("email_brief_version") != "equity_direct_action_email_v5":
         return  # Explicit owner review renders its own appendix, not this context.
     if context is None:
         return  # Exact dated legacy artifacts retain their original rendering.

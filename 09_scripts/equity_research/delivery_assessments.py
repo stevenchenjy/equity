@@ -348,15 +348,14 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
                 and canonical_sha256(json.loads(canonical)) == old['delivery_assessment']['canonical_content_sha256'],
                 'baseline_alert_canonical_reference_unverified')
         else:
-            from capital_presentation import action_lines
+            from attention_email import displayed_action
             text, document = bodies
             document_text = ' '.join(html.unescape(re.sub(r'<[^>]+>', '', document)).split())
             displayed = lambda value: value in text and ' '.join(value.split()) in document_text
             for action in projection['actions']:
                 candidate = next(r for r in old['capital_decision']['decisions'] if r['ticker'] == action['ticker'])
-                label = {'ACTIONABLE_BUY': 'BUY', 'ACTIONABLE_ADD': 'ADD',
-                    'REDUCE_REVIEW': 'REDUCE REVIEW', 'EXIT_REVIEW': 'EXIT REVIEW'}[candidate['decision']]
-                require(displayed(label + ' — ' + candidate['ticker']) and all(displayed(line) for line in action_lines(candidate)),
+                label, required_lines = displayed_action(old, candidate)
+                require(displayed(label) and all(displayed(line) for line in required_lines),
                     'baseline_action_not_displayed')
             if not all(displayed(entry['ticker']) and displayed(entry['reason']) and displayed(entry['next_step'])
                     for entry in projection['priority']):
@@ -710,6 +709,39 @@ def validate_envelope(decision: dict) -> dict:
 
 def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tuple[str, str, str]:
     envelope = eligibility if eligibility is not None else validate_envelope(decision)
+    if decision.get('email_brief_version') == 'equity_direct_action_email_v5':
+        from attention_email import direct_action, section
+        from email_brief import _render_cards
+        sections = []
+        changed = set(envelope.get('changed_action_tickers', []))
+        for row in decision.get('capital_decision', {}).get('decisions', []):
+            if row.get('ticker') in changed and row.get('order_draft'):
+                title, exact_lines = direct_action(decision, row)
+                sections.append(section(title, exact_lines, group='action',
+                    kind='sell' if row['order_draft']['side'] == 'sell' else 'buy'))
+        for ticker in envelope.get('removed_action_tickers', []):
+            sections.append(section(ticker + ' — previous eligible instruction withdrawn; do not resubmit its earlier quantity.',
+                ['Reconcile actual holdings and orders before considering a replacement.'], group='action', kind='inactive'))
+        if not sections:
+            sections.append(section('No new or repeated trading instruction',
+                ['Existing quantities are not reissued.'], group='action', kind='inactive'))
+        if envelope.get('priority_changed'):
+            entries = decision.get('analyst_priority_review', {}).get('entries', [])
+            # A priority receipt acknowledges the exact authored reason and next
+            # step for each entry. Preserve them; do not acknowledge a hidden
+            # case or invent a new summary authority to meet an email budget.
+            for entry in entries:
+                sections.append(section('Research priority — ' + entry['ticker'],
+                    ['Research update: ' + entry['reason'], 'Next step: ' + entry['next_step']]))
+        from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
+        continuity = decision.get('delivery_followthrough', {})
+        if continuation_requires_reconciliation(continuity):
+            sections.append(section('Earlier order — reconcile before replacing', continuation_lines(continuity),
+                group='action', kind='inactive'))
+        subject = '[Equity] ' + sections[0]['title']
+        stamp = 'Source close: ' + str(decision.get('capital_decision', {}).get('market_data_timestamp', 'unverified')) + ' (not live).'
+        return _render_cards(subject, sections, title=sections[0]['title'], stamp=stamp,
+            footer='Human execution only. No order or fill is assumed. Detailed conditions, research and sources: dashboard/local report.', action_first=True)
     subject = '[Equity] Action update' if envelope.get('action_changed') else '[Equity] Research priority update'
     lines = [subject, 'Generated: ' + str(decision.get('generated_at', '')) + ' · dated reference data, not live.']
     lines.append('Reference market session: ' + str(decision.get('capital_decision', {}).get('market_data_timestamp', 'unverified')))
@@ -739,7 +771,7 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
     if isinstance(url, str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[a-f0-9]{64}', url):
         lines += ['', 'Private dashboard: ' + url]
     plain = '\n'.join(lines) + '\n'
-    if decision.get('email_brief_version') == 'equity_attention_email_v4':
+    if decision.get('email_brief_version') in {'equity_attention_email_v4', 'equity_direct_action_email_v5'}:
         # New presentation only. Historical v3 delivery envelopes retain their
         # exact plain HTML for immutable archive/follow-through verification.
         from email_brief import _render_cards

@@ -11,11 +11,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from _support import SCRIPT_DIR  # noqa: F401
+from _support import SCRIPT_DIR, visible_html_text  # noqa: F401
 from daily_common import canonical_sha256
 from capital_presentation import action_lines
 from email_brief import EMAIL_BRIEF_VERSION, render_email
-from attention_email import cards, held_earnings_card
+from attention_email import DIRECT_VERSION, cards, direct_action, held_earnings_card
 import test_capital_decision as capital_tests
 from test_assessment_presentation import envelope
 import delivery_followthrough as follow
@@ -46,7 +46,8 @@ class AttentionEmailTests(unittest.TestCase):
         self.builder = capital_tests.CapitalDecisionTests()
         self.builder.setUp()
         self.decision = self.builder.d
-        self.decision['email_brief_version'] = EMAIL_BRIEF_VERSION
+        # These tests retain the historical v4 renderer and archive contract.
+        self.decision['email_brief_version'] = 'equity_attention_email_v4'
         self.decision['capital_decision'] = self.build()
 
     def build(self):
@@ -57,6 +58,192 @@ class AttentionEmailTests(unittest.TestCase):
         self.decision['eligible_action_review_candidates'] = []
         self.decision['eligible_new_position_review_candidates'] = []
         self.decision['capital_decision'] = self.build()
+
+    def direct_exit(self):
+        self.decision['email_brief_version'] = DIRECT_VERSION
+        self.decision['eligible_new_position_review_candidates'] = []
+        self.decision['eligible_action_review_candidates'] = []
+        self.decision['watch_candidates'] = []
+        self.decision['held_positions'] = [dict(ticker='TEST', current_shares=6, current_price=101, asset_role='active_stock')]
+        plans = [dict(ticker='TEST', status='maintained', action='trim_review', blockers=['fresh_quote_and_available_shares_required'],
+            review_at='2026-09-23T11:15:00-04:00', instruction='Verify a fresh bid at/above103, six recorded shares including pending settlement (P), two sellable shares, no conflicting order and no material issuer news. If the bid is below103, skip; do not lower the limit or chase.',
+            reason='Reduce the exposure while retaining participation. ' + 'DETAILED_MODEL_ANALYSIS ' * 60,
+            purpose={'failure_condition':'If the issuer announces a customer cancellation, skip and reassess.',
+                     'exit_rule':'Cancel any unfilled remainder at11:15EDT; do not carry or automatically reprice.'},
+            historical_order_draft={'side':'sell','type':'LIMIT','quantity':2,'limit_price':103,'time_in_force':'DAY',
+                                    'session_date':'2026-09-23','starts_at':'2026-09-23T10:05:00-04:00'})]
+        for ticker, qty in (('AAA',3),('BBB',7),('CCC',5),('DDD',9)):
+            self.decision['held_positions'].append(dict(ticker=ticker,current_shares=qty,current_price=10,asset_role='active_stock'))
+            plans.append(dict(ticker=ticker,status='maintained',action='hold',blockers=[],instruction='Keep the recorded shares.',
+                              review_at='2026-09-23T15:00:00-04:00'))
+        self.decision['plan_continuity'] = {'plans':plans}
+        self.decision['delivery_followthrough'] = {'status':'prior_no_specific_order','prior_sent_at':self.decision['generated_at']}
+        self.decision['capital_decision'] = self.build()
+        return next(row for row in self.decision['capital_decision']['decisions'] if row['ticker']=='TEST')
+
+    def test_v5_first_visible_action_exact_conditions_and_small_email_leave_contract_unchanged(self):
+        row = self.direct_exit()
+        self.assertIsNotNone(row['order_draft'])
+        before = copy.deepcopy(self.decision)
+        subject, plain, document = render_email(self.decision)
+        visible = visible_html_text(document)
+        action = 'SELL 2 TEST — LIMIT ≥ $103.00 · DAY'
+        self.assertIn(action, subject)
+        self.assertTrue(visible.startswith(action))
+        self.assertRegex(document,r'<h1[^>]*>SELL 2 TEST')
+        self.assertIn('display:none;max-height:0', document)
+        for text in (plain, visible):
+            for condition in ('10:05–11:15 EDT','fresh bid at/above 103','pending settlement (P)',
+                              'two sellable shares','no conflicting order','no material issuer news',
+                              'do not lower the limit or chase','customer cancellation',
+                              'Cancel any unfilled remainder at 11:15 EDT','do not carry or automatically reprice',
+                              'no downside protection','No fill or spendable proceeds are assumed'):
+                self.assertIn(condition,text)
+            for omitted in ('DETAILED_MODEL_ANALYSIS','Opportunity shortlist','Candidate outcomes:',
+                            'Earlier instructions','Intraday portfolio risk','Supporting information'):
+                self.assertNotIn(omitted,text)
+            self.assertEqual(text.count('AAA 3 shares'),1)
+            self.assertIn('Add 0 / sell 0 for these holdings',text)
+        self.assertLess(len(plain.split()),330)
+        self.assertEqual(before,self.decision)
+        shown,incomplete=follow._displayed_actions(self.decision,plain,document,self.builder.v['current'])
+        self.assertFalse(incomplete)
+        self.assertEqual([(r['ticker'],r['side'],r['quantity']) for r in shown],[('TEST','sell',2)])
+        for bad_plain,bad_html in ((plain.replace('$103.00','$102.00'),document),
+                                   (plain,document.replace('customer cancellation','ordinary update'))):
+            self.assertEqual(follow._displayed_actions(self.decision,bad_plain,bad_html,self.builder.v['current']),([],True))
+
+    def test_v5_keeps_additional_authored_condition_and_genuine_earlier_order_blocker(self):
+        row=self.direct_exit()
+        row['order_draft']['cancel_conditions'].append('Skip if a newly announced capital raise changes the case.')
+        contract=self.decision['capital_decision']
+        contract['content_sha256']=canonical_sha256({k:v for k,v in contract.items() if k!='content_sha256'})
+        _,plain,document=render_email(self.decision)
+        for body in (plain,visible_html_text(document)):
+            self.assertIn('Skip if a newly announced capital raise changes the case.',body)
+        self.decision['delivery_followthrough']={'status':'conditional_execution_followthrough','requires_reconciliation':True,'actions':[]}
+        _,plain,_=render_email(self.decision)
+        self.assertIn('Earlier order — reconcile before replacing',plain)
+        self.assertIn('not a verified order or fill',plain)
+
+    def test_v5_receipt_archive_accepts_complete_projection_and_rejects_missing_critical_line(self):
+        self.direct_exit()
+        import delivery_assessments as assessments
+        from daily_common import atomic_write_json
+        subject,plain,document=render_email(self.decision)
+        archive=self.root/assessments.ARCHIVE_REL;archive.mkdir(parents=True,exist_ok=True)
+        raw=json.dumps(self.decision).encode();digest=hashlib.sha256(raw).hexdigest()
+        (archive/(digest+'.json')).write_bytes(raw)
+        def receipt(text):
+            text_digest=hashlib.sha256(text.encode()).hexdigest();html_digest=hashlib.sha256(document.encode()).hexdigest()
+            (archive/(text_digest+'.txt')).write_text(text);(archive/(html_digest+'.html')).write_text(document)
+            return {'decision_sha256':digest,'brief_text_sha256':text_digest,'brief_html_sha256':html_digest}
+        with patch.object(assessments,'advice_projection',return_value={'actions':[{'ticker':'TEST'}],'priority':[]}):
+            self.assertEqual(assessments._archived_receipt_baseline(receipt(plain),root=self.root)['status'],'verified')
+            self.assertEqual(assessments._archived_receipt_baseline(receipt(plain.replace('customer cancellation','ordinary update')),root=self.root)['status'],'unverified')
+
+    def test_v5_buy_keeps_exact_risk_target_time_exit_and_conditions_without_model_dump(self):
+        self.decision['email_brief_version']=DIRECT_VERSION
+        row=self.decision['capital_decision']['decisions'][0]
+        row['thesis_summary']='MODEL_ESSAY '*200
+        contract=self.decision['capital_decision']
+        contract['content_sha256']=canonical_sha256({k:v for k,v in contract.items() if k!='content_sha256'})
+        subject,plain,document=render_email(self.decision)
+        draft=row['order_draft']
+        self.assertIn('BUY 4 TEST — LIMIT ≤ $102.00 · DAY',subject)
+        self.assertTrue(visible_html_text(document).startswith('BUY 4 TEST'))
+        for body in (plain,visible_html_text(document)):
+            self.assertIn('invalidate $98.00; planned loss $16.00 (0.16%)',body)
+            self.assertIn(f"Target / review: ${draft['initial_reassessment_price']:.2f}",body)
+            self.assertIn(draft['trigger_rule'],body)
+            self.assertIn(draft['invalidation_rule'],' '.join(body.split()))
+            self.assertIn(draft['reassessment_rule'],' '.join(body.split()))
+            for value in draft['cancel_conditions']:
+                self.assertIn(value,body)
+            for omitted in ('MODEL_ESSAY','Capital: approximately','weight 0.00%','Cash: $'):
+                self.assertNotIn(omitted,body)
+        shown,incomplete=follow._displayed_actions(self.decision,plain,document,self.builder.v['current'])
+        self.assertFalse(incomplete);self.assertEqual(shown[0]['quantity'],4)
+
+    def test_v5_stop_and_marketable_limit_headers_keep_trigger_and_cancellation(self):
+        for kind in ('STOP','MARKETABLE_LIMIT'):
+            self.direct_exit()
+            plan=self.decision['plan_continuity']['plans'][0]
+            raw=plan['historical_order_draft'];raw['type']=kind
+            if kind=='STOP':raw['stop_price']=99;raw.pop('limit_price')
+            self.decision['capital_decision']=self.build()
+            row=next(r for r in self.decision['capital_decision']['decisions'] if r['ticker']=='TEST')
+            self.assertIsNotNone(row['order_draft'])
+            title,required=direct_action(self.decision,row)
+            self.assertIn('SELL 2 TEST — '+kind,title)
+            self.assertIn('≤ $99.00' if kind=='STOP' else '≥ $103.00',title)
+            _,plain,document=render_email(self.decision)
+            self.assertTrue(visible_html_text(document).startswith(title))
+            self.assertIn('stop can gap' if kind=='STOP' else 'sell limit gives no downside protection',plain)
+            self.assertIn('customer cancellation',plain)
+            self.assertIn('11:15 EDT',plain)
+            self.assertFalse(follow._displayed_actions(self.decision,plain,document,self.builder.v['current'])[1])
+
+    def test_v5_owner_review_and_changed_action_alert_share_direct_projection_only_for_shown_actions(self):
+        self.direct_exit()
+        self.decision['owner_requested_research']={'mode':'explicit_one_off_research',
+            'decision_fingerprint':'synthetic-bound-review','presentation':'compact',
+            'sections':[{'title':'LONG_OWNER_CASE','body':'OWNER_MODEL_ESSAY '*80,'sources':[]}]}
+        self.decision['decision_fingerprint']='synthetic-bound-review'
+        subject,plain,document=render_email(self.decision)
+        self.assertIn('SELL 2 TEST',subject)
+        self.assertTrue(visible_html_text(document).startswith('SELL 2 TEST'))
+        self.assertNotIn('OWNER_MODEL_ESSAY',plain)
+        self.assertFalse(follow._displayed_actions(self.decision,plain,document,self.builder.v['current'])[1])
+        self.decision.pop('owner_requested_research')
+        alert=envelope(self.decision,changed=['TEST'],priority=False)
+        subject,plain,document=render_email(alert)
+        self.assertIn('SELL 2 TEST',subject)
+        self.assertTrue(visible_html_text(document).startswith('SELL 2 TEST'))
+        self.assertNotIn('Capital: approximately',plain)
+        shown,incomplete=follow._displayed_actions(alert,plain,document,self.builder.v['current'])
+        self.assertFalse(incomplete);self.assertEqual([r['ticker'] for r in shown],['TEST'])
+        self.assertEqual(follow._displayed_actions(alert,plain.replace('customer cancellation','ordinary update'),document,self.builder.v['current']),([],True))
+        self.decision['analyst_priority_review']={'status':'current','entries':[{'ticker':ticker,
+            'reason':'The issuer reported a new contract.','next_step':'Verify collections before completing the model.'}
+            for ticker in ('CASE','OTHER')]}
+        priority_only=envelope(self.decision,priority=True)
+        _,plain,document=render_email(priority_only)
+        self.assertNotIn('SELL 2 TEST',plain)
+        self.assertIn('No new or repeated trading instruction',plain)
+        for entry in self.decision['analyst_priority_review']['entries']:
+            self.assertIn('Research priority — '+entry['ticker'],plain)
+            self.assertIn(entry['reason'],plain);self.assertIn(entry['next_step'],plain)
+        self.assertEqual(follow._displayed_actions(priority_only,plain,document,self.builder.v['current']),([],False))
+
+    def test_v5_owner_review_validates_current_followthrough_while_legacy_appendix_bypass_stays(self):
+        self.direct_exit()
+        self.decision['owner_requested_research']={'presentation':'compact'}
+        self.decision['delivery_followthrough']={'as_of':self.decision['generated_at'],'status':'prior_no_specific_order'}
+        with patch.object(follow,'build_followthrough',return_value={'status':'changed'}) as reader:
+            with self.assertRaisesRegex(ValueError,'delivery_followthrough_recompose_required'):
+                follow.validate_followthrough(self.decision,root=self.root,current=self.builder.v['current'])
+            reader.assert_called_once()
+        self.decision['email_brief_version']='equity_attention_email_v4'
+        with patch.object(follow,'build_followthrough') as reader:
+            follow.validate_followthrough(self.decision,root=self.root,current=self.builder.v['current'])
+            reader.assert_not_called()
+
+    def test_v5_paired_rotation_keeps_sequence_and_genuine_risk_while_empty_monitor_is_omitted(self):
+        self.no_entry();self.decision['email_brief_version']=DIRECT_VERSION
+        rotations=[{'title':'OPTIONAL BUY 3 SYN','body':'Buy all3 first; only then consider selling the pair. Skip a partial fill.',
+                    'headline':'LIMIT ≤ $17.00','kind':'buy','group':'action','sources':[]},
+                   {'title':'PAIRED SELL 2 OLD','body':'Never sell before the full buy fills. Deadline tomorrow; no extension.',
+                    'headline':'LIMIT ≥ $26.00','kind':'sell','group':'action','sources':[]}]
+        self.decision['intraday_portfolio_risk']={'schema_version':'intraday_portfolio_risk_v1','status':'unavailable',
+            'plan_conditions':[{'ticker':'SYN','status':'triggered','condition':'Current plan support failed; reassess.'}]}
+        with patch('attention_email.optional_rotation_cards',return_value=rotations):
+            subject,plain,document=render_email(self.decision)
+        self.assertIn('OPTIONAL BUY 3 SYN',subject)
+        self.assertTrue(visible_html_text(document).startswith('OPTIONAL BUY 3 SYN'))
+        self.assertIn(rotations[0]['body'],plain);self.assertIn(rotations[1]['body'],plain)
+        self.assertIn('Current plan support failed; reassess.',plain)
+        self.assertNotIn('Observation status: unavailable',plain)
 
     def test_complete_real_engine_buy_draft_survives_both_bodies_and_archive_admission(self):
         row = self.decision['capital_decision']['decisions'][0]

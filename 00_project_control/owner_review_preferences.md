@@ -22,6 +22,20 @@ return or justify an unsupported concentration.
 
 ## Action-first regular email (2026-09-29)
 
+October 30 directness correction: the first visible email block must state the
+current action directly: ticker, whole-share quantity, order type, price limit
+and session/window. Group unchanged holdings into one short line after current
+actions. Preserve essential trigger, skip, cancellation, expiry and execution
+checks in compact wording. Keep analysis to at most two short sentences and
+leave full company cases, model details, diagnostics and queues on the dashboard
+or linked report. Do not put status explanations, a portfolio essay, repeated
+HOLD cards or research logs ahead of the action. When no complete draft is
+admitted, lead with “No new trade” and the exact hold/no-add outcome.
+
+This is a presentation change. It neither changes maintained plans, prices,
+quantities, gates or human execution authority nor authorizes an additional
+email send.
+
 October 27 attention correction: an email must help the owner decide what is
 worth attention, rather than reproduce the research log. Lead with every current
 validated conditional action, preserving its whole-share size, session/time
