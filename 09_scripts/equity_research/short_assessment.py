@@ -369,7 +369,10 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
     if swing_context.get("schema_version") in {"equity_swing_research_v1", "equity_swing_research_v2"}:
         try:
             if swing_context["schema_version"] == "equity_swing_research_v2":
-                from swing_research_v2 import revalidate_projection as validate_swing
+                if str(swing_context.get("version", "")).startswith("daily-swing-review-windows-v3-"):
+                    from active_swing_research import revalidate_projection as validate_swing
+                else:
+                    from swing_research_v2 import revalidate_projection as validate_swing
             else:
                 from swing_research import revalidate_projection as validate_swing
             swing_context = validate_swing(root, swing_context, current)
@@ -383,7 +386,11 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
     benchmark_context = framework.get("swing_benchmarks", {})
     if isinstance(benchmark_context, dict) and benchmark_context:
         try:
-            from swing_benchmarks import revalidate_projection as validate_benchmarks
+            if (isinstance(benchmark_context.get('protocol'), dict)
+                    and benchmark_context['protocol'].get('version') == 'spy-qqqm-matched-paths-v2-20261101'):
+                from swing_benchmarks_v2 import revalidate_projection as validate_benchmarks
+            else:
+                from swing_benchmarks import revalidate_projection as validate_benchmarks
             benchmark_context = validate_benchmarks(root, benchmark_context, current)
         except (ImportError, OSError, ValueError, KeyError, TypeError):
             benchmark_context = {"status": "unverified", "capital_authority": False}

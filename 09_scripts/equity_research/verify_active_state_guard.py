@@ -53,6 +53,10 @@ ACTIVE_CONFIG_PATH = CONTROL_DIR / "active_production_config.json"
 # first receipt or analyst review exists. Optionality is a closed path/type
 # contract, never a registry-controlled exemption for other required inputs.
 OPTIONAL_ACTIVE_INPUTS = {
+    "08_reviews/swing_benchmarks_v2.local/comparisons.jsonl": "optional_append_only",
+    "08_reviews/swing_benchmarks_v2.local/forward_reviews.jsonl": "optional_append_only",
+    "08_reviews/swing_research_v3.local/ledger.jsonl": "optional_append_only",
+    "08_reviews/earnings_survival.local/ledger.jsonl": "optional_append_only",
     "08_reviews/swing_benchmarks.local/comparisons.jsonl": "optional_append_only",
     "08_reviews/swing_benchmarks.local/forward_reviews.jsonl": "optional_append_only",
     "08_reviews/swing_research_v2.local/ledger.jsonl": "optional_append_only",
@@ -92,6 +96,9 @@ OPTIONAL_ACTIVE_INPUTS = {
     "03_source_data/equity_research/official_news_status.local.json": "optional_generated_research",
 }
 OPTIONAL_ACTIVE_PATTERNS = {
+    "08_reviews/swing_benchmarks_v2.local/**/*": "optional_private_research_history",
+    "08_reviews/swing_research_v3.local/**/*": "optional_private_research_history",
+    "08_reviews/earnings_survival.local/**/*": "optional_private_research_history",
     "08_reviews/swing_benchmarks.local/**/*": "optional_private_research_history",
     "03_source_data/equity_research/swing_benchmark_quotes.local/**/*": "optional_public_source_receipt",
     "08_reviews/swing_research_v2.local/**/*": "optional_private_research_history",

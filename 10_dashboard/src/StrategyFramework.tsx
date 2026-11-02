@@ -1,4 +1,4 @@
-import type {Snapshot, StrategyReadiness, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks} from './domain';
+import type {Snapshot, StrategyReadiness, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks, EarningsSurvivalStudy} from './domain';
 import {money, timeLabel} from './domain';
 
 const readinessLabels:Record<StrategyReadiness['classification'],string>={
@@ -282,6 +282,33 @@ function SwingSetups({view,data,now,unavailable}:{view:SwingResearch;data:Snapsh
   </section>;
 }
 
+export function EarningsSurvivalPanel({view,unavailable=false}:{view:EarningsSurvivalStudy;unavailable?:boolean}) {
+  if(view.schema_version!=='equity_earnings_survival_study_v1'||view.research_only!==true
+    ||view.capital_authority!==false||view.actionable_quantity!==0||view.automatic_action_allowed!==false
+    ||view.profitability_established!==false)return null;
+  const summary=view.summary??{};
+  const labels:[string,string][]=[['pre_event_candidates','Before-earnings observations'],
+    ['ordinary_breakout_signals','Ordinary breakout signals'],['survival_breakout_signals','Earnings-survival signals'],
+    ['failed_support','Support failures'],['expired_or_missed','Expired or missed cases'],
+    ['matured_primary_paths','Matured raw five-session paths'],['matched_primary_paths','Matched raw five-session paths']];
+  return <section className="swing-research" aria-label="Earnings-survival paper study">
+    <h3>Earnings-survival paper study</h3>
+    <p><strong>Research only · zero approved shares</strong></p>
+    <p>Compare a base that survives earnings and then breaks out with ordinary breakouts, using the same observation clocks and costs.</p>
+    <p role="status">{unavailable?'Current source proof is unavailable.':view.status==='waiting_on_data'?'Waiting for source-bound study observations.':'Prospective study is collecting evidence.'} A completed five-session cohort permits a process review; it does not establish an investment edge.</p>
+    {!unavailable?<dl className="condition-grid">{labels.map(([key,label])=><div key={key}><dt>{label}</dt><dd>{count(summary[key])??'Not established'}</dd></div>)}</dl>:null}
+    {!unavailable&&view.candidates?.length?<details><summary>Observed research cases</summary><ul>{view.candidates.slice(0,8).map((row,index)=><li key={row.observation_id??`${row.ticker}:${index}`}><strong>{row.ticker}</strong> — {row.state.replaceAll('_',' ')}</li>)}</ul></details>:null}
+    {!unavailable&&view.timing_usability?<details><summary>Owner-window timing observations</summary>
+      <p>{view.timing_usability.status.replaceAll('_',' ')}. Qualifying setup/windows: {count(view.timing_usability.unique_setup_windows_with_qualifying_marks)??'Not established'}. Unmatched source signals: {count(view.timing_usability.unmatched_source_signals)??'Not established'}.</p>
+      {view.timing_usability.delay_cohorts.length?<ul>{view.timing_usability.delay_cohorts.map(row=><li key={row.delay_minutes}>{row.delay_minutes}-minute delay: {row.records} retained observations; {row.qualifying_marks} qualifying marks.</li>)}</ul>:null}
+      <p>These are dated source observations after the study capture. Delay variants are not independent setups, current entry prices, owner responses or fills.</p>
+    </details>:null}
+    {view.dependencies?.length?<details><summary>Missing evidence and study limits</summary><ul>{view.dependencies.map((row,index)=><li key={`${row.code}:${index}`}>{row.code.replaceAll('_',' ')}{typeof row.count==='number'?` (${row.count})`:''}</li>)}</ul></details>:null}
+    <details><summary>How the comparison works</summary><p>Levels are frozen before earnings. The release needs retained issuer evidence and a separate local observation time. Five sessions is the primary horizon, with matched SPY and QQQM comparisons and predeclared trading-cost scenarios.</p><p>Unobserved entry delays, bid/ask spreads and whole-share funding remain explicit dependencies. No opening price substitutes for a missed owner-window observation. These are modeled price paths, not fills or managed-stop returns.</p></details>
+    <p className="form-hint">Study {view.version}{view.generated_at?` · view as of ${timeLabel(view.generated_at)}`:''}. Raw price paths still require corporate-action and economic review. Qualified strategy paths: 0. Profitability remains unestablished.</p>
+  </section>;
+}
+
 export default function StrategyFrameworkPanel({data,now,unavailable=false}:{data:Snapshot;now:number;unavailable?:boolean}) {
   const view=data.strategy_framework;
   if(!view||view.schema_version!=='equity_strategy_framework_v1'||view.automatic_action_allowed!==false)return null;
@@ -306,5 +333,6 @@ export default function StrategyFrameworkPanel({data,now,unavailable=false}:{dat
     {view.swing_coverage?<SwingCoveragePanel view={view.swing_coverage} unavailable={unavailable}/>:null}
     {view.swing_research?<SwingSetups view={view.swing_research} data={data} now={now} unavailable={unavailable}/>:null}
     {view.swing_benchmarks?<BenchmarkEvaluation view={view.swing_benchmarks} unavailable={unavailable}/>:null}
+    {view.earnings_survival?<EarningsSurvivalPanel view={view.earnings_survival} unavailable={unavailable}/>:null}
   </section>;
 }

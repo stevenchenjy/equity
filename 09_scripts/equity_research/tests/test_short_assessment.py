@@ -148,6 +148,23 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertIs(research["capital_authority"], False)
         self.assertFalse((self.root / short.STATE_REL).exists())
 
+    def test_short_context_routes_registered_v2_benchmark_protocol(self):
+        from unittest.mock import Mock
+        publication = self.typed_publication("09:20")
+        value = {"schema_version": "equity_swing_benchmarks_v1",
+                 "protocol": {"version": "spy-qqqm-matched-paths-v2-20261101"},
+                 "status": "experimental"}
+        publication["strategy_framework"] = {"status": "ready", "swing_benchmarks": value}
+        atomic_write_json(self.root / "04_research/company_research/daily_decision.json", publication)
+        validator = Mock(return_value={**value, "capital_authority": False})
+        legacy = Mock()
+        with patch("decision_readiness.validate_projection"), \
+             patch.dict("sys.modules", {"swing_benchmarks_v2": Mock(revalidate_projection=validator),
+                                        "swing_benchmarks": Mock(revalidate_projection=legacy)}):
+            short.build_context(self.root, self.moment("09:30"))
+        validator.assert_called_once_with(self.root, value, self.moment("09:30"))
+        legacy.assert_not_called()
+
     def test_unverified_strategy_handoff_does_not_leak_into_short_research(self):
         publication = self.typed_publication("09:20")
         publication["strategy_framework"] = {"status": "ready", "analyst_handoff": [

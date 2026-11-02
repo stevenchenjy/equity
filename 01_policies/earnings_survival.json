@@ -1,0 +1,22 @@
+{
+  "schema_version": "equity_earnings_survival_policy_v1",
+  "version": "earnings-survival-forward-v1-20261101",
+  "research_only": true,
+  "capital_authority": false,
+  "actionable_quantity": 0,
+  "automatic_action_allowed": false,
+  "primary_horizon_sessions": 5,
+  "secondary_horizons_sessions": [10, 14],
+  "one_way_cost_bps": [10, 25, 50],
+  "post_release_breakout_window_sessions": 5,
+  "pre_event_rule": "Before the calendar attention deadline and before the subsequently confirmed actual release, freeze the first eligible common-stock daily observation: SMA20>SMA50, close>SMA20, five-session low<close<=prior19-session high. Support is that five-session low and resistance that prior19-session high.",
+  "survival_rule": "For an independently confirmed outside-regular-session actual results release, every complete regular-session low from the first post-release opening through the observed breakout must be at or above the frozen support. Missing sessions are unavailable, never assumed to survive. Intraday releases require a separately supported path and remain unavailable here.",
+  "breakout_rule": "Within the first five post-release trading sessions, an actually captured completed daily close must exceed both frozen resistance and the rolling prior19-session high, exceed the prior close, and have volume at least twice the prior19-session mean. Never retrospectively capture an earlier breakout.",
+  "baseline_rule": "Retain all existing completed-close19-high/2RVOL common-stock breakouts from the same admitted dataset and actual capture clock. Treatment is tagged on shared signal identities; overlapping cohort membership, horizons and two ETFs are not independent trades. Unknown canonical/tactical eligibility is not economic failure.",
+  "entry_rule": "Descriptive fixed-horizon benchmark only: first regular-session opening strictly after actual signal capture. No elapsed opening, quote, fill, owner response or stop protection is inferred.",
+  "timing_usability_rule": "Read-only links to independently validated active-swing owner-window and3/5/10-minute delay observations require identical source session, original51bars, price basis and native dataset/implementation bindings. Positive observations and their delay anchors must occur strictly after study signal capture. Preserve invalidation, out-of-band, missed and unavailable cases; count unique signal/windows separately from delay variants. Historical last sales are not current entries, fills or human response. The five-session EOD endpoint is unchanged and unsupported window return paths remain unqualified.",
+  "outcome_rule": "Five trading sessions is primary; ten/fourteen are secondary. Exact same-entry/same-exit SPY and QQQM forward bars and identical per-side costs are required for matched price differences. Unreviewed corporate actions, stop sequencing, whole shares, current cash and portfolio capacity remain explicit dependencies. No economic or managed-strategy qualification is granted.",
+  "release_confirmation_rule": "An explicit offline check/apply writer requires retained issuer HTML, issuer-specific manifest host, matching canonical URL, a single timezone-qualified article:published_time or Article/NewsArticle/PressRelease datePublished, an actual results headline, literal ticker and fiscal-period evidence, and a corroborating validated official-news observed-event record. dateModified, webcast times, calendar estimates and SEC acceptance times cannot become actual release clocks. Original HTML and evidence receipts are retained; local document availability is the actual admission clock.",
+  "threshold_basis": "Prospectively fixed exploratory approximation of earnings-survival breakouts, not an exact replication of a creator's discretionary method and not optimized on selected historical winners. No 15% gap rule is adopted.",
+  "adoption": "No automatic promotion, new risk limit, longer live mandate, positive capital quantity, delivery purpose or execution authority. Independent forward/holdout, adverse-regime, cost, capacity and explicit owner review remain required."
+}

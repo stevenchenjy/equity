@@ -231,12 +231,15 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
             status='unverified', automatic_action_allowed=False, strategies=[], decisions=[], analyst_handoff=[],
             validation_error='Current readiness source, capital or implementation proof is unverified.',
             swing_research=raw.get('swing_research'), swing_coverage=raw.get('swing_coverage'),
-            swing_benchmarks=raw.get('swing_benchmarks'))
+            swing_benchmarks=raw.get('swing_benchmarks'), earnings_survival=raw.get('earnings_survival'))
     swing = result.get('swing_research')
     if isinstance(swing, dict):
         try:
             if swing.get('schema_version') == 'equity_swing_research_v2':
-                from swing_research_v2 import revalidate_projection
+                if str(swing.get('version', '')).startswith('daily-swing-review-windows-v3-'):
+                    from active_swing_research import revalidate_projection
+                else:
+                    from swing_research_v2 import revalidate_projection
             else:
                 from swing_research import revalidate_projection
             result['swing_research'] = revalidate_projection(root, swing, current)
@@ -245,6 +248,16 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
                 status='waiting_on_data', research_only=True, capital_authority=False,
                 actionable_quantity=0, candidates=[],
                 dependencies=['Current source and session validation is unavailable; no setup levels are current.'])
+    if isinstance(result.get('earnings_survival'), dict):
+        try:
+            from earnings_survival import revalidate_projection as validate_earnings_survival
+            result['earnings_survival'] = validate_earnings_survival(root, result['earnings_survival'], current)
+        except (ImportError, OSError, ValueError, KeyError, TypeError):
+            result['earnings_survival'] = dict(schema_version='equity_earnings_survival_study_v1',
+                version=result['earnings_survival'].get('version', 'unverified'), generated_at=current.isoformat(),
+                status='waiting_on_data', research_only=True, capital_authority=False, actionable_quantity=0,
+                automatic_action_allowed=False, profitability_established=False, summary={}, candidates=[],
+                dependencies=[{'code':'Current earnings-study source proof is unavailable.'}])
     if isinstance(result.get('swing_coverage'), dict):
         try:
             from swing_coverage import build as build_swing_coverage
@@ -255,7 +268,11 @@ def strategy_framework_view(root: Path, decision: dict, current: datetime, *,
                 actionable_quantity=0, blockers=['Broad research history and current source coverage are unverified.'])
     if isinstance(result.get('swing_benchmarks'), dict):
         try:
-            from swing_benchmarks import revalidate_projection as revalidate_benchmarks
+            if (isinstance(result['swing_benchmarks'].get('protocol'), dict)
+                    and result['swing_benchmarks']['protocol'].get('version') == 'spy-qqqm-matched-paths-v2-20261101'):
+                from swing_benchmarks_v2 import revalidate_projection as revalidate_benchmarks
+            else:
+                from swing_benchmarks import revalidate_projection as revalidate_benchmarks
             result['swing_benchmarks'] = revalidate_benchmarks(root, result['swing_benchmarks'], current)
         except (ImportError, OSError, ValueError, KeyError, TypeError):
             result['swing_benchmarks'] = dict(schema_version='equity_swing_benchmarks_v1',

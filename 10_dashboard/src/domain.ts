@@ -82,6 +82,19 @@ export type StrategyFramework = {
   swing_research?:SwingResearch;
   swing_coverage?:SwingCoverage;
   swing_benchmarks?:SwingBenchmarks;
+  earnings_survival?:EarningsSurvivalStudy;
+};
+export type EarningsSurvivalStudy = {
+  schema_version:'equity_earnings_survival_study_v1';version:string;generated_at:string;status:string;
+  research_only:true;capital_authority:false;actionable_quantity:0;automatic_action_allowed:false;
+  profitability_established:false;registered_at?:string;
+  summary:Record<string,number>;
+  dependencies?:{code:string;count?:number}[];
+  candidates?:{ticker:string;event_id?:string;observation_id?:string;state:string;actionable_quantity:0}[];
+  delay_observations_status?:string;feasibility?:Record<string,unknown>;
+  timing_usability?:{status:string;unique_setup_windows_with_qualifying_marks:number|null;
+    window_evaluation_records:number|null;unmatched_source_signals:number|null;
+    delay_cohorts:{delay_minutes:number;records:number;qualifying_marks:number}[]};
 };
 export type SwingBenchmarkSummary = {
   unique_stock_outcomes:number;unique_matched_stock_outcomes:number;comparison_pairs:number;raw_pairs:number;reviewed_pairs:number;

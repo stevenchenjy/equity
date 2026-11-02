@@ -31,6 +31,11 @@ class StrategyFrameworkIntegrationTests(unittest.TestCase):
                                  "comparisons": [{"ticker": "META", "benchmark": "QQQM",
                                                   "raw_excess_price_path_pct": 2.0}]}}
         self.assertEqual(recommendation_notification_fingerprint(original), recommendation_notification_fingerprint(changed))
+        changed["strategy_framework"]["earnings_survival"] = {
+            "status": "prospective_research_only", "research_only": True,
+            "capital_authority": False, "actionable_quantity": 0,
+            "summary": {"survival_breakout_signals": 12}, "profitability_established": False}
+        self.assertEqual(recommendation_notification_fingerprint(original), recommendation_notification_fingerprint(changed))
         self.assertEqual(delivery_meaning_key(original), delivery_meaning_key(changed))
         self.assertEqual(render_email(original), render_email(changed))
         changed["watch_candidates"][0]["suggested_whole_shares"] = "2"
@@ -50,13 +55,16 @@ class StrategyFrameworkIntegrationTests(unittest.TestCase):
                 benchmarks = {"status": "waiting_on_outcomes", "comparisons": [], "capital_authority": False}
                 with patch("decision_readiness.build", return_value={"status": "ready"}), \
                      patch("swing_coverage.build", return_value={"status": "unavailable", "candidates": []}), \
-                     patch("swing_benchmarks.build", return_value=benchmarks) as compare, \
-                     patch("swing_research_v2.build", return_value=study) as build:
+                     patch("swing_benchmarks_v2.build", return_value=benchmarks) as compare, \
+                     patch("active_swing_research.build", return_value=study) as build, \
+                     patch("earnings_survival.build", return_value={"status":"prospective_research_only","capital_authority":False}) as earnings:
                     compose_strategy_research(decision, root=Path("/unused"), current=current)
                 build.assert_called_once_with(Path("/unused"), current=current, capture=False, baseline=decision)
                 self.assertEqual(decision["strategy_framework"]["swing_research"], study)
                 compare.assert_called_once_with(Path("/unused"), current=current, capture=False)
                 self.assertEqual(decision["strategy_framework"]["swing_benchmarks"], benchmarks)
+                earnings.assert_called_once_with(Path("/unused"), current=current, capture=False, baseline=decision)
+                self.assertFalse(decision["strategy_framework"]["earnings_survival"]["capital_authority"])
                 self.assertEqual({k: v for k, v in decision.items() if k != "strategy_framework"}, original)
 
 

@@ -1,9 +1,37 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {renderToStaticMarkup} from 'react-dom/server';
-import StrategyFrameworkPanel, {swingReviewState} from './StrategyFramework';
+import StrategyFrameworkPanel, {swingReviewState, EarningsSurvivalPanel} from './StrategyFramework';
 import {CapitalActions} from './CapitalActions';
-import type {Snapshot, StrategyFramework, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks} from './domain';
+import type {Snapshot, StrategyFramework, SwingResearch, SwingResearchCandidate, SwingReviewWindow, SwingCoverage, SwingBenchmarks, EarningsSurvivalStudy} from './domain';
+
+const earningsStudy:EarningsSurvivalStudy={schema_version:'equity_earnings_survival_study_v1',
+  version:'earnings-survival-forward-v1-20261101',generated_at:'2026-11-01T20:00:00-05:00',
+  status:'prospective_research_only',research_only:true,capital_authority:false,actionable_quantity:0,
+  automatic_action_allowed:false,profitability_established:false,
+  summary:{pre_event_candidates:7,ordinary_breakout_signals:3,survival_breakout_signals:1,
+    failed_support:2,expired_or_missed:1,matured_primary_paths:0,matched_primary_paths:0},
+  dependencies:[{code:'official_release_confirmation_required',count:4}]};
+
+test('earnings study exposes process counts without capital or performance claims',()=>{
+  const html=renderToStaticMarkup(<EarningsSurvivalPanel view={earningsStudy}/>);
+  assert.match(html,/Earnings-survival paper study/);
+  assert.match(html,/zero approved shares/);
+  assert.match(html,/Qualified strategy paths: 0/);
+  assert.match(html,/Matched raw five-session paths/);
+  assert.match(html,/official release confirmation required/);
+  assert.doesNotMatch(html,/BUY|SELL|win rate|approved trade/);
+});
+
+test('earnings study rejects expanded authority and withholds unverified figures',()=>{
+  for(const changes of [{capital_authority:true},{actionable_quantity:1},{profitability_established:true}]){
+    const view={...earningsStudy,...changes} as unknown as EarningsSurvivalStudy;
+    assert.equal(renderToStaticMarkup(<EarningsSurvivalPanel view={view}/>),'');
+  }
+  const html=renderToStaticMarkup(<EarningsSurvivalPanel view={earningsStudy} unavailable/>);
+  assert.match(html,/Current source proof is unavailable/);
+  assert.doesNotMatch(html,/Before-earnings observations/);
+});
 
 const now=Date.parse('2026-10-28T08:00:00-04:00');
 const framework:StrategyFramework={schema_version:'equity_strategy_framework_v1',generated_at:'2026-10-28T09:45:00-04:00',

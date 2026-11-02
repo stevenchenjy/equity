@@ -102,7 +102,7 @@ def _scope(symbols) -> dict:
 
 
 def quote_targets(root: Path, current: datetime) -> list[str]:
-    from swing_research_v2 import quote_targets as selected_targets
+    from active_swing_research import quote_targets as selected_targets
     return list(_scope(selected_targets(root, current, limit=MAX_TARGETS)))
 
 

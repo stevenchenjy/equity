@@ -611,6 +611,26 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(framework, before)
         self.assertEqual(result['decisions'], [])
 
+    def test_registered_v2_benchmarks_use_protocol_identity_at_read_time(self):
+        from server import strategy_framework_view
+        from unittest.mock import Mock
+        value = dict(schema_version='equity_swing_benchmarks_v1', status='experimental',
+                     protocol={'version': 'spy-qqqm-matched-paths-v2-20261101'},
+                     comparisons=[], capital_authority=False, actionable_quantity=0)
+        framework = dict(schema_version='equity_strategy_framework_v1', decisions=[],
+                         analyst_handoff=[], swing_benchmarks=value)
+        projected = {**value, 'read_time': self.now.isoformat()}
+        validator = Mock(return_value=projected)
+        legacy = Mock()
+        with patch('decision_readiness.validate_projection'), \
+             patch.dict('sys.modules', {'swing_benchmarks_v2': Mock(revalidate_projection=validator),
+                                       'swing_benchmarks': Mock(revalidate_projection=legacy)}):
+            result = strategy_framework_view(self.root, {'strategy_framework': framework}, self.now,
+                                             capital=None, market_current=True)
+        validator.assert_called_once_with(self.root, value, self.now)
+        legacy.assert_not_called()
+        self.assertEqual(result['swing_benchmarks'], projected)
+
     def test_invalid_benchmark_sources_suppress_claimed_results(self):
         from server import strategy_framework_view
         from unittest.mock import Mock

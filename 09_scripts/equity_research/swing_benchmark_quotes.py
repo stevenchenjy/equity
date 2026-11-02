@@ -1,4 +1,4 @@
-"""Supplemental paired SPY/QQQM last sales for genuine V2 entry observations.
+"""Supplemental paired SPY/QQQM last sales for genuine retained entry observations.
 
 This collector never changes the frozen strategy, held quote pointer, account,
 research slots or capital. Historical pairs are dated research measurements,
@@ -70,8 +70,12 @@ def _read(root, binding, folder):
 
 
 def _entries(root,current):
-    rows=study._load(root,current)
-    study._verify(root,rows)
+    if (Path(root)/"01_policies/swing_research_v3.json").exists():
+        import active_swing_research as selected_study
+    else:
+        selected_study = study
+    rows=selected_study._load(root,current)
+    selected_study._verify(root,rows)
     observations={row["observation_id"]:row for row in rows if row["kind"]=="observation"}
     entries={row["record_hash"]:row for row in rows if
         (row["kind"]=="window_evaluation" and row.get("first_qualifying_entry") is True and row["state"]=="condition_observed")

@@ -105,7 +105,7 @@ def run(root: Path, *, current=None, clock=now_et, runtime_lock=None,
         if not due_window(actual) or active_claim(root, actual):
             return dict(result, status="deferred_changed_window_or_claim")
         _configuration(root)
-        from swing_research_v2 import build as default_builder, quote_targets as default_targets
+        from active_swing_research import build as default_builder, quote_targets as default_targets
         builder, targets = builder or default_builder, targets or default_targets
         collector = collector or swing_candidate_quotes.collect
         identity = "swing-observer-" + uuid.uuid4().hex

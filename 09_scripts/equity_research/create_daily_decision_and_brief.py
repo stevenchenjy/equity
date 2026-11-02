@@ -793,14 +793,25 @@ def compose_strategy_research(decision: dict[str, Any], *, root: Path,
                               current: datetime, capture: bool = False) -> None:
     """Attach optional research without changing capital or notification meaning."""
     from decision_readiness import build as build_decision_readiness
-    from swing_research_v2 import build as build_swing_research
+    from active_swing_research import build as build_swing_research
     from swing_coverage import build as build_swing_coverage
-    from swing_benchmarks import build as build_swing_benchmarks
+    from swing_benchmarks_v2 import build as build_swing_benchmarks
     view = build_decision_readiness(root, decision, current=current)
     view["swing_research"] = build_swing_research(
         root, current=current, capture=capture, baseline=decision)
     view["swing_coverage"] = build_swing_coverage(root, current=current)
     view["swing_benchmarks"] = build_swing_benchmarks(root, current=current, capture=capture)
+    try:
+        from earnings_survival import build as build_earnings_survival
+        view["earnings_survival"] = build_earnings_survival(
+            root, current=current, capture=capture, baseline=decision)
+    except (ImportError, OSError, ValueError, TypeError, KeyError, RuntimeError):
+        view["earnings_survival"] = {
+            "schema_version": "equity_earnings_survival_study_v1", "version": "unverified",
+            "generated_at": current.isoformat(), "status": "waiting_on_data", "research_only": True,
+            "capital_authority": False, "actionable_quantity": 0, "automatic_action_allowed": False,
+            "profitability_established": False, "summary": {}, "candidates": [],
+            "dependencies": [{"code": "earnings_survival_source_or_policy_unavailable", "count": 1}]}
     decision["strategy_framework"] = view
 
 
@@ -1491,6 +1502,21 @@ def main() -> int:
 """
     from capital_presentation import markdown as capital_markdown
     report = "# Equity Research — capital decision\n\n" + capital_markdown(decision) + "\n\n---\n\n## Full research diagnostics\n\n" + report
+    study = decision.get("strategy_framework", {}).get("earnings_survival", {})
+    if study:
+        report += "\n\n## Earnings-survival paper study\n\n"
+        report += f"Status: {study.get('status', 'waiting_on_data')}; version: {study.get('version', 'unverified')}. Research only; zero approved shares.\n\n"
+        report += "A base identified before earnings is compared with ordinary breakouts on the same clocks and costs. Five sessions is the primary outcome; a first cohort permits a process review, not a profitability conclusion.\n\n"
+        for key, label in (("pre_event_candidates", "Before-earnings observations"),
+                           ("ordinary_breakout_signals", "Ordinary breakout signals"),
+                           ("survival_breakout_signals", "Earnings-survival signals"),
+                           ("failed_support", "Support failures"),
+                           ("expired_or_missed", "Expired or missed cases"),
+                           ("matured_primary_paths", "Matured five-session paths"),
+                           ("matched_primary_paths", "Matched five-session paths")):
+            report += f"- {label}: {study.get('summary', {}).get(key, 'unavailable')}.\n"
+        if study.get("dependencies"):
+            report += "\nMissing evidence: " + "; ".join(str(row.get("code", "unavailable")) for row in study["dependencies"]) + ".\n"
 
     subject, plain, html_body = render_email(decision)
 

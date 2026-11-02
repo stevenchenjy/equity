@@ -8,10 +8,20 @@ human-only execution and experiment-adoption requirements.
 ## Signal, observation and execution clocks
 
 Frozen `daily-swing-forward-v1-20261027` code, policy and observations remain
-retained. The separate v2 uses `01_policies/swing_research_v2.json`,
-`swing_research_v2.py` and `08_reviews/swing_research_v2.local/`. First detection,
-source availability, first future opening benchmark, owner-window last sale,
-modeled outcome and actual human execution are distinct. Never backdate entry.
+retained. The active prospective route is
+`daily-swing-review-windows-v3-20261101`, with
+`01_policies/swing_research_v3.json`, `active_swing_research.py` and
+`08_reviews/swing_research_v3.local/`. Its verified runtime registry
+`01_policies/swing_runtime_v3.json` pins the original engine and its local
+dependency closure to retained Git bytes. New observations begin at actual
+first capture; source recovery does not create earlier signals or entries.
+
+Historical v2 uses `01_policies/swing_research_v2.json`, `swing_research_v2.py`
+and `08_reviews/swing_research_v2.local/`. Those original sources, policies,
+observations and their unresolved historical validation state are preserved;
+they are not repaired or reinterpreted as v3. First detection, source
+availability, first future opening benchmark, owner-window last sale, modeled
+outcome and actual human execution are distinct. Never backdate entry.
 
 A daily stock setup stays conditional through its named next exchange session's
 09:45–10:45 and 14:45–15:20 Eastern owner windows, clipped at the actual close.
@@ -21,6 +31,13 @@ suppressed. One last sale cannot prove rebound sequencing, an intraday path,
 NBBO, spread, order or fill. Every experimental card retains zero actionable
 shares. Growth thesis, catalyst, event risk, sizing and execution feasibility
 remain analytical requirements. Stable ticker order is not a conviction ranking.
+
+The existing observer also retains predeclared three-, five- and ten-minute
+delay sensitivities when actual fresh source marks are available at or after
+the delay. Preserve actual elapsed time, misses and invalidations. A missing
+delayed mark cannot reuse the original quote or an elapsed opening. Delay
+variants are nominal price observations, not independently verified owner
+response, executable fills or independent setups.
 
 ## Public observations without another analyst slot
 
@@ -92,9 +109,15 @@ version. Exact strategy review and explicit owner adoption remain necessary.
 
 ### Separately versioned matched benchmarks
 
-`01_policies/swing_benchmarks.json` and `swing_benchmarks.py` define a separate,
-zero-capital SPY and QQQM comparison protocol. They do not change the frozen v1
-or v2 signal definitions, original observations, or their implementation hashes.
+The active zero-capital SPY/QQQM protocol is
+`spy-qqqm-matched-paths-v2-20261101`, using
+`01_policies/swing_benchmarks_v2.json`, `swing_benchmarks_v2.py` and
+`08_reviews/swing_benchmarks_v2.local/`. It measures the active v3 signal cohort
+without changing frozen v1/v2 signal definitions, original observations or
+their implementation hashes. Historical benchmark v1 retains
+`01_policies/swing_benchmarks.json`, `swing_benchmarks.py`, its original review
+writer and `08_reviews/swing_benchmarks.local/`; those historical instructions
+are not the active route and its registration is not rewritten.
 Future-opening stock paths compare with the same entry session, exit session,
 horizon and predeclared cost scenario. A daily opening price cannot stand in
 for an owner-window or delayed entry. Such comparisons require original paired
@@ -107,7 +130,9 @@ budget. It makes no benchmark request when there is no new eligible entry or
 insufficient remaining budget. Supplemental receipts are isolated under
 `03_source_data/equity_research/swing_benchmark_quotes.local/`; they never replace
 the held-risk batch or canonical account prices. The separate append-only
-comparison history lives under `08_reviews/swing_benchmarks.local/`.
+active comparison history lives under `08_reviews/swing_benchmarks_v2.local/`.
+Shared quote receipts select exact active-v3 entry records; they do not transfer
+an older cohort into the new protocol or reset source clocks.
 
 Raw unadjusted price comparisons and source-reviewed fixed-horizon modeled
 paths remain distinct. Both legs require exact source coverage and applicable
@@ -117,7 +142,7 @@ The dashboard revalidates the comparison's own proof at read time, reports
 unique outcome denominators separately from overlapping horizons and scenarios,
 and withholds results whose source or protocol proof fails.
 
-The separate `swing_benchmark_review.py --root ROOT --input PROPOSAL` path
+The active `active_swing_benchmark_review.py --root ROOT --input PROPOSAL` path
 validates a forward-window-only ETF corporate-action review; `--apply` appends
 the accepted review under the existing runtime-then-pipeline lock discipline.
 Its documented schema binds the exact immutable comparison, protocol, forward
@@ -127,8 +152,17 @@ session. A distribution before entry cannot by itself invalidate this narrower
 benchmark-path review. An unsupported split or distribution inside the evaluated
 window remains a dependency. This review does not clear the original stock
 signal history; the stock leg still needs its independent existing review.
+For the active v3 stock leg, use `active_swing_outcome_review.py`; the original
+v1/v2 writer/history remain preserved for their original versions.
 Accepted research reviews require the normal full no-send recomposition, with
 no additional delivery purpose or analyst slot.
+
+The separately preregistered [earnings-survival study](earnings_survival_study.md)
+may link exact retained active-v3 window/delay records occurring after its own
+signal capture. Its `timing_usability` view keeps missingness and delays visible;
+it does not qualify owner-window returns, fills or the daily-opening study's
+economic outcome. The existing analyst reviews own supported release
+confirmation and precise unresolved dependencies, with no added cadence.
 
 At existing analyst reviews, inspect the handoff and outside research tasks
 after urgent held risks and imminent events. Complete a sourced growth/company/

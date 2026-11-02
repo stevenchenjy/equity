@@ -21,6 +21,18 @@ The public-only window observer adds no analyst slot, completed conclusion or
 email purpose. Preserve its original observation clocks and failed attempts;
 never substitute a daily opening price for a later owner-window observation.
 
+During these same reviews, inspect the
+[earnings-survival study](earnings_survival_study.md) and its source-bound
+release-confirmation dependencies after urgent held risks. When retained
+official results evidence supports confirmation, use
+`run_earnings_survival.py --root ROOT --confirm-release PROPOSAL` to check,
+then `--apply`. The CLI acquires runtime, pipeline and study locks in order;
+do not invoke it while already holding those locks in a parent process. The
+analyst obtains and validates the official evidence; do not ask the owner to
+invent a release clock or research case. Missing or unsupported evidence stays
+an explicit dependency. This adds no review slot, delivery purpose, capital
+authority or change to the approved five-session live mandate.
+
 For an active `daily_decision.json:capital_deployment_escalation`, immediately
 prioritize its `research_priority_tickers` and exact evidence/valuation gates.
 Compare quality holding additions, the strongest researched growth case and

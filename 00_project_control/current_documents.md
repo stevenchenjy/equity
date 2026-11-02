@@ -1,11 +1,16 @@
 # Equity Research — current document entrypoints
 
-Reviewed 2026-10-22 ET. This index locates maintained guidance and generated
+Reviewed 2026-11-01 ET. This index locates maintained guidance and generated
 outputs; it does not freeze balances, test counts, call counts, schedules, or
 open-item counts. Verify the current branch, files, runtime timestamps and
 relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
+
+- [Prospective earnings-survival study](earnings_survival_study.md): separately
+  versioned pre-event setup capture, official release clocks, survival/breakout
+  observations and same-clock forward comparisons; zero capital, a five-session
+  primary horizon and unchanged strategy-adoption requirements.
 
 - [Swing research during owner review windows](swing_review_window_workflow.md):
   separately versioned timing, public-only observations, focused outside-universe

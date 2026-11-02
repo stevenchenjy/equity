@@ -33,10 +33,10 @@ class SwingObserverTests(unittest.TestCase):
 
     def invoke(self, **kw):
         # The engine itself is exercised in its own full source-admission suite.
-        module = types.ModuleType("swing_research_v2")
+        module = types.ModuleType("active_swing_research")
         module.build = kw.get("builder", Mock(return_value={"status": "experimental_current", "version": "fixture"}))
         module.quote_targets = kw.get("targets", Mock(return_value=[]))
-        with patch.dict(sys.modules, swing_research_v2=module):
+        with patch.dict(sys.modules, active_swing_research=module):
             return observer.run(self.root, current=self.current, clock=lambda: self.current,
                                 runtime_lock=self.lock, **kw)
 
