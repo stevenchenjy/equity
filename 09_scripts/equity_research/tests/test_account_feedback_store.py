@@ -5,7 +5,8 @@ import uuid
 from pathlib import Path
 from unittest.mock import patch
 from datetime import datetime
-from feedback import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version, read, sha
+from _support import SCRIPT_DIR  # noqa: F401
+from account_feedback_store import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version, read, sha
 
 
 class FeedbackTests(unittest.TestCase):
@@ -256,27 +257,27 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(json.loads((self.root/ACCOUNT).read_text())['prior_account_value'],1200)
 
     def test_recovery_after_mid_transition_keeps_exactly_one_fill(self):
-        import feedback
+        import account_feedback_store as feedback
         original=feedback.atomic; counter=[0]
         def fail(root,rel,content):
             counter[0]+=1
             if counter[0]==3: raise OSError('simulated process failure')
             return original(root,rel,content)
         p=self.payload(); p['preview_hash']=self.store.preview(p)['preview_hash']
-        with patch('feedback.atomic',fail):
+        with patch('account_feedback_store.atomic',fail):
             with self.assertRaises(OSError): self.store.submit(p)
         result=Store(self.root,self.root/'runtime.lock',refresh=False).submit(p)
         self.assertEqual(result['stage'],'applied')
         self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
 
     def test_external_change_during_recovery_fails_without_overwrite(self):
-        import feedback
+        import account_feedback_store as feedback
         original=feedback.atomic
         def fail(root,rel,content):
             if rel==ACCOUNT: raise OSError('simulated process failure')
             return original(root,rel,content)
         p=self.payload(); p['preview_hash']=self.store.preview(p)['preview_hash']
-        with patch('feedback.atomic',fail):
+        with patch('account_feedback_store.atomic',fail):
             with self.assertRaises(OSError): self.store.submit(p)
         self.put(ACCOUNT,{'external':'new state'})
         with self.assertRaisesRegex(FeedbackError,'recovery_conflict'): self.store.submit(p)
@@ -312,7 +313,7 @@ class FeedbackTests(unittest.TestCase):
     def test_prepared_request_must_recover_under_lock_before_returning_a_receipt(self):
         import fcntl
         p=self.total_payload();p['preview_hash']=self.store.preview(p)['preview_hash']
-        with patch('feedback.atomic',side_effect=OSError('interrupted write')):
+        with patch('account_feedback_store.atomic',side_effect=OSError('interrupted write')):
             with self.assertRaises(OSError):self.store.submit(p)
         with (self.root/'runtime.lock').open('a+b') as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
@@ -328,7 +329,7 @@ class FeedbackTests(unittest.TestCase):
             entered.set()
             if not released.wait(3):raise AssertionError('intake waited for research')
             raise subprocess.TimeoutExpired('public research',1800)
-        with patch('feedback.subprocess.run',side_effect=public_child):
+        with patch('account_feedback_store.subprocess.run',side_effect=public_child):
             worker=threading.Thread(target=self.store.work_once);worker.start()
             try:
                 self.assertTrue(entered.wait(2))
@@ -373,7 +374,7 @@ class FeedbackTests(unittest.TestCase):
                 'started_at':datetime.now().astimezone().replace(microsecond=0).isoformat(),
                 'email_attempted':False,'outcome':'passed','hard_failures':[],'decision_created':True})
             return subprocess.CompletedProcess(command,0)
-        with patch('feedback.subprocess.run',side_effect=child),patch('email_brief.render_email',side_effect=renderer):
+        with patch('account_feedback_store.subprocess.run',side_effect=child),patch('email_brief.render_email',side_effect=renderer):
             self.assertTrue(self.store.work_once())
         self.assertEqual(len(rows(read(self.root,LEDGER))),2)
         self.assertTrue(all(r['research_status']=='passed' for r in self.store.history()))
@@ -421,7 +422,7 @@ class FeedbackTests(unittest.TestCase):
         import subprocess
         self.submit(self.payload());self.store.refresh=True
         before={p:(self.root/p).read_bytes() for p in (ACCOUNT,POSITIONS,LEDGER)}
-        with patch('feedback.subprocess.run',side_effect=subprocess.TimeoutExpired('public research',1800)):
+        with patch('account_feedback_store.subprocess.run',side_effect=subprocess.TimeoutExpired('public research',1800)):
             self.store.work_once()
         self.assertEqual(self.store.history()[0]['research_status'],'failed')
         self.assertEqual(before,{p:(self.root/p).read_bytes() for p in before})
@@ -434,7 +435,7 @@ class FeedbackTests(unittest.TestCase):
         self.store.refresh=True
         first=self.submit(self.total_payload(amount='100'))
         started=datetime.fromisoformat(first['recorded_at'])
-        with patch('feedback.datetime',wraps=datetime) as clock,patch('feedback.subprocess.run') as child:
+        with patch('account_feedback_store.datetime',wraps=datetime) as clock,patch('account_feedback_store.subprocess.run') as child:
             clock.now.return_value=started+timedelta(seconds=60)
             self.assertFalse(self.store.work_once())
             # Preview and apply the next entry while public research is deferred.
@@ -459,7 +460,7 @@ class FeedbackTests(unittest.TestCase):
         records=[{'stage':'applied','research_status':'queued','recorded_at':first.isoformat()},
                  {'stage':'applied','research_status':'queued','recorded_at':(first+timedelta(seconds=170)).isoformat()}]
         self.store.intake_quiet_seconds=90
-        with patch('feedback.datetime',wraps=datetime) as clock:
+        with patch('account_feedback_store.datetime',wraps=datetime) as clock:
             clock.now.return_value=first+timedelta(seconds=179)
             self.assertTrue(self.store.intake_waiting(records))
             clock.now.return_value=first+timedelta(seconds=180)
@@ -471,7 +472,7 @@ class FeedbackTests(unittest.TestCase):
     def test_intake_is_rechecked_after_acquiring_the_research_lock(self):
         self.submit(self.total_payload())
         self.store.refresh=True
-        with patch.object(self.store,'intake_waiting',side_effect=[False,True]) as waiting,patch('feedback.subprocess.run') as child:
+        with patch.object(self.store,'intake_waiting',side_effect=[False,True]) as waiting,patch('account_feedback_store.subprocess.run') as child:
             self.assertFalse(self.store.work_once())
             self.assertEqual(waiting.call_count,2)
             child.assert_not_called()
@@ -486,7 +487,7 @@ class FeedbackTests(unittest.TestCase):
         request_file.write_text(json.dumps(payload))
         with patch.object(cli,'DEFAULT_ROOT',self.root),patch.object(cli,'RUNTIME_LOCK',self.root/'runtime.lock'),\
              patch('sys.argv',['record_feedback.py',str(request_file),'--apply','--refresh']),\
-             patch('feedback.subprocess.run',side_effect=subprocess.TimeoutExpired('public research',1800)) as child,\
+             patch('account_feedback_store.subprocess.run',side_effect=subprocess.TimeoutExpired('public research',1800)) as child,\
              contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(cli.main(),0)
         self.assertEqual(child.call_count,1)

@@ -711,7 +711,7 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
     envelope = eligibility if eligibility is not None else validate_envelope(decision)
     if decision.get('email_brief_version') == 'equity_direct_action_email_v5':
         from attention_email import direct_action, section
-        from email_brief import _render_cards
+        from email_brief import _render_cards, email_support_location
         sections = []
         changed = set(envelope.get('changed_action_tickers', []))
         for row in decision.get('capital_decision', {}).get('decisions', []):
@@ -741,7 +741,8 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
         subject = '[Equity] ' + sections[0]['title']
         stamp = 'Source close: ' + str(decision.get('capital_decision', {}).get('market_data_timestamp', 'unverified')) + ' (not live).'
         return _render_cards(subject, sections, title=sections[0]['title'], stamp=stamp,
-            footer='Human execution only. No order or fill is assumed. Detailed conditions, research and sources: dashboard/local report.', action_first=True)
+            footer=f"Human execution only. No order or fill is assumed. Detailed conditions, research and sources: {email_support_location(decision, 'dashboard/local report')}.",
+            action_first=True)
     subject = '[Equity] Action update' if envelope.get('action_changed') else '[Equity] Research priority update'
     lines = [subject, 'Generated: ' + str(decision.get('generated_at', '')) + ' · dated reference data, not live.']
     lines.append('Reference market session: ' + str(decision.get('capital_decision', {}).get('market_data_timestamp', 'unverified')))
@@ -766,7 +767,7 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
     if not envelope.get('action_changed'):
         lines += ['', 'No new or repeated trading instruction. Existing quantities are not reissued.']
     lines += ['', 'Human execution only. Verify executable quotes, available shares/funds and unrecorded changes; no order or fill is assumed.']
-    link = decision.get('dashboard_link', {})
+    link = decision.get('dashboard_link', {}) if decision.get('email_support_surface') != 'local_report' else {}
     url = link.get('url', '') if isinstance(link, dict) else ''
     if isinstance(url, str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[a-f0-9]{64}', url):
         lines += ['', 'Private dashboard: ' + url]

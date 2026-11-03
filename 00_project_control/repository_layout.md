@@ -24,11 +24,10 @@ An authoring edit or generated authoring report does not prove deployment.
 | `04_data/equity_research` | RUNTIME_NAMESPACE: tracked valuation bundle example | Private versioned valuation inputs, retained source receipts and scenarios; valuation bundle writer |
 | `04_research/company_research` | RUNTIME_NAMESPACE: intentionally absent from tracked Git at audit baseline | Maintained dossiers, opportunities and append-only outcomes alongside generated decisions; research writers |
 | `05_risk_and_positions` | RUNTIME_NAMESPACE: README and examples | Approved private account truth, plans, snapshots and generated calculations; manual account writer/C9 |
-| `06_execution_records` | RUNTIME_NAMESPACE: execution example/template | Confirmed manual records, reconciliation and dashboard feedback; manual writer, never broker access |
-| `07_automation` | ACTIVE_CONFIG: launchd templates, installers/checks, delivery configuration example | Email briefs, exact sent artifacts, ledgers, scheduler locks/state and dashboard service files |
+| `06_execution_records` | RUNTIME_NAMESPACE: execution example/template | Confirmed manual records, reconciliation and account feedback; manual writer, never broker access |
+| `07_automation` | ACTIVE_CONFIG: launchd templates, installers/checks, delivery configuration example | Email briefs, exact sent artifacts, ledgers, scheduler locks/state |
 | `08_reviews` | RUNTIME_NAMESPACE: `shadow_llm/README.md` documents the isolated evaluator | Current reports, owner reviews, SHADOW run bundles, capital queues and frozen momentum evidence; respective producers |
 | `09_scripts/equity_research` | ACTIVE_SOURCE / COMPATIBILITY_PATH: Python modules and tests | Checkout-relative execution; never flatten independently of consumers |
-| `10_dashboard` | ACTIVE_SOURCE: React UI, Python server and tests | Ignored build/dependencies; private service state under `07_automation/dashboard.local/` |
 | `11_archive` | HISTORICAL_UNIQUE plus HISTORICAL_GIT_RECOVERABLE pointers | `portfolio_versions.local/` and migration snapshots are private retained evidence, not active inputs |
 | `graphify-out` | GENERATED_REGENERABLE: retained graph/report/manifest/labels are useful navigation artifacts | Local AST cache, reflections and interactive exports; Graphify owns relationships |
 
@@ -60,7 +59,7 @@ architecture. Dated implementation, repair and measurement records live in
 `11_archive/project_control_history/` or their existing dated archive. A dated
 filename is not sufficient reason to move a still-effective decision: momentum
 integration, workflow follow-through, research budgets, source manifests and the
-in-progress dashboard plan remain current. Historical records can describe prior
+active operations guidance remain current. Historical records can describe prior
 paths and thresholds; they cannot override current contracts.
 
 ## Path ownership and bounded future migrations
@@ -71,7 +70,7 @@ paths and thresholds; they cannot override current contracts.
 | Production checkout, external runtime lock and strict Git sync | `run_runtime_scheduler.py`; scheduler templates/installer and independent verifier |
 | Admitted active inputs and optionality | `00_project_control/allowed_active_inputs.csv`; `verify_active_state_guard.py` |
 | Versioned valuation input location/admission | `valuation_input_bundle.py`; valuation producers/readers |
-| Private portfolio predecessor location | `portfolio_archive.py`; account and dashboard writers |
+| Private portfolio predecessor location | `portfolio_archive.py`; account writers |
 | Frozen implementation closure | `frozen_momentum_runtime.py` plus `momentum_implementation_archives.json`; replay tests and retained input hashes |
 | Display/branding | `01_policies/equity_display_names.json`; `equity_naming.py` |
 

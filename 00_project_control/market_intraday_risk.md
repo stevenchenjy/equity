@@ -139,7 +139,7 @@ company, market and investment-gate failures keep their existing effect. No
 optional-data failure may fabricate a loss, clear a genuine blocker or grant
 trading eligibility.
 
-## Email, dashboard and delivery
+## Email and delivery
 
 The production text and HTML show a dated observation card with the actual
 price clock, source/delay label, baseline and expiry. This immutable email
@@ -147,13 +147,6 @@ records risk at observation time; reading it later does not make the prices
 current. Its existing completed-close holdings/cash and conditional action
 cards remain separate.
 
-The dashboard independently projects that same assessment against the actual
-read-time account, source bindings, latest attempt and clock. Expired, changed
-or invalid observations suppress current aggregate NAV, price-only loss,
-weights and price-dependent crossing claims. The browser also applies expiry
-between API polls. Older decisions without an intraday field remain compatible.
-The closing-value account summary and recorded cash are never overwritten by
-an intraday mark.
 
 Raw price polling, price-only movement, a refreshed clock or a collector success
 creates no extra email purpose. The installed scheduled sender still owns the

@@ -110,7 +110,7 @@ does not acknowledge or incorporate its events.
    Processing a company is not completion; count new admissible fields,
    sourced analytical conclusions and validated plan versions separately.
    Also list the durable owner requests with the production
-   `10_dashboard/record_feedback.py --list-reviews` command. A dashboard request
+   `09_scripts/equity_research/record_feedback.py --list-reviews` command for retained requests. A retained request
    asks for analysis, not an email resend. Select relevant queued or blocked
    requests alongside the existing risk priorities; do not leave them out of
    the run merely because they were entered in a form rather than a chat.
@@ -187,28 +187,15 @@ does not acknowledge or incorporate its events.
    the mail sender; the existing scheduled sender owns normal delivery and
    its meaningful-change policy. A recurring wake is not a new explicit
    owner-review email request.
-8. Maintain the dashboard's reading summaries after a validated plan change
-   and final recomposition. Use production `10_dashboard/plan_summary.py
-   --template` to obtain exact plan/source bindings, then author a private
-   proposal with 3–4 concise Chinese labelled points for each of `reason`,
-   `counterargument` and `conditions`. Preserve negations, uncertainty,
-   quantities, historical dates, entry gates and separate exit decisions.
-   Validate with `--input PRIVATE_JSON`; add `--apply` only after checking
-   fidelity against the full source. Run from the production checkout with
-   an explicit `--runtime-root /Users/messssi/LocalRuntime/equity`.
-   This writes presentation notes only; it neither amends a plan nor sends
-   mail. Changed plan identity or source text suppresses stale summaries and
-   leaves complete source points visible until new notes are accepted.
 
-## Dashboard request receipts
+## Retained review request receipts
 
-The dashboard queue is private and uses the same account locks as manual
-feedback. Run the following commands from the verified production checkout
+The legacy review queue is private and uses the same account locks as manual feedback. New owner requests are handled in chat. Run the following commands from the verified production checkout
 with the Python interpreter specified below:
 
 ```sh
-python3 10_dashboard/record_feedback.py --list-reviews
-python3 10_dashboard/record_feedback.py --claim-review REQUEST_ID
+python3 09_scripts/equity_research/record_feedback.py --list-reviews
+python3 09_scripts/equity_research/record_feedback.py --claim-review REQUEST_ID
 ```
 
 Claim before starting substantive work. The original request's account and
@@ -234,7 +221,7 @@ insufficient, use `--block-review REQUEST_ID --receipt PRIVATE_JSON` instead.
 Completion verifies source bytes, current account binding, final decision and
 exact published text/HTML. Changed accounts block completion and require a
 fresh claim and reassessment. The original request, every transition and the
-hashed result remain available in the dashboard. Do not manufacture conclusions
+hashed result remain available in the private account journal. Do not manufacture conclusions
 or mark completion merely because a job ran successfully.
 
 ## Writer paths and admission modes

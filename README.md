@@ -19,15 +19,13 @@ are separate from the source.
 - **Risk and uncertainty.** Scenario calculations, position constraints, and
   research queues make assumptions explicit. Conditional arithmetic is not a
   forecast, and a research candidate is not approval to trade.
-- **A reviewable workspace.** The [dashboard](10_dashboard/README.md) combines
-  research, price history, and previewed manual records with retained audit
-  trails. It requires the owner's separate private runtime inputs.
+- **A reviewable workspace.** Research and decision briefs retain their evidence and manual account records have an audit trail.
 - **Experiments with clear boundaries.** Momentum observations and
   [SHADOW LLM evaluation](08_reviews/shadow_llm/README.md) are separate research
   surfaces. AI is excluded from active production decisions.
 
 For a closer look, start with the [research implementation](09_scripts/equity_research/),
-[dashboard source](10_dashboard/src/), or [repository map](00_project_control/repository_layout.md).
+or the [repository map](00_project_control/repository_layout.md).
 The [current-document index](00_project_control/current_documents.md) distinguishes
 maintained guidance from historical records.
 
@@ -45,11 +43,9 @@ The active Python test runner is:
 python3 09_scripts/equity_research/run_active_tests.py
 ```
 
-Dashboard build and test commands are documented in its
-[package definition](10_dashboard/package.json) and [guide](10_dashboard/README.md).
 This is a custom educational workspace, rather than a ready-to-run public
 investing service. A fresh clone does not contain the private account inputs or
-generated reports needed by the operational dashboard.
+generated reports needed by the production research and email workflow.
 
 <details>
 <summary>Detailed workflow, safety boundaries, and maintainer commands</summary>

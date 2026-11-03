@@ -9,7 +9,9 @@ from __future__ import annotations
 
 from equity_naming import DISPLAY_NAMES, brand_name, subject_prefix
 
+import hashlib
 import html
+import json
 import re
 from datetime import datetime
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
@@ -924,7 +926,7 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
         f"Coverage: {coverage.get('scope', 'unverified scope')}; {coverage.get('horizon_start', 'unknown')} to "
         f"{coverage.get('horizon_end', 'unknown')}; {coverage.get('days_verified', 0)}/{coverage.get('days_requested', 0)} dates verified. Status: {status}.",
         "Independent of momentum rank. These are research tasks; entry, valuation and risk gates still apply.",
-        f"Upcoming research events: {len(upcoming)}. Elapsed, cancelled or timing-unverified retained events: {other_count}; kept separately on the dashboard.",
+        f"Upcoming research events: {len(upcoming)}. Elapsed, cancelled or timing-unverified retained events: {other_count}; kept separately on {email_support_location(decision, 'the dashboard')}.",
     ]
     failures = coverage.get("failed_dates") or []
     if failures:
@@ -963,9 +965,11 @@ def earnings_research_card(decision: dict[str, Any]) -> dict[str, Any] | None:
         lines.append("No verified upcoming event is available in this retained coverage." if status != "ready"
                      else "No upcoming event was detected in the verified calendar coverage.")
     if len(upcoming) > 6:
-        lines.append(f"Showing 6 of {len(upcoming)} upcoming events, reviewed outcomes first, then research deadline. Open Upcoming earnings research on the dashboard for every retained event and source.")
+        lines.append(f"Showing 6 of {len(upcoming)} upcoming events, reviewed outcomes first, then research deadline. Open Upcoming earnings research on {email_support_location(decision, 'the dashboard')} for every retained event and source.")
     else:
-        lines.append("Full retained event history and source receipts are available under Upcoming earnings research on the dashboard.")
+        lines.append("Full retained event history and source receipts are available in Upcoming earnings research in the local research report."
+                     if decision.get("email_support_surface") == "local_report"
+                     else "Full retained event history and source receipts are available under Upcoming earnings research on the dashboard.")
     return {"title": "Upcoming earnings research", "body": "\n".join(lines), "sources": list(dict.fromkeys(review_sources)), "group": "background"}
 
 
@@ -1066,7 +1070,8 @@ def _render_maintained_scheduled(decision: dict[str, Any], view: dict[str, Any])
         session = decision.get("market_gate", {}).get("expected_market_session", "unverified")
         return _render_cards(email_subject(decision), direct_cards(decision), title=direct_subject(decision),
             stamp=f"Source close: {session} (not live). Recorded planning cash: ${contract['planning_cash']:.2f}; not verified buying power.",
-            footer="Human execution only. Details and sources: dashboard/local report.", action_first=True)
+            footer=f"Human execution only. Details and sources: {email_support_location(decision, 'dashboard/local report')}.",
+            action_first=True)
     if decision.get("email_brief_version") == "equity_attention_email_v4" and decision.get("capital_decision"):
         from attention_email import cards, intraday_card, subject_label
         sections = cards(decision)
@@ -1321,6 +1326,19 @@ def _render_email_without_dashboard(decision: dict[str, Any]) -> tuple[str, str,
     return subject, "\n".join(lines) + "\n", document
 
 
+def email_support_location(decision: dict[str, Any], legacy_location: str) -> str:
+    """Use the report for new decisions and preserve the exact archive renderer."""
+    return "the local research report" if decision.get("email_support_surface") == "local_report" else legacy_location
+
+
+def _archived_publication_id(decision: dict[str, Any]) -> str:
+    identity = json.dumps(
+        [decision.get("generated_at"), decision.get("decision_fingerprint"), decision.get("owner_requested_research")],
+        sort_keys=True, separators=(",", ":"), allow_nan=False,
+    ).encode()
+    return hashlib.sha256(identity).hexdigest()
+
+
 def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
     if "delivery_assessment" in decision:
         # Immutable delivery envelopes describe exactly which current actions
@@ -1336,12 +1354,13 @@ def render_email(decision: dict[str, Any]) -> tuple[str, str, str]:
                      '<h2>' + html.escape(risk_card["title"]) + '</h2>'
                      '<p style="white-space:pre-line;line-height:1.6">' + html.escape(risk_card["body"]) + '</p></section>')
         document = document.replace('</body>', risk_html + '</body>')
-    from dashboard_publication import publication_id
+    if decision.get("email_support_surface") == "local_report":
+        return subject, plain, document
     link=decision.get('dashboard_link',{})
     url=link.get('url','') if isinstance(link,dict) else ''
     if isinstance(url,str) and re.fullmatch(r'https://[a-z0-9][a-z0-9.-]*\.ts\.net/\?publication=[0-9a-f]{64}',url):
         parsed=urlsplit(url)
-        url='https://'+parsed.hostname+'/?publication='+publication_id(decision)
+        url='https://'+parsed.hostname+'/?publication='+_archived_publication_id(decision)
         if decision.get('email_brief_version') == 'equity_direct_action_email_v5':
             plain+='\nDetails: '+url+'\n'
             addition='<p style="margin:24px;color:#496351"><a href="'+html.escape(url,quote=True)+'">Details and sources</a></p>'

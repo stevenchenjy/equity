@@ -143,9 +143,7 @@ message does not imply that omitted canonical drafts were delivered.
 
 Recovery never invokes the sender. If publication fails after a verified send,
 the SMTP completion remains recorded once and a separate failed/pending recovery
-receipt retains the exact dependency. The dashboard continues to withhold an
-invalid capital card, and the failure is not relabelled as an unsent email or
-permission to retry SMTP. Inspect actual current artifacts and a naturally
+receipt retains the exact dependency. Invalid capital output remains blocked. The recovery failure does not change the prior delivery receipt or authorize an SMTP retry. Inspect actual current artifacts and a naturally
 scheduled recovery receipt before calling this path live-verified.
 
 ## Two daily briefs

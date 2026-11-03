@@ -1,12 +1,13 @@
-"""Same coordinator as the form, for explicit owner-reported facts in Codex.
+"""Record explicit owner-reported account facts from Codex.
 
 Use --preview first, inspect changes, then retain that exact request UUID and
 preview_hash in the local JSON for --apply. No brokerage or email sender.
 """
 import argparse
 import json
-from server import DEFAULT_ROOT, RUNTIME_LOCK
-from feedback import Store, FeedbackError
+from run_runtime_scheduler import PRODUCTION_RUNTIME_ROOT as DEFAULT_ROOT
+from run_runtime_scheduler import RUNTIME_LOCK_PATH as RUNTIME_LOCK
+from account_feedback_store import Store, FeedbackError
 
 
 def main():

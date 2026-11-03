@@ -1248,6 +1248,7 @@ def main() -> int:
         },
         "account_conflicts": conflicts,
         "email_brief_version": EMAIL_BRIEF_VERSION,
+        "email_support_surface": "local_report",
         "pending_execution_summaries": [
             {key: row.get(key, "") for key in ("ticker", "execution_id", "order_status")}
             for row in read_csv(PENDING_EXECUTION_PATH)
@@ -1389,9 +1390,6 @@ def main() -> int:
             )
             decision["send_recommended"] = send_recommended
             decision["send_reason"] = send_reason
-    from dashboard_publication import bind_dashboard_link
-    bind_dashboard_link(decision, ROOT)
-
     held_lines = "\n".join(
         f"- {row['ticker']}: {held_position_summary(row)}" for row in held_rows
     )

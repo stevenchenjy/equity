@@ -4,8 +4,8 @@ import uuid
 from datetime import datetime
 from unittest.mock import patch
 
-import test_feedback as fixture_module
-from feedback import ACCOUNT, POSITIONS, ORDERS, LEDGER, PENDING, FeedbackError, Store, encoded, read, sha, version
+import test_account_feedback_store as fixture_module
+from account_feedback_store import ACCOUNT, POSITIONS, ORDERS, LEDGER, PENDING, FeedbackError, Store, encoded, read, sha, version
 
 
 DECISION = '04_research/company_research/daily_decision.json'
@@ -86,7 +86,7 @@ class ReviewAndCorrectionTests(unittest.TestCase):
         with self.assertRaisesRegex(FeedbackError, 'invalid_account_correction'): self.store.preview(p)
 
     def test_crashed_account_correction_recovers_without_reversing_a_trade(self):
-        import feedback
+        import account_feedback_store as feedback
         original = self.fixture.submit(self.fixture.payload())
         ledger = read(self.root, LEDGER)
         p = self.correction(original)
@@ -95,7 +95,7 @@ class ReviewAndCorrectionTests(unittest.TestCase):
         def fail(root, rel, content):
             if rel == ACCOUNT: raise OSError('simulated interruption')
             return atomic(root, rel, content)
-        with patch('feedback.atomic', fail):
+        with patch('account_feedback_store.atomic', fail):
             with self.assertRaises(OSError): self.store.submit(p)
         result = Store(self.root, self.root/'runtime.lock', refresh=False).submit(p)
         self.assertEqual(result['stage'], 'applied')

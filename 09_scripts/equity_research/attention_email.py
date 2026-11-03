@@ -285,6 +285,8 @@ def held_earnings_card(decision):
             if safe and safe not in event_links:
                 event_links.append(safe)
         sources.extend(event_links[:2])
+    from email_brief import email_support_location
+    support = email_support_location(decision, "the dashboard")
     if unresolved_timing:
         remaining = 3 - len(selected)
         shown_unknown = unresolved_timing[:remaining]
@@ -293,8 +295,8 @@ def held_earnings_card(decision):
         if names:
             lines.append("Timing dependency: " + names + ". Verify the retained schedule before relying on it.")
         if len(unresolved_timing) > len(shown_unknown):
-            lines.append(f"Additional unresolved held-event timing records: {len(unresolved_timing) - len(shown_unknown)}; verify the retained schedules on the dashboard.")
-    lines.append("Detailed expectations, downside cases and all retained source receipts remain on the dashboard. No trigger, price or order is created by this event warning.")
+            lines.append(f"Additional unresolved held-event timing records: {len(unresolved_timing) - len(shown_unknown)}; verify the retained schedules on {support}.")
+    lines.append(f"Detailed expectations, downside cases and all retained source receipts remain on {support}. No trigger, price or order is created by this event warning.")
     return section("Upcoming events in your holdings", lines, group="attention", sources=sources)
 
 
@@ -383,11 +385,13 @@ def cards(decision):
         result.append(section("Existing holdings — one summary", lines))
 
     counts = Counter(row["decision"] for row in rows)
+    from email_brief import email_support_location
+    support = email_support_location(decision, "the dashboard/local report")
     cash_lines = [f"Recorded planning cash: ${contract['planning_cash']:.2f}; mandatory reserve ${contract['mandatory_reserve']:.2f}. "
                   "Unallocated cash is not a recommendation to retain that percentage.",
                   f"Candidate outcomes: {counts['BLOCKED']} need evidence or an admitted current plan; "
                   f"{counts['NO_ACTION']} have no eligible action. These states are distinct; neither is a buy list.",
-                  "Full company cases, all candidate outcomes, sources and research work remain on the dashboard/local report."]
+                  f"Full company cases, all candidate outcomes, sources and research work remain on {support}."]
     authority = contract.get("account_authority", {})
     if authority.get("local_planning_enabled"):
         cash_lines.append("Owner-approved local records govern these conditional drafts.")
@@ -398,7 +402,7 @@ def cards(decision):
 
 def intraday_card(decision):
     """Keep dated marks and actual risk flags, omitting untriggered plan copies."""
-    from email_brief import intraday_risk_card
+    from email_brief import email_support_location, intraday_risk_card
     full = intraday_risk_card(decision)
     if full is None:
         return None
@@ -413,5 +417,6 @@ def intraday_card(decision):
             compact.append("Existing plan condition: " + condition.get("ticker", "Portfolio") + " — "
                            + str(condition.get("condition", condition.get("description", "unverified")))
                            + " (" + condition["status"].replace("_", " ") + ").")
-    compact.append("Exact immutable observation, individual marks and unchanged plan conditions remain on the dashboard/local report. Price monitoring alone creates no new instruction or email.")
+    support = email_support_location(decision, "the dashboard/local report")
+    compact.append(f"Exact immutable observation, individual marks and unchanged plan conditions remain on {support}. Price monitoring alone creates no new instruction or email.")
     return section(full["title"], compact)

@@ -81,6 +81,24 @@ class AttentionEmailTests(unittest.TestCase):
         self.decision['capital_decision'] = self.build()
         return next(row for row in self.decision['capital_decision']['decisions'] if row['ticker']=='TEST')
 
+    def test_current_report_only_email_preserves_actions_and_archived_link_render(self):
+        self.direct_exit()
+        stored_link = "https://private.ts.net/?publication=" + "0" * 64
+        self.decision["dashboard_link"] = {"url": stored_link}
+        legacy_subject, legacy_text, legacy_html = render_email(self.decision)
+        self.assertRegex(legacy_text, r"Details: https://private[.]ts[.]net/\?publication=[a-f0-9]{64}")
+        self.assertIn("Details and sources", legacy_html)
+        self.assertNotIn(stored_link, legacy_text)
+        current = {**self.decision, "email_support_surface": "local_report"}
+        subject, text, document = render_email(current)
+        self.assertEqual(subject, legacy_subject)
+        for body in (text, document):
+            self.assertNotIn("private.ts.net", body)
+            self.assertNotIn("dashboard", body.lower())
+            self.assertIn("the local research report", body)
+            self.assertIn("SELL 2 TEST", body)
+        self.assertEqual(render_email(self.decision), (legacy_subject, legacy_text, legacy_html))
+
     def test_v5_first_visible_action_exact_conditions_and_small_email_leave_contract_unchanged(self):
         row = self.direct_exit()
         self.assertIsNotNone(row['order_draft'])

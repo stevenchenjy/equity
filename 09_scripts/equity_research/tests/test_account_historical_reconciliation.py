@@ -9,11 +9,12 @@ from contextlib import redirect_stdout
 from datetime import datetime
 from unittest.mock import patch
 
-import feedback
+from _support import SCRIPT_DIR  # noqa: F401
+import account_feedback_store as feedback
 import record_feedback
-import test_feedback as fixtures
+import test_account_feedback_store as fixtures
 from daily_common import canonical_sha256
-from feedback import (ACCOUNT, CONFIRMED, HISTORICAL_INPUTS, HISTORICAL_SCHEMA,
+from account_feedback_store import (ACCOUNT, CONFIRMED, HISTORICAL_INPUTS, HISTORICAL_SCHEMA,
     JOURNAL, LEDGER, MANUAL, MARKET, ORDERS, PENDING, POSITIONS, RECONCILED,
     FeedbackError, Store, encoded, read, rows, sha, version)
 
@@ -263,7 +264,7 @@ class HistoricalReconciliationTests(unittest.TestCase):
             if rel == LEDGER:
                 raise OSError('simulated interruption after account changes')
             return real(root, rel, content)
-        with patch('feedback.atomic', side_effect=interrupted), self.assertRaises(OSError):
+        with patch('account_feedback_store.atomic', side_effect=interrupted), self.assertRaises(OSError):
             self.store.historical_submit(self.payload)
         with self.store.db() as con:
             self.assertEqual(con.execute('SELECT state FROM requests WHERE id=?',
@@ -281,7 +282,7 @@ class HistoricalReconciliationTests(unittest.TestCase):
             if rel == LEDGER:
                 raise OSError('simulated interruption')
             return real(root, rel, content)
-        with patch('feedback.atomic', side_effect=interrupted), self.assertRaises(OSError):
+        with patch('account_feedback_store.atomic', side_effect=interrupted), self.assertRaises(OSError):
             self.store.historical_submit(self.payload)
         account = json.loads(read(self.root, ACCOUNT))
         account['cash_available'] = 1234.56

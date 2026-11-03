@@ -26,7 +26,6 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / '09_scripts/equity_research'))
 from account_common import validate_account_state
 from execution_common import EXECUTION_FIELDS, validate_execution_row
 from validate_execution_fill import CONFIRMED_FIELDS
@@ -146,7 +145,7 @@ def atomic(root, rel, content):
     read(root, rel, optional=True)  # Reject symlinks before archive/replace.
     path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     archive_before_replace(path, content)
-    descriptor, name = tempfile.mkstemp(prefix='.dashboard-', dir=path.parent)
+    descriptor, name = tempfile.mkstemp(prefix='.account-feedback-', dir=path.parent)
     try:
         with os.fdopen(descriptor, 'wb') as handle:
             handle.write(content); handle.flush(); os.fsync(handle.fileno())
@@ -755,7 +754,7 @@ class Store:
                         cash_before=row['cash_before'],cash_before_source='canonical_account_state',calculated_cash_after=row['cash_after'],selected_cash_after=row['cash_after'],
                         cash_reconciliation_difference='0',positions_sha256_before=sha(read(self.root,POSITIONS)),positions_sha256_after=sha(writes[POSITIONS]),
                         account_sha256_before=sha(read(self.root,ACCOUNT)),account_sha256_after=sha(writes[ACCOUNT]),reference_price_timestamp=now.isoformat(),
-                        notes='Human facts applied by durable dashboard coordinator; public valuation and research are separate.')
+                        notes='Human facts applied by the account feedback coordinator; public valuation and research are separate.')
                     writes[RECONCILED] = csv_bytes(rows(read(self.root,RECONCILED,optional=True))+[recon],RECONCILIATION_FIELDS)
                     record['execution_id'] = eid
                     if context is not None:
@@ -780,7 +779,7 @@ class Store:
                     if f['inventory_complete']:
                         orders['current_inventory_observation']['source']={'path':observation,'sha256':sha(observed)}
                         writes[ORDERS]=encoded(orders)
-                    writes[MANUAL] = encoded(dict(schema_version='phase5r_owner_snapshot_v1',owner_snapshot=True,source_note='Owner confirmed full account in dashboard',
+                    writes[MANUAL] = encoded(dict(schema_version='phase5r_owner_snapshot_v1',owner_snapshot=True,source_note='Owner confirmed full account',
                         observed_at=now.isoformat(),positions_sha256_before=sha(read(self.root,POSITIONS)),positions_sha256_after=sha(writes[POSITIONS]),
                         account_sha256_before=sha(read(self.root,ACCOUNT)),account_sha256_after=sha(writes[ACCOUNT]),confirmed_execution_sha256=sha(read(self.root,CONFIRMED)) if (self.root/CONFIRMED).exists() else None))
                     manual=json.loads(writes[MANUAL])
@@ -960,7 +959,7 @@ class Store:
         # Read the durable outbox without taking the long research locks. This
         # delays research only; saved facts and preview/submit remain available.
         # Prepared writes and interrupted runs bypass the quiet window so their
-        # existing recovery path is never delayed by newer form activity.
+        # existing recovery path is never delayed by newer owner reports.
         with self.db() as con:
             prepared = con.execute("SELECT 1 FROM requests WHERE state='prepared' LIMIT 1").fetchone()
             queued = [json.loads(r[0]) for r in con.execute('SELECT body FROM records')]
@@ -982,7 +981,7 @@ class Store:
                 bound_version=input_version(self.root)
                 tickers = {r['ticker'] for r in rows(read(self.root,POSITIONS))}
             if not self.refresh: return False
-            log = self.root / '07_automation/dashboard.local/refresh.log'
+            log = self.root / '00_project_control/run_logs/account_feedback_refresh.local.log'
             log.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
             # Only the existing public research pipeline; no sender or broker.
             script = self.root / '09_scripts/equity_research/run_daily_refresh.py'
