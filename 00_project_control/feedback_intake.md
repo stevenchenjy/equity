@@ -29,11 +29,7 @@ composer cannot adopt a changed account without recomposition.
 The account transition also replaces the unsent text/HTML brief with a current
 account-only pending notice, retaining the old bytes in the durable journal.
 A composer cannot overwrite an applying/recovery-conflict transition.
-The dashboard serves current committed cash and holdings throughout a refresh.
-It withholds superseded research quantities and drafts until recomposition is
-current. The temporary account-only view retains the independently validated
-owner local-ledger authority; research refresh does not request a new broker
-observation or claim one occurred. Email validates the same account fingerprint; final validation and its
+The pending notice retains the independently validated owner local-ledger authority. Email validates the same account fingerprint; final validation and its
 durable send claim use the short shared account lock. The lock is released
 before SMTP. A claim fixes the immutable as-of snapshot; a fill recorded after
 that claim belongs to the next publication. Historical sent artifacts remain
@@ -47,33 +43,15 @@ transaction and recovery checks remain effective. Deployment retains the
 runtime/daily locks, and service replacement must preserve the durable journal.
 
 
-## Bounded account preview
+## Manual account-record CLI
 
-Action-log previews use `GET /api/feedback/snapshot`, a small committed-account
-context independent of the full research dashboard. It carries the current
-account version, decision identity and optional retained plan references for
-audit. It supplies no current valuation, price, eligible quantity or trading
-authority. Preview and confirmation still validate the original account/version,
-plan reference, preview hash and request identity through the same writer.
-
-The full research snapshot captures and rechecks account identity under short
-account locks; its expensive research validation runs outside that lock. A
-concurrent account change rejects that response instead of blocking intake or
-combining old research with new facts. The form retains a separate account
-context and never promotes it into the research cards.
-
-Requests have a 15-second network-and-body deadline and a Stop waiting control.
-Stopping a preview changes no account record. A timed-out or interrupted save
-keeps its original durable request ID for recovery; it is never automatically
-resubmitted as a new transaction. Existing duplicate, stale-version, incomplete
-account-write and unknown-result checks remain effective.
+Use `09_scripts/equity_research/record_feedback.py` to preview and apply verified owner-reported account events. Preview and confirmation validate the account version, plan reference, preview hash and request identity. An uncertain save retains its original request ID for recovery.
 
 ## Saved pending records and historical reconciliation
 
 A saved pending receipt is a completed intake, not a running request and not an
 applied financial transition. Research completion does not change that financial
-status. The form shows the saved receipt with visible history and review actions
-instead of leaving a disabled edit form as a dead end. Reviewing a pending record
+status. Reviewing a pending record
 uses its latest acknowledged record identity and revision. A deliberately changed
 revision uses a new request UUID; recovery of an uncertain unchanged save keeps
 the original UUID and payload.

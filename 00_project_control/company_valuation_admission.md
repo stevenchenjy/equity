@@ -95,7 +95,7 @@ existing financial numbers; it never makes a network request to do so.
 A valid current company case is carried in the capital row's optional
 `research_case` display projection. Its original model hash, review version, actual
 reference close, assumptions, zero-share reason and review conditions feed both
-email supporting information and the dashboard company detail even when no position
+email supporting information and the local company report even when no position
 plan exists. Missing model admission/news coverage remains explicitly labelled.
 Invalid, expired or source-changed models do not acquire current display prices.
 This display projection neither clears a gate nor creates an order. Only the existing
@@ -129,9 +129,6 @@ lease commitments and per-share cash economics still require actual analysis.
 When a later completed market session is still unavailable, a newly accepted
 company review can retain its explicitly dated prior-close valuation and
 add/hold/exit judgment. That does not admit its model as current or authorize a
-new order. The dashboard verifies the complete retained snapshot, exact held
-prices and per-holding session declarations against the failed market gate,
-displays the actual retained date and a separate required-session warning, and
-withholds legacy entry quantities. A changed account, price, source fingerprint,
+new order. Publication must preserve the actual retained date and a separate required-session warning. Withhold legacy entry quantities. A changed account, price, source fingerprint,
 mixed session or falsely passing gate still fails validation. Company-model
 admission and all production investment freshness/quality limits are unchanged.

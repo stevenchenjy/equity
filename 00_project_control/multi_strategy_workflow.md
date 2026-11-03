@@ -36,8 +36,7 @@ human-only execution remain governed by their current contracts.
 `decision_readiness.py` provides the optional
 `equity_strategy_framework_v1` read-only projection after the existing capital
 contract is composed. It validates that contract and its current source bindings.
-It does not create a second recommender or enlarge a quantity. The dashboard
-shows the original canonical outcome and one explanation class:
+It does not create a second recommender or enlarge a quantity. The projection retains the original canonical outcome and one explanation class:
 
 - `valid_action`: an exact current admitted conditional draft; manual review and
   execution checks remain necessary.

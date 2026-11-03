@@ -60,7 +60,7 @@ does not establish business quality, reviewed valuation or funding readiness.
 | `update_experiment_research_approval.py` | owner instruction, complete version review, exact policy/registered Git binding | research use only; never changes experiment history, risk or strategy eligibility |
 | Existing thesis, valuation, account, portfolio and daily decision | their existing reviewed contracts and private authoritative stores | sole business/economic/capital authority; new research views do not replace their admission checks |
 | `opportunity_measurement.py` / existing experiment evaluation | frozen first-observation horizons/cost sensitivities and source-bound forward outcomes | software/routing and prospective hypothetical-path measurement, separate from investment-performance evidence |
-| Existing decision/status/report/email/dashboard | final decisions and separately labelled research views | presentation only; action email sections and normal notification authority are unchanged |
+| Existing decision/status/report/email | final decisions and separately labelled research views | presentation only; action email sections and normal notification authority are unchanged |
 
 `04_research/company_research/opportunities.local/store.json` is the durable source
 of research lifecycle state. The atomically replaced JSON contains the whole

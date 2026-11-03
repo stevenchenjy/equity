@@ -64,7 +64,7 @@ an identical retry is a no-op. It never rewrites the plan ledger or either
 source file. Registry tampering, missing/changed retained bytes, unsafe paths
 and a different plan record fail closed. New plan proposals must bind their
 own direct retained sources; an older record's resolution cannot authorize
-them. Workflow, capital and dashboard publication checks revalidate the
+them. Workflow and capital publication checks revalidate the
 registry and the explicitly registered retained bytes. Recompose the complete
 decision after registration, then append any separately researched plan via
 the ordinary maintained writer. Research dates, expiry, economics, allocation,

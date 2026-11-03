@@ -27,7 +27,7 @@ account gates and a named closest candidate where one can be compared. Account
 integrity blockers suspend deployment escalation and are displayed explicitly;
 ticker-only quarantine cannot suspend unrelated research. The closest candidate
 is a readiness comparison, not approval or a claim of investment quality. Final
-text/HTML and the dashboard consume the same summary.
+email text and HTML consume the same summary.
 
 Private state/report and bounded attempt receipts live under
 `08_reviews/capital_escalation.local/`. A triggered full refresh immediately runs
@@ -41,11 +41,10 @@ the same escalation batch again that session. No sender or broker is invoked.
 The final capital decision is `daily_decision.json:capital_decision`, mirrored at
 `08_reviews/current/capital_decision.local.json`. It is produced after canonical
 eligibility, maintained thesis/plan reconciliation, portfolio sizing and observed
-price-risk review. It is the common input to the action-first email and dashboard.
+price-risk review. It is the common input to the action-first email and local reports.
 Renderers do not calculate a second recommendation. The engine does not connect
 to a broker, handle credentials, submit orders or invoke a sender.
-Adjacent dashboard widgets cannot restore old ceiling quantities or withheld
-drafts. Historical plan levels remain available as historical evidence. Entry
+Published reports cannot restore old ceiling quantities or withheld drafts. Historical plan levels remain available as historical evidence. Entry
 validity ends at the earliest strategy/maintained-plan review or DAY close.
 
 ## Decision work versus execution
@@ -160,14 +159,14 @@ metadata alone cannot implement a new entry method or invent a signal.
 ## Publication and verification
 
 Contract content and source hashes are validated at publication consumers. Expired
-or changed inputs suppress numerical actions on the dashboard and block delivery
+or changed inputs suppress numerical actions and block delivery
 validation until recomposed. Historical outputs remain historical. Software tests
 prove calculation, isolation and presentation; investment evidence remains the
 separately frozen forward/unseen strategy study. No profitability is inferred.
 
 ## Delivery and follow-up consistency
 
-Email, text, Markdown and dashboard consume the admitted capital contract.
+Email text, HTML and Markdown consume the admitted capital contract.
 The notification baseline includes exact current drafts, held-position
 conclusions and shared blockers; clock-only updates and unqualified research
 churn do not count as new instructions. A new draft cannot quietly reuse an

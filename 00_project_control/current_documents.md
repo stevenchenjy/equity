@@ -52,7 +52,7 @@ relevant checks before relying on any linked claim.
 - [Official-news source manifest](../01_policies/official_news_sources.json): approved issuer feeds, source domains, request bounds and freshness requirements; coverage is limited to configured sources.
 - [Allowed active-input registry](allowed_active_inputs.csv): current machine-readable input paths, permitted readers, scope and freshness, including optional source-bound thesis assessments. Absence of an optional assessment cannot create an exit conclusion.
 
-## Dashboard implementation and remaining phases
+## Account-record intake
 
 - [Consecutive account-record intake](feedback_intake.md): independent immediate account writes during refresh, version-bound recomposition and publication, and retained duplicate/recovery checks.
 

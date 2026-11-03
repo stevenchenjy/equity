@@ -27,8 +27,7 @@ current action directly: ticker, whole-share quantity, order type, price limit
 and session/window. Group unchanged holdings into one short line after current
 actions. Preserve essential trigger, skip, cancellation, expiry and execution
 checks in compact wording. Keep analysis to at most two short sentences and
-leave full company cases, model details, diagnostics and queues on the dashboard
-or linked report. Do not put status explanations, a portfolio essay, repeated
+leave full company cases, model details, diagnostics and queues in the linked local report. Do not put status explanations, a portfolio essay, repeated
 HOLD cards or research logs ahead of the action. When no complete draft is
 admitted, lead with “No new trade” and the exact hold/no-add outcome.
 
@@ -46,7 +45,7 @@ new opportunity. Show at most three current source-bound attention judgments,
 with their reason, countercase or failed gate and next decisive condition. Do
 not present a raw screen, internal work queue or an expired model as a list of
 high-potential investments. Keep full company cases and blocked-candidate
-diagnostics on the dashboard and in local reports. Completed negative or
+diagnostics in local reports. Completed negative or
 price-rejected cases must be distinguished from unfinished analysis. Preserve
 material account/risk failures, protective or exit drafts and unresolved earlier
 instructions. Do not substitute a valuation-review level or dated close for an

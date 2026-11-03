@@ -242,7 +242,7 @@ than clearing the canonical capital gates.
 
 Author and test in `/Users/messssi/Desktop/equity`. Production is
 `/Users/messssi/LocalRuntime/equity`; Documents stores audit artifacts. Inspect
-the actual study report and adjacent decision/dashboard views in an isolated
+the actual study report and adjacent decision and report views in an isolated
 rehearsal before calling implementation complete. Source edits and passing
 tests do not establish deployment, natural market-open observations, a completed
 forward cohort, email delivery or a broker fill. Deployment and any no-send

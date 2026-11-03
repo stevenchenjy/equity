@@ -89,7 +89,7 @@ with existing 2:1 minimum plausible reward/risk and human-only execution.
 
 ## Publication and delivery
 
-The final decision, separate email research section, dashboard event panel and
+The final decision, separate email research section and
 production status show the same source-bound event lifecycle. Research belongs
 below the actionable BUY/SELL cards. Unreviewed detections never appear as order
 instructions. The ordinary sender may recognize a newly completed, current

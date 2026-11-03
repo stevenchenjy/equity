@@ -138,9 +138,7 @@ Raw unadjusted price comparisons and source-reviewed fixed-horizon modeled
 paths remain distinct. Both legs require exact source coverage and applicable
 corporate-action review before qualification. Neither is total-return alpha,
 an actual fill, a managed stop-strategy return or sufficient adoption evidence.
-The dashboard revalidates the comparison's own proof at read time, reports
-unique outcome denominators separately from overlapping horizons and scenarios,
-and withholds results whose source or protocol proof fails.
+Keep unique outcome denominators separate from overlapping horizons and scenarios. Results whose source or protocol proof fails are unqualified.
 
 The active `active_swing_benchmark_review.py --root ROOT --input PROPOSAL` path
 validates a forward-window-only ETF corporate-action review; `--apply` appends
