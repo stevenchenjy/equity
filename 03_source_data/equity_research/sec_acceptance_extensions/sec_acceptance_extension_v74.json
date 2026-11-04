@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-11-04T08:24:04.000-05:00",
+  "artifact_sha256": "cd8251a925e4e24dcfeaf031a0d7da1d6a4b2ed4a122b0f4a912129d378a383a",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v74",
+  "prior_extension_set_sha256": "8803d65a1d9274417b3334c344df7c498bd54e6ab994d490b1d1e80d5fbb6d9d",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-03T21:16:27.000+00:00",
+      "accession_number": "0000002488-26-000188",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-04T08:24:04.000-05:00",
+      "cik": "2488",
+      "entity_name": "ADVANCED MICRO DEVICES INC",
+      "extension_record_sha256": "88551448dd65586f07cf4e949d5cc3d42b5c823f14649da5e0c59165119385ee",
+      "extension_version": "v74",
+      "filing_date": "2026-11-03",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "b7de23c7d1544f44264b4572eb2126a9886d49aa553b4e1b3dd9dc5f4abf73cb",
+      "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+      "ticker": "AMD"
+    },
+    {
+      "accepted_at": "2026-11-03T23:00:17.000+00:00",
+      "accession_number": "0000002488-26-000191",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-04T08:24:04.000-05:00",
+      "cik": "2488",
+      "entity_name": "ADVANCED MICRO DEVICES INC",
+      "extension_record_sha256": "995b80af764e2bb8a5cd13bb5bf5fe0b009d9ffaea8169ac1f72a48fceb927d9",
+      "extension_version": "v74",
+      "filing_date": "2026-11-04",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "9b0cc6bbf5a073f7889a71c0ea05d7a179db8b8680e7abfa736fd119486cbd1e",
+      "source_url": "https://data.sec.gov/submissions/CIK0000002488.json",
+      "ticker": "AMD"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

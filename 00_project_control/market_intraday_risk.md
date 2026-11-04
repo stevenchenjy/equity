@@ -15,6 +15,14 @@ has intraday coverage. It is independent of momentum rank. A partial collection
 cannot establish a current portfolio total, portfolio loss or allocation weight.
 The canonical completed-close prices and their original history remain separate.
 
+Collection and risk derivation use the same instrument-identity validator over
+the universe seed and the existing supplemental metadata. The risk receipt binds
+the supplemental file's exact bytes. Unknown, duplicate or conflicting identities
+remain unavailable; an absent seed row is not permission to classify an ETF as a
+stock. ETF identity is separate from approved core membership: only the configured
+SPY/QQQM core counts toward that floor. This does not expand candidate or capital
+authority, and a metadata change requires a newly validated assessment.
+
 The initial public source is Nasdaq Last Sale through the credential-free
 Nasdaq quote endpoint. It is an alternative last-sale observation, not the
 consolidated NBBO, an executable bid/offer, a fill or guaranteed liquidation

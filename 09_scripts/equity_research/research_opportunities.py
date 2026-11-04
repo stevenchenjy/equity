@@ -12,7 +12,7 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
     read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, transition_batch, publish_store,
-    retain_input, validate_policy, validate_observation, require)
+    retain_input, validate_policy, validate_observation, validate_journal, require)
 from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
@@ -411,7 +411,7 @@ def read_report(root: Path, *, current: datetime) -> dict:
     require(clock <= current and current-clock <= timedelta(hours=24), "research_opportunity_report_stale_clock")
     require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
         == load_authority(root, current), "research_opportunity_report_account_authority_changed")
-    replay(read_json(root / STORE_REL), root=root, current=current)
+    validate_journal(read_json(root / STORE_REL), root=root, current=current)
     return report
 
 

@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from daily_common import atomic_write_json, canonical_sha256, read_json, sha256_file
+from validation_cache import file_hash_validation
 from workflow_evaluation import aware
 
 BASE_REL = Path("04_research/company_research/opportunities.local")
@@ -121,6 +122,34 @@ def empty_store() -> dict:
 
 
 def replay(store: dict, *, root: Path | None = None, current: datetime | None = None) -> dict[str, dict]:
+    """Validate the entire journal against one mutation-fenced source read.
+
+    Repeated observations can bind the same retained source thousands of times.
+    Reuse only its digest during this read-only replay, while every receipt's
+    path, expected digest and clock, and every journal event, still validate.
+    The transaction's final identity fence rejects a source changed after its
+    last use. Nothing survives this invocation or is trusted from a view.
+    """
+    with file_hash_validation():
+        return _replay(store, root=root, current=current)
+
+
+def validate_journal(store: dict, *, root: Path, current: datetime) -> None:
+    """Run every replay check without materializing a discarded attention view.
+
+    Read-report callers already have a separately hash-validated materialized
+    report. Journal validation still walks every event, hash chain, transition,
+    source and historical clock; it only omits copies used as replay output.
+    """
+    require(isinstance(root, Path), "research_validation_source_root_missing")
+    require(isinstance(current, datetime) and current.utcoffset() is not None,
+            "research_validation_clock_missing")
+    with file_hash_validation():
+        _replay(store, root=root, current=current, materialize=False)
+
+
+def _replay(store: dict, *, root: Path | None = None, current: datetime | None = None,
+            materialize: bool = True) -> dict[str, dict]:
     require(store.get("schema_version") == "equity_research_opportunity_store_v1" and all(store.get(k) is False for k in AUTHORITY), "research_store_invalid")
     require(isinstance(store.get("events"), list), "research_journal_invalid")
     result, previous, ids, observations, last_clock = {}, "", set(), set(), None
@@ -138,12 +167,16 @@ def replay(store: dict, *, root: Path | None = None, current: datetime | None = 
             if root:
                 validate_observation(packet, root=root, current=clock)
             ids.add(identity); observations.add(packet["observation_id"])
+            # Preserve the materialized replay's required-field contract even
+            # when the caller discards its output.
+            reason_code = event["reason_code"]
             result[identity] = {"opportunity_id": identity, "ticker": packet["ticker"], "instrument_kind": packet["instrument_kind"],
                 "first_seen_at": packet["detected_at"], "first_observation": copy.deepcopy(packet),
                 "observations": [copy.deepcopy(packet)], "initial_state": event["to_state"], "state": event["to_state"],
                 "last_evidence_at": packet["detected_at"], "research_started_at": "", "objective_completed_at": "",
                 "assessment_at": "", "transitions": [], "blockers": event.get("blockers", []),
-                "owner": event["owner"], "reason_code": event["reason_code"], **AUTHORITY}
+                "owner": event["owner"], "reason_code": reason_code, **AUTHORITY} if materialize else {
+                    "ticker": packet["ticker"], "state": event["to_state"]}
         elif kind == "observed":
             require(identity in result, "research_unknown_opportunity")
             packet = event["observation"]
@@ -151,8 +184,9 @@ def replay(store: dict, *, root: Path | None = None, current: datetime | None = 
             if root:
                 validate_observation(packet, root=root, current=clock)
             observations.add(packet["observation_id"])
-            result[identity]["observations"].append(copy.deepcopy(packet))
-            result[identity]["last_evidence_at"] = packet["detected_at"]
+            if materialize:
+                result[identity]["observations"].append(copy.deepcopy(packet))
+                result[identity]["last_evidence_at"] = packet["detected_at"]
         elif kind == "transition":
             require(identity in result and event["to_state"] in TRANSITIONS, "research_transition_invalid")
             item = result[identity]
@@ -161,14 +195,16 @@ def replay(store: dict, *, root: Path | None = None, current: datetime | None = 
             require(bool(event.get("reason_code")) and isinstance(event.get("blockers"), list), "research_transition_reason_missing")
             if root:
                 validate_receipts(event["sources"], root=root, current=clock)
-            item.update(state=event["to_state"], owner=owner, reason_code=event["reason_code"], blockers=event["blockers"])
-            item["transitions"].append(copy.deepcopy(event))
-            if event["to_state"] == "researching" and not item["research_started_at"]:
-                item["research_started_at"] = event["recorded_at"]
-            if event["to_state"] == "evidence_attached" and not item["objective_completed_at"]:
-                item["objective_completed_at"] = event["recorded_at"]
-            if owner == "analyst_assessment":
-                item["assessment_at"] = event["recorded_at"]
+            item["state"] = event["to_state"]
+            if materialize:
+                item.update(owner=owner, reason_code=event["reason_code"], blockers=event["blockers"])
+                item["transitions"].append(copy.deepcopy(event))
+                if event["to_state"] == "researching" and not item["research_started_at"]:
+                    item["research_started_at"] = event["recorded_at"]
+                if event["to_state"] == "evidence_attached" and not item["objective_completed_at"]:
+                    item["objective_completed_at"] = event["recorded_at"]
+                if owner == "analyst_assessment":
+                    item["assessment_at"] = event["recorded_at"]
         else:
             raise ValueError("research_journal_kind_invalid")
         previous, last_clock = event["record_hash"], clock

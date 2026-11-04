@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-11-04T08:24:04.000-05:00",
+  "artifact_sha256": "47a82cf072f22b19a2aa9c27113d9cf3eeb25bd86c238e24ee2cdb10a3fbe69f",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v77",
+  "prior_extension_set_sha256": "e3a5c2bf9ba3c49575e30fa7c60b5f3332ae0c69483b3d77b5a1e613467e1f74",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-04T00:50:21.000+00:00",
+      "accession_number": "0001193125-26-445846",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-04T08:24:04.000-05:00",
+      "cik": "1341439",
+      "entity_name": "ORACLE CORP",
+      "extension_record_sha256": "a7aa5634d86668556494eb077390d622ac5f9c708da527eea73197c39a4899a0",
+      "extension_version": "v77",
+      "filing_date": "2026-11-04",
+      "form": "424B2",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "70392dda33017c3899eccad09519f1a05b31c79d6615da656e22bd88644067f6",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "ticker": "ORCL"
+    },
+    {
+      "accepted_at": "2026-11-04T00:52:48.000+00:00",
+      "accession_number": "0001193125-26-445847",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-04T08:24:04.000-05:00",
+      "cik": "1341439",
+      "entity_name": "ORACLE CORP",
+      "extension_record_sha256": "15e1d7534d48e7fd3d55b9ab085cbe6e815979fe9353ea3995f186a8cc9616a3",
+      "extension_version": "v77",
+      "filing_date": "2026-11-04",
+      "form": "424B5",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a494f76e338ae0d3a810a9c3bfb6bd589d558e082682577ce4c71a6197af00ef",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "ticker": "ORCL"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

@@ -21,9 +21,17 @@ def observation():
             "reassessment_triggers": [], "dependencies": [], "limitations": ["A last trade is not an executable quote."]}
 
 
+def maintained_decision():
+    # The shared fixture also serves legacy-renderer tests. These observation
+    # checks exercise the maintained path, as actual typed decisions do.
+    decision = decision_fixture()
+    decision['workflow_integrity'] = {'status': 'current'}
+    return decision
+
+
 class IntradayRiskPresentationTests(unittest.TestCase):
     def test_validated_snapshot_has_same_cash_and_inventory_baseline_and_explicit_expiry(self):
-        decision = decision_fixture()
+        decision = maintained_decision()
         decision['intraday_portfolio_risk'] = observation()
         before = copy.deepcopy(decision)
         card = intraday_risk_card(decision)
@@ -50,7 +58,7 @@ class IntradayRiskPresentationTests(unittest.TestCase):
 
     def test_optional_overlay_absent_on_old_decision_and_unsafe_text_escaped(self):
         self.assertIsNone(intraday_risk_card(decision_fixture()))
-        decision=decision_fixture()
+        decision=maintained_decision()
         risk=observation()
         risk['limitations']=['<script>bad()</script>']
         decision['intraday_portfolio_risk']=risk
@@ -60,8 +68,7 @@ class IntradayRiskPresentationTests(unittest.TestCase):
         self.assertIn('&lt;script&gt;bad()',html)
 
     def test_actual_maintained_email_includes_one_prominent_observation_and_original_risk_limits(self):
-        decision=decision_fixture()
-        decision['workflow_integrity']={'status':'current'}
+        decision=maintained_decision()
         risk=observation()
         risk['tactical_limits']={'ordinary_risk_pct':0.5,'event_risk_pct':0.25,'combined_risk_pct':2,
             'max_position_pct':5,'min_reward_to_risk':2,'existing_planned_risk_usd':0,'combined_planned_risk_pct':0}
@@ -75,7 +82,7 @@ class IntradayRiskPresentationTests(unittest.TestCase):
         self.assertLess(text.index('Intraday portfolio risk'),text.index('Holdings'))
 
     def test_generated_email_remains_deterministic_and_does_not_expire_eod_advice(self):
-        decision=decision_fixture()
+        decision=maintained_decision()
         decision['intraday_portfolio_risk']=observation()
         self.assertEqual(render_email(decision),render_email(decision))
         self.assertEqual(decision['intraday_portfolio_risk']['status'],'current')

@@ -66,6 +66,14 @@ projection. Completion checks derive that required set from the deployed code,
 not an older fixed stage count. An elapsed claim becomes durably expired on the next
 claim/completion entry, including an out-of-window wake, without replay.
 
+Read-only journal validation still checks every event, transition, historical
+clock and source receipt. When a caller needs only validation, it omits the
+historical result copies that would otherwise be discarded. Repeated file
+digests are reused only inside one read-only validation transaction, with a
+file-identity check on each lookup and a final mutation fence. No result is
+trusted across invocations. The stage set, 75-second child limit and ten-minute
+claim remain unchanged; faster validation does not grant investment authority.
+
 A truthful degraded, zero-order full publication can document the
 remaining public-data failure for a no-action result; it is not a passing
 research refresh or an accepted analytical amendment. Accepted amendments

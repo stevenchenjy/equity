@@ -26,6 +26,7 @@ from active_config import (load_active_config, validate_allocation_targets,
                            validate_research_risk_limits)
 from daily_common import ET, canonical_sha256, now_et
 from investment_plans import TERMINAL, evaluate_plans, regular_close, stamp
+from instrument_metadata import RELATIVE as INSTRUMENT_METADATA, asset_class
 from tactical_review import review_open_orders
 
 SCHEMA = "intraday_portfolio_risk_v1"
@@ -105,6 +106,11 @@ def _context(root: Path, current: datetime) -> dict:
         raw, source = _read(root, relative)
         raws[relative] = raw
         bindings.append(source)
+    # Instrument identity is shared with the collector. Supplemental identities
+    # do not add candidate/core authority, but their exact bytes are risk inputs.
+    if (root / INSTRUMENT_METADATA).exists():
+        _, source = _read(root, INSTRUMENT_METADATA)
+        bindings.append(source)
     authority = load_authority(root, current)
     if (root / POLICY_PATH).exists():
         _, source = _read(root, POLICY_PATH)
@@ -118,7 +124,8 @@ def _context(root: Path, current: datetime) -> dict:
         raise ValueError("intraday_risk_account_observation_after_assessment")
     orders = json.loads(raws[INPUTS[5]])
     positions = list(csv.DictReader(io.StringIO(raws[INPUTS[4]].decode("utf-8"))))
-    metadata = {row["ticker"]: row for row in csv.DictReader(io.StringIO(raws[INPUTS[2]].decode("utf-8")))}
+    metadata_rows = list(csv.DictReader(io.StringIO(raws[INPUTS[2]].decode("utf-8"))))
+    metadata = {row["ticker"]: row for row in metadata_rows}
     seen, inventory = set(), []
     for row in positions:
         ticker = row.get("ticker", "").strip().upper()
@@ -128,8 +135,11 @@ def _context(root: Path, current: datetime) -> dict:
         qty = _number(row.get("shares_optional"), ticker + ".shares", positive=True)
         if qty != qty.to_integral_value():
             raise ValueError("intraday_risk_nonwhole_recorded_shares")
-        is_etf = metadata.get(ticker, {}).get("sector", "").upper() == "ETF"
-        if ticker in core and (not is_etf or metadata[ticker].get("is_benchmark") != "yes"):
+        instrument = asset_class(ticker, root=root, universe=metadata_rows)
+        if instrument is None:
+            raise ValueError("intraday_risk_instrument_metadata_missing:" + ticker)
+        is_etf = instrument == "etf"
+        if ticker in core and (not is_etf or metadata.get(ticker, {}).get("is_benchmark") != "yes"):
             raise ValueError("intraday_risk_core_metadata_invalid:" + ticker)
         inventory.append({"ticker": ticker, "shares": int(qty), "sleeve": "core" if ticker in core else "other_etf" if is_etf else "stock"})
     if not isinstance(orders, dict) or not isinstance(orders.get("orders"), list):

@@ -66,9 +66,12 @@ class IntradayPortfolioRiskTests(unittest.TestCase):
             writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
             writer.writeheader(); writer.writerows(rows)
 
-    def plans(self, *, tactical=False, review_due=False):
+    def plans(self, *, tactical=False, review_due=False, fund=False):
         records = []
-        for ticker, role, shares in (("SPY", "broad_core", 2), ("AAA", "tactical" if tactical else "long_term_growth", 1)):
+        holdings = (("SPY", "broad_core", 2), ("AAA", "tactical" if tactical else "long_term_growth", 1))
+        if fund:
+            holdings += (("VGT", "long_term_growth", 2),)
+        for ticker, role, shares in holdings:
             row = record(ticker=ticker, role=role)
             row.update(recorded_at="2026-10-22T09:00:00-04:00", effective_at="2026-10-22T09:00:00-04:00",
                 account_observed_at="2026-10-20T11:00:00-04:00", review_at="2026-10-22T10:00:00-04:00" if review_due else "2026-10-22T15:45:00-04:00",
@@ -99,6 +102,99 @@ class IntradayPortfolioRiskTests(unittest.TestCase):
             return json.dumps(data).encode()
         client = feed.NasdaqIntradayClient(self.root, get=get, sleep=lambda _: None, now=lambda: self.now)
         return feed.collect(self.root, self.symbols, account_version=capture_version(self.root), claim_id="claim-risk", current=self.now, client=client)
+
+    def supplemental_fund(self):
+        # Same real mismatch as the deployed VGT observation: fund identity is
+        # supplemental and deliberately does not expand the candidate seed.
+        from instrument_metadata import RELATIVE
+        self.write(RELATIVE, {"schema_version": "equity_supplemental_instrument_metadata_v1",
+            "instruments": [{"ticker": "VGT", "asset_class": "etf", "name": "Synthetic held sector fund",
+                "source_url": "https://example.test/fund", "reviewed_on": "2026-10-21"}]})
+        self.csv(risk.INPUTS[4], [{"ticker": "SPY", "shares_optional": "2"},
+            {"ticker": "AAA", "shares_optional": "1"}, {"ticker": "VGT", "shares_optional": "2"}])
+        self.csv(feed.BASELINE, [{"ticker": ticker, "last_price": "100", "market_session_date": "2026-10-21",
+            "data_quality_label": "ok"} for ticker in ("SPY", "AAA", "VGT")])
+        seed_admitted_history(self.root)
+        self.plans(fund=True)
+        self.symbols["VGT"] = "etf"
+        return RELATIVE
+
+    def test_supplemental_held_fund_uses_collector_identity_and_is_not_core_or_stock(self):
+        relative = self.supplemental_fund()
+        from intraday_assessment import held_symbols
+        seed_before = (self.root / risk.INPUTS[2]).read_bytes()
+        snapshot = self.snapshot(prices={"SPY": 98, "AAA": 90, "VGT": 110})
+        result = risk.assess(self.root, snapshot, self.now)
+        self.assertEqual(result["status"], "current", result)
+        self.assertEqual(held_symbols(self.root), self.symbols)
+        self.assertEqual(result["portfolio_nav"], 606)
+        self.assertEqual(result["baseline_portfolio_nav"], 600)
+        self.assertEqual({x["ticker"]: x["sleeve"] for x in result["positions"]},
+                         {"SPY": "core", "AAA": "stock", "VGT": "other_etf"})
+        self.assertAlmostEqual(result["allocation"]["stock_weight_pct"], 90 / 606 * 100)
+        self.assertAlmostEqual(result["allocation"]["other_etf_weight_pct"], 220 / 606 * 100)
+        self.assertEqual(result["allocation"]["core_tickers"], ["QQQM", "SPY"])
+        self.assertEqual(result["concentration"]["largest_stock_ticker"], "AAA")
+        self.assertIn(relative, {s["path"] for s in result["source_bindings"]})
+        self.assertEqual((self.root / risk.INPUTS[2]).read_bytes(), seed_before)
+        self.assertEqual(risk.validate_assessment(self.root, result), result)
+        self.assertFalse(result["trading_eligibility_granted"])
+        self.assertFalse(result["email_authorized"])
+
+    def test_missing_conflicting_or_duplicate_identity_cannot_default_to_stock(self):
+        relative = self.supplemental_fund()
+        snapshot = self.snapshot(prices={"SPY": 98, "AAA": 90, "VGT": 110})
+        (self.root / relative).unlink()
+        with self.assertRaisesRegex(ValueError, "instrument_metadata_missing:VGT"):
+            risk.assess(self.root, snapshot, self.now)
+        self.supplemental_fund()
+        self.csv(risk.INPUTS[2], [{"ticker": "SPY", "sector": "ETF", "is_benchmark": "yes"},
+            {"ticker": "AAA", "sector": "Technology", "is_benchmark": "no"},
+            {"ticker": "VGT", "sector": "Technology", "is_benchmark": "no"}])
+        with self.assertRaisesRegex(ValueError, "classification_conflict"):
+            risk.assess(self.root, snapshot, self.now)
+        self.csv(risk.INPUTS[2], [{"ticker": "SPY", "sector": "ETF", "is_benchmark": "yes"},
+            {"ticker": "AAA", "sector": "Technology", "is_benchmark": "no"},
+            {"ticker": "AAA", "sector": "Technology", "is_benchmark": "no"}])
+        from intraday_assessment import held_symbols
+        for operation in (lambda: risk.assess(self.root, snapshot, self.now), lambda: held_symbols(self.root)):
+            with self.assertRaisesRegex(ValueError, "duplicate_universe_symbol"):
+                operation()
+
+    def test_changed_supplemental_metadata_invalidates_retained_marks(self):
+        relative = self.supplemental_fund()
+        result = risk.assess(self.root, self.snapshot(prices={"SPY": 98, "AAA": 90, "VGT": 110}), self.now)
+        value = json.loads((self.root / relative).read_text())
+        value["instruments"][0]["reviewed_on"] = "2026-10-22"
+        self.write(relative, value)
+        with self.assertRaisesRegex(ValueError, "source_changed"):
+            risk.validate_assessment(self.root, result)
+        projected = risk.projection(self.root, result, self.now)
+        self.assertIsNone(projected["portfolio_nav"])
+        self.assertFalse(projected["trading_eligibility_granted"])
+        # Reclassifying the fund to stocks cannot relabel the retained ETF quote.
+        value["instruments"][0]["asset_class"] = "stocks"
+        self.write(relative, value)
+        rejected = risk.assess(self.root, feed.load_latest(self.root), self.now)
+        self.assertEqual(rejected["status"], "unavailable")
+        self.assertIn("intraday_risk_held_price_scope_missing_or_conflicting", rejected["dependencies"])
+
+    def test_supplemental_fund_does_not_bypass_coverage_expiry_or_account_gates(self):
+        self.supplemental_fund()
+        prices = {"SPY": 98, "AAA": 90, "VGT": 110}
+        partial = risk.assess(self.root, self.snapshot(broken="VGT", prices=prices), self.now)
+        self.assertEqual(partial["status"], "partial")
+        self.assertIsNone(partial["portfolio_nav"])
+        snapshot = self.snapshot(prices=prices)
+        expired = risk.assess(self.root, snapshot, self.now + timedelta(minutes=6))
+        self.assertNotEqual(expired["status"], "current")
+        self.assertIsNone(expired["portfolio_nav"])
+        account = json.loads((self.root / risk.INPUTS[3]).read_text())
+        account["cash_available"] += 1
+        self.write(risk.INPUTS[3], account)
+        changed = risk.assess(self.root, snapshot, self.now)
+        self.assertNotEqual(changed["status"], "current")
+        self.assertIsNone(changed["portfolio_nav"])
 
     def test_complete_mark_includes_cash_and_all_inventory_not_stale_account_nav(self):
         snapshot = self.snapshot()

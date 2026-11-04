@@ -22,7 +22,8 @@ SCHEMA = "equity_intraday_risk_receipt_v1"
 def held_symbols(root: Path) -> dict[str, str]:
     """The complete positive local inventory; never a momentum shortlist."""
     with (root / "03_source_data/equity_research/universe_seed.csv").open() as stream:
-        metadata = {row["ticker"]: row for row in csv.DictReader(stream)}
+        # Preserve duplicates so the shared identity validator can reject them.
+        metadata = list(csv.DictReader(stream))
     with (root / "05_risk_and_positions/current_positions.local.csv").open() as stream:
         rows = list(csv.DictReader(stream))
     selected = {}
