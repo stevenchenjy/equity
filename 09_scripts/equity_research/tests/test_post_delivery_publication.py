@@ -165,6 +165,43 @@ class PostDeliveryPublicationTests(unittest.TestCase):
             rows=list(csv.DictReader(self.ledger.read_text().splitlines())), mode='intraday_alert')
         self.assertFalse(eligibility['eligible'])
 
+    def test_registered_retained_plan_sources_are_valid_protected_bindings(self):
+        from test_plan_source_resolutions import PlanSourceResolutionTests
+        from workflow_inputs import WORKFLOW_INPUTS
+        fixture = PlanSourceResolutionTests(); fixture.setUp(); self.addCleanup(fixture.doCleanups)
+        fixture.register()
+        root = fixture.root
+        archived = {'account_input_version': input_version(root),
+            'workflow_integrity': {'input_hashes': repair._hashes(root, WORKFLOW_INPUTS)},
+            'capital_decision': {'source_bindings': capital.binding(root)}}
+        self.assertIn(fixture.retained, archived['capital_decision']['source_bindings'])
+        protected = repair._protected(root, archived)
+        self.assertEqual(protected['source_hashes'][fixture.retained], fixture.digest(fixture.old))
+        for mutation in ('missing', 'extra'):
+            invalid = copy.deepcopy(archived)
+            if mutation == 'missing': invalid['capital_decision']['source_bindings'].pop(fixture.retained)
+            else: invalid['capital_decision']['source_bindings']['unregistered-evidence.json'] = '0' * 64
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(ValueError, 'full_source_bindings_required'):
+                repair._protected(root, invalid)
+        (root / fixture.retained).write_bytes(b'changed evidence')
+        with self.assertRaisesRegex(ValueError, 'retained_hash_mismatch'):
+            repair._protected(root, archived)
+
+    def test_economic_rejection_with_retained_proofs_is_not_mistaken_for_expiry_only(self):
+        from test_plan_source_resolutions import PlanSourceResolutionTests
+        fixture = PlanSourceResolutionTests(); fixture.setUp(); self.addCleanup(fixture.doCleanups)
+        fixture.register(); root = fixture.root
+        previous = {'capital_decision': {'source_bindings': capital.binding(root)}}
+        changed_path = root / '04_data/equity_research/valuation_scenarios.local.json'
+        changed_path.parent.mkdir(parents=True, exist_ok=True)
+        changed_path.write_text('{"new_reviewed_evidence": "adverse"}')
+        current = {'capital_decision': {'source_bindings': capital.binding(root)}}
+        with patch.object(delivery, '_delivered_canonical', return_value=previous):
+            self.assertTrue(delivery._economic_rejection_changed(current,
+                {'reasons': ['reviewed_business_case_not_supported']}, {}, root=root))
+            self.assertFalse(delivery._economic_rejection_changed(current,
+                {'reasons': ['plan_expired']}, {}, root=root))
+
     def test_no_append_dedup_skip_or_unknown_does_not_run_closure(self):
         self.assertEqual(self.recover()['outcome'], 'not_required'); self.assertEqual(self.calls, [])
         self.append_delivery(status='delivery_unknown')

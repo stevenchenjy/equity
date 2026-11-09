@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-11-05T08:22:24.000-05:00",
+  "artifact_sha256": "565652b60760fca51395e478550176af4ca80bc2cc721b0b26f466bcfa2b2b10",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v85",
+  "prior_extension_set_sha256": "e4c739dd72621bcde987da5c9906bb0a216f66597fa27b170e51b322ea0a62a1",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-04T21:01:27.000+00:00",
+      "accession_number": "0001193125-26-447173",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-05T08:22:24.000-05:00",
+      "cik": "789019",
+      "entity_name": "MICROSOFT CORP",
+      "extension_record_sha256": "b42f0eee1c351e957e0ec8d5843bdb3caa329ba2de451acd979015c3948047ad",
+      "extension_version": "v85",
+      "filing_date": "2026-11-04",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a012edb86b4b556b63cea217d1703022b484a82566fd0efc1644b3a41b25b14b",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "ticker": "MSFT"
+    },
+    {
+      "accepted_at": "2026-11-05T11:01:52.000+00:00",
+      "accession_number": "0001193125-26-448357",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-05T08:22:24.000-05:00",
+      "cik": "789019",
+      "entity_name": "MICROSOFT CORP",
+      "extension_record_sha256": "360c548b0a1df39ee2150ca561bab706ec8c4cdc3aebf023e0bee54fd2c75a82",
+      "extension_version": "v85",
+      "filing_date": "2026-11-05",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "37b72b06bdd38917e280729890b11a7c535747939657ee57a304e7570ce87543",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "ticker": "MSFT"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

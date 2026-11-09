@@ -25,6 +25,9 @@ class RequestedCoverageTests(unittest.TestCase):
         self.enterContext(patch.object(baseline, "approved_core_tickers", return_value=core))
         self.enterContext(patch.object(baseline, "is_core_allocation_ticker", side_effect=lambda t: t in core))
         self.enterContext(patch("long_horizon_research.is_core_allocation_ticker", side_effect=lambda t: t in core))
+        # This fixture tests requested/ranked coverage, not private maintained
+        # dossiers that may exist in the checkout running the suite.
+        self.enterContext(patch.object(baseline, "retained_company_tickers", return_value=set()))
 
     def test_owner_names_survive_ranked_shortlist_without_becoming_eligible(self):
         def rows(path):
@@ -62,6 +65,7 @@ class RequestedCoverageTests(unittest.TestCase):
         by_ticker = {row["ticker"]: row for row in seeds}
         for ticker in ("QQQM", "XLI"):
             self.assertEqual(by_ticker[ticker]["is_benchmark"], "yes")
+            self.assertEqual(by_ticker[ticker]["sector"], "ETF")
             self.assertFalse(evidence.company_fundamentals_required(ticker))
             self.assertEqual(c9.is_core_allocation_ticker(ticker), ticker == "QQQM")
             self.assertIn(ticker, POLICY["excluded_benchmarks"])
@@ -79,7 +83,9 @@ class RequestedCoverageTests(unittest.TestCase):
                 ]
             if path == baseline.UNIVERSE_PATH:
                 return [
-                    {"ticker": ticker, "is_benchmark": "yes" if ticker in {"SPY", "QQQM", "XLI"} else "no"}
+                    {"ticker": ticker,
+                     "is_benchmark": "yes" if ticker in {"SPY", "QQQM", "XLI"} else "no",
+                     "sector": "ETF" if ticker in {"SPY", "QQQM", "XLI"} else "Technology"}
                     for ticker in REQUIRED
                 ]
             return []
@@ -113,7 +119,7 @@ class RequestedCoverageTests(unittest.TestCase):
                 return [{"ticker": "SPY", "last_price": "100", "market_session_date": "2026-09-18",
                          "data_quality_label": "ok", "data_source": "fixture"}]
             if path == baseline.UNIVERSE_PATH:
-                return [{"ticker": "SPY", "is_benchmark": "yes"}]
+                return [{"ticker": "SPY", "is_benchmark": "yes", "sector": "ETF"}]
             if path == baseline.FUNDAMENTALS_PATH:
                 return [{"ticker": "IOT", "revenue_yoy_pct": "30", "source_url": "https://www.sec.gov/fixture"}]
             return []

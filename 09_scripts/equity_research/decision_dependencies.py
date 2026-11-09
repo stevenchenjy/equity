@@ -29,7 +29,14 @@ STAGE_OUTPUTS = {
 def classify(code: str, *, ticker: str | None = None, scope='ticker') -> dict[str, Any]:
     code = str(code)
     category, worker, needed = 'D', 'recurring_analyst', 'A sourced strategy-appropriate thesis, valuation and counterevidence conclusion; no positive conclusion is inferred from a screen.'
-    if code == 'reviewed_business_case_not_supported':
+    if code == 'maintained_exit_draft_requires_current_shares_price_and_validity':
+        needed = ('The recurring analyst must complete a current conditional reduction/exit draft with exact remaining quantity, '
+                  'dated price, order type, session and expiry. Resolve any named earlier-order or share-availability contradiction '
+                  'with the owner; unfinished new-buy valuation alone does not establish a reason to defer risk review.')
+    elif code == 'exit_stop_already_breached_reassessment_required':
+        needed = ('The recorded stop reference is already crossed. Preserve that observation and reassess the permitted response '
+                  'at a current price; do not renew the crossed stop as a new protective order or infer a fill.')
+    elif code == 'reviewed_business_case_not_supported':
         needed = 'The current completed source-bound company review does not support a positive investment case. This is a reviewed rejection, not unfinished research; another unchanged dossier cannot clear it. Reassess only with materially changed evidence and an accepted source-bound amendment. The current outcome remains zero-share NO_ACTION.'
     elif any(w in code for w in ('account', 'planning_cash', 'cash_confirm', 'cash_not_confirmed', 'cash_basis', 'open_orders', 'order_inventory', 'order_snapshot', 'existing_order', 'remaining_shares', 'holdings', 'execution_conflict', 'execution_funds', 'buying_power', 'tactical_risk_unconfirmed', 'earlier_instruction_execution')):
         category, worker, needed = 'C', 'approved_manual_account_record', 'Dated complete current holdings and account-wide pending/partial orders (remaining quantity, price/stop, TIF and status), plus available execution funds and settlement/buying-power confirmation.'

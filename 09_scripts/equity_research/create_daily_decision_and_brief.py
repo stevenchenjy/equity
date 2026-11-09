@@ -1342,6 +1342,13 @@ def main() -> int:
     from capital_decision import publish as publish_capital_decision, meaning as capital_meaning
     from decision_dependencies import publish as publish_dependencies
     compose_capital_contracts(decision, root=ROOT)
+    # Risk visibility is independent of new-capital eligibility and unfinished
+    # company models. Keep exact dated observations and unavailable states even
+    # when another holding's price or a research gate fails.
+    from held_position_risk import build as build_held_risk, publish as publish_held_risk
+    decision["held_position_risk"] = build_held_risk(
+        decision, root=ROOT, current=datetime.fromisoformat(decision["generated_at"]))
+    publish_held_risk(ROOT, decision["held_position_risk"])
     # Event discovery remains independent of momentum and cannot admit capital.
     # Only the completed capital contract may supply conditional-plan status.
     from earnings_events import summary as earnings_event_summary

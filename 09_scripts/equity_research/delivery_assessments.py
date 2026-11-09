@@ -336,6 +336,7 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
             # Presentation may evolve; exact older archived bodies still bind
             # the original advice chain. Never regenerate or rewrite history.
             require(tuple(bodies) in (render_failure_brief(old)[1:],
+                _render_prior_failure_cards(old)[1:],
                 _render_legacy_failure_brief(old)[1:]), 'baseline_status_render_mismatch')
             return {'status': 'status_only', 'receipt_sha256': canonical_sha256(row)}
         projection = advice_projection(old)
@@ -413,12 +414,13 @@ def _delivered_canonical(root: Path, baseline: dict) -> dict:
 def _economic_rejection_changed(decision: dict, row: dict, baseline: dict, *, root: Path) -> bool:
     """Canonical economic failures with changed evidence are not mere expiry."""
     from capital_decision import CONDITION_FAILURES, INPUTS
+    from plan_source_resolutions import proof_hashes
     if not any(reason in CONDITION_FAILURES for reason in row.get('reasons', [])):
         return False
     delivered = _delivered_canonical(root, baseline)
     before = delivered.get('capital_decision', {}).get('source_bindings', {})
     after = decision.get('capital_decision', {}).get('source_bindings', {})
-    return (set(before) == set(after) == INPUTS and any(before[path] != after[path] for path in before
+    return (set(before) == set(after) == INPUTS | set(proof_hashes(root)) and any(before[path] != after[path] for path in before
         if path != '07_automation/email_delivery/daily_delivery_ledger.csv'))
 
 
@@ -645,8 +647,8 @@ def _render_legacy_failure_brief(artifact: dict) -> tuple[str, str, str]:
     return subject_prefix() + ' ' + artifact['headline'] + ' — ' + artifact['cycle_date'], plain, document
 
 
-def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
-    """Use the current brief shell while keeping the typed status scope explicit."""
+def _render_prior_failure_cards(artifact: dict) -> tuple[str, str, str]:
+    """Exact earlier card format for retained delivery verification only."""
     validate_failure_brief_archive(artifact)
     from email_brief import _render_cards
     from equity_naming import subject_prefix
@@ -658,6 +660,43 @@ def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
         {'title': 'Next step',
             'body': 'Await a validated research publication; unresolved data and research requirements remain effective.',
             'sources': []},
+    ]
+    return _render_cards(subject, sections, title='Research status',
+        stamp=f"Mandatory {artifact['scheduled_slot']} brief · Observed: {artifact['generated_at']}",
+        footer='No earlier price, DAY order or trading quantity is renewed by this status update.')
+
+
+def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
+    """Expose the exact failed condition and responsible operational next step."""
+    validate_failure_brief_archive(artifact)
+    from email_brief import _render_cards
+    from equity_naming import subject_prefix
+    reason = artifact['failure_reason']
+    detail, next_step = {
+        'workflow_earnings_events_changed_recompose_required': (
+            'Earnings research changed or crossed an evidence or review deadline after the last publication.',
+            'Recompose the decision from current evidence and validate the earnings view before the next eligible delivery check.'),
+        'capital_decision_inputs_changed_recompose_required': (
+            'The current capital decision no longer matches its bound inputs, including the delivery ledger.',
+            'Reconcile the changed input and regenerate the capital decision and email; verify source bindings before delivery.'),
+        'workflow_plan_state_changed_recompose_required': (
+            'A maintained position plan changed or expired after the last publication.',
+            'Recompose the current risk and plan states, and assign the expired holding review to the analyst.'),
+        'daily_refresh_not_fully_passed': (
+            'The latest refresh has failed or incomplete required stages.',
+            'Inspect the named failed stages in the retained refresh receipt, repair the failure, then run and validate the no-send decision chain.'),
+    }.get(reason, ('A required publication check did not pass.',
+        'Inspect the retained refresh and validation receipts, resolve the named failure, and validate a new publication before resuming recommendations.'))
+    subject = subject_prefix() + ' ' + artifact['headline'] + ' — ' + artifact['cycle_date']
+    sections = [
+        {'title': 'Status only — no current trading instruction', 'kind': 'inactive',
+            'body': 'Portfolio recommendation unavailable. This is not a reviewed HOLD decision.\n'
+                + 'Reason: ' + artifact['status_summary'] + '\n' + artifact['verification_scope'], 'sources': []},
+        {'title': 'Failure requiring repair',
+            'body': detail + '\nFailure code: ' + reason + '\nOwner: scheduled research service / workspace maintainer.', 'sources': []},
+        {'title': 'Next step', 'body': next_step
+            + '\nReview expectation: the next configured assessment or delivery check must revalidate the publication. '
+            'This message does not establish that a repair ran or succeeded.', 'sources': []},
     ]
     return _render_cards(subject, sections, title='Research status',
         stamp=f"Mandatory {artifact['scheduled_slot']} brief · Observed: {artifact['generated_at']}",
@@ -709,6 +748,11 @@ def validate_envelope(decision: dict) -> dict:
 
 def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tuple[str, str, str]:
     envelope = eligibility if eligibility is not None else validate_envelope(decision)
+    from held_position_risk import cards as held_risk_cards
+    # This is context in an already-authorized action/priority alert. It does
+    # not enter eligibility or the delivery-purpose comparison, and absent
+    # fields preserve the exact immutable historical alert rendering.
+    risk_sections = held_risk_cards(decision)
     if decision.get('email_brief_version') == 'equity_direct_action_email_v5':
         from attention_email import direct_action, section
         from email_brief import _render_cards, email_support_location
@@ -725,6 +769,10 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
         if not sections:
             sections.append(section('No new or repeated trading instruction',
                 ['Existing quantities are not reissued.'], group='action', kind='inactive'))
+        if risk_sections:
+            if not envelope.get('action_changed'):
+                sections[0]['body'] += '\nResearch alert with dated holding-risk context; no fresh order is created or renewed.'
+            sections.extend(risk_sections)
         if envelope.get('priority_changed'):
             entries = decision.get('analyst_priority_review', {}).get('entries', [])
             # A priority receipt acknowledges the exact authored reason and next
@@ -757,6 +805,10 @@ def render_intraday_alert(decision: dict, eligibility: dict | None = None) -> tu
         lines += ['', label + ' — ' + row['ticker'], *action_lines(row)]
     for ticker in envelope.get('removed_action_tickers', []):
         lines += ['', ticker + ' — previous eligible instruction withdrawn; do not resubmit its earlier quantity.']
+    if risk_sections:
+        lines += ['', 'Dated holding-risk context; this observation creates or renews no order.']
+        for risk_section in risk_sections:
+            lines += ['', risk_section['title'], risk_section['body']]
     if envelope.get('priority_changed'):
         lines += ['', 'Research priorities — no trade eligibility is implied.']
         for rank, entry in enumerate(decision.get('analyst_priority_review', {}).get('entries', []), 1):

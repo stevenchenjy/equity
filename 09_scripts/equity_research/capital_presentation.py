@@ -114,7 +114,8 @@ def optional_rotation_cards(decision):
 
 def cards(decision, view=None):
     c=decision['capital_decision'];validate(c,current=datetime.fromisoformat(decision['generated_at']))
-    result=[]
+    from held_position_risk import cards as risk_cards
+    result=risk_cards(decision)
     rotations=optional_rotation_cards(decision)
     skip_rotation=any(r['title']=='Skip the rotation' for r in rotations)
     actionable=[r for r in c['decisions'] if r['order_draft']]
@@ -129,6 +130,10 @@ def cards(decision, view=None):
                 headline='0 shares · no current order price',
                 body='No complete current conditional '+side+' draft passes the required checks. No order is requested by this update.', sources=[]))
     for row in [*actionable,*[r for r in c['decisions'] if r['decision'] in {'REDUCE_REVIEW','EXIT_REVIEW','HOLD'} and not r['order_draft']]]:
+        if row['decision'] == 'HOLD' and 'held_position_risk' in decision:
+            risk = next((r for r in decision['held_position_risk']['holdings'] if r['ticker'] == row['ticker']), {})
+            if risk.get('state') != 'REVIEWED_HOLD':
+                continue
         label={'ACTIONABLE_BUY':'BUY','ACTIONABLE_ADD':'ADD','REDUCE_REVIEW':'REDUCE REVIEW','EXIT_REVIEW':'EXIT REVIEW','HOLD':'HOLD'}[row['decision']]
         result.append(dict(title=f"{label} — {row['ticker']}",group='action',kind='buy' if row['decision'] in BUY else 'sell' if 'REVIEW' in row['decision'] else 'inactive',
                            headline=f"{row['shares']} shares · approx. ${row['estimated_notional']:.2f}" if row.get('order_draft') else 'No new order draft',

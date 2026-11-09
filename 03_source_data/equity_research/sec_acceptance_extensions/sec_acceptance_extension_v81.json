@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-11-05T08:22:24.000-05:00",
+  "artifact_sha256": "94e1f64de0669782273891ede5214539e7e050cac06625b9fe91a544408e2ee3",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v81",
+  "prior_extension_set_sha256": "e82119b8a5bb2974a315bb6be226fbdbaefe57bbc8ea74b30debed284289df40",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-04T22:22:04.000+00:00",
+      "accession_number": "0001628280-26-070292",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-05T08:22:24.000-05:00",
+      "cik": "1561550",
+      "entity_name": "Datadog, Inc.",
+      "extension_record_sha256": "57d8efdaa9b52f2737a79bcc604211e6b9cafa7e2e596875ed0550345f070bab",
+      "extension_version": "v81",
+      "filing_date": "2026-11-04",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "8c885d3dbe92bf4a292a90eab93355956a721644e3d5aaaf78022bec2b1964ed",
+      "source_url": "https://data.sec.gov/submissions/CIK0001561550.json",
+      "ticker": "DDOG"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

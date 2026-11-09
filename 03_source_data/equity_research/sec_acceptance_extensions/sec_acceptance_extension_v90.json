@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-11-06T08:19:58.000-05:00",
+  "artifact_sha256": "463e2e9d1da8591f577fad8d164aed8c40aedfc0723029f3d3610eaf7414f1ee",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v90",
+  "prior_extension_set_sha256": "ed987b328543adcc7ec649d4a4166095e1e08b77682a3b21d37bfa6127661965",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-05T21:18:21.000+00:00",
+      "accession_number": "0001477333-26-000060",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-06T08:19:58.000-05:00",
+      "cik": "1477333",
+      "entity_name": "Cloudflare, Inc.",
+      "extension_record_sha256": "089028720a48e7995c63e1e28f9817e8562ca560918e5e54c97d6bcea96a976e",
+      "extension_version": "v90",
+      "filing_date": "2026-11-05",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "58de9b24647c0a0705cbdffa0501120008081761bcbf7125359297491858920e",
+      "source_url": "https://data.sec.gov/submissions/CIK0001477333.json",
+      "ticker": "NET"
+    },
+    {
+      "accepted_at": "2026-11-05T21:21:33.000+00:00",
+      "accession_number": "0001477333-26-000061",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-06T08:19:58.000-05:00",
+      "cik": "1477333",
+      "entity_name": "Cloudflare, Inc.",
+      "extension_record_sha256": "a7ef444728b1e9c0c097c3d379a7a3ce5cb770e4a9708cb03af43ea553678272",
+      "extension_version": "v90",
+      "filing_date": "2026-11-05",
+      "form": "10-Q",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a49b98493a00f11e809dba4e5c185976189f16c217053742f26643a809a3907d",
+      "source_url": "https://data.sec.gov/submissions/CIK0001477333.json",
+      "ticker": "NET"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

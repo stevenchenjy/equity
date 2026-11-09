@@ -21,6 +21,9 @@ from valuation_input_bundle import seal_bundle, validate_and_materialize_bundle
 from valuation_research_inputs import company_projection_record
 
 CURRENT = datetime.fromisoformat('2026-10-12T12:00:00+00:00')
+# These retained email assertions exercise the full-case v3 presentation. The
+# current decision-first v5 email deliberately links to the complete report.
+LEGACY_CASE_EMAIL_VERSION = 'equity_action_email_v3'
 
 
 def write_json(root, relative, document):
@@ -187,13 +190,53 @@ class CompanyValuationTests(unittest.TestCase):
         from email_brief import render_email
         from test_email_brief import decision_fixture
         final = decision_fixture()
-        final.update(decision)
+        final.update(decision, email_brief_version=LEGACY_CASE_EMAIL_VERSION)
         final['workflow_integrity']={'schema_version':'equity_workflow_integrity_v1'}
         _, plain, html = render_email(final)
         self.assertIn('$8.00 / $15.00 / $20.00', plain)
         self.assertIn('当前新增订单股数：0 股', html)
         self.assertIn('data-email-group="background"', html)
         self.assertTrue(all(isinstance(url, str) for url in research['sources']))
+
+    def test_current_brief_preserves_full_company_case_in_local_report(self):
+        from decimal import Decimal
+        from capital_decision import SCHEMA as CAPITAL_SCHEMA
+        from capital_presentation import markdown
+        from company_research_presentation import presentation_case
+        from daily_common import canonical_sha256
+        from email_brief import EMAIL_BRIEF_VERSION, render_email
+        from test_email_brief import decision_fixture
+
+        view = self.views()['ABC']
+        case = presentation_case(view, root=self.root, current=CURRENT, quote=self.quote,
+            minimum_reward_to_risk=Decimal('1.25'))
+        row = {'ticker': 'ABC', 'decision': 'BLOCKED', 'shares': 0, 'order_draft': None,
+            'research_case': case, 'reasons': [case['conclusion']], 'blockers': ['valuation'],
+            'dependencies': []}
+        capital = {'schema_version': CAPITAL_SCHEMA, 'automatic_action_allowed': False,
+            'broker_connected': False, 'order_placed': False, 'decisions': [row],
+            'dependencies': [], 'planning_cash': 4000, 'mandatory_reserve': 0,
+            'global_blockers': []}
+        capital['content_sha256'] = canonical_sha256(capital)
+        decision = decision_fixture()
+        self.assertEqual(decision['email_brief_version'], EMAIL_BRIEF_VERSION)
+        decision.update(generated_at=CURRENT.isoformat(), capital_decision=capital,
+            long_horizon_research={'candidate_views': {'ABC': view}},
+            workflow_integrity={'schema_version': 'equity_workflow_integrity_v1'},
+            email_support_surface='local_report')
+        original = deepcopy(decision)
+        _, plain, html = render_email(decision)
+        report = markdown(decision)
+        for rendered in (plain, visible_html_text(html)):
+            self.assertIn('No new trade', rendered)
+            self.assertIn('Details and sources:', rendered)
+            self.assertNotIn('$8.00 / $15.00 / $20.00', rendered)
+            self.assertNotIn('BUY LIMIT', rendered)
+        self.assertIn('$8.00 / $15.00 / $20.00', report)
+        self.assertIn(case['conclusion'], report)
+        self.assertIn(case['next_review_at'], report)
+        self.assertIn('当前新增订单股数：0 股', report)
+        self.assertEqual(decision, original)
 
     def test_invalid_or_expired_research_model_never_acquires_current_display_prices(self):
         from decimal import Decimal
@@ -264,6 +307,7 @@ class CompanyValuationTests(unittest.TestCase):
                 capital['content_sha256'] = canonical_sha256(capital)
                 final = decision_fixture()
                 final.update(generated_at=CURRENT.isoformat(), capital_decision=capital,
+                    email_brief_version=LEGACY_CASE_EMAIL_VERSION,
                     long_horizon_research={'candidate_views':{'ABC':view}},
                     workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
                 _, plain, html = render_email(final)
@@ -331,6 +375,7 @@ class CompanyValuationTests(unittest.TestCase):
                 capital['content_sha256']=canonical_sha256(capital)
                 decision=decision_fixture()
                 decision.update(generated_at=CURRENT.isoformat(),capital_decision=capital,
+                    email_brief_version=LEGACY_CASE_EMAIL_VERSION,
                     long_horizon_research={'candidate_views':{'ABC':view}},
                     workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
                 _,plain,html=render_email(decision)
@@ -417,6 +462,7 @@ class CompanyValuationTests(unittest.TestCase):
                 capital['content_sha256']=canonical_sha256(capital)
                 final=decision_fixture()
                 final.update(generated_at=CURRENT.isoformat(),capital_decision=capital,
+                    email_brief_version=LEGACY_CASE_EMAIL_VERSION,
                     workflow_integrity={'schema_version':'equity_workflow_integrity_v1'})
                 expected='$112.70 / $242.72 / '+('$363.78' if bull_key=='scenario_share_value_usd' else '未核验')
                 for rendered in render_email(final)[1:]:

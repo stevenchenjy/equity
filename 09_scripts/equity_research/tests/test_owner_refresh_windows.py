@@ -15,6 +15,18 @@ class OwnerRefreshWindowsTests(unittest.TestCase):
         handoff = {'cycle_date': '2026-09-29', 'expected_market_session': '2026-09-28',
                    'started_at': now.isoformat(), 'outcome': 'passed' if success else 'failed',
                    'steps': [{'name': 'market_refresh', 'exit_code': 0 if success else 1}]}
+        # Source admission is an independent boundary, not a scheduler flag.
+        # Retain this synthetic proof only after the isolated child succeeds.
+        def refresh(snapshot_mode, *, refresh_public=False):
+            if success:
+                self.market_receipt = {'expected_market_session': '2026-09-28',
+                    'observed_at': now.isoformat()}
+            return scheduler.subprocess.CompletedProcess([], 0 if success else 1)
+
+        def admission(root, *, current, not_before=None):
+            proof = getattr(self, 'market_receipt', None)
+            return proof if proof and (not_before is None or proof['observed_at'] >= not_before) else None
+
         with ExitStack() as stack:
             for name, value in [('now_et', now), ('iso_now', now.isoformat()), ('cycle_date', '2026-09-29'),
                                 ('load_active_state', {'operational_from': '2026-08-01'}),
@@ -24,8 +36,11 @@ class OwnerRefreshWindowsTests(unittest.TestCase):
             stack.enter_context(patch.object(scheduler, 'atomic_write_json'))
             stack.enter_context(patch.object(scheduler, 'publish_automation_alert'))
             stack.enter_context(patch('news_schedule.run_due_news_checks', return_value={}))
+            stack.enter_context(patch('market_admission.current_admission', side_effect=admission))
             stack.enter_context(patch.object(scheduler.sys, 'argv', ['refresh']))
-            run = stack.enter_context(patch.object(scheduler.subprocess, 'run', return_value=scheduler.subprocess.CompletedProcess([], 0 if success else 1)))
+            run = stack.enter_context(patch.object(scheduler, '_run_refresh_pipeline', side_effect=refresh))
+            stack.enter_context(patch.object(scheduler.subprocess, 'Popen',
+                side_effect=AssertionError('scheduler fixture must not spawn a real refresh')))
             with redirect_stdout(io.StringIO()):
                 scheduler.main()
         return run
@@ -34,13 +49,14 @@ class OwnerRefreshWindowsTests(unittest.TestCase):
         state = {'dates': {}}
         morning = self.run_at(state, '08:02')
         self.assertEqual(morning.call_count, 1)
-        self.assertIn('fetch', morning.call_args.args[0])
+        self.assertEqual(morning.call_args.args[0], 'fetch')
+        self.assertTrue(morning.call_args.kwargs['refresh_public'])
         day = state['dates']['2026-09-29']
         self.assertNotIn('13:30', day['refresh_slots_completed'])
         self.assertEqual(self.run_at(state, '08:45').call_count, 0)
         afternoon = self.run_at(state, '13:35')
         self.assertEqual(afternoon.call_count, 1)
-        self.assertIn('reuse_validated_snapshot', afternoon.call_args.args[0])
+        self.assertEqual(afternoon.call_args.args[0], 'reuse_validated_snapshot')
         self.assertIn('14:00', day['refresh_slots_completed'])
         self.assertEqual(self.run_at(state, '14:10').call_count, 0)
 
@@ -49,10 +65,10 @@ class OwnerRefreshWindowsTests(unittest.TestCase):
         self.run_at(state, '08:02', success=False)
         self.assertEqual(self.run_at(state, '08:15', success=False).call_count, 0)
         retry = self.run_at(state, '08:35', success=False)
-        self.assertIn('fetch', retry.call_args.args[0])
+        self.assertEqual(retry.call_args.args[0], 'fetch')
         afternoon = self.run_at(state, '13:35')
         self.assertEqual(afternoon.call_count, 1)
-        self.assertIn('fetch', afternoon.call_args.args[0])
+        self.assertEqual(afternoon.call_args.args[0], 'fetch')
         self.assertFalse(state['dates']['2026-09-29'].get('decision_completed', False))
 
     def test_evening_wake_archives_missed_slots_without_late_catchup_fetch(self):

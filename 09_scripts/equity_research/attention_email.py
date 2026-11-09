@@ -125,6 +125,10 @@ def direct_subject(decision):
     rotations = optional_rotation_cards(decision)
     if any(card.get("kind") in {"buy", "sell"} for card in rotations):
         return rotations[0]["title"] + " · " + rotations[0].get("headline", "")
+    from held_position_risk import material_intraday_conditions
+    if decision.get("held_position_risk", {}).get("attention_tickers") or (
+            "held_position_risk" in decision and material_intraday_conditions(decision)):
+        return "Holdings need attention — no new order"
     return "No new trade"
 
 
@@ -134,7 +138,8 @@ def direct_cards(decision):
     validate(contract, current=datetime.fromisoformat(decision["generated_at"]))
     rows = contract["decisions"]
     held = {row["ticker"]: row for row in decision.get("held_positions", [])}
-    result = []
+    from held_position_risk import cards as risk_cards, material_intraday_conditions
+    result = risk_cards(decision)
     actionable = [row for row in rows if row.get("order_draft")]
     for row in actionable:
         title, lines = direct_action(decision, row)
@@ -144,6 +149,24 @@ def direct_cards(decision):
     if not actionable and not any(card.get("kind") in {"buy", "sell"} for card in rotations):
         result.append(section("No new trade", ["Buy/add 0; no current priced order passes the required checks."],
                               group="action", kind="inactive"))
+    if "held_position_risk" in decision and not any(
+            row.get("order_draft", {}).get("side") == "buy" for row in actionable):
+        escalation = decision.get("capital_deployment_escalation", {})
+        closest = escalation.get("closest_candidate") or {}
+        name = closest.get("ticker")
+        candidate = next((row for row in rows if row.get("ticker") == name), None)
+        lines = ["No purchase currently qualifies; cash remains available for a supported entry."]
+        if candidate:
+            codes = list(dict.fromkeys(candidate.get("blockers", []) + candidate.get("reasons", [])))
+            lines.append(name + " — " + candidate["decision"].replace("_", " ") + ": "
+                         + "; ".join(str(code).replace("_", " ") for code in codes[:3]) + ".")
+            requirements = candidate.get("dependencies", [])
+            if requirements:
+                lines.append("Next decisive work: " + requirements[0]["evidence_required"])
+            lines.append("This is a readiness comparison, not a buy recommendation or approved price.")
+        else:
+            lines.append("A current sourced company/entry judgment, valid plan and feasible shares must pass the existing gates; the detailed candidate decisions remain in the local research report.")
+        result.append(section("New capital opportunities", lines, group="action", kind="inactive"))
     result.extend(rotations)
     checks = ["Current blocker: " + str(code).replace("_", " ") for code in contract.get("global_blockers", [])]
     checks += ["Required: " + item["evidence_required"] for item in contract.get("dependencies", [])
@@ -152,6 +175,10 @@ def direct_cards(decision):
         result.append(section("Required checks", list(dict.fromkeys(checks)), group="action", kind="inactive"))
     for row in rows:
         if row["ticker"] in held and not row.get("order_draft") and row["decision"] in {"BLOCKED", "NO_ACTION", "REDUCE_REVIEW", "EXIT_REVIEW"}:
+            if "held_position_risk" in decision and row["decision"] in {"BLOCKED", "NO_ACTION"}:
+                # Exact risk state and blockers already appear in the leading
+                # holding card. Full dependency narratives remain in the report.
+                continue
             result.append(section(row["decision"].replace("_", " ") + " — " + row["ticker"], action_lines(row),
                                   group="action", kind="inactive"))
     from delivery_followthrough import continuation_lines, continuation_requires_reconciliation
@@ -159,7 +186,11 @@ def direct_cards(decision):
     if continuation_requires_reconciliation(continuity):
         result.append(section("Earlier order — reconcile before replacing", continuation_lines(continuity),
                               group="action", kind="inactive"))
-    holds = [row for row in rows if row["decision"] == "HOLD" and not row.get("order_draft") and row["ticker"] in held]
+    risk_states = {r["ticker"]: r["state"] for r in decision.get("held_position_risk", {}).get("holdings", [])}
+    intraday_attention = {r.get("ticker") for r in material_intraday_conditions(decision)} if risk_states else set()
+    holds = [row for row in rows if row["decision"] == "HOLD" and not row.get("order_draft") and row["ticker"] in held
+             and row["ticker"] not in intraday_attention
+             and (not risk_states or risk_states.get(row["ticker"]) == "REVIEWED_HOLD")]
     if holds:
         inventory = "; ".join(row["ticker"] + " " + _quantity(held[row["ticker"]]["current_shares"])
                               + (" share" if Decimal(str(held[row["ticker"]]["current_shares"])) == 1 else " shares") for row in holds)
@@ -183,7 +214,9 @@ def direct_cards(decision):
     risk = decision.get("intraday_portfolio_risk", {})
     material = [entry for key in ("plan_conditions", "reassessment_triggers")
                 for entry in risk.get(key, []) if isinstance(entry, dict)
-                and entry.get("status") in {"triggered", "breached", "requires_reassessment"}]
+                and (entry.get("status") in {"triggered", "breached", "requires_reassessment"}
+                     or "held_position_risk" in decision and risk.get("status") == "current"
+                     and entry.get("status") == "price_condition_met_reassessment_required")]
     if material:
         result.append(section("Risk condition — reassess", [str(entry.get("ticker", "Portfolio")) + ": "
             + str(entry.get("message") or entry.get("condition") or entry.get("description") or "Current plan requires reassessment.")

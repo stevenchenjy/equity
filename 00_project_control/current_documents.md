@@ -7,6 +7,10 @@ relevant checks before relying on any linked claim.
 
 ## Authoritative policy and boundaries
 
+- [Held-position risk visibility](held_position_risk_visibility.md): independent
+  dated basis observations, explicit plan/risk states, per-ticker canonical-price
+  isolation, retained observations and unchanged investment/delivery authority.
+
 - [Prospective earnings-survival study](earnings_survival_study.md): separately
   versioned pre-event setup capture, official release clocks, survival/breakout
   observations and same-clock forward comparisons; zero capital, a five-session

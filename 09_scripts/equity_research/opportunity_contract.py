@@ -7,6 +7,10 @@ from __future__ import annotations
 
 import copy
 import hashlib
+import gzip
+import json
+import os
+import tempfile
 import re
 from datetime import datetime
 from pathlib import Path
@@ -255,6 +259,46 @@ def transition_batch(store: dict, changes: list[dict], *, root: Path, current: d
     store["events"].extend(candidate["events"][len(store["events"]):])
 
 
+def retain_history_json(path: Path, payload: dict) -> Path:
+    """Retain exact JSON bytes losslessly without another full-size snapshot.
+
+    Existing plain histories remain byte-for-byte intact. New histories use a
+    deterministic gzip container; decompressing recovers the same bytes as
+    atomic_write_json. Immutable collisions and damaged archives fail closed.
+    No current input, journal validation, or source receipt changes format.
+    """
+    raw = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    expected = hashlib.sha256(raw).hexdigest()
+    compressed = path.with_suffix(path.suffix + ".gz")
+    for existing in (path, compressed):
+        if existing.exists():
+            try:
+                actual = (gzip.decompress(existing.read_bytes()) if existing == compressed
+                          else existing.read_bytes())
+            except (OSError, EOFError) as exc:
+                raise ValueError("research_history_archive_corrupt") from exc
+            require(hashlib.sha256(actual).hexdigest() == expected,
+                    "research_history_archive_conflict")
+            return existing
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=".history-", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as output:
+            with gzip.GzipFile(filename="", fileobj=output, mode="wb", compresslevel=1, mtime=0) as archive:
+                archive.write(raw)
+            output.flush()
+            os.fsync(output.fileno())
+        # Atomic create, never replace another writer's retained history.
+        try:
+            os.link(temporary, compressed)
+        except FileExistsError:
+            require(hashlib.sha256(gzip.decompress(compressed.read_bytes())).hexdigest() == expected,
+                    "research_history_archive_conflict")
+        return compressed
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
 def publish_store(root: Path, store: dict, *, previous: dict, current: datetime) -> None:
     require(store["events"][:len(previous["events"])] == previous["events"], "research_history_rewrite_forbidden")
     replay(store, root=root, current=current)
@@ -263,5 +307,5 @@ def publish_store(root: Path, store: dict, *, previous: dict, current: datetime)
     if store == previous and old_path.exists():
         return
     for payload in (previous, store):
-        atomic_write_json(root / BASE_REL / "history" / (canonical_sha256(payload) + ".json"), payload)
+        retain_history_json(root / BASE_REL / "history" / (canonical_sha256(payload) + ".json"), payload)
     atomic_write_json(old_path, store)

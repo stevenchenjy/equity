@@ -186,6 +186,7 @@ class AssessmentSenderTests(unittest.TestCase):
             artifact = json.loads((archive / (row["decision_sha256"] + ".json")).read_bytes())
             self.assertEqual(artifact["schema_version"], "equity_mandatory_status_brief_v1")
             self.assertNotIn("capital_decision", artifact)
+            self.assertIn(";publication_status=status_only", row["reason"])
             text = (archive / (row["brief_text_sha256"] + ".txt")).read_text()
             self.assertIn("verifies neither market prices nor account facts", text)
             self.assertNotIn("$87.18", text)
@@ -264,6 +265,17 @@ class AssessmentSchedulerTests(unittest.TestCase):
         self.assertIn("scheduled_brief", run.call_args.args[0])
         self.assertTrue(slot["decision_completed"])
 
+    def test_status_delivery_is_completed_without_claiming_a_valid_decision(self):
+        state = {"dates": {}}
+        self.invoke(state, at(9, 30), "email_sent=true message_count=1 publication_status=status_only")
+        slot = state["dates"]["2026-09-01"]["delivery_windows"]["morning"]
+        self.assertTrue(slot["decision_completed"])
+        self.assertEqual(slot["decision_publication_status"], "status_only")
+        state = {"dates": {}}
+        self.invoke(state, at(9, 30), "email_sent=true message_count=1 publication_status=verified_decision")
+        self.assertEqual(state["dates"]["2026-09-01"]["delivery_windows"]["morning"][
+            "decision_publication_status"], "verified_decision")
+
     def test_unknown_delivery_and_closed_market_prevent_future_alert_invocations(self):
         state = {"dates": {}}
         self.invoke(state, at(9, 30), "email_sent=unknown reason=smtp_exception_after_claim", 1)
@@ -283,15 +295,19 @@ class AssessmentSchedulerTests(unittest.TestCase):
                     ("refresh_readiness", (False, "daily_refresh_not_fully_passed"))]:
                 stack.enter_context(patch.object(pipeline, name, return_value=value))
             stack.enter_context(patch.object(pipeline, "ExclusiveFileLock"))
-            stack.enter_context(patch.object(pipeline, "log_daily_run"))
-            stack.enter_context(patch.object(pipeline, "clear_automation_alert"))
+            logged = stack.enter_context(patch.object(pipeline, "log_daily_run"))
+            clear = stack.enter_context(patch.object(pipeline, "clear_automation_alert"))
+            alert = stack.enter_context(patch("daily_common.publish_automation_alert"))
             run = stack.enter_context(patch.object(pipeline, "run_command", return_value=
-                pipeline.subprocess.CompletedProcess([], 0, stdout="email_sent=true message_count=1")))
+                pipeline.subprocess.CompletedProcess([], 0, stdout="email_sent=true message_count=1 publication_status=status_only")))
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(pipeline.execute(True, "morning", "scheduled_brief"), 0)
             command = run.call_args.args[0]
             self.assertIn("--failure-status", command)
             self.assertIn("daily_refresh_not_fully_passed", command)
+            self.assertEqual(logged.call_args.kwargs["outcome"], "status_only_delivered")
+            clear.assert_not_called()
+            alert.assert_called_once_with(component="daily_decision", reason="decision_publication_unavailable")
 
 
 class AssessmentFollowthroughIntegrationTests(unittest.TestCase):

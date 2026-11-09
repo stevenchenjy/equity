@@ -943,6 +943,9 @@ def send_once(
             request_suffix += ";scheduled_slot=" + scheduled_slot
         if limited_status and failure_reason is None:
             request_suffix += ";refresh_handoff=limited_status_only"
+        publication_status = ("status_only" if failure_reason is not None else
+                              "limited_status" if limited_status else "verified_decision")
+        request_suffix += ";publication_status=" + publication_status
         # Claim one immutable account-version snapshot. Later fills belong to
         # the next publication; intake never waits for SMTP/network activity.
         from account_access import account_lock
@@ -1056,7 +1059,8 @@ def send_once(
         )
         print(
             "email_sent=true message_count=1 automatic_retry=false "
-            f"correction={str(correction).lower()} owner_review={str(owner_review).lower()}"
+            f"correction={str(correction).lower()} owner_review={str(owner_review).lower()} "
+            f"publication_status={publication_status}"
         )
         return 0
 

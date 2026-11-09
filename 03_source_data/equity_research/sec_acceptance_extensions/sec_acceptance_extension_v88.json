@@ -1,0 +1,50 @@
+{
+  "admitted_at": "2026-11-06T08:19:58.000-05:00",
+  "artifact_sha256": "24c1eb9e921fbc82814fb1d50de9292844ea562d6483f6024ce67d0efe48fc83",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v88",
+  "prior_extension_set_sha256": "25a6b1dcd306f7c2333ed5195ee660896e5a04010061b35c73c16ebc23c73162",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-05T21:58:46.000+00:00",
+      "accession_number": "0001193125-26-450074",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-06T08:19:58.000-05:00",
+      "cik": "1326801",
+      "entity_name": "Meta Platforms, Inc.",
+      "extension_record_sha256": "79114333ae399d1c771e6b2bf2bac64bccfe4ee5fe384f00b2daa9e3785bb5a0",
+      "extension_version": "v88",
+      "filing_date": "2026-11-05",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "a32d49806a6bd32124c765d2605987e925be03e2b062340f6cdfe41dadee12ce",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "ticker": "META"
+    },
+    {
+      "accepted_at": "2026-11-06T12:35:49.000+00:00",
+      "accession_number": "0001193125-26-450754",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-06T08:19:58.000-05:00",
+      "cik": "1326801",
+      "entity_name": "Meta Platforms, Inc.",
+      "extension_record_sha256": "5e1e87daeda4bc99e1b9f98e7e1f775358ebfccc0ff99162c91dc4afbcd19597",
+      "extension_version": "v88",
+      "filing_date": "2026-11-06",
+      "form": "424B5",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "012938a4ea9966579d2e6ce159bee6bef59ee039af4056b3ae811ba31cc62784",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "ticker": "META"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

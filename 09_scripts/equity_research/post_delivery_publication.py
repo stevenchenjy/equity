@@ -91,10 +91,17 @@ def _store(root: Path, receipt: dict) -> dict:
 
 def _protected(root: Path, archived: dict) -> dict:
     from capital_decision import INPUTS
+    from plan_source_resolutions import proof_hashes
     contract = archived.get("workflow_integrity", {})
     capital = archived.get("capital_decision", {})
     expected = dict(contract.get("input_hashes", {}))
-    if set(expected) != WORKFLOW_INPUTS or set(capital.get("source_bindings", {})) != INPUTS:
+    # Capital binds the registered retained plan evidence as well as its fixed
+    # inputs. A valid recovery registry must not make every later send
+    # impossible to recompose. Revalidate the registry and its original bytes;
+    # arbitrary extra or missing bindings remain an error.
+    proofs = proof_hashes(root)
+    if (set(expected) != WORKFLOW_INPUTS
+            or set(capital.get("source_bindings", {})) != INPUTS | set(proofs)):
         raise ValueError("post_delivery_full_source_bindings_required")
     for path, digest in capital["source_bindings"].items():
         if path in expected and expected[path] != digest:

@@ -83,16 +83,24 @@ def assessment_scheduler(current, notifications: dict) -> int:
     unknown = delivery_status_is_unknown(summary)
     sent = "email_sent=true" in summary
     completed = "delivery_purpose_complete=true" in summary
+    status_only = "publication_status=status_only" in summary
     if unknown:
         selected.update(decision_terminal_failure=True, decision_terminal_reason="delivery_status_unknown")
         date_state["decision_terminal_reason"] = "delivery_status_unknown"
         publish_automation_alert(component="daily_decision", reason="delivery_status_unknown")
     elif result.returncode == 0 and (sent or completed):
         if mode == "scheduled_brief":
-            selected.update(decision_completed=True, decision_completed_at=iso_now())
+            # This flag completes the once-per-window delivery obligation.
+            # Preserve a separate explicit investment-publication outcome.
+            selected.update(decision_completed=True, decision_completed_at=iso_now(),
+                decision_publication_status="status_only" if status_only else
+                    "limited_status" if "publication_status=limited_status" in summary else
+                    "verified_decision" if "publication_status=verified_decision" in summary else "not_observed")
         if sent:
             selected["decision_attempts"] = int(selected.get("decision_attempts", 0) or 0) + 1
-        if "post_delivery_publication_pending=true" not in summary:
+        if status_only:
+            publish_automation_alert(component="daily_decision", reason="decision_publication_unavailable")
+        elif "post_delivery_publication_pending=true" not in summary:
             clear_automation_alert(component="daily_decision")
     elif result.returncode == REFRESH_NOT_READY_EXIT or not sent:
         # Polls/validation waits are not SMTP attempts and cannot retire an

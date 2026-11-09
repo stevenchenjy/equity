@@ -268,6 +268,7 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         sender = run_command(sender_arguments, timeout=SENDER_PROCESS_TIMEOUT_SECONDS)
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
+        status_only = "publication_status=status_only" in sender_summary
         if (routine_recovery and sender.returncode == 0 and not delivery_status_unknown
                 and "email_sent=true" in sender_summary):
             # Receipt/archive proof inside the helper, never stdout alone,
@@ -277,6 +278,8 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         pipeline_outcome = (
             "delivery_unknown"
             if delivery_status_unknown
+            else "status_only_delivered"
+            if sender.returncode == 0 and status_only
             else "passed"
             if sender.returncode == 0
             else "sender_nonzero"
@@ -305,7 +308,10 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
             f"sender_exit={sender.returncode} {sender_summary} "
             f"post_delivery_publication_pending={str(publication_pending).lower()}"
         )
-        if sender.returncode == 0 and not delivery_status_unknown and not publication_pending:
+        if status_only:
+            from daily_common import publish_automation_alert
+            publish_automation_alert(component="daily_decision", reason="decision_publication_unavailable")
+        elif sender.returncode == 0 and not delivery_status_unknown and not publication_pending:
             clear_automation_alert(component="daily_decision")
         return (
             DELIVERY_STATUS_UNKNOWN_EXIT

@@ -495,6 +495,10 @@ def publication_meaning(view: dict) -> dict:
     The live reader already validates every actual receipt clock and raw hash.
     Refetch timestamps and regenerated countdowns do not alter this projection;
     changed source bytes, date coverage, review state or a passed deadline do.
+    An extra age annotation on an already absent or elapsed event does not
+    invalidate the entire portfolio publication. Those unavailable events
+    retain their original status, source, and unresolved blockers; their full
+    live annotations remain in the research view.
     This is a publication consistency check, not an account-wide capital gate.
     """
     coverage = view.get('coverage', {})
@@ -504,7 +508,11 @@ def publication_meaning(view: dict) -> dict:
         'events': sorted([{**{key: event.get(key) for key in ('event_id', 'ticker', 'company_name',
                 'schedule_version', 'event_date', 'session', 'event_at', 'research_deadline_at',
                 'first_detected_at', 'date_confidence', 'timing', 'status', 'research_state',
-                'blockers', 'next_step', 'assessment_sha256')},
+                'next_step', 'assessment_sha256')},
+            'blockers': [blocker for blocker in event.get('blockers', [])
+                if not (blocker == 'earnings_calendar_receipt_stale'
+                    and ('event_absent_on_latest_scan_not_cancelled' in event.get('blockers', [])
+                         or event.get('timing') in {'elapsed', 'post_event'}))],
             'sources': sorted([{key: source.get(key) for key in ('path', 'sha256', 'source_url')}
                 for source in event.get('sources', [])], key=lambda source: (str(source['path']), str(source['sha256'])))}
             for event in view.get('events', [])], key=lambda event: str(event['event_id']))}

@@ -241,6 +241,9 @@ class DeliveryAssessmentTests(unittest.TestCase):
             self.assertIn(message, text)
             self.assertIn(message, visible)
         self.assertEqual(artifact, original)
+        self.assertIn('This is not a reviewed HOLD decision.', text)
+        self.assertIn('Failure code: capital_decision_inputs_changed_recompose_required', visible)
+        self.assertIn('Owner: scheduled research service / workspace maintainer.', visible)
         self.assertEqual(subject, delivery._render_legacy_failure_brief(artifact)[0])
         self.assertNotIn('capital_decision', artifact)
         self.assertNotIn('held_positions', artifact)
@@ -279,6 +282,18 @@ class DeliveryAssessmentTests(unittest.TestCase):
         row['brief_html_sha256'] = digest
         self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'unverified')
 
+    def test_prior_failure_cards_keep_their_exact_historical_delivery_proof(self):
+        artifact = delivery.build_failure_brief(self.root, NOW - timedelta(hours=1),
+            'morning', 'workflow_earnings_events_changed_recompose_required')
+        row = self.archive(artifact)
+        _, text, document = delivery._render_prior_failure_cards(artifact)
+        for key, suffix, body in [('brief_text_sha256', '.txt', text),
+                ('brief_html_sha256', '.html', document)]:
+            digest = hashlib.sha256(body.encode()).hexdigest()
+            (self.root / delivery.ARCHIVE_REL / (digest + suffix)).write_text(body)
+            row[key] = digest
+        self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'status_only')
+
     def test_alert_envelope_exact_action_render_scope_and_original_archive(self):
         baseline = self.archive()
         current = copy.deepcopy(self.decision); current['capital_decision']['decisions'] = [action_row()]
@@ -298,6 +313,38 @@ class DeliveryAssessmentTests(unittest.TestCase):
             bad = copy.deepcopy(enriched); bad['delivery_assessment'].update(changes)
             bad['delivery_assessment']['envelope_sha256'] = canonical_sha256({k: v for k, v in bad['delivery_assessment'].items() if k != 'envelope_sha256'})
             with self.assertRaises(ValueError):delivery.validate_envelope(bad)
+
+    def test_intraday_priority_includes_risk_context_without_changing_alert_authority(self):
+        from test_held_position_risk import HeldPositionRiskTests
+        import held_position_risk as risk
+        fixture = HeldPositionRiskTests(); fixture.setUp(); self.addCleanup(fixture.doCleanups)
+        fixture.plans['plans'][0]['status'] = 'expired_pending_verification'
+        fixture.write_csv(risk.MARKET, fixture.quotes[:1])
+        fixture.decision['market_gate'] = {'passed': False, 'failures': ['BBB:market_row_missing']}
+        for version in ('equity_direct_action_email_v5', 'equity_attention_email_v4', 'equity_attention_email_v3'):
+            with self.subTest(version=version):
+                current = copy.deepcopy(self.decision)
+                current['email_brief_version'] = version
+                current['analyst_priority_review'] = {'status': 'current', 'entries': [
+                    {'ticker': 'SYN', 'reason': 'New source-backed research judgment.',
+                     'next_step': 'Complete the stated company scope.'}]}
+                before = delivery.advice_projection(current)
+                current['held_position_risk'] = fixture.build()
+                self.assertEqual(delivery.advice_projection(current), before)
+                eligibility = {'eligible': True, 'mode': 'intraday_alert',
+                    'purpose_key': 'alert:2026-10-22:' + 'a' * 64 + ':' + 'b' * 64,
+                    'meaning_key': delivery.advice_meaning_key(current), 'action_changed': False,
+                    'priority_changed': True, 'changed_action_tickers': [], 'removed_action_tickers': []}
+                current['delivery_assessment'] = delivery.delivery_envelope(current, eligibility,
+                    canonical_decision_sha256='c' * 64)
+                _, text, document = delivery.render_intraday_alert(current)
+                visible = visible_html_text(document)
+                for expected in ('AAA — PLAN EXPIRED', 'BBB — UNVERIFIED', '-30.00%',
+                                 'New source-backed research judgment.', 'No new or repeated trading instruction'):
+                    self.assertIn(expected, text)
+                    self.assertIn(expected, visible)
+                self.assertNotIn('BUY —', text)
+                self.assertNotIn('SELL —', text)
 
     def test_verified_contiguous_status_briefs_do_not_acknowledge_or_retract_advice(self):
         action = copy.deepcopy(self.decision); action['capital_decision']['decisions'] = [action_row()]

@@ -147,10 +147,14 @@ class OfficialNewsScheduleTests(unittest.TestCase):
 
                 def child_result(command, **_kwargs):
                     ordered_scripts.append(command[1])
-                    if command[1] == str(refresh_scheduler.REFRESH_PIPELINE):
-                        news_state = self.state()["dates"]["2026-09-21"]
-                        self.assertEqual(news_state["last_outcome"], "passed")
-                        self.assertIn(clock, news_state["attempted_slots"])
+                    return SimpleNamespace(returncode=0)
+
+                def refresh_result(snapshot_mode, *, refresh_public=False):
+                    ordered_scripts.append(str(refresh_scheduler.REFRESH_PIPELINE))
+                    self.assertTrue(refresh_public)
+                    news_state = self.state()["dates"]["2026-09-21"]
+                    self.assertEqual(news_state["last_outcome"], "passed")
+                    self.assertIn(clock, news_state["attempted_slots"])
                     return SimpleNamespace(returncode=0)
 
                 with (
@@ -164,6 +168,8 @@ class OfficialNewsScheduleTests(unittest.TestCase):
                     patch.object(refresh_scheduler, "read_json", side_effect=lambda path, _default: eod_state if path == refresh_scheduler.DAILY_SCHEDULER_STATE_PATH else {}),
                     patch.object(refresh_scheduler, "atomic_write_json"),
                     patch.object(refresh_scheduler.subprocess, "run", side_effect=child_result),
+                    patch.object(refresh_scheduler, "_run_refresh_pipeline", side_effect=refresh_result),
+                    patch.object(refresh_scheduler.subprocess, "Popen", side_effect=AssertionError("scheduler fixture must not spawn a real refresh")),
                     redirect_stdout(io.StringIO()),
                 ):
                     result = refresh_scheduler.main()
@@ -188,13 +194,15 @@ class OfficialNewsScheduleTests(unittest.TestCase):
             patch.object(refresh_scheduler, "iso_now", return_value=current.isoformat()),
             patch.object(refresh_scheduler, "read_json", side_effect=lambda path, _default: eod_state if path == refresh_scheduler.DAILY_SCHEDULER_STATE_PATH else {}),
             patch.object(refresh_scheduler, "atomic_write_json"),
-            patch.object(refresh_scheduler.subprocess, "run", return_value=SimpleNamespace(returncode=0)) as child,
+            patch.object(refresh_scheduler, "_run_refresh_pipeline", return_value=SimpleNamespace(returncode=0)) as child,
+            patch.object(refresh_scheduler.subprocess, "Popen", side_effect=AssertionError("scheduler fixture must not spawn a real refresh")),
             redirect_stdout(output),
         ):
             result = refresh_scheduler.main()
         self.assertEqual(result, 0)
         child.assert_called_once()
-        self.assertIn(str(refresh_scheduler.REFRESH_PIPELINE), child.call_args.args[0])
+        self.assertEqual(child.call_args.args, (refresh_scheduler.MARKET_SNAPSHOT_FETCH,))
+        self.assertTrue(child.call_args.kwargs["refresh_public"])
         self.assertIn("research_refresh_continues=true", output.getvalue())
         self.assertIn("13:30", eod_state["dates"]["2026-09-21"]["refresh_slots_completed"])
 

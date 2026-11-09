@@ -279,6 +279,36 @@ class EarningsEventsTests(unittest.TestCase):
         self.assertNotEqual(publication_meaning(first), publication_meaning(changed))
         self.assertFalse(changed['capital_authority'])
 
+    def test_already_absent_event_age_boundary_does_not_block_portfolio_publication(self):
+        # Reproduce Nov 5: a former calendar row disappeared; its old receipt
+        # crossed 24 hours between a passed refresh and the mandatory brief.
+        observed = NOW - timedelta(hours=23, minutes=59)
+        self.refresh(now=observed, fetcher=lambda d, p: feed(d, [row('GONE')]
+            if d == NOW.date() else []))
+        self.refresh(now=NOW, fetcher=lambda d, p: feed(d, []))
+        before = summary(self.root, current=NOW)
+        after = summary(self.root, current=NOW + timedelta(minutes=2))
+        self.assertEqual(before['coverage']['days_verified'], 10)
+        self.assertEqual(after['coverage']['days_verified'], 10)
+        self.assertIn('event_absent_on_latest_scan_not_cancelled', before['events'][0]['blockers'])
+        self.assertNotIn('earnings_calendar_receipt_stale', before['events'][0]['blockers'])
+        self.assertIn('earnings_calendar_receipt_stale', after['events'][0]['blockers'])
+        self.assertEqual(publication_meaning(before), publication_meaning(after))
+        # Exact bytes and renewed availability still matter.
+        altered = copy.deepcopy(after)
+        altered['events'][0]['sources'][0]['sha256'] = '0' * 64
+        self.assertNotEqual(publication_meaning(before), publication_meaning(altered))
+        altered = copy.deepcopy(after)
+        altered['events'][0]['blockers'].remove('event_absent_on_latest_scan_not_cancelled')
+        self.assertNotEqual(publication_meaning(before), publication_meaning(altered))
+
+    def test_current_event_staleness_and_crossed_deadline_still_require_republication(self):
+        before = self.refresh()
+        stale = summary(self.root, current=NOW + timedelta(hours=24, seconds=1))
+        self.assertNotEqual(publication_meaning(before), publication_meaning(stale))
+        crossed = summary(self.root, current=NOW.replace(hour=20))
+        self.assertNotEqual(publication_meaning(before), publication_meaning(crossed))
+
     def test_notification_meaning_ignores_collection_metadata(self):
         self.assertEqual(notification_meaning({'status': 'ready', 'events': [{'status': 'awaiting_research'}]}), [])
         event = {'status': 'reviewed_without_entry', 'timing': 'pre_event', 'event_id': 'id',
