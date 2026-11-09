@@ -46,6 +46,7 @@ class AssessmentCadenceConfigTests(unittest.TestCase):
                     self.check(changed)
 
     def test_absent_adoption_keeps_legacy_config_valid(self):
+        self.config["notifications"].pop("risk_review_alerts", None)
         for field in ["mandatory_daily_briefs", "intraday_alerts_enabled", "delivery_assessment_effective_from",
                       "short_assessment_slots_et", "short_assessment_budget_minutes"]:
             self.config["notifications"].pop(field)

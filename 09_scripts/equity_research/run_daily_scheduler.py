@@ -8,7 +8,8 @@ import subprocess
 import sys
 
 from active_config import load_active_config
-from delivery_schedule import active_delivery_window, configured_delivery_windows, assessment_delivery_enabled, intraday_alert_window_open
+from delivery_schedule import (active_delivery_window, configured_delivery_windows, assessment_delivery_enabled,
+                               intraday_alert_window_open, risk_review_alert_window)
 from daily_common import (
     DAILY_SCHEDULER_STATE_PATH, ROOT, RUNTIME_EXPECTED_CYCLE_DATE_ENV,
     atomic_write_json, clear_automation_alert, cycle_date, iso_now,
@@ -28,6 +29,42 @@ MAX_AUTOMATIC_ATTEMPTS = 2
 def _save_state(state: dict) -> None:
     state["updated_at"] = iso_now()
     atomic_write_json(DAILY_SCHEDULER_STATE_PATH, state)
+
+
+def _risk_review_check(current, notifications: dict, state: dict, date_state: dict) -> int:
+    """One combined notice per existing short check; no research completion gate."""
+    window = risk_review_alert_window(notifications, current)
+    if window is None or date_state.get("decision_terminal_reason") == "delivery_status_unknown":
+        return 0
+    selected = date_state.setdefault("risk_review_checks", {}).setdefault(window["slot_id"], {})
+    if selected.get("decision_completed"):
+        return 0
+    arguments = [sys.executable, str(DECISION_PIPELINE), "--scheduled", "--delivery-purpose", "risk_review_alert"]
+    try:
+        result = subprocess.run(arguments, cwd=ROOT, text=True, stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT, timeout=520, check=False)
+    except subprocess.TimeoutExpired as exc:
+        partial = exc.stdout or ""
+        if isinstance(partial, bytes):
+            partial = partial.decode("utf-8", errors="replace")
+        result = subprocess.CompletedProcess(arguments, 124, stdout=f"{partial}\nrisk_review_sender_process_timeout")
+    summary = " ".join(result.stdout.strip().split())[-750:]
+    selected.update(decision_checks=int(selected.get("decision_checks", 0) or 0) + 1,
+        decision_last_check_at=iso_now(), decision_last_check_exit_code=result.returncode,
+        decision_last_check_reason=summary)
+    unknown = delivery_status_is_unknown(summary)
+    if unknown:
+        selected.update(decision_terminal_failure=True, decision_terminal_reason="delivery_status_unknown")
+        date_state["decision_terminal_reason"] = "delivery_status_unknown"
+        publish_automation_alert(component="daily_decision", reason="delivery_status_unknown")
+    elif result.returncode == 0 and ("email_sent=true" in summary or "delivery_purpose_complete=true" in summary):
+        selected.update(decision_completed=True, decision_completed_at=iso_now())
+    else:
+        selected["decision_waits"] = int(selected.get("decision_waits", 0) or 0) + 1
+    # A successful risk notice cannot clear an unresolved research/publication failure.
+    _save_state(state)
+    print(f"scheduler_action=risk_review_alert check={window['slot_id']} exit_code={result.returncode} {summary}")
+    return result.returncode if unknown else 0
 
 
 def assessment_scheduler(current, notifications: dict) -> int:
@@ -63,6 +100,8 @@ def assessment_scheduler(current, notifications: dict) -> int:
     elif assessment_delivery_enabled(notifications, current, alerts=True) and intraday_alert_window_open(current):
         mode, selected, slot = "intraday_alert", alerts, None
     else:
+        if risk_review_alert_window(notifications, current) is not None:
+            return _risk_review_check(current, notifications, state, date_state)
         print("scheduler_action=none reason=no_current_delivery_purpose pipeline_invoked=false")
         return 0
     arguments = [sys.executable, str(DECISION_PIPELINE), "--scheduled", "--delivery-purpose", mode]
@@ -108,7 +147,11 @@ def assessment_scheduler(current, notifications: dict) -> int:
         selected["decision_waits"] = int(selected.get("decision_waits", 0) or 0) + 1
     _save_state(state)
     print(f"scheduler_action={mode} delivery_window={slot or 'none'} exit_code={result.returncode} {summary}")
-    return result.returncode if unknown else 0
+    if unknown:
+        return result.returncode
+    # Ordinary actual risk cards can cover these conditions. A status-only
+    # research failure cannot; the independent sender decides from archives.
+    return _risk_review_check(now_et(), notifications, state, date_state)
 
 
 def main() -> int:
@@ -140,7 +183,8 @@ def main() -> int:
         print("scheduler_action=none reason=non_market_session pipeline_invoked=false")
         return 0
     if (assessment_delivery_enabled(notifications, current)
-            or assessment_delivery_enabled(notifications, current, alerts=True)):
+            or assessment_delivery_enabled(notifications, current, alerts=True)
+            or risk_review_alert_window(notifications, current) is not None):
         return assessment_scheduler(current, notifications)
     if current.strftime("%H:%M") < windows[0]["start"]:
         print("scheduler_action=none reason=before_daily_decision_time")

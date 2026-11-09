@@ -4,7 +4,9 @@ Owner authority: October 22, 2026 request to add validated intraday prices and
 portfolio-risk assessment to the existing 90-minute short checks. This adds an
 optional, source-bound observation alongside the canonical completed-close
 research decision. It changes no valuation, entry gate, allocation target,
-risk budget, delivery rule or execution authority.
+risk budget or execution authority. The later November 8 permission for
+[standalone held-risk review notifications](standalone_risk_review_notifications.md)
+is a separate delivery contract and does not weaken this observation's admission.
 
 ## Scope and admission
 
@@ -157,9 +159,11 @@ cards remain separate.
 
 
 Raw price polling, price-only movement, a refreshed clock or a collector success
-creates no extra email purpose. The installed scheduled sender still owns the
-two mandatory daily briefs and only existing eligible changed-action or
-substantive source-bound research-priority alerts. Duplicate claims, uncertain
+creates no extra email purpose. An independently validated crossing of an
+already-approved current held risk condition may qualify through the separately
+approved November 8 risk-review route; it does not need a changed capital action
+or analyst priority. The installed scheduled sender owns that route, the two
+mandatory briefs and eligible action/priority alerts. Duplicate claims, uncertain
 sends, previous advice and unresolved manual execution remain protected. No
 SMTP call, test email, broker access or trade is authorized by this feature.
 

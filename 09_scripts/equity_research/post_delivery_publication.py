@@ -142,7 +142,8 @@ def _candidate(root: Path, current: datetime, pending: dict):
     for row in (claim, sent):
         mode = [x for x in row["reason"].split(";") if x.startswith("delivery_mode=")]
         purpose = [x for x in row["reason"].split(";") if x.startswith("delivery_purpose_v1=")]
-        if (mode not in [["delivery_mode=scheduled_brief"], ["delivery_mode=intraday_alert"]]
+        if (mode not in [["delivery_mode=scheduled_brief"], ["delivery_mode=intraday_alert"],
+                        ["delivery_mode=risk_review_alert"]]
                 or len(purpose) != 1):
             return None, "not_a_routine_delivery_pair"
     started, ended = (datetime.fromisoformat(row["timestamp"]) for row in (claim, sent))
@@ -154,17 +155,37 @@ def _candidate(root: Path, current: datetime, pending: dict):
     if hashlib.sha256(archived_raw).hexdigest() != sent["decision_sha256"]:
         raise ValueError("post_delivery_archive_hash_mismatch")
     archived = json.loads(archived_raw)
-    if archived.get("schema_version") != "phase5r_daily_decision_v1":
+    baseline_status = _archived_receipt_baseline(sent, root=root).get("status")
+    risk_only = baseline_status == "risk_only"
+    if not risk_only and archived.get("schema_version") != "phase5r_daily_decision_v1":
         return None, "status_only_or_noncanonical_delivery_requires_full_refresh"
-    if _archived_receipt_baseline(sent, root=root).get("status") != "verified":
+    if baseline_status not in {"verified", "risk_only"}:
         raise ValueError("post_delivery_archive_unverified")
-    _, text, html = render_email(archived)
-    for key, suffix, body in (("brief_text_sha256", ".txt", text), ("brief_html_sha256", ".html", html)):
-        raw = _read(root, ARCHIVE_REL / (sent[key] + suffix))
-        if hashlib.sha256(raw).hexdigest() != sent[key] or raw != body.encode("utf-8"):
-            raise ValueError("post_delivery_exact_archived_render_required")
-    canonical_digest = sent["decision_sha256"]
-    if "delivery_assessment" in archived:
+    identity = canonical_sha256(sent)
+    retry = (pending.get("delivery_receipt_sha256") == identity
+             and pending.get("ledger_sha256") == hashlib.sha256(ledger).hexdigest()
+             and pending.get("outcome") in {"running", "failed", "deferred"})
+    if risk_only:
+        # This alert did not publish capital advice. A narrow rebind is allowed
+        # only when the untouched current publication binds the exact ledger
+        # prefix. Preserve that publication separately for bounded retries.
+        canonical_digest = pending.get("canonical_decision_sha256") if retry else None
+        canonical_raw = (_read(root, ARCHIVE_REL / (canonical_digest + ".json"))
+                         if canonical_digest else _read(root, ARTIFACTS[0]))
+        if canonical_digest and hashlib.sha256(canonical_raw).hexdigest() != canonical_digest:
+            raise ValueError("post_delivery_canonical_archive_hash_mismatch")
+        canonical_digest = hashlib.sha256(canonical_raw).hexdigest()
+        archived = json.loads(canonical_raw)
+        if archived.get("schema_version") != "phase5r_daily_decision_v1":
+            return None, "risk_review_canonical_publication_unavailable"
+    else:
+        _, text, html = render_email(archived)
+        for key, suffix, body in (("brief_text_sha256", ".txt", text), ("brief_html_sha256", ".html", html)):
+            raw = _read(root, ARCHIVE_REL / (sent[key] + suffix))
+            if hashlib.sha256(raw).hexdigest() != sent[key] or raw != body.encode("utf-8"):
+                raise ValueError("post_delivery_exact_archived_render_required")
+        canonical_digest = sent["decision_sha256"]
+    if not risk_only and "delivery_assessment" in archived:
         # A priority-only envelope is not proof that omitted canonical orders
         # were delivered. It references the exact source publication instead.
         from delivery_assessments import validate_envelope
@@ -183,16 +204,12 @@ def _candidate(root: Path, current: datetime, pending: dict):
     if (original_hash is None and len(rows) != 2) or (original_hash is not None
             and hashlib.sha256(prefix).hexdigest() != original_hash):
         raise ValueError("post_delivery_exact_ledger_prefix_required")
-    identity = canonical_sha256(sent)
     from market_admission import current_admission
     market_admission = current_admission(root, current=current)
     if market_admission is None:
         raise ValueError("post_delivery_current_market_admission_required")
     protected = _protected(root, archived)
     current_raw = _read(root, ARTIFACTS[0])
-    retry = (pending.get("delivery_receipt_sha256") == identity
-             and pending.get("ledger_sha256") == hashlib.sha256(ledger).hexdigest()
-             and pending.get("outcome") in {"running", "failed", "deferred"})
     if retry and pending.get("protected_before") != protected:
         raise ValueError("post_delivery_pending_inputs_changed_requires_full_refresh")
     if hashlib.sha256(current_raw).hexdigest() != canonical_digest and not retry:
@@ -202,7 +219,14 @@ def _candidate(root: Path, current: datetime, pending: dict):
         if (_read(root, ARTIFACTS[1]) != canonical_text.encode("utf-8")
                 or _read(root, ARTIFACTS[2]) != canonical_html.encode("utf-8")):
             raise ValueError("post_delivery_current_artifacts_not_exact_sent_publication")
+        if risk_only:
+            from delivery_archive import archive_validated_delivery
+            contents = {"decision_sha256": current_raw, "brief_text_sha256": canonical_text.encode("utf-8"),
+                        "brief_html_sha256": canonical_html.encode("utf-8")}
+            archive_validated_delivery(root / ARCHIVE_REL, contents=contents,
+                hashes={key: hashlib.sha256(raw).hexdigest() for key, raw in contents.items()})
     return {"delivery_receipt": sent, "delivery_claim": claim, "delivery_receipt_sha256": identity,
+            "canonical_decision_sha256": canonical_digest,
             "ledger_sha256": hashlib.sha256(ledger).hexdigest(), "protected_before": protected,
             "market_admission": market_admission, "archived_decision": archived}, None
 

@@ -9,7 +9,12 @@ relevant checks before relying on any linked claim.
 
 - [Held-position risk visibility](held_position_risk_visibility.md): independent
   dated basis observations, explicit plan/risk states, per-ticker canonical-price
-  isolation, retained observations and unchanged investment/delivery authority.
+  isolation, retained observations and unchanged investment authority.
+
+- [Standalone held-risk review notifications](standalone_risk_review_notifications.md):
+  November 8 owner-approved, human-review-only alert purpose for existing held
+  risk-condition crossings or unavailable review/protection; existing short-slot
+  cadence, configured recipient and duplicate/uncertain-send fences.
 
 - [Prospective earnings-survival study](earnings_survival_study.md): separately
   versioned pre-event setup capture, official release clocks, survival/breakout
@@ -25,7 +30,7 @@ relevant checks before relying on any linked claim.
   five-, ten- and fourteen-session swing research; exact next analytical work,
   source-bound conditions, outcome measurement and explicit adoption boundaries.
 
-- [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and unchanged investment/duplicate-protection rules; effective October 22, 2026.
+- [Assessment cadence and delivery](assessment_cadence.md): two full reviews and mandatory daily briefs, market-open 90-minute short assessments, source-bound priority alerts and the November 8 separately approved risk-review route; unchanged investment/duplicate-protection rules.
 
 - [Validated intraday observations and portfolio risk](market_intraday_risk.md): all-held Nasdaq Last Sale admission during actual short claims; bound prior closes, explicit expiry, fixed-inventory price-only change, existing risk conditions and separate dated email observations. No new investment or delivery thresholds.
 

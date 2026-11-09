@@ -323,6 +323,14 @@ def build_followthrough(decision: dict[str, Any], *, root: Path, current: dateti
     if _uncertain(rows):
         context["status"] = "prior_delivery_uncertain"
         return context
+    from delivery_assessments import _archived_receipt_baseline
+    # Strictly verified risk notices contain no capital instructions. Keep the
+    # earlier substantive receipt for continuation; never infer execution or
+    # cancellation from the later warning. Corrupt notices remain evidence gaps.
+    risk_receipts = {canonical_sha256(row) for row in rows
+        if row["status"].endswith("sent")
+        and _archived_receipt_baseline(row, root=root).get("status") == "risk_only"}
+    rows = [row for row in rows if canonical_sha256(row) not in risk_receipts]
     row = next((row for row in reversed(rows) if row["status"].endswith("sent")), None)
     if row is None:
         return context

@@ -30,7 +30,9 @@ PURPOSE_MARKER = 'delivery_purpose_v1='
 MEANING_MARKER = 'action_priority_v1='
 HEX = re.compile(r'[a-f0-9]{64}')
 TICKER = re.compile(r'[A-Z][A-Z0-9.\-]{0,9}')
-MODES = {'scheduled_brief', 'intraday_alert'}
+MODES = {'scheduled_brief', 'intraday_alert', 'risk_review_alert'}
+RISK_DELIVERY_SCHEMA = 'equity_risk_review_delivery_v1'
+RISK_MEANING_MARKER = 'risk_review_v1='
 PRIORITY_INPUTS = (
     '03_source_data/equity_research/market_data_snapshot.csv',
     '05_risk_and_positions/current_account_state.local.json',
@@ -332,6 +334,11 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
             body = (root / ARCHIVE_REL / (body_digest + suffix)).read_bytes()
             require(hashlib.sha256(body).hexdigest() == body_digest, 'baseline_body_hash_mismatch')
             bodies.append(body.decode('utf-8'))
+        if old.get('schema_version') == RISK_DELIVERY_SCHEMA:
+            validate_risk_review_envelope(old)
+            require(tuple(bodies) == render_risk_review_alert(old)[1:], 'baseline_risk_render_mismatch')
+            return {'status': 'risk_only', 'receipt_sha256': canonical_sha256(row),
+                'decision_sha256': digest}
         if old.get('schema_version') == 'equity_mandatory_status_brief_v1':
             # Presentation may evolve; exact older archived bodies still bind
             # the original advice chain. Never regenerate or rewrite history.
@@ -385,7 +392,7 @@ def latest_receipt_baseline(rows, *, root: Path, current: datetime) -> dict:
         if not str(row.get('status', '')).endswith('sent'):
             return {'status': 'unverified', 'receipt_sha256': latest}
         baseline = _archived_receipt_baseline(row, root=root)
-        if baseline['status'] == 'status_only':
+        if baseline['status'] in {'status_only', 'risk_only'}:
             continue
         return {**baseline, 'advice_receipt_sha256': baseline['receipt_sha256'], 'receipt_sha256': latest}
     return {'status': 'absent', 'receipt_sha256': latest}
@@ -478,6 +485,9 @@ def _current_policy(decision, root, current):
 def delivery_eligibility(decision: dict, *, root: Path, current: datetime, rows: list,
                          mode: str, scheduled_slot: str | None = None) -> dict:
     require(mode in MODES, 'assessment_delivery_mode_invalid')
+    if mode == 'risk_review_alert':
+        return risk_review_eligibility(decision, root=root, current=current, rows=rows,
+                                       scheduled_slot=scheduled_slot)
     base = {'eligible': False, 'mode': mode, 'reason': '', 'meaning_key': advice_meaning_key(decision),
         'purpose_key': '', 'baseline_status': 'not_checked', 'action_changed': False,
         'priority_changed': False, 'changed_action_tickers': [], 'removed_action_tickers': [],
@@ -538,6 +548,236 @@ def delivery_eligibility(decision: dict, *, root: Path, current: datetime, rows:
             'changed_action_tickers': changed, 'removed_action_tickers': removed}
     except (ValueError, KeyError, TypeError, OSError) as exc:
         return {**base, 'reason': str(exc) or 'assessment_delivery_unverified'}
+
+
+def risk_review_envelope(observation: dict, evaluation: dict) -> dict:
+    """Bind only newly uncovered risk conditions; never adopt capital advice."""
+    from risk_review_alerts import validate_archive
+    validate_archive(observation)
+    require(evaluation.get('eligible') is True, 'risk_delivery_not_eligible')
+    artifact = {'schema_version': RISK_DELIVERY_SCHEMA,
+        'cycle_date': observation['cycle_date'], 'generated_at': observation['generated_at'],
+        'headline': observation['headline'], 'risk_review_alert': deepcopy(observation),
+        'risk_delivery': {key: deepcopy(evaluation[key]) for key in
+            ('mode', 'slot_id', 'purpose_key', 'meaning_key', 'selected_episode_keys', 'policy_sha256')},
+        'automatic_action_allowed': False, 'trading_eligibility_granted': False,
+        'email_authorized': False}
+    artifact['decision_fingerprint'] = canonical_sha256(artifact)
+    return validate_risk_review_envelope(artifact)
+
+
+def validate_risk_review_envelope(artifact: dict) -> dict:
+    from risk_review_alerts import validate_archive, episode_keys
+    from short_assessment import due_slot
+    fields = {'schema_version', 'cycle_date', 'generated_at', 'headline', 'risk_review_alert',
+        'risk_delivery', 'automatic_action_allowed', 'trading_eligibility_granted',
+        'email_authorized', 'decision_fingerprint'}
+    require(isinstance(artifact, dict) and set(artifact) == fields
+        and artifact['schema_version'] == RISK_DELIVERY_SCHEMA
+        and all(artifact[k] is False for k in ('automatic_action_allowed', 'trading_eligibility_granted', 'email_authorized'))
+        and artifact['decision_fingerprint'] == canonical_sha256({k: v for k, v in artifact.items()
+            if k != 'decision_fingerprint'}), 'risk_delivery_archive_invalid')
+    observation = validate_archive(artifact['risk_review_alert'])
+    require(all(artifact[k] == observation[k] for k in ('cycle_date', 'generated_at', 'headline')),
+        'risk_delivery_observation_mismatch')
+    delivery = artifact['risk_delivery']
+    require(isinstance(delivery, dict) and set(delivery) == {'mode', 'slot_id', 'purpose_key',
+        'meaning_key', 'selected_episode_keys', 'policy_sha256'} and delivery['mode'] == 'risk_review_alert',
+        'risk_delivery_scope_invalid')
+    selected = delivery['selected_episode_keys']
+    window = due_slot(aware(artifact['generated_at']))
+    require(window.get('outcome') == 'due' and delivery['slot_id'] == window['slot_id']
+        and delivery['purpose_key'] == 'risk-review:' + window['slot_id']
+        and isinstance(selected, list) and selected == sorted(set(selected)) and bool(selected)
+        and set(selected) <= set(episode_keys(observation))
+        and delivery['meaning_key'] == RISK_MEANING_MARKER + canonical_sha256(selected)
+        and HEX.fullmatch(str(delivery['policy_sha256'])), 'risk_delivery_episode_binding_invalid')
+    return artifact
+
+
+def render_risk_review_alert(artifact: dict) -> tuple[str, str, str]:
+    validate_risk_review_envelope(artifact)
+    from equity_naming import subject_prefix
+    observation = artifact['risk_review_alert']
+    selected = set(artifact['risk_delivery']['selected_episode_keys'])
+    conditions = [row for row in observation['conditions'] if row['episode_key'] in selected]
+    lines = [observation['headline'], 'Observed: ' + observation['generated_at'],
+        'Risk review requested. No new order, replacement instruction or renewed plan is created.']
+    for row in observation['risk_rows']:
+        entries = [item for item in conditions if item['ticker'] == row['ticker']]
+        if not entries:
+            continue
+        lines += [row['ticker'] + ' — risk review requested',
+            f"Recorded holding: {row['recorded_shares']:g} shares.",
+            'Plan: ' + str(row['plan_state']).replace('_', ' ') + '.']
+        lines.append('Plan identity: ' + str(row['plan_id']) + ', version ' + str(row['plan_version']) + '.'
+                     if row.get('plan_id') else 'No current plan is recorded for this holding.')
+        quote = row.get('quote')
+        if quote:
+            lines.append(f"Close ${quote['price']:.2f} on {quote['session']}; not live.")
+            if row.get('basis_price_change_pct') is not None:
+                lines.append(f"{row['basis_price_change_pct']:+.2f}% versus recorded average basis ${row['recorded_average_basis']:.2f}.")
+        else:
+            lines.append('Current ticker price unavailable; no current return is inferred.')
+        for condition in entries:
+            lines.append(condition['summary'])
+            if condition['reference'] is not None:
+                lines.append('Observed condition: ' + condition['kind'].replace('_', ' ') +
+                    f" ${condition['reference']:.2f}, " + condition['direction'].replace('_', ' ') + '.')
+                if condition['observed_price'] is not None:
+                    lines.append(f"Observation ${condition['observed_price']:.2f}: " + str(condition['observation_basis']) + '.')
+                    lines.append('Observation time: ' + str(condition.get('observation_at'))
+                        + '; session: ' + str(condition.get('observation_session'))
+                        + ('; expires: ' + str(condition['expires_at']) if condition.get('expires_at') else '') + '.')
+        if row.get('dependencies'):
+            lines.append('Unresolved: ' + '; '.join(str(code).replace('_', ' ') for code in row['dependencies']) + '.')
+        lines.append('Next: ' + row['next_step'] + ' Due: ' + str(row['review_due_by']) + '.')
+    lines += ['Recorded basis may include wash-sale adjustments; these observations are not total portfolio drawdown.',
+        'Current broker protection is not inferred from a research plan. Human review remains required.']
+    plain = '\n\n'.join(lines) + '\n'
+    document = ('<!doctype html><html lang="en"><head><meta charset="utf-8"></head>'
+        '<body style="font-family:Arial,sans-serif;color:#183229;max-width:760px;margin:24px auto;padding:0 20px">'
+        + ''.join('<p style="line-height:1.55">' + html.escape(line) + '</p>' for line in lines)
+        + '</body></html>\n')
+    return subject_prefix() + ' ' + observation['headline'], plain, document
+
+
+def _risk_receipt_state(row: dict, *, root: Path) -> dict:
+    """Only verified archived content can cover or explicitly recover an episode."""
+    from risk_review_alerts import coverage_state_from_decision, coverage_conditions_from_decision, recovered_episode_keys
+    def moments(conditions, fallback):
+        return {item['episode_key']: aware(item['observation_at']) if item.get('observation_at') else fallback
+                for item in conditions}
+    values = []
+    for field, suffix in (('decision_sha256', '.json'), ('brief_text_sha256', '.txt'), ('brief_html_sha256', '.html')):
+        digest = row.get(field, '')
+        require(HEX.fullmatch(digest), 'risk_delivery_receipt_digest_missing')
+        raw = inside(root, str(ARCHIVE_REL / (digest + suffix))).read_bytes()
+        require(hashlib.sha256(raw).hexdigest() == digest, 'risk_delivery_receipt_archive_changed')
+        values.append(raw.decode('utf-8'))
+    prior, plain, document = json.loads(values[0]), values[1], values[2]
+    if prior.get('schema_version') == RISK_DELIVERY_SCHEMA:
+        validate_risk_review_envelope(prior)
+        require((plain, document) == render_risk_review_alert(prior)[1:], 'risk_delivery_receipt_render_changed')
+        return {'active': prior['risk_delivery']['selected_episode_keys'],
+            'recovered': recovered_episode_keys(prior['risk_review_alert']),
+            'observed_at': aware(prior['generated_at']),
+            'moments': moments(prior['risk_review_alert']['conditions'], aware(prior['generated_at']))}
+    if prior.get('schema_version') == 'equity_mandatory_status_brief_v1':
+        require(_archived_receipt_baseline(row, root=root)['status'] == 'status_only', 'risk_status_receipt_unverified')
+        return {'active': [], 'recovered': [], 'observed_at': aware(prior['generated_at']), 'moments': {}}
+    report = prior.get('held_position_risk')
+    if report is None:
+        return {'active': [], 'recovered': [], 'observed_at': aware(row['timestamp']), 'moments': {}}
+    if 'delivery_assessment' in prior:
+        validate_envelope(prior)
+        require((plain, document) == render_intraday_alert(prior)[1:], 'risk_prior_alert_render_changed')
+    from held_position_risk import cards
+    require(report.get('content_sha256') == canonical_sha256({k: v for k, v in report.items()
+        if k != 'content_sha256'}), 'risk_prior_projection_hash_invalid')
+    visible = ' '.join(html.unescape(re.sub(r'<[^>]+>', '', document)).split())
+    for card in cards(prior):
+        for line in (card['title'], *card['body'].splitlines()):
+            require(line in plain and ' '.join(line.split()) in visible, 'risk_prior_card_not_displayed')
+    return {**coverage_state_from_decision(prior), 'observed_at': aware(report['generated_at']),
+        'moments': moments(coverage_conditions_from_decision(prior), aware(report['generated_at']))}
+
+
+def _risk_receipt_fence(rows: list, *, root: Path, current: datetime) -> list:
+    """Preserve legacy continuity without expiring risk-purpose uncertainty."""
+    from delivery_continuity import RECEIPTS
+    for row in rows:
+        if row.get('status') in RECEIPTS:
+            try:
+                receipt_at = aware(row['timestamp'])
+            except (ValueError, KeyError, TypeError):
+                raise ValueError('risk_delivery_receipt_clock_invalid')
+            require(receipt_at <= current, 'risk_delivery_receipt_clock_invalid')
+    receipts = _receipt_rows(rows, current)
+    pending = _pending_delivery(rows, current)
+    require(pending is None, 'existing_' + str(pending))
+
+    # Only the actual substantive receipt can supersede an old unscoped
+    # transport uncertainty. A newer status/risk-only alias supplies no such
+    # meaning, and a corrupt latest chain cannot establish a boundary.
+    baseline = latest_receipt_baseline(rows, root=root, current=current)
+    baseline_digest = baseline.get('advice_receipt_sha256') if baseline.get('status') == 'verified' else None
+    baseline_at = next((stamp for stamp, _, row in receipts
+                        if canonical_sha256(row) == baseline_digest), None)
+    for index, (stamp, _, row) in enumerate(receipts):
+        status = str(row['status'])
+        if status.endswith('sent'):
+            continue
+        if status.endswith('send_claimed') and _attempt(row) is not None and any(
+                str(later['status']).endswith('sent') and _attempt(later) == _attempt(row)
+                for _, _, later in receipts[index + 1:]):
+            continue
+        parts = row.get('reason', '').split(';')
+        scoped = status not in {'send_claimed', 'delivery_unknown'} or any(
+            part.startswith((PURPOSE_MARKER, 'delivery_mode=', 'scheduled_slot=',
+                             'owner_request_sha256=', RISK_MEANING_MARKER)) for part in parts)
+        # Retained risk evidence also identifies the purpose if metadata has
+        # been omitted. Missing old legacy archives cannot invent a purpose.
+        digest = row.get('decision_sha256', '')
+        if not scoped and HEX.fullmatch(digest):
+            try:
+                prior = json.loads((root / ARCHIVE_REL / (digest + '.json')).read_bytes())
+                scoped = isinstance(prior, dict) and prior.get('schema_version') == RISK_DELIVERY_SCHEMA
+            except (OSError, ValueError, TypeError):
+                pass
+        require(not scoped and baseline_at is not None and baseline_at > stamp,
+                'existing_delivery_unknown' if status.endswith('delivery_unknown') else 'existing_send_claimed')
+    return receipts
+
+
+def risk_review_eligibility(decision: dict, *, root: Path, current: datetime, rows: list,
+                            scheduled_slot: str | None = None) -> dict:
+    from delivery_schedule import risk_review_alert_window
+    from risk_review_alerts import validate_current, episode_keys
+    base = {'eligible': False, 'mode': 'risk_review_alert', 'reason': '', 'purpose_key': '',
+        'meaning_key': '', 'selected_episode_keys': [], 'purpose_completed': False}
+    try:
+        require(scheduled_slot is None, 'risk_alert_has_no_scheduled_delivery_window')
+        notifications = read_json(root / CONFIG_REL)['notifications']
+        window = risk_review_alert_window(notifications, current)
+        require(window is not None, 'outside_risk_review_check')
+        permission = notifications['risk_review_alerts']
+        observation = decision.get('risk_review_alert') if decision.get('schema_version') == RISK_DELIVERY_SCHEMA else decision
+        if observation is not decision:
+            validate_risk_review_envelope(decision)
+        validate_current(observation, root=root, current=current)
+        purpose = 'risk-review:' + window['slot_id']
+        base.update(slot_id=window['slot_id'], purpose_key=purpose,
+                    policy_sha256=canonical_sha256(permission))
+        all_receipts = _risk_receipt_fence(rows, root=root, current=current)
+        receipts = [item for item in all_receipts
+            if str(item[2]['status']).endswith('sent')
+            and item[0].astimezone(ET).date().isoformat() >= permission['effective_from']]
+        covered, observed = set(), {}
+        for index, (sent_at, _, row) in enumerate(receipts):
+            state = _risk_receipt_state(row, root=root)
+            require(state['observed_at'] <= sent_at, 'risk_delivery_observation_after_receipt')
+            if PURPOSE_MARKER + purpose in row.get('reason', '').split(';'):
+                return {**base, 'purpose_completed': True, 'reason': 'risk_review_check_already_sent'}
+            for key in state['recovered']:
+                moment = state['moments'][key]
+                require(moment <= state['observed_at'], 'risk_condition_observation_future')
+                if key not in observed or moment > observed[key]:
+                    covered.discard(key); observed[key] = moment
+            for key in state['active']:
+                moment = state['moments'][key]
+                require(moment <= state['observed_at'], 'risk_condition_observation_future')
+                if key not in observed or moment >= observed[key]:
+                    covered.add(key); observed[key] = moment
+        condition_moments = {item['episode_key']: aware(item['observation_at']) if item.get('observation_at')
+                             else aware(observation['generated_at']) for item in observation['conditions']}
+        selected = sorted(key for key in set(episode_keys(observation)) - covered
+                          if key not in observed or condition_moments[key] > observed[key])
+        return {**base, 'eligible': bool(selected), 'selected_episode_keys': selected,
+            'meaning_key': RISK_MEANING_MARKER + canonical_sha256(selected),
+            'reason': 'uncovered_held_risk_review' if selected else 'held_risk_already_covered_or_no_condition'}
+    except (ValueError, KeyError, TypeError, OSError) as exc:
+        return {**base, 'reason': str(exc) or 'risk_review_unverified'}
 
 
 def build_failure_brief(root: Path, current: datetime, scheduled_slot: str, reason: str) -> dict:

@@ -2,7 +2,9 @@
 
 The November 8, 2026 reliability repair adds a dated observation for every
 positive holding in the current local record. It does not change loss limits,
-strategy approval, notification purposes, capital eligibility or manual execution.
+strategy approval, capital eligibility or manual execution. The separate
+November 8 owner approval for [standalone held-risk review notifications](standalone_risk_review_notifications.md)
+adds one explicit notification purpose using these validated observations.
 
 `held_position_risk.py` reads the current position inventory, average basis,
 individually checked canonical closes and quality rows, order inventory and
@@ -36,9 +38,9 @@ cancelled and remaining quantities; no fill is inferred from price or expiry.
 Current broker protection remains unverified unless supported by current evidence.
 
 Normal decision emails lead with holding risk. Research alerts can carry the
-same dated context without gaining order or delivery authority. Existing
-scheduled windows, duplicate/uncertain-send controls and alert purposes remain.
-Standalone price-risk alerts require a separate owner-approved notification
-contract. The optional intraday batch still requires complete admitted coverage;
+same dated context without gaining order authority. The separately approved
+risk-review route can qualify without an action/priority change, but only under
+its explicit permission, existing short-slot windows, configured recipient and
+duplicate/uncertain-send controls. The optional intraday batch still requires complete admitted coverage;
 this repair isolates **canonical-close** observations and does not weaken that
 intraday validator. No portfolio aggregate is inferred from partial coverage.

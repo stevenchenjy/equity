@@ -23,7 +23,8 @@ from active_config import load_active_config
 from email_brief import EMAIL_BRIEF_VERSION, build_email_view, email_subject, render_email
 from delivery_continuity import covered_by_last_delivery, delivery_meaning_key, delivery_notification_comparison
 from delivery_archive import archive_validated_delivery
-from delivery_schedule import active_delivery_window, assessment_delivery_enabled, intraday_alert_window_open
+from delivery_schedule import (active_delivery_window, assessment_delivery_enabled,
+                               intraday_alert_window_open, risk_review_alert_window)
 from validation_cache import file_hash_validation
 from daily_common import (
     ROOT,
@@ -501,7 +502,11 @@ def build_message(
     owner_review: bool = False,
     snapshot_briefs: dict[str, str] | None = None,
 ) -> EmailMessage:
-    if decision.get("delivery_assessment") is not None:
+    if decision.get("schema_version") == "equity_risk_review_delivery_v1":
+        from delivery_assessments import render_risk_review_alert
+        purpose_subject, body_text, body_html = render_risk_review_alert(decision)
+        subject = safe_header(purpose_subject, "subject")
+    elif decision.get("delivery_assessment") is not None:
         from delivery_assessments import render_intraday_alert
         purpose_subject, body_text, body_html = render_intraday_alert(decision)
         subject = safe_header(purpose_subject, "subject")
@@ -519,7 +524,10 @@ def build_message(
     # retained for config compatibility, never used as the display authority.
     message["From"] = formataddr((safe_header(brand_name(), "display_brand"), config["smtp_username"]))
     message["To"] = config["recipient_email"]
-    if decision.get("delivery_assessment") is not None:
+    if decision.get("schema_version") == "equity_risk_review_delivery_v1":
+        if snapshot_briefs is None or (body_text, body_html) != (snapshot_briefs["text"], snapshot_briefs["html"]):
+            raise ValueError("risk_review_brief_snapshot_mismatch")
+    elif decision.get("delivery_assessment") is not None:
         if snapshot_briefs is not None and (body_text != snapshot_briefs["text"] or body_html != snapshot_briefs["html"]):
             raise ValueError("intraday_brief_snapshot_mismatch")
     elif decision.get("email_brief_version") == EMAIL_BRIEF_VERSION:
@@ -699,17 +707,40 @@ def capture_failure_brief(artifact: dict[str, Any], *, snapshot_hashes=None, sna
     return artifact
 
 
+def capture_risk_review_alert(artifact: dict[str, Any], *, snapshot_hashes=None, snapshot_briefs=None,
+                              snapshot_bytes=None) -> dict[str, Any]:
+    from delivery_assessments import validate_risk_review_envelope, render_risk_review_alert
+    from risk_review_alerts import validate_current
+    validate_risk_review_envelope(artifact)
+    validate_current(artifact["risk_review_alert"], root=ROOT, current=now_et())
+    _, plain, document = render_risk_review_alert(artifact)
+    contents = {"decision_sha256": (json.dumps(artifact, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode(),
+        "brief_text_sha256": plain.encode(), "brief_html_sha256": document.encode()}
+    if snapshot_hashes is not None:
+        snapshot_hashes.update({key: hashlib.sha256(raw).hexdigest() for key, raw in contents.items()})
+    if snapshot_briefs is not None:
+        snapshot_briefs.update(text=plain, html=document)
+    if snapshot_bytes is not None:
+        snapshot_bytes.update(contents)
+    return artifact
+
+
 def assessment_delivery_guard(mode: str, scheduled_slot: str | None) -> tuple[bool, str]:
     """New routine purposes retain operation controls and have their own clocks."""
-    if mode not in {"scheduled_brief", "intraday_alert"}:
+    if mode not in {"scheduled_brief", "intraday_alert", "risk_review_alert"}:
         return False, "delivery_purpose_invalid"
     current = now_et()
     notifications = load_active_config()["notifications"]
-    if not assessment_delivery_enabled(notifications, current, alerts=mode == "intraday_alert"):
+    if mode == "risk_review_alert":
+        if scheduled_slot is not None or risk_review_alert_window(notifications, current) is None:
+            return False, "outside_risk_review_check"
+    elif not assessment_delivery_enabled(notifications, current, alerts=mode == "intraday_alert"):
         return False, "assessment_delivery_not_effective"
     enabled, reason, _, _ = delivery_guard()
     if not enabled and reason not in {"before_daily_decision_time", "outside_delivery_window"}:
         return False, reason
+    if mode == "risk_review_alert":
+        return True, "risk_review_check_open"
     if mode == "intraday_alert":
         if scheduled_slot is not None:
             return False, "intraday_alert_has_no_scheduled_slot"
@@ -771,7 +802,10 @@ def send_once(
 
     try:
         check_limited_handoff()
-        if failure_reason is not None:
+        if delivery_mode == "risk_review_alert":
+            from risk_review_alerts import build
+            decision = build(ROOT, now_et())
+        elif failure_reason is not None:
             from delivery_assessments import build_failure_brief
             decision = capture_failure_brief(build_failure_brief(ROOT, now_et(), scheduled_slot, failure_reason))
         else:
@@ -870,7 +904,10 @@ def send_once(
 
         try:
             check_limited_handoff()
-            if failure_reason is not None:
+            if delivery_mode == "risk_review_alert":
+                from risk_review_alerts import validate_current
+                revalidated = validate_current(decision, root=ROOT, current=now_et())
+            elif failure_reason is not None:
                 revalidated = capture_failure_brief(decision, snapshot_hashes=content_hashes,
                     snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
             else:
@@ -885,7 +922,11 @@ def send_once(
             return 2
 
         try:
-            if delivery_mode == "intraday_alert":
+            if delivery_mode == "risk_review_alert":
+                from delivery_assessments import risk_review_envelope
+                decision = capture_risk_review_alert(risk_review_envelope(decision, purpose_evaluation),
+                    snapshot_hashes=content_hashes, snapshot_briefs=snapshot_briefs, snapshot_bytes=snapshot_bytes)
+            elif delivery_mode == "intraday_alert":
                 # Retain the exact original publication for provenance before
                 # archiving the separate, purpose-bound actual alert body.
                 archive_validated_delivery(DAILY_DELIVERY_LEDGER_PATH.parent / "sent_decisions.local",
@@ -934,7 +975,8 @@ def send_once(
             ";" + owner_review_request_key(owner_review_request_id)
             + ";" + owner_review_coverage_key(decision)
         ) if owner_review else ""
-        request_suffix += ";" + delivery_meaning_key(decision)
+        if delivery_mode != "risk_review_alert":
+            request_suffix += ";" + delivery_meaning_key(decision)
         if delivery_mode is not None:
             request_suffix += ";delivery_mode=" + delivery_mode
             request_suffix += ";delivery_purpose_v1=" + purpose_evaluation["purpose_key"]
@@ -943,7 +985,8 @@ def send_once(
             request_suffix += ";scheduled_slot=" + scheduled_slot
         if limited_status and failure_reason is None:
             request_suffix += ";refresh_handoff=limited_status_only"
-        publication_status = ("status_only" if failure_reason is not None else
+        publication_status = ("risk_review" if delivery_mode == "risk_review_alert" else
+                              "status_only" if failure_reason is not None else
                               "limited_status" if limited_status else "verified_decision")
         request_suffix += ";publication_status=" + publication_status
         # Claim one immutable account-version snapshot. Later fills belong to
@@ -952,7 +995,9 @@ def send_once(
         with account_lock(ROOT, shared=True):
             try:
                 check_limited_handoff()
-                if failure_reason is not None:
+                if delivery_mode == "risk_review_alert":
+                    capture_risk_review_alert(decision)
+                elif failure_reason is not None:
                     capture_failure_brief(decision)
                 if decision.get("workflow_integrity") is not None:
                     from workflow_integrity import validate_published_workflow
@@ -962,7 +1007,7 @@ def send_once(
                 print(f"email_sent=false reason={exc} smtp_config_read=true")
                 return 2
             try:
-                if failure_reason is None:
+                if failure_reason is None and delivery_mode != "risk_review_alert":
                     from delivery_followthrough import validate_followthrough
                     validate_followthrough(decision, root=ROOT, current=now_et())
             except (OSError, ValueError) as exc:
@@ -980,7 +1025,8 @@ def send_once(
                     latest = delivery_eligibility(decision, root=ROOT, current=now_et(), rows=delivery_rows,
                         mode=delivery_mode, scheduled_slot=scheduled_slot)
                     if (latest.get("eligible") is not True or any(latest.get(key) != purpose_evaluation.get(key)
-                            for key in ("purpose_key", "meaning_key"))):
+                            for key in ("purpose_key", "meaning_key", "policy_sha256")
+                            if key in latest or key in purpose_evaluation)):
                         raise ValueError(str(latest.get("reason", "delivery_assessment_changed_before_claim")))
                 except (OSError, ValueError, KeyError, TypeError) as exc:
                     log_daily_run(component="daily_sender", run_mode=run_mode, outcome="blocked", reason=str(exc))
@@ -1077,7 +1123,7 @@ def main() -> int:
                         help="Stable ordinary delivery purpose; never an arbitrary retry ID")
     parser.add_argument("--limited-status", action="store_true",
                         help="Internal: require exact current zero-order soft-failure handoff")
-    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert"),
+    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert", "risk_review_alert"),
                         help="Internal ordinary assessment purpose; never an owner-review override")
     parser.add_argument("--failure-status", metavar="REASON",
                         help="Internal: a separately validated current failure brief, with no order instructions")
@@ -1088,8 +1134,8 @@ def main() -> int:
         parser.error("--limited-status requires --send")
     if (args.delivery_purpose or args.failure_status) and not args.send:
         parser.error("assessment delivery purposes require --send")
-    if args.delivery_purpose == "intraday_alert" and args.delivery_window:
-        parser.error("intraday alerts do not have a scheduled delivery window")
+    if args.delivery_purpose in {"intraday_alert", "risk_review_alert"} and args.delivery_window:
+        parser.error("independent alerts do not have a scheduled delivery window")
     if args.check:
         enabled, reason, _, _ = delivery_guard()
         print(
@@ -1099,7 +1145,7 @@ def main() -> int:
         return 0
     slot = args.delivery_window
     purpose = args.delivery_purpose
-    if args.send and slot is None and purpose != "intraday_alert":
+    if args.send and slot is None and purpose not in {"intraday_alert", "risk_review_alert"}:
         window = active_delivery_window(load_active_config()["notifications"], now_et())
         if window is None:
             print("email_sent=false reason=outside_delivery_window smtp_config_read=false")

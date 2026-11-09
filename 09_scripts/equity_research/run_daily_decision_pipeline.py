@@ -165,10 +165,15 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         return 2
     with ExclusiveFileLock(DAILY_PIPELINE_LOCK_PATH):
         if delivery_mode is not None:
-            if delivery_mode not in {"scheduled_brief", "intraday_alert"}:
+            if delivery_mode not in {"scheduled_brief", "intraday_alert", "risk_review_alert"}:
                 raise ValueError("delivery_purpose_invalid")
             current = now_et()
-            if not assessment_delivery_enabled(load_active_config()["notifications"], current,
+            if delivery_mode == "risk_review_alert":
+                from delivery_schedule import risk_review_alert_window
+                if scheduled_slot is not None or risk_review_alert_window(load_active_config()["notifications"], current) is None:
+                    print("daily_pipeline_blocked=true reason=outside_risk_review_check email_attempted=false")
+                    return 2
+            elif not assessment_delivery_enabled(load_active_config()["notifications"], current,
                     alerts=delivery_mode == "intraday_alert"):
                 print("daily_pipeline_blocked=true reason=assessment_delivery_not_effective email_attempted=false")
                 return 2
@@ -180,8 +185,11 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
             if window is None or window["id"] != scheduled_slot:
                 print("daily_pipeline_blocked=true reason=outside_delivery_window email_attempted=false")
                 return 2
-        ready, readiness_reason = (refresh_readiness(scheduled_slot)
-                                   if scheduled_slot is not None else refresh_readiness())
+        # Independently verified holding-risk observations do not inherit a
+        # company-research completion requirement or start another refresh.
+        ready, readiness_reason = ((True, "independent_risk_review_check") if delivery_mode == "risk_review_alert"
+                                  else refresh_readiness(scheduled_slot)
+                                  if scheduled_slot is not None else refresh_readiness())
         failure_status = not ready and send and delivery_mode == "scheduled_brief"
         if not ready and not failure_status:
             log_daily_run(
@@ -269,7 +277,8 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
         status_only = "publication_status=status_only" in sender_summary
-        if (routine_recovery and sender.returncode == 0 and not delivery_status_unknown
+        if ((routine_recovery or delivery_mode == "risk_review_alert")
+                and sender.returncode == 0 and not delivery_status_unknown
                 and "email_sent=true" in sender_summary):
             # Receipt/archive proof inside the helper, never stdout alone,
             # authorizes the no-send closure. SMTP success stays durable even
@@ -311,7 +320,8 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
         if status_only:
             from daily_common import publish_automation_alert
             publish_automation_alert(component="daily_decision", reason="decision_publication_unavailable")
-        elif sender.returncode == 0 and not delivery_status_unknown and not publication_pending:
+        elif (delivery_mode != "risk_review_alert" and sender.returncode == 0
+              and not delivery_status_unknown and not publication_pending):
             clear_automation_alert(component="daily_decision")
         return (
             DELIVERY_STATUS_UNKNOWN_EXIT
@@ -327,12 +337,12 @@ def main() -> int:
     mode.add_argument("--no-send", action="store_true")
     mode.add_argument("--safe-check", action="store_true")
     parser.add_argument("--delivery-window", help="Stable scheduled delivery purpose; never an arbitrary retry ID")
-    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert"))
+    parser.add_argument("--delivery-purpose", choices=("scheduled_brief", "intraday_alert", "risk_review_alert"))
     args = parser.parse_args()
     if args.safe_check:
         return safe_check()
     slot = args.delivery_window
-    if args.scheduled and slot is None and args.delivery_purpose != "intraday_alert":
+    if args.scheduled and slot is None and args.delivery_purpose not in {"intraday_alert", "risk_review_alert"}:
         window = active_delivery_window(load_active_config()["notifications"], now_et())
         if window is None:
             print("daily_pipeline_blocked=true reason=outside_delivery_window email_attempted=false")

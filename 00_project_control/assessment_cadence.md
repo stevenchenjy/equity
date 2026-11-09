@@ -174,10 +174,10 @@ The underlying `regular_delivery_mode=watch_or_action_change` and
 The separately adopted `mandatory_daily_briefs` purpose is what authorizes
 an unchanged daily checkpoint; it does not falsify `send_recommended`.
 
-## Extra action and priority alerts
+## Extra action, priority and held-risk review alerts
 
 The existing scheduled sender alone may send an extra alert while the exchange
-is open. It requires either a material validated action change, including
+is open. The October 21 action/priority route requires a material validated action change, including
 withdrawal of a previously delivered recommendation, or a substantive
 source-bound analyst research-priority change. A priority alert can state
 which company should be researched first and why without implying that it is
@@ -189,9 +189,18 @@ authorship time, sources and validity. It grants no allocation, model,
 strategy-adoption or execution authority. Raw scores, watchlist movements,
 calendar polling, source-arrival titles alone, clock changes and unreviewed
 queue reshuffling do not independently authorize an alert. Intraday price polling,
-a changed observation timestamp, a portfolio price-only decline or an observed
-existing risk condition likewise requires the existing source-bound analytical
-and delivery eligibility; none creates a new loss threshold or email rule.
+a changed observation timestamp or a portfolio price-only decline does not
+create a new loss threshold or email rule.
+
+The November 8 owner-approved [standalone held-risk review route](standalone_risk_review_notifications.md)
+separately permits a validated crossing of an already-approved current held risk
+condition, or unavailable required held review/protection with unresolved
+exposure. It requires neither a capital action nor an analyst priority change.
+It inherits the five existing short slots and their fifteen-minute admission
+grace, capped at actual exchange close, without extending the ten-minute worker
+budget. The installed sender owns this human-review-only notification and the
+existing configured recipient; workers still do not send mail. Absent, disabled
+or future-dated permission cannot enable it. Identical risk states remain quiet.
 
 Daily briefs and alerts have distinct durable purposes. Compare alert meaning
 with exact archived delivery context, including claimed and uncertain sends;

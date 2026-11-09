@@ -134,7 +134,17 @@
       "14:00",
       "15:30"
     ],
-    "short_assessment_budget_minutes": 10
+    "short_assessment_budget_minutes": 10,
+    "risk_review_alerts": {
+      "schema_version": "owner_held_risk_review_alert_permission_v1",
+      "enabled": true,
+      "effective_from": "2026-11-08",
+      "allowed_triggers": [
+        "approved_risk_condition_crossed",
+        "held_review_or_protection_unavailable"
+      ],
+      "delivery_grace_minutes": 15
+    }
   },
   "model_policy": {
     "status": "removed_from_active_production",

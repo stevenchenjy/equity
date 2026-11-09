@@ -8,8 +8,17 @@ and the restriction of all routine mail to the two attention windows. Keep
 the full 08:45/13:45 ET reviews. Short research checks run every 90 minutes
 from 09:30 through the actual market close. The morning and afternoon windows
 each require one brief even with no action. Separately identified intraday
-alerts require a material action or source-bound analyst priority change;
+action/priority alerts require a material action or source-bound analyst priority change;
 they do not require a positive allocation, and raw ranking churn stays quiet.
+
+The November 8, 2026 owner approval additionally permits the separately typed
+[standalone held-risk review notification](standalone_risk_review_notifications.md)
+under its explicit configuration, current five short-slot windows and existing
+recipient. A validated current held risk-condition crossing or unavailable
+required review/protection with unresolved exposure can qualify independently
+of action/priority changes. This is a human-review request, never a new order,
+loss threshold or permission to invoke an extra sender. Legacy delivery archives
+and action/priority policy-context schemas remain unchanged.
 
 These are separate delivery purposes under the existing single sender,
 durable claims, exact archives, follow-through and unknown-send fences.

@@ -95,6 +95,32 @@ def validate_allocation_targets(account: dict[str, Any]) -> dict[str, float]:
     return result
 
 
+def validate_risk_review_alerts(value: Any) -> dict[str, Any]:
+    """Validate the optional owner permission without granting capital authority.
+
+    Legacy configurations omit this object. Runtime eligibility separately checks
+    its effective date, enabled flag and the existing exchange/slot window.
+    """
+    keys = {"schema_version", "enabled", "effective_from", "allowed_triggers",
+            "delivery_grace_minutes"}
+    if not isinstance(value, dict) or set(value) != keys:
+        raise ActiveConfigError("risk-review alert permission fields do not match owner approval")
+    effective = value.get("effective_from")
+    try:
+        parsed = date.fromisoformat(effective) if isinstance(effective, str) else None
+    except ValueError as exc:
+        raise ActiveConfigError("risk-review alert effective date is invalid") from exc
+    if (parsed is None or parsed.isoformat() != effective
+            or value.get("schema_version") != "owner_held_risk_review_alert_permission_v1"
+            or type(value.get("enabled")) is not bool
+            or value.get("allowed_triggers") != ["approved_risk_condition_crossed",
+                                                   "held_review_or_protection_unavailable"]
+            or type(value.get("delivery_grace_minutes")) is not int
+            or value["delivery_grace_minutes"] != 15):
+        raise ActiveConfigError("risk-review alert permission does not match owner approval")
+    return value
+
+
 def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
     config = read_json(path)
     if not isinstance(config, dict) or set(config) != _REQUIRED_TOP_LEVEL:
@@ -210,6 +236,10 @@ def load_active_config(path: Path = ACTIVE_CONFIG_PATH) -> dict[str, Any]:
                 or type(notifications["short_assessment_budget_minutes"]) is not int
                 or notifications["short_assessment_budget_minutes"] != 10):
             raise ActiveConfigError("assessment delivery cadence does not match owner approval")
+    if "risk_review_alerts" in notifications:
+        validate_risk_review_alerts(notifications["risk_review_alerts"])
+        if not assessment_keys.issubset(notifications):
+            raise ActiveConfigError("risk-review alerts require the existing approved assessment cadence")
     return config
 
 

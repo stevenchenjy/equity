@@ -51,3 +51,23 @@ def intraday_alert_window_open(current: datetime) -> bool:
     local = current.astimezone(ET)
     return (is_us_market_session_date(local.date())
             and datetime.combine(local.date(), time(9, 30), ET) <= local < regular_close(local.date().isoformat()))
+
+
+def risk_review_alert_window(notifications: dict[str, Any], current: datetime) -> dict | None:
+    """Explicit risk permission uses only the existing bounded short checks."""
+    from active_config import validate_risk_review_alerts
+    from short_assessment import SLOTS, SLOT_GRACE, due_slot
+    permission = notifications.get("risk_review_alerts")
+    if permission is None or current.tzinfo is None:
+        return None
+    try:
+        validate_risk_review_alerts(permission)
+        if (permission["enabled"] is not True
+                or current.astimezone(ET).date() < date.fromisoformat(permission["effective_from"])
+                or notifications.get("short_assessment_slots_et") != list(SLOTS)
+                or permission["delivery_grace_minutes"] * 60 != SLOT_GRACE.total_seconds()):
+            return None
+        slot = due_slot(current)
+        return slot if slot["outcome"] == "due" else None
+    except (ValueError, TypeError, KeyError):
+        return None

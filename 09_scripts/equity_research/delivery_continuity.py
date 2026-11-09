@@ -118,7 +118,8 @@ def delivery_meaning_key(decision: dict[str, Any]) -> str:
     return MARKER + canonical_sha256(meaning)
 
 
-def latest_delivery_receipt(rows: list[dict[str, str]], *, current: datetime) -> dict[str, str] | None:
+def latest_delivery_receipt(rows: list[dict[str, str]], *, current: datetime,
+                            archive_dir: Path | None = None) -> dict[str, str] | None:
     """Use the latest durable receipt, including claimed or uncertain delivery."""
     candidates = []
     for index, row in enumerate(rows):
@@ -133,7 +134,22 @@ def latest_delivery_receipt(rows: list[dict[str, str]], *, current: datetime) ->
         candidates.append((stamp, index, row))
     if not candidates:
         return None
-    return max(candidates, key=lambda item: (item[0], item[1]))[2]
+    for stamp, index, row in sorted(candidates, key=lambda item: (item[0], item[1]), reverse=True):
+        if archive_dir is not None:
+            # A verified review-only message neither adopts nor retracts the
+            # owner's prior capital advice. Claims and unknown deliveries still
+            # fence the comparison unless an exact completed pair is proved.
+            from delivery_assessments import _archived_receipt_baseline, _attempt
+            root = archive_dir.parent.parent.parent
+            completed = row if row.get("status", "").endswith("sent") else None
+            if row.get("status", "").endswith("send_claimed") and _attempt(row) is not None:
+                completed = next((later for later_stamp, later_index, later in candidates
+                    if later_stamp >= stamp and later_index > index and later.get("status", "").endswith("sent")
+                    and _attempt(later) == _attempt(row)), None)
+            if completed is not None and _archived_receipt_baseline(completed, root=root).get("status") == "risk_only":
+                continue
+        return row
+    return None
 
 
 def receipt_meaning_key(row: dict[str, str], *, archive_dir: Path) -> str | None:
@@ -163,7 +179,7 @@ def delivery_notification_comparison(decision: dict[str, Any], fallback: dict[st
     delivery receipt supplies this baseline. Missing receipt evidence retains
     the existing research comparison, including quiet initial seeding.
     """
-    row = latest_delivery_receipt(rows, current=current)
+    row = latest_delivery_receipt(rows, current=current, archive_dir=archive_dir)
     prior = receipt_meaning_key(row, archive_dir=archive_dir) if row else None
     if prior is None:
         return copy.deepcopy(fallback)
@@ -177,6 +193,6 @@ def delivery_notification_comparison(decision: dict[str, Any], fallback: dict[st
 def covered_by_last_delivery(rows: list[dict[str, str]], decision: dict[str, Any], *,
                              current: datetime, archive_dir: Path) -> bool:
     """Compare only the latest receipt; unavailable evidence cannot suppress."""
-    row = latest_delivery_receipt(rows, current=current)
+    row = latest_delivery_receipt(rows, current=current, archive_dir=archive_dir)
     prior = receipt_meaning_key(row, archive_dir=archive_dir) if row else None
     return prior is not None and prior == delivery_meaning_key(decision)
