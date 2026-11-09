@@ -240,3 +240,7 @@ graphify-out/reflections/
 /00_project_control/run_logs/swing_observer.local/
 # Historical private quote receipts retained by immutable model references.
 03_source_data/equity_research/valuation_observations.local/
+
+# Private held-position risk projections and immutable observation history.
+/04_research/company_research/held_position_risk.local.json
+/05_risk_and_positions/generated/held_risk_observations.local/

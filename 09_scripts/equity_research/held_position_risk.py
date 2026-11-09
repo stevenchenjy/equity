@@ -113,9 +113,11 @@ def material_intraday_conditions(decision):
 def _quote(root, ticker, quotes, quality, current, expected, market_gate, inventory_tickers=()):
     matches = [row for row in quotes if str(row.get("ticker") or "").upper() == ticker]
     checks = [row for row in quality if str(row.get("ticker") or "").upper() == ticker]
-    # Portfolio-wide provenance failures are different from a missing other
-    # ticker. Never turn an invalid backup lineage into an admitted observation.
-    failures = market_gate.get("failures", [])
+    # The composer appends this marker when derived portfolio/account outputs
+    # lag current holdings. It does not invalidate an independently bound quote.
+    # All other global provenance failures still reject the observation.
+    failures = [code for code in market_gate.get("failures", [])
+                if code != "current_holdings_portfolio_outputs_not_recomposed"]
     known_tickers = {str(row.get("ticker") or "").upper() for row in quotes + quality} | set(inventory_tickers)
     if any(str(code).split(":", 1)[0] not in known_tickers for code in failures):
         return None
@@ -227,7 +229,11 @@ def build(decision, *, root: Path, current: datetime) -> dict:
         changes = c.get("blockers", [])
         next_step = ("Recurring analyst: review the existing purpose, current adverse evidence and permitted reduce/exit response; "
                      "record a source-bound plan or exact unresolved dependency by the next review window.")
-        if account_problem or pending or "earlier_instruction_execution_unreconciled" in changes:
+        if plan_state == "position_changed_pending_verification" and valid_inventory:
+            next_step += f" Reconcile the prior plan with the current recorded {qty:g} shares before proposing a replacement."
+        owner_record_problem = (not valid_inventory or bool(global_issues)
+                                or plan_state == "order_conflict_pending_review")
+        if owner_record_problem or pending or "earlier_instruction_execution_unreconciled" in changes:
             next_step += " Owner/account record: provide actual remaining shares and each earlier order's filled, cancelled or remaining quantity; never duplicate a reserved sale."
         if mark is None:
             next_step += " Public-data worker: restore this ticker's dated canonical close; retain other independently verified observations."

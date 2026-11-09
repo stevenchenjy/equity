@@ -110,11 +110,27 @@ class HeldPositionRiskTests(unittest.TestCase):
         self.assertEqual(aaa["basis_price_change_pct"], -30)
         self.assertIn("actual remaining shares", aaa["next_step"])
 
+    def test_changed_plan_quantity_uses_current_account_without_reasking_owner(self):
+        self.write_json(risk.ORDERS, {"as_of": self.now.isoformat(), "orders": [], "complete": True,
+                                     "cash_confirmed": True})
+        self.plans["plans"][0].update(status="position_changed_pending_verification",
+                                       blockers=["remaining_quantity_changed"])
+        report = self.build()
+        row = report["holdings"][0]
+        self.assertEqual(row["state"], "UNVERIFIED")
+        self.assertEqual(row["basis_price_change_pct"], -30)
+        self.assertIn("Reconcile the prior plan with the current recorded 4 shares", row["next_step"])
+        self.assertNotIn("Owner/account record:", row["next_step"])
+        self.assertNotIn("provide actual remaining shares", row["next_step"])
+        self.assertIn(row["next_step"], risk.cards({"held_position_risk": report})[0]["body"])
+        self.assertFalse(report["trading_eligibility_granted"])
+
     def test_partial_order_reserves_shares_and_names_reconciliation(self):
         self.write_json(risk.ORDERS, {"orders": [{"ticker": "AAA", "status": "partial_fill",
                                                "quantity": 4, "remaining_quantity": 2}]})
         row = self.build()["holdings"][0]
         self.assertIn("never duplicate", row["next_step"])
+        self.assertIn("Owner/account record: provide actual remaining shares", row["next_step"])
         self.assertEqual(row["known_pending_orders"][0]["remaining_quantity"], 2)
 
     def test_bound_source_change_and_content_tampering_rejected(self):

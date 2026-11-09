@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "00_project_control/account_state_policy.md": {
-    "mtime": 1794193319.632736,
-    "ast_hash": "e31cf68999e33b03b6fbb06d42422237",
+    "mtime": 1794196386.6027813,
+    "ast_hash": "86fa3386fc8875bf44e8c1ca4d4eddb9",
     "semantic_hash": ""
   },
   "00_project_control/action_threshold_policy.md": {
@@ -1580,8 +1580,8 @@
     "semantic_hash": ""
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1794193934.124378,
-    "ast_hash": "2ff5bdfb49bbda8134269157e04e6bdd",
+    "mtime": 1794196559.3055103,
+    "ast_hash": "66177cdf9280c8dafcc7af1bb16948d9",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -1940,8 +1940,8 @@
     "semantic_hash": ""
   },
   "00_project_control/feedback_intake.md": {
-    "mtime": 1794193319.642124,
-    "ast_hash": "306c89e817ce7402e67a7455b33612bf",
+    "mtime": 1794196386.602663,
+    "ast_hash": "c6d8e21e82d94e385c5a6deba80fac77",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v45.json": {
@@ -2765,18 +2765,18 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/held_position_risk.py": {
-    "mtime": 1794193922.9775965,
-    "ast_hash": "0e11773921354b1724cacc2ba7d5f97a",
+    "mtime": 1794196523.5679379,
+    "ast_hash": "6a195228548038f0377c531ef28c735d",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_held_position_risk.py": {
-    "mtime": 1794193928.3942063,
-    "ast_hash": "091b2b477bb73b22913f23ec46eda084",
+    "mtime": 1794196523.5682068,
+    "ast_hash": "c840c9c5197aab30c5c3435cf487d769",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_held_risk_edge_cases.py": {
-    "mtime": 1794193929.3381422,
-    "ast_hash": "6caceacb72ceb663caf599600ab8584b",
+    "mtime": 1794195728.6060977,
+    "ast_hash": "12ccc0801b6356ca6df047b501092af6",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/tests/test_opportunity_history_retention.py": {
@@ -2787,6 +2787,11 @@
   "00_project_control/held_position_risk_visibility.md": {
     "mtime": 1794193935.1161125,
     "ast_hash": "e0d05851e3b79a113baaf64022bf6887",
+    "semantic_hash": ""
+  },
+  "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v92.json": {
+    "mtime": 1794196333.458316,
+    "ast_hash": "cda120c143fd9a036f05e732d4737226",
     "semantic_hash": ""
   }
 }

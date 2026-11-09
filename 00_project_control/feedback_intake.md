@@ -47,6 +47,25 @@ runtime/daily locks, and service replacement must preserve the durable journal.
 
 Use `09_scripts/equity_research/record_feedback.py` to preview and apply verified owner-reported account events. Preview and confirmation validate the account version, plan reference, preview hash and request identity. An uncertain save retains its original request ID for recovery.
 
+## Historical plan sources after account changes
+
+Managed account writers preserve changed predecessor bytes, but preservation
+alone does not register a historical plan's source resolution. After an account
+update, verify the complete plan ledger against its sources before treating a
+recomposed decision as current. An older plan may have bound one of the mutable
+current account, position or order paths. A legitimate update can therefore
+produce `plan_source_hash_mismatch` even though its exact predecessor was saved.
+
+For each affected record, use the explicit
+[historical source recovery procedure](position_purpose_reassessment.md#exact-historical-source-recovery)
+to register the exact retained bytes and original plan/source identity, then
+recompose. Keep the accepted current account facts and original plan history;
+do not restore older account values or infer a fill, renewed deadline or new
+trade authority. Once registered, that historical source remains resolved
+through later account updates. Missing or mismatched retained bytes remain a
+blocker requiring investigation. New plan proposals must bind their own direct
+retained sources, rather than relying on an earlier record's resolution.
+
 ## Saved pending records and historical reconciliation
 
 A saved pending receipt is a completed intake, not a running request and not an

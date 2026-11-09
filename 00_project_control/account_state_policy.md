@@ -17,6 +17,12 @@ current portfolio files at its boundary; managed writers save changed
 predecessors before replacement. See `05_risk_and_positions/README.md` for
 direct manual edits.
 
+After an accepted account update, also verify historical plan-source bindings
+as described in [account intake](feedback_intake.md#historical-plan-sources-after-account-changes).
+An explicit registered resolution may establish the exact source of an older
+plan using retained bytes; it never substitutes those bytes for current account
+truth or renews that plan. Predecessor archival alone is not this registration.
+
 ## Runtime State
 
 No dollar amount, share count, or position weight in this policy is current
