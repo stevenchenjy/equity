@@ -428,6 +428,34 @@ class FeedbackTests(unittest.TestCase):
         self.assertIn('reported_account_feedback_unresolved',result['global_blockers'])
         self.assertIsNone(result['plans'][0]['order_draft']);self.assertEqual(result['plans'][0]['eligible_quantity'],0)
 
+    def test_pending_projection_types_a_fill_and_preserves_its_financial_identity(self):
+        from account_feedback_gate import SCHEMA
+
+        fill = self.submit(self.payload(side='sell', fee_status='unknown', fees=''))
+        pending = read(self.root, PENDING)
+        projection = json.loads(pending)
+        self.assertEqual(projection['schema_version'], SCHEMA)
+        row, = projection['records']
+        self.assertEqual(row['scope'], {'kind': 'single_ticker_fill', 'side': 'sell', 'status': 'filled'})
+        self.assertEqual((row['id'], row['ticker'], row['revision']), (fill['id'], 'ABC', 1))
+        self.assertRegex(row['record_sha256'], r'^[a-f0-9]{64}$')
+
+        with self.store.locked(), self.store.db() as conn:
+            changed = {**fill, 'research_status': 'failed', 'research_completed_at': '2026-09-30T11:00:00-04:00'}
+            self.assertEqual(self.store.export(conn, replacement=changed), pending)
+            self.assertIsNone(json.loads(self.store.export(conn, replacement={**fill, 'stage': 'applying'}))['records'][0]['scope'])
+            self.assertIsNone(json.loads(self.store.export(conn, replacement={**fill, 'stage': 'recovery_conflict'}))['records'][0]['scope'])
+            self.put(PENDING, {'schema_version': 'equity_dashboard_pending_v1', 'records': [{
+                key: row[key] for key in ('id', 'ticker', 'stage', 'missing')}]})
+            self.store.recover(conn)
+        self.assertEqual(read(self.root, PENDING), pending)
+
+    def test_pending_account_snapshot_is_unscoped_even_with_a_named_ticker(self):
+        today = datetime.now().astimezone().date().isoformat()
+        account = self.submit(self.payload(status='account', date=today, time='', cash='', account_observed=False))
+        row, = json.loads(read(self.root, PENDING))['records']
+        self.assertEqual((row['id'], row['ticker'], row['scope']), (account['id'], 'ABC', None))
+
     def test_two_concurrent_devices_cannot_apply_same_baseline_twice(self):
         import concurrent.futures
         p=self.payload();q=self.payload()

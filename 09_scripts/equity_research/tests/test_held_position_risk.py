@@ -11,8 +11,11 @@ from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 import held_position_risk as risk
+from account_feedback_gate import LEGACY_SCHEMA, LOCAL_SCOPE_KIND, RELATIVE as PENDING, SCHEMA, UNRESOLVED
 from attention_email import direct_cards, direct_subject
 from decision_dependencies import classify
+from investment_plans import RELATIVE_PATH as PLAN, append_plan
+from test_investment_plans import ledger, record
 
 
 class HeldPositionRiskTests(unittest.TestCase):
@@ -110,6 +113,49 @@ class HeldPositionRiskTests(unittest.TestCase):
         self.assertEqual(aaa["basis_price_change_pct"], -30)
         self.assertIn("actual remaining shares", aaa["next_step"])
 
+    def test_pending_fill_scope_keeps_unrelated_hold_and_shared_capital_barrier(self):
+        (self.root / "receipt.json").write_bytes(b"receipt")
+        def held_plan(ticker, quantity):
+            plan = record(ticker=ticker, role="long_term_growth")
+            plan.update(action="hold", order_draft=None, expected_shares=quantity, proposed_change_shares=0,
+                        review_at=(self.now + timedelta(hours=1)).isoformat())
+            return plan
+        plans = append_plan(ledger(held_plan("AAA", 4)), held_plan("BBB", 1), root=self.root)
+        self.write_json(PLAN, plans)
+        self.write_json(risk.ORDERS, {"as_of": self.now.isoformat(), "complete": True, "orders": []})
+        feedback = dict(id="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", ticker="AAA", stage="pending",
+                        revision=1, record_sha256="b" * 64, missing=["Unresolved fill input"],
+                        scope={"kind": LOCAL_SCOPE_KIND, "side": "sell", "status": "filled"})
+        self.write_json(PENDING, {"schema_version": SCHEMA, "records": [feedback]})
+        quantities = [{"ticker": "AAA", "current_shares": 4}, {"ticker": "BBB", "current_shares": 1}]
+        context = risk.load_plan_context(self.root, quantities, self.now)
+        self.assertEqual(context["feedback_fill_tickers"], ["AAA"])
+        self.assertTrue(context["block_new_capital"])
+        self.assertIn(UNRESOLVED, context["global_blockers"])
+        self.assertIn(UNRESOLVED, context["ticker_blockers"]["AAA"])
+        self.assertEqual([item["status"] for item in context["plans"]],
+                         ["account_feedback_pending_verification", "maintained"])
+        self.decision["workflow_integrity"] = {"global_blockers": [UNRESOLVED]}
+        report = risk.build(self.decision, root=self.root, current=self.now)
+        self.assertEqual([holding["state"] for holding in report["holdings"]], ["UNVERIFIED", "REVIEWED_HOLD"])
+        self.assertEqual(report["holdings"][0]["quote"]["price"], 70)
+        self.assertIn(UNRESOLVED, report["holdings"][0]["dependencies"])
+        self.assertNotIn(UNRESOLVED, report["holdings"][1]["dependencies"])
+        self.assertFalse(report["trading_eligibility_granted"])
+        decision = {**self.decision, "held_position_risk": report}
+        risk.validate_publication(decision, root=self.root, current=self.now)
+
+        for schema, pending in ((LEGACY_SCHEMA, {k: feedback[k] for k in ("id", "ticker", "stage", "missing")}),
+                                (SCHEMA, {**feedback, "scope": None}),
+                                (SCHEMA, {**feedback, "stage": "recovery_conflict", "scope": None}),
+                                (SCHEMA, {**feedback, "record_sha256": "unverified"})):
+            with self.subTest(schema=schema, pending=pending):
+                self.write_json(PENDING, {"schema_version": schema, "records": [pending]})
+                broad = risk.build(self.decision, root=self.root, current=self.now)
+                self.assertEqual([holding["state"] for holding in broad["holdings"]], ["UNVERIFIED", "UNVERIFIED"])
+                with self.assertRaisesRegex(ValueError, "recompose_required"):
+                    risk.validate_publication(decision, root=self.root, current=self.now)
+
     def test_changed_plan_quantity_uses_current_account_without_reasking_owner(self):
         self.write_json(risk.ORDERS, {"as_of": self.now.isoformat(), "orders": [], "complete": True,
                                      "cash_confirmed": True})
@@ -173,6 +219,17 @@ class HeldPositionRiskTests(unittest.TestCase):
         result = classify("maintained_exit_draft_requires_current_shares_price_and_validity")
         self.assertIn("exact remaining quantity", result["evidence_required"])
         self.assertIn("unfinished new-buy valuation alone", result["evidence_required"])
+
+    def test_pending_account_feedback_requests_the_named_intake_fields(self):
+        pending = classify(UNRESOLVED, scope="global")
+        self.assertEqual((pending["category"], pending["resolver"], pending["scope"]),
+                         ("C", "approved_manual_account_record", "global"))
+        self.assertIn("specific saved feedback record", pending["evidence_required"])
+        self.assertIn("missing fields", pending["evidence_required"])
+        self.assertNotIn("account-wide", pending["evidence_required"])
+        earlier = classify("earlier_instruction_execution_unreconciled", scope="global")
+        self.assertIn("complete owner-recorded holdings/cash snapshot", earlier["evidence_required"])
+        self.assertIn("account-wide order observation", earlier["evidence_required"])
 
 
 if __name__ == "__main__":

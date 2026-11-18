@@ -234,7 +234,7 @@ def _collector_journal_delta(root: Path, row: dict, current: datetime) -> dict |
 
     The same store contains true analyst assessments. Never exempt an entire
     filename, self-reported producer label, rewritten prefix or assessment event.
-    Existing replay validates the hash chain, legal transition owners and every
+    Journal validation verifies the hash chain, legal transition owners and every
     retained source receipt before a suffix can be classified as collection.
     """
     basis = row.get("opportunity_journal_basis")
@@ -242,13 +242,13 @@ def _collector_journal_delta(root: Path, row: dict, current: datetime) -> dict |
     if not basis or basis.get("sha256") != expected:
         return None
     try:
-        from opportunity_contract import replay
+        from opportunity_contract import validate_journal
         path = _inside(root, basis["path"])
         if sha256_file(path) != expected:
             raise ValueError("short_assessment_journal_basis_corrupt")
         before = read_json(path)
         after = _read(root, OPPORTUNITY_JOURNAL)
-        replay(after, root=root, current=current)
+        validate_journal(after, root=root, current=current)
         old_events, events = before["events"], after["events"]
         if ({k: v for k, v in before.items() if k != "events"}
                 != {k: v for k, v in after.items() if k != "events"}

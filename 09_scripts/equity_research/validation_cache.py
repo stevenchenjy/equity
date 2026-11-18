@@ -1,9 +1,11 @@
 """Transaction-scoped reuse of unchanged file hashes during read-only validation.
 
-Every lookup stats the actual locator. Each transaction has an independent
-final mutation fence. An explicitly scoped operation may carry byte digests
-from successful transactions for repeat lookups with an identical full file
-identity. Clock checks, source availability and eligibility are never cached.
+Direct file-hash lookups check the file identity each time. Repeated source
+locators within one read-only transaction reuse their initial resolved proof.
+The transaction checks locator resolution and target identity again at exit.
+An explicitly scoped operation may carry byte digests from successful
+transactions for repeat lookups with an identical full file identity. Clock
+checks, source availability and eligibility are never cached.
 """
 from __future__ import annotations
 
@@ -38,6 +40,7 @@ class _Transaction:
     def __init__(self, previous):
         self.first = {}
         self.entries = {}
+        self.resolved_sources = {}
         self.changed = False
         self.previous = previous
 
@@ -62,7 +65,17 @@ class _Transaction:
         self.entries[path] = (before, digest)
         return digest
 
+    def resolved_digest(self, root: Path, locator: str, resolve):
+        key = (root, locator, resolve)
+        if key not in self.resolved_sources:
+            path = resolve(root, locator)
+            self.resolved_sources[key] = (path, self.digest(path))
+        return self.resolved_sources[key][1]
+
     def validate(self):
+        for (root, locator, resolve), (path, _) in self.resolved_sources.items():
+            if resolve(root, locator) != path:
+                self.changed = True
         for path, identity in self.first.items():
             if _identity(path) != identity:
                 self.changed = True
@@ -101,3 +114,11 @@ def sha256_file(path: Path) -> str:
         with file_hash_validation() as transaction:
             return transaction.digest(path)
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def resolved_sha256(root: Path, locator: str, resolve) -> str:
+    """Prove a resolved source once per read-only transaction and recheck its locator on exit."""
+    cache = _CURRENT.get()
+    if cache is None:
+        return sha256_file(resolve(root, locator))
+    return cache.resolved_digest(root, locator, resolve)

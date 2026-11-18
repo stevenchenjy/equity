@@ -690,6 +690,7 @@ def semantic_state(context: dict[str, Any]) -> dict[str, Any]:
     return {"status": context.get("status"), "conflicts": context.get("conflicts", []),
             "global_blockers": context.get("global_blockers", []), "ticker_blockers": context.get("ticker_blockers", {}),
             "strategy_blockers": context.get("strategy_blockers", {}),
+            **({"feedback_fill_tickers": context["feedback_fill_tickers"]} if "feedback_fill_tickers" in context else {}),
             "plans": [{key: row.get(key) for key in ("ticker", "plan_id", "version", "record_hash", "role", "status", "action", "current_shares", "review_at", "time_exit_at", "blockers")}
                       for row in context.get("plans", [])]}
 
@@ -705,13 +706,19 @@ def load_plan_context(root: Path, positions: list[dict[str, Any]], current: date
                 "global_blockers": ["plan_or_order_inputs_unavailable"], "ticker_blockers": {}, "strategy_blockers": {}, "blocked_tickers": [],
                 "automatic_action_allowed": False}
     context = evaluate_plans(payload, positions, current=current, open_orders=orders, root=root)
-    from account_feedback_gate import feedback_blocker
-    blocker=feedback_blocker(root)
+    from account_feedback_gate import feedback_scope
+    blocker, pending_tickers = feedback_scope(root)
     if blocker:
         context['global_blockers']=sorted(set(context.get('global_blockers',[])+[blocker]))
         context['conflicts'].append(blocker)
+        if pending_tickers is not None:
+            context['feedback_fill_tickers'] = sorted(pending_tickers)
+            for ticker in pending_tickers:
+                context['ticker_blockers'].setdefault(ticker, []).append(blocker)
         for plan in context.get('plans',[]):
-            if plan.get('status')=='completed_observed': continue
+            if (plan.get('status') == 'completed_observed'
+                    or pending_tickers is not None and plan['ticker'] not in pending_tickers):
+                continue
             plan.update(status='account_feedback_pending_verification',action='reconcile_plan',eligible_quantity=0,order_draft=None,
                 instruction='用户报告的账户事实尚待补全或恢复；先核对实际现金、股数和挂单，历史委托条件暂停。',
                 blockers=sorted(set(plan.get('blockers',[])+[blocker])))

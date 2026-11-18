@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+from account_feedback_gate import RELATIVE as PENDING_FEEDBACK, UNRESOLVED as UNRESOLVED_FEEDBACK
 from daily_common import (ET, ExclusiveFileLock, atomic_write_json, canonical_sha256,
                           is_us_market_session_date, latest_published_market_session,
                           sha256_file)
@@ -28,7 +29,7 @@ INPUTS = (POSITIONS, MARKET, QUALITY, ORDERS,
           "05_risk_and_positions/current_account_state.local.json",
           "05_risk_and_positions/account_record_policy.local.json",
           "05_risk_and_positions/investment_plans.local.json",
-          "05_risk_and_positions/plan_source_resolutions.local.json")
+          "05_risk_and_positions/plan_source_resolutions.local.json", PENDING_FEEDBACK)
 OUTPUT = "04_research/company_research/held_position_risk.local.json"
 HISTORY = "05_risk_and_positions/generated/held_risk_observations.local"
 ALERTS = {"RISK_ALERT", "PLAN_EXPIRED", "REVIEW_REQUIRED", "UNVERIFIED", "REDUCE_REVIEW", "EXIT_REVIEW"}
@@ -161,6 +162,10 @@ def build(decision, *, root: Path, current: datetime) -> dict:
     global_issues = list(context.get("global_blockers", []))
     global_issues += [code for code in decision.get("workflow_integrity", {}).get("global_blockers", [])
                       if any(word in code for word in ("account", "inventory", "execution", "cash"))]
+    if context.get("feedback_fill_tickers") is not None:
+        # Pending fills block capital until cash is reconciled. For a no-change
+        # observation, only the named holdings have an unresolved share count.
+        global_issues = [code for code in global_issues if code != UNRESOLVED_FEEDBACK]
     next_review = _review_deadline(current)
     rows = []
     for item in inventory:
@@ -207,7 +212,8 @@ def build(decision, *, root: Path, current: datetime) -> dict:
         intraday = [x for x in material_intraday_conditions(decision) if x.get("ticker") == ticker]
         crossed = any(x["crossed_at_observation"] is True for x in conditions) or bool(intraday)
         account_problem = not valid_inventory or bool(global_issues) or plan_state in {
-            "position_changed_pending_verification", "order_conflict_pending_review", "conflict"}
+            "position_changed_pending_verification", "order_conflict_pending_review", "conflict",
+            "account_feedback_pending_verification"}
         if account_problem or mark is None:
             state = "UNVERIFIED"
         elif crossed:
@@ -232,7 +238,7 @@ def build(decision, *, root: Path, current: datetime) -> dict:
         if plan_state == "position_changed_pending_verification" and valid_inventory:
             next_step += f" Reconcile the prior plan with the current recorded {qty:g} shares before proposing a replacement."
         owner_record_problem = (not valid_inventory or bool(global_issues)
-                                or plan_state == "order_conflict_pending_review")
+                                or plan_state in {"order_conflict_pending_review", "account_feedback_pending_verification"})
         if owner_record_problem or pending or "earlier_instruction_execution_unreconciled" in changes:
             next_step += " Owner/account record: provide actual remaining shares and each earlier order's filled, cancelled or remaining quantity; never duplicate a reserved sale."
         if mark is None:

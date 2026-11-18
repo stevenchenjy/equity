@@ -242,7 +242,7 @@ def build(root: Path, decision: dict, current: datetime) -> dict:
                 marker = read_json(base / ("last_" + stage + "_run.json"), {})
                 if marker and marker.get("exit_code") != 0:
                     raise ValueError("latest_opportunity_stage_failed")
-            report = read_report(root, current=current)
+            report = read_report(root, current=current, publication_view=True)
             report_status = "validated"
         except (OSError, ValueError, KeyError, TypeError):
             report_status = "unverified"

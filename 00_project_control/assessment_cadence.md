@@ -68,16 +68,15 @@ claim/completion entry, including an out-of-window wake, without replay.
 
 Read-only journal validation still checks every event, transition, historical
 clock and source receipt. When a caller needs only validation, it omits the
-historical result copies that would otherwise be discarded. Repeated file
-digests are reused only inside one read-only validation transaction, with a
-file-identity check on each lookup and a final mutation fence. No result is
-trusted across invocations. The stage set, 75-second child limit and ten-minute
-claim remain unchanged; faster validation does not grant investment authority.
-Intake and objective work can reuse verified source digests across their separate
-validation transactions within one invocation. Every lookup checks the file
-identity and each transaction retains its final mutation check. Journal checks
-still walk all events. Calendar row-order changes alone do not append a new
-research observation. A changed raw issuer-row digest still requires review.
+historical result copies that would otherwise be discarded. Direct file-hash
+lookups check the file identity each time. A transaction proves each distinct
+journal source locator once and rechecks its resolved path and file identity at
+exit. Every receipt still validates its own clock and expected digest. Intake
+and objective work may reuse byte digests across transactions within one
+invocation when the complete file identity matches. Each transaction keeps its
+final mutation check. The stage set, 75-second child limit and ten-minute claim
+remain unchanged. Calendar row-order changes alone do not append a new research
+observation. A changed raw issuer-row digest still requires review.
 
 A truthful degraded, zero-order full publication can document the
 remaining public-data failure for a no-action result; it is not a passing

@@ -121,6 +121,26 @@ class EarningsResearchRoutingTests(unittest.TestCase):
         self.assertEqual(item["observations"][-1]["evidence"]["event"]["row_index"], 4)
         self.assertEqual(read_json(self.root / STORE_REL)["events"][:len(prior)], prior)
 
+    def test_publication_projection_keeps_event_routing_and_exact_review_source_bindings(self):
+        from earnings_events import summary as event_summary
+        from research_opportunities import read_report, report_proof_scope
+        event = self.event("VISIBLE")
+        event.update(row_index=4, row_sha256="a" * 64, schedule_version="synthetic-v1")
+        self.collect([event])
+        full = read_report(self.root, current=NOW)
+        with report_proof_scope():
+            projected = read_report(self.root, current=NOW, publication_view=True)
+        actual = next(row for row in projected["opportunities"] if row["ticker"] == "VISIBLE")
+        self.assertEqual(actual["observations"], [{"evidence": {"event": {"event_id": event["event_id"],
+            "row_sha256": event["row_sha256"], "schedule_version": event["schedule_version"]}},
+            "sources": event["sources"]}])
+        with patch("earnings_events.event_observations", side_effect=lambda *a, **k:
+                    ([copy.deepcopy(event)], {"status": "ready"})):
+            with patch("research_opportunities.read_report", return_value=full):
+                baseline = event_summary(self.root, current=NOW)
+            with report_proof_scope():
+                self.assertEqual(event_summary(self.root, current=NOW), baseline)
+
     def test_elapsed_conflicting_or_missing_coverage_never_invents_event_priority(self):
         elapsed = self.event("OLD", -1)
         conflicting = self.event("BAD", 2); conflicting.update(status="schedule_conflict", blockers=["schedule_conflict"])

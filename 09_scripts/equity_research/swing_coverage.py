@@ -55,7 +55,7 @@ def _continuity(root: Path, current: datetime) -> tuple[dict, dict, str]:
         return {}, {}, "not_yet_recorded"
     try:
         from research_opportunities import read_report
-        report = read_report(root, current=current)
+        report = read_report(root, current=current, publication_view=True)
         by = {row["ticker"]: row for row in report["opportunities"]}
         return by, {str(path.relative_to(root)): sha256_file(path),
                     "04_research/company_research/opportunities.local/store.json": report["store_sha256"]}, "validated"

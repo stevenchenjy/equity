@@ -35,10 +35,10 @@ def _protected(root: Path, row: dict, current: datetime) -> dict:
         raise ValueError("short_publication_account_or_market_changed")
     stores = short._hashes(root, short.MUTABLE_STORES)
     if stores.get(short.OPPORTUNITY_JOURNAL) is not None:
-        from opportunity_contract import replay
+        from opportunity_contract import validate_journal
         # A store's own hash cannot prove its retained original receipts still
         # exist. Recheck provenance even when the journal bytes did not change.
-        replay(short._read(root, short.OPPORTUNITY_JOURNAL), root=root, current=current)
+        validate_journal(short._read(root, short.OPPORTUNITY_JOURNAL), root=root, current=current)
     changed = {p for p, digest in stores.items() if digest != original["stores"].get(p)}
     collector = None
     if short.OPPORTUNITY_JOURNAL in changed:

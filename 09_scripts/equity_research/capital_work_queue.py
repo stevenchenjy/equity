@@ -466,7 +466,7 @@ def refresh_capital_work_queue(decision: dict, *, root: Path, current: datetime,
             if opportunity_path.exists():
                 try:
                     from research_opportunities import read_report
-                    opportunity_report = read_report(input_root, current=current)
+                    opportunity_report = read_report(input_root, current=current, publication_view=True)
                     opportunity_status = "available"
                     receipts.append({"path": str(opportunity_path.relative_to(input_root)), "sha256": hashlib.sha256(opportunity_path.read_bytes()).hexdigest()})
                 except (OSError, ValueError, TypeError, KeyError):

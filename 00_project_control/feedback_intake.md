@@ -75,6 +75,15 @@ uses its latest acknowledged record identity and revision. A deliberately change
 revision uses a new request UUID; recovery of an uncertain unchanged save keeps
 the original UUID and payload.
 
+The coordinator's typed pending projection retains each record's identity,
+revision and intake digest. A confirmed projection of a pending single-symbol
+fill preserves the shared cash and trading barrier and the named holding's
+reconciliation requirement. An independently supported zero-change review for
+another holding remains possible. Legacy, malformed, whole-account, applying,
+and recovery-conflict projections retain their account-wide holding scope.
+Re-exporting pending state through normal coordinator recovery preserves the
+original request, financial records and execution history.
+
 Ordinary submissions retain the backdated-fill guard. A fill at or before the
 latest accepted Chase statement observation requires statement reconciliation
 before a cash or shares update. A same-date report without a fill time cannot

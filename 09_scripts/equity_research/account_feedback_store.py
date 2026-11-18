@@ -28,6 +28,7 @@ from zoneinfo import ZoneInfo
 
 from chase_statement import ACTIVITY_LEDGER, STATEMENT_INDEX, activity_register, snapshot_context
 from account_common import observed_shares, validate_account_state
+from account_feedback_gate import LOCAL_SCOPE_KIND, SCHEMA as PENDING_SCHEMA
 from execution_common import EXECUTION_FIELDS, validate_execution_row
 from validate_execution_fill import CONFIRMED_FIELDS
 from reconcile_account_state import RECONCILIATION_FIELDS
@@ -260,9 +261,23 @@ class Store:
         data = [json.loads(r['body']) for r in con.execute('SELECT body FROM records')]
         if replacement:
             data = [r for r in data if r['id'] != replacement['id']] + [replacement]
-        unresolved = [dict(id=r['id'], ticker=r['feedback'].get('ticker'), stage=r['stage'], missing=r['missing'])
-                      for r in data if r['stage'] in {'pending', 'applying', 'recovery_conflict'} and r['feedback']['status'] != 'skipped']
-        return encoded({'schema_version': 'equity_dashboard_pending_v1', 'records': sorted(unresolved, key=lambda r:r['id'])})
+        unresolved = []
+        for record in data:
+            feedback, stage = record['feedback'], record['stage']
+            ticker, side, status = feedback.get('ticker'), feedback.get('side'), feedback['status']
+            if stage not in {'pending', 'applying', 'recovery_conflict'} or status == 'skipped':
+                continue
+            scope = None
+            if (stage == 'pending' and status in {'filled', 'partial'} and side in {'buy', 'sell'}
+                    and isinstance(ticker, str) and SYMBOL.fullmatch(ticker)
+                    and record.get('correction') is None and record.get('historical_reconciliation') is None
+                    and record.get('production_effect') is False and record.get('changes') is None):
+                scope = {'kind': LOCAL_SCOPE_KIND, 'side': side, 'status': status}
+            identity = {key: record.get(key) for key in ('id', 'revision', 'request_id', 'feedback',
+                'stage', 'missing', 'changes', 'production_effect', 'correction', 'historical_reconciliation')}
+            unresolved.append(dict(id=record['id'], ticker=ticker, stage=stage, missing=record['missing'],
+                                   revision=record['revision'], record_sha256=sha(encoded(identity)), scope=scope))
+        return encoded({'schema_version': PENDING_SCHEMA, 'records': sorted(unresolved, key=lambda r:r['id'])})
 
     def pending_brief(self, writes, now):
         """Invalidate the visible unsent draft in the same durable transition."""

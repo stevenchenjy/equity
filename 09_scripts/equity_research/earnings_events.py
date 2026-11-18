@@ -424,7 +424,7 @@ def summary(root: Path, *, current: datetime, capital: dict | None = None) -> di
         # Lazy import avoids a collector/intake circular dependency. This reader
         # replays and validates the existing research source receipts first.
         from research_opportunities import read_report
-        items = read_report(root, current=current)['opportunities']
+        items = read_report(root, current=current, publication_view=True)['opportunities']
     except (OSError, ValueError, KeyError, TypeError, ImportError):
         pass
     by_ticker = {item['ticker']: item for item in items}

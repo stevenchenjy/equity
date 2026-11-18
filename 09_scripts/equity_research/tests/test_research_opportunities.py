@@ -138,6 +138,33 @@ class OpportunityTests(unittest.TestCase):
                 read_report(self.root, current=NOW)
             self.assertEqual(validation.call_count, 2)
 
+    def test_publication_projection_reads_full_proof_once_and_keeps_reader_objects_isolated(self):
+        import research_opportunities as opportunities
+        intake(self.root, current=NOW)
+        full_before = read_report(self.root, current=NOW)
+        with report_proof_scope(), patch.object(opportunities, '_read_bound_json',
+                wraps=opportunities._read_bound_json) as full_read:
+            projected = read_report(self.root, current=NOW, publication_view=True)
+            item = projected['opportunities'][0]
+            self.assertEqual(projected['report_hash'], full_before['report_hash'])
+            self.assertEqual(item['observations'], [o for o in full_before['opportunities'][0]['observations']
+                if o['family'] == 'market' and o['instrument_kind'] == 'stock'])
+            expected = copy.deepcopy(projected)
+            item['observations'].clear()
+            self.assertEqual(read_report(self.root, current=NOW + timedelta(minutes=3), publication_view=True), expected)
+            self.assertEqual(full_read.call_count, 2)
+            with self.assertRaisesRegex(ValueError, 'stale_clock'):
+                read_report(self.root, current=NOW + timedelta(hours=25), publication_view=True)
+            with patch('research_opportunities.load_authority', return_value={'mode': 'different'}):
+                with self.assertRaisesRegex(ValueError, 'account_authority_changed'):
+                    read_report(self.root, current=NOW, publication_view=True)
+            self.assertEqual(read_report(self.root, current=NOW), full_before)
+            self.assertEqual(full_read.call_count, 3)
+            source = self.root / full_before['opportunities'][0]['first_observation']['sources'][0]['path']
+            source.write_bytes(b'fictional source mutation')
+            with self.assertRaisesRegex(ValueError, 'research_source_changed'):
+                read_report(self.root, current=NOW, publication_view=True)
+
     def test_scoped_proof_detects_report_journal_and_retained_source_replacement(self):
         intake(self.root, current=NOW)
         with report_proof_scope():

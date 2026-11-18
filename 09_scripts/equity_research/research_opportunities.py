@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 from contextlib import contextmanager
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import copy
@@ -22,7 +22,7 @@ from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
 from account_authority import load_authority, project_research_requirements
-from validation_cache import content_proof_scope, file_hash_validation
+from validation_cache import content_proof_scope, file_hash_validation, resolved_sha256
 
 
 @dataclass(frozen=True)
@@ -31,6 +31,7 @@ class _ReportProof:
     store_digest: str
     latest_event: datetime | None
     receipts: tuple[tuple[str, str], ...]
+    publication_bytes: bytes | None = None
 
 
 _REPORT_PROOFS = ContextVar("opportunity_report_operation_proofs", default=None)
@@ -455,7 +456,42 @@ def _read_bound_json(path: Path, digest: str) -> dict:
     return json.loads(raw)
 
 
-def read_report(root: Path, *, current: datetime) -> dict:
+def _publication_report(report: dict) -> dict:
+    """Keep only the fields read by decision, event and swing publication."""
+    def fields(record, keys):
+        return {key: record[key] for key in keys if key in record}
+
+    visible = fields(report, ("schema_version", "generated_at", "store_sha256", "report_hash",
+                              "account_authority", "metrics", *AUTHORITY))
+    queue_fields = ("ticker", "state", "reason_code", "blockers", "owner", "first_seen_at",
+                    "last_evidence_at", "queue_age_hours", "upcoming_earnings", "assessment",
+                    "opportunity_id", "first_observation")
+    for name in ("priority_queue", "reassessment_queue"):
+        visible[name] = [fields(row, queue_fields) for row in report[name]]
+    visible["opportunities"] = []
+    for row in report["opportunities"]:
+        item = fields(row, ("ticker", "state", "first_seen_at", "last_evidence_at", "research_started_at",
+                            "reason_code", "blockers", "assessment"))
+        item["transitions"] = row.get("transitions", [])[-1:]
+        item["observations"] = []
+        for observed in row.get("observations", []):
+            if observed.get("family") == "market" and observed.get("instrument_kind") == "stock":
+                item["observations"].append(observed)
+                continue
+            event = observed.get("evidence", {}).get("event")
+            if isinstance(event, dict) and event.get("event_id"):
+                item["observations"].append({"evidence": {"event": fields(event,
+                    ("event_id", "row_sha256", "schedule_version"))}, "sources": observed.get("sources", [])})
+        visible["opportunities"].append(item)
+    return visible
+
+
+def read_report(root: Path, *, current: datetime, publication_view: bool = False) -> dict:
+    """Validate the full report and journal; optionally return publication's view.
+
+    Within an operation, only immutable bytes of the compact view are shared.
+    A reader gets an isolated object after new path, source and clock checks.
+    """
     proofs = _REPORT_PROOFS.get()
     root = root.resolve()
     with file_hash_validation():
@@ -463,8 +499,12 @@ def read_report(root: Path, *, current: datetime) -> dict:
         store_digest = sha256_file(root / STORE_REL)
         prior = proofs.get(root) if proofs is not None else None
         same = prior and (prior.report_digest, prior.store_digest) == (report_digest, store_digest)
-        report = (_read_bound_json(root / REPORT_REL, report_digest)
-            if proofs is not None else read_json(root / REPORT_REL, {}))
+        cached = prior.publication_bytes if same and publication_view else None
+        if cached is not None:
+            report = json.loads(cached)
+        else:
+            report = (_read_bound_json(root / REPORT_REL, report_digest)
+                if proofs is not None else read_json(root / REPORT_REL, {}))
         require(report.get("schema_version") == "equity_research_opportunity_report_v1"
             and all(report.get(k) is False for k in AUTHORITY), "research_opportunity_report_invalid")
         require(report["store_sha256"] == store_digest, "research_opportunity_report_stale_store")
@@ -473,25 +513,30 @@ def read_report(root: Path, *, current: datetime) -> dict:
         require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
             == load_authority(root, current), "research_opportunity_report_account_authority_changed")
         if same:
-            require(prior.latest_event is None or prior.latest_event <= current, "research_journal_clock_regression")
-            for locator, digest in prior.receipts:
-                inside(root, locator)
-                require(sha256_file(root / locator) == digest, "research_source_changed")
-            return report
-        require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
-        journal = (_read_bound_json(root / STORE_REL, store_digest)
-            if proofs is not None else read_json(root / STORE_REL))
-        validate_journal(journal, root=root, current=current)
-        if proofs is not None:
-            events = journal["events"]
-            # The journal validator checks observation receipts for detections
-            # and updates, and event receipts for transitions.
-            receipts = sorted({(r["path"], r["sha256"]) for event in events
-                for r in (event["sources"] if event["kind"] == "transition" else event["observation"]["sources"])})
-            for locator, digest in receipts:
-                require(sha256_file(root / locator) == digest, "research_source_changed")
-            proof = _ReportProof(report_digest, store_digest,
-                aware(events[-1]["recorded_at"]) if events else None, tuple(receipts))
+            proof = prior
+            require(proof.latest_event is None or proof.latest_event <= current, "research_journal_clock_regression")
+            for locator, digest in proof.receipts:
+                require(resolved_sha256(root, locator, inside) == digest, "research_source_changed")
+        else:
+            require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
+            journal = (_read_bound_json(root / STORE_REL, store_digest)
+                if proofs is not None else read_json(root / STORE_REL))
+            validate_journal(journal, root=root, current=current)
+            if proofs is not None:
+                events = journal["events"]
+                # The journal validator checks observation receipts for detections
+                # and updates, and event receipts for transitions.
+                receipts = sorted({(r["path"], r["sha256"]) for event in events
+                    for r in (event["sources"] if event["kind"] == "transition" else event["observation"]["sources"])})
+                for locator, digest in receipts:
+                    require(resolved_sha256(root, locator, inside) == digest, "research_source_changed")
+                proof = _ReportProof(report_digest, store_digest,
+                    aware(events[-1]["recorded_at"]) if events else None, tuple(receipts))
+        if publication_view and cached is None:
+            report = _publication_report(report)
+            if proofs is not None:
+                proof = replace(proof, publication_bytes=json.dumps(report, ensure_ascii=False,
+                    separators=(",", ":")).encode("utf-8"))
     if proofs is not None:
         proofs[root] = proof
     return report
@@ -504,7 +549,7 @@ def summary(root: Path, *, current: datetime) -> dict:
             if marker and marker.get("exit_code") != 0:
                 return {"status": "failed_or_incomplete", "reason": "latest_research_"+stage+"_run_did_not_complete",
                     "last_run": marker, "report_path": str(MARKDOWN_REL), **AUTHORITY}
-        report = read_report(root, current=current)
+        report = read_report(root, current=current, publication_view=True)
         return {"status": "ready", "generated_at": report["generated_at"], "report_path": str(MARKDOWN_REL),
             "store_sha256": report["store_sha256"], "metrics": report["metrics"],
             "priority_queue": [{**{k: i[k] for k in ("ticker", "state", "first_seen_at", "queue_age_hours", "reason_code", "blockers", "owner")},

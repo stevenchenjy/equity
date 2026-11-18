@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from daily_common import atomic_write_json, canonical_sha256, read_json, sha256_file
-from validation_cache import file_hash_validation
+from validation_cache import file_hash_validation, resolved_sha256
 from workflow_evaluation import aware
 
 BASE_REL = Path("04_research/company_research/opportunities.local")
@@ -101,7 +101,9 @@ def validate_receipts(receipts: list, *, root: Path, current: datetime) -> None:
     for receipt in receipts:
         require(isinstance(receipt, dict) and HEX.fullmatch(str(receipt.get("sha256", ""))), "research_receipt_invalid")
         require(aware(receipt["available_at"]) <= current, "research_source_from_future")
-        require(sha256_file(inside(root, receipt["path"])) == receipt["sha256"], "research_source_changed")
+        locator = receipt["path"]
+        require(isinstance(locator, str), "research_path_invalid")
+        require(resolved_sha256(root, locator, inside) == receipt["sha256"], "research_source_changed")
 
 
 def validate_observation(packet: dict, *, root: Path, current: datetime) -> dict:

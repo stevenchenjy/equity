@@ -31,6 +31,27 @@ class CapitalDecisionTests(unittest.TestCase):
         self.assertEqual(p['estimated_cash_after'],7492);self.assertEqual(p['time_in_force'],'DAY');self.assertEqual(p['entry_limit'],102)
         engine.validate(c,current=self.v['current'],root=ROOT)
 
+    def test_scoped_pending_fill_keeps_holding_review_and_blocks_trades(self):
+        from account_feedback_gate import UNRESOLVED
+        self.d['workflow_integrity']['global_blockers'] = [UNRESOLVED]
+        self.d['held_positions'] = [{'ticker': 'SPY', 'current_shares': 1, 'current_price': 101,
+                                     'asset_role': 'core_allocation'},
+                                    {'ticker': 'AAA', 'current_shares': 2, 'current_price': 101,
+                                     'asset_role': 'active_stock'}]
+        self.d['plan_continuity']['plans'] = [dict(ticker='SPY', status='maintained', action='hold',
+            instruction='Retain the independent index holding.'),
+            dict(ticker='AAA', status='maintained', action='protect_review',
+                 reason='Source-bound risk reduction', review_at='2026-09-23T15:30:00-04:00',
+                 order_draft=dict(side='sell', type='STOP', quantity=1, stop_price=95,
+                                  time_in_force='DAY', session_date='2026-09-23'))]
+        contract = self.build()
+        decisions = {row['ticker']: row for row in contract['decisions']}
+        self.assertEqual(decisions['SPY']['decision'], 'HOLD')
+        self.assertIn(UNRESOLVED, contract['global_blockers'])
+        self.assertIn(UNRESOLVED, decisions['TEST']['blockers'])
+        self.assertIn(UNRESOLVED, decisions['AAA']['blockers'])
+        self.assertTrue(all(row['shares'] == 0 and row['order_draft'] is None for row in decisions.values()))
+
     def test_household_limits_apply_to_admitted_draft_but_not_protective_order(self):
         call = dict(ticker="TEST", broker="Chase", side="BUY", shares="1", price_usd="102",
                     opens_at="2026-09-23T09:45:00-04:00", expires_at="2026-09-23T10:45:00-04:00",
