@@ -1,0 +1,34 @@
+{
+  "admitted_at": "2026-11-11T08:19:05.000-05:00",
+  "artifact_sha256": "fc00ed66d6ab84949303d70543cb70e6fe173e27c908e1862a2311accd8e1d32",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v96",
+  "prior_extension_set_sha256": "d6979e208874bfa1565cfd63d998f08fb0a6f63c1c8723effde1d8148d038525",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-10T13:41:38.000+00:00",
+      "accession_number": "0001046179-26-000797",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-11T08:19:05.000-05:00",
+      "cik": "1046179",
+      "entity_name": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "extension_record_sha256": "65749cb8052f32163ab3fb64831f8a10175d7a085e4969f59e3380f1adb11180",
+      "extension_version": "v96",
+      "filing_date": "2026-11-10",
+      "form": "6-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "6d72cd0120e709d9725dec572d8339a5450c1dad9d63f5d66bd089f64f76905c",
+      "source_url": "https://data.sec.gov/submissions/CIK0001046179.json",
+      "ticker": "TSM"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}
