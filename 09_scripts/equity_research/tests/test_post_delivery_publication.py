@@ -166,6 +166,45 @@ class PostDeliveryPublicationTests(unittest.TestCase):
             rows=list(csv.DictReader(self.ledger.read_text().splitlines())), mode='intraday_alert')
         self.assertFalse(eligibility['eligible'])
 
+    def test_actual_pair_preserves_household_bindings_in_repaired_publication(self):
+        from household_planning import MANIFEST, RESEARCH_MANIFEST
+        from workflow_integrity import apply_workflow_integrity
+
+        manifests = (MANIFEST, RESEARCH_MANIFEST)
+        for path in manifests:
+            atomic_write_json(self.root / path, {"fixture": path})
+        apply_workflow_integrity(self.decision, root=self.root, current=NOW)
+        self.capital(self.decision)
+        self.save(self.decision)
+        before = repair._hashes(self.root, manifests)
+        self.append_delivery()
+
+        result = self.recover()
+
+        self.assertEqual(result['outcome'], 'passed', result)
+        self.assertEqual(self.calls, list(repair.STEP_NAMES))
+        self.assertEqual(repair._hashes(self.root, manifests), before)
+        current = repair._validate_current(self.root, NOW)
+        for path, digest in before.items():
+            self.assertEqual(current['capital_decision']['source_bindings'][path], digest)
+            self.assertEqual(result['protected_after']['source_hashes'][path], digest)
+
+    def test_household_bindings_reject_omitted_or_changed_sources(self):
+        from household_planning import MANIFEST
+        from workflow_inputs import WORKFLOW_INPUTS
+
+        atomic_write_json(self.root / MANIFEST, {"fixture": "original"})
+        self.decision['workflow_integrity']['input_hashes'] = repair._hashes(self.root, WORKFLOW_INPUTS)
+        self.capital(self.decision)
+        invalid = copy.deepcopy(self.decision)
+        del invalid['capital_decision']['source_bindings'][MANIFEST]
+        with self.assertRaisesRegex(ValueError, 'full_source_bindings_required'):
+            repair._protected(self.root, invalid)
+
+        atomic_write_json(self.root / MANIFEST, {"fixture": "changed"})
+        with self.assertRaisesRegex(ValueError, 'unrelated_source_change_requires_full_refresh'):
+            repair._protected(self.root, self.decision)
+
     def test_registered_retained_plan_sources_are_valid_protected_bindings(self):
         from test_plan_source_resolutions import PlanSourceResolutionTests
         from workflow_inputs import WORKFLOW_INPUTS
@@ -254,6 +293,47 @@ class PostDeliveryPublicationTests(unittest.TestCase):
         self.assertEqual(result['outcome'], 'failed'); self.assertTrue(result['alert_required'])
         self.assertEqual(self.ledger.read_bytes(), original)
 
+    def test_unchanged_protected_source_reuses_verified_digest_across_stages(self):
+        source = self.root / '01_policies/tactical_trade_policy.json'
+        atomic_write_json(source, {"fixture": "stable"})
+        self.capital(self.decision)
+        self.save(self.decision)
+        self.append_delivery()
+        reads = []
+        read_bytes = Path.read_bytes
+
+        def count_read(path):
+            if path == source:
+                reads.append(path)
+            return read_bytes(path)
+
+        with patch.object(Path, 'read_bytes', count_read):
+            result = self.recover()
+
+        self.assertEqual(result['outcome'], 'passed', result)
+        self.assertEqual(self.calls, list(repair.STEP_NAMES))
+        self.assertEqual(reads, [source])
+
+    def test_protected_source_replacement_after_a_stage_invalidates_previous_proof(self):
+        source = self.root / '01_policies/tactical_trade_policy.json'
+        atomic_write_json(source, {"fixture": "first"})
+        self.capital(self.decision)
+        self.save(self.decision)
+        self.append_delivery()
+        original_ledger = self.ledger.read_bytes()
+
+        def replace_after_first_stage(*args, **kwargs):
+            result = self.runner(*args, **kwargs)
+            atomic_write_json(source, {"fixture": "other"})
+            return result
+
+        result = self.recover(replace_after_first_stage)
+
+        self.assertEqual(result['outcome'], 'failed', result)
+        self.assertEqual(result['reason'], 'post_delivery_unrelated_source_change_requires_full_refresh')
+        self.assertEqual(self.calls, ['daily_decision'])
+        self.assertEqual(self.ledger.read_bytes(), original_ledger)
+
     def test_partial_stage_failure_retries_on_next_poll_without_another_send(self):
         self.append_delivery(); original = self.ledger.read_bytes()
         def fail(name, *args, **kwargs):
@@ -273,6 +353,27 @@ class PostDeliveryPublicationTests(unittest.TestCase):
             value = self.runner(*args, **kwargs); self.seconds = 200; return value
         self.assertEqual(self.recover(exhausted)['outcome'], 'failed')
         self.assertLess(len(self.calls), len(repair.STEP_NAMES))
+
+    def test_expiry_during_final_artifact_hashing_preserves_sent_completion(self):
+        self.append_delivery()
+        original_ledger = self.ledger.read_bytes()
+        hashes = repair._hashes
+
+        def hash_until_expiry(root, paths):
+            result = hashes(root, paths)
+            if paths == repair.ARTIFACTS:
+                self.seconds = repair.MAX_SECONDS
+            return result
+
+        with patch.object(repair, '_hashes', side_effect=hash_until_expiry):
+            result = self.recover()
+
+        self.assertEqual(result['outcome'], 'failed', result)
+        self.assertEqual(result['reason'], 'post_delivery_publication_budget_exhausted')
+        self.assertTrue(result['publication_pending'])
+        self.assertTrue(result['smtp_completion_preserved'])
+        self.assertEqual(self.calls, list(repair.STEP_NAMES))
+        self.assertEqual(self.ledger.read_bytes(), original_ledger)
 
     def test_live_short_claim_defers_but_time_expired_claim_needs_no_journal_mutation(self):
         self.append_delivery()

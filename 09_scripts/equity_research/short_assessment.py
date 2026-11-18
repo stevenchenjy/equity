@@ -71,17 +71,25 @@ def _validated_publication(root: Path, current: datetime) -> dict:
     from workflow_integrity import validate_published_workflow
     from delivery_assessments import delivery_policy_context, priority_review_context
     from email_brief import render_email
-    decision = _read(root, "04_research/company_research/daily_decision.json")
-    if (decision.get("workflow_integrity", {}).get("schema_version") != "equity_workflow_integrity_v1"
-            or decision.get("assessment_delivery_policy") != delivery_policy_context(root)
-            or decision.get("analyst_priority_review") != priority_review_context(root, current=current)):
-        raise ValueError("short_assessment_typed_current_publication_required")
-    validate_published_workflow(decision, root=root, current=current)
-    _subject, text, html = render_email(decision)
-    for path, expected in (("07_automation/email_briefs/daily_email_brief.txt", text),
-                           ("07_automation/email_briefs/daily_email_brief.html", html)):
-        if _inside(root, path).read_text(encoding="utf-8") != expected:
-            raise ValueError("short_assessment_final_email_recomposition_required")
+    from research_opportunities import report_proof_scope
+    from validation_cache import file_hash_validation, read_hashed_bytes
+    with report_proof_scope(), file_hash_validation():
+        decision_path = "04_research/company_research/daily_decision.json"
+        if not (root / decision_path).exists():
+            raise ValueError("short_assessment_typed_current_publication_required")
+        raw, _ = read_hashed_bytes(_inside(root, decision_path))
+        decision = json.loads(raw.decode("utf-8"))
+        if (decision.get("workflow_integrity", {}).get("schema_version") != "equity_workflow_integrity_v1"
+                or decision.get("assessment_delivery_policy") != delivery_policy_context(root)
+                or decision.get("analyst_priority_review") != priority_review_context(root, current=current)):
+            raise ValueError("short_assessment_typed_current_publication_required")
+        validate_published_workflow(decision, root=root, current=current)
+        _subject, text, html = render_email(decision)
+        for path, expected in (("07_automation/email_briefs/daily_email_brief.txt", text),
+                               ("07_automation/email_briefs/daily_email_brief.html", html)):
+            body, _ = read_hashed_bytes(_inside(root, path))
+            if body != expected.encode("utf-8"):
+                raise ValueError("short_assessment_final_email_recomposition_required")
     return decision
 
 

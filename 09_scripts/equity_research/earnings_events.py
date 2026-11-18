@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Callable
 
 from daily_common import ET, ROOT, atomic_write_json, canonical_sha256, read_json, sha256_file
+from validation_cache import file_hash_validation, read_hashed_bytes, resolved_sha256
 
 POLICY_REL = Path('01_policies/earnings_event_policy.json')
 EVENTS_REL = Path('03_source_data/equity_research/earnings_events.local.json')
@@ -179,11 +180,13 @@ def empty_store() -> dict:
     return {'schema_version': 'equity_earnings_event_store_v1', 'scans': [], **AUTHORITY}
 
 
+@file_hash_validation()
 def validated_scans(root: Path, *, current: datetime) -> list[dict]:
     store = read_json(root / EVENTS_REL, empty_store())
     require(store.get('schema_version') == 'equity_earnings_event_store_v1'
         and all(store.get(k) is False for k in AUTHORITY) and isinstance(store.get('scans'), list), 'earnings_store_invalid')
     result, prior_time = [], None
+    parsed_dates = {}
     for ref in store['scans']:
         require(HEX.fullmatch(str(ref.get('sha256', ''))) is not None, 'earnings_scan_hash_invalid')
         path = inside(root, ref['path'])
@@ -195,21 +198,31 @@ def validated_scans(root: Path, *, current: datetime) -> list[dict]:
         require(sha256_file(policy_path) == policy_ref['sha256'] == scan.get('policy_sha256'), 'earnings_scan_policy_changed')
         policy = validate_policy(read_json(policy_path))
         stamp = aware(scan['completed_at'])
+        started = aware(scan['started_at'])
         require(stamp <= current and (prior_time is None or stamp >= prior_time), 'earnings_scan_clock_invalid')
-        require(aware(ref['available_at']) == stamp and aware(scan['started_at']) <= stamp, 'earnings_scan_receipt_clock_invalid')
+        require(aware(ref['available_at']) == stamp and started <= stamp, 'earnings_scan_receipt_clock_invalid')
         require(isinstance(scan.get('dates'), list) and len(scan['dates']) <= 31, 'earnings_scan_dates_invalid')
-        expected = {d.isoformat() for d in requested_dates(aware(scan['started_at']), policy)}
+        expected = {d.isoformat() for d in requested_dates(started, policy)}
         require({r['date'] for r in scan['dates']} == expected and len(scan['dates']) == len(expected), 'earnings_scan_date_coverage_invalid')
         for row in scan['dates']:
             observed = aware(row['observed_at'])
-            require(aware(scan['started_at']) <= observed <= stamp, 'earnings_observation_clock_invalid')
+            require(started <= observed <= stamp, 'earnings_observation_clock_invalid')
             if row['status'] in {'verified', 'partial'}:
                 source = row['source']
                 require(source['source_url'] == ENDPOINT + '?date=' + row['date']
                     and aware(source['available_at']) == observed, 'earnings_source_identity_invalid')
-                rawpath = inside(root, source['path'])
-                require(sha256_file(rawpath) == source['sha256'], 'earnings_source_changed')
-                events, quarantine = parse_date(rawpath.read_bytes(), date.fromisoformat(row['date']), policy)
+                source_digest = source['sha256']
+                key = (source_digest, row['date'], policy_ref['sha256'])
+                parsed = parsed_dates.get(key)
+                if parsed is None:
+                    payload, digest = read_hashed_bytes(inside(root, source['path']))
+                    require(digest == source_digest, 'earnings_source_changed')
+                    parsed = parse_date(payload, date.fromisoformat(row['date']), policy)
+                    parsed_dates[key] = parsed
+                # Each receipt still binds its own locator through the final
+                # validation fence, even when it contains already parsed bytes.
+                require(resolved_sha256(root, source['path'], inside) == source_digest, 'earnings_source_changed')
+                events, quarantine = parsed
                 require(events == row['events'] and quarantine == row['quarantine'], 'earnings_parsed_source_changed')
                 require(row['status'] == ('partial' if quarantine else 'verified'), 'earnings_partial_status_invalid')
             else:

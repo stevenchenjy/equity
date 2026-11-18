@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 from _support import SCRIPT_DIR  # noqa: F401
 from daily_common import sha256_file
 from opportunity_contract import inside, validate_receipts
-from validation_cache import file_hash_validation, content_proof_scope, resolved_sha256
+from validation_cache import file_hash_validation, content_proof_scope, read_hashed_bytes, resolved_sha256
 
 
 class ValidationCacheTests(unittest.TestCase):
@@ -39,6 +39,65 @@ class ValidationCacheTests(unittest.TestCase):
             self.assertEqual(len(reads), 2)
             sha256_file(self.path); sha256_file(self.path)
             self.assertEqual(len(reads), 4)
+
+    def test_nested_content_scope_reuses_digest_only_while_identity_matches(self):
+        original = Path.read_bytes
+        with patch.object(Path, 'read_bytes', autospec=True, side_effect=original) as read:
+            with content_proof_scope():
+                before = sha256_file(self.path)
+                with content_proof_scope():
+                    self.assertEqual(sha256_file(self.path), before)
+                    self.assertEqual(read.call_count, 1)
+                    replacement = self.path.with_suffix('.replacement')
+                    replacement.write_bytes(b'changed!')
+                    replacement.replace(self.path)
+                    after = sha256_file(self.path)
+                    self.assertEqual(after, hashlib.sha256(b'changed!').hexdigest())
+                    self.assertNotEqual(after, before)
+                    self.assertEqual(read.call_count, 2)
+                self.assertEqual(sha256_file(self.path), after)
+                self.assertEqual(read.call_count, 2)
+            self.assertEqual(sha256_file(self.path), after)
+            self.assertEqual(read.call_count, 3)
+
+    def test_nested_content_scope_retains_final_mutation_fence(self):
+        with content_proof_scope():
+            prior = sha256_file(self.path)
+            with self.assertRaisesRegex(ValueError, 'validation_sources_changed_during_transaction'):
+                with content_proof_scope(), file_hash_validation():
+                    self.assertEqual(sha256_file(self.path), prior)
+                    self.path.write_bytes(b'replaced after lookup')
+            self.assertNotEqual(sha256_file(self.path), prior)
+
+    def test_combined_read_registers_digest_and_preserves_final_identity_fence(self):
+        original = Path.read_bytes
+        with patch.object(Path, 'read_bytes', autospec=True, side_effect=original) as read:
+            with self.assertRaisesRegex(ValueError, 'validation_sources_changed_during_transaction'):
+                with file_hash_validation():
+                    raw, digest = read_hashed_bytes(self.path)
+                    self.assertEqual(digest, hashlib.sha256(raw).hexdigest())
+                    self.assertEqual(sha256_file(self.path), digest)
+                    self.assertEqual(read.call_count, 1)
+                    alias = self.path.with_suffix('.new')
+                    alias.write_bytes(raw)
+                    os.replace(alias, self.path)
+
+    def test_combined_read_rejects_symlink_retarget_during_the_read(self):
+        other = self.path.with_name('other.json')
+        other.write_bytes(b'original')
+        alias = self.path.with_name('alias.json')
+        alias.symlink_to(self.path)
+        original = Path.read_bytes
+
+        def retarget(path):
+            data = original(path)
+            alias.unlink()
+            alias.symlink_to(other)
+            return data
+
+        with patch.object(Path, 'read_bytes', retarget):
+            with self.assertRaisesRegex(ValueError, 'validation_source_changed_during_hash'):
+                read_hashed_bytes(alias)
 
     def test_resolved_source_locator_is_proved_once_and_rechecked_at_exit(self):
         def resolve(root, locator):

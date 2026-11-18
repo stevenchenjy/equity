@@ -28,7 +28,11 @@ def _identity(path: Path) -> tuple:
 
 @contextmanager
 def content_proof_scope():
-    """Carry only file identities and their verified SHA across a single call."""
+    """Carry only file identities and their verified SHA across one operation."""
+    if _OPERATION_DIGESTS.get() is not None:
+        # Nested readers keep their independent validation transactions.
+        yield
+        return
     token = _OPERATION_DIGESTS.set({})
     try:
         yield
@@ -44,26 +48,45 @@ class _Transaction:
         self.changed = False
         self.previous = previous
 
-    def digest(self, path: Path) -> str:
+    def _track(self, path: Path):
         # Preserve the locator so symlink/atomic replacement is checked again.
         path = Path(os.path.abspath(path))
         before = _identity(path)
         if self.first.setdefault(path, before) != before:
             self.changed = True
+        return path, before
+
+    def _known(self, path, identity):
         found = self.entries.get(path)
-        if found and found[0] == before:
-            return found[1]
+        if found and found[0] == identity:
+            return found
         if self.previous is not None:
             prior = self.previous.get(path)
-            if prior and prior[0] == before:
-                self.entries[path] = prior
-                return prior[1]
-        digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        if _identity(path) != before:
+            if prior and prior[0] == identity:
+                return prior
+        return None
+
+    def _read(self, path, identity):
+        raw = path.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        known = self._known(path, identity)
+        if _identity(path) != identity or (known is not None and known[1] != digest):
             self.changed = True
             raise ValueError('validation_source_changed_during_hash')
-        self.entries[path] = (before, digest)
-        return digest
+        self.entries[path] = (identity, digest)
+        return raw, digest
+
+    def digest(self, path: Path) -> str:
+        path, identity = self._track(path)
+        known = self._known(path, identity)
+        if known is not None:
+            self.entries[path] = known
+            return known[1]
+        return self._read(path, identity)[1]
+
+    def read_hashed_bytes(self, path: Path) -> tuple[bytes, str]:
+        path, identity = self._track(path)
+        return self._read(path, identity)
 
     def resolved_digest(self, root: Path, locator: str, resolve):
         key = (root, locator, resolve)
@@ -114,6 +137,12 @@ def sha256_file(path: Path) -> str:
         with file_hash_validation() as transaction:
             return transaction.digest(path)
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def read_hashed_bytes(path: Path) -> tuple[bytes, str]:
+    """Read and hash the same bytes under the transaction's identity fence."""
+    with file_hash_validation() as transaction:
+        return transaction.read_hashed_bytes(path)
 
 
 def resolved_sha256(root: Path, locator: str, resolve) -> str:

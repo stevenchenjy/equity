@@ -68,10 +68,15 @@ def codes(value: Any) -> list[str]:
     return [s.strip() for s in value.split(',') if s.strip()] if isinstance(value,str) else list(value or [])
 
 
+def binding_input_paths(root: Path) -> set[str]:
+    """Return fixed and present optional inputs, before retained plan proofs."""
+    return INPUTS | {path for path in (MANIFEST, RESEARCH_MANIFEST) if (root / path).is_file()}
+
+
 def binding(root: Path) -> dict:
     from plan_source_resolutions import proof_hashes
     proofs = proof_hashes(root)
-    inputs = INPUTS | {p for p in (MANIFEST, RESEARCH_MANIFEST) if (root / p).is_file()}
+    inputs = binding_input_paths(root)
     return {**{p:sha256_file(root/p) if (root/p).is_file() else None for p in sorted(inputs)}, **proofs}
 
 

@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
+from unittest.mock import patch
 from _support import SCRIPT_DIR  # noqa: F401
 from capital_work_queue import (STORE_REL, build_capital_work_queue, refresh_capital_work_queue,
                                semantic_state, validate_state)
@@ -57,6 +58,19 @@ def write_valid_backlog(root):
     report["report_hash"]=canonical_sha256(report)
     path=root/BACKLOG_REL;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(report))
     return report
+
+
+def write_valid_opportunity_report(root):
+    from daily_common import atomic_write_json, canonical_sha256, sha256_file
+    from opportunity_contract import AUTHORITY, REPORT_REL, STORE_REL, empty_store
+
+    atomic_write_json(root / STORE_REL, empty_store())
+    report = {"schema_version": "equity_research_opportunity_report_v1", "generated_at": WHEN.isoformat(),
+              "store_sha256": sha256_file(root / STORE_REL), "opportunities": [],
+              "priority_queue": [], "reassessment_queue": [], **AUTHORITY}
+    report["report_hash"] = canonical_sha256(report)
+    atomic_write_json(root / REPORT_REL, report)
+    return REPORT_REL
 
 
 class CapitalWorkQueueTests(unittest.TestCase):
@@ -308,6 +322,52 @@ class CapitalWorkQueueTests(unittest.TestCase):
             self.assertEqual(p.read_bytes(),before)
             self.assertFalse((source/STORE_REL).exists())
             self.assertTrue((out/STORE_REL).exists())
+
+    def test_opportunity_receipt_reuses_verified_report_without_a_second_read(self):
+        from daily_common import sha256_file
+        from research_opportunities import read_report, report_proof_scope
+
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name).resolve()
+            relative = write_valid_opportunity_report(root)
+            path = root / relative
+            expected = sha256_file(path)
+            report_reads = []
+            original = Path.read_bytes
+
+            def count(observed):
+                if observed == path:
+                    report_reads.append(observed)
+                return original(observed)
+
+            with patch.object(Path, 'read_bytes', count), report_proof_scope():
+                read_report(root, current=WHEN, publication_view=True)
+                report = refresh_capital_work_queue(decision(), root=root, current=WHEN)
+            self.assertEqual(report_reads, [path])
+            self.assertEqual(report['opportunity_status'], 'available')
+            self.assertEqual(report['source']['receipts'], [{'path': str(relative), 'sha256': expected}])
+
+    def test_opportunity_replacement_during_validation_excludes_candidate_and_receipt(self):
+        from research_opportunities import read_report
+
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name).resolve()
+            path = root / write_valid_opportunity_report(root)
+            raw = path.read_bytes()
+
+            def verify_then_replace(*args, **kwargs):
+                candidate = read_report(*args, **kwargs)
+                replacement = path.with_suffix('.replacement')
+                replacement.write_bytes(raw)
+                replacement.replace(path)
+                return candidate
+
+            with patch('research_opportunities.read_report', side_effect=verify_then_replace), patch(
+                    'capital_work_queue.build_capital_work_queue', wraps=build_capital_work_queue) as build:
+                report = refresh_capital_work_queue(decision(), root=root, current=WHEN)
+            self.assertEqual(report['opportunity_status'], 'unverified')
+            self.assertEqual(report['source']['receipts'], [])
+            self.assertIsNone(build.call_args.kwargs['opportunity_report'])
 
     def test_canonical_ticker_string_eligibility_is_research_only(self):
         d=decision(); d["eligible_new_position_review_candidates"]=["SPY"]

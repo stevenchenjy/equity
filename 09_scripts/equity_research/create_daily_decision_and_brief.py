@@ -1312,6 +1312,11 @@ def main() -> int:
             "trade_placed": False,
         },
     }
+    from research_opportunities import summary as opportunity_summary
+    # Validate the large bound report/journal before workflow binding hashes
+    # them. This invocation shares only verified byte proofs; the later queue
+    # read still checks its current clock, authority and source identities.
+    opportunity_summary(ROOT, current=current)
     apply_workflow_integrity(decision, root=ROOT, current=current)
     from intraday_assessment import publication_context as intraday_context
     intraday_observation = intraday_context(ROOT, current)
@@ -1346,7 +1351,6 @@ def main() -> int:
     # renew a plan or modify the approved capital/risk policy.
     work_current = now_et()
     decision["research_backlog"] = read_backlog_summary(ROOT, current=work_current)
-    from research_opportunities import summary as opportunity_summary
     decision["research_opportunities"] = opportunity_summary(ROOT, current=work_current)
     decision["capital_work_queue"] = refresh_capital_work_queue(decision, root=ROOT, current=work_current)
     from delivery_followthrough import build_followthrough

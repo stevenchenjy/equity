@@ -94,6 +94,26 @@ class ShortAssessmentTests(unittest.TestCase):
         return refresh_events(self.root, clock=lambda: self.moment(clock),
                               fetcher=lambda day, policy: feed(day, []))
 
+    def test_publication_rejects_source_replacement_after_workflow_check(self):
+        from workflow_integrity import validate_published_workflow
+
+        current = self.moment("09:20")
+        decision = short._validated_publication(self.root, current)
+        source = self.root / "05_risk_and_positions/current_open_orders.local.json"
+        before = source.read_bytes()
+
+        def verify_then_replace(value, *, root, current):
+            validate_published_workflow(value, root=root, current=current)
+            replacement = source.with_suffix(".replacement")
+            replacement.write_bytes(before)
+            replacement.replace(source)
+
+        with patch("workflow_integrity.validate_published_workflow", side_effect=verify_then_replace) as validate:
+            with self.assertRaisesRegex(ValueError, "validation_sources_changed_during_transaction"):
+                short._validated_publication(self.root, current)
+            validate.assert_called_once()
+        self.assertEqual(short._validated_publication(self.root, current), decision)
+
     def refresh_receipt(self, started, completed, *, degraded=False):
         from run_daily_refresh import STEP_SPECS
         atomic_write_json(self.root / "00_project_control/run_logs/daily_refresh_state.local.json", {

@@ -6,6 +6,7 @@ import json
 import tempfile
 import unittest
 import urllib.error
+from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -13,9 +14,10 @@ from unittest.mock import Mock, patch
 from _support import SCRIPT_DIR  # noqa: F401
 from daily_common import ROOT, atomic_write_json, canonical_sha256, sha256_file
 from earnings_events import (AUTHORITY, BASE_REL, ENDPOINT, EVENTS_REL, POLICY_REL,
-    EarningsError, NoRedirect, event_observations, fetch_date, load_policy,
+    EarningsError, NoRedirect, event_observations, fetch_date, immutable, load_policy,
     notification_meaning, publication_meaning, parse_date, refresh_events, requested_dates, summary,
-    validate_event_review)
+    validate_event_review, validated_scans)
+from validation_cache import resolved_sha256
 
 NOW = datetime(2026, 10, 21, 14, tzinfo=timezone.utc)
 
@@ -108,6 +110,99 @@ class EarningsEventsTests(unittest.TestCase):
         before = len(json.loads((self.root / EVENTS_REL).read_text())['scans'])
         self.refresh(now=NOW + timedelta(hours=1))
         self.assertEqual(len(json.loads((self.root / EVENTS_REL).read_text())['scans']), before)
+
+    def test_repeated_bound_dates_read_and_parse_the_response_once(self):
+        self.refresh()
+        later = NOW + timedelta(hours=1)
+        self.refresh(now=later)
+        raw_reads = Counter()
+        sources = (self.root / BASE_REL / 'sources').resolve()
+        original_read = Path.read_bytes
+
+        def count_source_read(path):
+            if path.parent == sources:
+                raw_reads[path] += 1
+            return original_read(path)
+
+        with patch.object(Path, 'read_bytes', count_source_read), patch('earnings_events.parse_date', wraps=parse_date) as parse:
+            scans = validated_scans(self.root, current=later)
+        self.assertEqual(len(scans), 2)
+        self.assertEqual(parse.call_count, len(requested_dates(NOW, self.policy)))
+        self.assertEqual(len(raw_reads), parse.call_count)
+        self.assertEqual(set(raw_reads.values()), {1})
+
+    def test_repeated_source_never_skips_locator_date_rows_or_clock_checks(self):
+        self.refresh()
+        later = NOW + timedelta(hours=1)
+        self.refresh(now=later)
+        store_path = self.root / EVENTS_REL
+        store = json.loads(store_path.read_text())
+        prior = json.loads((self.root / store['scans'][-1]['path']).read_text())
+
+        alternate = self.root / 'conflicting-source.json'
+        alternate.write_text('{}')
+
+        def change_date(scan):
+            first, second = scan['dates'][:2]
+            second['source'].update(first['source'], source_url=ENDPOINT + '?date=' + second['date'])
+
+        changes = {
+            'earnings_source_changed': lambda scan: scan['dates'][0]['source'].update(path=alternate.name),
+            'earnings_response_date_mismatch': change_date,
+            'earnings_parsed_source_changed': lambda scan: scan['dates'][0].update(events=[]),
+            'earnings_observation_clock_invalid': lambda scan: scan['dates'][0].update(observed_at=NOW.isoformat()),
+            'earnings_partial_status_invalid': lambda scan: scan['dates'][0].update(status='partial'),
+        }
+        for expected, change in changes.items():
+            with self.subTest(expected=expected):
+                scan = copy.deepcopy(prior)
+                change(scan)
+                changed = immutable(self.root, 'scans', json.dumps(scan).encode())
+                store['scans'][-1].update(changed)
+                atomic_write_json(store_path, store)
+                with self.assertRaisesRegex(EarningsError, '^' + expected + '$'):
+                    validated_scans(self.root, current=later)
+
+    def test_repeated_response_is_parsed_again_under_a_different_policy(self):
+        def fetch(day, policy):
+            return feed(day, [row(), row('OTHER')] if day == NOW.date() else [])
+
+        self.refresh(fetcher=fetch)
+        later = NOW + timedelta(hours=1)
+        self.refresh(now=later, fetcher=fetch)
+        store_path = self.root / EVENTS_REL
+        store = json.loads(store_path.read_text())
+        ref = store['scans'][-1]
+        scan = json.loads((self.root / ref['path']).read_text())
+        stricter = {**self.policy, 'maximum_rows_per_date': 1}
+        scan['policy_source'] = immutable(self.root, 'policies', json.dumps(stricter).encode())
+        scan['policy_sha256'] = scan['policy_source']['sha256']
+        ref.update(immutable(self.root, 'scans', json.dumps(scan).encode()))
+        atomic_write_json(store_path, store)
+        with self.assertRaisesRegex(EarningsError, '^earnings_row_bound_exceeded$'):
+            validated_scans(self.root, current=later)
+
+    def test_repeated_source_is_checked_again_at_the_final_identity_fence(self):
+        self.refresh()
+        later = NOW + timedelta(hours=1)
+        self.refresh(now=later)
+        store = json.loads((self.root / EVENTS_REL).read_text())
+        scan = json.loads((self.root / store['scans'][-1]['path']).read_text())
+        locator = scan['dates'][0]['source']['path']
+        encounters = 0
+
+        def change_after_cached_lookup(root, path, resolve):
+            nonlocal encounters
+            digest = resolved_sha256(root, path, resolve)
+            if path == locator:
+                encounters += 1
+                if encounters == 2:
+                    (root / path).write_text('{}')
+            return digest
+
+        with patch('earnings_events.resolved_sha256', side_effect=change_after_cached_lookup):
+            with self.assertRaisesRegex(ValueError, '^validation_sources_changed_during_transaction$'):
+                validated_scans(self.root, current=later)
 
     def test_absence_never_infers_cancellation_and_reschedule_is_conflict(self):
         self.refresh()

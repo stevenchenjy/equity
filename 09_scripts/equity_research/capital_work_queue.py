@@ -15,7 +15,8 @@ from pathlib import Path
 from typing import Any
 
 from daily_common import (ET, ExclusiveFileLock, atomic_write_json, atomic_write_text,
-                          canonical_sha256, is_us_market_session_date)
+                          canonical_sha256, is_us_market_session_date, sha256_file)
+from validation_cache import file_hash_validation
 
 SCHEMA = "equity_capital_work_queue_v1"
 STORE_REL = Path("08_reviews/capital_work_queue.local/state.json")
@@ -465,10 +466,14 @@ def refresh_capital_work_queue(decision: dict, *, root: Path, current: datetime,
             opportunity_path = input_root / "04_research/company_research/opportunities.local/report.json"
             if opportunity_path.exists():
                 try:
-                    from research_opportunities import read_report
-                    opportunity_report = read_report(input_root, current=current, publication_view=True)
+                    from research_opportunities import read_report, report_proof_scope
+                    with report_proof_scope(), file_hash_validation():
+                        candidate = read_report(input_root, current=current, publication_view=True)
+                        opportunity_receipt = {"path": str(opportunity_path.relative_to(input_root)),
+                                               "sha256": sha256_file(opportunity_path)}
+                    opportunity_report = candidate
                     opportunity_status = "available"
-                    receipts.append({"path": str(opportunity_path.relative_to(input_root)), "sha256": hashlib.sha256(opportunity_path.read_bytes()).hexdigest()})
+                    receipts.append(opportunity_receipt)
                 except (OSError, ValueError, TypeError, KeyError):
                     opportunity_status = "unverified"
             scheduler_path = input_root / "00_project_control/run_logs/daily_scheduler_state.local.json"

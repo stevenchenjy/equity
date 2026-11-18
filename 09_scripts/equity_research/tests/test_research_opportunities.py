@@ -165,6 +165,34 @@ class OpportunityTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'research_source_changed'):
                 read_report(self.root, current=NOW, publication_view=True)
 
+    def test_cold_report_proof_reads_bound_report_and_store_once_each(self):
+        intake(self.root, current=NOW)
+        bound = {(self.root / path).resolve(): 0 for path in (REPORT_REL, STORE_REL)}
+        original = Path.read_bytes
+
+        def count(path):
+            if path in bound:
+                bound[path] += 1
+            return original(path)
+
+        with report_proof_scope(), patch.object(Path, 'read_bytes', count):
+            report = read_report(self.root, current=NOW, publication_view=True)
+            with report_proof_scope():
+                nested = read_report(self.root, current=NOW, publication_view=True)
+                self.assertEqual(nested, report)
+                nested['opportunities'].clear()
+                self.assertEqual(read_report(self.root, current=NOW, publication_view=True), report)
+        self.assertEqual(list(bound.values()), [1, 1])
+
+    def test_cold_report_proof_rejects_unbound_store_even_when_report_hash_passes(self):
+        report = intake(self.root, current=NOW)
+        report['store_sha256'] = None
+        report['report_hash'] = canonical_sha256({k: v for k, v in report.items() if k != 'report_hash'})
+        atomic_write_json(self.root / REPORT_REL, report)
+        with report_proof_scope():
+            with self.assertRaisesRegex(ValueError, 'research_opportunity_report_stale_store'):
+                read_report(self.root, current=NOW, publication_view=True)
+
     def test_scoped_proof_detects_report_journal_and_retained_source_replacement(self):
         intake(self.root, current=NOW)
         with report_proof_scope():
@@ -174,7 +202,7 @@ class OpportunityTests(unittest.TestCase):
             replacement = source.with_name('replacement')
             replacement.write_bytes(b'X' * len(before))
             replacement.replace(source)
-            with self.assertRaisesRegex(ValueError, 'research_source_changed'):
+            with report_proof_scope(), self.assertRaisesRegex(ValueError, 'research_source_changed'):
                 read_report(self.root, current=NOW)
             source.write_bytes(before)
             report_path = self.root / REPORT_REL

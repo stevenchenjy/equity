@@ -19,6 +19,7 @@ from delivery_assessments import ARCHIVE_REL, _attempt, _archived_receipt_baseli
 from email_brief import render_email
 from short_assessment import (ACCOUNT_MARKET, MUTABLE_STORES, SCHEMA as SHORT_STATE_SCHEMA,
                               STATE_REL as SHORT_STATE_REL, aware)
+from validation_cache import content_proof_scope, file_hash_validation, resolved_sha256
 from workflow_inputs import WORKFLOW_INPUTS
 
 SCHEMA = "equity_post_delivery_publication_v1"
@@ -34,18 +35,23 @@ STEP_NAMES = ("daily_decision", "workflow_evaluation", "capital_allocation_valid
               "evidence_packet", "current_status")
 
 
-def _read(root: Path, relative: str | Path) -> bytes:
+def _source_path(root: Path, relative: str | Path) -> Path:
     relative = Path(relative)
     path = root / relative
     if (relative.is_absolute() or ".." in relative.parts or path.is_symlink()
             or not path.resolve().is_relative_to(root.resolve()) or not path.is_file()):
         raise ValueError("post_delivery_source_unsafe_or_missing")
-    return path.read_bytes()
+    return path
+
+
+def _read(root: Path, relative: str | Path) -> bytes:
+    return _source_path(root, relative).read_bytes()
 
 
 def _hashes(root: Path, paths) -> dict:
-    return {str(path): hashlib.sha256(_read(root, path)).hexdigest()
-            if (root / path).exists() else None for path in sorted(set(paths))}
+    with file_hash_validation():
+        return {path: resolved_sha256(root, path, _source_path)
+                if (root / path).exists() else None for path in sorted(set(map(str, paths)))}
 
 
 def _ledger_rows(raw: bytes):
@@ -91,18 +97,16 @@ def _store(root: Path, receipt: dict) -> dict:
 
 
 def _protected(root: Path, archived: dict) -> dict:
-    from capital_decision import INPUTS
+    from capital_decision import binding_input_paths
     from plan_source_resolutions import proof_hashes
     contract = archived.get("workflow_integrity", {})
     capital = archived.get("capital_decision", {})
     expected = dict(contract.get("input_hashes", {}))
-    # Capital binds the registered retained plan evidence as well as its fixed
-    # inputs. A valid recovery registry must not make every later send
-    # impossible to recompose. Revalidate the registry and its original bytes;
-    # arbitrary extra or missing bindings remain an error.
+    # Require the same fixed, optional, and retained evidence scope as capital
+    # decision creation. The exact archived digests are checked below.
     proofs = proof_hashes(root)
     if (set(expected) != WORKFLOW_INPUTS
-            or set(capital.get("source_bindings", {})) != INPUTS | set(proofs)):
+            or set(capital.get("source_bindings", {})) != binding_input_paths(root) | set(proofs)):
         raise ValueError("post_delivery_full_source_bindings_required")
     for path, digest in capital["source_bindings"].items():
         if path in expected and expected[path] != digest:
@@ -252,6 +256,7 @@ def _validate_current(root: Path, current: datetime) -> dict:
     return value
 
 
+@content_proof_scope()
 def recover_locked(root: Path, *, clock=now_et, step_runner=None,
                    maximum_seconds: float = MAX_SECONDS, monotonic=time.monotonic) -> dict:
     """Called only inside existing runtime→pipeline ownership; never send."""
@@ -363,10 +368,25 @@ def recover_locked(root: Path, *, clock=now_et, step_runner=None,
             from market_admission import current_admission
             if current_admission(root, current=clock()) != candidate["market_admission"]:
                 raise ValueError("post_delivery_market_admission_changed_during_closure")
+            protected_after = _protected(root, candidate["archived_decision"])
+            if protected_after != candidate["protected_before"]:
+                raise ValueError("post_delivery_protected_input_changed")
+            artifacts = _hashes(root, ARTIFACTS)
+            if hashlib.sha256(_read(root, LEDGER)).hexdigest() != candidate["ledger_sha256"]:
+                raise ValueError("post_delivery_ledger_changed_during_closure")
+            completed_at = clock()
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise ValueError("post_delivery_publication_budget_exhausted")
+            if (completed_at.date() != current.date()
+                    or short_window_conflict(completed_at, maximum_seconds=remaining)):
+                raise ValueError("post_delivery_publication_budget_or_short_window")
+            if monotonic() >= deadline:
+                raise ValueError("post_delivery_publication_budget_exhausted")
         receipt.update(outcome="passed", publication_pending=False,
-                       protected_after=_protected(root, candidate["archived_decision"]),
-                       artifacts=_hashes(root, ARTIFACTS))
+                       protected_after=protected_after, artifacts=artifacts,
+                       completed_at=completed_at.isoformat())
     except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
-        receipt.update(outcome="failed", reason=str(exc), publication_pending=True, alert_required=True)
-    receipt["completed_at"] = clock().isoformat()
+        receipt.update(outcome="failed", reason=str(exc), publication_pending=True, alert_required=True,
+                       completed_at=clock().isoformat())
     return _store(root, receipt)

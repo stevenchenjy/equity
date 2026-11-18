@@ -8,7 +8,6 @@ from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import copy
-import hashlib
 import json
 import time
 
@@ -22,7 +21,7 @@ from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
 from account_authority import load_authority, project_research_requirements
-from validation_cache import content_proof_scope, file_hash_validation, resolved_sha256
+from validation_cache import content_proof_scope, file_hash_validation, read_hashed_bytes, resolved_sha256
 
 
 @dataclass(frozen=True)
@@ -45,6 +44,9 @@ def report_proof_scope():
     retained locator, with a fresh mutation fence, live account and clock.
     No report object, decision or delivery eligibility is shared.
     """
+    if _REPORT_PROOFS.get() is not None:
+        yield
+        return
     token = _REPORT_PROOFS.set({})
     try:
         with content_proof_scope():
@@ -448,12 +450,13 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
     return report
 
 
-def _read_bound_json(path: Path, digest: str) -> dict:
+def _read_bound_json(path: Path, digest: str | None = None, *,
+                     mismatch: str = "research_report_input_changed_during_read") -> tuple[dict, str]:
     # Hash the very bytes being decoded. Independent pre-claim validations can
     # outlive the first transaction and must not inherit a read/replace race.
-    raw = path.read_bytes()
-    require(hashlib.sha256(raw).hexdigest() == digest, "research_report_input_changed_during_read")
-    return json.loads(raw)
+    raw, actual = read_hashed_bytes(path)
+    require(digest is None or actual == digest, mismatch)
+    return json.loads(raw), actual
 
 
 def _publication_report(report: dict) -> dict:
@@ -495,19 +498,26 @@ def read_report(root: Path, *, current: datetime, publication_view: bool = False
     proofs = _REPORT_PROOFS.get()
     root = root.resolve()
     with file_hash_validation():
-        report_digest = sha256_file(root / REPORT_REL) if proofs is not None else None
-        store_digest = sha256_file(root / STORE_REL)
         prior = proofs.get(root) if proofs is not None else None
-        same = prior and (prior.report_digest, prior.store_digest) == (report_digest, store_digest)
-        cached = prior.publication_bytes if same and publication_view else None
-        if cached is not None:
-            report = json.loads(cached)
+        first_proof = proofs is not None and prior is None
+        if first_proof:
+            report, report_digest = _read_bound_json(root / REPORT_REL)
+            store_digest, same, cached = None, False, None
         else:
-            report = (_read_bound_json(root / REPORT_REL, report_digest)
-                if proofs is not None else read_json(root / REPORT_REL, {}))
+            report_digest = sha256_file(root / REPORT_REL) if proofs is not None else None
+            store_digest = sha256_file(root / STORE_REL)
+            same = prior and (prior.report_digest, prior.store_digest) == (report_digest, store_digest)
+            cached = prior.publication_bytes if same and publication_view else None
+            if cached is not None:
+                report = json.loads(cached)
+            elif proofs is not None:
+                report, _ = _read_bound_json(root / REPORT_REL, report_digest)
+            else:
+                report = read_json(root / REPORT_REL, {})
         require(report.get("schema_version") == "equity_research_opportunity_report_v1"
             and all(report.get(k) is False for k in AUTHORITY), "research_opportunity_report_invalid")
-        require(report["store_sha256"] == store_digest, "research_opportunity_report_stale_store")
+        if not first_proof:
+            require(report["store_sha256"] == store_digest, "research_opportunity_report_stale_store")
         clock = aware(report["generated_at"])
         require(clock <= current and current-clock <= timedelta(hours=24), "research_opportunity_report_stale_clock")
         require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
@@ -519,8 +529,14 @@ def read_report(root: Path, *, current: datetime, publication_view: bool = False
                 require(resolved_sha256(root, locator, inside) == digest, "research_source_changed")
         else:
             require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
-            journal = (_read_bound_json(root / STORE_REL, store_digest)
-                if proofs is not None else read_json(root / STORE_REL))
+            if first_proof:
+                require(isinstance(report["store_sha256"], str), "research_opportunity_report_stale_store")
+                journal, store_digest = _read_bound_json(root / STORE_REL, report["store_sha256"],
+                    mismatch="research_opportunity_report_stale_store")
+            elif proofs is not None:
+                journal, store_digest = _read_bound_json(root / STORE_REL, store_digest)
+            else:
+                journal = read_json(root / STORE_REL)
             validate_journal(journal, root=root, current=current)
             if proofs is not None:
                 events = journal["events"]
