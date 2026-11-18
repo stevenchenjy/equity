@@ -15,6 +15,7 @@ RESEARCH_MANIFEST = "05_risk_and_positions/household_research.local.json"
 SOURCE_DIR = Path("05_risk_and_positions/household_sources.local")
 CONFIG = "00_project_control/active_production_config.json"
 SCHEMA = "equity_household_planning_v1"
+ORDER_DISPLAY_POLICY = "confirmed_orders_only_v1"
 CENT = Decimal("0.01")
 CORE = {"SPY", "QQQM"}
 
@@ -324,8 +325,11 @@ def research_cards(decision):
     if not household.get("chase_ledger_matches") or decision.get("account_conflicts"):
         return [dict(title="Household research pending", group="background", sources=[],
                      body="Account or evidence checks require a fresh review. Current household order size is zero.")]
+    current_display = decision.get("email_action_display_policy") == ORDER_DISPLAY_POLICY
     rows = decision.get("capital_decision", {}).get("decisions", [])
     active_tickers = {r["ticker"] for r in rows if r.get("order_draft")}
+    adverse_tickers = {r["ticker"] for r in decision.get("held_position_risk", {}).get("holdings", [])
+                       if r["state"] in {"RISK_ALERT", "REDUCE_REVIEW", "EXIT_REVIEW"}}
     result = []
     for row in report["calls"]:
         if row["ticker"] in active_tickers:
@@ -337,9 +341,7 @@ def research_cards(decision):
             if not inventory or _hold_accounts(inventory) != row["account_shares"]:
                 continue
             qty = ", ".join(f"{shares} at {broker}" for broker, shares in _hold_accounts(inventory).items())
-            risk = next((r["state"] for r in decision.get("held_position_risk", {}).get("holdings", [])
-                         if r["ticker"] == row["ticker"]), None)
-            if risk in {"RISK_ALERT", "REDUCE_REVIEW", "EXIT_REVIEW"}:
+            if row["ticker"] in adverse_tickers:
                 result.append(dict(title=f"{row['ticker']} household HOLD under reassessment", group="background", sources=[],
                                    body=f"Recorded shares: {qty}. Current held-risk review takes priority. Recheck: " + row["next_check"]))
                 continue
@@ -354,14 +356,35 @@ def research_cards(decision):
             *[key + "_failed" for key in ("market_gate", "evidence_gate", "fundamental_gate")
               if decision.get(key, {}).get("passed") is False],
             *decision.get("capital_decision", {}).get("global_blockers", [])]))
-        pending = ", ".join(str(code).replace("_", " ") for code in blockers[:3]) or "a current, approved account-specific order"
+        pending = [str(code).replace("_", " ") for code in blockers[:3]]
         size = _quantity(_amount(row['shares']))
         price = _amount(row['price_usd'])
-        result.append(dict(title=f"{row['ticker']} decision to review in {row['broker']}", group="background", sources=[],
-                           body=f"Research case: {row['side']} {size} {'share' if size == '1' else 'shares'} {condition} ${price:,.2f} "
-                                f"(about ${price * _amount(row['shares']):,.2f}). Approved order size: 0.\n"
-                                f"Review window: {start:%Y-%m-%d %H:%M %Z} to {end:%Y-%m-%d %H:%M %Z}.\n"
-                                + row["condition"] + "\nPending: " + pending + ".\nNext check: " + row["next_check"]))
+        unit = "share" if size == "1" else "shares"
+        if not current_display:
+            # Historical briefs must regenerate exactly for delivery verification.
+            result.append(dict(title=f"{row['ticker']} decision to review in {row['broker']}", group="background", sources=[],
+                               body=f"Research case: {row['side']} {size} {unit} {condition} ${price:,.2f} "
+                                    f"(about ${price * _amount(row['shares']):,.2f}). Approved order size: 0.\n"
+                                    f"Review window: {start:%Y-%m-%d %H:%M %Z} to {end:%Y-%m-%d %H:%M %Z}.\n"
+                                    + row["condition"] + "\nPending: "
+                                    + (", ".join(pending) or "a current, approved account-specific order")
+                                    + ".\nNext check: " + row["next_check"]))
+            continue
+        if row["side"] == "BUY" and row["ticker"] in decision.get("pending_stability_candidates", []):
+            count = decision.get("new_candidate_stability_by_ticker", {}).get(row["ticker"])
+            required = decision.get("required_distinct_closes")
+            if isinstance(count, int) and isinstance(required, int) and 0 <= count < required:
+                pending.insert(0, f"{count} of {required} required completed regular closes recorded")
+        if not pending:
+            pending = ["a current, approved account-specific order"]
+        held = any(r["ticker"] == row["ticker"] and
+                   _amount(r[row["broker"].lower() + "_shares"]) > 0 for r in household["positions"])
+        instruction = "Keep the recorded holding. " if held and row["ticker"] not in adverse_tickers else ""
+        result.append(dict(title=f"{row['ticker']} research only in {row['broker']}", group="background", kind="inactive", sources=[],
+                           body=f"{instruction}Approved order size: 0.\n"
+                                f"The modeled {row['side'].lower()} threshold for {size} {unit} is {condition} ${price:,.2f}.\n"
+                                f"Research review window: {start:%Y-%m-%d %H:%M %Z} to {end:%Y-%m-%d %H:%M %Z}.\n"
+                                + "Pending: " + ", ".join(pending) + "."))
     return result
 
 

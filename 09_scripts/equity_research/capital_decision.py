@@ -15,7 +15,7 @@ from daily_common import canonical_sha256, sha256_file, read_json, read_csv, ato
 from production_strategies import REGISTRY, select
 from decision_dependencies import classify
 from tactical_review import review_open_orders
-from investment_plans import regular_close, stamp
+from investment_plans import PENDING_EXECUTION_NOTICE, regular_close, stamp
 from workflow_integrity import reviewed_candidate_ready, company_review_complete
 from household_planning import MANIFEST, RESEARCH_MANIFEST, marked_allocation, planning_context, research_context, bounded_elective_terms
 from core_entry import eligible_core_tranche
@@ -246,7 +246,11 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                              cancel_conditions=['Skip if current holdings or order inventory differs, or shares are already reserved.','Never duplicate a pending exit; confirm cancellation before replacement.','This draft expires at '+end.isoformat()+'.','Expected proceeds are conditional and unsettled; no new purchase is funded by an assumed sale.'],
                              price_basis='Source-bound maintained exit level, not a live quote.',cost_assumption='Proceeds at the stated price are an estimate before costs, not a fill or settled buying power.',automatic_action_allowed=False))
                         if household_call:
-                            row["order_draft"]["trigger_rule"] += " " + household_call["condition"]
+                            trigger = row["order_draft"]["trigger_rule"]
+                            condition = " " + household_call["condition"]
+                            if trigger.endswith(PENDING_EXECUTION_NOTICE):
+                                condition += PENDING_EXECUTION_NOTICE
+                            row["order_draft"]["trigger_rule"] = trigger.removesuffix(PENDING_EXECUTION_NOTICE) + condition
                 except (KeyError,ValueError,TypeError,InvalidOperation,ZeroDivisionError) as exc:
                     exit_issues.append(str(exc) if isinstance(exc, ValueError) and str(exc).startswith("household_") else "maintained_exit_draft_requires_current_shares_price_and_validity")
                 row['blockers']=sorted(set(exit_issues))

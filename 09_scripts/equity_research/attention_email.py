@@ -15,6 +15,8 @@ from zoneinfo import ZoneInfo
 
 from capital_decision import validate
 from capital_presentation import action_lines, optional_rotation_cards
+from household_planning import ORDER_DISPLAY_POLICY
+from investment_plans import PENDING_EXECUTION_NOTICE
 
 
 DIRECT_VERSION = "equity_direct_action_email_v5"
@@ -69,7 +71,7 @@ def direct_action(decision, row):
     # future company-specific exceptions, survive intact on separate lines.
     wrappers = (
         f"SELL LIMIT at or above ${price:.2f}; verify current quote and available shares before submission. ",
-        "；仅为未提交的研究计划，先核验报价、订单和剩余股数。",
+        PENDING_EXECUTION_NOTICE,
         " A target limit does not protect a decline. Stop execution can gap below the trigger.",
         " Reassess by " + draft["entry_window"]["ends_at"] + "; if no fill, the remaining exposure and original purpose persist.",
     )
@@ -145,16 +147,27 @@ def direct_cards(decision):
     rows = contract["decisions"]
     held = {row["ticker"]: row for row in decision.get("held_positions", [])}
     from held_position_risk import cards as risk_cards, material_intraday_conditions
-    result = risk_cards(decision)
+    current_display = decision.get("email_action_display_policy") == ORDER_DISPLAY_POLICY
+    holding_cards = risk_cards(decision)
+    result = [] if current_display else holding_cards
     actionable = [row for row in rows if row.get("order_draft")]
+    reasons = []
     for row in actionable:
         title, lines = direct_action(decision, row)
+        # Keep a short authored rationale with the ticker's actual draft.
+        sentence = re.split(r"(?<=[.!?])\s+(?=[A-Z])", str(row.get("thesis_summary", "")), maxsplit=1)[0]
+        if sentence and len(sentence.split()) <= 28 and sentence not in reasons and len(reasons) < 2:
+            reasons.append(_readable_execution(sentence))
+            if current_display:
+                lines.append("Rationale: " + reasons[-1])
         result.append(section(title, lines, group="action",
                               kind="sell" if row["order_draft"]["side"] == "sell" else "buy"))
     rotations = optional_rotation_cards(decision)
     if not actionable and not any(card.get("kind") in {"buy", "sell"} for card in rotations):
         result.append(section("No new trade", ["Buy/add 0; no current priced order passes the required checks."],
                               group="action", kind="inactive"))
+    if current_display:
+        result.extend(holding_cards)
     if "held_position_risk" in decision and not any(
             row.get("order_draft", {}).get("side") == "buy" for row in actionable):
         escalation = decision.get("capital_deployment_escalation", {})
@@ -163,9 +176,15 @@ def direct_cards(decision):
         candidate = next((row for row in rows if row.get("ticker") == name), None)
         lines = ["No purchase currently qualifies; cash remains available for a supported entry."]
         if candidate:
-            codes = list(dict.fromkeys(candidate.get("blockers", []) + candidate.get("reasons", [])))
-            lines.append(name + " — " + candidate["decision"].replace("_", " ") + ": "
-                         + "; ".join(str(code).replace("_", " ") for code in codes[:3]) + ".")
+            if current_display:
+                lines.append(name + " — " + candidate["decision"].replace("_", " ") + ". Approved additional shares: 0.")
+                codes = candidate.get("blockers", [])
+                if codes:
+                    lines.append("Pending: " + ", ".join(str(code).replace("_", " ") for code in codes[:3]) + ".")
+            else:
+                codes = list(dict.fromkeys(candidate.get("blockers", []) + candidate.get("reasons", [])))
+                lines.append(name + " — " + candidate["decision"].replace("_", " ") + ": "
+                             + "; ".join(str(code).replace("_", " ") for code in codes[:3]) + ".")
             requirements = candidate.get("dependencies", [])
             if requirements:
                 lines.append("Next decisive work: " + requirements[0]["evidence_required"])
@@ -206,19 +225,7 @@ def direct_cards(decision):
         inventory = "; ".join(row["ticker"] + " " + _quantity(held[row["ticker"]]["current_shares"])
                               + (" share" if Decimal(str(held[row["ticker"]]["current_shares"])) == 1 else " shares") for row in holds)
         result.append(section("Unchanged holdings", [inventory + ". Add 0 / sell 0 for these holdings."]))
-    reasons = []
-    for row in actionable:
-        # Only complete short authored sentences qualify for the compact reason;
-        # longer analysis stays in the report. Execution conditions above are
-        # never subject to this presentation budget.
-        for sentence in re.split(r"(?<=[.!?])\s+(?=[A-Z])", str(row.get("thesis_summary", "")))[:1]:
-            if sentence and len(sentence.split()) <= 28 and sentence not in reasons:
-                reasons.append(_readable_execution(sentence))
-            if len(reasons) == 2:
-                break
-        if len(reasons) == 2:
-            break
-    if reasons:
+    if not current_display and reasons:
         result[-1]["body"] += "\n" + " ".join(reasons)
     # Genuine triggered portfolio conditions remain visible; unavailable or
     # untriggered monitoring diagnostics are retained only in the full report.

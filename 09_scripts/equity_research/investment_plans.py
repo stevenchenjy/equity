@@ -26,6 +26,7 @@ HORIZON_ROLES = {"intraday_momentum": "tactical", "multi_day_trend": "tactical",
                  "long_term_growth": "long_term_growth", "broad_core": "broad_core"}
 ACTIONS = {"hold", "protect_review", "exit_review", "trim_review", "watch"}
 TERMINAL = {"completed", "cancelled", "superseded"}
+PENDING_EXECUTION_NOTICE = "；仅为未提交的研究计划，先核验报价、订单和剩余股数。"
 ET = ZoneInfo("America/New_York")
 # NYSE published calendar, verified 2026-09-24. Exceptional closures require
 # a source update. Unsupported years cannot validate a DAY draft.
@@ -655,7 +656,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         }
         instruction = row["instruction"] if status == "maintained" else labels[status]
         if status == "maintained" and row["action"] != "hold":
-            instruction += "；仅为未提交的研究计划，先核验报价、订单和剩余股数。"
+            instruction += PENDING_EXECUTION_NOTICE
         if row.get("time_exit_at") and quantity:
             instruction += " 原定时间退出/复核：" + row["time_exit_at"] + "。"
         effective = {key: row.get(key) for key in ("plan_id", "version", "record_hash", "recorded_at", "ticker", "role", "reason", "counterargument", "change_reason", "review_at", "time_exit_at", "thesis_id", "account_observed_at", "sources", "strategy_horizon", "purpose", "setup_status", "setup_status_reason", "reassessment", "reviewed_allocation", "valid_until")}

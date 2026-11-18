@@ -88,6 +88,22 @@ class HouseholdPlanningTests(unittest.TestCase):
             for phrase in ("$950.00", "2 Chase / 1 Moomoo", "at or above $100.00",
                            "Approved order size: 0", "10:45 EST", "Verify available shares"):
                 self.assertIn(phrase, body)
+        d["email_action_display_policy"] = hp.ORDER_DISPLAY_POLICY
+        _, text, doc = render_email(d)
+        for body in (text, visible_html_text(doc)):
+            self.assertIn("Keep the recorded holding. Approved order size: 0.", body)
+            self.assertIn("The modeled sell threshold for 1 share is at or above $100.00.", body)
+            self.assertNotIn(self.call["condition"], body)
+            self.assertNotIn(self.call["next_check"], body)
+        original_call = d["household_research"]["calls"][0]
+        d["household_research"]["calls"] = [dict(original_call, side="BUY", price_relation="at_or_below")]
+        d.update(pending_stability_candidates=["ABC"], new_candidate_stability_by_ticker={"ABC": 1},
+                 required_distinct_closes=2)
+        _, text, doc = render_email(d)
+        for body in (text, visible_html_text(doc)):
+            self.assertIn("1 of 2 required completed regular closes recorded", body)
+            self.assertIn("The modeled buy threshold for 1 share is at or below $100.00.", body)
+        d["household_research"]["calls"] = [original_call]
         d["market_gate"]["passed"] = False
         d["capital_decision"]["household_allocation"] = dict(status="marked", market_session="2026-11-17",
                     planning_total_usd=964, core_before_usd=0, stocks_before_usd=315)

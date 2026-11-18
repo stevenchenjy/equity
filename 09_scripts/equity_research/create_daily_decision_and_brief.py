@@ -61,6 +61,7 @@ from instrument_metadata import is_fund
 from active_config import load_active_config
 from execution_common import applied_reconciliation_matches_current_state
 from email_brief import EMAIL_BRIEF_VERSION, build_discovery_view, render_email
+from household_planning import ORDER_DISPLAY_POLICY
 from market_discovery import load_discovery
 from tactical_review import load_tactical_review
 from market_regime import load_regime_controls
@@ -1250,6 +1251,7 @@ def main() -> int:
         },
         "account_conflicts": conflicts,
         "email_brief_version": EMAIL_BRIEF_VERSION,
+        "email_action_display_policy": ORDER_DISPLAY_POLICY,
         "email_support_surface": "local_report",
         "pending_execution_summaries": [
             {key: row.get(key, "") for key in ("ticker", "execution_id", "order_status")}

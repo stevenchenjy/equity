@@ -15,7 +15,8 @@ from _support import SCRIPT_DIR, visible_html_text  # noqa: F401
 from daily_common import canonical_sha256
 from capital_presentation import action_lines
 from email_brief import EMAIL_BRIEF_VERSION, render_email
-from attention_email import DIRECT_VERSION, cards, direct_action, held_earnings_card
+from attention_email import DIRECT_VERSION, ORDER_DISPLAY_POLICY, cards, direct_action, direct_cards, held_earnings_card
+from investment_plans import PENDING_EXECUTION_NOTICE
 import test_capital_decision as capital_tests
 from test_assessment_presentation import envelope
 import delivery_followthrough as follow
@@ -143,6 +144,30 @@ class AttentionEmailTests(unittest.TestCase):
         _,plain,_=render_email(self.decision)
         self.assertIn('Earlier order — reconcile before replacing',plain)
         self.assertIn('not a verified order or fill',plain)
+
+    def test_current_order_presentation_keeps_trigger_and_rationale_with_exact_exit(self):
+        original = self.direct_exit()["order_draft"]
+        self.decision["email_action_display_policy"] = ORDER_DISPLAY_POLICY
+        plan = self.decision["plan_continuity"]["plans"][0]
+        plan["instruction"] += PENDING_EXECUTION_NOTICE
+        with patch("capital_decision.bounded_elective_terms",
+                   side_effect=lambda report, ticker, side, qty, price, start, end, current:
+                       (qty, start, end, {"condition": "Confirm the issuer guidance before submitting."})):
+            self.decision["capital_decision"] = self.build()
+        new = next(row for row in self.decision["capital_decision"]["decisions"] if row["ticker"] == "TEST")
+        self.assertEqual({key: val for key, val in new["order_draft"].items() if key != "trigger_rule"},
+                         {key: val for key, val in original.items() if key != "trigger_rule"})
+        self.assertEqual(new["shares"], 2)
+        self.assertTrue(new["order_draft"]["trigger_rule"].endswith(PENDING_EXECUTION_NOTICE))
+        _, text, html_body = render_email(self.decision)
+        for body in (text, visible_html_text(html_body)):
+            self.assertNotIn(PENDING_EXECUTION_NOTICE, body)
+            self.assertIn("Confirm the issuer guidance before submitting.", body)
+        rendered = direct_cards(self.decision)
+        self.assertIn("Rationale: Reduce the exposure while retaining participation.", rendered[0]["body"])
+        holds = next(card for card in rendered if card["title"] == "Unchanged holdings")
+        self.assertNotIn("Reduce the exposure", holds["body"])
+        self.assertFalse(follow._displayed_actions(self.decision, text, html_body, self.builder.v["current"])[1])
 
     def test_v5_receipt_archive_accepts_complete_projection_and_rejects_missing_critical_line(self):
         self.direct_exit()
