@@ -224,6 +224,42 @@ def validate_archive(context, generated_at):
 
 
 
+def _hold_accounts(position):
+    """Use the observed inventory, displaying only accounts that actually hold shares."""
+    return {broker: _quantity(_amount(position[broker.lower() + "_shares"]))
+            for broker in ("Chase", "Moomoo") if _amount(position[broker.lower() + "_shares"]) > 0}
+
+
+def _call_accounts(row, holdings, source, matches):
+    ticker = row["ticker"]
+    _check(isinstance(ticker, str) and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,12}", ticker),
+           "household_research_call_scope_invalid")
+    shared = {"ticker", "side", "opens_at", "expires_at", "condition", "next_check"}
+    if row["side"] == "HOLD":
+        _check(set(row) == shared | {"account_shares"}, "household_research_call_invalid")
+        expected = _hold_accounts(holdings[ticker]) if ticker in holdings else {}
+        _check(matches and expected and row["account_shares"] == expected, "household_research_hold_inventory_changed")
+        # A HOLD has no cash terms. Bind its quoted review conditions to the
+        # same retained company passage, preserving typed financial thresholds.
+        excerpts = (row["condition"], row["next_check"])
+        _check(any(re.search(r"(?<![A-Za-z0-9.-])" + re.escape(ticker) + r"(?![A-Za-z0-9.-])", line)
+                   and re.search(r"\bhold\b", line, re.IGNORECASE) and all(excerpt in line for excerpt in excerpts)
+                   for line in source.decode().replace("**", "").splitlines()), "household_research_hold_source_mismatch")
+        return set(expected)
+    _check(set(row) == shared | {"broker", "shares", "price_usd", "price_relation"},
+           "household_research_call_invalid")
+    broker = row["broker"]
+    _check(broker in {"Chase", "Moomoo"}, "household_research_call_scope_invalid")
+    shares, price = _amount(row["shares"]), _amount(row["price_usd"])
+    _check(shares > 0 and price > 0 and Decimal(_cash(price)) == price
+           and (row["side"], row["price_relation"]) in {("SELL", "at_or_above"), ("BUY", "at_or_below")},
+           "household_research_price_or_size_invalid")
+    if row["side"] == "SELL":
+        _check(shares <= _amount(holdings.get(ticker, {}).get(broker.lower()+"_shares", 0)),
+               "household_research_insufficient_shares")
+    return {broker}
+
+
 def research_context(root, current, household):
     """Return dated research scenarios. Eligibility remains in the capital decision."""
     path = root / RESEARCH_MANIFEST
@@ -249,20 +285,11 @@ def research_context(root, current, household):
         seen = set()
         _check(isinstance(payload["calls"], list), "household_research_calls_invalid")
         for row in payload["calls"]:
-            _check(set(row) == {"ticker", "broker", "side", "shares", "price_usd", "price_relation",
-                               "opens_at", "expires_at", "condition", "next_check"},
-                   "household_research_call_invalid")
-            ticker, broker, side = row["ticker"], row["broker"], row["side"]
-            _check(re.fullmatch(r"[A-Z][A-Z0-9.-]{0,12}", ticker) and broker in {"Chase", "Moomoo"}
-                   and (ticker, broker) not in seen, "household_research_call_scope_invalid")
-            seen.add((ticker, broker))
-            shares, price = _amount(row["shares"]), _amount(row["price_usd"])
-            _check(shares > 0 and price > 0 and Decimal(_cash(price)) == price
-                   and (side, row["price_relation"]) in {("SELL", "at_or_above"), ("BUY", "at_or_below")},
-                   "household_research_price_or_size_invalid")
-            if side == "SELL":
-                held = holdings.get(ticker, {})
-                _check(shares <= _amount(held.get(broker.lower()+"_shares", 0)), "household_research_insufficient_shares")
+            brokers = _call_accounts(row, holdings, source, household["chase_ledger_matches"])
+            ticker = row["ticker"]
+            keys = {(ticker, broker) for broker in brokers}
+            _check(seen.isdisjoint(keys), "household_research_call_scope_invalid")
+            seen.update(keys)
             start, end = (datetime.fromisoformat(row[k]) for k in ("opens_at", "expires_at"))
             _check(start.tzinfo is not None and end.tzinfo is not None and authored < end and start < end,
                    "household_research_window_invalid")
@@ -276,7 +303,7 @@ def research_context(root, current, household):
                    "household_research_regular_session_required")
             if current < end:
                 active.append(row)
-            elif broker == "Chase" and current.astimezone(start_et.tzinfo).date() == start_et.date():
+            elif "Chase" in brokers and current.astimezone(start_et.tzinfo).date() == start_et.date():
                 expired_today.append(ticker)
         return dict(status="research_only" if active else "expired", plan_source_sha256=digest,
                     authored_at=payload["authored_at"], calls=active, expired_chase_tickers=sorted(expired_today))
@@ -305,6 +332,22 @@ def research_cards(decision):
             continue
         start, end = (datetime.fromisoformat(row[k]).astimezone(ZoneInfo("America/New_York"))
                       for k in ("opens_at", "expires_at"))
+        if row["side"] == "HOLD":
+            inventory = next((r for r in household.get("positions", []) if r["ticker"] == row["ticker"]), {})
+            if not inventory or _hold_accounts(inventory) != row["account_shares"]:
+                continue
+            qty = ", ".join(f"{shares} at {broker}" for broker, shares in _hold_accounts(inventory).items())
+            risk = next((r["state"] for r in decision.get("held_position_risk", {}).get("holdings", [])
+                         if r["ticker"] == row["ticker"]), None)
+            if risk in {"RISK_ALERT", "REDUCE_REVIEW", "EXIT_REVIEW"}:
+                result.append(dict(title=f"{row['ticker']} household HOLD under reassessment", group="background", sources=[],
+                                   body=f"Recorded shares: {qty}. Current held-risk review takes priority. Recheck: " + row["next_check"]))
+                continue
+            result.append(dict(title=f"{row['ticker']} household research — HOLD", group="background", sources=[],
+                               body=f"Retain {qty}. Add 0 shares / sell 0 shares under this review.\n"
+                                    f"Review window: {start:%Y-%m-%d %H:%M %Z} to {end:%Y-%m-%d %H:%M %Z}.\n"
+                                    + row["condition"] + "\nNext check: " + row["next_check"]))
+            continue
         condition = "at or below" if row["price_relation"] == "at_or_below" else "at or above"
         blockers = next((r.get("blockers", []) for r in rows if r["ticker"] == row["ticker"]), [])
         blockers = list(dict.fromkeys([*blockers,
@@ -387,7 +430,9 @@ def bounded_elective_terms(report, ticker, side, quantity, price, start, end, cu
         raise ValueError(report["reason"])
     if ticker in report.get("expired_chase_tickers", []):
         raise ValueError("household_research_window_expired")
-    call = next((c for c in report["calls"] if c["ticker"] == ticker and c["broker"] == "Chase"), None)
+    if any(c["ticker"] == ticker and c["side"] == "HOLD" and "Chase" in c["account_shares"] for c in report["calls"]):
+        raise ValueError("household_research_reviewed_hold")
+    call = next((c for c in report["calls"] if c["ticker"] == ticker and c.get("broker") == "Chase"), None)
     if not call:
         return quantity, start, end, None
     if call["side"].lower() != side:

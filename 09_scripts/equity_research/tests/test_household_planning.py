@@ -133,6 +133,70 @@ class HouseholdPlanningTests(unittest.TestCase):
             self.write(hp.RESEARCH_MANIFEST, self.plan)
             self.assertEqual(hp.research_context(self.root, NOW, scope)["reason"], "household_research_regular_session_required")
 
+    def hold_review(self):
+        condition = "Reassess the position if operating margin falls below 20%."
+        next_check = "Inspect the next filing and completed regular close."
+        source = f"ABC — HOLD. {condition} {next_check}".encode()
+        digest = hashlib.sha256(source).hexdigest()
+        path = hp.SOURCE_DIR / (digest + ".md")
+        (self.root / path).write_bytes(source)
+        hold = {"ticker": "ABC", "side": "HOLD", "account_shares": {"Chase": "2", "Moomoo": "1"},
+                "opens_at": NOW.replace(hour=9, minute=30).isoformat(), "expires_at": NOW.replace(hour=16, minute=0).isoformat(),
+                "condition": condition, "next_check": next_check}
+        self.plan.update(plan_source_path=str(path), plan_source_sha256=digest, calls=[hold])
+        self.write(hp.RESEARCH_MANIFEST, self.plan)
+        return hold, hp.planning_context(self.root, NOW)
+
+    def test_hold_is_bound_to_issuer_passage_and_each_broker_position(self):
+        hold, scope = self.hold_review()
+        view = hp.research_context(self.root, NOW, scope)
+        self.assertEqual(view["calls"], [hold])
+        for side in ("sell", "buy"):
+            with self.assertRaisesRegex(ValueError, "household_research_reviewed_hold"):
+                hp.bounded_elective_terms(view, "ABC", side, 1, Decimal("20"), NOW, NOW+timedelta(hours=1), NOW)
+        expired = hp.research_context(self.root, NOW.replace(hour=16, minute=0), scope)
+        self.assertEqual(expired["status"], "expired")
+        self.assertEqual(expired["expired_chase_tickers"], ["ABC"])
+        for change, reason in (({"account_shares": {"Chase": "3"}}, "inventory_changed"),
+                               ({"price_usd":"100"}, "call_invalid"),
+                               ({"next_check":"Unauthored trigger."}, "source_mismatch")):
+            self.plan["calls"] = [dict(hold, **change)]
+            self.write(hp.RESEARCH_MANIFEST, self.plan)
+            self.assertIn(reason, hp.research_context(self.root, NOW, scope)["reason"])
+        self.plan["calls"] = [hold, self.call]
+        self.write(hp.RESEARCH_MANIFEST, self.plan)
+        self.assertIn("scope_invalid", hp.research_context(self.root, NOW, scope)["reason"])
+
+    def test_hold_cards_render_in_normal_briefs_and_yield_to_new_risk(self):
+        from email_brief import render_email
+        from test_attention_email import AttentionEmailTests
+        hold, scope = self.hold_review()
+        fixture = AttentionEmailTests()
+        self.addCleanup(fixture.doCleanups)
+        fixture.setUp()
+        fixture.no_entry()
+        decision = fixture.decision
+        decision["email_brief_version"] = "equity_direct_action_email_v5"
+        decision["household_planning"] = scope
+        for moment in (NOW, NOW.replace(hour=14, minute=40)):
+            decision["household_research"] = hp.research_context(self.root, moment, scope)
+            _, text, document = render_email(decision)
+            for body in (text, visible_html_text(document)):
+                for phrase in ("ABC household research — HOLD", "2 at Chase, 1 at Moomoo", "Add 0 shares / sell 0 shares",
+                               hold["condition"], hold["next_check"], "16:00 EST"):
+                    self.assertIn(phrase, body)
+            only_status = delivery.build_failure_brief(self.root, moment, "morning" if moment.hour<12 else "afternoon",
+                                                      "daily_refresh_not_fully_passed")
+            _, text, document = delivery.render_failure_brief(only_status)
+            for body in (text, visible_html_text(document)):
+                self.assertNotIn(hold["condition"], body)
+                self.assertIn("Approved shares for this checkpoint: 0", body)
+        risk_input = dict(decision, held_position_risk={"holdings": [{"ticker": "ABC", "state": "RISK_ALERT"}]})
+        self.assertIn("under reassessment", hp.research_cards(risk_input)[0]["title"])
+        self.assertNotIn("Retain", hp.research_cards(risk_input)[0]["body"])
+        decision["capital_decision"] = {"decisions": [{"ticker": "ABC", "order_draft": {"side": "sell"}}]}
+        self.assertEqual(hp.research_cards(decision), [])
+
     def test_both_status_only_windows_revalidate_sources_and_exclude_conditions(self):
         for slot, moment in (("morning", NOW), ("afternoon", NOW.replace(hour=14, minute=45))):
             artifact = delivery.build_failure_brief(self.root, moment, slot, "daily_refresh_not_fully_passed")
