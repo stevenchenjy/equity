@@ -99,6 +99,28 @@ class EarningsResearchRoutingTests(unittest.TestCase):
         old_events = json.loads(prior)["events"]
         self.assertEqual(read_json(self.root / STORE_REL)["events"][:len(old_events)], old_events)
 
+    def test_calendar_reordering_preserves_history_but_changed_row_digest_reaches_journal(self):
+        original = self.event("REORDER")
+        original.update(row_index=6, row_sha256="a" * 64)
+        self.collect([original])
+        prior = read_json(self.root / STORE_REL)["events"]
+        moved = {**original, "row_index": 4}
+        repeated = self.collect([moved], current=NOW + timedelta(minutes=1))
+        item = next(i for i in repeated["opportunities"] if i["ticker"] == "REORDER")
+        self.assertEqual(repeated["metrics"]["rediscovery_updates"], 0)
+        self.assertEqual(len(item["observations"]), 1)
+        self.assertEqual(item["observations"][0]["evidence"]["event"]["row_index"], 6)
+        self.assertEqual(read_json(self.root / STORE_REL)["events"], prior)
+
+        changed = {**moved, "row_sha256": "b" * 64}
+        updated = self.collect([changed], current=NOW + timedelta(minutes=2))
+        item = next(i for i in updated["opportunities"] if i["ticker"] == "REORDER")
+        self.assertEqual(updated["metrics"]["rediscovery_updates"], 1)
+        self.assertEqual(len(item["observations"]), 2)
+        self.assertEqual(item["observations"][-1]["evidence"]["event"]["row_sha256"], "b" * 64)
+        self.assertEqual(item["observations"][-1]["evidence"]["event"]["row_index"], 4)
+        self.assertEqual(read_json(self.root / STORE_REL)["events"][:len(prior)], prior)
+
     def test_elapsed_conflicting_or_missing_coverage_never_invents_event_priority(self):
         elapsed = self.event("OLD", -1)
         conflicting = self.event("BAD", 2); conflicting.update(status="schedule_conflict", blockers=["schedule_conflict"])

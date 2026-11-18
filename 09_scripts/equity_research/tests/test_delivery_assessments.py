@@ -243,6 +243,10 @@ class DeliveryAssessmentTests(unittest.TestCase):
         self.assertEqual(artifact, original)
         self.assertIn('This is not a reviewed HOLD decision.', text)
         self.assertIn('Failure code: capital_decision_inputs_changed_recompose_required', visible)
+        for body in (text, visible):
+            self.assertIn('This failure code does not identify which input changed.', body)
+            self.assertIn('Compare the current input hashes with those saved in the capital decision.', body)
+            self.assertNotIn('including the delivery ledger', body)
         self.assertIn('Owner: scheduled research service / workspace maintainer.', visible)
         self.assertEqual(subject, delivery._render_legacy_failure_brief(artifact)[0])
         self.assertNotIn('capital_decision', artifact)
@@ -293,6 +297,26 @@ class DeliveryAssessmentTests(unittest.TestCase):
             (self.root / delivery.ARCHIVE_REL / (digest + suffix)).write_text(body)
             row[key] = digest
         self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'status_only')
+
+    def test_previous_capital_failure_copy_keeps_exact_archive_proof(self):
+        artifact = delivery.build_failure_brief(self.root, NOW.replace(hour=9, minute=45),
+            'morning', 'capital_decision_inputs_changed_recompose_required')
+        row = self.archive(artifact)
+        self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], 'status_only')
+        _, text, document = delivery.render_failure_brief(artifact)
+        old_detail = 'The current capital decision no longer matches its bound inputs, including the delivery ledger.'
+        new_detail = 'At least one bound input differs from the published capital decision. This failure code does not identify which input changed.'
+        old_step = 'Reconcile the changed input and regenerate the capital decision and email; verify source bindings before delivery.'
+        new_step = 'Compare the current input hashes with those saved in the capital decision. Rebuild the decision and verify the new email text and HTML before delivery.'
+        for key, suffix, body in [('brief_text_sha256', '.txt', text),
+                ('brief_html_sha256', '.html', document)]:
+            old_body = body.replace(new_detail, old_detail).replace(new_step, old_step)
+            self.assertNotEqual(old_body, body)
+            digest = hashlib.sha256(old_body.encode()).hexdigest()
+            (self.root / delivery.ARCHIVE_REL / (digest + suffix)).write_text(old_body)
+            row[key] = digest
+            expected = 'unverified' if suffix == '.txt' else 'status_only'
+            self.assertEqual(delivery._archived_receipt_baseline(row, root=self.root)['status'], expected)
 
     def test_alert_envelope_exact_action_render_scope_and_original_archive(self):
         baseline = self.archive()

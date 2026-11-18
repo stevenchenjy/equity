@@ -42,6 +42,34 @@ def row(ticker="SYN"):
 
 
 class OpportunityTests(unittest.TestCase):
+    def test_intake_reuses_source_proofs_but_rechecks_changes_between_replays(self):
+        first = intake(self.root, current=NOW)
+        source = self.root / first['opportunities'][0]['first_observation']['sources'][0]['path']
+        original_read = Path.read_bytes
+        reads = []
+
+        def read(path):
+            if path == source:
+                reads.append(path)
+            return original_read(path)
+
+        with patch.object(Path, 'read_bytes', read):
+            intake(self.root, current=NOW)
+            self.assertEqual(len(reads), 1)
+            intake(self.root, current=NOW)
+            self.assertEqual(len(reads), 2)
+
+        from research_opportunities import collect_triggers
+
+        def change_after_first_replay(*args, **kwargs):
+            result = collect_triggers(*args, **kwargs)
+            source.write_bytes(b'replaced retained source')
+            return result
+
+        with patch('research_opportunities.collect_triggers', change_after_first_replay):
+            with self.assertRaisesRegex(ValueError, 'research_source_changed'):
+                intake(self.root, current=NOW)
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.root = Path(self.directory.name)
@@ -420,6 +448,27 @@ class OpportunityTests(unittest.TestCase):
         with patch.object(opportunity_contract, "atomic_write_json", side_effect=fail):
             with self.assertRaises(OSError): publish_store(self.root, changed, previous=old, current=NOW)
         self.assertEqual(read_json(self.root / STORE_REL), old)
+
+    def test_transition_checks_required_earlier_event_fields_without_materialization(self):
+        from opportunity_contract import append_event
+        for kind, field in (("detected", "instrument_kind"), ("detected", "detected_at"), ("observed", "detected_at")):
+            with self.subTest(kind=kind, field=field):
+                store = self.deferred_store(1)
+                first = store["events"][0]
+                identity = first["opportunity_id"]
+                if kind == "detected":
+                    del first["observation"][field]
+                    first["record_hash"] = canonical_sha256({k: v for k, v in first.items() if k != "record_hash"})
+                else:
+                    observed = {**first["observation"], "observation_id": "a" * 64}
+                    del observed[field]
+                    append_event(store, {"kind": "observed", "opportunity_id": identity,
+                        "recorded_at": NOW.isoformat(), "observation": observed})
+                original = copy.deepcopy(store)
+                with self.assertRaisesRegex(KeyError, field):
+                    transition(store, identity, "queued", owner="research_orchestration",
+                        reason="synthetic", sources=first["observation"]["sources"], blockers=[], current=NOW)
+                self.assertEqual(store, original)
 
     def test_wrong_layer_cannot_advance_supported_research(self):
         report = intake(self.root, current=NOW)

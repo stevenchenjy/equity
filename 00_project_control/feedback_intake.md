@@ -75,8 +75,11 @@ uses its latest acknowledged record identity and revision. A deliberately change
 revision uses a new request UUID; recovery of an uncertain unchanged save keeps
 the original UUID and payload.
 
-Ordinary browser and CLI submissions retain the backdated-fill guard. When the
-owner explicitly identifies an omitted historical fill and a correction to a
+Ordinary submissions retain the backdated-fill guard. A fill at or before the
+latest accepted Chase statement observation requires statement reconciliation
+before a cash or shares update. A same-date report without a fill time cannot
+establish that the trade came after the observation. When the owner explicitly
+identifies an omitted historical fill and a correction to a
 previously applied fill date, the operator-only historical-reconciliation path
 can preview and apply that exact source-bound batch through the same durable
 prepare/recover journal. It is not an HTTP bypass or a new account observation.

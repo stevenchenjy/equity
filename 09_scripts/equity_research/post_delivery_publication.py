@@ -17,7 +17,8 @@ from account_access import ACCOUNT_INPUTS, input_version, research_context
 from daily_common import ROOT, atomic_write_json, canonical_sha256, latest_published_market_session, now_et
 from delivery_assessments import ARCHIVE_REL, _attempt, _archived_receipt_baseline, _pending_delivery
 from email_brief import render_email
-from short_assessment import ACCOUNT_MARKET, MUTABLE_STORES, STATE_REL as SHORT_STATE_REL
+from short_assessment import (ACCOUNT_MARKET, MUTABLE_STORES, SCHEMA as SHORT_STATE_SCHEMA,
+                              STATE_REL as SHORT_STATE_REL, aware)
 from workflow_inputs import WORKFLOW_INPUTS
 
 SCHEMA = "equity_post_delivery_publication_v1"
@@ -299,6 +300,16 @@ def recover_locked(root: Path, *, clock=now_et, step_runner=None,
             return {"outcome": "not_applicable", "reason": reason, "publication_pending": True,
                     "alert_required": False, "email_attempted": False}
         _full_handoff(root, current)
+        slots = {}
+        if (root / SHORT_STATE_REL).exists():
+            state = json.loads(_read(root, SHORT_STATE_REL))
+            if (not isinstance(state, dict) or state.get("schema_version") != SHORT_STATE_SCHEMA
+                    or not isinstance(state.get("slots"), dict)):
+                raise ValueError("short_assessment_state_invalid")
+            slots = state["slots"]
+            if not all(isinstance(row, dict) for row in slots.values()):
+                raise ValueError("short_assessment_state_invalid")
+        short_deadlines = [aware(row["expires_at"]) for row in slots.values() if row.get("status") == "claimed"]
     except (OSError, ValueError, KeyError, TypeError) as exc:
         return _store(root, {"schema_version": SCHEMA, "started_at": current.isoformat(),
             "completed_at": clock().isoformat(), "outcome": "rejected", "reason": str(exc),
@@ -311,16 +322,14 @@ def recover_locked(root: Path, *, clock=now_et, step_runner=None,
         "publication_pending": True, "alert_required": False}
     from run_daily_refresh_scheduler import short_window_conflict
     from run_daily_refresh import STEP_SPECS, CURRENT_STATUS_SPEC, run_step, MARKET_SNAPSHOT_REUSE
-    state = json.loads(_read(root, SHORT_STATE_REL)) if (root / SHORT_STATE_REL).exists() else {}
-    claimed = [row for row in state.get("slots", {}).values() if row.get("status") == "claimed"]
-    active = bool(claimed)
     checked = clock()
+    # Keep the worker's expiry transition in its own journal. The timestamp
+    # ends the reservation even when that bookkeeping has not run yet.
+    active = any(expires_at > checked for expires_at in short_deadlines)
     remaining = max(0, deadline - monotonic())
     conflict = short_window_conflict(checked, maximum_seconds=remaining)
     if active or conflict or remaining <= 5:
         reason = "active_or_protected_short_window" if active or conflict else "publication_budget_unavailable"
-        if active and all(datetime.fromisoformat(row["expires_at"]) <= checked for row in claimed):
-            reason = "unretired_expired_short_claim_requires_worker_reconciliation"
         receipt.update(outcome="deferred", reason=reason,
                        completed_at=clock().isoformat())
         return _store(root, receipt)

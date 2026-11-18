@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from _support import SCRIPT_DIR  # noqa: F401
+from daily_common import canonical_sha256
 import delivery_assessments as delivery
 import held_position_risk as held
 import risk_review_alerts as risk
@@ -24,6 +25,7 @@ from delivery_schedule import risk_review_alert_window
 from email_brief import render_email
 from test_email_brief import decision_fixture
 from test_intraday_prices import seed_admitted_history
+from test_investment_plans import ledger
 from test_risk_review_alerts import NOW, seed_risk_fixture, write_csv, write_json
 
 
@@ -143,6 +145,65 @@ class RiskReviewDeliveryTests(unittest.TestCase):
     def eligible(self, rows, artifact=None):
         return delivery.delivery_eligibility(artifact or risk.build(self.root, self.now), root=self.root,
             current=self.now, rows=rows, mode='risk_review_alert')
+
+    def test_expired_plan_notice_preserves_dated_close_and_legacy_render(self):
+        self.now = self.now.replace(hour=15, minute=30)
+        observation = risk.build(self.root, self.now)
+        evaluation = self.eligible([], observation)
+        wrapper = delivery.risk_review_envelope(observation, evaluation)
+        _, plain, html = delivery.render_risk_review_alert(wrapper)
+        for body in (plain, html):
+            self.assertIn('Risk review checked at 2026-11-06T15:30:00-05:00', body)
+            self.assertIn('Recorded holding: 1 share.', body)
+            self.assertIn('Close $90.00 on 2026-11-05; not live.', body)
+            self.assertIn('The recorded plan expired. Reassess the holding', body)
+            self.assertNotIn('lacks a current verified risk review or usable risk evidence', body)
+            self.assertNotIn('held plan expired pending verification', body)
+
+        observation['schema_version'] = risk.LEGACY_SCHEMA
+        observation.pop('content_sha256')
+        observation['content_sha256'] = canonical_sha256(observation)
+        old_wrapper = delivery.risk_review_envelope(observation, evaluation)
+        _, old_plain, old_html = delivery.render_risk_review_alert(old_wrapper)
+        # Captured from the production v1 renderer for these exact fixture facts.
+        self.assertEqual(hashlib.sha256(old_plain.encode()).hexdigest(),
+                         '8c201cdc3bb2ce42a96df4bfeceeb091095552d1107b6f1223236b57988a8eb2')
+        self.assertEqual(hashlib.sha256(old_html.encode()).hexdigest(),
+                         '1391d41f060e40c32399c029a4b01578962227c9de38107ab10635b008e4d27f')
+        archived = self.archive(old_wrapper)
+        self.assertEqual(delivery._risk_receipt_state(archived, root=self.root)['active'],
+                         evaluation['selected_episode_keys'])
+
+    def test_plan_review_due_copy_does_not_call_the_plan_expired(self):
+        plan = json.loads((self.root / risk.PLAN).read_text())['records'][0]
+        plan.pop('record_hash')
+        plan.pop('valid_until')
+        plan.pop('reviewed_allocation')
+        write_json(self.root, risk.PLAN, ledger(plan))
+        self.now = self.now.replace(hour=15, minute=30)
+        observation = risk.build(self.root, self.now)
+        self.assertEqual(observation['risk_rows'][0]['plan_state'], 'review_due')
+        wrapper = delivery.risk_review_envelope(observation, self.eligible([], observation))
+        _, plain, html = delivery.render_risk_review_alert(wrapper)
+        for body in (plain, html):
+            self.assertIn('The recorded plan has reached its review deadline.', body)
+            self.assertNotIn('plan expired', body)
+
+    def test_legacy_risk_receipt_covers_same_episode_after_render_upgrade(self):
+        observation = risk.build(self.root, self.now)
+        evaluation = self.eligible([], observation)
+        observation['schema_version'] = risk.LEGACY_SCHEMA
+        observation.pop('content_sha256')
+        observation['content_sha256'] = canonical_sha256(observation)
+        wrapper = delivery.risk_review_envelope(observation, evaluation)
+        receipt = self.archive(wrapper,
+            reason='delivery_mode=risk_review_alert;delivery_purpose_v1=' + evaluation['purpose_key'])
+        self.now = self.now.replace(hour=12, minute=30)
+        new_observation = risk.build(self.root, self.now)
+        self.assertEqual(new_observation['active_episode_keys'], observation['active_episode_keys'])
+        after = self.eligible([receipt], new_observation)
+        self.assertEqual(after['reason'], 'held_risk_already_covered_or_no_condition')
+        self.assertFalse(after['eligible'])
 
     def test_independent_notice_claim_archive_and_existing_recipient_without_canonical_refresh(self):
         write_json(self.root, delivery.REFRESH_REL, {'outcome': 'failed', 'hard_failures': ['company_research']})

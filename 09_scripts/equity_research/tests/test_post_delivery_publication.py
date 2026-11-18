@@ -273,6 +273,36 @@ class PostDeliveryPublicationTests(unittest.TestCase):
         self.assertEqual(self.recover(exhausted)['outcome'], 'failed')
         self.assertLess(len(self.calls), len(repair.STEP_NAMES))
 
+    def test_live_short_claim_defers_but_time_expired_claim_needs_no_journal_mutation(self):
+        self.append_delivery()
+        path = self.root / repair.SHORT_STATE_REL
+        from short_assessment import SCHEMA
+        row = {'status': 'claimed', 'expires_at': (NOW + timedelta(seconds=1)).isoformat()}
+        state = {'schema_version': SCHEMA, 'slots': {'2026-10-26/09:30': row}}
+        atomic_write_json(path, state)
+        result = self.recover()
+        self.assertEqual(result['outcome'], 'deferred', result)
+        self.assertEqual(result['reason'], 'active_or_protected_short_window')
+        self.assertEqual(self.calls, [])
+        row['expires_at'] = NOW.replace(tzinfo=None).isoformat()
+        atomic_write_json(path, state)
+        invalid = self.recover()
+        self.assertEqual(invalid['outcome'], 'rejected', invalid)
+        self.assertEqual(invalid['reason'], 'short_assessment_aware_timestamp_required')
+        self.assertEqual(self.calls, [])
+        atomic_write_json(path, {**state, 'slots': []})
+        invalid = self.recover()
+        self.assertEqual(invalid['outcome'], 'rejected', invalid)
+        self.assertEqual(invalid['reason'], 'short_assessment_state_invalid')
+        self.assertEqual(self.calls, [])
+        row['expires_at'] = NOW.isoformat()
+        atomic_write_json(path, state)
+        original = path.read_bytes()
+        recovered = self.recover()
+        self.assertEqual(recovered['outcome'], 'passed', recovered)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(self.calls, list(repair.STEP_NAMES))
+
     def test_slow_proof_rechecks_actual_clock_before_starting_stages(self):
         self.append_delivery(); calls = [0]
         def clock():

@@ -73,6 +73,11 @@ digests are reused only inside one read-only validation transaction, with a
 file-identity check on each lookup and a final mutation fence. No result is
 trusted across invocations. The stage set, 75-second child limit and ten-minute
 claim remain unchanged; faster validation does not grant investment authority.
+Intake and objective work can reuse verified source digests across their separate
+validation transactions within one invocation. Every lookup checks the file
+identity and each transaction retains its final mutation check. Journal checks
+still walk all events. Calendar row-order changes alone do not append a new
+research observation. A changed raw issuer-row digest still requires review.
 
 A truthful degraded, zero-order full publication can document the
 remaining public-data failure for a no-action result; it is not a passing
@@ -139,7 +144,9 @@ existing natural scheduler poll only after its source proof and remaining
 protected time budget pass again. The combined pre/post recovery work has a
 180-second allowance, with each stage at most 75 seconds, within the existing
 parent process bound. An approaching short slot or active claim defers recovery;
-it does not admit an early claim or extend an existing one.
+it does not admit an early claim or extend an existing one. A reservation whose
+aware expiry has passed no longer holds recovery, even if the assessment worker
+has yet to record its expiry. The worker retains ownership of that history.
 
 A quantity withheld solely because its exact earlier delivered instruction still
 requires reconciliation is retained advice, not a new withdrawal. This existing

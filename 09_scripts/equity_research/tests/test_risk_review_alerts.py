@@ -105,6 +105,19 @@ class RiskReviewAlertTests(unittest.TestCase):
         self.assertTrue(any("responses/" in x for x in self.first["source_bindings"]))
         self.assertNotIn("order_draft", json.dumps(self.first))
 
+    def test_risk_evidence_available_without_a_reviewed_hold(self):
+        self.change_price(100)
+        observed = self.build()
+        self.assertEqual(observed["risk_rows"][0]["state"], "RISK_EVIDENCE_AVAILABLE")
+        self.assertEqual(alerts.episode_keys(observed), [])
+        self.assertTrue(alerts.recovered_episode_keys(observed))
+        legacy = deepcopy(observed)
+        legacy["schema_version"] = alerts.LEGACY_SCHEMA
+        legacy["risk_rows"][0]["state"] = "REVIEWED_HOLD"
+        legacy.pop("content_sha256")
+        legacy["content_sha256"] = canonical_sha256(legacy)
+        self.assertEqual(alerts.recovered_episode_keys(legacy), alerts.recovered_episode_keys(observed))
+
     def test_clock_recomputes_expiry_without_any_new_canonical_decision(self):
         later = NOW + timedelta(hours=1)
         expired = self.build(later)

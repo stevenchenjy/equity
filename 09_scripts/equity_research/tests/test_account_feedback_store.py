@@ -7,6 +7,7 @@ from unittest.mock import patch
 from datetime import datetime
 from _support import SCRIPT_DIR  # noqa: F401
 from account_feedback_store import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version, read, sha
+from chase_statement import STATEMENT_INDEX
 
 
 class FeedbackTests(unittest.TestCase):
@@ -56,6 +57,27 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(rows((self.root/LEDGER).read_bytes())[0]['fees'],'0')
         self.assertEqual(self.store.submit(p),r)
         self.assertEqual(len(rows((self.root/LEDGER).read_bytes())),1)
+
+    def test_chase_statement_blocks_replay_and_allows_later_fill(self):
+        self.put(STATEMENT_INDEX, {'schema': 'chase_activity_windows_v1', 'windows': [
+            {'account_as_of': '2026-09-29T15:00:00-04:00'},
+            {'account_as_of': '2026-09-27T15:00:00-04:00'},
+        ]})
+        before = {path: read(self.root, path) for path in (ACCOUNT, POSITIONS, ORDERS)}
+        for date, time in [('2026-09-28', '14:00'), ('2026-09-29', ''), ('2026-09-29', '15:00')]:
+            with self.subTest(date=date, time=time):
+                pending = self.submit(self.payload(date=date, time=time))
+                self.assertEqual(pending['stage'], 'pending')
+                self.assertIn('accepted Chase statement', pending['missing'][0])
+        self.assertEqual(before, {path: read(self.root, path) for path in before})
+        self.assertFalse((self.root / LEDGER).exists())
+
+        same_day_later = self.store.preview(self.payload(date='2026-09-29', time='15:01'))
+        self.assertEqual(same_day_later['missing'], [])
+        applied = self.submit(self.payload(date='2026-09-30', time='', side='sell'))
+        self.assertEqual(applied['stage'], 'applied')
+        self.assertEqual(applied['changes']['shares_after'], 1)
+        self.assertEqual(applied['changes']['cash_after'], 1100)
 
     def total_payload(self, **changes):
         p=self.simple_payload(**changes)

@@ -343,6 +343,8 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
             # Presentation may evolve; exact older archived bodies still bind
             # the original advice chain. Never regenerate or rewrite history.
             accepted = [render_failure_brief(old)[1:]]
+            if old['failure_reason'] == 'capital_decision_inputs_changed_recompose_required':
+                accepted.append(_render_failure_brief(old, historical_capital_copy=True)[1:])
             if 'household_planning' not in old:
                 accepted.extend((_render_prior_failure_cards(old)[1:], _render_legacy_failure_brief(old)[1:]))
             require(tuple(bodies) in accepted, 'baseline_status_render_mismatch')
@@ -599,17 +601,20 @@ def validate_risk_review_envelope(artifact: dict) -> dict:
 def render_risk_review_alert(artifact: dict) -> tuple[str, str, str]:
     validate_risk_review_envelope(artifact)
     from equity_naming import subject_prefix
+    from risk_review_alerts import LEGACY_SCHEMA, UNAVAILABLE
     observation = artifact['risk_review_alert']
+    legacy = observation['schema_version'] == LEGACY_SCHEMA
     selected = set(artifact['risk_delivery']['selected_episode_keys'])
     conditions = [row for row in observation['conditions'] if row['episode_key'] in selected]
-    lines = [observation['headline'], 'Observed: ' + observation['generated_at'],
+    lines = [observation['headline'], ('Observed: ' if legacy else 'Risk review checked at ') + observation['generated_at'],
         'Risk review requested. No new order, replacement instruction or renewed plan is created.']
     for row in observation['risk_rows']:
         entries = [item for item in conditions if item['ticker'] == row['ticker']]
         if not entries:
             continue
+        share_unit = 'share' if not legacy and row['recorded_shares'] == 1 else 'shares'
         lines += [row['ticker'] + ' — risk review requested',
-            f"Recorded holding: {row['recorded_shares']:g} shares.",
+            f"Recorded holding: {row['recorded_shares']:g} {share_unit}.",
             'Plan: ' + str(row['plan_state']).replace('_', ' ') + '.']
         lines.append('Plan identity: ' + str(row['plan_id']) + ', version ' + str(row['plan_version']) + '.'
                      if row.get('plan_id') else 'No current plan is recorded for this holding.')
@@ -619,9 +624,19 @@ def render_risk_review_alert(artifact: dict) -> tuple[str, str, str]:
             if row.get('basis_price_change_pct') is not None:
                 lines.append(f"{row['basis_price_change_pct']:+.2f}% versus recorded average basis ${row['recorded_average_basis']:.2f}.")
         else:
-            lines.append('Current ticker price unavailable; no current return is inferred.')
+            lines.append('Current ticker price unavailable; no current return is inferred.' if legacy else
+                         'A verified completed-session close is unavailable.')
         for condition in entries:
-            lines.append(condition['summary'])
+            if legacy or condition['trigger'] != UNAVAILABLE:
+                lines.append(condition['summary'])
+            elif row['plan_state'] == 'expired_pending_verification':
+                lines.append('The recorded plan expired. Reassess the holding before relying on it for a current decision.')
+            elif row['plan_state'] == 'review_due':
+                lines.append('The recorded plan has reached its review deadline. Reassess the holding using current evidence.')
+            elif row['plan_state'] == 'time_exit_due_pending_verification':
+                lines.append('The recorded exit deadline has passed. Verify outstanding orders and remaining shares before reassessment.')
+            else:
+                lines.append('A current risk review is required for the recorded holding. Check the unresolved items below.')
             if condition['reference'] is not None:
                 lines.append('Observed condition: ' + condition['kind'].replace('_', ' ') +
                     f" ${condition['reference']:.2f}, " + condition['direction'].replace('_', ' ') + '.')
@@ -630,8 +645,12 @@ def render_risk_review_alert(artifact: dict) -> tuple[str, str, str]:
                     lines.append('Observation time: ' + str(condition.get('observation_at'))
                         + '; session: ' + str(condition.get('observation_session'))
                         + ('; expires: ' + str(condition['expires_at']) if condition.get('expires_at') else '') + '.')
-        if row.get('dependencies'):
-            lines.append('Unresolved: ' + '; '.join(str(code).replace('_', ' ') for code in row['dependencies']) + '.')
+        dependencies = row.get('dependencies', [])
+        if not legacy:
+            shown = {row['plan_state'], 'held_plan_' + row['plan_state'], 'current_ticker_close_unavailable'}
+            dependencies = [code for code in dependencies if code not in shown]
+        if dependencies:
+            lines.append('Unresolved: ' + '; '.join(str(code).replace('_', ' ') for code in dependencies) + '.')
         lines.append('Next: ' + row['next_step'] + ' Due: ' + str(row['review_due_by']) + '.')
     lines += ['Recorded basis may include wash-sale adjustments; these observations are not total portfolio drawdown.',
         'Current broker protection is not inferred from a research plan. Human review remains required.']
@@ -919,7 +938,11 @@ def _render_prior_failure_cards(artifact: dict) -> tuple[str, str, str]:
 
 
 def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
-    """Expose the exact failed condition and responsible operational next step."""
+    """Expose the failed condition and responsible operational next step."""
+    return _render_failure_brief(artifact)
+
+
+def _render_failure_brief(artifact: dict, *, historical_capital_copy: bool = False) -> tuple[str, str, str]:
     validate_failure_brief_archive(artifact)
     from email_brief import _render_cards
     from equity_naming import subject_prefix
@@ -929,8 +952,8 @@ def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
             'Earnings research changed or crossed an evidence or review deadline after the last publication.',
             'Recompose the decision from current evidence and validate the earnings view before the next eligible delivery check.'),
         'capital_decision_inputs_changed_recompose_required': (
-            'The current capital decision no longer matches its bound inputs, including the delivery ledger.',
-            'Reconcile the changed input and regenerate the capital decision and email; verify source bindings before delivery.'),
+            'At least one bound input differs from the published capital decision. This failure code does not identify which input changed.',
+            'Compare the current input hashes with those saved in the capital decision. Rebuild the decision and verify the new email text and HTML before delivery.'),
         'workflow_plan_state_changed_recompose_required': (
             'A maintained position plan changed or expired after the last publication.',
             'Recompose the current risk and plan states, and assign the expired holding review to the analyst.'),
@@ -939,6 +962,9 @@ def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
             'Inspect the named failed stages in the retained refresh receipt, repair the failure, then run and validate the no-send decision chain.'),
     }.get(reason, ('A required publication check did not pass.',
         'Inspect the retained refresh and validation receipts, resolve the named failure, and validate a new publication before resuming recommendations.'))
+    if historical_capital_copy and reason == 'capital_decision_inputs_changed_recompose_required':
+        detail = 'The current capital decision no longer matches its bound inputs, including the delivery ledger.'
+        next_step = 'Reconcile the changed input and regenerate the capital decision and email; verify source bindings before delivery.'
     subject = subject_prefix() + ' ' + artifact['headline'] + ' — ' + artifact['cycle_date']
     sections = [
         {'title': 'Status only — no current trading instruction', 'kind': 'inactive',

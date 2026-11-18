@@ -22,7 +22,8 @@ from daily_common import ET, canonical_sha256
 from investment_plans import regular_close, stamp
 from plan_source_resolutions import read_regular, safe_path
 
-SCHEMA = "equity_risk_review_alert_v1"
+LEGACY_SCHEMA = "equity_risk_review_alert_v1"
+SCHEMA = "equity_risk_review_alert_v2"
 HEADLINE = "Held-position risk review — no new order"
 CROSSED = "approved_risk_condition_crossed"
 UNAVAILABLE = "held_review_or_protection_unavailable"
@@ -50,6 +51,16 @@ def _risk_dependencies(row):
     # This standing manual execution check applies to every protective draft.
     # It cannot suppress a dated risk condition or manufacture a risk outage.
     return [code for code in row.get("dependencies", []) if code != "fresh_quote_and_available_shares_required"]
+
+
+def _risk_state(conditions, evidence_available, schema):
+    if any(condition["active"] is True for condition in conditions):
+        return "RISK_ALERT"
+    if not evidence_available:
+        return "REVIEW_REQUIRED"
+    # This projection can run without a current capital decision. Available
+    # held-risk evidence does not independently establish a reviewed HOLD.
+    return "REVIEWED_HOLD" if schema == LEGACY_SCHEMA else "RISK_EVIDENCE_AVAILABLE"
 
 
 def _json(root, relative):
@@ -265,8 +276,7 @@ def _projection(report, intraday=None, plans=()):
                 "quote", "recorded_average_basis", "basis_label", "basis_price_change_pct", "unrealized_change_usd",
                 "dependencies", "broker_protection", "rationale", "next_step", "review_due_by")
         visible = {key: row.get(key) for key in keep}
-        visible.update(conditions=observed_conditions, state="RISK_ALERT" if any(x["active"] is True for x in observed_conditions)
-                       else "REVIEW_REQUIRED" if not healthy else "REVIEWED_HOLD")
+        visible.update(conditions=observed_conditions, state=_risk_state(observed_conditions, healthy, SCHEMA))
         rows.append(visible)
     return sorted(rows, key=lambda r: r["ticker"]), sorted(conditions, key=lambda c: c["episode_key"])
 
@@ -302,7 +312,7 @@ def validate_archive(artifact: dict) -> dict:
     binding before using this result as evidence of prior recipient coverage.
     """
     try:
-        if (not isinstance(artifact, dict) or set(artifact) != FIELDS or artifact.get("schema_version") != SCHEMA
+        if (not isinstance(artifact, dict) or set(artifact) != FIELDS or artifact.get("schema_version") not in {LEGACY_SCHEMA, SCHEMA}
                 or artifact.get("headline") != HEADLINE or artifact.get("inventory_available") is not True
                 or any(artifact.get(k) is not False for k in ("automatic_action_allowed", "trading_eligibility_granted", "email_authorized"))
                 or artifact.get("content_sha256") != canonical_sha256({k: v for k, v in artifact.items() if k != "content_sha256"})
@@ -372,7 +382,7 @@ def validate_archive(artifact: dict) -> dict:
                            and row["plan_record_hash"] and row["quote"] and not _risk_dependencies(row))
             if (len(unavailable) != 1 or unavailable[0]["active"] != (not healthy)
                     or sorted(row["conditions"], key=lambda c: c["episode_key"]) != cross
-                    or row["state"] != ("RISK_ALERT" if any(c["active"] is True for c in cross) else "REVIEW_REQUIRED" if not healthy else "REVIEWED_HOLD")):
+                    or row["state"] != _risk_state(cross, healthy, artifact["schema_version"])):
                 raise ValueError()
         if (artifact["active_episode_keys"] != sorted(c["episode_key"] for c in artifact["conditions"] if c["active"] is True)
                 or artifact["recovered_episode_keys"] != sorted(c["episode_key"] for c in artifact["conditions"] if c["active"] is False)):

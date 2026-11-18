@@ -91,6 +91,23 @@ def rows(raw):
     return list(csv.DictReader(io.StringIO(raw.decode()))) if raw else []
 
 
+def latest_chase_statement_observation(root):
+    """A completed Chase snapshot has already incorporated its activity window."""
+    raw = read(root, STATEMENT_INDEX, optional=True)
+    if not raw and not (root / STATEMENT_INDEX).exists():
+        return None
+    try:
+        index = json.loads(raw)
+        if index['schema'] != 'chase_activity_windows_v1' or not isinstance(index['windows'], list):
+            raise ValueError('invalid activity window index')
+        observations = [datetime.fromisoformat(window['account_as_of']) for window in index['windows']]
+        if any(observed.tzinfo is None for observed in observations):
+            raise ValueError('missing observation timezone')
+        return max(observations, default=None)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise FeedbackError('chase_statement_index_invalid') from exc
+
+
 def verify_publication(root, decision):
     """Verify the final visible publication, beyond hashes on stale content."""
     account=json.loads(read(root,ACCOUNT))
@@ -392,6 +409,9 @@ class Store:
             prior_dates = [r.get('fill_date','') for r in rows(read(self.root,CONFIRMED,optional=True)) if r.get('canonical_state_applied')=='yes']
             if prior_dates and f['date'] < max(prior_dates) and historical is None:
                 missing.append('较晚成交已计入账户；先完整账户核对，避免倒序重复应用')
+            statement_observed = latest_chase_statement_observation(self.root)
+            if statement_observed is not None and event <= statement_observed:
+                missing.append('The reported fill might already be included in the accepted Chase statement. Reconcile the statement before applying the fill.')
             if f['order_type'] not in {'LIMIT','MARKET','STOP','STOP_LIMIT','UNSPECIFIED'}: raise FeedbackError('invalid_order_type')
             if status == 'partial':
                 need('remaining','剩余挂单股数',integer=True)

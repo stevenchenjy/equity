@@ -174,10 +174,11 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             # Preserve the materialized replay's required-field contract even
             # when the caller discards its output.
             reason_code = event["reason_code"]
-            result[identity] = {"opportunity_id": identity, "ticker": packet["ticker"], "instrument_kind": packet["instrument_kind"],
-                "first_seen_at": packet["detected_at"], "first_observation": copy.deepcopy(packet),
+            instrument_kind, detected_at = packet["instrument_kind"], packet["detected_at"]
+            result[identity] = {"opportunity_id": identity, "ticker": packet["ticker"], "instrument_kind": instrument_kind,
+                "first_seen_at": detected_at, "first_observation": copy.deepcopy(packet),
                 "observations": [copy.deepcopy(packet)], "initial_state": event["to_state"], "state": event["to_state"],
-                "last_evidence_at": packet["detected_at"], "research_started_at": "", "objective_completed_at": "",
+                "last_evidence_at": detected_at, "research_started_at": "", "objective_completed_at": "",
                 "assessment_at": "", "transitions": [], "blockers": event.get("blockers", []),
                 "owner": event["owner"], "reason_code": reason_code, **AUTHORITY} if materialize else {
                     "ticker": packet["ticker"], "state": event["to_state"]}
@@ -188,9 +189,10 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             if root:
                 validate_observation(packet, root=root, current=clock)
             observations.add(packet["observation_id"])
+            detected_at = packet["detected_at"]
             if materialize:
                 result[identity]["observations"].append(copy.deepcopy(packet))
-                result[identity]["last_evidence_at"] = packet["detected_at"]
+                result[identity]["last_evidence_at"] = detected_at
         elif kind == "transition":
             require(identity in result and event["to_state"] in TRANSITIONS, "research_transition_invalid")
             item = result[identity]
@@ -223,11 +225,11 @@ def append_event(store: dict, event: dict) -> None:
 
 def transition(store: dict, identity: str, target: str, *, owner: str, reason: str,
                sources: list, blockers: list, current: datetime) -> None:
-    item = replay(store)[identity]
+    item = _replay(store, materialize=False)[identity]
     append_event(store, {"kind": "transition", "opportunity_id": identity,
         "from_state": item["state"], "to_state": target, "owner": owner, "reason_code": reason,
         "sources": sources, "blockers": blockers, "recorded_at": current.isoformat()})
-    replay(store)
+    _replay(store, materialize=False)
 
 
 def transition_batch(store: dict, changes: list[dict], *, root: Path, current: datetime) -> None:
@@ -255,7 +257,7 @@ def transition_batch(store: dict, changes: list[dict], *, root: Path, current: d
             "reason_code": change["reason"], "sources": change["sources"], "blockers": change["blockers"],
             "recorded_at": current.isoformat()})
         item["state"] = target
-    replay(candidate, root=root, current=current)
+    validate_journal(candidate, root=root, current=current)
     store["events"].extend(candidate["events"][len(store["events"]):])
 
 
@@ -301,7 +303,7 @@ def retain_history_json(path: Path, payload: dict) -> Path:
 
 def publish_store(root: Path, store: dict, *, previous: dict, current: datetime) -> None:
     require(store["events"][:len(previous["events"])] == previous["events"], "research_history_rewrite_forbidden")
-    replay(store, root=root, current=current)
+    validate_journal(store, root=root, current=current)
     old_path = root / STORE_REL
     require(read_json(old_path, empty_store()) == previous, "research_store_changed_before_publication")
     if store == previous and old_path.exists():

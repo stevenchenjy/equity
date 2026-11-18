@@ -171,13 +171,25 @@ def _base_metrics() -> dict:
         "analyst_assessments_completed": 0, "attempts": []}
 
 
+def _earnings_schedule_evidence(evidence: dict) -> dict:
+    # A row can move when other issuers are reordered. Keep its exact digest
+    # and all schedule/evidence fields in the comparison and retain the full
+    # position locator in every admitted observation.
+    stable = {k: v for k, v in evidence.items() if k != "prior_schedule_observation_id"}
+    stable["event"] = {k: v for k, v in evidence["event"].items() if k != "row_index"}
+    return stable
+
+
+@content_proof_scope()
 def intake(root: Path, *, current: datetime) -> dict:
     start = time.monotonic()
     policy = validate_policy(read_json(root / POLICY_REL))
     with ExclusiveFileLock(root / BASE_REL / "store.lock"):
         previous = read_json(root / STORE_REL, empty_store())
         items = replay(previous, root=root, current=current)
-        store, metrics = copy.deepcopy(previous), _base_metrics()
+        # Events are append-only. Candidate transitions append new records and
+        # never edit an existing event, so only the event list needs isolation.
+        store, metrics = {**previous, "events": list(previous["events"])}, _base_metrics()
         held = held_tickers(root)
         expirations = []
         for identity, item in items.items():
@@ -198,22 +210,21 @@ def intake(root: Path, *, current: datetime) -> dict:
         for p in sorted(packets, key=lambda i: priority(i, held, current=current)):
             schedule_key = ((p["ticker"], p["evidence"]["event"]["event_id"])
                 if p.get("trigger") == "upcoming_earnings_calendar" else None)
-            if p["observation_id"] in seen:
-                latest = latest_schedules.get(schedule_key)
-                semantic = lambda evidence: {k: v for k, v in evidence.items() if k != "prior_schedule_observation_id"}
-                if latest and semantic(latest["evidence"]) != semantic(p["evidence"]):
-                    # A recovery can match an earlier original schedule. Bind
-                    # this newly observed state to the immediately prior state
-                    # rather than rewriting history or discarding it as old.
-                    evidence = {**copy.deepcopy(p["evidence"]),
-                        "prior_schedule_observation_id": latest["observation_id"]}
-                    p = packet(ticker=p["ticker"], family=p["family"], trigger=p["trigger"],
-                        evidence=evidence, sources=p["sources"], current=aware(p["detected_at"]),
-                        produced_by=p["producer"], kind=p["instrument_kind"], missing=p["missing_evidence"])
-                    validate_observation(p, root=root, current=current)
-                else:
-                    metrics["duplicate_packets_skipped"] += 1
-                    continue
+            latest = latest_schedules.get(schedule_key)
+            duplicate = p["observation_id"] in seen
+            if ((latest and _earnings_schedule_evidence(latest["evidence"]) == _earnings_schedule_evidence(p["evidence"]))
+                    or duplicate and not latest):
+                metrics["duplicate_packets_skipped"] += 1
+                continue
+            if duplicate:
+                # A recovery can match an earlier original schedule. Bind
+                # this newly observed state to the immediately prior state
+                # rather than rewriting history or discarding it as old.
+                evidence = {**p["evidence"], "prior_schedule_observation_id": latest["observation_id"]}
+                p = packet(ticker=p["ticker"], family=p["family"], trigger=p["trigger"],
+                    evidence=evidence, sources=p["sources"], current=aware(p["detected_at"]),
+                    produced_by=p["producer"], kind=p["instrument_kind"], missing=p["missing_evidence"])
+                validate_observation(p, root=root, current=current)
             identity = by_ticker.get(p["ticker"])
             if identity:
                 append_event(store, {"kind": "observed", "opportunity_id": identity,
@@ -280,6 +291,7 @@ def intake(root: Path, *, current: datetime) -> dict:
         return publish_view(root, store, current=current, metrics=metrics, diagnostics=diagnostics)
 
 
+@content_proof_scope()
 def objective(root: Path, *, current: datetime, allow_network: bool = False, clock=None) -> dict:
     start = time.monotonic()
     clock = clock or (lambda: current)
@@ -287,7 +299,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
     with ExclusiveFileLock(root / BASE_REL / "store.lock"):
         previous = read_json(root / STORE_REL, empty_store())
         initial_items = replay(previous, root=root, current=current)
-        store, metrics = copy.deepcopy(previous), _base_metrics()
+        store, metrics = {**previous, "events": list(previous["events"])}, _base_metrics()
         metrics["request_limit"] = 2*policy["external_issuers_per_fetch"]
         config = read_json(root / "00_project_control/active_production_config.json", {})
         budget = config.get("workflow", {}).get("objective_research_max_tickers", 3)

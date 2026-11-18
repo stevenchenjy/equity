@@ -57,6 +57,10 @@ condition, dated observation and freshness limits, account/protection uncertaint
 precise responsible resolver and next existing review expectation. It clearly
 requests human review and states that it creates or renews no order. A valid
 observation for one holding must not imply validated prices or NAV for others.
+The check time and the price observation time have separate meanings. An
+expired plan or a due review can require reassessment while the dated close
+remains available. Standalone risk evidence availability carries no reviewed
+HOLD decision. That decision requires the canonical capital review.
 
 Retain the exact source-bound decision, typed delivery purpose and immutable
 text/HTML. Deduplicate the same ticker/plan/condition state against actual recent

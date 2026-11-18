@@ -1,6 +1,7 @@
 graphify-out/
 11_archive/
 .git/
+.codex-worktrees/
 .venv/
 venv/
 __pycache__/
