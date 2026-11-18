@@ -69,7 +69,6 @@ def _recomposition_step(root: Path, claim_id: str) -> dict:
 
 def _validated_publication(root: Path, current: datetime) -> dict:
     from workflow_integrity import validate_published_workflow
-    from delivery_assessments import delivery_policy_context, priority_review_context
     from email_brief import render_email
     from research_opportunities import report_proof_scope
     from validation_cache import file_hash_validation, read_hashed_bytes
@@ -80,8 +79,8 @@ def _validated_publication(root: Path, current: datetime) -> dict:
         raw, _ = read_hashed_bytes(_inside(root, decision_path))
         decision = json.loads(raw.decode("utf-8"))
         if (decision.get("workflow_integrity", {}).get("schema_version") != "equity_workflow_integrity_v1"
-                or decision.get("assessment_delivery_policy") != delivery_policy_context(root)
-                or decision.get("analyst_priority_review") != priority_review_context(root, current=current)):
+                or "assessment_delivery_policy" not in decision
+                or "analyst_priority_review" not in decision):
             raise ValueError("short_assessment_typed_current_publication_required")
         validate_published_workflow(decision, root=root, current=current)
         _subject, text, html = render_email(decision)

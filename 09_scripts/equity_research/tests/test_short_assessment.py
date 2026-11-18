@@ -114,6 +114,52 @@ class ShortAssessmentTests(unittest.TestCase):
             validate.assert_called_once()
         self.assertEqual(short._validated_publication(self.root, current), decision)
 
+    def test_publication_revalidates_each_current_delivery_context_once(self):
+        from delivery_assessments import delivery_policy_context, priority_review_context
+
+        current = self.moment("09:20")
+        with patch("delivery_assessments.delivery_policy_context", wraps=delivery_policy_context) as policy, patch(
+                "delivery_assessments.priority_review_context", wraps=priority_review_context) as priority:
+            short._validated_publication(self.root, current)
+        policy.assert_called_once_with(self.root)
+        priority.assert_called_once_with(self.root, current=current)
+
+    def test_publication_rejects_missing_and_forged_delivery_contexts(self):
+        current = self.moment("09:20")
+        path = self.root / "04_research/company_research/daily_decision.json"
+        valid = json.loads(path.read_text())
+        for field, error in (
+                ("assessment_delivery_policy", "workflow_assessment_delivery_policy_changed_recompose_required"),
+                ("analyst_priority_review", "workflow_priority_review_changed_recompose_required")):
+            with self.subTest(field=field):
+                atomic_write_json(path, {key: value for key, value in valid.items() if key != field})
+                with self.assertRaisesRegex(ValueError, "^short_assessment_typed_current_publication_required$"):
+                    short._validated_publication(self.root, current)
+                atomic_write_json(path, {**valid, field: {**valid[field], "forged": True}})
+                with self.assertRaisesRegex(ValueError, f"^{error}$"):
+                    short._validated_publication(self.root, current)
+
+    def test_publication_fences_priority_source_after_context_check(self):
+        from delivery_assessments import AUTHORITY, STORE_REL, priority_review_context
+
+        current = self.moment("09:20")
+        source = self.root / STORE_REL
+        atomic_write_json(source, {"schema_version": "equity_priority_review_store_v1", "records": [], **AUTHORITY})
+        decision = self.typed_publication("09:20")
+
+        def check_then_replace(root, *, current):
+            context = priority_review_context(root, current)
+            replacement = source.with_suffix(".replacement")
+            replacement.write_bytes(source.read_bytes())
+            replacement.replace(source)
+            return context
+
+        with patch("delivery_assessments.priority_review_context", side_effect=check_then_replace) as check:
+            with self.assertRaisesRegex(ValueError, "^validation_sources_changed_during_transaction$"):
+                short._validated_publication(self.root, current)
+            check.assert_called_once()
+        self.assertEqual(short._validated_publication(self.root, current), decision)
+
     def refresh_receipt(self, started, completed, *, degraded=False):
         from run_daily_refresh import STEP_SPECS
         atomic_write_json(self.root / "00_project_control/run_logs/daily_refresh_state.local.json", {
