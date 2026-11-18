@@ -215,6 +215,19 @@ class SchedulingRecoveryTests(unittest.TestCase):
                 refresh.run_step(name, script, True, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE)
                 self.assertNotIn("--refresh", child.call_args.args[0])
 
+    def test_publication_only_flag_reaches_only_the_offline_composer_child(self):
+        with (patch.object(refresh, "run_stage", return_value=subprocess.CompletedProcess([], 0)) as child,
+                patch("decision_dependencies.observe", return_value=None),
+                patch("decision_dependencies.record_attempt"), patch.object(refresh, "atomic_write_json")):
+            refresh.run_step("daily_decision", "composer.py", False, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE)
+            self.assertNotIn("--publication-only", child.call_args.args[0])
+            refresh.run_step("daily_decision", "composer.py", False, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE,
+                             publication_only=True)
+            self.assertIn("--publication-only", child.call_args.args[0])
+            refresh.run_step("current_status", "status.py", False, market_snapshot_mode=refresh.MARKET_SNAPSHOT_REUSE,
+                             publication_only=True)
+            self.assertNotIn("--publication-only", child.call_args.args[0])
+
     def test_short_window_protection_preserves_grace_budget_and_early_close(self):
         for clock in ("13:43", "14:00", "14:11", "14:24"):
             hour, minute = map(int, clock.split(":"))

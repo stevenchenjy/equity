@@ -58,14 +58,45 @@ class StrategyFrameworkIntegrationTests(unittest.TestCase):
                      patch("swing_benchmarks_v2.build", return_value=benchmarks) as compare, \
                      patch("active_swing_research.build", return_value=study) as build, \
                      patch("earnings_survival.build", return_value={"status":"prospective_research_only","capital_authority":False}) as earnings:
-                    compose_strategy_research(decision, root=Path("/unused"), current=current)
-                build.assert_called_once_with(Path("/unused"), current=current, capture=False, baseline=decision)
+                    compose_strategy_research(decision, root=Path("/unused"), current=current, capture=True)
+                build.assert_called_once_with(Path("/unused"), current=current, capture=True, baseline=decision)
                 self.assertEqual(decision["strategy_framework"]["swing_research"], study)
-                compare.assert_called_once_with(Path("/unused"), current=current, capture=False)
+                compare.assert_called_once_with(Path("/unused"), current=current, capture=True)
                 self.assertEqual(decision["strategy_framework"]["swing_benchmarks"], benchmarks)
-                earnings.assert_called_once_with(Path("/unused"), current=current, capture=False, baseline=decision)
+                earnings.assert_called_once_with(Path("/unused"), current=current, capture=True, baseline=decision)
                 self.assertFalse(decision["strategy_framework"]["earnings_survival"]["capital_authority"])
                 self.assertEqual({k: v for k, v in decision.items() if k != "strategy_framework"}, original)
+
+    def test_publication_only_preserves_canonical_action_and_defers_frozen_studies(self):
+        from decision_readiness import DEFERRED_STUDY
+        from delivery_continuity import delivery_meaning_key
+        from email_brief import render_email
+        from test_notification_changes import notification_fixture
+        decision = notification_fixture()
+        original = deepcopy(decision)
+        current = datetime(2026, 10, 27, 21, 0, tzinfo=ET)
+        readiness = {"status": "ready", "analyst_handoff": [{"ticker": "META"}]}
+        coverage = {"status": "focused_research_ready", "capital_authority": False}
+        with (patch("decision_readiness.build", return_value=deepcopy(readiness)) as ready,
+                patch("swing_coverage.build", return_value=coverage) as cover,
+                patch("active_swing_research.build") as swing, patch("swing_benchmarks_v2.build") as benchmark,
+                patch("earnings_survival.build") as survival):
+            compose_strategy_research(decision, root=Path("/unused"), current=current,
+                                      capture=True, publication_only=True)
+        ready.assert_called_once_with(Path("/unused"), decision, current=current)
+        cover.assert_called_once_with(Path("/unused"), current=current)
+        swing.assert_not_called()
+        benchmark.assert_not_called()
+        survival.assert_not_called()
+        view = decision["strategy_framework"]
+        self.assertEqual(view["analyst_handoff"], readiness["analyst_handoff"])
+        self.assertEqual(view["swing_coverage"], coverage)
+        for name in ("swing_research", "swing_benchmarks", "earnings_survival"):
+            self.assertEqual(view[name], {"status": DEFERRED_STUDY, "research_only": True,
+                "capital_authority": False, "actionable_quantity": 0, "automatic_action_allowed": False})
+        self.assertEqual({k: v for k, v in decision.items() if k != "strategy_framework"}, original)
+        self.assertEqual(delivery_meaning_key(decision), delivery_meaning_key(original))
+        self.assertEqual(render_email(decision), render_email(original))
 
 
 if __name__ == "__main__":

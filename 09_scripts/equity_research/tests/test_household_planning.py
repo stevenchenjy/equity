@@ -213,6 +213,28 @@ class HouseholdPlanningTests(unittest.TestCase):
         decision["capital_decision"] = {"decisions": [{"ticker": "ABC", "order_draft": {"side": "sell"}}]}
         self.assertEqual(hp.research_cards(decision), [])
 
+    def test_new_household_research_label_requires_reviewed_holding_to_say_hold(self):
+        hold, scope = self.hold_review()
+        decision = {"household_planning": scope, "household_research": hp.research_context(self.root, NOW, scope),
+                    "email_action_display_policy": hp.ORDER_DISPLAY_POLICY,
+                    "capital_decision": {"decisions": [{"ticker": "ABC", "decision": "HOLD"}]},
+                    "held_position_risk": {"holdings": [{"ticker": "ABC", "state": "REVIEW_REQUIRED"}]}}
+        pending, = hp.research_cards(decision)
+        self.assertEqual(pending['title'], "ABC household research — review pending")
+        self.assertIn("Approved order size: 0.", pending['body'])
+        self.assertIn(hold['next_check'], pending['body'])
+        self.assertNotIn(hold['condition'], pending['body'])
+
+        decision["held_position_risk"]["holdings"][0]["state"] = "REVIEWED_HOLD"
+        reviewed, = hp.research_cards(decision)
+        self.assertEqual(reviewed['title'], "ABC household research — HOLD")
+        self.assertIn(hold['condition'], reviewed['body'])
+
+        decision["capital_decision"]["decisions"][0]["decision"] = "BLOCKED"
+        self.assertEqual(hp.research_cards(decision)[0]['title'], pending['title'])
+        decision["email_action_display_policy"] = hp.LEGACY_ORDER_DISPLAY_POLICY
+        self.assertEqual(hp.research_cards(decision), [reviewed])
+
     def test_both_status_only_windows_revalidate_sources_and_exclude_conditions(self):
         for slot, moment in (("morning", NOW), ("afternoon", NOW.replace(hour=14, minute=45))):
             artifact = delivery.build_failure_brief(self.root, moment, slot, "daily_refresh_not_fully_passed")

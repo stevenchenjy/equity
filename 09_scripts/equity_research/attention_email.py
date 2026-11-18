@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from capital_decision import validate
 from capital_presentation import action_lines, optional_rotation_cards
-from household_planning import ORDER_DISPLAY_POLICY
+from household_planning import LEGACY_ORDER_DISPLAY_POLICY, ORDER_DISPLAY_POLICY
 from investment_plans import PENDING_EXECUTION_NOTICE
 
 
@@ -147,7 +147,8 @@ def direct_cards(decision):
     rows = contract["decisions"]
     held = {row["ticker"]: row for row in decision.get("held_positions", [])}
     from held_position_risk import cards as risk_cards, material_intraday_conditions
-    current_display = decision.get("email_action_display_policy") == ORDER_DISPLAY_POLICY
+    display_policy = decision.get("email_action_display_policy")
+    current_display = display_policy in {LEGACY_ORDER_DISPLAY_POLICY, ORDER_DISPLAY_POLICY}
     holding_cards = risk_cards(decision)
     result = [] if current_display else holding_cards
     actionable = [row for row in rows if row.get("order_draft")]
@@ -175,6 +176,11 @@ def direct_cards(decision):
         name = closest.get("ticker")
         candidate = next((row for row in rows if row.get("ticker") == name), None)
         lines = ["No purchase currently qualifies; cash remains available for a supported entry."]
+        if display_policy == ORDER_DISPLAY_POLICY:
+            from account_feedback_gate import INVALID, UNRESOLVED
+            global_blockers = contract.get("global_blockers", [])
+            if any(code in global_blockers for code in (INVALID, UNRESOLVED)):
+                lines = ["No purchase currently qualifies. Reconcile the account feedback and recorded planning cash before sizing an entry."]
         if candidate:
             if current_display:
                 lines.append(name + " — " + candidate["decision"].replace("_", " ") + ". Approved additional shares: 0.")

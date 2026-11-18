@@ -141,6 +141,29 @@ class EarningsResearchRoutingTests(unittest.TestCase):
             with report_proof_scope():
                 self.assertEqual(event_summary(self.root, current=NOW), baseline)
 
+    def test_current_status_reuses_report_proof_without_hiding_source_changes(self):
+        from generate_current_status import current_research_views
+        from opportunity_contract import validate_journal
+        event = self.event("VISIBLE")
+        self.collect([event])
+        with (patch("research_opportunities.validate_journal", wraps=validate_journal) as validation,
+                patch("earnings_events.event_observations", return_value=([copy.deepcopy(event)], {"status": "ready"}))):
+            opportunities, earnings = current_research_views(self.root, current=NOW, capital=None)
+        self.assertEqual(validation.call_count, 1)
+        self.assertEqual(opportunities["status"], "ready")
+        self.assertIn("research_state", earnings["events"][0])
+
+        source = self.root / event["sources"][0]["path"]
+
+        def new_calendar(*args, **kwargs):
+            source.write_bytes(b"changed after the first reader validated it")
+            return [copy.deepcopy(event)], {"status": "ready"}
+
+        with patch("earnings_events.event_observations", side_effect=new_calendar):
+            opportunities, earnings = current_research_views(self.root, current=NOW, capital=None)
+        self.assertEqual(opportunities["status"], "ready")
+        self.assertNotIn("research_state", earnings["events"][0])
+
     def test_elapsed_conflicting_or_missing_coverage_never_invents_event_priority(self):
         elapsed = self.event("OLD", -1)
         conflicting = self.event("BAD", 2); conflicting.update(status="schedule_conflict", blockers=["schedule_conflict"])

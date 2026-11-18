@@ -66,6 +66,15 @@ projection. Completion checks derive that required set from the deployed code,
 not an older fixed stage count. An elapsed claim becomes durably expired on the next
 claim/completion entry, including an out-of-window wake, without replay.
 
+The short closure and exact post-delivery closure pass `--publication-only`
+to the existing decision composer. Its capital decisions, holding risk,
+decision readiness and source-validated coverage remain current. Optional
+swing, benchmark and earnings-survival studies explicitly show
+`deferred_to_full_review`; this path does not run their experiments or append
+study observations. The ordinary full review still performs those stages.
+Publication and analytical completion re-read the actual clock after their
+final expensive validations and refuse success at or after claim expiry.
+
 Read-only journal validation still checks every event, transition, historical
 clock and source receipt. When a caller needs only validation, it omits the
 historical result copies that would otherwise be discarded. Direct file-hash

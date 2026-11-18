@@ -32,7 +32,8 @@ def main() -> int:
         elif args.claim:
             result = claim(args.root, current, refresh_public=args.refresh_public, clock=lambda: datetime.now(ET))
         else:
-            result = complete(args.root, json.loads(args.input.read_text(encoding="utf-8")), current)
+            result = complete(args.root, json.loads(args.input.read_text(encoding="utf-8")), current,
+                              clock=lambda: datetime.now(ET))
     except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
         print(json.dumps({"outcome": "not_completed", "reason": str(error), "email_sent": False, "trade_placed": False}))
         return 1

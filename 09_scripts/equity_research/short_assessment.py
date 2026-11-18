@@ -385,8 +385,11 @@ def build_context(root: Path, current: datetime, *, handoff: dict | None = None)
         swing_coverage = swing_coverage_build(root, current=current)
     except (ImportError, OSError, ValueError, KeyError, TypeError):
         swing_coverage = {"status": "unavailable", "analyst_handoff": [], "blockers": ["outside_universe_source_coverage_unverified"]}
+    from decision_readiness import DEFERRED_STUDY
     benchmark_context = framework.get("swing_benchmarks", {})
-    if isinstance(benchmark_context, dict) and benchmark_context:
+    if isinstance(benchmark_context, dict) and benchmark_context.get("status") == DEFERRED_STUDY:
+        benchmark_context = {"status": DEFERRED_STUDY, "capital_authority": False}
+    elif isinstance(benchmark_context, dict) and benchmark_context:
         try:
             if (isinstance(benchmark_context.get('protocol'), dict)
                     and benchmark_context['protocol'].get('version') == 'spy-qqqm-matched-paths-v2-20261101'):
@@ -598,7 +601,8 @@ def _zero_order_publication(decision: dict) -> bool:
     return True
 
 
-def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Path | None = None) -> dict:
+def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Path | None = None,
+             clock: Callable[[], datetime] | None = None) -> dict:
     current = aware(current)
     if proposal.get("schema_version") != SCHEMA or any(proposal.get(k) is not False for k in AUTHORITY):
         raise ValueError("short_assessment_result_authority_invalid")
@@ -724,9 +728,14 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
         # missing publication, externally changed input or newly expired gate.
         if publication is None:
             _validated_publication(root, current)
+        fingerprint = build_context(root, current,
+            handoff=row["context"].get("public_handoff"))["input_fingerprint"]
+        ended = aware(clock()) if clock is not None else current
+        if not current <= ended < aware(row["expires_at"]):
+            raise ValueError("short_assessment_completion_outside_budget")
         # Nothing here sends email or claims that an analyst dossier completed a
         # valuation. The scheduled sender evaluates accepted current semantics.
-        updated = _transition(root, row, current, status="completed", ended_at=current.isoformat(),
+        updated = _transition(root, row, ended, status="completed", ended_at=ended.isoformat(),
             result=proposal, publication=publication, collector_changes=collector_changes)
         state["slots"][slot_id] = updated
         state["pending_work"] = {**continuation, "tickers": [item["ticker"] for item in items],
@@ -734,7 +743,6 @@ def complete(root: Path, proposal: dict, current: datetime, *, runtime_lock: Pat
         state["last_items_sha256"] = items_digest
         if publication is not None:
             state.pop("publication_recomposition_pending", None)
-        state["last_completed_fingerprint"] = build_context(root, current,
-            handoff=row["context"].get("public_handoff"))["input_fingerprint"]
+        state["last_completed_fingerprint"] = fingerprint
         atomic_write_json(root / STATE_REL, state)
         return updated

@@ -123,18 +123,22 @@ def run(root: Path, claim_id: str, *, clock: Callable[[], datetime] = now_et,
                     raise ValueError("short_publication_outside_claim_budget")
                 spec = specs[name]
                 result = runner(spec[0], spec[1], False, market_snapshot_mode=MARKET_SNAPSHOT_REUSE,
-                                maximum_child_seconds=min(75, remaining))
+                                maximum_child_seconds=min(75, remaining), publication_only=True)
                 receipt["steps"].append(result)
                 atomic_write_json(root / STATE_REL, receipt)
                 if result.get("exit_code") != 0:
                     raise ValueError("short_publication_stage_failed:" + name)
-            ended = short.aware(clock())
-            _live_row(root, claim_id, ended)
-            receipt.update(protected_after=_protected(root, row, ended), completed_at=ended.isoformat(),
-                           artifacts=short._hashes(root, ARTIFACTS), outcome="passed")
+            validation_at = short.aware(clock())
+            _live_row(root, claim_id, validation_at)
+            receipt.update(protected_after=_protected(root, row, validation_at),
+                           artifacts=short._hashes(root, ARTIFACTS))
             if not _same_protected(protected, receipt["protected_after"]):
                 raise ValueError("short_publication_protected_input_changed")
-            short._validated_publication(root, ended)
+            short._validated_publication(root, validation_at)
+            ended = short.aware(clock())
+            if not validation_at <= ended < short.aware(row["expires_at"]):
+                raise ValueError("short_publication_outside_claim_budget")
+            receipt.update(completed_at=ended.isoformat(), outcome="passed")
         except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
             receipt.update(outcome="failed", reason=str(error), completed_at=short.aware(clock()).isoformat())
         receipt["receipt_sha256"] = canonical_sha256(receipt)

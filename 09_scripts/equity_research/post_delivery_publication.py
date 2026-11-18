@@ -345,7 +345,7 @@ def recover_locked(root: Path, *, clock=now_et, step_runner=None,
                 if remaining <= 0 or short_window_conflict(clock(), maximum_seconds=remaining):
                     raise ValueError("post_delivery_publication_budget_or_short_window")
                 result = runner(name, specs[name][1], False, market_snapshot_mode=MARKET_SNAPSHOT_REUSE,
-                                maximum_child_seconds=min(MAX_CHILD_SECONDS, remaining))
+                                maximum_child_seconds=min(MAX_CHILD_SECONDS, remaining), publication_only=True)
                 receipt["steps"].append(result); receipt = _store(root, receipt)
                 if result.get("exit_code") != 0:
                     raise ValueError("post_delivery_stage_failed:" + name)

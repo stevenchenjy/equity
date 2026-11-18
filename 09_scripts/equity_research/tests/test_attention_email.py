@@ -16,6 +16,7 @@ from daily_common import canonical_sha256
 from capital_presentation import action_lines
 from email_brief import EMAIL_BRIEF_VERSION, render_email
 from attention_email import DIRECT_VERSION, ORDER_DISPLAY_POLICY, cards, direct_action, direct_cards, held_earnings_card
+from household_planning import LEGACY_ORDER_DISPLAY_POLICY
 from investment_plans import PENDING_EXECUTION_NOTICE
 import test_capital_decision as capital_tests
 from test_assessment_presentation import envelope
@@ -168,6 +169,24 @@ class AttentionEmailTests(unittest.TestCase):
         holds = next(card for card in rendered if card["title"] == "Unchanged holdings")
         self.assertNotIn("Reduce the exposure", holds["body"])
         self.assertFalse(follow._displayed_actions(self.decision, text, html_body, self.builder.v["current"])[1])
+
+    def test_pending_account_cash_copy_preserves_rendering_of_prior_briefs(self):
+        self.no_entry()
+        self.decision['email_brief_version'] = DIRECT_VERSION
+        self.decision['held_position_risk'] = {'inventory_available': True, 'holdings': []}
+        contract = self.decision['capital_decision']
+        contract['global_blockers'] = ['reported_account_feedback_unresolved']
+        contract['content_sha256'] = canonical_sha256({k: v for k, v in contract.items() if k != 'content_sha256'})
+        for policy, expected, absent in (
+            (LEGACY_ORDER_DISPLAY_POLICY, 'cash remains available', 'Reconcile the account feedback'),
+            (ORDER_DISPLAY_POLICY, 'Reconcile the account feedback and recorded planning cash', 'cash remains available'),
+        ):
+            with self.subTest(policy=policy):
+                self.decision['email_action_display_policy'] = policy
+                _, plain, html = render_email(self.decision)
+                for body in (plain, visible_html_text(html)):
+                    self.assertIn(expected, body)
+                    self.assertNotIn(absent, body)
 
     def test_v5_receipt_archive_accepts_complete_projection_and_rejects_missing_critical_line(self):
         self.direct_exit()

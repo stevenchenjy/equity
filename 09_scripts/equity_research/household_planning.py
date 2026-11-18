@@ -15,7 +15,8 @@ RESEARCH_MANIFEST = "05_risk_and_positions/household_research.local.json"
 SOURCE_DIR = Path("05_risk_and_positions/household_sources.local")
 CONFIG = "00_project_control/active_production_config.json"
 SCHEMA = "equity_household_planning_v1"
-ORDER_DISPLAY_POLICY = "confirmed_orders_only_v1"
+LEGACY_ORDER_DISPLAY_POLICY = "confirmed_orders_only_v1"
+ORDER_DISPLAY_POLICY = "confirmed_orders_only_v2"
 CENT = Decimal("0.01")
 CORE = {"SPY", "QQQM"}
 
@@ -325,11 +326,14 @@ def research_cards(decision):
     if not household.get("chase_ledger_matches") or decision.get("account_conflicts"):
         return [dict(title="Household research pending", group="background", sources=[],
                      body="Account or evidence checks require a fresh review. Current household order size is zero.")]
-    current_display = decision.get("email_action_display_policy") == ORDER_DISPLAY_POLICY
+    display_policy = decision.get("email_action_display_policy")
+    current_display = display_policy in {LEGACY_ORDER_DISPLAY_POLICY, ORDER_DISPLAY_POLICY}
     rows = decision.get("capital_decision", {}).get("decisions", [])
     active_tickers = {r["ticker"] for r in rows if r.get("order_draft")}
-    adverse_tickers = {r["ticker"] for r in decision.get("held_position_risk", {}).get("holdings", [])
-                       if r["state"] in {"RISK_ALERT", "REDUCE_REVIEW", "EXIT_REVIEW"}}
+    risk_states = {r["ticker"]: r["state"] for r in decision.get("held_position_risk", {}).get("holdings", [])}
+    adverse_tickers = {ticker for ticker, state in risk_states.items()
+                       if state in {"RISK_ALERT", "REDUCE_REVIEW", "EXIT_REVIEW"}}
+    reviewed_holds = {r["ticker"] for r in rows if r.get("decision") == "HOLD"}
     result = []
     for row in report["calls"]:
         if row["ticker"] in active_tickers:
@@ -341,6 +345,13 @@ def research_cards(decision):
             if not inventory or _hold_accounts(inventory) != row["account_shares"]:
                 continue
             qty = ", ".join(f"{shares} at {broker}" for broker, shares in _hold_accounts(inventory).items())
+            ticker = row["ticker"]
+            if (display_policy == ORDER_DISPLAY_POLICY
+                    and (risk_states.get(ticker) != "REVIEWED_HOLD" or ticker not in reviewed_holds)):
+                result.append(dict(title=f"{ticker} household research — review pending", group="background", sources=[],
+                                   body=f"Recorded shares: {qty}. Approved order size: 0. See the held-position section for the current review status.\n"
+                                        + "Next research check: " + row["next_check"]))
+                continue
             if row["ticker"] in adverse_tickers:
                 result.append(dict(title=f"{row['ticker']} household HOLD under reassessment", group="background", sources=[],
                                    body=f"Recorded shares: {qty}. Current held-risk review takes priority. Recheck: " + row["next_check"]))

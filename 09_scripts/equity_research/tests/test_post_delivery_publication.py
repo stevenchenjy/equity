@@ -127,6 +127,7 @@ class PostDeliveryPublicationTests(unittest.TestCase):
     def runner(self, name, script, allowed, **kwargs):
         self.calls.append(name)
         self.assertFalse(allowed); self.assertEqual(kwargs['market_snapshot_mode'], 'reuse_validated_snapshot')
+        self.assertIs(kwargs['publication_only'], True)
         self.assertLessEqual(kwargs['maximum_child_seconds'], 75)
         if name == 'daily_decision':
             value = json.loads((self.root / repair.ARTIFACTS[0]).read_text())

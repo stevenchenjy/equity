@@ -13,6 +13,7 @@ from typing import Any
 from daily_common import canonical_sha256, latest_published_market_session, read_json, sha256_file
 
 SCHEMA = "equity_strategy_framework_v1"
+DEFERRED_STUDY = "deferred_to_full_review"
 ACTIONABLE = {"ACTIONABLE_BUY", "ACTIONABLE_ADD", "REDUCE_REVIEW", "EXIT_REVIEW"}
 CLASSES = {"valid_action", "justified_no_action", "research_incomplete", "plan_expired",
            "data_unavailable", "strategy_not_adopted"}

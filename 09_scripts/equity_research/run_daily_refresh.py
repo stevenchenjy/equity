@@ -218,6 +218,7 @@ def run_step(
     market_snapshot_mode: str = MARKET_SNAPSHOT_FETCH,
     maximum_child_seconds: float | None = None,
     refresh_public: bool | None = None,
+    publication_only: bool = False,
     on_child_started=None,
 ) -> dict[str, Any]:
     started_at = iso_now()
@@ -246,7 +247,9 @@ def run_step(
     # company/calendar/discovery work of a normal scheduled full refresh.
     public_network = market_snapshot_mode == MARKET_SNAPSHOT_FETCH if refresh_public is None else refresh_public
     extra_arguments = (
-        (["--root", str(ROOT), "--pipeline-coordinated", *(["--collect"] if public_network else [])])
+        ["--publication-only"]
+        if name == "daily_decision" and publication_only
+        else (["--root", str(ROOT), "--pipeline-coordinated", *(["--collect"] if public_network else [])])
         if name == "swing_candidate_history"
         else
         (["--refresh"] if public_network else [])

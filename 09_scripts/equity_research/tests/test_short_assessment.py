@@ -165,6 +165,23 @@ class ShortAssessmentTests(unittest.TestCase):
         validator.assert_called_once_with(self.root, value, self.moment("09:30"))
         legacy.assert_not_called()
 
+    def test_deferred_optional_study_is_visible_without_running_a_benchmark(self):
+        from decision_readiness import DEFERRED_STUDY
+        publication = self.typed_publication("09:20")
+        marker = {"status": DEFERRED_STUDY, "capital_authority": False}
+        publication["strategy_framework"] = {"status": "ready", "swing_benchmarks": marker, "swing_research": marker}
+        atomic_write_json(self.root / "04_research/company_research/daily_decision.json", publication)
+        with (patch("decision_readiness.validate_projection"),
+                patch("swing_benchmarks.revalidate_projection") as legacy,
+                patch("swing_benchmarks_v2.revalidate_projection") as current):
+            context = short.build_context(self.root, self.moment("09:30"))
+        choices = context["attention_context"]["strategy_research"]
+        self.assertEqual(choices["swing_research_status"], DEFERRED_STUDY)
+        self.assertEqual(choices["swing_benchmark_status"], DEFERRED_STUDY)
+        self.assertFalse(choices["capital_authority"])
+        legacy.assert_not_called()
+        current.assert_not_called()
+
     def test_unverified_strategy_handoff_does_not_leak_into_short_research(self):
         publication = self.typed_publication("09:20")
         publication["strategy_framework"] = {"status": "ready", "analyst_handoff": [
@@ -317,6 +334,30 @@ class ShortAssessmentTests(unittest.TestCase):
         self.assertIsNone(short._collector_journal_delta(self.root, value["receipt"], self.moment("09:35")))
         with self.assertRaisesRegex(ValueError, "amendment_receipts_incomplete"):
             self.complete(self.result(value))
+
+    def test_completion_finishing_at_expiry_does_not_write_success(self):
+        claim = self.claim()
+        row = claim["receipt"]
+        state = self.root / short.STATE_REL
+        receipt_dir = self.root / short.RECEIPTS_REL / row["claim_id"]
+        state_before = state.read_bytes()
+        receipts_before = set(receipt_dir.iterdir())
+        current = self.moment("09:35")
+        actual = current
+        original = short.build_context
+
+        def slow_final_context(*args, **kwargs):
+            nonlocal actual
+            context = original(*args, **kwargs)
+            actual = short.aware(row["expires_at"])
+            return context
+
+        with patch.object(short, 'build_context', side_effect=slow_final_context):
+            with self.assertRaisesRegex(ValueError, "short_assessment_completion_outside_budget"):
+                short.complete(self.root, self.result(claim), current, runtime_lock=self.runtime_lock,
+                    clock=lambda: actual)
+        self.assertEqual(state.read_bytes(), state_before)
+        self.assertEqual(set(receipt_dir.iterdir()), receipts_before)
 
     def test_unchanged_completed_inputs_skip_without_repeat_analysis(self):
         value = self.claim()

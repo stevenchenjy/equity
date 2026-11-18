@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 from daily_common import atomic_write_json, canonical_sha256, sha256_file
@@ -28,6 +29,7 @@ class ShortPublicationTests(unittest.TestCase):
     def runner(self, name, script, allowed_to_fail, **kwargs):
         self.assertFalse(allowed_to_fail)
         self.assertEqual(kwargs["market_snapshot_mode"], "reuse_validated_snapshot")
+        self.assertIs(kwargs["publication_only"], True)
         self.assertLessEqual(kwargs["maximum_child_seconds"], 75)
         if name == "daily_decision":
             self.fixture.typed_publication("09:32")
@@ -153,6 +155,23 @@ class ShortPublicationTests(unittest.TestCase):
         self.assertEqual(receipt["outcome"], "failed")
         self.assertEqual(calls, [publication.STEP_NAMES[0]])
         self.assertIn("outside_claim_budget", receipt["reason"])
+
+    def test_final_validation_finishing_at_expiry_cannot_pass(self):
+        original = short._validated_publication
+        state_before = (self.root / short.STATE_REL).read_bytes()
+
+        def slow_validation(root, current):
+            decision = original(root, current)
+            self.current = short.aware(self.row["expires_at"])
+            return decision
+
+        with patch.object(short, '_validated_publication', side_effect=slow_validation):
+            receipt = self.run_publication()
+        self.assertEqual(len(receipt["steps"]), len(publication.STEP_NAMES))
+        self.assertEqual(receipt["outcome"], "failed")
+        self.assertEqual(receipt["reason"], "short_publication_outside_claim_budget")
+        self.assertEqual(receipt["completed_at"], self.row["expires_at"])
+        self.assertEqual((self.root / short.STATE_REL).read_bytes(), state_before)
 
     def test_changed_inputs_during_closure_and_receipt_corruption_remain_fenced(self):
         def changed(name, script, allowed_to_fail, **kwargs):

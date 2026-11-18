@@ -792,13 +792,22 @@ def compose_capital_contracts(decision: dict[str, Any], *, root: Path) -> None:
 
 
 def compose_strategy_research(decision: dict[str, Any], *, root: Path,
-                              current: datetime, capture: bool = False) -> None:
+                              current: datetime, capture: bool = False,
+                              publication_only: bool = False) -> None:
     """Attach optional research without changing capital or notification meaning."""
-    from decision_readiness import build as build_decision_readiness
-    from active_swing_research import build as build_swing_research
+    from decision_readiness import DEFERRED_STUDY, build as build_decision_readiness
     from swing_coverage import build as build_swing_coverage
-    from swing_benchmarks_v2 import build as build_swing_benchmarks
     view = build_decision_readiness(root, decision, current=current)
+    if publication_only:
+        view["swing_coverage"] = build_swing_coverage(root, current=current)
+        for study in ("swing_research", "swing_benchmarks", "earnings_survival"):
+            view[study] = {"status": DEFERRED_STUDY, "research_only": True,
+                "capital_authority": False, "actionable_quantity": 0, "automatic_action_allowed": False}
+        decision["strategy_framework"] = view
+        return
+
+    from active_swing_research import build as build_swing_research
+    from swing_benchmarks_v2 import build as build_swing_benchmarks
     view["swing_research"] = build_swing_research(
         root, current=current, capture=capture, baseline=decision)
     view["swing_coverage"] = build_swing_coverage(root, current=current)
@@ -820,7 +829,10 @@ def compose_strategy_research(decision: dict[str, Any], *, root: Path,
 @report_proof_scope()
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--check", action="store_true")
+    mode.add_argument("--publication-only", action="store_true",
+                      help="Rebuild the current decision without running optional studies")
     args = parser.parse_args()
 
     from account_access import expected_version, publication_guard
@@ -1361,7 +1373,8 @@ def main() -> int:
     # Explain the existing capital contract and independently study short-term
     # setups. This optional research view never enters the capital fingerprint,
     # eligible quantities, strategy adoption or delivery-purpose comparison.
-    compose_strategy_research(decision, root=ROOT, current=now_et(), capture=True)
+    compose_strategy_research(decision, root=ROOT, current=now_et(), capture=not args.publication_only,
+                              publication_only=args.publication_only)
     from delivery_assessments import delivery_policy_context, priority_review_context
     decision["assessment_delivery_policy"] = delivery_policy_context(ROOT)
     decision["analyst_priority_review"] = priority_review_context(ROOT, current=now_et())
@@ -1512,7 +1525,9 @@ def main() -> int:
     from capital_presentation import markdown as capital_markdown
     report = "# Equity Research — capital decision\n\n" + capital_markdown(decision) + "\n\n---\n\n## Full research diagnostics\n\n" + report
     study = decision.get("strategy_framework", {}).get("earnings_survival", {})
-    if study:
+    if args.publication_only:
+        report += "\n\n## Optional studies\n\nSwing, benchmark and earnings-survival updates are deferred to a full research review.\n"
+    elif study:
         report += "\n\n## Earnings-survival paper study\n\n"
         report += f"Status: {study.get('status', 'waiting_on_data')}; version: {study.get('version', 'unverified')}. Research only; zero approved shares.\n\n"
         report += "A base identified before earnings is compared with ordinary breakouts on the same clocks and costs. Five sessions is the primary outcome; a first cohort permits a process review, not a profitability conclusion.\n\n"

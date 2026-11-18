@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 from work_queue_reporting import read_backlog_summary, work_health
 from evidence_scope import current_shared_integrity_passed, ticker_blockers as evidence_ticker_blockers
+from research_opportunities import report_proof_scope
 
 from active_config import ACTIVE_CONFIG_PATH, load_active_config
 from daily_common import (
@@ -264,6 +265,14 @@ def jsonl_count(path: Path) -> int:
     return sum(bool(line.strip()) for line in path.read_text(encoding="utf-8").splitlines())
 
 
+@report_proof_scope()
+def current_research_views(root: Path, *, current: datetime, capital: dict | None):
+    from research_opportunities import summary as opportunity_summary
+    from earnings_events import summary as earnings_event_summary
+    return (opportunity_summary(root, current=current),
+            earnings_event_summary(root, current=current, capital=capital))
+
+
 def main() -> int:
     config = load_active_config()
     refresh = read_json(DAILY_REFRESH_STATE_PATH, {})
@@ -356,10 +365,8 @@ def main() -> int:
     experiment_review = momentum_review_health(experiment_review, refresh, current=current,
                                                expected_session=expected_session)
     backlog = read_backlog_summary(ROOT, current=current, refresh=refresh)
-    from research_opportunities import summary as opportunity_summary
-    opportunities = opportunity_summary(ROOT, current=current)
-    from earnings_events import summary as earnings_event_summary
-    earnings_events = earnings_event_summary(ROOT, current=current, capital=decision.get("capital_decision"))
+    opportunities, earnings_events = current_research_views(
+        ROOT, current=current, capital=decision.get("capital_decision"))
     work_queue = work_health(decision.get("capital_work_queue"), refresh,
                              current=current, step="daily_decision")
     health = workflow_health(decision, long_report, incorporation, evaluation, refresh,
