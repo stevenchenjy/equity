@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 import argparse
 from pathlib import Path
 
@@ -93,7 +95,7 @@ def record_confirmation(rows: list[dict[str, str]], args: argparse.Namespace) ->
         actual_shares = args.filled_shares if args.filled_shares is not None else int(round(as_float(row["shares"], "shares")))
         if actual_shares <= 0:
             raise ValueError("actual filled shares must be positive")
-        before = int(round(as_float(row["shares_before"], "shares_before")))
+        before = Decimal(row["shares_before"])
         after = before - actual_shares if row["side"] == "sell" else before + actual_shares
         if after < 0:
             raise ValueError("actual fill would make shares negative")

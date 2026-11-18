@@ -5,6 +5,7 @@ import json
 import math
 import os
 from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Iterable
 
@@ -267,6 +268,22 @@ def load_portfolio_summary() -> dict[str, str]:
     if as_float(summary.get("account_total_value", ""), "account_total_value") <= 0:
         raise ValueError("dynamic account total must be positive")
     return summary
+
+
+def observed_shares(value):
+    """JSON number preserving observed share precision and existing integer records."""
+    try:
+        number = Decimal(str(value))
+        if not number.is_finite() or number < 0:
+            raise ValueError
+        if number == number.to_integral_value():
+            return int(number)
+        result = float(number)
+        if Decimal(str(result)) != number:
+            raise ValueError
+        return result
+    except (TypeError, ValueError, InvalidOperation, OverflowError) as exc:
+        raise ValueError("recorded_share_quantity_invalid") from exc
 
 
 def load_positions() -> list[dict[str, object]]:

@@ -469,3 +469,11 @@ investment conclusion from unfinished analysis or a missing execution prerequisi
 The deterministic engine remains the eligibility authority. The chat worker
 provides auditable analyst inputs through existing validators; it does not
 replace the retired production model or grant a new model trading authority.
+
+## Household planning for the two daily briefs
+
+Use both observed brokerage account values and the owner's separately recorded outside assets for strategic weights. The current production household balance manifest is `05_risk_and_positions/household_planning.local.json`. Check the recorded times, provisional broker fields and the Chase ledger match. Deduct any transfer from its original location before counting it in the receiving account. Brokerage cash, margin, unsettled proceeds, available shares and open orders remain account-specific. Compare shared holdings across accounts before proposing an addition.
+
+At each existing full review, update genuinely changed household research through `09_scripts/equity_research/record_household_planning.py`. This keeps the same research available to the morning and afternoon brief. Start with the current `05_risk_and_positions/household_research.local.json` schema. Preserve the original dated analysis in a private Markdown source and bind its exact SHA-256, the broker observation digest, the named broker, buy/sell side, share count, price condition, Eastern review window, expiry, invalidation and next check. For a new balance observation use the assets schema, explicitly reconcile the outside contribution, and provide the original brokerage observation JSON. Keep the reports and proposals private.
+
+Run `record_household_planning.py --root ROOT --kind research --input PROPOSAL --source ORIGINAL` first, then repeat with `--apply --expected PRIOR_DIGEST` from the preview. Use `--kind assets` for balance changes. The writer owns its mutation locks. Release other locks before invoking it. After an accepted change use the approved full no-send recomposition and read the final decision and both renderings. Expired scenarios require fresh analysis. Only a canonical, fully eligible manual action supplies an order in a daily brief. The status-only fallback identifies the combined planning basis and reports zero eligible shares when the normal publication cannot be validated.

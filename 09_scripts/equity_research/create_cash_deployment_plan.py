@@ -27,7 +27,8 @@ from account_common import (
     write_csv,
 )
 from portfolio_construction import core_starter_decision
-from daily_common import latest_published_market_session, now_et
+from daily_common import ROOT, latest_published_market_session, now_et
+from household_planning import current_allocation
 
 
 PLAN_FIELDS = [
@@ -97,10 +98,21 @@ def main() -> None:
         summary["current_active_stock_weight_pct"], "current_active_stock_weight_pct"
     )
     current_core = as_float(summary["current_core_value"], "current_core_value")
+    current = now_et()
+    expected_session = latest_published_market_session(current).isoformat()
+    household = current_allocation(ROOT, current, summary, read_csv(MARKET_SNAPSHOT), expected_session)
+    household_error = household.get("reason") if household else None
+    secondary_stocks = 0.0
+    if household and not household_error:
+        account_total = float(household["total"])
+        current_core = float(household["core"])
+        secondary_stocks = float(household["stocks"]) - active_value
+        active_value = float(household["stocks"])
+        active_weight = active_value / account_total * 100
     core_target = as_float(account["core_allocation_target_pct"], "core_target")
     core_minimum = account.get("core_minimum_pct")
     core_threshold = as_float(core_minimum, "core_minimum_pct") if core_minimum is not None else core_target
-    core_threshold_met = current_core + 1e-9 >= account_total * core_threshold / 100.0
+    core_threshold_met = not household_error and current_core + 1e-9 >= account_total * core_threshold / 100.0
     active_target = as_float(account["active_stock_target_pct"], "active_target")
     cash_target = as_float(account["cash_target_pct"], "cash_target")
     review_date = (
@@ -111,7 +123,6 @@ def main() -> None:
     # not block another fund, and alternatives never share the same buy quantity.
     options = []
     packets = load_packets()
-    expected_session = latest_published_market_session(now_et()).isoformat()
     for ticker in approved_core_tickers():
         source_issue = ""
         price = 0.0
@@ -141,6 +152,10 @@ def main() -> None:
                       "suggested_whole_shares": 0, "fifty_two_week_range_percentile": None,
                       "cash_affordable_shares": 0, "target_gap_whole_shares": 0,
                       "failed_gates": ["core_market_or_entry_evidence_unverified"]}
+        if household_error:
+            review.update(selected=False, blocked_only_by_maintenance=False, suggested_whole_shares=0)
+            review["failed_gates"].append(household_error)
+            source_issue = household_error
         options.append({"ticker": ticker, "price": price, "review": review, "source_issue": source_issue})
     # Configuration order retains the existing SPY-first starter preference.
     # Approval to count either fund does not imply an automatic rotation or a
@@ -160,6 +175,8 @@ def main() -> None:
         "Individual stocks must still pass source-bound valuation and reward/risk gates; "
         "whole-share constraints and the combined index-core floor are calculated explicitly."
     )
+    if household:
+        cash_rationale += " Chase funds supply the order budget. Moomoo and outside assets contribute to household allocation only."
     failures = "; ".join(option["ticker"] + ":" + ",".join(option["review"]["failed_gates"])
                          for option in options if option["review"]["failed_gates"])
     plan_rows = [{
@@ -242,7 +259,7 @@ def main() -> None:
         for row in actions
         if row["recommended_action"] in {"trim_specific_shares_review", "exit_review"}
     )
-    active_after_reviews = sum(
+    active_after_reviews = secondary_stocks + sum(
         as_float(row["target_shares"], f"{row['ticker']}.target_shares")
         * as_float(row["current_price"], f"{row['ticker']}.current_price")
         for row in actions
@@ -308,7 +325,7 @@ def main() -> None:
             "target_value": f"{account_total * cash_target / 100.0:.2f}",
             "allocation_gap_value": f"{account_total * cash_target / 100.0 - cash:.2f}",
             "policy_status": summary["cash_status"],
-            "calculation_basis": "manual cash divided by dynamic cash-plus-current-holdings total",
+            "calculation_basis": "Chase cash divided by the allocation planning total",
         },
     ]
     write_csv(CASH_DEPLOYMENT_PLAN, plan_rows, PLAN_FIELDS)

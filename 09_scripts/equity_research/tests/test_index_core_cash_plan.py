@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import date
+from datetime import date, datetime
 import unittest
 from unittest.mock import patch
 
@@ -12,7 +12,7 @@ from active_config import load_active_config
 
 
 class IndexCoreCashPlanTests(unittest.TestCase):
-    def output(self, *, core=775, cash=None, fail=(), stale=(), maintenance=False):
+    def output(self, *, core=775, cash=None, fail=(), stale=(), maintenance=False, household=None):
         cash = 4000 - core if cash is None else cash
         config = copy.deepcopy(load_active_config())
         config["account"]["core_allocation_tickers"] = ["SPY", "QQQM"]
@@ -35,6 +35,8 @@ class IndexCoreCashPlanTests(unittest.TestCase):
         with (patch.object(cash_plan, "load_active_config", return_value=config),
               patch.object(cash_plan, "approved_core_tickers", return_value=("SPY", "QQQM")),
               patch.object(cash_plan, "is_core_allocation_ticker", side_effect=lambda t: t in {"SPY", "QQQM"}),
+              patch.object(cash_plan, "current_allocation", return_value=household),
+              patch.object(cash_plan, "now_et", return_value=datetime.fromisoformat("2026-10-19T08:45:00-04:00")),
               patch.object(cash_plan, "latest_published_market_session", return_value=date(2026, 10, 16)),
               patch.object(cash_plan, "load_active_inhibit", return_value={"active": maintenance}),
               patch.object(cash_plan, "load_research_account_state", return_value=account),
@@ -91,6 +93,18 @@ class IndexCoreCashPlanTests(unittest.TestCase):
             self.assertIn("not a trim instruction", rows[ticker]["reason"])
         self.assertEqual(post["proposed_core_ticker"], "")
         self.assertEqual(post["resulting_core_value"], "1347.00")
+
+    def test_household_floor_uses_combined_denominator_but_only_chase_funds(self):
+        household = dict(status="marked", total=6000, core=1347, stocks=2303)
+        rows, post = self.output(core=1347, cash=350, household=household)
+        self.assertEqual(rows["SPY"]["planned_shares"], "0")
+        self.assertEqual(rows["QQQM"]["planned_shares"], "1")
+        self.assertEqual(post["resulting_cash"], "60.00")
+        self.assertEqual(post["core_weight_pct"], "27.2833")
+        unavailable = dict(status="unavailable", reason="household_moomoo_close_unverified_TEST")
+        rows, _ = self.output(core=1000, cash=350, household=unavailable)
+        self.assertEqual(rows["QQQM"]["planned_shares"], "0")
+        self.assertIn(unavailable["reason"], rows["QQQM"]["reason"])
 
     def test_maintenance_cannot_use_either_fund(self):
         rows, post = self.output(maintenance=True)

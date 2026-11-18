@@ -215,6 +215,16 @@ class IntradayPortfolioRiskTests(unittest.TestCase):
         self.assertEqual(result["tactical_limits"]["event_risk_pct"], .25)
         self.assertEqual(risk.validate_assessment(self.root, result), result)
 
+    def test_fractional_held_exposure_survives_marking_and_plan_context(self):
+        self.csv(risk.INPUTS[4], [{"ticker": "SPY", "shares_optional": "2"},
+                                  {"ticker": "AAA", "shares_optional": "0.24681"}])
+        result = risk.assess(self.root, self.snapshot(), self.now)
+        self.assertEqual(result["status"], "current")
+        self.assertEqual(result["portfolio_nav"], 318.2129)
+        self.assertEqual(result["baseline_portfolio_nav"], 324.681)
+        self.assertEqual(result["new_order_quantities"], 0)
+        self.assertEqual(risk.validate_assessment(self.root, result), result)
+
     def test_missing_or_delayed_single_holding_cannot_make_portfolio_percent(self):
         result = risk.assess(self.root, self.snapshot(broken="AAA"), self.now)
         self.assertEqual(result["status"], "partial")

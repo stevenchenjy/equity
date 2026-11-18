@@ -4,6 +4,7 @@ Keep the inventory in one place: new approved inputs must neither be omitted
 from publication fingerprints nor rejected by a separate display allowlist.
 """
 from account_authority import POLICY_REL
+from household_planning import MANIFEST as HOUSEHOLD_MANIFEST, RESEARCH_MANIFEST as HOUSEHOLD_RESEARCH
 
 WORKFLOW_INPUTS = {
     "03_source_data/equity_research/intraday_prices.local/current.json",
@@ -19,6 +20,8 @@ WORKFLOW_INPUTS = {
     "01_policies/market_data_feeds.json",
     "01_policies/supplemental_instrument_metadata.json",
     POLICY_REL,
+    HOUSEHOLD_MANIFEST,
+    HOUSEHOLD_RESEARCH,
     "05_risk_and_positions/investment_plans.local.json",
     "05_risk_and_positions/plan_source_resolutions.local.json",
     "05_risk_and_positions/current_positions.local.csv",

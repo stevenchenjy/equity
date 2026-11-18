@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import tempfile
 import unittest
@@ -81,6 +81,7 @@ class IndexCoreReportRegressionTests(unittest.TestCase):
                       patch.object(portfolio, "load_packets", return_value=copy.deepcopy(packets)),
                       patch.object(portfolio, "requested_coverage_tickers", return_value=set()),
                       patch.object(portfolio, "read_csv", side_effect=rows),
+                      patch.object(portfolio, "now_et", return_value=datetime.fromisoformat("2026-10-19T08:45:00-04:00")),
                       patch.object(portfolio, "latest_published_market_session", return_value=date(2026, 10, 16)),
                       patch("reviewed_allocation.current_allocations", return_value={}),
                       patch.object(portfolio, "write_csv", side_effect=lambda p, r, f: written.update({p: r})),

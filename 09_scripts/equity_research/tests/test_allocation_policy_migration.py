@@ -157,7 +157,10 @@ class CashPlanFloorReportingTests(unittest.TestCase):
                        current_core_value=current_core, active_stock_status="within_target",
                        cash_status="above_target")
         written = {}
-        with (patch.object(cash_plan, "load_active_inhibit", return_value={"active": False}),
+        # This migration fixture predates the household planning mandate.
+        clock = datetime.fromisoformat("2026-10-19T08:45:00-04:00")
+        with (patch.object(cash_plan, "now_et", return_value=clock),
+              patch.object(cash_plan, "load_active_inhibit", return_value={"active": False}),
               patch.object(cash_plan, "load_research_account_state", return_value=effective),
               patch.object(cash_plan, "load_portfolio_summary", return_value=summary),
               patch.object(cash_plan, "load_market_rows", return_value={"SPY": dict(

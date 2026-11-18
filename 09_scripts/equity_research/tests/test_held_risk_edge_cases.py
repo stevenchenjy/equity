@@ -84,11 +84,12 @@ class HeldRiskEdgeCaseTests(unittest.TestCase):
         body = risk.cards({"held_position_risk": report})[0]["body"]
         self.assertIn("UNVERIFIED", body)
 
-    def test_fractional_quantity_is_not_verified_whole_share_inventory(self):
-        self.write_csv(risk.POSITIONS, [{"ticker": "AAA", "shares_optional": "1.5", "entry_price": "100"}])
+    def test_fractional_inventory_uses_exact_exposure_without_order_authority(self):
+        self.write_csv(risk.POSITIONS, [{"ticker": "AAA", "shares_optional": "0.24681", "entry_price": "100"}])
         row = self.build()["holdings"][0]
-        self.assertEqual(row["state"], "UNVERIFIED")
-        self.assertIsNone(row["unrealized_change_usd"])
+        self.assertEqual(row["recorded_shares"], 0.24681)
+        self.assertNotIn("recorded_quantity_or_identity_unverified", row["dependencies"])
+        self.assertEqual(row["unrealized_change_usd"], round((row["quote"]["price"] - 100) * 0.24681, 2))
 
     def test_colon_in_global_provenance_failure_cannot_admit_mark(self):
         self.decision["market_gate"]["failures"] = ["market_feed_source_hash_mismatch:retained_history"]

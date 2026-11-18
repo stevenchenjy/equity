@@ -43,6 +43,7 @@ from account_common import (
     write_csv,
     write_text,
 )
+from household_planning import current_allocation
 from portfolio_construction import individual_sizing_decision, remaining_core_floor_cost
 from instrument_metadata import is_fund
 from build_current_research_baseline import (
@@ -319,6 +320,20 @@ def main() -> None:
     active_weight = as_float(summary["current_active_stock_weight_pct"], "current_active_stock_weight_pct")
     requested = requested_coverage_tickers()
     expected_session = latest_published_market_session(now_et()).isoformat()
+    household = current_allocation(ROOT, now_et(), summary, market_by_ticker.values(), expected_session)
+    allocation_total = float(summary["account_total_value"])
+    allocation_core = float(summary["current_core_value"])
+    allocation_stocks = float(summary["current_active_stock_value"])
+    secondary_positions = {}
+    household_error = household.get("reason") if household else None
+    if household and not household_error:
+        allocation_total = float(household["total"])
+        allocation_core = float(household["core"])
+        allocation_stocks = float(household["stocks"])
+        active_weight = allocation_stocks / allocation_total * 100
+        secondary_positions = household["moomoo_positions"]
+    if household_error:
+        shared_core_plan = {}
     price_unverified = set()
 
     scored: list[dict[str, str]] = []
@@ -445,7 +460,9 @@ def main() -> None:
     new_rows: list[dict[str, str]] = []
     stock_committed_value = 0.0
     deployable_cash = as_float(summary["deployable_cash"], "deployable_cash")
-    account_total = as_float(summary["account_total_value"], "account_total_value")
+    account_total = allocation_total
+    if household_error:
+        deployable_cash = 0.0
     default_cap_pct = optional_cap(account["single_stock_default_cap_pct"], "single_stock_default_cap_pct")
     active_hard_pct = as_float(account["active_stock_hard_cap_pct"], "active_stock_hard_cap_pct")
     core_unit_prices = [as_float(market_by_ticker[t]["last_price"], f"{t}.core_floor_unit_price")
@@ -483,7 +500,7 @@ def main() -> None:
         budget = shared_candidate_budget(
             policy=construction_policy, core_plan=shared_core_plan, account_total=account_total,
             deployable_cash=deployable_cash, active_weight_pct=active_weight,
-            current_core_value=float(summary.get("current_core_value", 0) or 0),
+            current_core_value=allocation_core,
             stock_committed_value=stock_committed_value,
             core_unit_prices=core_unit_prices,
         )
@@ -506,7 +523,7 @@ def main() -> None:
             active_hard_cap_pct=active_hard_pct,
             single_stock_default_cap_pct=default_cap_pct,
             reviewed_target_pct=allocation_review.get("target_position_pct"),
-            current_position_value=float(weights.get(ticker, {}).get("current_value", 0) or 0),
+            current_position_value=float(weights.get(ticker, {}).get("current_value", 0) or 0) + float(secondary_positions.get(ticker, 0)),
             current_core_value=budget["current_core_value"],
             core_unit_prices=core_unit_prices,
         )
@@ -534,8 +551,8 @@ def main() -> None:
             maximum_review_price = math.floor(maximum_review_price * 100)/100
         if is_core:
             core_plan = core_plans.get(ticker, {})
-            core_status = core_plan.get("status", "not_selected")
-            suggested_whole_shares = int(core_plan.get("planned_shares", "0") or 0)
+            core_status = "not_selected" if household_error else core_plan.get("status", "not_selected")
+            suggested_whole_shares = 0 if household_error else int(core_plan.get("planned_shares", "0") or 0)
             suggested_position_pct = as_float(
                 core_plan.get("core_weight_after", "0") or "0",
                 f"{ticker}.core_weight_after",
@@ -566,6 +583,8 @@ def main() -> None:
                 for part in core_plan.get("reason", "").partition("Failed gates:")[2].rstrip(".").split(",")
                 if part.strip() and part.strip() != "none"
             )
+            if household_error:
+                gate_blockers = household_error
             valuation_applicability = "not_applicable_broad_market_etf"
         elif suggested_whole_shares >= 1:
             stock_committed_value += suggested_whole_shares * sizing_price
@@ -584,7 +603,7 @@ def main() -> None:
         else:
             eligibility_label = "wait_for_more_evidence"
             action = "watch_only"
-            failed = list(sizing["failed_gates"])
+            failed = list(sizing["failed_gates"]) + ([household_error] if household_error else [])
             failed.extend(valuation.get("input_limitations", []) if any(str(x).startswith("company_model_admission_unverified:")
                           for x in valuation.get("input_limitations", [])) else [])
             if failed == ["whole_share_affordability"] and all(gate_results.values()):
@@ -686,10 +705,10 @@ def main() -> None:
         "",
         "## Account State",
         "",
-        f"- Account total: `${float(summary['account_total_value']):.2f}`.",
+        f"- Allocation planning total: `${allocation_total:.2f}`.",
         f"- Reported cash: `${float(summary['cash_available']):.2f}` (`{float(summary['current_cash_pct']):.4f}%`).",
-        f"- Active-stock sleeve: `${float(summary['current_active_stock_value']):.2f}` (`{active_weight:.4f}%`), status `{summary['active_stock_status']}`.",
-        f"- Core sleeve currently recorded: `${float(summary['current_core_value']):.2f}`.",
+        f"- Active-stock sleeve: `${allocation_stocks:.2f}` (`{active_weight:.4f}%`), status `{summary['active_stock_status']}`.",
+        f"- Core sleeve currently recorded: `${allocation_core:.2f}`.",
         f"- Invested capital: `${float(summary['current_holdings_value']):.2f}` (`{invested_pct:.4f}%`); underdeployment review threshold `{underdeployment_threshold:.2f}%`.",
         f"- Cash/holding reconciliation difference: `${float(summary['reconciliation_difference']):.2f}` (`{summary['reconciliation_status']}`).",
         "",
@@ -768,9 +787,9 @@ def main() -> None:
         f"Generated: `{timestamp()}`",
         "",
         f"- Primary scenario: `c9_account_aware_manual_review`.",
-        f"- Account total: `${float(summary['account_total_value']):.2f}`.",
+        f"- Allocation planning total: `${allocation_total:.2f}`.",
         f"- Current cash: `${float(summary['cash_available']):.2f}` (`{float(summary['current_cash_pct']):.4f}%`).",
-        f"- Current active-stock sleeve: `${float(summary['current_active_stock_value']):.2f}` (`{active_weight:.4f}%`).",
+        f"- Current active-stock sleeve: `${allocation_stocks:.2f}` (`{active_weight:.4f}%`).",
         f"- Capital-deployment decision: `{core_recommendation['eligibility_label']}`; proposed whole shares `{core_recommendation['suggested_whole_shares']}`.",
         f"- Post-review retained cash: `${float(selected_post_action['resulting_cash']):.2f}` (`{float(selected_post_action['cash_weight_pct']):.4f}%`).",
         f"- New eligible individual-stock count: `{len(eligible_individual)}`.",

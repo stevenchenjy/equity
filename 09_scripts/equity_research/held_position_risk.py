@@ -168,7 +168,7 @@ def build(decision, *, root: Path, current: datetime) -> dict:
         qty, basis = number(item.get("shares_optional")), number(item.get("entry_price"))
         p, c = plans.get(ticker, {}), capital.get(ticker, {})
         issues = list(dict.fromkeys(global_issues + context.get("ticker_blockers", {}).get(ticker, [])))
-        valid_inventory = (qty is not None and qty == qty.to_integral_value()
+        valid_inventory = (qty is not None
                            and re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker)
                            and sum(str(r.get("ticker") or "").upper() == ticker for r in inventory) == 1)
         if not valid_inventory:

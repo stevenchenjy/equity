@@ -31,6 +31,68 @@ class CapitalDecisionTests(unittest.TestCase):
         self.assertEqual(p['estimated_cash_after'],7492);self.assertEqual(p['time_in_force'],'DAY');self.assertEqual(p['entry_limit'],102)
         engine.validate(c,current=self.v['current'],root=ROOT)
 
+    def test_household_limits_apply_to_admitted_draft_but_not_protective_order(self):
+        call = dict(ticker="TEST", broker="Chase", side="BUY", shares="1", price_usd="102",
+                    opens_at="2026-09-23T09:45:00-04:00", expires_at="2026-09-23T10:45:00-04:00",
+                    condition="Recheck the observed inventory and quote.")
+        with patch.object(engine, "research_context", return_value={"status":"research_only", "calls":[call]}):
+            draft = self.build()["decisions"][0]
+            self.assertEqual(draft["shares"], 1)
+            self.assertEqual(draft["order_draft"]["entry_window"]["starts_at"], call["opens_at"])
+            self.assertEqual(draft["order_draft"]["entry_window"]["ends_at"], call["expires_at"])
+            call["price_usd"] = "100"
+            denied = self.build()["decisions"][0]
+            self.assertEqual(denied["shares"], 0)
+            self.assertIn("household_research_price_conflict", denied["blockers"])
+            self.d["held_positions"] = [dict(ticker="TEST", current_shares=2, current_price=101, asset_role="active_stock")]
+            self.d["plan_continuity"]["plans"] = [dict(ticker="TEST", status="maintained", action="protect_review",
+                reason="Source-bound risk reduction", review_at="2026-09-23T15:30:00-04:00",
+                order_draft=dict(side="sell", type="STOP", quantity=2, stop_price=95,
+                                 time_in_force="DAY", session_date="2026-09-23"))]
+            risk = self.build()["decisions"][0]
+            self.assertEqual(risk["shares"], 2)
+            self.assertEqual(risk["order_draft"]["entry_order_type"], "STOP")
+
+    def test_combined_allocation_never_adds_moomoo_or_outside_cash_to_the_order_budget(self):
+        session=self.d["market_gate"]["expected_market_session"]
+        scope=dict(status="observed", chase_ledger_matches=True, positions=[
+            dict(ticker="TEST", chase_shares="0", moomoo_shares="5", moomoo_value_usd="490")],
+            moomoo_total_usd="1000", external_assets_usd="500")
+        quote = dict(ticker="TEST", last_price="100", market_session_date=session, data_quality_label="ok",
+                     data_source="fixture", data_timestamp=self.v["current"].isoformat())
+        self.d["held_positions"] = []
+        self.d["account"]["cash_available"] = self.d["account"]["account_total_value"] = 10000
+        with patch.object(engine,"planning_context",return_value=scope), patch.object(engine,"read_csv",return_value=[quote]):
+            contract = self.build()
+            self.assertEqual(contract["household_allocation"]["planning_total_usd"], 11510)
+            self.assertEqual(contract["household_allocation"]["stocks_before_usd"], 500)
+            self.assertEqual(contract["planning_cash"], 10000)
+            self.assertEqual(contract["decisions"][0]["shares"], 0)
+            quote["data_quality_label"]="stale"
+            unavailable=self.build()
+            self.assertIn("household_moomoo_close_unverified_TEST", unavailable["global_blockers"])
+            self.assertEqual(unavailable["decisions"][0]["shares"], 0)
+
+    def test_household_growth_target_counts_secondary_position_and_reserves_combined_core_floor(self):
+        from test_concentrated_allocation import ConcentratedAllocationTests
+        fixture = ConcentratedAllocationTests()
+        fixture.setUp()
+        decision = fixture.base.d
+        decision["account"]["cash_available"] = 7000
+        session = decision["market_gate"]["expected_market_session"]
+        scope = dict(status="observed", chase_ledger_matches=True, moomoo_total_usd=2000, external_assets_usd=500,
+                     positions=[dict(ticker="SPY", chase_shares=30, moomoo_shares=0, moomoo_value_usd=0),
+                                dict(ticker="TEST", chase_shares=0, moomoo_shares=20, moomoo_value_usd=2000)])
+        quotes = [dict(ticker=t, last_price=100, market_session_date=session, data_quality_label="ok",
+                       data_source="fixture", data_timestamp=fixture.now.isoformat()) for t in ("SPY","TEST")]
+        with patch.object(engine,"planning_context",return_value=scope), patch.object(engine,"read_csv",return_value=quotes):
+            row = fixture.result()
+            self.assertEqual(row["shares"], 30)
+            self.assertEqual(row["order_draft"]["portfolio_weight_after"], 40)
+            self.assertEqual(row["order_draft"]["estimated_cash_after"], 3900)
+            decision["account"]["cash_available"] = 600
+            self.assertEqual(fixture.result()["shares"], 0)
+
     def test_completed_adverse_company_case_is_no_action_not_missing_research(self):
         self.d['eligible_new_position_review_candidates'] = []
         self.d['eligible_action_review_candidates'] = []

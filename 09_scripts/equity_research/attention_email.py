@@ -59,6 +59,12 @@ def direct_action(decision, row):
     if start.date() != end.date():
         window = f"{start:%Y-%m-%d %H:%M %Z}–{end:%Y-%m-%d %H:%M %Z}"
     lines = ["When: " + window + ". Conditional manual order in Chase."]
+    if decision.get("household_planning"):
+        amount = Decimal(quantity) * Decimal(str(price))
+        label = "Estimated proceeds before costs" if selling else "Maximum purchase value before costs"
+        if stopping:
+            label = "Illustrative value at trigger before costs"
+        lines.append(f"{label}: ${amount:,.2f}.")
     # Remove only exact engine-generated wrappers. Authored sentences, including
     # future company-specific exceptions, survive intact on separate lines.
     wrappers = (
@@ -168,6 +174,11 @@ def direct_cards(decision):
             lines.append("A current sourced company/entry judgment, valid plan and feasible shares must pass the existing gates; the detailed candidate decisions remain in the local research report.")
         result.append(section("New capital opportunities", lines, group="action", kind="inactive"))
     result.extend(rotations)
+    from household_planning import summary_card, research_cards
+    household = summary_card(decision.get("household_planning"), allocation=contract.get("household_allocation"))
+    if household:
+        result.append(household)
+    result.extend(research_cards(decision))
     checks = ["Current blocker: " + str(code).replace("_", " ") for code in contract.get("global_blockers", [])]
     checks += ["Required: " + item["evidence_required"] for item in contract.get("dependencies", [])
                if item.get("scope") == "global"]

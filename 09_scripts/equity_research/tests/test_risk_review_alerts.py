@@ -176,13 +176,18 @@ class RiskReviewAlertTests(unittest.TestCase):
         self.assertNotIn(key, alerts.recovered_episode_keys(self.build()))
 
     def test_corrupt_inventory_cannot_invent_owned_exposure(self):
-        for qty in ("-1", "NaN", "1.5", "", "true"):
+        for qty in ("-1", "NaN", "Infinity", "", "true"):
             with self.subTest(qty=qty):
                 write_csv(self.root, held.POSITIONS, [{"ticker": "AAA", "shares_optional": qty, "entry_price": "100"}])
                 with self.assertRaisesRegex(ValueError, "inventory_invalid"):
                     self.build()
         (self.root / held.POSITIONS).write_bytes(b"\xff")
         with self.assertRaises(ValueError): self.build()
+
+    def test_fractional_inventory_retains_account_observed_size(self):
+        write_csv(self.root, held.POSITIONS, [{"ticker": "AAA", "shares_optional": "0.24681", "entry_price": "100"}])
+        result = self.build()
+        self.assertEqual(result["risk_rows"][0]["recorded_shares"], 0.24681)
 
     def test_partial_held_scope_preserves_independently_bound_quote(self):
         write_csv(self.root, held.POSITIONS, [{"ticker": "AAA", "shares_optional": "1", "entry_price": "100"},

@@ -1,6 +1,7 @@
 """Existing dated broad-core entry admission; shared by decision and legacy output."""
 from __future__ import annotations
 from datetime import datetime
+from account_common import observed_shares
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from pathlib import Path
@@ -60,11 +61,11 @@ def eligible_core_tranche(decision: dict[str, Any], row: dict[str, Any], *, root
                 or qty <= 0 or qty != qty.to_integral_value() or cap <= 0
                 or not cap.is_finite() or not qty.is_finite()
                 or not planning_cash.is_finite() or planning_cash < qty * cap
-                or held_before < 0 or held_before != held_before.to_integral_value()
+                or not held_before.is_finite() or held_before < 0
                 or int(row.get("stability_distinct_closes", 0)) < int(row.get("required_distinct_closes", 2))):
             return None
     except (KeyError, StopIteration, TypeError, ValueError, InvalidOperation):
         return None
     return {"ticker": ticker, "quantity": int(qty), "max_price": str(cap),
             "session_date": session, "review_at": maintained["review_at"],
-            "held_before": int(held_before)}
+            "held_before": observed_shares(held_before)}

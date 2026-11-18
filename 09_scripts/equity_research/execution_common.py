@@ -420,7 +420,7 @@ def validate_execution_row(row: dict[str, str]) -> None:
     after = as_float(row["shares_after"], f"{execution_id}.shares_after")
     if shares <= 0 or before < 0 or after < 0:
         raise ValueError(f"{execution_id} share values are invalid")
-    if not all(math.isclose(value, round(value), abs_tol=1e-9) for value in (shares, before, after)):
+    if not shares.is_integer():
         raise ValueError(f"{execution_id} uses whole shares only")
     expected_after = before - shares if side == "sell" else before + shares
     if not math.isclose(after, expected_after, abs_tol=1e-9):

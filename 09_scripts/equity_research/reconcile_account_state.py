@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from account_common import observed_shares
 from equity_naming import report_heading
 
 import argparse
@@ -207,7 +208,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
         fields = csv_fields(CURRENT_POSITIONS)
         for position in raw_positions:
             if position["ticker"].strip().upper() == ticker:
-                position["shares_optional"] = str(int(round(shares_after)))
+                position["shares_optional"] = str(observed_shares(row["shares_after"]))
         new_account = dict(account)
         new_account["cash_available"] = round(cash_after, 2)
         new_account["account_total_value"] = round(selected_total, 2)

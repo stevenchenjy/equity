@@ -17,6 +17,7 @@ from decision_dependencies import classify
 from tactical_review import review_open_orders
 from investment_plans import regular_close, stamp
 from workflow_integrity import reviewed_candidate_ready, company_review_complete
+from household_planning import MANIFEST, RESEARCH_MANIFEST, marked_allocation, planning_context, research_context, bounded_elective_terms
 from core_entry import eligible_core_tranche
 from account_authority import POLICY_REL, load_authority
 
@@ -70,7 +71,8 @@ def codes(value: Any) -> list[str]:
 def binding(root: Path) -> dict:
     from plan_source_resolutions import proof_hashes
     proofs = proof_hashes(root)
-    return {**{p:sha256_file(root/p) if (root/p).is_file() else None for p in sorted(INPUTS)}, **proofs}
+    inputs = INPUTS | {p for p in (MANIFEST, RESEARCH_MANIFEST) if (root / p).is_file()}
+    return {**{p:sha256_file(root/p) if (root/p).is_file() else None for p in sorted(inputs)}, **proofs}
 
 
 def meaning(contract: dict) -> dict:
@@ -147,6 +149,19 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
     except (KeyError,ValueError,TypeError,InvalidOperation):
         active_value=core_value=Decimal(0)
         global_codes.append('held_position_prices_unverified')
+    scope = planning_context(root, current)
+    research_report = research_context(root, current, scope)
+    allocation = marked_allocation(scope, read_csv(root/'03_source_data/equity_research/market_data_snapshot.csv') if scope else [],
+                                   expected, total, core_value, active_value)
+    allocation_total = total
+    secondary_positions = {}
+    if allocation:
+        if allocation["status"] == "marked":
+            allocation_total, core_value, active_value = (allocation[k] for k in ("total", "core", "stocks"))
+            secondary_positions = allocation["moomoo_positions"]
+        else:
+            global_codes.append(allocation["reason"])
+    starting_core, starting_stocks = core_value, active_value
     global_codes=sorted(set(global_codes))
     cfg=config['account']; rows=[]; dependencies=[]
     for code in global_codes: dependencies.append(classify(code,scope='global'))
@@ -162,6 +177,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
         row=dict(ticker=ticker,decision='NO_ACTION',decision_timestamp=current.isoformat(),market_data_timestamp=expected,
                  shares=0,estimated_notional=0,order_draft=None,blockers=[],reasons=[],confidence=w.get('confidence','unverified'),
                  thesis_summary='',key_evidence=[],strategy_source=None)
+        protective = False
         if h:
             status=p.get('status')
             view=decision.get('long_horizon_research',{}).get('views',{}).get(ticker,{})
@@ -196,6 +212,17 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         end=min(end,stamp(p['valid_until']))
                     opening=close.replace(hour=9,minute=30)
                     start=stamp(raw['starts_at']) if raw.get('starts_at') is not None else opening
+                    is_adverse = (view.get("business_case_status") in {"challenged", "rejected"} and purpose_reviewed) or any(
+                        item.get("ticker") == ticker and item.get("state") == "RISK_ALERT"
+                        and item.get("plan_record_hash") and item["plan_record_hash"] == p.get("record_hash")
+                        for item in decision.get("held_position_risk", {}).get("holdings", []))
+                    protective = kind == "STOP" or p.get("action") == "protect_review" or is_adverse
+                    household_call = None
+                    if not protective:
+                        qty, start, end, household_call = bounded_elective_terms(
+                            research_report, ticker, "sell", qty, price, start, end, current)
+                    if scope and scope.get("status") == "observed" and not scope["chase_ledger_matches"]:
+                        exit_issues.append("household_chase_ledger_requires_reconciliation")
                     if p.get('status')!='maintained' or raw.get('side')!='sell' or kind not in {'LIMIT','MARKETABLE_LIMIT','STOP'} or raw.get('time_in_force')!='DAY' or not 0<qty<=existing or qty!=qty.to_integral_value() or price<=0 or current>=end:
                         raise ValueError('maintained_exit_draft_invalid')
                     if not opening<=start<end:
@@ -214,11 +241,14 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                              initial_reassessment_price=money(price),reassessment_rule=(p.get('purpose',{}).get('exit_rule','')+' Reassess by '+end.isoformat()+'; if no fill, the remaining exposure and original purpose persist.').strip(),
                              invalidation_rule=(p.get('purpose',{}).get('failure_condition','')+' A target limit does not protect a decline. Stop execution can gap below the trigger.').strip(),
                              trigger_rule=('SELL STOP trigger at or below ' if kind=='STOP' else 'SELL LIMIT at or above ')+f'${price:.2f}; verify current quote and available shares before submission. '+p.get('instruction',''),
-                             portfolio_weight_before=round(float(existing*reference/total*100),4),portfolio_weight_after=round(float((existing-qty)*reference/total*100),4),
+                             portfolio_weight_before=round(float((existing*reference+secondary_positions.get(ticker,0))/allocation_total*100),4),portfolio_weight_after=round(float(((existing-qty)*reference+secondary_positions.get(ticker,0))/allocation_total*100),4),
                              cash_before=money(cash_remaining),estimated_cash_after=money(cash_remaining+amount),account_value=money(total),
                              cancel_conditions=['Skip if current holdings or order inventory differs, or shares are already reserved.','Never duplicate a pending exit; confirm cancellation before replacement.','This draft expires at '+end.isoformat()+'.','Expected proceeds are conditional and unsettled; no new purchase is funded by an assumed sale.'],
                              price_basis='Source-bound maintained exit level, not a live quote.',cost_assumption='Proceeds at the stated price are an estimate before costs, not a fill or settled buying power.',automatic_action_allowed=False))
-                except (KeyError,ValueError,TypeError,InvalidOperation,ZeroDivisionError):exit_issues.append('maintained_exit_draft_requires_current_shares_price_and_validity')
+                        if household_call:
+                            row["order_draft"]["trigger_rule"] += " " + household_call["condition"]
+                except (KeyError,ValueError,TypeError,InvalidOperation,ZeroDivisionError) as exc:
+                    exit_issues.append(str(exc) if isinstance(exc, ValueError) and str(exc).startswith("household_") else "maintained_exit_draft_requires_current_shares_price_and_validity")
                 row['blockers']=sorted(set(exit_issues))
             elif status != 'maintained' or held_local:
                 row.update(decision='BLOCKED',blockers=sorted(set(held_local or ['current_held_plan_reassessment_required'])),
@@ -226,7 +256,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                            thesis_summary=p.get('reason',''), review_at=p.get('review_at'))
             else:
                 row.update(decision='HOLD',reasons=[p.get('instruction') or 'No supported change in the existing position purpose.'])
-        if ticker in eligible:
+        if ticker in eligible and not protective:
             core=ticker in approved_core and (w.get('valuation_applicability')=='not_applicable_broad_market_etf' or h.get('asset_role')=='core_allocation')
             growth=not core and p.get('role')=='long_term_growth'
             adapter='core_tranche' if core else ('reviewed_company' if growth else 'reviewed_tactical')
@@ -244,20 +274,20 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                 try:
                     from reviewed_allocation import validate_allocation
                     validate_allocation(p)
-                    allocation=p['reviewed_allocation']
+                    company_allocation=p['reviewed_allocation']
                     if p.get('status')!='maintained' or p.get('strategy_horizon')!='long_term_growth':
                         raise ValueError('growth_plan_not_current')
-                    proposed_entry=num(allocation['maximum_entry_price'])
+                    proposed_entry=num(company_allocation['maximum_entry_price'])
                     canonical_max=num(w['maximum_review_price'])
                     if canonical_max <= 0 or proposed_entry > canonical_max:
                         issues.append('entry_above_canonical_maximum')
-                    reward=num(allocation['reassessment_price'])-proposed_entry
-                    loss=proposed_entry-num(allocation['invalidation_price'])
+                    reward=num(company_allocation['reassessment_price'])-proposed_entry
+                    loss=proposed_entry-num(company_allocation['invalidation_price'])
                     minimum_rr=min(num(band['minimum_reward_to_risk']) for band in cfg['candidate_sizing_tiers'])
                     if loss <= 0 or reward/loss < minimum_rr:
                         issues.append('reward_to_risk_below_minimum')
-                    draft=dict(eligible=True,entry_price=allocation['maximum_entry_price'],stop_price=allocation['invalidation_price'],
-                        target_price=allocation['reassessment_price'],quantity=int(w['suggested_whole_shares']),
+                    draft=dict(eligible=True,entry_price=company_allocation['maximum_entry_price'],stop_price=company_allocation['invalidation_price'],
+                        target_price=company_allocation['reassessment_price'],quantity=int(w['suggested_whole_shares']),
                         session_date=current.date().isoformat(),review_at=p['review_at'],time_in_force='DAY',
                         entry_rule=p['purpose']['entry_validity'],invalidation_rule=p['purpose']['failure_condition'],
                         time_exit_session=None,hypothetical_quantity=0)
@@ -268,7 +298,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
             if not issues:
                 try:
                     entry=num(draft['max_price'] if core else draft['entry_price'])
-                    before_qty=num(h.get('current_shares',0)); before_value=before_qty*num(h.get('current_price',entry))
+                    before_qty=num(h.get('current_shares',0)); chase_before_value=before_qty*num(h.get('current_price',entry))
+                    before_value=chase_before_value+secondary_positions.get(ticker,0)
                     qty=int(draft['quantity']); session=draft['session_date']
                     close=regular_close(session)
                     deadlines=[close]
@@ -279,23 +310,27 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                     if any(t.tzinfo is None for t in deadlines):raise ValueError('draft_review_clock_invalid')
                     valid_end=min(deadlines)
                     starts_at=datetime.fromisoformat(session+'T09:30:00').replace(tzinfo=current.tzinfo)
+                    qty, starts_at, valid_end, household_call = bounded_elective_terms(
+                        research_report, ticker, "buy", qty, entry, starts_at, valid_end, current)
                     if current>=valid_end or valid_end<=starts_at or qty<=0 or entry<=0:raise ValueError('draft_invalid_or_expired')
                     if not core and (draft.get('hypothetical_quantity') or draft.get('time_in_force')!='DAY'):raise ValueError('hypothetical_or_undated_draft')
                     # Core is a minimum; permit the whole share that crosses the floor.
                     if core:
-                        gap=max(Decimal(0),total*num(cfg.get('core_minimum_pct',cfg['core_target_pct']))/100-core_value)
+                        gap=max(Decimal(0),allocation_total*num(cfg.get('core_minimum_pct',cfg['core_target_pct']))/100-core_value)
                         from decimal import ROUND_CEILING
                         core_shares=int((gap/entry).to_integral_value(rounding=ROUND_CEILING if cfg.get('core_minimum_pct') is not None else ROUND_FLOOR))
                         limit_value=role_room=entry*core_shares
                     else:
                         cap=cfg.get('single_stock_hard_cap_pct')
-                        limit_value=max(Decimal(0),total*num(cap)/100-before_value) if cap is not None else cash_remaining
+                        limit_value=max(Decimal(0),allocation_total*num(cap)/100-before_value) if cap is not None else cash_remaining
                         if growth:
-                            limit_value=min(limit_value,max(Decimal(0),total*num(p['reviewed_allocation']['target_position_pct'])/100-before_value))
+                            limit_value=min(limit_value,max(Decimal(0),allocation_total*num(p['reviewed_allocation']['target_position_pct'])/100-before_value))
                         else:
-                            limit_value=min(limit_value,max(Decimal(0),total*num(decision['tactical_review']['risk_policy']['max_position_pct'])/100-before_value))
-                        role_room=total*num(cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-active_value
-                        core_gap=max(Decimal(0),total*num(cfg.get('core_minimum_pct',0))/100-core_value)
+                            position_cap = num(decision["tactical_review"]["risk_policy"]["max_position_pct"]) / 100
+                            limit_value=min(limit_value, max(Decimal(0),total*position_cap-chase_before_value),
+                                            max(Decimal(0),allocation_total*position_cap-before_value))
+                        role_room=allocation_total*num(cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-active_value
+                        core_gap=max(Decimal(0),allocation_total*num(cfg.get('core_minimum_pct',0))/100-core_value)
                         if core_gap:
                             from portfolio_construction import remaining_core_floor_cost
                             core_prices = [float(num(q.get('last_price', 0)))
@@ -304,7 +339,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                                            and q.get('market_session_date') == expected and q.get('data_source') and q.get('data_timestamp')
                                            and num(q.get('last_price', 0)) > 0]
                             if core_prices:
-                                core_gap=num(remaining_core_floor_cost(account_total=float(total),
+                                core_gap=num(remaining_core_floor_cost(account_total=float(allocation_total),
                                     current_core_value=float(core_value), core_minimum_pct=float(cfg.get('core_minimum_pct',0)),
                                     core_unit_prices=core_prices))
                             elif growth:
@@ -328,7 +363,7 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                           initial_reassessment_price=None if core else draft['target_price'],
                           reassessment_rule=p.get('purpose',{}).get('exit_rule','') if core or growth else 'Review at the observed target; exit/reassess no later than '+draft['time_exit_session']+' close. No purpose conversion.',
                           invalidation_rule=p.get('purpose',{}).get('invalidation','Core case/material fund evidence or allocation policy failure requires reassessment; no tactical price stop is prescribed.') if core else draft['invalidation_rule'],
-                          portfolio_weight_before=round(float(before_value/total*100),4),portfolio_weight_after=round(float((before_value+amount)/total*100),4),
+                          portfolio_weight_before=round(float(before_value/allocation_total*100),4),portfolio_weight_after=round(float((before_value+amount)/allocation_total*100),4),
                           cash_before=money(cash_remaining),estimated_cash_after=money(cash_remaining-amount),account_value=money(total),
                           cancel_conditions=['Skip if current holdings, complete order inventory or execution funds differ from the recorded inputs.',
                           'Skip if the current executable quote or estimated all-in cost exceeds the limit/budget; no chasing.',
@@ -338,6 +373,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                           trigger_rule='Only while quote is at or below the limit and all dated core conditions hold.' if core else draft['entry_rule'],
                           cost_assumption='Commission and regulatory/execution costs not independently observed here; estimated notional excludes fees. Any positive cost must fit confirmed funds and risk budget.',
                           price_basis='Source-bound analyst entry, invalidation and reassessment judgments; not observed live levels.' if growth else 'Completed market publication; not a live quote.',automatic_action_allowed=False)
+                        if household_call:
+                            proposed["trigger_rule"] += " " + household_call["condition"]
                         row.update(decision='ACTIONABLE_ADD' if before_qty else 'ACTIONABLE_BUY',shares=qty,estimated_notional=money(amount),order_draft=proposed,
                                    strategy_source={'strategy_id':strategy['strategy_id'],'version':strategy['version'],'adapter':adapter,'authority':strategy['authority']},
                                    position_purpose={'role':'broad_core' if core else ('long_term_growth' if growth else 'tactical'),'strategy_horizon':'core_investment' if core else ('long_term_growth' if growth else 'multi_day_trend'),'time_exit_session':None if core or growth else draft['time_exit_session']},
@@ -349,7 +386,8 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         else:
                             active_value+=amount
                             if not growth:risk_remaining-=loss
-                except (KeyError,ValueError,TypeError,InvalidOperation):issues.append('strategy_numeric_entry_or_risk_contract_invalid')
+                except (KeyError,ValueError,TypeError,InvalidOperation) as exc:
+                    issues.append(str(exc) if isinstance(exc, ValueError) and str(exc).startswith("household_") else "strategy_numeric_entry_or_risk_contract_invalid")
             if issues:
                 missing=[c for c in issues if c not in CONDITION_FAILURES]
                 row.update(decision='BLOCKED' if missing else 'NO_ACTION',shares=0,estimated_notional=0,order_draft=None,blockers=sorted(set(issues)) if missing else [],reasons=numeric_reasons or (['No complete admissible capital draft under the existing rules.'] if missing else ['Observed conditions do not permit a new position: '+', '.join(sorted(set(issues)))]))
@@ -391,6 +429,13 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                 planning_cash=money(cash),mandatory_reserve=money(reserve),estimated_uncommitted_cash_after=money(cash_remaining),
                 source_bindings=binding(root),automatic_action_allowed=False,broker_connected=False,order_placed=False,
                 execution='Owner reads the complete conditional draft and manually enters any real order in Chase.')
+    if allocation:
+        result["household_allocation"] = (dict(status="marked", market_session=expected,
+            planning_total_usd=money(allocation_total), chase_marked_total_usd=money(total),
+            moomoo_marked_net_usd=money(allocation["moomoo_total"]), external_assets_usd=money(allocation["external"]),
+            core_before_usd=money(starting_core), stocks_before_usd=money(starting_stocks),
+            core_after_buys_usd=money(core_value), stocks_after_buys_usd=money(active_value))
+            if allocation["status"] == "marked" else allocation)
     result['content_sha256']=canonical_sha256(result)
     validate(result,current=current)
     return result

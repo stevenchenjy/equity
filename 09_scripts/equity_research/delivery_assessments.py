@@ -342,9 +342,10 @@ def _archived_receipt_baseline(row: dict, *, root: Path) -> dict:
         if old.get('schema_version') == 'equity_mandatory_status_brief_v1':
             # Presentation may evolve; exact older archived bodies still bind
             # the original advice chain. Never regenerate or rewrite history.
-            require(tuple(bodies) in (render_failure_brief(old)[1:],
-                _render_prior_failure_cards(old)[1:],
-                _render_legacy_failure_brief(old)[1:]), 'baseline_status_render_mismatch')
+            accepted = [render_failure_brief(old)[1:]]
+            if 'household_planning' not in old:
+                accepted.extend((_render_prior_failure_cards(old)[1:], _render_legacy_failure_brief(old)[1:]))
+            require(tuple(bodies) in accepted, 'baseline_status_render_mismatch')
             return {'status': 'status_only', 'receipt_sha256': canonical_sha256(row)}
         projection = advice_projection(old)
         if old.get('delivery_assessment'):
@@ -819,6 +820,11 @@ def build_failure_brief(root: Path, current: datetime, scheduled_slot: str, reas
         'verification_scope': 'This status brief verifies neither market prices nor account facts. It contains no order, quantity or reused trading level.',
         'automatic_action_allowed': False,
         'boundaries': {'broker_connected': False, 'broker_account_read': False, 'order_code_created': False, 'trade_placed': False}}
+    from household_planning import planning_context
+    household = planning_context(root, current)
+    if household is not None:
+        result['household_planning'] = household
+        result['verification_scope'] = 'Household figures are dated planning observations. Current prices, account buying power and trade eligibility are unverified.'
     result['decision_fingerprint'] = canonical_sha256({k: v for k, v in result.items() if k != 'generated_at'})
     return result
 
@@ -841,13 +847,19 @@ def validate_failure_brief_archive(artifact: dict) -> dict:
         'current_refresh_pending': 'The current research refresh has not completed. A current trading instruction is unavailable.',
         'current_refresh_failed': 'The current refresh did not establish a validated trading plan. Its failure remains recorded.',
         'current_publication_unverified': 'A refresh receipt exists, but a current safe trading publication could not be verified.'}
+    scope = 'This status brief verifies neither market prices nor account facts. It contains no order, quantity or reused trading level.'
+    if 'household_planning' in artifact:
+        from household_planning import validate_archive
+        validate_archive(artifact['household_planning'], aware(artifact['generated_at']))
+        fields.add('household_planning')
+        scope = 'Household figures are dated planning observations. Current prices, account buying power and trade eligibility are unverified.'
     require(set(artifact) == fields and artifact.get('schema_version') == 'equity_mandatory_status_brief_v1'
         and artifact.get('scheduled_slot') in {'morning', 'afternoon'}
         and artifact.get('headline') == 'Research status — no current trading instruction'
         and re.fullmatch(r'[a-zA-Z0-9_:.-]{1,180}', str(artifact.get('failure_reason', '')))
         and artifact.get('status') in summaries
         and artifact.get('status_summary') == summaries[artifact['status']]
-        and artifact.get('verification_scope') == 'This status brief verifies neither market prices nor account facts. It contains no order, quantity or reused trading level.'
+        and artifact.get('verification_scope') == scope
         and artifact.get('automatic_action_allowed') is False
         and artifact.get('boundaries') == {'broker_connected': False, 'broker_account_read': False,
             'order_code_created': False, 'trade_placed': False}, 'status_brief_archive_type_invalid')
@@ -938,6 +950,10 @@ def render_failure_brief(artifact: dict) -> tuple[str, str, str]:
             + '\nReview expectation: the next configured assessment or delivery check must revalidate the publication. '
             'This message does not establish that a repair ran or succeeded.', 'sources': []},
     ]
+    from household_planning import summary_card
+    household = summary_card(artifact.get('household_planning'), status_only=True)
+    if household:
+        sections.insert(1, household)
     return _render_cards(subject, sections, title='Research status',
         stamp=f"Mandatory {artifact['scheduled_slot']} brief · Observed: {artifact['generated_at']}",
         footer='No earlier price, DAY order or trading quantity is renewed by this status update.')

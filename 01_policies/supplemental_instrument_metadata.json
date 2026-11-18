@@ -3,6 +3,20 @@
   "scope": "Public instrument classification only; no candidate membership, core approval, entry strategy or position size is granted.",
   "instruments": [
     {
+      "ticker": "DGII",
+      "asset_class": "stocks",
+      "name": "Digi International Inc. common stock",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/854775/000085477526000029/dgii-20261111.htm",
+      "reviewed_on": "2026-11-17"
+    },
+    {
+      "ticker": "GEV",
+      "asset_class": "stocks",
+      "name": "GE Vernova Inc. common stock",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1996810/000199681026000163/gev-20260930.htm",
+      "reviewed_on": "2026-11-17"
+    },
+    {
       "ticker": "RBRK",
       "asset_class": "stocks",
       "name": "Rubrik, Inc. Class A common stock",

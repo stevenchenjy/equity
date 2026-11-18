@@ -127,7 +127,7 @@ def _inventory(root, current):
         except (InvalidOperation, TypeError):
             raise ValueError("risk_alert_inventory_invalid") from None
         if (re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", ticker) is None or ticker in seen
-                or not quantity.is_finite() or quantity < 0 or quantity != quantity.to_integral_value()):
+                or not quantity.is_finite() or quantity < 0):
             raise ValueError("risk_alert_inventory_invalid")
         seen.add(ticker)
     return rows
@@ -322,7 +322,7 @@ def validate_archive(artifact: dict) -> dict:
             raise ValueError()
         for row in rows.values():
             quantity = held_risk.number(row["recorded_shares"])
-            if (set(row) != ROW_FIELDS or quantity is None or quantity != quantity.to_integral_value()
+            if (set(row) != ROW_FIELDS or quantity is None
                     or re.fullmatch(r"[A-Z][A-Z0-9.-]{0,14}", row["ticker"]) is None
                     or not isinstance(row["dependencies"], list) or any(not isinstance(x, str) for x in row["dependencies"])):
                 raise ValueError()

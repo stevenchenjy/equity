@@ -231,7 +231,7 @@ def review_open_orders(payload: dict[str, Any], current: datetime, session: date
         for position in held_positions:
             ticker = str(position.get("ticker", "")).upper() if isinstance(position, dict) else ""
             quantity = _number(position.get("current_shares")) if isinstance(position, dict) else None
-            if not ticker or ticker in held or quantity is None or quantity < 0 or quantity != quantity.to_integral_value():
+            if not ticker or ticker in held or quantity is None or quantity < 0:
                 global_blockers.append("position_inventory_integrity_invalid")
             else:
                 held[ticker] = quantity

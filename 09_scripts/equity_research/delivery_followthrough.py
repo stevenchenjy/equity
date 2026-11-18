@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from account_common import observed_shares
 from daily_common import canonical_sha256, read_csv, sha256_file, last_completed_market_session
 
 ET = ZoneInfo("America/New_York")
@@ -151,7 +152,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                     continue
                 holding = next((h for h in prior.get("held_positions", []) if h.get("ticker") == ticker), {})
                 held = Decimal(str(holding.get("current_shares", 0)))
-                if not held.is_finite() or held < 0 or held != held.to_integral_value() or (side == "sell" and qty > held):
+                if not held.is_finite() or held < 0 or (side == "sell" and qty > held):
                     incomplete = True
                     continue
                 actions.append({"ticker": ticker, "side": side, "quantity": int(qty),
@@ -159,7 +160,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                     "review_at": draft["entry_window"]["ends_at"],
                     "time_exit_at": (regular_close(row["position_purpose"]["time_exit_session"]).isoformat()
                                      if row.get("position_purpose", {}).get("time_exit_session") else None),
-                    "draft_sha256": canonical_sha256(draft), "held_before": int(held),
+                    "draft_sha256": canonical_sha256(draft), "held_before": observed_shares(held),
                     "assumed_fill_price": str(_positive(draft["exit_price"] if side == "sell" else draft["entry_limit"])),
                     "source": "exact_displayed_capital_draft"})
         except (KeyError, TypeError, ValueError, InvalidOperation):
@@ -183,7 +184,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                 continue
             quantity = _positive(draft["quantity"])
             held_quantity = _positive(plan["current_shares"])
-            if (quantity != quantity.to_integral_value() or held_quantity != held_quantity.to_integral_value()
+            if (quantity != quantity.to_integral_value()
                     or quantity != _positive(plan["proposed_change_shares"]) or quantity > held_quantity):
                 continue
             if sent_at >= _stamp(plan["review_at"]) or sent_at >= regular_close(draft["session_date"]):
@@ -204,7 +205,7 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                 "order_type": draft["type"], "session_date": draft["session_date"],
                 "plan_id": plan.get("plan_id"), "plan_record_hash": plan["record_hash"],
                 "review_at": plan["review_at"], "time_exit_at": plan.get("time_exit_at"),
-                "draft_sha256": canonical_sha256(draft), "held_before": int(held_quantity),
+                "draft_sha256": canonical_sha256(draft), "held_before": observed_shares(held_quantity),
                 "assumed_fill_price": str(_positive(draft["stop_price"] if draft["type"] == "STOP" else draft["limit_price"])),
                 "source": "exact_displayed_maintained_conditional_draft"})
         except (KeyError, TypeError, ValueError, InvalidOperation):
@@ -233,14 +234,14 @@ def _displayed_actions(prior: dict, text: str, html: str, sent_at: datetime) -> 
                 continue
             holding = next((row for row in prior.get("held_positions", []) if row.get("ticker") == ticker), {})
             held_before = Decimal(str(holding.get("current_shares", 0)))
-            if not held_before.is_finite() or held_before < 0 or held_before != held_before.to_integral_value():
+            if not held_before.is_finite() or held_before < 0:
                 incomplete = True
                 continue
             actions.append({"ticker": ticker, "side": "buy", "quantity": int(qty),
                 "order_type": draft["order_type"], "session_date": draft["session_date"],
                 "review_at": regular_close(draft["session_date"]).isoformat(),
                 "time_exit_at": regular_close(draft["time_exit_session"]).isoformat(),
-                "draft_sha256": canonical_sha256(draft), "held_before": int(held_before),
+                "draft_sha256": canonical_sha256(draft), "held_before": observed_shares(held_before),
                 "assumed_fill_price": str(entry), "source": "exact_displayed_eligible_tactical_draft"})
         except (KeyError, TypeError, ValueError, InvalidOperation):
             incomplete = True

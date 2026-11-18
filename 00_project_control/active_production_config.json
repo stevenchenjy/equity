@@ -18,6 +18,8 @@
     }
   },
   "account": {
+    "household_planning_required": true,
+    "household_planning_effective_from": "2026-11-17T22:37:08.489394-05:00",
     "investment_horizon_years": 1,
     "core_target_pct": 30.0,
     "active_target_pct": 70.0,

@@ -19,6 +19,7 @@ from plan_source_resolutions import proof_hashes as plan_source_resolution_proof
 from instrument_metadata import is_fund
 
 from workflow_inputs import WORKFLOW_INPUTS
+from household_planning import planning_context, research_context
 
 CRITICAL_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 
@@ -215,6 +216,12 @@ def news_meaning(context: dict[str, Any]) -> dict[str, Any]:
 
 
 def apply_workflow_integrity(decision: dict[str, Any], *, root: Path, current: datetime) -> None:
+    household = planning_context(root, current)
+    if household is not None:
+        decision["household_planning"] = household
+    household_research = research_context(root, current, household)
+    if household_research is not None:
+        decision["household_research"] = household_research
     allocation = decision["capital_allocation"]
     allocation.setdefault("baseline_research_projection", deepcopy({
         key: value for key, value in allocation.items() if key != "baseline_research_projection"}))
@@ -417,6 +424,10 @@ def validate_published_workflow(decision: dict[str, Any], *, root: Path, current
         actual = sha256_file(root / candidate) if (root / candidate).exists() else None
         if digest != actual:
             raise ValueError("workflow_inputs_changed_recompose_required")
+    household = planning_context(root, current)
+    if (decision.get("household_planning") != household or
+            decision.get("household_research") != research_context(root, current, household)):
+        raise ValueError("workflow_household_planning_changed_recompose_required")
     if "intraday_portfolio_risk" in decision:
         from intraday_assessment import publication_context as intraday_context
         generated = stamp(decision.get("generated_at"))

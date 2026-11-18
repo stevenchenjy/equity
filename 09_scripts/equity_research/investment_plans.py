@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
+from account_common import observed_shares
 from daily_common import canonical_sha256, is_us_market_session_date
 
 SCHEMA = "equity_investment_plans_v1"
@@ -141,7 +142,7 @@ def _validate_rotation_review(row: dict[str, Any], root: Path | None = None) -> 
     if (not isinstance(buy, dict) or not isinstance(sell, dict)
             or sell.get("ticker") != row["ticker"] or buy.get("ticker") == sell.get("ticker")
             or not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", str(buy.get("ticker", "")))
-            or not 0 < _whole(sell.get("quantity")) <= _whole(row["expected_shares"])
+            or not 0 < _whole(sell.get("quantity")) <= observed_shares(row["expected_shares"])
             or _whole(buy.get("quantity")) <= 0):
         raise ValueError("plan_rotation_review_legs_invalid")
     for leg, field in ((buy, "maximum_price"), (sell, "minimum_price")):
@@ -150,9 +151,9 @@ def _validate_rotation_review(row: dict[str, Any], root: Path | None = None) -> 
             raise ValueError("plan_rotation_review_price_invalid")
     expected = review.get("expected_holdings")
     if (not isinstance(expected, dict) or set(expected) != {buy["ticker"], sell["ticker"]}
-            or _whole(expected[sell["ticker"]]) != _whole(row["expected_shares"])):
+            or observed_shares(expected[sell["ticker"]]) != observed_shares(row["expected_shares"])):
         raise ValueError("plan_rotation_review_expected_holdings_invalid")
-    _whole(expected[buy["ticker"]])
+    observed_shares(expected[buy["ticker"]])
     starts, ends = stamp(review.get("starts_at")), stamp(review.get("ends_at"))
     session = review.get("session_date")
     close = regular_close(session)
@@ -303,7 +304,7 @@ def validate_record(row: dict[str, Any], *, root: Path | None = None,
         raise ValueError("plan_observation_after_recording")
     if stamp(row["review_at"]) < stamp(row["effective_at"]):
         raise ValueError("plan_review_before_effective")
-    expected = _whole(row.get("expected_shares"))
+    expected = observed_shares(row.get("expected_shares"))
     quantity = _whole(row.get("proposed_change_shares"))
     if quantity > expected or (row["action"] in {"hold", "watch"} and quantity):
         raise ValueError("plan_change_exceeds_position")
@@ -404,7 +405,7 @@ def append_plan(payload: dict[str, Any], proposal: dict[str, Any], *, root: Path
     _validate_append_transition(payload, latest, proposal)
     prior = latest.get(proposal["plan_id"])
     row = copy.deepcopy(proposal)
-    row["expected_shares"] = _whole(row["expected_shares"])
+    row["expected_shares"] = observed_shares(row["expected_shares"])
     row["proposed_change_shares"] = _whole(row["proposed_change_shares"])
     row.update(version=prior["version"] + 1 if prior else 1,
                supersedes=prior["record_hash"] if prior else None,
@@ -548,7 +549,7 @@ def evaluate_plans(payload: dict[str, Any], positions: list[dict[str, Any]], *,
         base.update(status="invalid", conflicts=[str(exc)], block_new_capital=True, global_blockers=["plan_ledger_integrity_invalid"])
         return base
     try:
-        held = {row["ticker"]: _whole(row.get("current_shares", row.get("shares_optional", 0))) for row in positions}
+        held = {row["ticker"]: observed_shares(row.get("current_shares", row.get("shares_optional", 0))) for row in positions}
         if len(held) != len(positions) or any(not isinstance(ticker, str) or not re.fullmatch(r"[A-Z][A-Z0-9.\-]{0,11}", ticker) for ticker in held):
             raise ValueError("duplicate_or_invalid_position")
     except (ValueError, KeyError, TypeError):

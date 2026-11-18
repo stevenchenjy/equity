@@ -26,7 +26,8 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from account_common import validate_account_state
+from chase_statement import ACTIVITY_LEDGER, STATEMENT_INDEX, activity_register, snapshot_context
+from account_common import observed_shares, validate_account_state
 from execution_common import EXECUTION_FIELDS, validate_execution_row
 from validate_execution_fill import CONFIRMED_FIELDS
 from reconcile_account_state import RECONCILIATION_FIELDS
@@ -401,13 +402,13 @@ class Store:
                 if f['amount_mode'] == 'net': gross = amount - fee if f['side']=='buy' else amount + fee
                 if gross <= 0: raise FeedbackError('net_amount_less_than_fees')
                 price = gross / qty
-                before = dec(positions[ticker]['shares_optional'], 'held', integer=True) if ticker in positions else Decimal(0)
+                before = dec(positions[ticker]['shares_optional'], 'held') if ticker in positions else Decimal(0)
                 after = before + qty if f['side']=='buy' else before - qty
                 if after < 0: raise FeedbackError('insufficient_recorded_shares')
                 current_cash = dec(account['cash_available'],'cash',zero=True)
                 post_cash = cash(current_cash - gross - fee if f['side']=='buy' else current_cash + gross - fee)
                 if post_cash < dec(account['cash_reserved'],'reserved',zero=True): raise FeedbackError('insufficient_recorded_cash')
-                changes.update(cash_after=float(post_cash), ticker=ticker, shares_before=int(before), shares_after=int(after), fill_price=float(price), fees=float(fee))
+                changes.update(cash_after=float(post_cash), ticker=ticker, shares_before=observed_shares(before), shares_after=observed_shares(after), fill_price=float(price), fees=float(fee))
                 if after == 0: positions.pop(ticker)
                 else:
                     previous = positions.get(ticker)
@@ -442,8 +443,17 @@ class Store:
                 missing.append('对应挂单' if simple else '对应订单编号')
             if f['prior_partial'] and f.get('partial_recorded') is not True: missing.append('确认撤单前成交已单独计入账户')
             if f.get('terminal_confirmed') is not True: missing.append('确认券商已显示撤单完成')
+        statement = None
+        if 'chase_observation_sha256' in f:
+            if status != 'account':
+                raise FeedbackError('chase_statement_requires_account_snapshot')
+            try:
+                statement = snapshot_context(self.root, f['chase_observation_sha256'], f, now, account,
+                    old_positions, sha(read(self.root, MANUAL)), sha(read(self.root, POSITIONS)))
+            except ValueError as exc:
+                raise FeedbackError('chase_statement_invalid', {'reason': str(exc)}) from exc
         if status == 'account':
-            if f['date']!=now.date().isoformat(): missing.append('账户核对须是今天的当前观察；历史快照不覆盖当前账户')
+            if statement is None and f['date']!=now.date().isoformat(): missing.append('账户核对须是今天的当前观察；历史快照不覆盖当前账户')
             reported_cash = need('cash','现金',zero=True)
             if f.get('account_observed') is not True: missing.append('确认完整账户观察')
             if not isinstance(f.get('holdings'),list) or len(f['holdings']) > 100: raise FeedbackError('invalid_holdings')
@@ -452,7 +462,7 @@ class Store:
                 if not isinstance(r,dict) or not isinstance(r.get('ticker'),str): raise FeedbackError('invalid_holdings')
                 symbol = r['ticker'].strip().upper()
                 if SYMBOL.fullmatch(symbol) is None or symbol in observed: raise FeedbackError('invalid_holdings')
-                shares = dec(r.get('shares'),'holding_shares',integer=True)
+                shares = dec(r.get('shares'),'holding_shares',integer=statement is None)
                 old = positions.get(symbol)
                 if not old and not r.get('entry_price'): missing.append(symbol+' 平均成本')
                 entry = dec(r['entry_price'],'entry_price') if r.get('entry_price') else dec(old['entry_price'],'entry_price') if old else Decimal(1)
@@ -482,6 +492,29 @@ class Store:
             market = {r['ticker']:r for r in rows(read(self.root, MARKET,optional=True))}
             valuation_complete = all(r['ticker'] in market and market[r['ticker']].get('data_quality_label')=='ok' for r in positions.values())
             total = cash(dec(account['cash_available'],'cash',zero=True)+sum((dec(market[r['ticker']]['last_price'],'mark')*dec(r['shares_optional'],'shares') for r in positions.values()),Decimal(0))) if valuation_complete else dec(account['account_total_value'],'total')
+            if statement is not None:
+                total = dec(statement['account_value'], 'broker_total')
+                account['last_updated'] = statement['account_as_of']
+                orders['as_of'] = orders['current_inventory_observation']['as_of'] = statement['orders_as_of']
+                orders['source'] = 'Chase order-status observation retained with the complete broker statement.'
+                changes['chase_statement'] = statement
+                for symbol, position in positions.items():
+                    position['position_pct'] = format(Decimal(statement['current_position_values'][symbol]) * 100 / total, '.4f')
+                    if symbol in statement['opened_dates']:
+                        position['entry_date'] = statement['opened_dates'][symbol]
+                    position['notes'] = f['notes']
+                index = json.loads(read(self.root, STATEMENT_INDEX, optional=True) or b'{"schema":"chase_activity_windows_v1","windows":[]}')
+                if index.get('schema') != 'chase_activity_windows_v1' or not isinstance(index.get('windows'), list):
+                    raise FeedbackError('chase_statement_index_invalid')
+                previous = index['windows']
+                existing = read(self.root, ACTIVITY_LEDGER, optional=True)
+                if ((previous and activity_register(self.root, previous) != existing)
+                        or (not previous and existing)
+                        or any(item['account'] != statement['account'] for item in previous)):
+                    raise FeedbackError('chase_transaction_register_changed')
+                previous.append(statement)
+                writes[ACTIVITY_LEDGER] = activity_register(self.root, previous)
+                writes[STATEMENT_INDEX] = encoded(index)
             account['account_total_value'] = float(total)
             validate_account_state(account)
             changes['valuation_complete'] = valuation_complete
@@ -784,6 +817,11 @@ class Store:
                         account_sha256_before=sha(read(self.root,ACCOUNT)),account_sha256_after=sha(writes[ACCOUNT]),confirmed_execution_sha256=sha(read(self.root,CONFIRMED)) if (self.root/CONFIRMED).exists() else None))
                     manual=json.loads(writes[MANUAL])
                     manual.update(source={'path':observation,'sha256':sha(observed)},correction=record['correction'])
+                    if 'chase_statement' in changes:
+                        statement = changes['chase_statement']
+                        manual.update(observed_at=statement['account_as_of'], recorded_at=now.isoformat(),
+                            valuation_basis='manual_ui_observation', chase_statement=statement,
+                            source_note=f['notes'])
                     writes[MANUAL]=encoded(manual)
             if f['status']!='skipped': writes.update(self.pending_brief(writes,now))
             if context is not None:

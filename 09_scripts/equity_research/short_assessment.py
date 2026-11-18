@@ -22,6 +22,7 @@ from daily_common import (ET, ROOT, ExclusiveFileLock, atomic_write_json,
 from investment_plans import CALENDAR_SOURCE, regular_close
 from account_access import ACCOUNT_INPUTS
 from workflow_inputs import WORKFLOW_INPUTS
+from household_planning import MANIFEST as HOUSEHOLD_MANIFEST, RESEARCH_MANIFEST as HOUSEHOLD_RESEARCH
 
 SCHEMA = "equity_short_assessment_v1"
 STATE_REL = Path("00_project_control/run_logs/short_assessment.local.json")
@@ -34,6 +35,7 @@ PUBLIC_MAX_AGE = timedelta(minutes=75)
 AUTHORITY = {"automatic_action_allowed": False, "execution_authority": False,
              "canonical_admission": False, "email_sent": False, "trade_placed": False}
 MUTABLE_STORES = (
+    HOUSEHOLD_RESEARCH,
     "05_risk_and_positions/investment_plans.local.json",
     "04_research/company_research/thesis_dossiers.local.json",
     "04_data/equity_research/company_valuation_admissions.local.json",
@@ -41,7 +43,7 @@ MUTABLE_STORES = (
     "04_research/company_research/opportunities.local/store.json",
     "04_research/company_research/priority_reviews.local.json",
 )
-ACCOUNT_MARKET = (*ACCOUNT_INPUTS,
+ACCOUNT_MARKET = (*ACCOUNT_INPUTS, HOUSEHOLD_MANIFEST,
     "03_source_data/equity_research/market_data_snapshot.csv",
     "03_source_data/equity_research/market_feed.local/current.json",
 )

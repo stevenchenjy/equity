@@ -20,7 +20,7 @@ from typing import Any
 
 import account_access
 from account_authority import load_authority
-from account_common import validate_account_state
+from account_common import observed_shares, validate_account_state
 from active_config import (load_active_config, validate_allocation_targets,
                            validate_core_allocation_tickers,
                            validate_research_risk_limits)
@@ -133,15 +133,13 @@ def _context(root: Path, current: datetime) -> dict:
             raise ValueError("intraday_risk_position_inventory_invalid")
         seen.add(ticker)
         qty = _number(row.get("shares_optional"), ticker + ".shares", positive=True)
-        if qty != qty.to_integral_value():
-            raise ValueError("intraday_risk_nonwhole_recorded_shares")
         instrument = asset_class(ticker, root=root, universe=metadata_rows)
         if instrument is None:
             raise ValueError("intraday_risk_instrument_metadata_missing:" + ticker)
         is_etf = instrument == "etf"
         if ticker in core and (not is_etf or metadata.get(ticker, {}).get("is_benchmark") != "yes"):
             raise ValueError("intraday_risk_core_metadata_invalid:" + ticker)
-        inventory.append({"ticker": ticker, "shares": int(qty), "sleeve": "core" if ticker in core else "other_etf" if is_etf else "stock"})
+        inventory.append({"ticker": ticker, "shares": observed_shares(qty), "sleeve": "core" if ticker in core else "other_etf" if is_etf else "stock"})
     if not isinstance(orders, dict) or not isinstance(orders.get("orders"), list):
         raise ValueError("intraday_risk_order_inventory_invalid")
     held = [{"ticker": x["ticker"], "current_shares": x["shares"]} for x in inventory]
@@ -278,7 +276,7 @@ def assess(root: Path, snapshot: dict, current: datetime | None = None, *, _hist
         marked, baseline = cash, cash
         rows, prices = [], {}
         for holding in context["inventory"]:
-            ticker, quantity = holding["ticker"], Decimal(holding["shares"])
+            ticker, quantity = holding["ticker"], Decimal(str(holding["shares"]))
             quote = quotes[ticker]
             price = _number(quote["price"], ticker + ".price", positive=True)
             prior = _number(quote["previous_close"], ticker + ".previous_close", positive=True)
