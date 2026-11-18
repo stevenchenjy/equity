@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 from daily_common import sha256_file
-from validation_cache import file_hash_validation
+from validation_cache import file_hash_validation, content_proof_scope
 
 
 class ValidationCacheTests(unittest.TestCase):
@@ -49,6 +49,29 @@ class ValidationCacheTests(unittest.TestCase):
                 self.assertEqual(self.path.stat().st_mtime_ns, original.st_mtime_ns)
                 self.assertNotEqual(sha256_file(self.path), before)
                 self.assertEqual(sha256_file(self.path), hashlib.sha256(b'replaced').hexdigest())
+
+    def test_reproving_identical_bytes_enrolls_in_independent_final_fence(self):
+        with content_proof_scope():
+            prior = sha256_file(self.path)
+            with self.assertRaisesRegex(ValueError, 'validation_sources_changed_during_transaction'):
+                with file_hash_validation():
+                    with patch.object(Path, 'read_bytes', side_effect=AssertionError('duplicate read')):
+                        self.assertEqual(sha256_file(self.path), prior)
+                    self.path.write_bytes(b'changed')
+            with file_hash_validation():
+                self.assertNotEqual(sha256_file(self.path), prior)
+
+    def test_replaced_locator_with_original_size_and_mtime_always_rehashes(self):
+        original = self.path.stat()
+        with content_proof_scope():
+            prior = sha256_file(self.path)
+            replacement = self.path.with_suffix('.new')
+            replacement.write_bytes(b'replaced')
+            os.utime(replacement, ns=(original.st_atime_ns, original.st_mtime_ns))
+            os.replace(replacement, self.path)
+            new = sha256_file(self.path)
+        self.assertNotEqual(new, prior)
+        self.assertEqual(new, hashlib.sha256(b'replaced').hexdigest())
 
     def test_atomic_replacement_invalidates_even_with_same_bytes_and_mtime(self):
         original = self.path.stat()

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 import math
+from decimal import Decimal
 from pathlib import Path
 
 from calculate_dynamic_weights import confirmed_thesis_break, load_thesis_reviews
 from account_common import (
+    format_shares,
     ACCOUNT_STATE,
     C5_PACKETS,
     CURRENT_POSITIONS,
@@ -125,6 +127,14 @@ def valuation_trim_review_required(
     )
 
 
+def whole_share_reduction(shares, maximum_remaining):
+    """A whole-share sale can leave the acquired fraction in the account."""
+    held = Decimal(str(shares))
+    keep = Decimal(str(maximum_remaining))
+    change = min(int(held), max(0, math.ceil(held - keep)))
+    return change, float(held - change)
+
+
 def main() -> None:
     load_active_inhibit()
     account = load_research_account_state()
@@ -182,12 +192,11 @@ def main() -> None:
             )
         elif label == "exit_review" and confirmed_thesis_break(thesis_reviews.get(ticker, {}), position):
             recommended_action = "exit_review"
-            change = math.ceil(shares - 1e-9)
-            target_shares = 0.0
-            target_weight = 0.0
-            target_value = 0.0
-            cash_change = value
-            resulting_weight = 0.0
+            change, target_shares = whole_share_reduction(shares, 0)
+            target_value = target_shares * price
+            target_weight = target_value / account_total * 100.0
+            cash_change = change * price
+            resulting_weight = target_weight
             assessment = thesis_reviews[ticker]
             reason = (
                 f"Reviewed thesis invalidation: {assessment['reason']}; "
@@ -196,9 +205,7 @@ def main() -> None:
             )
             trim_condition = "Exit review only if the documented thesis or evidence is materially impaired and a human confirms."
         elif hard_cap is not None and weight > hard_cap + 1e-9:
-            maximum_whole_shares = max(0, math.floor(cap_value / price + 1e-12))
-            change = max(0, math.ceil(shares - maximum_whole_shares - 1e-9))
-            target_shares = max(0.0, shares - change)
+            change, target_shares = whole_share_reduction(shares, cap_value / price)
             target_weight = hard_cap
             target_value = cap_value
             cash_change = change * price
@@ -220,12 +227,7 @@ def main() -> None:
                 held_review_policy,
             )
         ):
-            maximum_whole_shares = max(
-                0,
-                math.floor(default_cap_value / price + 1e-12),
-            )
-            change = max(0, math.ceil(shares - maximum_whole_shares - 1e-9))
-            target_shares = max(0.0, shares - change)
+            change, target_shares = whole_share_reduction(shares, default_cap_value / price)
             target_weight = default_cap
             target_value = default_cap_value
             cash_change = change * price
@@ -282,12 +284,14 @@ def main() -> None:
                 f"Reopen trim review only if refreshed weight rises above {hard_cap:.2f}% or independent research evidence weakens."
             )
 
+        if recommended_action in {"exit_review", "trim_specific_shares_review"} and target_shares and change == int(shares) and shares != int(shares):
+            reason += " The retained fractional balance requires a separate broker-specific review."
         if recommended_action not in ALLOWED_ACTIONS:
             raise ValueError(f"unsupported C9 action {recommended_action}")
         action_row = {
             "ticker": ticker,
             "asset_role": asset_role,
-            "current_shares": f"{shares:.4f}",
+            "current_shares": format_shares(shares),
             "current_price": f"{price:.2f}",
             "current_value": f"{value:.2f}",
             "current_weight_pct": f"{weight:.4f}",
@@ -296,7 +300,7 @@ def main() -> None:
             "target_weight_pct": f"{target_weight:.4f}",
             "target_value": f"{target_value:.2f}",
             "whole_shares_to_change": str(change),
-            "target_shares": f"{target_shares:.4f}",
+            "target_shares": format_shares(target_shares),
             "estimated_cash_change": f"{cash_change:.2f}",
             "resulting_weight_pct": f"{resulting_weight:.4f}",
             "holding_horizon": str(position["horizon_class"]),
@@ -322,7 +326,7 @@ def main() -> None:
                 "current_label": label,
                 "recommended_action": recommended_action,
                 "whole_share_scenario": (
-                    f"change={change}; target_shares={target_shares:.4f}; resulting_weight_pct={resulting_weight:.4f}"
+                    f"change={change}; target_shares={format_shares(target_shares)}; resulting_weight_pct={resulting_weight:.4f}"
                 ),
                 "next_review_condition": trim_condition,
                 "human_confirmation_required": (

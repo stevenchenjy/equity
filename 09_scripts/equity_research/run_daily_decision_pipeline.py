@@ -39,6 +39,10 @@ DELIVERY_STATUS_UNKNOWN_EXIT = 76
 # this allowance extends neither a delivery window nor a short assessment's
 # ten-minute analytical budget. Interrupted claims remain fenced as unknown.
 SENDER_PROCESS_TIMEOUT_SECONDS = 180
+# Five independent normal-brief validations took 188 seconds on the
+# November 18 ledger and retained research sources, before SMTP. This
+# allowance applies only to a ready normal scheduled publication.
+NORMAL_BRIEF_PROCESS_TIMEOUT_SECONDS = 300
 POST_DELIVERY_PUBLICATION_SECONDS = 180
 
 
@@ -205,13 +209,17 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
             return REFRESH_NOT_READY_EXIT
         publication_remaining = float(POST_DELIVERY_PUBLICATION_SECONDS)
         publication_pending = False
+        sender_timeout = (NORMAL_BRIEF_PROCESS_TIMEOUT_SECONDS
+            if delivery_mode == "scheduled_brief" and scheduled_slot is not None
+            and ready and readiness_reason == "daily_refresh_ready"
+            else SENDER_PROCESS_TIMEOUT_SECONDS)
 
         def recover_publication(*, before_sender: bool) -> None:
             nonlocal publication_remaining, publication_pending
             from post_delivery_publication import recover_locked
             from run_daily_refresh_scheduler import short_window_conflict
             allowance = publication_remaining
-            sender_reserve = SENDER_PROCESS_TIMEOUT_SECONDS if before_sender else 0
+            sender_reserve = sender_timeout if before_sender else 0
             if short_window_conflict(now_et(), maximum_seconds=allowance+sender_reserve):
                 # Both phases must defer before archive/render proof can hold
                 # the runtime lock across a protected short-check admission.
@@ -225,7 +233,7 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
                     allowance = 0
                 else:
                     end = current.replace(hour=int(window["end"][:2]), minute=int(window["end"][3:]), second=0, microsecond=0)
-                    allowance = min(allowance, max(0, (end-current).total_seconds()-SENDER_PROCESS_TIMEOUT_SECONDS-5))
+                    allowance = min(allowance, max(0, (end-current).total_seconds()-sender_reserve-5))
             started = time.monotonic()
             try:
                 result = recover_locked(ROOT, maximum_seconds=allowance)
@@ -273,7 +281,7 @@ def execute(send: bool, scheduled_slot: str | None = None, delivery_mode: str | 
             sender_arguments.append("--limited-status")
         if scheduled_slot is not None:
             sender_arguments += ["--delivery-window", scheduled_slot]
-        sender = run_command(sender_arguments, timeout=SENDER_PROCESS_TIMEOUT_SECONDS)
+        sender = run_command(sender_arguments, timeout=sender_timeout)
         sender_summary = " ".join(sender.stdout.strip().split())[-500:]
         delivery_status_unknown = delivery_status_is_unknown(sender_summary)
         status_only = "publication_status=status_only" in sender_summary

@@ -70,6 +70,7 @@ from create_long_horizon_research import SIGNAL_LABELS, missing_label
 from workflow_integrity import apply_workflow_integrity, record_decision_history
 from investment_plans import render_plan_lines
 from capital_work_queue import refresh_capital_work_queue
+from research_opportunities import report_proof_scope
 from work_queue_reporting import read_backlog_summary, report_section
 from delivery_continuity import delivery_notification_comparison
 from evidence_scope import current_shared_integrity_passed, ticker_blockers as evidence_ticker_blockers, required_issuer_blockers
@@ -815,6 +816,7 @@ def compose_strategy_research(decision: dict[str, Any], *, root: Path,
     decision["strategy_framework"] = view
 
 
+@report_proof_scope()
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")

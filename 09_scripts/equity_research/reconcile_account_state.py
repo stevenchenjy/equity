@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from account_common import observed_shares
+from account_common import format_shares, observed_shares
 from equity_naming import report_heading
 
 import argparse
@@ -127,6 +127,7 @@ def upsert_reconciliation_row(report_row: dict[str, str]) -> None:
 def write_pending_outputs(row: dict[str, str]) -> None:
     position_hash = sha256(CURRENT_POSITIONS)
     account_hash = sha256(ACCOUNT_STATE)
+    rbrk_shares = next((str(observed_shares(p["shares"])) for p in load_positions() if p["ticker"] == "RBRK"), "")
     report_row = {field: "" for field in RECONCILIATION_FIELDS}
     report_row.update(
         {
@@ -138,8 +139,8 @@ def write_pending_outputs(row: dict[str, str]) -> None:
             "shares_before": row["shares_before"],
             "actual_shares_filled": "",
             "shares_after": row["shares_after"],
-            "rbrk_shares_before": "2" if any(str(p["ticker"]) == "RBRK" and float(p["shares"]) == 2.0 for p in load_positions()) else "",
-            "rbrk_shares_after": "2" if any(str(p["ticker"]) == "RBRK" and float(p["shares"]) == 2.0 for p in load_positions()) else "",
+            "rbrk_shares_before": rbrk_shares,
+            "rbrk_shares_after": rbrk_shares,
             "positions_sha256_before": position_hash,
             "positions_sha256_after": position_hash,
             "account_sha256_before": account_hash,
@@ -256,7 +257,7 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
                 "execution_id": row["execution_id"],
                 "reconciliation_state": reconciliation_state,
                 "ticker": name,
-                "shares_after": f"{post_shares[name]:.4f}",
+                "shares_after": format_shares(post_shares[name]),
                 "reference_price": f"{price:.2f}",
                 "post_execution_value": f"{value:.2f}",
                 "account_total_after": f"{selected_total:.2f}",
@@ -278,9 +279,9 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
         "execution_status": row["order_status"],
         "reconciliation_status": reconciliation_state,
         "canonical_state_applied": "yes" if positions_modified else "no",
-        "shares_before": f"{shares_before:.4f}",
+        "shares_before": format_shares(shares_before),
         "actual_shares_filled": row["shares"],
-        "shares_after": f"{shares_after:.4f}",
+        "shares_after": format_shares(shares_after),
         "fill_price": row["fill_price"],
         "fees": row["fees"],
         "cash_before": f"{cash_before:.2f}",
@@ -292,8 +293,8 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
         "selected_account_total_after": f"{selected_total:.2f}",
         "account_total_source": total_source,
         "account_total_reconciliation_difference": f"{total_difference:.2f}",
-        "rbrk_shares_before": f"{float(rbrk_before):.4f}" if rbrk_before != "" else "",
-        "rbrk_shares_after": f"{float(rbrk_after):.4f}" if rbrk_after != "" else "",
+        "rbrk_shares_before": format_shares(float(rbrk_before)) if rbrk_before != "" else "",
+        "rbrk_shares_after": format_shares(float(rbrk_after)) if rbrk_after != "" else "",
         "positions_sha256_before": positions_hash_before,
         "positions_sha256_after": positions_hash_after,
         "account_sha256_before": account_hash_before,
@@ -311,12 +312,12 @@ def reconcile_fill(row: dict[str, str], apply_state: bool) -> tuple[str, bool]:
             f"## Status: `{reconciliation_state}`",
             "",
             f"- Execution: `{row['execution_id']}` (`{row['order_status']}`).",
-            f"- {ticker} shares: `{shares_before:.0f}` to `{shares_after:.0f}` using the confirmed `{row['shares']}`-share fill.",
+            f"- {ticker} shares: `{observed_shares(shares_before)}` to `{observed_shares(shares_after)}` using the confirmed `{row['shares']}`-share fill.",
             f"- Confirmed fill price: `${as_float(row['fill_price'], 'fill_price'):.4f}`; fees: `${as_float(row['fees'], 'fees'):.2f}`.",
             f"- Reconciled cash after: `${cash_after:.2f}` (`{cash_source}`).",
             f"- Account total after: `${selected_total:.2f}` (`{total_source}`).",
             f"- Difference from public-price estimate: `${total_difference:.2f}`.",
-            f"- RBRK shares remain `{float(rbrk_after):.0f}`.",
+            f"- RBRK shares remain `{observed_shares(rbrk_after) if rbrk_after != '' else 'unrecorded'}`.",
             "",
             "Public prices are references, not broker quotes. The active workflow state was validated; no email or automatic transaction is authorized.",
         ]

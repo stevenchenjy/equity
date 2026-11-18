@@ -3,8 +3,13 @@ from __future__ import annotations
 from equity_naming import report_heading
 
 from pathlib import Path
+from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 
 from account_common import (
+    format_shares,
+    CURRENT_POSITIONS,
+    ROOT,
     DYNAMIC_WEIGHTS,
     EXACT_ACTION_PLAN,
     PORTFOLIO_SUMMARY,
@@ -13,6 +18,9 @@ from account_common import (
 )
 from execution_common import (
     ACCOUNT_STATE,
+    CONFIRMED_REPORT,
+    RECONCILIATION_REPORT,
+    sha256,
     EXECUTION_FILE,
     EXECUTION_RESEARCH_REPORT,
     MARKET_SNAPSHOT,
@@ -53,15 +61,46 @@ ACTION_FIELDS = [
 ALLOWED_SELL_STYLES = {"limit_review", "wait_for_market_open_review", "staged_limit_review", "no_action"}
 
 
+def snapshot_applied_fills(executions, account):
+    """A later exact owner snapshot preserves previously applied fills as history."""
+    from update_manual_account import current_manual_snapshot_matches
+    if not current_manual_snapshot_matches(sha256(CURRENT_POSITIONS), sha256(ACCOUNT_STATE), root=ROOT):
+        return set()
+    if not RECONCILIATION_REPORT.is_file():
+        return set()
+    observed_day = datetime.fromisoformat(account["last_updated"]).date()
+    confirmed = {r["execution_id"]: r for r in read_csv(CONFIRMED_REPORT)}
+    applied = {r["execution_id"]: r for r in read_csv(RECONCILIATION_REPORT)}
+    result = set()
+    for row in executions:
+        identifier = row["execution_id"]
+        record, receipt = confirmed.get(identifier, {}), applied.get(identifier, {})
+        if (row["order_status"] not in {"filled", "partial_fill"}
+                or record.get("canonical_state_applied") != "yes" or receipt.get("canonical_state_applied") != "yes"
+                or receipt.get("reconciliation_status") != "applied" or receipt.get("ticker") != row["ticker"]
+                or receipt.get("execution_status") != row["order_status"]
+                or any(record.get(k) != v for k, v in row.items())):
+            continue
+        try:
+            if (date.fromisoformat(row["fill_date"]) < observed_day
+                    and Decimal(receipt["shares_after"]) == Decimal(row["shares_after"])
+                    and Decimal(receipt["actual_shares_filled"]) == Decimal(row["shares"])):
+                result.add(identifier)
+        except (InvalidOperation, KeyError, ValueError):
+            continue
+    return result
+
+
 def main() -> None:
     load_active_inhibit()
-    load_account_state()
+    account = load_account_state()
     summary = load_portfolio_summary()
     account_total = as_float(summary["account_total_value"], "account_total_value")
     actions = read_csv(EXACT_ACTION_PLAN)
     weights = {row["ticker"]: row for row in read_csv(DYNAMIC_WEIGHTS)}
     executions = load_execution_rows()
     execution_by_ticker = {row["ticker"]: row for row in executions}
+    applied_fills = snapshot_applied_fills(executions, account)
     canonical_shares = {str(row["ticker"]): as_float(row["shares"], f"{row['ticker']}.shares") for row in load_positions()}
     markets = load_market_rows([row["ticker"] for row in actions])
     output: list[dict[str, str]] = []
@@ -101,6 +140,7 @@ def main() -> None:
         elif (
             execution is not None
             and execution["order_status"] in {"filled", "partial_fill"}
+            and execution["execution_id"] not in applied_fills
             and not abs(canonical_shares[ticker] - as_float(execution["shares_after"], f"{ticker}.shares_after")) < 1e-9
         ):
             output_action = "confirmed_fill_awaiting_reconciliation"
@@ -170,7 +210,7 @@ def main() -> None:
                 "ticker": ticker,
                 "action": output_action,
                 "shares_under_review": shares_under_review,
-                "target_shares": f"{target_shares:.4f}",
+                "target_shares": format_shares(target_shares),
                 "reference_price": f"{price:.2f}",
                 "reference_price_timestamp": market["data_timestamp"],
                 "minimum_sell_price_or_condition": minimum_sell,

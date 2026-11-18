@@ -242,6 +242,19 @@ class B2RefreshCadenceTests(unittest.TestCase):
             daily_refresh.EOD_MARKET_REFRESH_TIMEOUT_SECONDS,
         )
 
+    def test_canonical_publisher_allowance_respects_the_remaining_claim_budget(self) -> None:
+        completed = daily_refresh.subprocess.CompletedProcess(["child"], 0)
+        with patch.object(daily_refresh, "run_stage", return_value=completed) as run:
+            for remaining, expected in ((None, 360), (500, 360), (45, 45)):
+                with self.subTest(remaining=remaining):
+                    result = daily_refresh.run_step(
+                        "daily_decision", "create_daily_decision_and_brief.py", False,
+                        market_snapshot_mode=daily_refresh.MARKET_SNAPSHOT_REUSE,
+                        maximum_child_seconds=remaining,
+                    )
+                    self.assertEqual(result["outcome"], "passed")
+                    self.assertEqual(run.call_args.kwargs["timeout"], expected)
+
     def test_refresh_scheduler_rejects_stale_child_state(self) -> None:
         stale_state = {
             "cycle_date": "2026-08-05",

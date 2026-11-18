@@ -26,6 +26,7 @@ from delivery_archive import archive_validated_delivery
 from delivery_schedule import (active_delivery_window, assessment_delivery_enabled,
                                intraday_alert_window_open, risk_review_alert_window)
 from validation_cache import file_hash_validation
+from research_opportunities import report_proof_scope
 from daily_common import (
     ROOT,
     DAILY_BRIEF_HTML_PATH,
@@ -752,6 +753,7 @@ def assessment_delivery_guard(mode: str, scheduled_slot: str | None) -> tuple[bo
     return True, "scheduled_brief_window_open"
 
 
+@report_proof_scope()
 def send_once(
     smtp_factory: Callable[..., Any] = smtplib.SMTP,
     *,

@@ -15,19 +15,22 @@ ET = ZoneInfo("America/New_York")
 
 
 class SenderProcessBudgetTests(unittest.TestCase):
-    def execute(self, clock, *, summary="email_sent=true", returncode=0):
+    def execute(self, clock, *, summary="email_sent=true", returncode=0, mode=None,
+                slot="morning", readiness=(True, "daily_refresh_ready")):
         with ExitStack() as stack:
             for name, value in [("load_active_state", {}), ("load_inhibit", {"active": False}),
                     ("now_et", clock), ("load_active_config", CONFIG),
-                    ("refresh_readiness", (True, "daily_refresh_ready"))]:
+                    ("refresh_readiness", readiness), ("assessment_delivery_enabled", True)]:
                 stack.enter_context(patch.object(pipeline, name, return_value=value))
+            stack.enter_context(patch('post_delivery_publication.recover_locked', return_value={}))
+            stack.enter_context(patch('delivery_schedule.risk_review_alert_window', return_value=object()))
             stack.enter_context(patch.object(pipeline, "ExclusiveFileLock"))
             stack.enter_context(patch.object(pipeline, "log_daily_run"))
             clear = stack.enter_context(patch.object(pipeline, "clear_automation_alert"))
             run = stack.enter_context(patch.object(pipeline, "run_command", return_value=
                 subprocess.CompletedProcess([], returncode, stdout=summary)))
             with redirect_stdout(io.StringIO()):
-                result = pipeline.execute(send=True, scheduled_slot="morning")
+                result = pipeline.execute(send=True, scheduled_slot=slot, delivery_mode=mode)
             return result, run, clear
 
     def test_sender_gets_finite_validation_and_smtp_allowance(self):
@@ -40,6 +43,22 @@ class SenderProcessBudgetTests(unittest.TestCase):
     def test_late_pipeline_start_still_never_invokes_sender(self):
         result, run, _ = self.execute(datetime(2026, 9, 1, 10, 31, tzinfo=ET))
         self.assertEqual(result, 2)
+        run.assert_not_called()
+
+    def test_only_ready_normal_brief_gets_longer_validation_allowance(self):
+        clock = datetime(2026, 9, 1, 9, 42, tzinfo=ET)
+        cases = [
+            ("scheduled_brief", "morning", (True, "daily_refresh_ready"), 300),
+            ("scheduled_brief", "morning", (True, "daily_refresh_limited_status_ready"), 180),
+            ("scheduled_brief", "morning", (False, "refresh_unavailable"), 180),
+            ("intraday_alert", None, (True, "daily_refresh_ready"), 180),
+            ("risk_review_alert", None, (True, "independent_risk_review_check"), 180),
+        ]
+        for mode, slot, readiness, expected in cases:
+            with self.subTest(mode=mode, readiness=readiness):
+                _, run, _ = self.execute(clock, mode=mode, slot=slot, readiness=readiness)
+                self.assertEqual(run.call_args.kwargs["timeout"], expected)
+        _, run, _ = self.execute(clock.replace(hour=10, minute=31), mode="scheduled_brief")
         run.assert_not_called()
 
     def test_uncertain_send_still_fences_and_does_not_clear_alert(self):

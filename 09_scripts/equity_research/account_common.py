@@ -286,6 +286,12 @@ def observed_shares(value):
         raise ValueError("recorded_share_quantity_invalid") from exc
 
 
+def format_shares(value):
+    """Keep the historical four places in exports without rounding a smaller share unit."""
+    number = Decimal(str(observed_shares(value)))
+    return format(number, f".{max(4, -number.as_tuple().exponent)}f")
+
+
 def load_positions() -> list[dict[str, object]]:
     if not CURRENT_POSITIONS.exists():
         raise FileNotFoundError("current_positions.local.csv is required")

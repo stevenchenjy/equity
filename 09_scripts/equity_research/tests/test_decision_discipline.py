@@ -51,10 +51,10 @@ class LongHorizonDecisionDisciplineTests(unittest.TestCase):
 
     def exact_action(self, label: str, *, score: float = 5.2, weight: float = 7.2,
                      assessment: dict[str, object] | None = None,
-                     name_cap: float | None = 15) -> dict[str, str]:
+                     name_cap: float | None = 15, shares: str = "2") -> dict[str, str]:
         position = {"ticker": "RBRK", "horizon_class": "long_term_research",
                     "invalidation_rule": self.assessment()["invalidation_rule"]}
-        rows = [{"ticker": "RBRK", "asset_role": "active_stock", "current_shares": "2",
+        rows = [{"ticker": "RBRK", "asset_role": "active_stock", "current_shares": shares,
                  "latest_price": "72", "current_value": "144", "current_weight_pct": str(weight),
                  "current_recommendation_label": label, "current_research_score": str(score),
                  "concentration_status": "above_hard_cap" if weight > 15 else "within_default_cap"}]
@@ -83,6 +83,41 @@ class LongHorizonDecisionDisciplineTests(unittest.TestCase):
                 clock.fromisoformat.side_effect = date.fromisoformat
                 action_plan.main()
         return written[action_plan.EXACT_ACTION_PLAN][0]
+
+    def test_five_decimal_share_inventory_and_whole_share_exit(self):
+        for shares, whole in (("0.37264", 0), ("1.37264", 1)):
+            hold = self.exact_action("hold_existing", shares=shares, name_cap=None)
+            self.assertEqual((hold["current_shares"], hold["target_shares"], hold["whole_shares_to_change"]),
+                             (shares, shares, "0"))
+            exit_review = self.exact_action("exit_review", assessment=self.assessment(), shares=shares, name_cap=None)
+            self.assertEqual((exit_review["current_shares"], exit_review["target_shares"],
+                              exit_review["whole_shares_to_change"]), (shares, "0.37264", str(whole)))
+            self.assertEqual(float(exit_review["estimated_cash_change"]), whole * 72)
+
+    def test_later_verified_snapshot_only_retires_matching_applied_fills(self):
+        import create_price_aware_action_plan as pricing
+        account = {"last_updated": "2026-10-09T15:00:00-04:00"}
+        fill = dict(ticker="ABC", execution_id="one", shares="1", shares_after="0.37264",
+                    order_status="filled", fill_date="2026-10-08")
+        confirmed = dict(fill, canonical_state_applied="yes")
+        receipt = dict(execution_id="one", ticker="ABC", reconciliation_status="applied", canonical_state_applied="yes",
+                       execution_status="filled", shares_after="0.37264", actual_shares_filled="1")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "receipt.csv"
+            path.touch()
+            rows = {path: [receipt], pricing.CONFIRMED_REPORT: [confirmed]}
+            with (patch.object(pricing, "sha256", return_value="0"*64),
+                  patch.object(pricing, "RECONCILIATION_REPORT", path),
+                  patch.object(pricing, "read_csv", side_effect=rows.__getitem__),
+                  patch("update_manual_account.current_manual_snapshot_matches", return_value=True) as matches):
+                self.assertEqual(pricing.snapshot_applied_fills([fill], account), {"one"})
+                for change in ({"shares_after": "1.37264"}, {"order_status": "pending_fill"}, {"fill_date": "2026-10-09"}):
+                    self.assertFalse(pricing.snapshot_applied_fills([dict(fill, **change)], account))
+                receipt["canonical_state_applied"] = "no"
+                self.assertFalse(pricing.snapshot_applied_fills([fill], account))
+                receipt["canonical_state_applied"] = "yes"
+                matches.return_value = False
+                self.assertFalse(pricing.snapshot_applied_fills([fill], account))
 
     def test_reviewed_primary_thesis_break_preserves_exit_review(self) -> None:
         result = self.exact_action("exit_review", score=7.5, assessment=self.assessment())

@@ -42,8 +42,7 @@ MARKET_SNAPSHOT_REUSE = "reuse_validated_snapshot"
 MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
 # The isolated EOD-publication market importer has a bounded 33-request plan paced
 # at least 13 seconds between request starts. Keep a fixed allowance for HTTP
-# time, process startup, local validation, and commit; all other children
-# retain the historical short timeout.
+# time, process startup, local validation, and commit.
 DEFAULT_CHILD_TIMEOUT_SECONDS = 240
 # Keep the child tree within the scheduler's unchanged 1,080-second bound.
 # A stage that exhausts this allowance remains failed; no required stage can
@@ -56,6 +55,9 @@ EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 MARKET_DISCOVERY_TIMEOUT_SECONDS = 360
 SWING_CANDIDATE_HISTORY_TIMEOUT_SECONDS = 210
 CAPITAL_ESCALATION_TIMEOUT_SECONDS = 900
+# The canonical publication revalidates the retained research and both account views.
+# The existing full-refresh or short-claim deadline can further reduce this allowance.
+DAILY_DECISION_TIMEOUT_SECONDS = 360
 STEP_SPECS = [
     ("market_refresh", "run_full_universe_market_data.py", False),
     ("market_discovery", "market_discovery.py", True),
@@ -232,6 +234,8 @@ def run_step(
         if name == "swing_candidate_history"
         else CAPITAL_ESCALATION_TIMEOUT_SECONDS
         if name == "capital_deployment_escalation"
+        else DAILY_DECISION_TIMEOUT_SECONDS
+        if name == "daily_decision"
         else DEFAULT_CHILD_TIMEOUT_SECONDS
     )
     if maximum_child_seconds is not None:

@@ -6,6 +6,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from account_common import (
+    format_shares,
     ACCOUNT_STATE,
     C5_PACKETS,
     CURRENT_POSITIONS,
@@ -223,7 +224,7 @@ def main() -> None:
             {
                 "ticker": ticker,
                 "asset_role": "core_allocation" if is_core else "active_stock",
-                "current_shares": f"{shares:.4f}",
+                "current_shares": format_shares(shares),
                 "latest_price": f"{price:.2f}",
                 "current_value": f"{current_value:.2f}",
                 "current_weight_pct": f"{current_weight:.4f}",

@@ -18,7 +18,7 @@ from opportunity_contract import (AUTHORITY, BASE_REL, POLICY_REL, STORE_REL, RE
     empty_store, replay, retain_input, transition, publish_store, validate_observation)
 from opportunity_triggers import packet, positive_changes, validate_approval
 from opportunity_evidence import objective_research, _seal, EVIDENCE_REL
-from research_opportunities import intake, objective, read_report, summary
+from research_opportunities import intake, objective, read_report, summary, report_proof_scope
 from research_backlog import build_backlog
 from update_research_assessment import apply_assessment
 import run_daily_refresh as refresh
@@ -91,6 +91,48 @@ class OpportunityTests(unittest.TestCase):
             "valuation_status": "pending", "missing_evidence": ["valuation"],
             "supporting_points": [{"point": "Synthetic supporting fact", "evidence_kind": "fact", "sources": [source]}],
             "counterpoints": [{"point": "Synthetic unresolved counterevidence", "evidence_kind": "unknown", "sources": [source]}], **AUTHORITY}
+
+    def test_scoped_proof_reuses_only_identical_bytes_with_fresh_clock_and_account(self):
+        from opportunity_contract import validate_journal
+        intake(self.root, current=NOW)
+        with patch('research_opportunities.validate_journal', wraps=validate_journal) as validation:
+            with report_proof_scope():
+                original = read_report(self.root, current=NOW)
+                original['opportunities'].clear()
+                self.assertTrue(read_report(self.root, current=NOW + timedelta(minutes=3))['opportunities'])
+                self.assertEqual(validation.call_count, 1)
+                with self.assertRaisesRegex(ValueError, 'stale_clock'):
+                    read_report(self.root, current=NOW + timedelta(hours=25))
+                with patch('research_opportunities.load_authority', return_value={'mode': 'different'}):
+                    with self.assertRaisesRegex(ValueError, 'account_authority_changed'):
+                        read_report(self.root, current=NOW)
+            with report_proof_scope():
+                read_report(self.root, current=NOW)
+            self.assertEqual(validation.call_count, 2)
+
+    def test_scoped_proof_detects_report_journal_and_retained_source_replacement(self):
+        intake(self.root, current=NOW)
+        with report_proof_scope():
+            report = read_report(self.root, current=NOW)
+            source = self.root / report['opportunities'][0]['first_observation']['sources'][0]['path']
+            before = source.read_bytes()
+            replacement = source.with_name('replacement')
+            replacement.write_bytes(b'X' * len(before))
+            replacement.replace(source)
+            with self.assertRaisesRegex(ValueError, 'research_source_changed'):
+                read_report(self.root, current=NOW)
+            source.write_bytes(before)
+            report_path = self.root / REPORT_REL
+            store_path = self.root / STORE_REL
+            before = store_path.read_bytes()
+            store_path.write_bytes(before + b' ')
+            with self.assertRaisesRegex(ValueError, 'stale_store'):
+                read_report(self.root, current=NOW)
+            store_path.write_bytes(before)
+            report['opportunities'].clear()
+            atomic_write_json(report_path, report)
+            with self.assertRaisesRegex(ValueError, 'report_hash_invalid'):
+                read_report(self.root, current=NOW)
 
     def test_broad_outside_universe_gets_task_without_canonical_files(self):
         report = intake(self.root, current=NOW)

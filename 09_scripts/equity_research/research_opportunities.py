@@ -2,9 +2,14 @@
 from __future__ import annotations
 
 from collections import Counter
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 import copy
+import hashlib
+import json
 import time
 
 from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_text,
@@ -12,11 +17,39 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
     read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, transition_batch, publish_store,
-    retain_input, retain_history_json, validate_policy, validate_observation, validate_journal, require)
+    retain_input, retain_history_json, validate_policy, validate_observation, validate_journal, require, inside)
 from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
 from account_authority import load_authority, project_research_requirements
+from validation_cache import content_proof_scope, file_hash_validation
+
+
+@dataclass(frozen=True)
+class _ReportProof:
+    report_digest: str
+    store_digest: str
+    latest_event: datetime | None
+    receipts: tuple[tuple[str, str], ...]
+
+
+_REPORT_PROOFS = ContextVar("opportunity_report_operation_proofs", default=None)
+
+
+@contextmanager
+def report_proof_scope():
+    """Reuse the mathematical proof of the same bytes for one invocation.
+
+    Each reader verifies actual report and journal bytes and every original
+    retained locator, with a fresh mutation fence, live account and clock.
+    No report object, decision or delivery eligibility is shared.
+    """
+    token = _REPORT_PROOFS.set({})
+    try:
+        with content_proof_scope():
+            yield
+    finally:
+        _REPORT_PROOFS.reset(token)
 
 
 def held_tickers(root: Path) -> set[str]:
@@ -253,7 +286,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
     policy = validate_policy(read_json(root / POLICY_REL))
     with ExclusiveFileLock(root / BASE_REL / "store.lock"):
         previous = read_json(root / STORE_REL, empty_store())
-        replay(previous, root=root, current=current)
+        initial_items = replay(previous, root=root, current=current)
         store, metrics = copy.deepcopy(previous), _base_metrics()
         metrics["request_limit"] = 2*policy["external_issuers_per_fetch"]
         config = read_json(root / "00_project_control/active_production_config.json", {})
@@ -280,7 +313,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
             # isolated external slots a second time through an attachment.
             bucket = 0 if base[0] == 0 and item["ticker"] not in canonical_attempted else 1 if item["ticker"] in reserved else 2
             return (bucket, *base)
-        for item in sorted(replay(store).values(), key=objective_priority):
+        for item in sorted(initial_items.values(), key=objective_priority):
             if item["state"] in TERMINAL | {"deferred_capacity"}:
                 continue
             if metrics["objective_items_processed"] >= remaining:
@@ -319,6 +352,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
             elif item["state"] != "data_blocked" or item["reason_code"] != reason:
                 transition(store, item["opportunity_id"], "data_blocked", owner="objective_research", reason=reason,
                     sources=item["observations"][-1]["sources"], blockers=[reason], current=task_completed)
+        del initial_items
         final_current = max(clock(), aware(store["events"][-1]["recorded_at"]) if store["events"] else current)
         publish_store(root, store, previous=previous, current=final_current)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
@@ -401,17 +435,53 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
     return report
 
 
+def _read_bound_json(path: Path, digest: str) -> dict:
+    # Hash the very bytes being decoded. Independent pre-claim validations can
+    # outlive the first transaction and must not inherit a read/replace race.
+    raw = path.read_bytes()
+    require(hashlib.sha256(raw).hexdigest() == digest, "research_report_input_changed_during_read")
+    return json.loads(raw)
+
+
 def read_report(root: Path, *, current: datetime) -> dict:
-    report = read_json(root / REPORT_REL, {})
-    require(report.get("schema_version") == "equity_research_opportunity_report_v1"
-        and all(report.get(k) is False for k in AUTHORITY), "research_opportunity_report_invalid")
-    require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
-    require(report["store_sha256"] == sha256_file(root / STORE_REL), "research_opportunity_report_stale_store")
-    clock = aware(report["generated_at"])
-    require(clock <= current and current-clock <= timedelta(hours=24), "research_opportunity_report_stale_clock")
-    require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
-        == load_authority(root, current), "research_opportunity_report_account_authority_changed")
-    validate_journal(read_json(root / STORE_REL), root=root, current=current)
+    proofs = _REPORT_PROOFS.get()
+    root = root.resolve()
+    with file_hash_validation():
+        report_digest = sha256_file(root / REPORT_REL) if proofs is not None else None
+        store_digest = sha256_file(root / STORE_REL)
+        prior = proofs.get(root) if proofs is not None else None
+        same = prior and (prior.report_digest, prior.store_digest) == (report_digest, store_digest)
+        report = (_read_bound_json(root / REPORT_REL, report_digest)
+            if proofs is not None else read_json(root / REPORT_REL, {}))
+        require(report.get("schema_version") == "equity_research_opportunity_report_v1"
+            and all(report.get(k) is False for k in AUTHORITY), "research_opportunity_report_invalid")
+        require(report["store_sha256"] == store_digest, "research_opportunity_report_stale_store")
+        clock = aware(report["generated_at"])
+        require(clock <= current and current-clock <= timedelta(hours=24), "research_opportunity_report_stale_clock")
+        require(report.get("account_authority", {'mode': 'verified_snapshot', 'local_planning_enabled': False})
+            == load_authority(root, current), "research_opportunity_report_account_authority_changed")
+        if same:
+            require(prior.latest_event is None or prior.latest_event <= current, "research_journal_clock_regression")
+            for locator, digest in prior.receipts:
+                inside(root, locator)
+                require(sha256_file(root / locator) == digest, "research_source_changed")
+            return report
+        require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
+        journal = (_read_bound_json(root / STORE_REL, store_digest)
+            if proofs is not None else read_json(root / STORE_REL))
+        validate_journal(journal, root=root, current=current)
+        if proofs is not None:
+            events = journal["events"]
+            # The journal validator checks observation receipts for detections
+            # and updates, and event receipts for transitions.
+            receipts = sorted({(r["path"], r["sha256"]) for event in events
+                for r in (event["sources"] if event["kind"] == "transition" else event["observation"]["sources"])})
+            for locator, digest in receipts:
+                require(sha256_file(root / locator) == digest, "research_source_changed")
+            proof = _ReportProof(report_digest, store_digest,
+                aware(events[-1]["recorded_at"]) if events else None, tuple(receipts))
+    if proofs is not None:
+        proofs[root] = proof
     return report
 
 
