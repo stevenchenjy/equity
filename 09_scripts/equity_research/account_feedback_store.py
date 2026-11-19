@@ -482,9 +482,17 @@ class Store:
         if 'chase_observation_sha256' in f:
             if status != 'account':
                 raise FeedbackError('chase_statement_requires_account_snapshot')
+            pending_sale = None
+            if payload.get('record_id'):
+                existing = con.execute('SELECT body FROM records WHERE id=?', (payload['record_id'],)).fetchone()
+                existing = json.loads(existing['body']) if existing else None
+                if not existing or existing['stage'] != 'pending' or existing['revision'] != payload.get('revision'):
+                    raise FeedbackError('record_revision_changed', status=409)
+                if existing['feedback']['status'] != 'account':
+                    pending_sale = existing
             try:
                 statement = snapshot_context(self.root, f['chase_observation_sha256'], f, now, account,
-                    old_positions, sha(read(self.root, MANUAL)), sha(read(self.root, POSITIONS)))
+                    old_positions, sha(read(self.root, MANUAL)), sha(read(self.root, POSITIONS)), pending=pending_sale)
             except ValueError as exc:
                 raise FeedbackError('chase_statement_invalid', {'reason': str(exc)}) from exc
         if status == 'account':
@@ -502,7 +510,26 @@ class Store:
                 if not old and not r.get('entry_price'): missing.append(symbol+' 平均成本')
                 entry = dec(r['entry_price'],'entry_price') if r.get('entry_price') else dec(old['entry_price'],'entry_price') if old else Decimal(1)
                 observed[symbol] = {**(old or self.new_position(symbol,f['date'],entry)), 'shares_optional':str(shares), 'entry_price':str(entry)}
-            if f.get('inventory_complete'):
+            observed_orders = (statement or {}).get('working_orders')
+            if observed_orders:
+                # A complete newer broker view may add known resting orders.
+                # Never use it to infer an earlier local order's terminal state.
+                order_facts = ('ticker', 'side', 'status', 'quantity', 'remaining_quantity', 'limit_price',
+                               'stop_price', 'order_type', 'time_in_force', 'session_date', 'expiration_date')
+                by_id = {row['order_id']: row for row in observed_orders}
+                prior_ids = set()
+                for order in orders['orders']:
+                    order_id = order.get('order_id', order.get('id'))
+                    current = order.get('status') in active and order.get('record_scope') != 'unresolved_historical_reservation'
+                    if order_id in by_id:
+                        if (not current or order_id in prior_ids
+                                or any(order.get(key) != by_id[order_id][key] for key in order_facts)):
+                            raise FeedbackError('chase_statement_existing_order_conflict', {'order_id': order_id}, 409)
+                        prior_ids.add(order_id)
+                    elif current:
+                        raise FeedbackError('chase_statement_existing_order_unreconciled', {'order_id': order_id}, 409)
+                orders['orders'].extend(row for row in observed_orders if row['order_id'] not in prior_ids)
+            elif f.get('inventory_complete'):
                 current_orders=[r for r in orders['orders'] if r.get('status') in active and r.get('record_scope')!='unresolved_historical_reservation']
                 if f.get('no_open_orders') is True:
                     if current_orders: missing.append('先核对已记录挂单的终态或成交')
@@ -548,7 +575,10 @@ class Store:
                         or any(item['account'] != statement['account'] for item in previous)):
                     raise FeedbackError('chase_transaction_register_changed')
                 previous.append(statement)
-                writes[ACTIVITY_LEDGER] = activity_register(self.root, previous)
+                try:
+                    writes[ACTIVITY_LEDGER] = activity_register(self.root, previous)
+                except (ValueError, InvalidOperation) as exc:
+                    raise FeedbackError('chase_statement_activity_unreconciled', {'reason': str(exc)}, 409) from exc
                 writes[STATEMENT_INDEX] = encoded(index)
             account['account_total_value'] = float(total)
             validate_account_state(account)

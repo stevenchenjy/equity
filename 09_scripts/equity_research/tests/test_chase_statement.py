@@ -10,7 +10,7 @@ import unittest
 from zoneinfo import ZoneInfo
 
 from _support import SCRIPT_DIR  # noqa: F401
-from chase_statement import COLUMNS, SOURCE_DIR, activity_register, snapshot_context
+from chase_statement import COLUMNS, DISPLAY_DESCRIPTION_LIMIT, SOURCE_DIR, activity_register, snapshot_context
 
 
 class ChaseStatementTests(unittest.TestCase):
@@ -81,6 +81,48 @@ class ChaseStatementTests(unittest.TestCase):
         self.assertEqual(len({r['activity_id'] for r in repeated}), 2)
         self.assertTrue(all(r['latest_statement_sha256'] == second['activity']['sha256'] for r in repeated))
         self.assertEqual(activity_register(self.root, [first, second]), activity_register(self.root, [first, second, second]))
+
+    def routing_window(self, rows, observed_at):
+        data = io.StringIO()
+        writer = csv.writer(data)
+        writer.writerow(COLUMNS)
+        for i, (description, status) in enumerate(rows, 1):
+            writer.writerow((i, '2026-09-29', 'Sell', 'XYZ', description, '2026-09-30', status,
+                             '19.00', '-1', '18.99'))
+        return {'account': 'Chase', 'account_as_of': observed_at,
+                'activity': {'sha256': self.keep(data.getvalue().encode(), '.csv')}}
+
+    def clipped_routing_description(self):
+        suffix = ' ROME: ROUTE'
+        return 'X' * (DISPLAY_DESCRIPTION_LIMIT - len(suffix)) + suffix
+
+    def test_settled_truncated_reference_preserves_id_and_both_source_observations(self):
+        original = self.routing_window([('XYZ ROME: ROUTE123 ACTUAL', 'Pending')], '2026-09-29T21:00:00-04:00')
+        clipped = self.clipped_routing_description()
+        settled = self.routing_window([(clipped, '')], '2026-09-30T21:00:00-04:00')
+        end = list(csv.DictReader(io.StringIO(activity_register(self.root, [original, settled]).decode())))
+        first = list(csv.DictReader(io.StringIO(activity_register(self.root, [original]).decode())))
+        self.assertEqual(len(end), 1)
+        self.assertEqual(end[0]['activity_id'], first[0]['activity_id'])
+        self.assertEqual(end[0]['first_statement_sha256'], original['activity']['sha256'])
+        self.assertEqual(end[0]['latest_statement_sha256'], settled['activity']['sha256'])
+        self.assertEqual(end[0]['broker_display_description'], clipped)
+        self.assertEqual(activity_register(self.root, [original, settled]),
+                         activity_register(self.root, [original, settled, settled]))
+
+    def test_truncated_reference_never_collapses_distinct_same_economic_rows(self):
+        full = 'XYZ ROME: ROUTE123 ACTUAL'
+        clipped = self.clipped_routing_description()
+        first = self.routing_window([(full, 'Pending')], '2026-09-29T21:00:00-04:00')
+        both = self.routing_window([(clipped, ''), (full, '')], '2026-09-30T21:00:00-04:00')
+        kept = list(csv.DictReader(io.StringIO(activity_register(self.root, [first, both]).decode())))
+        self.assertEqual(len(set(row['activity_id'] for row in kept)), 2)
+
+        distinct = self.routing_window([(full, 'Pending'), ('XYZ ROME: ROUTE456 ACTUAL', 'Pending')],
+                                       '2026-09-29T21:00:00-04:00')
+        ambiguous = self.routing_window([(clipped, '')], '2026-09-30T21:00:00-04:00')
+        with self.assertRaisesRegex(ValueError, 'ambiguous truncated Chase transaction reference'):
+            activity_register(self.root, [distinct, ambiguous])
 
     def test_fraction_and_settlement_cannot_be_rounded_or_added_twice(self):
         self.feedback['holdings'][0]['shares'] = '1'

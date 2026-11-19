@@ -1,13 +1,16 @@
+import csv
+import io
 import json
 import tempfile
 import unittest
 import uuid
 from pathlib import Path
 from unittest.mock import patch
-from datetime import datetime
+from datetime import date, datetime
 from _support import SCRIPT_DIR  # noqa: F401
-from account_feedback_store import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, encoded, rows, version, read, sha
-from chase_statement import STATEMENT_INDEX
+from account_feedback_store import Store, FeedbackError, ACCOUNT, POSITIONS, ORDERS, LEDGER, CONFIRMED, RECONCILED, PENDING, MARKET, MANUAL, encoded, rows, version, read, sha
+from chase_statement import ACTIVITY_LEDGER, COLUMNS, SOURCE_DIR, STATEMENT_INDEX
+from tactical_review import review_open_orders
 
 
 class FeedbackTests(unittest.TestCase):
@@ -78,6 +81,107 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(applied['stage'], 'applied')
         self.assertEqual(applied['changes']['shares_after'], 1)
         self.assertEqual(applied['changes']['cash_after'], 1100)
+
+    def chase_snapshot_with_working_limit(self, pending, **working_changes):
+        self.put(MANUAL, {})
+        self.put(POSITIONS, 'ticker,entry_date,entry_price,position_pct,shares_optional,thesis,horizon_class,'
+                 'planned_review_date,invalidation_rule,notes\nABC,2026-09-01,100,20,2,Test,long_horizon,2026-10-01,Test,\n')
+        data = io.StringIO()
+        writer = csv.writer(data)
+        writer.writerow(COLUMNS)
+        writer.writerow((1, '2026-09-30', 'Sell', 'ABC', 'ABC ROME: ACTUAL123', '2026-10-01',
+                         'Pending', '100.00', '-1', '99.99'))
+        writer.writerow((2, '2026-09-29', 'Buy', 'ABC', 'ABC', '2026-09-30', '', '100.00', '2', '-200.00'))
+        activity_sha = sha(data.getvalue().encode())
+        self.put(f'{SOURCE_DIR}/{activity_sha}.csv', data.getvalue())
+        working = dict(broker_order_number='KNOWN123', ticker='ABC', side='Sell', broker_status='Open',
+                       order_type='Limit', time_in_force='GTD', expiration_date='2027-03-29',
+                       order_time_displayed_et='2026-09-30T15:32:00-04:00', order_time_precision='minute',
+                       quantity='1', remaining_quantity='1', limit_price_usd='120.00')
+        working.update(working_changes)
+        chase = {
+            'account': 'Chase Self-Directed example', 'currency': 'USD',
+            'source': {'positions_and_balances_reported_asof_et': '2026-09-30T20:05:00-04:00',
+                       'order_status_reported_asof_et': '2026-09-30T20:03:33-04:00'},
+            'order_status': {'filters': 'All orders', 'rows_visible': 2, 'working_orders_visible': 1,
+                             'visible_orders': [{'order_number': 'KNOWN123', 'ticker': 'ABC', 'broker_status': 'Open'},
+                                                {'order_number': 'FILLED123', 'ticker': 'ABC', 'broker_status': 'Executed'}],
+                             'working_orders': [working]},
+            'transactions': {'sha256': activity_sha, 'broker_reported_and_captured_row_count': 2,
+                             'first_displayed_trade_date_et': '2026-09-29', 'last_displayed_trade_date_et': '2026-09-30',
+                             'types': {'Buy': 1, 'Sell': 1}},
+            'read_only_reconciliation': {'approved_snapshot': {'sha256': sha(read(self.root, MANUAL))},
+                                         'approved_positions': {'sha256': sha(read(self.root, POSITIONS))},
+                                         'approved_observation_at_et': '2026-09-29T15:00:00-04:00'},
+            'positions': [{'ticker': 'ABC', 'quantity_shares': '1', 'displayed_unit_price_usd': '100.00',
+                           'market_value_usd': '100.00', 'cost_usd': '107.00'}],
+            'balances_usd': {'cash_and_sweep_funds': '1099.99', 'cash_available_to_trade': '1099.99',
+                             'cash_available_to_withdraw': '1000.00', 'unsettled_trades_proceeds': '99.99',
+                             'positions_market_value_excluding_cash_and_sweep': '100.00', 'account_value': '1199.99'}
+        }
+        observation = {'schema': 'private_brokerage_observation_v1', 'accounts': {'chase': chase}}
+        observation_sha = sha(encoded(observation))
+        self.put(f'{SOURCE_DIR}/{observation_sha}.json', observation)
+        payload = self.payload(status='account', date='2026-09-30', time='', account_observed=True,
+                               cash='1099.99', inventory_complete=True, no_open_orders=False,
+                               orders_match=True, observed_order_ids=['chase-KNOWN123'],
+                               holdings=[{'ticker': 'ABC', 'shares': '1', 'entry_price': '107.00'}],
+                               chase_observation_sha256=observation_sha)
+        payload.update(record_id=pending['id'], revision=pending['revision'])
+        return payload
+
+    def test_statement_reconciles_pending_sale_and_retains_observed_dated_working_limit(self):
+        history = {'order_id': 'historic', 'ticker': 'XYZ', 'side': 'sell', 'status': 'filled', 'remaining_quantity': 0}
+        self.put(ORDERS, {'schema_version': 'phase5r_open_orders_v1', 'orders': [history]})
+        pending = self.submit(self.payload(side='sell', date='2026-09-30', time='', fee_status='unknown'))
+        payload = self.chase_snapshot_with_working_limit(pending)
+        accepted = self.submit(payload)
+        self.assertEqual((accepted['revision'], accepted['stage']), (2, 'applied'))
+        self.assertEqual((accepted['changes']['cash_after'], accepted['changes']['chase_statement']['account_value']),
+                         (1099.99, '1199.99'))
+        self.assertEqual(accepted['changes']['chase_statement']['reconciled_pending_sale'],
+                         {'record_id': pending['id'], 'revision': 1, 'activity_display_row': '1'})
+        position = rows(read(self.root, POSITIONS))[0]
+        self.assertEqual((position['shares_optional'], position['entry_price']), ('1', '107.00'))
+        orders = json.loads(read(self.root, ORDERS))
+        self.assertEqual(orders['orders'][0], history)
+        working = orders['orders'][1]
+        self.assertEqual((working['order_id'], working['status'], working['remaining_quantity'], working['limit_price'],
+                          working['time_in_force'], working['expiration_date']),
+                         ('chase-KNOWN123', 'open', 1, 120.0, 'GTD', '2027-03-29'))
+        self.assertEqual(orders['current_inventory_observation']['orders_shown'], [working])
+        self.assertEqual(orders['as_of'], '2026-09-30T20:03:33-04:00')
+        reviewed = review_open_orders(orders, datetime.fromisoformat('2026-09-30T20:06:00-04:00'),
+                                      date(2026, 9, 30), [{'ticker': 'ABC', 'current_shares': '1'}])
+        self.assertTrue(reviewed['broker_inventory_verified'])
+        self.assertEqual(reviewed['active_tickers'], ['ABC'])
+        self.assertEqual(reviewed['cash_reservation_usd'], 0.0)
+        self.assertEqual(rows(read(self.root, ACTIVITY_LEDGER))[0]['amount_usd_displayed'], '99.99')
+        self.assertFalse((self.root / LEDGER).exists())
+        self.assertEqual(json.loads(read(self.root, PENDING))['records'], [])
+        self.assertIn(pending, self.store.events(pending['id']))
+        self.assertEqual(self.store.submit(payload), accepted)
+        self.assertEqual(len(rows(read(self.root, ACTIVITY_LEDGER))), 2)
+
+    def test_statement_refuses_conflicting_active_orders_or_an_unmatched_pending_sale(self):
+        pending = self.submit(self.payload(side='sell', date='2026-09-30', time='', fee_status='unknown'))
+        for change, reason in (({'expiration_date': '2026-09-29'}, 'working sell limit facts'),
+                               ({'remaining_quantity': '2', 'quantity': '2'}, 'exceed reconciled holdings'),
+                               ({'broker_order_number': 'UNSEEN'}, 'working sell limit facts')):
+            with self.subTest(change=change), self.assertRaises(FeedbackError) as caught:
+                self.store.preview(self.chase_snapshot_with_working_limit(pending, **change))
+            self.assertIn(reason, caught.exception.details['reason'])
+
+        unrelated = self.submit(self.payload(side='sell', date='2026-09-30', time='', amount='101.00', fee_status='unknown'))
+        with self.assertRaises(FeedbackError) as caught:
+            self.store.preview(self.chase_snapshot_with_working_limit(unrelated))
+        self.assertIn('does not match exactly one', caught.exception.details['reason'])
+
+        self.put(ORDERS, {'orders': [{'order_id': 'local-active', 'ticker': 'XYZ', 'status': 'open'}]})
+        before = {path: read(self.root, path) for path in (ACCOUNT, POSITIONS, ORDERS, PENDING)}
+        with self.assertRaisesRegex(FeedbackError, 'chase_statement_existing_order_unreconciled'):
+            self.store.preview(self.chase_snapshot_with_working_limit(pending))
+        self.assertEqual(before, {path: read(self.root, path) for path in before})
 
     def total_payload(self, **changes):
         p=self.simple_payload(**changes)
