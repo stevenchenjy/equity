@@ -15,6 +15,7 @@ from account_feedback_gate import LEGACY_SCHEMA, LOCAL_SCOPE_KIND, RELATIVE as P
 from attention_email import direct_cards, direct_subject
 from decision_dependencies import classify
 from investment_plans import RELATIVE_PATH as PLAN, append_plan
+from tactical_review import review_open_orders
 from test_investment_plans import ledger, record
 
 
@@ -178,6 +179,57 @@ class HeldPositionRiskTests(unittest.TestCase):
         self.assertIn("never duplicate", row["next_step"])
         self.assertIn("Owner/account record: provide actual remaining shares", row["next_step"])
         self.assertEqual(row["known_pending_orders"][0]["remaining_quantity"], 2)
+
+    def test_verified_working_sell_reserves_shares_without_reasking_owner(self):
+        order = {"order_id": "broker-working", "ticker": "AAA", "status": "open", "side": "sell",
+                 "quantity": 4, "remaining_quantity": 4, "order_type": "LIMIT", "limit_price": 90.0,
+                 "time_in_force": "GTD", "session_date": "2026-11-06", "expiration_date": "2027-05-05"}
+        relative = "06_execution_records/working-order-observation.json"
+        self.write_json(relative, {"orders_shown": [order]})
+        stamp = self.now.isoformat()
+        orders = {"schema_version": "phase5r_open_orders_v1", "as_of": stamp, "complete": True,
+                  "orders": [order], "current_inventory_observation": {"as_of": stamp, "complete": True,
+                      "orders_shown": [order], "source": {"path": relative, "sha256": risk.sha256_file(self.root / relative)}}}
+        self.write_json(risk.ORDERS, orders)
+        self.decision["tactical_review"] = {"open_orders": review_open_orders(orders, self.now, self.now.date(), [
+            {"ticker": "AAA", "current_shares": 4}, {"ticker": "BBB", "current_shares": 1}])}
+        self.assertTrue(self.decision["tactical_review"]["open_orders"]["broker_inventory_verified"])
+        self.plans["plans"][0]["status"] = "expired_pending_verification"
+        self.plans["ticker_blockers"]["AAA"] = ["outstanding_sell_reserves_current_shares"]
+        self.decision["capital_decision"]["decisions"][0].update(
+            decision="BLOCKED", blockers=["outstanding_sell_reserves_current_shares"])
+
+        report = self.build()
+        row = report["holdings"][0]
+        self.assertEqual(report["observed_orders_display_version"], 1)
+        self.assertEqual(row["state"], "PLAN_EXPIRED")
+        self.assertTrue(row["observed_working_orders_verified"])
+        self.assertFalse(row["action_draft_available"])
+        self.assertIn("outstanding_sell_reserves_current_shares", row["dependencies"])
+        self.assertNotIn("known_order_remaining_quantity_requires_reconciliation_before_replacement", row["dependencies"])
+        self.assertIn("verified working sell order reserves its remaining shares", row["next_step"])
+        self.assertNotIn("Owner/account record:", row["next_step"])
+        self.assertEqual(row["known_pending_orders"], [order])
+
+        with patch.object(risk, "load_plan_context", return_value=self.plans):
+            old = risk.build(self.decision, root=self.root, current=self.now, legacy_order_display=True)
+            self.assertNotIn("observed_orders_display_version", old)
+            self.assertNotIn("observed_working_orders_verified", old["holdings"][0])
+            self.assertIn("Owner/account record:", old["holdings"][0]["next_step"])
+            risk.validate_publication({**self.decision, "held_position_risk": old}, root=self.root, current=self.now)
+
+        blockers = self.decision["capital_decision"]["decisions"][0]["blockers"]
+        blockers.append("earlier_instruction_execution_unreconciled")
+        conflicted = self.build()["holdings"][0]
+        self.assertFalse(conflicted["observed_working_orders_verified"])
+        self.assertIn("Owner/account record:", conflicted["next_step"])
+        blockers.pop()
+
+        self.write_json(relative, {"orders_shown": []})
+        unbound = self.build()["holdings"][0]
+        self.assertFalse(unbound["observed_working_orders_verified"])
+        self.assertIn("known_order_remaining_quantity_requires_reconciliation_before_replacement", unbound["dependencies"])
+        self.assertIn("Owner/account record:", unbound["next_step"])
 
     def test_bound_source_change_and_content_tampering_rejected(self):
         report = self.build()

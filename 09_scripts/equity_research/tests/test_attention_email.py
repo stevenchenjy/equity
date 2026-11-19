@@ -188,6 +188,55 @@ class AttentionEmailTests(unittest.TestCase):
                     self.assertIn(expected, body)
                     self.assertNotIn(absent, body)
 
+    def test_verified_working_sell_limit_is_observed_context_in_both_email_bodies(self):
+        from delivery_assessments import ARCHIVE_REL, _risk_receipt_state
+
+        self.no_entry()
+        self.decision['email_brief_version'] = DIRECT_VERSION
+        self.decision['email_action_display_policy'] = ORDER_DISPLAY_POLICY
+        observed_at = '2026-11-18T20:14:39-05:00'
+        order = {'ticker': 'DGII', 'side': 'sell', 'order_type': 'LIMIT', 'status': 'open',
+                 'time_in_force': 'GTD', 'remaining_quantity': 3, 'limit_price': 60,
+                 'expiration_date': '2027-05-17', 'source': 'chase_statement_observation'}
+        row = {'ticker': 'DGII', 'recorded_shares': 3, 'state': 'PLAN_EXPIRED',
+               'plan_state': 'expired_pending_verification', 'plan_review_at': '2026-11-18T16:00:00-05:00',
+               'quote': None, 'basis_price_change_pct': None, 'conditions': [], 'dependencies': [],
+               'next_step': 'Reassess the holding.', 'review_due_by': '2026-11-19T10:30:00-05:00',
+               'known_pending_orders': [order], 'order_observed_at': observed_at}
+        legacy = {'inventory_available': True, 'attention_tickers': ['DGII'], 'holdings': [row],
+                  'generated_at': observed_at}
+        legacy['content_sha256'] = canonical_sha256(legacy)
+        prior = {**self.decision, 'held_position_risk': legacy}
+        _, original_text, original_html = render_email(prior)
+        self.assertNotIn('Existing Chase order observed', original_text)
+        self.assertNotIn('Existing Chase order observed', original_html)
+        archive = self.root / ARCHIVE_REL
+        archive.mkdir(parents=True)
+        receipt = {}
+        for field, suffix, body in (('decision_sha256', '.json', json.dumps(prior)),
+                                    ('brief_text_sha256', '.txt', original_text),
+                                    ('brief_html_sha256', '.html', original_html)):
+            raw = body.encode()
+            receipt[field] = hashlib.sha256(raw).hexdigest()
+            (archive / (receipt[field] + suffix)).write_bytes(raw)
+
+        current = {**self.decision, 'held_position_risk': {
+            **legacy, 'observed_orders_display_version': 1,
+            'holdings': [{**row, 'observed_working_orders_verified': True}]}}
+        _, plain, document = render_email(current)
+        expected = ('Existing Chase order observed on 2026-11-18 20:14:39 EST. '
+                    'Sell limit $60.00 for 3 remaining shares, GTD through May 17, 2027.')
+        for body in (plain, visible_html_text(document)):
+            self.assertIn('Buy/add 0', body)
+            self.assertIn(expected, body)
+            self.assertNotIn('SELL 3 DGII', body)
+        self.assertEqual(follow._displayed_actions(current, plain, document, self.builder.v['current']), ([], False))
+        self.assertEqual(render_email(prior)[1:], (original_text, original_html))
+        self.assertEqual(_risk_receipt_state(receipt, root=self.root)['observed_at'].isoformat(), observed_at)
+
+        current['held_position_risk']['holdings'][0]['observed_working_orders_verified'] = False
+        self.assertEqual(render_email(current)[1:], (original_text, original_html))
+
     def test_v5_receipt_archive_accepts_complete_projection_and_rejects_missing_critical_line(self):
         self.direct_exit()
         import delivery_assessments as assessments

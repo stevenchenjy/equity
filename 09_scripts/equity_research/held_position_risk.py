@@ -10,7 +10,7 @@ from __future__ import annotations
 import csv
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
@@ -141,13 +141,36 @@ def _quote(root, ticker, quotes, quality, current, expected, market_gate, invent
             "source": row["data_source"], "basis": "canonical completed close; not live"}
 
 
-def build(decision, *, root: Path, current: datetime) -> dict:
+def _bound_order_observation(root, orders, reviewed, current):
+    observation = orders.get("current_inventory_observation")
+    if (reviewed.get("broker_inventory_verified") is not True or reviewed.get("global_blockers") != []
+            or not isinstance(observation, dict) or observation != reviewed.get("current_inventory_observation")
+            or not isinstance(observation.get("orders_shown"), list)
+            or observation.get("complete") is not True or observation.get("as_of") != orders.get("as_of")):
+        return None
+    try:
+        seen_at = stamp(observation["as_of"])
+        source = observation["source"]
+        relative = Path(source["path"])
+        bound = root / relative
+        if (not timedelta(0) <= current - seen_at <= timedelta(hours=24) or relative.is_absolute()
+                or ".." in relative.parts or bound.resolve() != root.resolve() / relative
+                or sha256_file(bound) != source["sha256"]):
+            return None
+        return observation
+    except (OSError, ValueError, TypeError, KeyError):
+        return None
+
+
+def build(decision, *, root: Path, current: datetime, legacy_order_display=False) -> dict:
     current = current.astimezone(ET)
     bindings = _bindings(root)
     inventory, inventory_available = _inventory(root)
     inventory = [row for row in inventory if not _zero_quantity(row)]
     quotes, quality = _csv(root, MARKET), _csv(root, QUALITY)
     orders = _json(root, ORDERS)
+    reviewed_orders = ((decision.get("tactical_review") or {}).get("open_orders") or {})
+    order_observation = None if legacy_order_display else _bound_order_observation(root, orders, reviewed_orders, current)
     expected = latest_published_market_session(current).isoformat()
     # Read raw inventory even when portfolio recomposition or company research
     # failed. An invalid row stays visible with an unavailable recommendation.
@@ -228,19 +251,30 @@ def build(decision, *, root: Path, current: datetime) -> dict:
             state = "REVIEWED_HOLD"
         pending = [x for x in orders.get("orders", []) if isinstance(x, dict) and x.get("ticker") == ticker
                    and x.get("status") in {"open", "pending", "partial_fill", "partially_filled"}]
+        changes = c.get("blockers", [])
+        owner_record_problem = (not valid_inventory or bool(global_issues)
+                                or plan_state in {"order_conflict_pending_review", "account_feedback_pending_verification"})
+        earlier_execution_unreconciled = "earlier_instruction_execution_unreconciled" in changes
+        remaining = [number(row.get("remaining_quantity")) for row in pending]
+        confirmed_working_sales = bool(
+            pending and order_observation and not account_problem and not earlier_execution_unreconciled
+            and not reviewed_orders.get("ticker_blockers", {}).get(ticker)
+            and None not in remaining and sum(remaining) <= qty
+            and all(row.get("side") == "sell" and row.get("status") in {"open", "partial_fill", "partially_filled"}
+                    and row in order_observation["orders_shown"] for row in pending))
         if pending:
-            issues.append("known_order_remaining_quantity_requires_reconciliation_before_replacement")
+            if not confirmed_working_sales:
+                issues.append("known_order_remaining_quantity_requires_reconciliation_before_replacement")
             if state == "REVIEWED_HOLD":
                 state = "REVIEW_REQUIRED"
-        changes = c.get("blockers", [])
         next_step = ("Recurring analyst: review the existing purpose, current adverse evidence and permitted reduce/exit response; "
                      "record a source-bound plan or exact unresolved dependency by the next review window.")
         if plan_state == "position_changed_pending_verification" and valid_inventory:
             next_step += f" Reconcile the prior plan with the current recorded {qty:g} shares before proposing a replacement."
-        owner_record_problem = (not valid_inventory or bool(global_issues)
-                                or plan_state in {"order_conflict_pending_review", "account_feedback_pending_verification"})
-        if owner_record_problem or pending or "earlier_instruction_execution_unreconciled" in changes:
+        if owner_record_problem or (pending and not confirmed_working_sales) or earlier_execution_unreconciled:
             next_step += " Owner/account record: provide actual remaining shares and each earlier order's filled, cancelled or remaining quantity; never duplicate a reserved sale."
+        elif confirmed_working_sales:
+            next_step += " The verified working sell order reserves its remaining shares. Reassess the held plan with that reservation in place."
         if mark is None:
             next_step += " Public-data worker: restore this ticker's dated canonical close; retain other independently verified observations."
         if state == "REVIEWED_HOLD":
@@ -264,6 +298,8 @@ def build(decision, *, root: Path, current: datetime) -> dict:
             "next_step": next_step,
             "review_due_by": p.get("review_at") if state == "REVIEWED_HOLD" else next_review,
             "review_deadline_is_service_expectation": True})
+        if not legacy_order_display:
+            rows[-1]["observed_working_orders_verified"] = confirmed_working_sales
     if bindings != _bindings(root):
         raise ValueError("held_risk_inputs_changed_during_assessment")
     report = {"schema_version": SCHEMA, "generated_at": current.isoformat(), "source_bindings": bindings,
@@ -275,6 +311,8 @@ def build(decision, *, root: Path, current: datetime) -> dict:
                         "No generic percentage-loss threshold is approved here. Tactical budgets apply only to their approved strategy.",
                         "Review deadlines are service expectations, not evidence a review or execution occurred."],
         "automatic_action_allowed": False, "trading_eligibility_granted": False, "email_authorized": False}
+    if not legacy_order_display:
+        report["observed_orders_display_version"] = 1
     report["content_sha256"] = canonical_sha256(report)
     return report
 
@@ -284,7 +322,8 @@ def validate_publication(decision, *, root: Path, current: datetime):
     if report is None:
         return  # Preserve the renderer/validation of immutable legacy emails.
     generated = stamp(report.get("generated_at"))
-    if generated > current or report != build(decision, root=root, current=generated):
+    legacy_order_display = "observed_orders_display_version" not in report
+    if generated > current or report != build(decision, root=root, current=generated, legacy_order_display=legacy_order_display):
         raise ValueError("held_risk_publication_changed_recompose_required")
 
 
@@ -301,6 +340,29 @@ def publish(root: Path, report: dict):
         else:
             atomic_write_json(path, report)
         atomic_write_json(root / OUTPUT, report)
+
+
+def _observed_order_line(order, observed_at):
+    if (order.get("source"), order.get("status"), order.get("side"),
+            order.get("order_type"), order.get("time_in_force")) != (
+            "chase_statement_observation", "open", "sell", "LIMIT", "GTD"):
+        return None
+    price = number(order.get("limit_price"))
+    remaining = number(order.get("remaining_quantity"))
+    if price is None or remaining is None:
+        return None
+    try:
+        observed = stamp(observed_at).astimezone(ET)
+        expires = date.fromisoformat(order.get("expiration_date"))
+    except (ValueError, TypeError):
+        return None
+    if expires <= observed.date():
+        return None
+    unit = "share" if remaining == 1 else "shares"
+    return (f"Existing Chase order observed on {observed:%Y-%m-%d %H:%M:%S %Z}. "
+            f"Sell limit ${price:.2f} for {remaining.normalize():f} remaining {unit}, "
+            f"GTD through {expires:%B} {expires.day}, {expires.year}. "
+            "The recorded order reserves these shares.")
 
 
 def cards(decision):
@@ -323,6 +385,11 @@ def cards(decision):
         else:
             lines.append("Current ticker price unavailable; no current return is inferred.")
         lines.append(f"Plan: {row['plan_state'].replace('_', ' ')}; recorded review {row['plan_review_at'] or 'unavailable'}.")
+        if report.get("observed_orders_display_version") == 1 and row.get("observed_working_orders_verified") is True:
+            for order in row.get("known_pending_orders", []):
+                order_line = _observed_order_line(order, row.get("order_observed_at"))
+                if order_line:
+                    lines.append(order_line)
         for condition in row["conditions"]:
             if condition["crossed_at_observation"]:
                 lines.append(f"Observed crossing: {condition['kind'].replace('_', ' ')} ${condition['reference']:.2f}. {condition['meaning']}")
