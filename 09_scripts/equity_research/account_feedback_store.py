@@ -155,6 +155,14 @@ def cash(value):
     return value.quantize(CENT, rounding=ROUND_HALF_UP)
 
 
+def chase_statement_protection_note(working_orders):
+    observation = (
+        'Working sell limit orders were observed at the stated time. This observation does not establish protective stop orders.'
+        if working_orders else 'Zero working orders were observed at the stated time.'
+    )
+    return observation + ' Prior order outcomes require separate confirmation.'
+
+
 def version(root):
     return sha(b''.join(read(root, p) for p in (ACCOUNT, POSITIONS, ORDERS)))
 
@@ -548,6 +556,7 @@ class Store:
                         'source':{'path':JOURNAL,'sha256':sha(encoded(f))}}
                     # No-orders observation never erases unresolved historical reservations.
                 else: orders['complete'] = False
+                orders.pop('protection_note', None)
                 orders.pop('broker_balance_observation', None)
         changes['holdings_after'] = [{'ticker':r['ticker'],'shares':r['shares_optional']} for r in positions.values()]
         if not missing and status in {'filled','partial','account'}:
@@ -559,6 +568,7 @@ class Store:
                 account['last_updated'] = statement['account_as_of']
                 orders['as_of'] = orders['current_inventory_observation']['as_of'] = statement['orders_as_of']
                 orders['source'] = 'Chase order-status observation retained with the complete broker statement.'
+                orders['protection_note'] = chase_statement_protection_note(statement.get('working_orders', []))
                 changes['chase_statement'] = statement
                 for symbol, position in positions.items():
                     position['position_pct'] = format(Decimal(statement['current_position_values'][symbol]) * 100 / total, '.4f')
@@ -826,6 +836,7 @@ class Store:
                     orders['complete'] = False
                     orders.pop('current_inventory_observation',None)
                     orders.pop('broker_balance_observation',None)
+                    orders.pop('protection_note', None)
                 if status!='skipped' and context is None: writes[ORDERS] = encoded(orders)
                 if status in {'filled','partial'}:
                     eid = 'dashboard-'+rid

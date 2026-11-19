@@ -132,7 +132,8 @@ class FeedbackTests(unittest.TestCase):
 
     def test_statement_reconciles_pending_sale_and_retains_observed_dated_working_limit(self):
         history = {'order_id': 'historic', 'ticker': 'XYZ', 'side': 'sell', 'status': 'filled', 'remaining_quantity': 0}
-        self.put(ORDERS, {'schema_version': 'phase5r_open_orders_v1', 'orders': [history]})
+        self.put(ORDERS, {'schema_version': 'phase5r_open_orders_v1', 'orders': [history],
+                          'protection_note': 'Zero active orders observed at stated time.'})
         pending = self.submit(self.payload(side='sell', date='2026-09-30', time='', fee_status='unknown'))
         payload = self.chase_snapshot_with_working_limit(pending)
         accepted = self.submit(payload)
@@ -151,6 +152,8 @@ class FeedbackTests(unittest.TestCase):
                          ('chase-KNOWN123', 'open', 1, 120.0, 'GTD', '2027-03-29'))
         self.assertEqual(orders['current_inventory_observation']['orders_shown'], [working])
         self.assertEqual(orders['as_of'], '2026-09-30T20:03:33-04:00')
+        self.assertEqual(orders['protection_note'], 'Working sell limit orders were observed at the stated time. This observation '
+                         'does not establish protective stop orders. Prior order outcomes require separate confirmation.')
         reviewed = review_open_orders(orders, datetime.fromisoformat('2026-09-30T20:06:00-04:00'),
                                       date(2026, 9, 30), [{'ticker': 'ABC', 'current_shares': '1'}])
         self.assertTrue(reviewed['broker_inventory_verified'])
@@ -324,9 +327,13 @@ class FeedbackTests(unittest.TestCase):
         self.assertEqual(json.loads((self.root/ORDERS).read_text())['orders'][0]['status'],'cancelled')
 
     def test_legacy_pending_still_requires_explicit_time_and_keeps_approximate_precision(self):
+        initial_orders = json.loads(read(self.root, ORDERS))
+        self.put(ORDERS, {**initial_orders, 'protection_note': 'Zero active orders observed at stated time.'})
         self.assertEqual(self.store.preview(self.payload(status='pending',shares='3',order_price='100',time=''))['missing'],['挂单时间'])
         r=self.submit(self.payload(status='pending',shares='3',order_price='100',time='14:00'))
-        order=json.loads((self.root/ORDERS).read_text())['orders'][0]
+        order_state = json.loads(read(self.root, ORDERS))
+        self.assertNotIn('protection_note', order_state)
+        order=order_state['orders'][0]
         self.assertEqual(r['event_time_precision'],'approximate')
         self.assertEqual(order['submitted_at'],'2026-09-29T14:00:00-04:00')
 
