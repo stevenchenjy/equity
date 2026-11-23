@@ -59,6 +59,10 @@ EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 MARKET_DISCOVERY_TIMEOUT_SECONDS = 360
 SWING_CANDIDATE_HISTORY_TIMEOUT_SECONDS = 210
 CAPITAL_ESCALATION_TIMEOUT_SECONDS = 900
+# The optional post-decision batch must fit in full before it can mutate inputs.
+# Reserve capacity for the four required tail stages; the separate final
+# reporting reserve remains outside this working-stage deadline.
+CAPITAL_REQUIRED_TAIL_RESERVE_SECONDS = 120
 # The canonical publication revalidates the retained research and both account views.
 # The existing full-refresh or short-claim deadline can further reduce this allowance.
 DAILY_DECISION_TIMEOUT_SECONDS = 360
@@ -206,6 +210,20 @@ def _progress_step(progress: dict[str, Any] | None, spec: tuple, market_snapshot
                   "started_at": stamp, "completed_at": stamp, "duration_seconds": 0,
                   "exit_code": 124, "outcome": "not_run_budget_exhausted",
                   "result_code": "full_refresh_total_budget_exhausted"}
+    elif (remaining is not None and spec[0] == "capital_deployment_escalation"
+            and spec[2] and spec[0] in ADVISORY_STEPS
+            and remaining < CAPITAL_ESCALATION_TIMEOUT_SECONDS + CAPITAL_REQUIRED_TAIL_RESERVE_SECONDS):
+        # Do not start a mutable advisory batch with a reduced child timeout:
+        # it can replace evidence before timing out and starve required work.
+        # This is an honest unperformed advisory result, never stage success.
+        stamp = iso_now()
+        result = {"name": spec[0], "script": spec[1], "allowed_to_fail": spec[2],
+                  "started_at": stamp, "completed_at": stamp, "duration_seconds": 0,
+                  "exit_code": 124, "outcome": "not_run_insufficient_complete_stage_budget",
+                  "result_code": "advisory_complete_stage_budget_unavailable",
+                  "remaining_budget_seconds": round(remaining, 3),
+                  "stage_budget_seconds": CAPITAL_ESCALATION_TIMEOUT_SECONDS,
+                  "required_tail_reserve_seconds": CAPITAL_REQUIRED_TAIL_RESERVE_SECONDS}
     else:
         def started(pid):
             if progress is not None:

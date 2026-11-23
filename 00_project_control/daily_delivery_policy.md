@@ -158,6 +158,16 @@ expiry, late-start retirement and final sender clock checks remain unchanged.
 The full allowance still reserves its final 30 seconds for reporting, and the
 outer parent exceeds the full allowance by 60 seconds.
 
+The already-advisory post-decision capital-escalation batch starts only when its
+full existing 900-second allowance and a 120-second required-tail reserve fit
+inside the remaining working deadline. Otherwise it is explicitly recorded as
+unperformed with exit124 and `not_run_insufficient_complete_stage_budget`;
+required outcome tracking, workflow evaluation, capital-allocation validation and
+evidence-packet stages continue under their existing limits and account/source
+publication fences. No partial extra batch is started with a shortened timeout.
+This prioritizes required completion without claiming the advisory research was
+performed, restarting its quota or changing any capital eligibility gate.
+
 Normal admission includes the 1,320-second parent, 170 seconds of independently
 scheduled news and 240 seconds of Git preflight: 1,730 seconds (28m50s). At the
 nominal 09:00 and 13:30 starts, that leaves 70 seconds before the next protected
