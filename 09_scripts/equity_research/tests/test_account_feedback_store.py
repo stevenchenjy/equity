@@ -99,12 +99,13 @@ class FeedbackTests(unittest.TestCase):
                        order_time_displayed_et='2026-09-30T15:32:00-04:00', order_time_precision='minute',
                        quantity='1', remaining_quantity='1', limit_price_usd='120.00')
         working.update(working_changes)
+        visible_number = working['broker_order_number'] if working.get('replaces_order_sha256') else 'KNOWN123'
         chase = {
             'account': 'Chase Self-Directed example', 'currency': 'USD',
             'source': {'positions_and_balances_reported_asof_et': '2026-09-30T20:05:00-04:00',
                        'order_status_reported_asof_et': '2026-09-30T20:03:33-04:00'},
             'order_status': {'filters': 'All orders', 'rows_visible': 2, 'working_orders_visible': 1,
-                             'visible_orders': [{'order_number': 'KNOWN123', 'ticker': 'ABC', 'broker_status': 'Open'},
+                             'visible_orders': [{'order_number': visible_number, 'ticker': 'ABC', 'broker_status': 'Open'},
                                                 {'order_number': 'FILLED123', 'ticker': 'ABC', 'broker_status': 'Executed'}],
                              'working_orders': [working]},
             'transactions': {'sha256': activity_sha, 'broker_reported_and_captured_row_count': 2,
@@ -124,7 +125,7 @@ class FeedbackTests(unittest.TestCase):
         self.put(f'{SOURCE_DIR}/{observation_sha}.json', observation)
         payload = self.payload(status='account', date='2026-09-30', time='', account_observed=True,
                                cash='1099.99', inventory_complete=True, no_open_orders=False,
-                               orders_match=True, observed_order_ids=['chase-KNOWN123'],
+                               orders_match=True, observed_order_ids=['chase-' + visible_number],
                                holdings=[{'ticker': 'ABC', 'shares': '1', 'entry_price': '107.00'}],
                                chase_observation_sha256=observation_sha)
         payload.update(record_id=pending['id'], revision=pending['revision'])
@@ -185,6 +186,56 @@ class FeedbackTests(unittest.TestCase):
         with self.assertRaisesRegex(FeedbackError, 'chase_statement_existing_order_unreconciled'):
             self.store.preview(self.chase_snapshot_with_working_limit(pending))
         self.assertEqual(before, {path: read(self.root, path) for path in before})
+
+    def revised_chase_order_snapshot(self, **changes):
+        pending = self.submit(self.payload(side='sell', date='2026-09-30', time='', fee_status='unknown'))
+        predecessor = dict(order_id='chase-KNOWN123', broker_order_reference='KNOWN123', ticker='ABC',
+                           side='sell', status='open', order_type='LIMIT', time_in_force='GTD',
+                           quantity=2, remaining_quantity=2, limit_price=120.0, stop_price=None,
+                           session_date='2026-09-29', expiration_date='2027-03-28',
+                           submitted_at='2026-09-29T15:32:00-04:00', submitted_time_precision='approximate',
+                           source='chase_statement_observation')
+        self.put(ORDERS, {'schema_version': 'phase5r_open_orders_v1', 'orders': [predecessor]})
+        revision = dict(broker_order_number='KNOWN123-1', replaces_broker_order_number='KNOWN123',
+                        replaces_order_sha256=sha(encoded(predecessor)))
+        revision.update(changes)
+        return predecessor, self.chase_snapshot_with_working_limit(pending, **revision)
+
+    def test_chase_order_revision_replaces_only_exact_predecessor_and_preserves_history(self):
+        predecessor, payload = self.revised_chase_order_snapshot()
+        accepted = self.submit(payload)
+        self.assertEqual(accepted['stage'], 'applied')
+        orders = json.loads(read(self.root, ORDERS))
+        self.assertEqual(len(orders['orders']), 1)
+        successor = orders['orders'][0]
+        self.assertEqual((successor['order_id'], successor['remaining_quantity'], successor['expiration_date']),
+                         ('chase-KNOWN123-1', 1, '2027-03-29'))
+        self.assertEqual(successor['prior_broker_order_observations'][-1]['order'], predecessor)
+        self.assertEqual(successor['prior_broker_order_observations'][-1]['observation'],
+                         accepted['changes']['chase_statement']['observation'])
+        self.assertFalse((self.root / LEDGER).exists())
+        reviewed = review_open_orders(orders, datetime.fromisoformat('2026-09-30T20:06:00-04:00'),
+                                      date(2026, 9, 30), [{'ticker': 'ABC', 'current_shares': '1'}])
+        self.assertEqual(reviewed['active_tickers'], ['ABC'])
+        self.assertNotIn('sell_reservations_exceed_recorded_holdings', reviewed['global_blockers'])
+        self.assertEqual(self.store.submit(payload), accepted)
+
+    def test_chase_order_revision_cannot_release_unrelated_or_unbound_reservations(self):
+        for mutation in ({'broker_order_number': 'OTHER-1'},
+                         {'replaces_broker_order_number': 'OTHER'},
+                         {'replaces_order_sha256': '0' * 64},
+                         {'broker_order_number': 'KNOWN123-2'},
+                         {'order_time_displayed_et': '2026-09-29T15:32:00-04:00'},
+                         {'limit_price_usd': '121.00'},
+                         {'replaces_broker_order_number': None}):
+            with self.subTest(mutation=mutation):
+                # Independent temporary stores keep the pending-record fixture isolated.
+                self.setUp()
+                predecessor, payload = self.revised_chase_order_snapshot(**mutation)
+                before = {path: read(self.root, path) for path in (ACCOUNT, POSITIONS, ORDERS, PENDING)}
+                with self.assertRaises(FeedbackError):
+                    self.store.preview(payload)
+                self.assertEqual(before, {path: read(self.root, path) for path in before})
 
     def total_payload(self, **changes):
         p=self.simple_payload(**changes)

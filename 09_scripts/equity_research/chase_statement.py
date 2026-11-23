@@ -19,9 +19,21 @@ STATEMENT_INDEX = '06_execution_records/dashboard_feedback.local/chase_statement
 ACTIVITY_LEDGER = '06_execution_records/chase_transactions.local.csv'
 CENT = Decimal('.01')
 DISPLAY_DESCRIPTION_LIMIT = 127
+ORDER_NUMBER = re.compile(r'[A-Z0-9]{1,32}(?:-[1-9][0-9]{0,5})?')
+
 COLUMNS = ('display_row', 'trade_date_et', 'transaction_type', 'security_or_broker_code',
            'broker_display_description', 'settlement_date', 'settlement_status_displayed',
            'price_usd_displayed', 'quantity_displayed', 'amount_usd_displayed')
+
+def immediate_order_revision(predecessor, successor):
+    """A revision changes an observation, never establishes a cancellation/fill."""
+    if not isinstance(predecessor, str) or not isinstance(successor, str):
+        return False
+    if ORDER_NUMBER.fullmatch(predecessor) is None or ORDER_NUMBER.fullmatch(successor) is None:
+        return False
+    old = predecessor.split('-', 1)
+    new = successor.split('-', 1)
+    return old[0] == new[0] and len(new) == 2 and int(new[1]) == (int(old[1]) if len(old) == 2 else 0) + 1
 
 
 def verify(condition, message):
@@ -70,7 +82,7 @@ def verified_working_orders(source, feedback, observed):
     for row in visible:
         number = row.get('broker_order_number', row.get('order_number'))
         status = row['broker_status']
-        verify(isinstance(number, str) and re.fullmatch('[A-Z0-9]{1,32}', number) is not None
+        verify(isinstance(number, str) and ORDER_NUMBER.fullmatch(number) is not None
                and number not in visible_ids and status in terminal | {'Open'},
                'Chase order list identity or status is unverified')
         visible_ids.add(number)
@@ -94,6 +106,12 @@ def verified_working_orders(source, feedback, observed):
                and quantity == remaining == quantity.to_integral_value()
                and limit.is_finite() and 0 < limit <= 1_000_000_000 and limit == money(limit),
                'Chase working sell limit facts are incomplete or unsupported')
+        predecessor = row.get('replaces_broker_order_number')
+        predecessor_hash = row.get('replaces_order_sha256')
+        if predecessor is not None or predecessor_hash is not None:
+            verify(immediate_order_revision(predecessor, number)
+                   and isinstance(predecessor_hash, str) and re.fullmatch('[a-f0-9]{64}', predecessor_hash),
+                   'Chase order revision requires an exact immediate predecessor binding')
         orders[number] = dict(order_id='chase-' + number, broker_order_reference=number,
                               ticker=ticker, status='open', side='sell', order_type='LIMIT',
                               quantity=int(quantity), remaining_quantity=int(remaining),
@@ -101,6 +119,9 @@ def verified_working_orders(source, feedback, observed):
                               session_date=submitted.date().isoformat(), expiration_date=expiry.isoformat(),
                               submitted_at=submitted.isoformat(), submitted_time_precision='approximate',
                               source='chase_statement_observation')
+        if predecessor is not None:
+            orders[number].update(replaces_order_id='chase-' + predecessor,
+                                  replaces_order_sha256=predecessor_hash)
     verified_ids = [row['order_id'] for row in orders.values()]
     verify(set(orders) == set(visible_open) and isinstance(feedback['observed_order_ids'], list)
            and sorted(feedback['observed_order_ids']) == sorted(verified_ids),

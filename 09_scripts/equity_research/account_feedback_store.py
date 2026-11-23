@@ -520,12 +520,19 @@ class Store:
                 observed[symbol] = {**(old or self.new_position(symbol,f['date'],entry)), 'shares_optional':str(shares), 'entry_price':str(entry)}
             observed_orders = (statement or {}).get('working_orders')
             if observed_orders:
-                # A complete newer broker view may add known resting orders.
-                # Never use it to infer an earlier local order's terminal state.
+                # Missing orders never establish a terminal state. A source-bound
+                # immediate broker revision may replace its exact earlier observation.
                 order_facts = ('ticker', 'side', 'status', 'quantity', 'remaining_quantity', 'limit_price',
                                'stop_price', 'order_type', 'time_in_force', 'session_date', 'expiration_date')
                 by_id = {row['order_id']: row for row in observed_orders}
-                prior_ids = set()
+                replacements = {}
+                for successor in observed_orders:
+                    predecessor = successor.get('replaces_order_id')
+                    if predecessor:
+                        if predecessor in replacements or predecessor in by_id:
+                            raise FeedbackError('chase_statement_order_revision_conflict', {'order_id': predecessor}, 409)
+                        replacements[predecessor] = successor
+                prior_ids, replaced_ids = set(), set()
                 for order in orders['orders']:
                     order_id = order.get('order_id', order.get('id'))
                     current = order.get('status') in active and order.get('record_scope') != 'unresolved_historical_reservation'
@@ -534,8 +541,30 @@ class Store:
                                 or any(order.get(key) != by_id[order_id][key] for key in order_facts)):
                             raise FeedbackError('chase_statement_existing_order_conflict', {'order_id': order_id}, 409)
                         prior_ids.add(order_id)
+                    elif order_id in replacements:
+                        successor = replacements[order_id]
+                        stable = ('ticker', 'side', 'order_type', 'time_in_force', 'limit_price', 'stop_price')
+                        try:
+                            later = datetime.fromisoformat(successor['submitted_at']) > datetime.fromisoformat(order['submitted_at'])
+                            reduced = 0 < successor['remaining_quantity'] <= order['remaining_quantity']
+                        except (KeyError, TypeError, ValueError):
+                            later = reduced = False
+                        if (not current or order.get('source') != 'chase_statement_observation'
+                                or order_id in replaced_ids or successor.get('replaces_order_sha256') != sha(encoded(order))
+                                or order.get('broker_order_reference') != order_id.removeprefix('chase-')
+                                or any(order.get(key) != successor.get(key) for key in stable)
+                                or not later or not reduced):
+                            raise FeedbackError('chase_statement_order_revision_conflict', {'order_id': order_id}, 409)
+                        successor['prior_broker_order_observations'] = [
+                            *order.get('prior_broker_order_observations', []),
+                            {'order': order, 'observation': statement['observation']}]
+                        replaced_ids.add(order_id)
                     elif current:
                         raise FeedbackError('chase_statement_existing_order_unreconciled', {'order_id': order_id}, 409)
+                if replaced_ids != set(replacements):
+                    raise FeedbackError('chase_statement_order_revision_predecessor_missing', status=409)
+                orders['orders'] = [row for row in orders['orders']
+                                    if row.get('order_id', row.get('id')) not in replaced_ids]
                 orders['orders'].extend(row for row in observed_orders if row['order_id'] not in prior_ids)
             elif f.get('inventory_complete'):
                 current_orders=[r for r in orders['orders'] if r.get('status') in active and r.get('record_scope')!='unresolved_historical_reservation']
