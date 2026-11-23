@@ -16,7 +16,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from daily_common import atomic_write_json, canonical_sha256, read_json, sha256_file
+from daily_common import atomic_write_json as _ordinary_atomic_write_json, canonical_sha256, read_json, sha256_file
+from portfolio_archive import archive_before_replace, portfolio_position_directory
 from validation_cache import file_hash_validation, resolved_sha256
 from workflow_evaluation import aware
 
@@ -269,6 +270,121 @@ def transition_batch(store: dict, changes: list[dict], *, root: Path, current: d
     store["events"].extend(candidate["events"][len(store["events"]):])
 
 
+def _document_envelope(payload: Any) -> bool:
+    return (type(payload) is dict and all(type(key) is str for key in payload)
+        and type(payload.get("schema_version")) is str and payload["schema_version"] in {
+            "equity_research_opportunity_store_v1", "equity_research_opportunity_report_v1"})
+
+
+def _document_chunks(payload: Any, *, pretty: bool = False):
+    """Emit the existing C-encoded bytes, bounded by one top-level array item.
+
+    This fast path is private to builtin opportunity document envelopes. Each
+    subtree still uses the host's ordinary encoder, including float, Unicode,
+    circular-reference and unsupported-type behavior. ASCII LF alone carries
+    structural indentation; Unicode line separators inside strings are data.
+    """
+    options = {"ensure_ascii": False, "sort_keys": True}
+    options.update({"indent": 2} if pretty else {"separators": (",", ":")})
+    if not _document_envelope(payload):
+        yield json.dumps(payload, **options)
+        return
+    if not payload:
+        yield "{}"
+        return
+    yield "{\n" if pretty else "{"
+    for index, key in enumerate(sorted(payload)):
+        if index:
+            yield ",\n" if pretty else ","
+        yield ("  " if pretty else "") + json.dumps(key, ensure_ascii=False) + (": " if pretty else ":")
+        value = payload[key]
+        if type(value) is list:
+            yield "["
+            for item_index, item in enumerate(value):
+                if item_index:
+                    yield ",\n" if pretty else ","
+                elif pretty:
+                    yield "\n"
+                encoded = json.dumps(item, **options)
+                yield "    " + encoded.replace("\n", "\n    ") if pretty else encoded
+            if value and pretty:
+                yield "\n  "
+            yield "]"
+        else:
+            encoded = json.dumps(value, **options)
+            yield encoded.replace("\n", "\n  ") if pretty else encoded
+    yield "\n}" if pretty else "}"
+
+
+def _document_bytes(payload: Any, *, pretty: bool = False, final_newline: bool = False):
+    pending = bytearray()
+    for text in _document_chunks(payload, pretty=pretty):
+        raw = text.encode("utf-8")
+        if len(raw) >= 65536:
+            if pending:
+                yield bytes(pending)
+                pending.clear()
+            yield raw
+        else:
+            pending.extend(raw)
+            if len(pending) >= 65536:
+                yield bytes(pending)
+                pending.clear()
+    if final_newline:
+        pending.extend(b"\n")
+    if pending:
+        yield bytes(pending)
+
+
+def document_sha256(payload: Any) -> str:
+    digest = hashlib.sha256()
+    for chunk in _document_bytes(payload):
+        digest.update(chunk)
+    return digest.hexdigest()
+
+
+def atomic_write_document(path: Path, payload: Any) -> None:
+    if not _document_envelope(payload):
+        return _ordinary_atomic_write_json(path, payload)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "wb") as output:
+            for chunk in _document_bytes(payload, pretty=True, final_newline=True):
+                output.write(chunk)
+            output.flush()
+            os.fsync(output.fileno())
+        replacement = Path(temporary).read_bytes() if portfolio_position_directory(path) else b""
+        archive_before_replace(path, replacement)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def atomic_write_json(path: Path, payload: Any) -> None:
+    # Keep this module's durable writer seam. Other financial modules continue
+    # to use daily_common's unchanged generic serializer.
+    atomic_write_document(path, payload)
+
+
+def _history_digest(path: Path, *, compressed: bool) -> str:
+    digest = hashlib.sha256()
+    try:
+        with (gzip.open(path, "rb") if compressed else path.open("rb")) as source:
+            while chunk := source.read(1024 * 1024):
+                digest.update(chunk)
+    except (OSError, EOFError) as exc:
+        raise ValueError("research_history_archive_corrupt") from exc
+    return digest.hexdigest()
+
+
+def _pretty_digest(payload: Any) -> str:
+    digest = hashlib.sha256()
+    for chunk in _document_bytes(payload, pretty=True, final_newline=True):
+        digest.update(chunk)
+    return digest.hexdigest()
+
+
 def retain_history_json(path: Path, payload: dict) -> Path:
     """Retain exact JSON bytes losslessly without another full-size snapshot.
 
@@ -277,32 +393,30 @@ def retain_history_json(path: Path, payload: dict) -> Path:
     atomic_write_json. Immutable collisions and damaged archives fail closed.
     No current input, journal validation, or source receipt changes format.
     """
-    raw = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
-    expected = hashlib.sha256(raw).hexdigest()
     compressed = path.with_suffix(path.suffix + ".gz")
     for existing in (path, compressed):
         if existing.exists():
-            try:
-                actual = (gzip.decompress(existing.read_bytes()) if existing == compressed
-                          else existing.read_bytes())
-            except (OSError, EOFError) as exc:
-                raise ValueError("research_history_archive_corrupt") from exc
-            require(hashlib.sha256(actual).hexdigest() == expected,
+            expected = _pretty_digest(payload)
+            require(_history_digest(existing, compressed=existing == compressed) == expected,
                     "research_history_archive_conflict")
             return existing
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary = tempfile.mkstemp(prefix=".history-", dir=path.parent)
     try:
         with os.fdopen(descriptor, "wb") as output:
+            digest = hashlib.sha256()
             with gzip.GzipFile(filename="", fileobj=output, mode="wb", compresslevel=1, mtime=0) as archive:
-                archive.write(raw)
+                for raw in _document_bytes(payload, pretty=True, final_newline=True):
+                    digest.update(raw)
+                    archive.write(raw)
             output.flush()
             os.fsync(output.fileno())
+        expected = digest.hexdigest()
         # Atomic create, never replace another writer's retained history.
         try:
             os.link(temporary, compressed)
         except FileExistsError:
-            require(hashlib.sha256(gzip.decompress(compressed.read_bytes())).hexdigest() == expected,
+            require(_history_digest(compressed, compressed=True) == expected,
                     "research_history_archive_conflict")
         return compressed
     finally:
@@ -317,5 +431,5 @@ def publish_store(root: Path, store: dict, *, previous: dict, current: datetime)
     if store == previous and old_path.exists():
         return
     for payload in (previous, store):
-        retain_history_json(root / BASE_REL / "history" / (canonical_sha256(payload) + ".json"), payload)
+        retain_history_json(root / BASE_REL / "history" / (document_sha256(payload) + ".json"), payload)
     atomic_write_json(old_path, store)

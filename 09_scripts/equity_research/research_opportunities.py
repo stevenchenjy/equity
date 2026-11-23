@@ -16,7 +16,8 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
     read_csv, read_json, sha256_file, ET)
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, transition_batch, publish_store,
-    retain_input, retain_history_json, validate_policy, validate_observation, validate_journal, require, inside)
+    retain_input, retain_history_json, validate_policy, validate_observation, validate_journal, require, inside,
+    document_sha256, atomic_write_document)
 from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
@@ -492,9 +493,9 @@ def publish_view(root: Path, store: dict, *, current: datetime, metrics: dict, d
             "ever_admitted_distinct_opportunities": sum(i["initial_state"] == "queued" or any(t["to_state"] == "queued" for t in i["transitions"]) for i in items)}, **AUTHORITY}
     from opportunity_measurement import measure_paths
     report["prospective_measurement"] = measure_paths(root, items, current=current)
-    report["report_hash"] = canonical_sha256(report)
-    atomic_write_json(root / REPORT_REL, report)
-    retain_history_json(root / BASE_REL / "run_history" / (canonical_sha256(report)+".json"), report)
+    report["report_hash"] = document_sha256(report)
+    atomic_write_document(root / REPORT_REL, report)
+    retain_history_json(root / BASE_REL / "run_history" / (document_sha256(report)+".json"), report)
     atomic_write_text(root / MARKDOWN_REL, render_report(report))
     return report
 
@@ -577,7 +578,7 @@ def read_report(root: Path, *, current: datetime, publication_view: bool = False
             for locator, digest in proof.receipts:
                 require(resolved_sha256(root, locator, inside) == digest, "research_source_changed")
         else:
-            require(report.get("report_hash") == canonical_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
+            require(report.get("report_hash") == document_sha256({k: v for k, v in report.items() if k != "report_hash"}), "research_opportunity_report_hash_invalid")
             if first_proof:
                 require(isinstance(report["store_sha256"], str), "research_opportunity_report_stale_store")
                 journal, store_digest = _read_bound_json(root / STORE_REL, report["store_sha256"],
