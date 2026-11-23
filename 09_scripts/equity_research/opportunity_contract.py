@@ -12,13 +12,14 @@ import json
 import os
 import tempfile
 import re
+import weakref
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from daily_common import atomic_write_json as _ordinary_atomic_write_json, canonical_sha256, read_json, sha256_file
 from portfolio_archive import archive_before_replace, portfolio_position_directory
-from validation_cache import file_hash_validation, resolved_sha256
+from validation_cache import file_hash_validation, resolved_sha256, read_hashed_bytes
 from workflow_evaluation import aware
 
 BASE_REL = Path("04_research/company_research/opportunities.local")
@@ -156,10 +157,11 @@ def validate_journal(store: dict, *, root: Path, current: datetime) -> None:
 
 
 def _replay(store: dict, *, root: Path | None = None, current: datetime | None = None,
-            materialize: bool = True) -> dict[str, dict]:
+            materialize: bool = True, copy_history: bool = True) -> dict[str, dict]:
     require(store.get("schema_version") == "equity_research_opportunity_store_v1" and all(store.get(k) is False for k in AUTHORITY), "research_store_invalid")
     require(isinstance(store.get("events"), list), "research_journal_invalid")
     result, previous, ids, observations, last_clock = {}, "", set(), set(), None
+    history_value = copy.deepcopy if copy_history else lambda value: value
     for event in store["events"]:
         require(event.get("previous_hash") == previous and event.get("record_hash") == canonical_sha256({k: v for k, v in event.items() if k != "record_hash"}), "research_journal_hash_invalid")
         require(all(event.get(k) is False for k in AUTHORITY), "research_journal_authority_violation")
@@ -179,8 +181,8 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             reason_code = event["reason_code"]
             instrument_kind, detected_at = packet["instrument_kind"], packet["detected_at"]
             result[identity] = {"opportunity_id": identity, "ticker": packet["ticker"], "instrument_kind": instrument_kind,
-                "first_seen_at": detected_at, "first_observation": copy.deepcopy(packet),
-                "observations": [copy.deepcopy(packet)], "initial_state": event["to_state"], "state": event["to_state"],
+                "first_seen_at": detected_at, "first_observation": history_value(packet),
+                "observations": [history_value(packet)], "initial_state": event["to_state"], "state": event["to_state"],
                 "last_evidence_at": detected_at, "research_started_at": "", "objective_completed_at": "",
                 "assessment_at": "", "transitions": [], "blockers": event.get("blockers", []),
                 "owner": event["owner"], "reason_code": reason_code, **AUTHORITY} if materialize else {
@@ -194,7 +196,7 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             observations.add(packet["observation_id"])
             detected_at = packet["detected_at"]
             if materialize:
-                result[identity]["observations"].append(copy.deepcopy(packet))
+                result[identity]["observations"].append(history_value(packet))
                 result[identity]["last_evidence_at"] = detected_at
         elif kind == "transition":
             require(identity in result and event["to_state"] in TRANSITIONS, "research_transition_invalid")
@@ -207,7 +209,7 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             item["state"] = event["to_state"]
             if materialize:
                 item.update(owner=owner, reason_code=event["reason_code"], blockers=event["blockers"])
-                item["transitions"].append(copy.deepcopy(event))
+                item["transitions"].append(history_value(event))
                 if event["to_state"] == "researching" and not item["research_started_at"]:
                     item["research_started_at"] = event["recorded_at"]
                 if event["to_state"] == "evidence_attached" and not item["objective_completed_at"]:
@@ -218,6 +220,83 @@ def _replay(store: dict, *, root: Path | None = None, current: datetime | None =
             raise ValueError("research_journal_kind_invalid")
         previous, last_clock = event["record_hash"], clock
     return result
+
+
+class _PreviousStoreProof:
+    """Opaque handle; only successful bound reads register publication proof."""
+
+
+_PREVIOUS_STORE_READS = weakref.WeakKeyDictionary()
+
+
+def _store_metadata_sha256(store: dict) -> str:
+    return canonical_sha256({key: value for key, value in store.items() if key != "events"})
+
+
+def read_validated_store(root: Path, *, current: datetime,
+                         borrow_history: bool = False) -> tuple[dict, dict, _PreviousStoreProof]:
+    """Bind actual initial bytes to a completely validated journal projection.
+
+    The objective's private borrowed projection owns item/list wrappers but
+    treats packet/event history as read-only. Public replay retains its copied
+    output. No raw document or mutable projection survives in the proof.
+    """
+    path = root / STORE_REL
+    if path.exists():
+        raw, digest = read_hashed_bytes(path)
+        text = raw.decode("utf-8")
+        del raw
+        previous = json.loads(text)
+        del text
+    else:
+        previous, digest = empty_store(), None
+    with file_hash_validation():
+        items = _replay(previous, root=root, current=current, copy_history=not borrow_history)
+    count = len(previous["events"])
+    head = previous["events"][-1]["record_hash"] if count else ""
+    metadata = _store_metadata_sha256(previous)
+    proof = _PreviousStoreProof()
+    _PREVIOUS_STORE_READS[proof] = (str(path.resolve()), digest, count, head, metadata)
+    return previous, items, proof
+
+
+def _fresh_store_sha256(path: Path) -> str:
+    """Always re-read bytes, with path/descriptor identity fences, never cache."""
+    def identity(value):
+        return (value.st_dev, value.st_ino, value.st_mode, value.st_nlink,
+                value.st_size, value.st_mtime_ns, value.st_ctime_ns)
+    before = identity(path.stat())
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        require(identity(os.fstat(source.fileno())) == before, "research_store_changed_before_publication")
+        while chunk := source.read(1024 * 1024):
+            digest.update(chunk)
+        require(identity(os.fstat(source.fileno())) == before and identity(path.stat()) == before,
+                "research_store_changed_before_publication")
+    return digest.hexdigest()
+
+
+def _validate_previous_store_proof(root: Path, store: dict, previous: dict,
+                                   proof: _PreviousStoreProof) -> None:
+    require(type(proof) is _PreviousStoreProof, "research_previous_store_proof_unverified")
+    captured = _PREVIOUS_STORE_READS.get(proof)
+    require(captured is not None, "research_previous_store_proof_unverified")
+    path, raw_sha, count, head, metadata = captured
+    require(path == str((root / STORE_REL).resolve()), "research_previous_store_proof_unverified")
+    previous_events, final_events = previous["events"], store["events"]
+    require(len(previous_events) == count and len(final_events) >= count
+            and (previous_events[-1]["record_hash"] if count else "") == head
+            and (final_events[count-1]["record_hash"] if count else "") == head
+            and _store_metadata_sha256(previous) == metadata,
+            "research_previous_store_changed_after_read")
+    # The caller has just validated every final event/hash/source/clock and
+    # exact previous-prefix equality. Its captured boundary head therefore
+    # binds the entire old chain, including every historical field.
+    if raw_sha is None:
+        require(not (root / STORE_REL).exists(), "research_store_changed_before_publication")
+    else:
+        require(_fresh_store_sha256(root / STORE_REL) == raw_sha,
+                "research_store_changed_before_publication")
 
 
 def append_event(store: dict, event: dict) -> None:
@@ -423,11 +502,15 @@ def retain_history_json(path: Path, payload: dict) -> Path:
         Path(temporary).unlink(missing_ok=True)
 
 
-def publish_store(root: Path, store: dict, *, previous: dict, current: datetime) -> None:
+def publish_store(root: Path, store: dict, *, previous: dict, current: datetime,
+                  previous_proof: _PreviousStoreProof | None = None) -> None:
     require(store["events"][:len(previous["events"])] == previous["events"], "research_history_rewrite_forbidden")
     validate_journal(store, root=root, current=current)
     old_path = root / STORE_REL
-    require(read_json(old_path, empty_store()) == previous, "research_store_changed_before_publication")
+    if previous_proof is None:
+        require(read_json(old_path, empty_store()) == previous, "research_store_changed_before_publication")
+    else:
+        _validate_previous_store_proof(root, store, previous, previous_proof)
     if store == previous and old_path.exists():
         return
     for payload in (previous, store):

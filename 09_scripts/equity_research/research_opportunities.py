@@ -17,7 +17,7 @@ from daily_common import (ExclusiveFileLock, atomic_write_json, atomic_write_tex
 from opportunity_contract import (AUTHORITY, BASE_REL, STORE_REL, REPORT_REL, POLICY_REL,
     MARKDOWN_REL, TERMINAL, empty_store, replay, append_event, transition, transition_batch, publish_store,
     retain_input, retain_history_json, validate_policy, validate_observation, validate_journal, require, inside,
-    document_sha256, atomic_write_document)
+    document_sha256, atomic_write_document, read_validated_store)
 from opportunity_triggers import collect_triggers, packet
 from opportunity_evidence import EVIDENCE_REL, objective_research
 from workflow_evaluation import aware
@@ -328,8 +328,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
     clock = clock or (lambda: current)
     policy = validate_policy(read_json(root / POLICY_REL))
     with ExclusiveFileLock(root / BASE_REL / "store.lock"):
-        previous = read_json(root / STORE_REL, empty_store())
-        initial_items = replay(previous, root=root, current=current)
+        previous, initial_items, previous_proof = read_validated_store(root, current=current, borrow_history=True)
         store, metrics = {**previous, "events": list(previous["events"])}, _base_metrics()
         metrics["request_limit"] = 2*policy["external_issuers_per_fetch"]
         config = read_json(root / "00_project_control/active_production_config.json", {})
@@ -341,6 +340,8 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         backlog = read_json(root / "04_research/company_research/research_backlog.local.json", {})
         same_cycle = backlog.get("generated_at", "")[:10] == current.date().isoformat()
         canonical_attempted = set(backlog.get("selected_tickers", [])) if same_cycle else set()
+        reserved = set(backlog.get("reserved_external_event_tickers", [])) if same_cycle else set()
+        del backlog
         completed = len(canonical_attempted)
         remaining = max(0, budget-completed)
         rows = {r["ticker"]: r for r in read_csv(root / "03_source_data/equity_research/daily_fundamentals.csv")}
@@ -368,21 +369,21 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
             return target
         from capital_escalation import research_priorities
         escalation_rank = {ticker: i for i, ticker in enumerate(research_priorities(root, current))}
-        reserved = set(backlog.get("reserved_external_event_tickers", [])) if same_cycle else set()
         def objective_priority(item):
             base = work_priority(item, held, current=current, escalation_rank=escalation_rank)
             # Canonical held work already performed must not consume the
             # isolated external slots a second time through an attachment.
             bucket = 0 if base[0] == 0 and item["ticker"] not in canonical_attempted else 1 if item["ticker"] in reserved else 2
             return (bucket, *base)
-        for item in sorted(initial_items.values(), key=objective_priority):
+        eligible = (item for item in initial_items.values() if item["state"] not in TERMINAL | {"deferred_capacity"})
+        for item in sorted(eligible, key=objective_priority):
             if item["state"] in TERMINAL | {"deferred_capacity"}:
                 continue
             if metrics["objective_items_processed"] >= remaining:
                 break
             task_started = clock()
             requests_before = metrics["network_requests"]
-            dossier, reason = objective_research(root, item, current=task_started, policy=policy,
+            dossier, reason = objective_research(root, copy.deepcopy(item), current=task_started, policy=policy,
                 canonical_rows=rows, market_session=market_session, allow_network=allow_network, metrics=metrics)
             task_completed = max(clock(), aware(dossier["observed_at"]) if dossier else task_started)
             latest_attachment = next((t for t in reversed(item["transitions"]) if t["to_state"] == "evidence_attached"), {})
@@ -420,7 +421,7 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         if changes:
             transition_batch(store, changes, root=root, current=final_current)
         del changes
-        publish_store(root, store, previous=previous, current=final_current)
+        publish_store(root, store, previous=previous, current=final_current, previous_proof=previous_proof)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
         metrics["shared_objective_work_budget"] = budget
         metrics["canonical_issuers_attempted_before_intake"] = completed
