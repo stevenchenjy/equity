@@ -239,15 +239,21 @@ def transition_batch(store: dict, changes: list[dict], *, root: Path, current: d
 
     Keep the caller's journal unchanged until every event and retained source
     validates. Only the candidate event list is extended; existing event bytes
-    and the ordinary single-transition contract remain unchanged.
+    and the ordinary single-transition contract remain unchanged. An optional
+    per-change recorded_at retains the original event timestamp; the final
+    replay still validates every historical clock and the current-time bound.
     """
     require(isinstance(root, Path), "research_transition_batch_source_root_missing")
-    items = replay(store, root=root, current=current)
+    # This boundary needs only identity and state. Retain every journal and
+    # source check without copying an unused full observation history.
+    with file_hash_validation():
+        items = _replay(store, root=root, current=current, materialize=False)
     require(isinstance(changes, list), "research_transition_batch_invalid")
     candidate = {**store, "events": list(store["events"])}
     for change in changes:
-        require(isinstance(change, dict) and set(change) == {
-            "identity", "target", "owner", "reason", "sources", "blockers"}, "research_transition_batch_invalid")
+        fields = {"identity", "target", "owner", "reason", "sources", "blockers"}
+        require(isinstance(change, dict) and set(change) in (fields, fields | {"recorded_at"}),
+                "research_transition_batch_invalid")
         identity, target = change["identity"], change["target"]
         require(identity in items and target in TRANSITIONS, "research_transition_invalid")
         owner, allowed = TRANSITIONS[target]
@@ -257,7 +263,7 @@ def transition_batch(store: dict, changes: list[dict], *, root: Path, current: d
         append_event(candidate, {"kind": "transition", "opportunity_id": identity,
             "from_state": item["state"], "to_state": target, "owner": change["owner"],
             "reason_code": change["reason"], "sources": change["sources"], "blockers": change["blockers"],
-            "recorded_at": current.isoformat()})
+            "recorded_at": change.get("recorded_at", current.isoformat())})
         item["state"] = target
     validate_journal(candidate, root=root, current=current)
     store["events"].extend(candidate["events"][len(store["events"]):])

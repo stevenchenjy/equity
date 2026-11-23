@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Iterable
 from zoneinfo import ZoneInfo
 
-from portfolio_archive import archive_before_replace
+from portfolio_archive import archive_before_replace, portfolio_position_directory
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -295,7 +295,8 @@ def atomic_write_text(path: Path, content: str) -> None:
             handle.write(content)
             handle.flush()
             os.fsync(handle.fileno())
-        archive_before_replace(path, Path(temporary_name).read_bytes())
+        replacement = Path(temporary_name).read_bytes() if portfolio_position_directory(path) else b""
+        archive_before_replace(path, replacement)
         os.replace(temporary_name, path)
     finally:
         try:
@@ -332,7 +333,8 @@ def atomic_write_csv(
             writer.writerows(rows)
             handle.flush()
             os.fsync(handle.fileno())
-        archive_before_replace(path, Path(temporary_name).read_bytes())
+        replacement = Path(temporary_name).read_bytes() if portfolio_position_directory(path) else b""
+        archive_before_replace(path, replacement)
         os.replace(temporary_name, path)
     finally:
         try:

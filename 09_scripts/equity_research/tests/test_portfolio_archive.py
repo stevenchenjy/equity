@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import stat
 import subprocess
@@ -12,12 +13,71 @@ from unittest.mock import patch
 
 from _support import SCRIPT_DIR  # noqa: F401
 from account_common import write_csv
-from daily_common import atomic_write_text
+import daily_common
+from daily_common import atomic_write_text, atomic_write_json, atomic_write_csv
 import portfolio_archive
 from portfolio_archive import snapshot_active_portfolio, snapshot_current
 
 
 class PortfolioArchiveTests(unittest.TestCase):
+    def test_outside_scope_reports_and_journals_never_read_archive_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            report = root / "04_research/report.json"
+            journal = root / "04_research/opportunities/store.json"
+            rows = root / "03_source_data/observations.csv"
+            for path in (report, journal, rows):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"previous bytes")
+            payload = {"label": "日本語", "revision": 2}
+            expected = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode()
+            with patch.object(Path, "read_bytes", side_effect=AssertionError("out-of-scope archive read")), \
+                    patch.object(daily_common, "archive_before_replace",
+                                 wraps=portfolio_archive.archive_before_replace) as archive:
+                self.assertIsNone(snapshot_current(report))
+                self.assertIsNone(portfolio_archive.archive_before_replace(journal, b"new"))
+                atomic_write_json(report, payload)
+                atomic_write_text(journal, "exact new journal\n")
+                atomic_write_csv(rows, ["ticker", "value"], [{"ticker": "ONE", "value": "a,b"}])
+            self.assertEqual([call.args[1] for call in archive.call_args_list], [b"", b"", b""])
+            self.assertEqual(report.read_bytes(), expected)
+            self.assertEqual(journal.read_bytes(), b"exact new journal\n")
+            self.assertEqual(rows.read_bytes(), b'ticker,value\nONE,"a,b"\n')
+            self.assertFalse((root / "11_archive").exists())
+
+    def test_outside_scope_keeps_symlink_and_nonregular_destination_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "target"
+            target.write_bytes(b"untouched")
+            for kind in ("symlink", "directory"):
+                path = root / ("outside-" + kind)
+                if kind == "symlink":
+                    path.symlink_to(target)
+                else:
+                    path.mkdir()
+                writers = [lambda: snapshot_current(path),
+                    lambda: portfolio_archive.archive_before_replace(path, b"replacement"),
+                    lambda: atomic_write_text(path, "replacement"),
+                    lambda: atomic_write_csv(path, ["ticker"], [{"ticker": "ONE"}])]
+                for writer in writers:
+                    with self.subTest(kind=kind, writer=writer):
+                        with patch.object(Path, "read_bytes", side_effect=AssertionError("unsafe read")):
+                            with self.assertRaisesRegex(ValueError, "non-regular"):
+                                writer()
+                self.assertTrue(path.is_symlink() if kind == "symlink" else path.is_dir())
+            self.assertEqual(target.read_bytes(), b"untouched")
+
+    def test_lexical_scope_preserves_nearest_original_position_parent(self) -> None:
+        path = Path("one/05_risk_and_positions/two/05_risk_and_positions/current.json")
+        expected = next(parent for parent in path.absolute().parents
+                        if parent.name == "05_risk_and_positions")
+        self.assertEqual(portfolio_archive.portfolio_position_directory(path), expected)
+        self.assertEqual(portfolio_archive._archive_location(path, b"bytes"),
+            expected.parent / "11_archive/portfolio_versions.local/current.json" /
+            hashlib.sha256(b"bytes").hexdigest())
+        self.assertIsNone(portfolio_archive.portfolio_position_directory(Path("04_research/report.json")))
+
     def test_changed_managed_outputs_preserve_exact_predecessors(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

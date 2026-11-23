@@ -320,6 +320,8 @@ def intake(root: Path, *, current: datetime) -> dict:
 
 @content_proof_scope()
 def objective(root: Path, *, current: datetime, allow_network: bool = False, clock=None) -> dict:
+    from opportunity_contract import TRANSITIONS
+
     start = time.monotonic()
     clock = clock or (lambda: current)
     policy = validate_policy(read_json(root / POLICY_REL))
@@ -343,6 +345,25 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         market_session = latest_published_market_session(current).isoformat()
         held = held_tickers(root)
         prior_report = read_json(root / REPORT_REL, {})
+        prior_diagnostics = prior_report.get("diagnostics", {})
+        del prior_report
+        changes = []
+        last_transition_clock = aware(store["events"][-1]["recorded_at"]) if store["events"] else None
+
+        def stage(item, state, target, *, owner, reason, sources, blockers, recorded_at):
+            nonlocal last_transition_clock
+            moment = aware(recorded_at.isoformat())
+            require(last_transition_clock is None or moment >= last_transition_clock,
+                    "research_journal_clock_regression")
+            require(target in TRANSITIONS, "research_transition_invalid")
+            expected_owner, allowed = TRANSITIONS[target]
+            require(owner == expected_owner and state in allowed, "research_transition_owner_or_state_invalid")
+            require(bool(reason) and isinstance(blockers, list), "research_transition_reason_missing")
+            changes.append(copy.deepcopy({"identity": item["opportunity_id"], "target": target,
+                "owner": owner, "reason": reason, "sources": sources, "blockers": blockers,
+                "recorded_at": recorded_at.isoformat()}))
+            last_transition_clock = moment
+            return target
         from capital_escalation import research_priorities
         escalation_rank = {ticker: i for i, ticker in enumerate(research_priorities(root, current))}
         reserved = set(backlog.get("reserved_external_event_tickers", [])) if same_cycle else set()
@@ -373,31 +394,35 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
             attempt = {"ticker": item["ticker"], "reason_code": reason, "status": "source_bound" if dossier else "unverified",
                 "dossier_hash": dossier.get("dossier_hash", "") if dossier else "", "canonical_fields_admitted": 0}
             metrics["attempts"].append(attempt)
+            state = item["state"]
             if not item["research_started_at"] and item["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}:
-                transition(store, item["opportunity_id"], "researching", owner="objective_research", reason="objective_source_inspection_started",
-                    sources=item["first_observation"]["sources"], blockers=[], current=task_started)
+                state = stage(item, state, "researching", owner="objective_research", reason="objective_source_inspection_started",
+                    sources=item["first_observation"]["sources"], blockers=[], recorded_at=task_started)
             if dossier:
                 src = retain_input(root, root / EVIDENCE_REL / "history" / (dossier["dossier_hash"]+".json"), available_at=dossier["observed_at"])
                 if item["state"] in {"research_supported", "eligibility_review"}:
-                    transition(store, item["opportunity_id"], "data_blocked", owner="objective_research", reason="changed_objective_evidence_requires_recorded_reassessment",
-                        sources=[src], blockers=["current_business_and_valuation_reassessment"], current=task_completed)
-                if replay(store)[item["opportunity_id"]]["state"] != "researching":
-                    transition(store, item["opportunity_id"], "researching", owner="objective_research", reason="source_bound_objective_work_started",
-                        sources=item["first_observation"]["sources"], blockers=[], current=task_completed)
-                transition(store, item["opportunity_id"], "evidence_attached", owner="objective_research", reason="objective_dossier:"+dossier["dossier_hash"],
-                    sources=[src], blockers=dossier["missing_evidence"], current=task_completed)
+                    state = stage(item, state, "data_blocked", owner="objective_research", reason="changed_objective_evidence_requires_recorded_reassessment",
+                        sources=[src], blockers=["current_business_and_valuation_reassessment"], recorded_at=task_completed)
+                if state != "researching":
+                    state = stage(item, state, "researching", owner="objective_research", reason="source_bound_objective_work_started",
+                        sources=item["first_observation"]["sources"], blockers=[], recorded_at=task_completed)
+                state = stage(item, state, "evidence_attached", owner="objective_research", reason="objective_dossier:"+dossier["dossier_hash"],
+                    sources=[src], blockers=dossier["missing_evidence"], recorded_at=task_completed)
                 metrics["objective_attachments_accepted"] += 1
                 metrics["new_research_numeric_fields"] += len(dossier["facts_available"]) if not latest_attachment else 0
             elif item["state"] != "data_blocked" or item["reason_code"] != reason:
-                transition(store, item["opportunity_id"], "data_blocked", owner="objective_research", reason=reason,
-                    sources=item["observations"][-1]["sources"], blockers=[reason], current=task_completed)
+                stage(item, state, "data_blocked", owner="objective_research", reason=reason,
+                    sources=item["observations"][-1]["sources"], blockers=[reason], recorded_at=task_completed)
         del initial_items
-        final_current = max(clock(), aware(store["events"][-1]["recorded_at"]) if store["events"] else current)
+        final_current = max(clock(), last_transition_clock if last_transition_clock is not None else current)
+        if changes:
+            transition_batch(store, changes, root=root, current=final_current)
+        del changes
         publish_store(root, store, previous=previous, current=final_current)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
         metrics["shared_objective_work_budget"] = budget
         metrics["canonical_issuers_attempted_before_intake"] = completed
-        report = publish_view(root, store, current=final_current, metrics=metrics, diagnostics=prior_report.get("diagnostics", {}))
+        report = publish_view(root, store, current=final_current, metrics=metrics, diagnostics=prior_diagnostics)
         # The backlog's non-authoritative view must expose the accepted progress
         # from this same full refresh, without another objective pass.
         from research_backlog import refresh_attention_view

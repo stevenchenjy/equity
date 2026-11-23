@@ -26,12 +26,15 @@ def _private_directory(path: Path, *, parents: bool = False) -> None:
     path.chmod(0o700)
 
 
+def portfolio_position_directory(path: Path) -> Path | None:
+    """Return the existing lexical archive scope, without reading file bytes."""
+    return next((parent for parent in path.absolute().parents
+                 if parent.name == POSITION_DIRECTORY_NAME), None)
+
+
 def _archive_location(path: Path, source_bytes: bytes) -> Path | None:
     path = path.absolute()
-    position_dir = next(
-        (parent for parent in path.parents if parent.name == POSITION_DIRECTORY_NAME),
-        None,
-    )
+    position_dir = portfolio_position_directory(path)
     if position_dir is None:
         return None
     relative = path.relative_to(position_dir)
@@ -87,15 +90,12 @@ def snapshot_current(path: Path) -> Path | None:
         return None
     if not path.is_file():
         raise ValueError(f"portfolio archive refuses a non-regular file: {path}")
+    position_dir = portfolio_position_directory(path)
+    if position_dir is None:
+        return None
     source_bytes = path.read_bytes()
     destination = _archive_location(path, source_bytes)
-    if destination is None:
-        return None
     # Private archives must not inherit a world-readable default directory mode.
-    position_dir = next(
-        parent for parent in path.absolute().parents
-        if parent.name == POSITION_DIRECTORY_NAME
-    )
     private_root = position_dir.parent / ARCHIVE_RELATIVE
     _private_directory(private_root, parents=True)
     relative_parent = destination.parent.relative_to(private_root)
@@ -148,6 +148,8 @@ def archive_before_replace(path: Path, replacement: bytes) -> Path | None:
         return None
     if not path.is_file():
         raise ValueError(f"portfolio archive refuses a non-regular file: {path}")
+    if portfolio_position_directory(path) is None:
+        return None
     if path.read_bytes() == replacement:
         return None
     return snapshot_current(path)
