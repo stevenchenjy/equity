@@ -243,8 +243,7 @@ def intake(root: Path, *, current: datetime) -> dict:
     start = time.monotonic()
     policy = validate_policy(read_json(root / POLICY_REL))
     with ExclusiveFileLock(root / BASE_REL / "store.lock"):
-        previous = read_json(root / STORE_REL, empty_store())
-        items = replay(previous, root=root, current=current)
+        previous, items, previous_proof = read_validated_store(root, current=current, borrow_history=True)
         # Events are append-only. Candidate transitions append new records and
         # never edit an existing event, so only the event list needs isolation.
         store, metrics = {**previous, "events": list(previous["events"])}, _base_metrics()
@@ -314,7 +313,7 @@ def intake(root: Path, *, current: datetime) -> dict:
         # Publication performs its own complete source-bound replay. Do not
         # retain another full materialized history while that proof is built.
         del current_items, changes
-        publish_store(root, store, previous=previous, current=current)
+        publish_store(root, store, previous=previous, current=current, previous_proof=previous_proof)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
         return publish_view(root, store, current=current, metrics=metrics, diagnostics=diagnostics)
 
