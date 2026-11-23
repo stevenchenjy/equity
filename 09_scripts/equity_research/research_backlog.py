@@ -391,6 +391,14 @@ def attention_rows(root: Path, current: datetime) -> list:
         return []  # Optional research failure never changes canonical authority.
 
 
+def validate_attention_view_base(root: Path) -> None:
+    """Retain the pre-incorporation history and fundamentals publication fence."""
+    with ExclusiveFileLock(root / DOSSIER_REL / "backlog.lock"):
+        report = read_json(root / REPORT_REL, {})
+        if report:
+            validate_report(report, root=root)
+
+
 def refresh_attention_view(root: Path, current: datetime) -> None:
     """Refresh derived backlog visibility after intake evidence; no extra work."""
     with ExclusiveFileLock(root / DOSSIER_REL / "backlog.lock"):
@@ -406,6 +414,7 @@ def refresh_attention_view(root: Path, current: datetime) -> None:
             current=current, previous=report, max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current),
             escalation_priorities=research_priorities(root, current))
         report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts", "priority_basis")})
+        report.pop("attention_report_hash", None)
         report["attention_view_updated_at"] = current.isoformat()
         report["report_hash"] = canonical_sha256({k: v for k, v in report.items() if k != "report_hash"})
         validate_report(report)
@@ -413,13 +422,16 @@ def refresh_attention_view(root: Path, current: datetime) -> None:
         atomic_write_text(root / MARKDOWN_REL, render_report(report))
 
 
-def recompose_final_view(root: Path, current: datetime) -> dict:
+def recompose_final_view(root: Path, current: datetime, *, attention_report_hash: str | None = None) -> dict:
     """Rebuild attention after final financial/analyst inputs, without research.
 
     Later earnings incorporation can legitimately replace the financial CSV.
     Preserve the original objective-run receipt and counts rather than rerun its
     budget or silently rebind its historical claim to different input bytes.
     """
+    if attention_report_hash is not None and (not isinstance(attention_report_hash, str)
+            or not re.fullmatch(r"[0-9a-f]{64}", attention_report_hash)):
+        raise ValueError("research_backlog_attention_report_hash_invalid")
     with ExclusiveFileLock(root / DOSSIER_REL / "backlog.lock"):
         path = root / REPORT_REL
         original_text = path.read_text()
@@ -441,9 +453,17 @@ def recompose_final_view(root: Path, current: datetime) -> dict:
                 dossier = {**dossier, "status": "unverified", "reason_code": "final_source_set_changed_requires_reassessment"}
             dossiers[ticker] = dossier
         from capital_escalation import research_priorities
+        if attention_report_hash is not None:
+            from research_opportunities import read_report
+            attention = read_report(root, current=current)
+            if attention.get("report_hash") != attention_report_hash:
+                raise ValueError("research_backlog_attention_report_changed")
+            opportunities = attention["opportunities"]
+        else:
+            opportunities = attention_rows(root, current)
         view = build_backlog(fundamentals=fundamentals, positions=read_csv(root / POSITIONS_REL),
             research=research, dossiers=dossiers, current=current, previous=report,
-            max_tickers=report["work_budget_tickers"], opportunities=attention_rows(root, current),
+            max_tickers=report["work_budget_tickers"], opportunities=opportunities,
             escalation_priorities=research_priorities(root, current))
         prior_hash, final_hash = report["report_hash"], sha256_file(root / FUNDAMENTALS_REL)
         history_path = root / DOSSIER_REL / "view_history" / f"{prior_hash}.json"
@@ -456,12 +476,17 @@ def recompose_final_view(root: Path, current: datetime) -> dict:
             "prior_report_hash": prior_hash, "prior_report_path": str(history_path.relative_to(root)),
             "fundamentals_sha256_before": report["inputs"]["fundamentals_sha256_after"],
             "fundamentals_sha256_after": final_hash, "objective_attempt_count": 0,
-            "canonical_numeric_updates": 0, "automatic_action_allowed": False})
+            "canonical_numeric_updates": 0, "automatic_action_allowed": False,
+            **({"attention_report_hash": attention_report_hash} if attention_report_hash is not None else {})})
         report.update({k: view[k] for k in ("items", "issuer_queue", "priority_queue", "counts", "priority_basis")})
         report["inputs"].setdefault("fundamentals_sha256_at_objective_completion", report["inputs"]["fundamentals_sha256_after"])
         report["inputs"]["fundamentals_sha256_after"] = final_hash
         report.update(view_recomposed_at=current.isoformat(), source_as_of=research.get("generated_at", ""),
             history_records=len(records), history_head_hash=records[-1]["record_hash"])
+        if attention_report_hash is not None:
+            report["attention_report_hash"] = attention_report_hash
+        else:
+            report.pop("attention_report_hash", None)
         report["report_hash"] = canonical_sha256({k: v for k, v in report.items() if k != "report_hash"})
         validate_report(report, root=root, current=current)
         atomic_write_json(path, report)
@@ -575,7 +600,8 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
     if apply_objective_updates and input_root != output_root:
         raise ValueError("cross_root_objective_updates_forbidden")
     current = aware(current.isoformat())
-    with ExclusiveFileLock(output_root / DOSSIER_REL / "backlog.lock"):
+    from research_opportunities import report_proof_scope
+    with ExclusiveFileLock(output_root / DOSSIER_REL / "backlog.lock"), report_proof_scope():
         path = input_root / FUNDAMENTALS_REL
         original_sha = sha256_file(path)
         fundamentals = read_csv(path)
@@ -634,6 +660,12 @@ def run(*, input_root: Path, output_root: Path, current: datetime, max_tickers: 
             for group in initial["issuer_queue"])
         reservation_limit = min(external_limit, max(0, max_tickers - urgent_canonical))
         reserved_tickers = [ticker for _, ticker in sorted(reserved_events)[:reservation_limit]]
+        # Initial ordering and reservations now retain only derived queue
+        # fields and ticker/deadline tuples. Do not keep this full evidence
+        # view while the final attention report is independently read again.
+        if attention:
+            del item, event
+        del attention
         canonical_budget = max_tickers - len(reserved_tickers)
         attempts, receipts, pending = [], [], []
         run_id = canonical_sha256({"started_at": current.isoformat(), "previous_hash": records[-1]["record_hash"] if records else "",

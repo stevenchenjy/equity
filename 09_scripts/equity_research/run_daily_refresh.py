@@ -19,6 +19,7 @@ from typing import Any
 from bounded_refresh_process import run_stage
 
 from portfolio_archive import snapshot_active_portfolio
+from workflow_evaluation import aware
 
 from daily_common import (
     DAILY_PIPELINE_LOCK_PATH,
@@ -33,6 +34,7 @@ from daily_common import (
     load_inhibit,
     log_daily_run,
     now_et,
+    read_json,
 )
 
 
@@ -136,8 +138,55 @@ CURRENT_STATUS_SPEC = (
 PROGRESS_REL = "00_project_control/run_logs/daily_refresh_progress.local.json"
 
 
+def _attention_deferral(progress: dict | None) -> dict | None:
+    """Bind an explicit deferral to this run's actual objective marker."""
+    if progress is None:
+        return None
+    step = next((row for row in reversed(progress.get("steps", []))
+                 if row.get("name") == "research_opportunity_objective"
+                 and row.get("attention_view_deferral_requested")), None)
+    if step is None:
+        return None
+    from opportunity_contract import BASE_REL
+    marker = read_json(ROOT / BASE_REL / "last_objective_run.json", {})
+    if (not isinstance(marker, dict) or step.get("exit_code") != 0 or step.get("attention_view_deferred") is not True
+            or marker.get("exit_code") != 0 or marker.get("stage") != "objective"
+            or marker.get("attention_view_deferred") is not True
+            or any(marker.get(key) != step.get(key) for key in
+                   ("started_at", "completed_at", "attention_report_hash", "attention_deferral_completed_at"))
+            or not isinstance(step.get("attention_report_hash"), str)
+            or len(step["attention_report_hash"]) != 64
+            or not aware(progress["started_at"]) <= aware(step["started_at"])
+                <= aware(step["attention_deferral_completed_at"]) <= aware(step["completed_at"])):
+        raise ValueError("coordinated_attention_deferral_unverified")
+    return step
+
+
+def _require_final_attention_view(progress: dict | None, current: datetime) -> None:
+    deferred = _attention_deferral(progress)
+    if deferred is None:
+        return
+    from research_backlog import REPORT_REL, validate_report
+    step = next((row for row in reversed(progress["steps"])
+                 if row.get("name") == "research_backlog_view"), {})
+    marker = read_json(ROOT / "08_reviews/research_backlog.local/last_view_run.json", {})
+    report = read_json(ROOT / REPORT_REL, {})
+    validate_report(report, root=ROOT, current=current)
+    if (not isinstance(marker, dict) or step.get("exit_code") != 0 or marker.get("exit_code") != 0
+            or marker.get("schema_version") != "equity_research_backlog_run_v1"
+            or any(marker.get(key) != step.get(key) for key in ("started_at", "completed_at"))
+            or not step.get("backlog_view_report_hash")
+            or report.get("report_hash") != step["backlog_view_report_hash"]
+            or marker.get("report_hash") != report["report_hash"]
+            or report.get("attention_report_hash") != deferred["attention_report_hash"]
+            or not aware(deferred["completed_at"]) <= aware(step["started_at"])
+                <= aware(report["view_recomposed_at"]) <= aware(step["completed_at"]) <= current):
+        raise ValueError("coordinated_attention_final_view_unfulfilled")
+
+
 def _progress_step(progress: dict[str, Any] | None, spec: tuple, market_snapshot_mode: str,
-                   *, deadline: float | None = None, refresh_public: bool | None = None) -> dict:
+                   *, deadline: float | None = None, refresh_public: bool | None = None,
+                   defer_attention_view: bool = False) -> dict:
     """Persist the active child and completed stages before another can be killed.
 
     This separate diagnostic can never satisfy daily-refresh readiness. The
@@ -160,9 +209,21 @@ def _progress_step(progress: dict[str, Any] | None, spec: tuple, market_snapshot
             if progress is not None:
                 progress["running_stage_pid"] = pid
                 atomic_write_json(ROOT / PROGRESS_REL, progress)
-        result = run_step(*spec, market_snapshot_mode=market_snapshot_mode,
-                          maximum_child_seconds=remaining, refresh_public=refresh_public,
-                          on_child_started=started)
+        try:
+            deferred = _attention_deferral(progress) if spec[0] in {"research_backlog_view", "daily_decision"} else None
+            if spec[0] == "daily_decision":
+                _require_final_attention_view(progress, now_et())
+        except (OSError, ValueError, KeyError, TypeError):
+            stamp = iso_now()
+            result = _record_work_step({"name": spec[0], "script": spec[1], "allowed_to_fail": spec[2],
+                "started_at": stamp, "completed_at": stamp, "duration_seconds": 0, "exit_code": 1,
+                "outcome": "failed", "result_code": "coordinated_attention_view_unfulfilled"})
+        else:
+            result = run_step(*spec, market_snapshot_mode=market_snapshot_mode,
+                              maximum_child_seconds=remaining, refresh_public=refresh_public,
+                              on_child_started=started, defer_attention_view=defer_attention_view,
+                              attention_report_hash=deferred["attention_report_hash"]
+                                  if deferred is not None and spec[0] == "research_backlog_view" else None)
     if result["name"] == "market_refresh" and result["exit_code"] == 0:
         from market_admission import capture
         try:
@@ -197,15 +258,52 @@ def _record_work_step(result: dict[str, Any]) -> dict[str, Any]:
             atomic_write_json(base / "last_run.json", marker)
     if result["name"] in {"research_opportunity_intake", "research_opportunity_objective"}:
         stage = "intake" if result["name"].endswith("intake") else "objective"
-        atomic_write_json(ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json"), {
-            "stage": stage, **{key: result[key] for key in ("started_at", "completed_at", "exit_code")}})
+        marker_path = ROOT / ("04_research/company_research/opportunities.local/last_"+stage+"_run.json")
+        if result.get("attention_view_deferral_requested") and result["exit_code"] == 0:
+            try:
+                child = read_json(marker_path, {})
+                valid = (isinstance(child, dict) and child.get("exit_code") == 0 and child.get("stage") == "objective"
+                    and child.get("attention_view_deferred") is True
+                    and isinstance(child.get("report_hash"), str) and len(child["report_hash"]) == 64
+                    and child.get("attention_report_hash") == child["report_hash"]
+                    and aware(result["started_at"]) <= aware(child["started_at"])
+                        <= aware(child["completed_at"]) <= aware(result["completed_at"]))
+            except (OSError, KeyError, TypeError, ValueError):
+                valid = False
+            if valid:
+                result.update(attention_view_deferred=True, attention_report_hash=child["report_hash"],
+                              attention_deferral_completed_at=child["completed_at"])
+            else:
+                result.update(exit_code=1, outcome="failed", result_code="coordinated_attention_deferral_unverified")
+        atomic_write_json(marker_path, {"stage": stage,
+            **{key: result[key] for key in ("started_at", "completed_at", "exit_code")},
+            **{key: result[key] for key in ("attention_view_deferred", "attention_report_hash",
+                "attention_deferral_completed_at") if key in result}})
     if result["name"] in {"research_backlog", "research_backlog_view"}:
         # Persist before composing the decision, including a killed child that
         # could not replace its own previous success report.
         marker = "last_view_run.json" if result["name"] == "research_backlog_view" else "last_run.json"
-        atomic_write_json(ROOT / "08_reviews/research_backlog.local" / marker, {
+        marker_path = ROOT / "08_reviews/research_backlog.local" / marker
+        extra = {}
+        if result["name"] == "research_backlog_view" and result["exit_code"] == 0:
+            try:
+                child = read_json(marker_path, {})
+                valid = (isinstance(child, dict) and child.get("exit_code") == 0
+                    and child.get("schema_version") == "equity_research_backlog_run_v1"
+                    and isinstance(child.get("report_hash"), str) and len(child["report_hash"]) == 64
+                    and aware(result["started_at"]) <= aware(child["started_at"])
+                        <= aware(child["completed_at"]) <= aware(result["completed_at"]))
+            except (OSError, KeyError, ValueError, TypeError):
+                valid = False
+            if valid:
+                result["backlog_view_report_hash"] = child["report_hash"]
+                extra["report_hash"] = child["report_hash"]
+            elif result.get("attention_report_hash_required") is not None:
+                result.update(exit_code=1, outcome="failed", result_code="coordinated_attention_final_view_unverified")
+        atomic_write_json(marker_path, {
             "schema_version": "equity_research_backlog_run_v1",
             **{key: result[key] for key in ("started_at", "completed_at", "exit_code")},
+            **extra,
         })
     return result
 
@@ -220,8 +318,16 @@ def run_step(
     refresh_public: bool | None = None,
     publication_only: bool = False,
     on_child_started=None,
+    defer_attention_view: bool = False,
+    attention_report_hash: str | None = None,
 ) -> dict[str, Any]:
-    started_at = iso_now()
+    if defer_attention_view and name != "research_opportunity_objective":
+        raise ValueError("attention_view_deferral_requires_objective_step")
+    if attention_report_hash is not None and name != "research_backlog_view":
+        raise ValueError("attention_report_binding_requires_final_view_step")
+    coordinated = defer_attention_view or attention_report_hash is not None
+    stamp = (lambda: now_et().isoformat()) if coordinated else iso_now
+    started_at = stamp()
     start_clock = time.monotonic()
     from decision_dependencies import observe
     dependency_before = observe(ROOT, name)
@@ -255,12 +361,14 @@ def run_step(
         (["--refresh"] if public_network else [])
         if name == "earnings_event_discovery"
         else
-        ["--stage", "objective", *(["--refresh"] if public_network else [])]
+        ["--stage", "objective", *(["--refresh"] if public_network else []),
+         *(["--defer-attention-view"] if defer_attention_view else [])]
         if name == "research_opportunity_objective"
         else
         ["--apply-objective-updates"]
         if name == "research_backlog"
-        else ["--recompose-only"]
+        else ["--recompose-only", *(["--attention-report-hash", attention_report_hash]
+                                   if attention_report_hash is not None else [])]
         if name == "research_backlog_view"
         else ["--reuse-validated-snapshot"]
         if name == "market_refresh" and market_snapshot_mode == MARKET_SNAPSHOT_REUSE
@@ -290,10 +398,12 @@ def run_step(
         )
     except subprocess.TimeoutExpired:
         return _record_work_step({
-            "started_at": started_at, "completed_at": iso_now(),
+            "started_at": started_at, "completed_at": stamp(),
             "duration_seconds": round(time.monotonic() - start_clock, 3),
             "name": name,
             "dependency_before": dependency_before,
+            **({"attention_view_deferral_requested": True} if defer_attention_view else {}),
+            **({"attention_report_hash_required": attention_report_hash} if attention_report_hash is not None else {}),
             "script": script_name,
             "exit_code": 124,
             "allowed_to_fail": allowed_to_fail,
@@ -301,10 +411,12 @@ def run_step(
             "result_code": f"child_timeout_{timeout_seconds}_seconds",
         })
     return _record_work_step({
-        "started_at": started_at, "completed_at": iso_now(),
+        "started_at": started_at, "completed_at": stamp(),
         "duration_seconds": round(time.monotonic() - start_clock, 3),
         "name": name,
             "dependency_before": dependency_before,
+        **({"attention_view_deferral_requested": True} if defer_attention_view else {}),
+        **({"attention_report_hash_required": attention_report_hash} if attention_report_hash is not None else {}),
         "script": script_name,
         "exit_code": completed.returncode,
         "allowed_to_fail": allowed_to_fail,
@@ -340,11 +452,16 @@ def consistent_steps(market_snapshot_mode, *, progress=None, deadline=None, refr
     """
     steps, retries = [], []
     boundary = next(i for i, spec in enumerate(STEP_SPECS) if spec[0]=='earnings_incorporation')
+    names = [spec[0] for spec in STEP_SPECS]
+    coordinated = (progress is not None and all(name in names for name in
+        ("research_opportunity_objective", "research_backlog_view", "daily_decision"))
+        and names.index("research_opportunity_objective") < names.index("research_backlog_view") < names.index("daily_decision"))
     for attempt in range(3):
         with research_context(ROOT) as version:
             specs = STEP_SPECS if attempt==0 else STEP_SPECS[boundary:]
             results = [_progress_step(progress, spec, market_snapshot_mode, deadline=deadline,
-                                      refresh_public=refresh_public) for spec in specs]
+                                      refresh_public=refresh_public,
+                                      defer_attention_view=coordinated and spec[0] == "research_opportunity_objective") for spec in specs]
             if attempt==0:
                 steps=results
             else:

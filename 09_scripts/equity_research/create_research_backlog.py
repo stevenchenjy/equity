@@ -17,7 +17,11 @@ def main():
         help="Explicitly publish verified additive numeric improvements and matching SEC receipts; same root only.")
     parser.add_argument("--recompose-only", action="store_true",
         help="Refresh gaps and priority from final admitted inputs; no objective work or canonical writes.")
+    parser.add_argument("--attention-report-hash",
+        help="Coordinated final view must validate this exact completed objective attention report")
     args = parser.parse_args()
+    if args.attention_report_hash is not None and not args.recompose_only:
+        parser.error("--attention-report-hash requires --recompose-only")
     if args.recompose_only and (args.apply_objective_updates or args.max_tickers is not None or args.input_root.resolve() != args.output_root.resolve()):
         parser.error("--recompose-only requires one root and no objective work flags")
     max_tickers = args.max_tickers
@@ -29,7 +33,7 @@ def main():
     marker = {"schema_version": "equity_research_backlog_run_v1", "started_at": started.isoformat(),
         "automatic_action_allowed": False}
     try:
-        report = (recompose_final_view(args.output_root, started) if args.recompose_only else
+        report = (recompose_final_view(args.output_root, started, attention_report_hash=args.attention_report_hash) if args.recompose_only else
             run(input_root=args.input_root, output_root=args.output_root, current=started,
                 max_tickers=max_tickers, apply_objective_updates=args.apply_objective_updates))
     except (ValueError, KeyError, TypeError, OSError):

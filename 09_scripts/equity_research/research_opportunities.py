@@ -320,7 +320,8 @@ def intake(root: Path, *, current: datetime) -> dict:
 
 
 @content_proof_scope()
-def objective(root: Path, *, current: datetime, allow_network: bool = False, clock=None) -> dict:
+def objective(root: Path, *, current: datetime, allow_network: bool = False, clock=None,
+              defer_attention_view: bool = False) -> dict:
     from opportunity_contract import TRANSITIONS
 
     start = time.monotonic()
@@ -426,8 +427,11 @@ def objective(root: Path, *, current: datetime, allow_network: bool = False, clo
         report = publish_view(root, store, current=final_current, metrics=metrics, diagnostics=prior_diagnostics)
         # The backlog's non-authoritative view must expose the accepted progress
         # from this same full refresh, without another objective pass.
-        from research_backlog import refresh_attention_view
-        refresh_attention_view(root, final_current)
+        from research_backlog import refresh_attention_view, validate_attention_view_base
+        if defer_attention_view:
+            validate_attention_view_base(root)
+        else:
+            refresh_attention_view(root, final_current)
         return report
 
 
