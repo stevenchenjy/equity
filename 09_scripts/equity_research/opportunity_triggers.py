@@ -163,7 +163,8 @@ def validate_approval(record: dict, *, root: Path, current: datetime) -> dict:
     return record
 
 
-def collect_triggers(root: Path, *, current: datetime, policy: dict) -> tuple[list, dict]:
+def collect_triggers(root: Path, *, current: datetime, policy: dict,
+                     known_schedule_ids: set[str] | None = None) -> tuple[list, dict]:
     produced_by = producer(root, policy)
     packets, diagnostics = [], {"unverified": [], "experiment_review_only": [], "network_requests": 0}
     # The public earnings calendar is an independent research lead, including
@@ -173,7 +174,12 @@ def collect_triggers(root: Path, *, current: datetime, policy: dict) -> tuple[li
         from earnings_events import event_observations
         events, coverage = event_observations(root, current=current)
         diagnostics["earnings_calendar"] = coverage
-        known_schedules = {record.get("observation", {}).get("evidence", {}).get("event", {}).get("event_id")
+        # Intake has already validated and replayed this journal. Reuse only
+        # its schedule identities, not a report, source proof or eligibility.
+        # Standalone callers without a projection still read the journal.
+        # An explicitly empty projection must not trigger another read.
+        known_schedules = known_schedule_ids if known_schedule_ids is not None else {
+            record.get("observation", {}).get("evidence", {}).get("event", {}).get("event_id")
             for record in read_json(root / "04_research/company_research/opportunities.local/store.json", {}).get("events", [])
             if record.get("observation", {}).get("trigger") == "upcoming_earnings_calendar"}
         for event in events:

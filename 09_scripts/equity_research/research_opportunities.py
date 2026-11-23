@@ -203,12 +203,16 @@ def intake(root: Path, *, current: datetime) -> dict:
                 metrics["expired"] += 1
         if expirations:
             transition_batch(store, expirations, root=root, current=current)
-        packets, diagnostics = collect_triggers(root, current=current, policy=policy)
         seen = {p["observation_id"] for i in items.values() for p in i["observations"]}
         by_ticker = {i["ticker"]: identity for identity, i in items.items()}
         latest_schedules = {(i["ticker"], p["evidence"]["event"]["event_id"]): p
             for i in items.values() for p in i["observations"]
             if p.get("trigger") == "upcoming_earnings_calendar"}
+        # These small lookup projections contain everything intake still
+        # needs. Release the full copied history before collecting new leads.
+        del items, expirations
+        packets, diagnostics = collect_triggers(root, current=current, policy=policy,
+            known_schedule_ids={event_id for _, event_id in latest_schedules})
         admitted = 0
         for p in sorted(packets, key=lambda i: priority(i, held, current=current)):
             schedule_key = ((p["ticker"], p["evidence"]["event"]["event_id"])
@@ -244,6 +248,7 @@ def intake(root: Path, *, current: datetime) -> dict:
             seen.add(p["observation_id"])
             if schedule_key:
                 latest_schedules[schedule_key] = p
+        del seen, by_ticker, latest_schedules, packets
         # A separately accepted analyst review can move deferred work into an
         # active state. Reconcile that real lifecycle transition before new
         # admissions; preserve its assessment and the displaced unfinished work.
@@ -289,6 +294,9 @@ def intake(root: Path, *, current: datetime) -> dict:
             active = [i for i in current_items.values() if i["state"] not in active_states]
             admitted += 1
             metrics["new_opportunities"] += 1
+        # Publication performs its own complete source-bound replay. Do not
+        # retain another full materialized history while that proof is built.
+        del current_items, active
         publish_store(root, store, previous=previous, current=current)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
         return publish_view(root, store, current=current, metrics=metrics, diagnostics=diagnostics)

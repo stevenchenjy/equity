@@ -42,6 +42,101 @@ def row(ticker="SYN"):
 
 
 class OpportunityTests(unittest.TestCase):
+    def calendar_fixture(self):
+        from opportunity_contract import append_event
+        path = self.root / "synthetic-calendar.json"
+        atomic_write_json(path, {"source": "synthetic calendar fixture"})
+        source = retain_input(self.root, path, available_at=(NOW-timedelta(hours=1)).isoformat())
+
+        def event(identity, ticker, *, blocked=False):
+            return {"event_id": identity, "ticker": ticker, "timing": "pre_event",
+                "status": "schedule_conflict" if blocked else "detected",
+                "blockers": ["synthetic_schedule_conflict"] if blocked else [],
+                "research_deadline_at": (NOW+timedelta(hours=2)).isoformat(),
+                "first_detected_at": (NOW-timedelta(hours=1)).isoformat(), "sources": [source]}
+
+        first = packet(ticker="EARN", family="catalyst", trigger="upcoming_earnings_calendar",
+            evidence={"event": event("known-schedule", "EARN")}, sources=[source],
+            current=NOW-timedelta(minutes=30), produced_by={"implementation_sha256": "a"*64,
+                "policy_sha256": "b"*64})
+        identity = canonical_sha256({"first_observation_id": first["observation_id"], "ticker": "EARN"})
+        store = empty_store()
+        append_event(store, {"kind": "detected", "opportunity_id": identity,
+            "recorded_at": (NOW-timedelta(minutes=30)).isoformat(), "observation": first,
+            "owner": "research_orchestration", "to_state": "deferred_capacity",
+            "reason_code": "research_capacity_wait", "blockers": ["bounded_research_capacity"]})
+        atomic_write_json(self.root / STORE_REL, store)
+        return [event("known-schedule", "EARN", blocked=True),
+            event("unknown-blocked", "BLOCK", blocked=True), event("new-schedule", "FRESH")]
+
+    def test_trigger_schedule_hint_matches_standalone_and_empty_hint_avoids_store_read(self):
+        import opportunity_triggers as triggers
+        events = self.calendar_fixture()
+        policy = read_json(self.root / POLICY_REL)
+        original_read = triggers.read_json
+
+        def no_redundant_store_read(path, *args, **kwargs):
+            if path == self.root / STORE_REL:
+                raise AssertionError("validated journal was read a second time")
+            return original_read(path, *args, **kwargs)
+
+        with patch("earnings_events.event_observations", return_value=(events, {"status": "synthetic"})):
+            standalone = triggers.collect_triggers(self.root, current=NOW, policy=policy)
+            with patch.object(triggers, "read_json", side_effect=no_redundant_store_read):
+                hinted = triggers.collect_triggers(self.root, current=NOW, policy=policy,
+                    known_schedule_ids={"known-schedule"})
+                empty = triggers.collect_triggers(self.root, current=NOW, policy=policy,
+                    known_schedule_ids=set())
+        self.assertEqual(json.dumps(hinted, sort_keys=True), json.dumps(standalone, sort_keys=True))
+        calendar_ids = lambda result: {p["evidence"]["event"]["event_id"] for p in result[0]
+            if p["trigger"] == "upcoming_earnings_calendar"}
+        self.assertEqual(calendar_ids(hinted), {"known-schedule", "new-schedule"})
+        self.assertEqual(calendar_ids(empty), {"new-schedule"})
+
+    def test_intake_schedule_hint_preserves_exact_store_report_and_rendered_view(self):
+        import opportunity_triggers as triggers
+        events = self.calendar_fixture()
+        with tempfile.TemporaryDirectory() as directory:
+            legacy_root = Path(directory) / "legacy"
+            shutil.copytree(self.root, legacy_root)
+            original_read = triggers.read_json
+
+            def no_redundant_store_read(path, *args, **kwargs):
+                if path == self.root / STORE_REL:
+                    raise AssertionError("intake reread the already validated journal")
+                return original_read(path, *args, **kwargs)
+
+            def standalone_collector(root, *, current, policy, known_schedule_ids=None):
+                return triggers.collect_triggers(root, current=current, policy=policy)
+
+            with (patch("earnings_events.event_observations", return_value=(events, {"status": "synthetic"})),
+                  patch("research_opportunities.time.monotonic", return_value=100)):
+                with patch.object(triggers, "read_json", side_effect=no_redundant_store_read):
+                    fast = intake(self.root, current=NOW)
+                with patch("research_opportunities.collect_triggers", side_effect=standalone_collector):
+                    legacy = intake(legacy_root, current=NOW)
+            self.assertEqual(json.dumps(fast, sort_keys=True), json.dumps(legacy, sort_keys=True))
+            for path in (STORE_REL, REPORT_REL, Path("08_reviews/current/research_opportunities.local.md")):
+                self.assertEqual((self.root / path).read_bytes(), (legacy_root / path).read_bytes())
+
+    def test_schedule_hint_does_not_waive_concurrent_store_publication_fence(self):
+        from research_opportunities import collect_triggers
+        intake(self.root, current=NOW)
+        external_bytes = []
+
+        def changed_store(*args, **kwargs):
+            result = collect_triggers(*args, **kwargs)
+            external = read_json(self.root / STORE_REL)
+            external["concurrent_writer_marker"] = "preserve these exact external bytes"
+            atomic_write_json(self.root / STORE_REL, external)
+            external_bytes.append((self.root / STORE_REL).read_bytes())
+            return result
+
+        with patch("research_opportunities.collect_triggers", side_effect=changed_store):
+            with self.assertRaisesRegex(ValueError, "research_store_changed_before_publication"):
+                intake(self.root, current=NOW)
+        self.assertEqual((self.root / STORE_REL).read_bytes(), external_bytes[0])
+
     def test_intake_reuses_source_proofs_but_rechecks_changes_between_replays(self):
         first = intake(self.root, current=NOW)
         source = self.root / first['opportunities'][0]['first_observation']['sources'][0]['path']
