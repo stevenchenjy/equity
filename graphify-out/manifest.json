@@ -260,8 +260,8 @@
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_daily_refresh.py": {
-    "mtime": 1795425531.9601302,
-    "ast_hash": "2081bd6d220a3b8b298d2d4764a6467d",
+    "mtime": 1795427487.480294,
+    "ast_hash": "345ae66b8ea4569c0647fd430435f547",
     "semantic_hash": ""
   },
   "09_scripts/equity_research/run_daily_refresh_scheduler.py": {
@@ -290,8 +290,8 @@
     "semantic_hash": ""
   },
   "00_project_control/daily_delivery_policy.md": {
-    "mtime": 1795425531.911862,
-    "ast_hash": "9adeb3eecc3d87f18041b463e8cbc93f",
+    "mtime": 1795427487.4757032,
+    "ast_hash": "dccbda14d3d3ba21728d56e1e919b9b3",
     "semantic_hash": ""
   },
   "00_project_control/daily_research_policy.md": {
@@ -1580,8 +1580,8 @@
     "semantic_hash": ""
   },
   "01_policies/production_strategies.json": {
-    "mtime": 1795425531.9518886,
-    "ast_hash": "cd4cf064a09d160658b1badf61166ef0",
+    "mtime": 1795427487.4786448,
+    "ast_hash": "c2546da350a72a3e9a7e3fe88dcf69f4",
     "semantic_hash": ""
   },
   "03_source_data/equity_research/sec_acceptance_extensions/sec_acceptance_extension_v34.json": {
@@ -3042,6 +3042,11 @@
   "09_scripts/equity_research/tests/test_backup_host_capacity.py": {
     "mtime": 1795425531.9690123,
     "ast_hash": "91226d0813fd34ce168b41465e449015",
+    "semantic_hash": ""
+  },
+  "09_scripts/equity_research/tests/test_advisory_tail_priority.py": {
+    "mtime": 1795427487.4872909,
+    "ast_hash": "24f34713b53116aa25289e46c9415271",
     "semantic_hash": ""
   }
 }
