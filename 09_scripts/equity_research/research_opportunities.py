@@ -183,6 +183,60 @@ def _earnings_schedule_evidence(evidence: dict) -> dict:
     return stable
 
 
+def _queue_transitions(items: dict, held: set[str], policy: dict, *, current: datetime) -> tuple[list, int]:
+    """Plan the existing ordered queue changes without replaying per change.
+
+    Only local lifecycle fields change during this plan. Evidence, the held
+    set and the review clock stay fixed, so each attention key is computed
+    once. The durable batch still validates the whole journal and its sources.
+    """
+    planned = {identity: dict(item) for identity, item in items.items()}
+    keys = {identity: priority(item, held, current=current) for identity, item in planned.items()}
+    inactive = TERMINAL | {"deferred_capacity"}
+    active = [item for item in planned.values() if item["state"] not in inactive]
+    changes = []
+
+    def key(item):
+        return keys[item["opportunity_id"]]
+
+    def stage(item, target, reason, blockers):
+        changes.append({"identity": item["opportunity_id"], "target": target,
+            "owner": "research_orchestration", "reason": reason,
+            "sources": item["observations"][-1]["sources"], "blockers": blockers})
+        item.update(state=target, owner="research_orchestration", reason_code=reason, blockers=blockers)
+
+    while len(active) > policy["active_capacity"]:
+        victims = [item for item in active if key(item)[0] > 0
+            and item["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+        if not victims:
+            break
+        stage(max(victims, key=key), "deferred_capacity",
+            "research_capacity_rebalanced_after_analyst_review", ["bounded_research_capacity"])
+        active = [item for item in planned.values() if item["state"] not in inactive]
+
+    # The old loop iterates a snapshot even after each replay. A victim that
+    # becomes deferred during admission is not a new candidate in this run.
+    candidates = [item for item in sorted(planned.values(), key=key) if item["state"] == "deferred_capacity"]
+    admitted = 0
+    for item in candidates:
+        if admitted >= policy["new_opportunities_per_run"]:
+            break
+        if len(active) >= policy["active_capacity"]:
+            victims = [other for other in active if key(other)[0] > 0 and key(other) > key(item)
+                and other["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+            event = upcoming_earnings(item, current)
+            urgent = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+            if not (key(item)[0] == 0 or urgent) or not victims:
+                continue
+            stage(max(victims, key=key), "deferred_capacity",
+                "research_capacity_reserved_for_held_or_adverse_work" if not urgent
+                else "research_capacity_reserved_for_pre_earnings_deadline", ["bounded_research_capacity"])
+        stage(item, "queued", "bounded_attention_admission", [])
+        active = [other for other in planned.values() if other["state"] not in inactive]
+        admitted += 1
+    return changes, admitted
+
+
 @content_proof_scope()
 def intake(root: Path, *, current: datetime) -> dict:
     start = time.monotonic()
@@ -213,7 +267,6 @@ def intake(root: Path, *, current: datetime) -> dict:
         del items, expirations
         packets, diagnostics = collect_triggers(root, current=current, policy=policy,
             known_schedule_ids={event_id for _, event_id in latest_schedules})
-        admitted = 0
         for p in sorted(packets, key=lambda i: priority(i, held, current=current)):
             schedule_key = ((p["ticker"], p["evidence"]["event"]["event_id"])
                 if p.get("trigger") == "upcoming_earnings_calendar" else None)
@@ -252,51 +305,14 @@ def intake(root: Path, *, current: datetime) -> dict:
         # A separately accepted analyst review can move deferred work into an
         # active state. Reconcile that real lifecycle transition before new
         # admissions; preserve its assessment and the displaced unfinished work.
-        active_states = TERMINAL | {"deferred_capacity"}
         current_items = replay(store)
-        active = [i for i in current_items.values() if i["state"] not in active_states]
-        while len(active) > policy["active_capacity"]:
-            victims = [i for i in active if priority(i, held, current=current)[0] > 0
-                and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
-            if not victims:
-                break
-            victim = max(victims, key=lambda i: priority(i, held, current=current))
-            transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
-                reason="research_capacity_rebalanced_after_analyst_review", sources=victim["observations"][-1]["sources"],
-                blockers=["bounded_research_capacity"], current=current)
-            current_items = replay(store)
-            active = [i for i in current_items.values() if i["state"] not in active_states]
-        # Rank the complete pool before allocating scarce research attention.
-        # A newly observed held/adverse item can displace lower-priority work;
-        # its original evidence/unfinished task remains retained as deferred.
-        for item in sorted(current_items.values(), key=lambda i: priority(i, held, current=current)):
-            if item["state"] != "deferred_capacity" or admitted >= policy["new_opportunities_per_run"]:
-                continue
-            if len(active) >= policy["active_capacity"]:
-                victims = [i for i in active if priority(i, held, current=current)[0] > 0
-                    and priority(i, held, current=current) > priority(item, held, current=current)
-                    and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
-                event = upcoming_earnings(item, current)
-                urgent_event = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
-                if not (priority(item, held, current=current)[0] == 0 or urgent_event) or not victims:
-                    continue
-                victim = max(victims, key=lambda i: priority(i, held, current=current))
-                transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
-                    reason="research_capacity_reserved_for_held_or_adverse_work" if not urgent_event else "research_capacity_reserved_for_pre_earnings_deadline",
-                    sources=victim["observations"][-1]["sources"],
-                    blockers=["bounded_research_capacity"], current=current)
-            transition(store, item["opportunity_id"], "queued", owner="research_orchestration", reason="bounded_attention_admission",
-                sources=item["observations"][-1]["sources"], blockers=[], current=current)
-            # Replaying the entire durable journal for every deferred lead is
-            # quadratic when a full queue admits none. Only actual mutations
-            # can change the active projection or the next victim choice.
-            current_items = replay(store)
-            active = [i for i in current_items.values() if i["state"] not in active_states]
-            admitted += 1
-            metrics["new_opportunities"] += 1
+        changes, admitted = _queue_transitions(current_items, held, policy, current=current)
+        if changes:
+            transition_batch(store, changes, root=root, current=current)
+        metrics["new_opportunities"] += admitted
         # Publication performs its own complete source-bound replay. Do not
         # retain another full materialized history while that proof is built.
-        del current_items, active
+        del current_items, changes
         publish_store(root, store, previous=previous, current=current)
         metrics["duration_seconds"] = round(time.monotonic()-start, 4)
         return publish_view(root, store, current=current, metrics=metrics, diagnostics=diagnostics)

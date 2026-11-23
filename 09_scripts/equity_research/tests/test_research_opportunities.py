@@ -409,6 +409,267 @@ class OpportunityTests(unittest.TestCase):
         self.assertEqual(len(first["opportunities"]), len(later["opportunities"]))
         self.assertTrue(all(i["state"] == "expired" for i in later["opportunities"]))
 
+    def legacy_queue(self, store, held, policy, current):
+        """The prior per-transition queue path, retained as an output oracle."""
+        from opportunity_contract import TERMINAL
+        from research_opportunities import priority, upcoming_earnings
+        from workflow_evaluation import aware
+        admitted = 0
+        metrics = {"new_opportunities": 0}
+        active_states = TERMINAL | {"deferred_capacity"}
+        current_items = replay(store)
+        active = [i for i in current_items.values() if i["state"] not in active_states]
+        while len(active) > policy["active_capacity"]:
+            victims = [i for i in active if priority(i, held, current=current)[0] > 0
+                and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+            if not victims:
+                break
+            victim = max(victims, key=lambda i: priority(i, held, current=current))
+            transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
+                reason="research_capacity_rebalanced_after_analyst_review", sources=victim["observations"][-1]["sources"],
+                blockers=["bounded_research_capacity"], current=current)
+            current_items = replay(store)
+            active = [i for i in current_items.values() if i["state"] not in active_states]
+        # Rank the complete pool before allocating scarce research attention.
+        # A newly observed held/adverse item can displace lower-priority work;
+        # its original evidence/unfinished task remains retained as deferred.
+        for item in sorted(current_items.values(), key=lambda i: priority(i, held, current=current)):
+            if item["state"] != "deferred_capacity" or admitted >= policy["new_opportunities_per_run"]:
+                continue
+            if len(active) >= policy["active_capacity"]:
+                victims = [i for i in active if priority(i, held, current=current)[0] > 0
+                    and priority(i, held, current=current) > priority(item, held, current=current)
+                    and i["state"] in {"queued", "data_blocked", "evidence_attached", "insufficient_evidence"}]
+                event = upcoming_earnings(item, current)
+                urgent_event = event and aware(event["research_deadline_at"]) - current <= timedelta(hours=48)
+                if not (priority(item, held, current=current)[0] == 0 or urgent_event) or not victims:
+                    continue
+                victim = max(victims, key=lambda i: priority(i, held, current=current))
+                transition(store, victim["opportunity_id"], "deferred_capacity", owner="research_orchestration",
+                    reason="research_capacity_reserved_for_held_or_adverse_work" if not urgent_event else "research_capacity_reserved_for_pre_earnings_deadline",
+                    sources=victim["observations"][-1]["sources"],
+                    blockers=["bounded_research_capacity"], current=current)
+            transition(store, item["opportunity_id"], "queued", owner="research_orchestration", reason="bounded_attention_admission",
+                sources=item["observations"][-1]["sources"], blockers=[], current=current)
+            # Replaying the entire durable journal for every deferred lead is
+            # quadratic when a full queue admits none. Only actual mutations
+            # can change the active projection or the next victim choice.
+            current_items = replay(store)
+            active = [i for i in current_items.values() if i["state"] not in active_states]
+            admitted += 1
+            metrics["new_opportunities"] += 1
+        return admitted
+
+    def queue_store(self, specs):
+        from opportunity_contract import append_event
+        store = empty_store()
+        source = retain_input(self.root, self.root / CACHE_RELATIVE / "latest.local.json",
+            available_at=NOW.isoformat())
+        for ticker, state, rank, urgent in specs:
+            evidence = {"metrics": {"rank": rank}}
+            if urgent:
+                evidence["event"] = {"event_id": ticker+"-fixture", "status": "detected", "blockers": [],
+                    "research_deadline_at": (NOW+timedelta(hours=24)).isoformat(),
+                    "first_detected_at": NOW.isoformat()}
+            observation = packet(ticker=ticker, family="catalyst" if urgent else "request",
+                trigger="upcoming_earnings_calendar" if urgent else "owner_requested_research",
+                evidence=evidence, sources=[source], current=NOW,
+                produced_by={"implementation_sha256": "a"*64, "policy_sha256": "b"*64})
+            identity = canonical_sha256({"first_observation_id": observation["observation_id"], "ticker": ticker})
+            append_event(store, {"kind": "detected", "opportunity_id": identity,
+                "recorded_at": NOW.isoformat(), "observation": observation, "owner": "research_orchestration",
+                "to_state": "queued" if state != "deferred_capacity" else state,
+                "reason_code": "fixture", "blockers": []})
+            if state == "research_supported":
+                for target, owner in (("researching", "objective_research"),
+                        ("evidence_attached", "objective_research"), ("research_supported", "analyst_assessment")):
+                    transition(store, identity, target, owner=owner, reason="fixture", sources=[source],
+                        blockers=[], current=NOW)
+        return store
+
+    def test_ordered_queue_batch_matches_legacy_journal_and_full_rendered_view(self):
+        import research_opportunities as opportunities
+        from opportunity_contract import transition_batch
+        cases = [
+            ([("OLD1", "queued", 30, False), ("OLD2", "queued", 40, False),
+              ("HELD1", "deferred_capacity", 1, False), ("HELD2", "deferred_capacity", 2, False)],
+             {"HELD1", "HELD2"}, 2, 2),
+            ([("ZVICTIM", "queued", 40, True), ("HELD", "queued", 1, False),
+              ("URGENT", "deferred_capacity", 1, True), ("LATER", "deferred_capacity", 50, True)],
+             {"HELD"}, 2, 6),
+            ([("HELD", "queued", 1, False), ("FIXED", "research_supported", 2, False),
+              ("LOW1", "queued", 3, False), ("LOW2", "queued", 4, False),
+              ("WAIT", "deferred_capacity", 5, False)], {"HELD"}, 1, 3),
+            ([("ONE", "queued", 1, False), ("TWO", "queued", 1, False),
+              ("THREE", "queued", 1, False)], set(), 1, 3),
+        ]
+        for specs, held, capacity, limit in cases:
+            with self.subTest(specs=specs), tempfile.TemporaryDirectory() as directory:
+                store = self.queue_store(specs)
+                policy = read_json(self.root / POLICY_REL)
+                policy.update(active_capacity=capacity, new_opportunities_per_run=limit)
+                expected = copy.deepcopy(store)
+                count = self.legacy_queue(expected, held, policy, NOW)
+                actual = copy.deepcopy(store)
+                projection = replay(actual, root=self.root, current=NOW)
+                untouched = copy.deepcopy(projection)
+                with patch.object(opportunities, "priority", wraps=opportunities.priority) as priority_calls:
+                    changes, admitted = opportunities._queue_transitions(projection, held, policy, current=NOW)
+                self.assertEqual(priority_calls.call_count, len(projection))
+                self.assertEqual(projection, untouched)
+                if changes:
+                    transition_batch(actual, changes, root=self.root, current=NOW)
+                self.assertEqual(admitted, count)
+                self.assertEqual(json.dumps(actual, sort_keys=True), json.dumps(expected, sort_keys=True))
+                atomic_write_json(self.root / STORE_REL, store)
+                legacy_root = Path(directory) / "legacy"
+                shutil.copytree(self.root, legacy_root)
+                metrics = opportunities._base_metrics()
+                metrics["new_opportunities"] = count
+                with patch("research_opportunities.held_tickers", return_value=held):
+                    for root, value in ((self.root, actual), (legacy_root, expected)):
+                        publish_store(root, value, previous=store, current=NOW)
+                        opportunities.publish_view(root, value, current=NOW, metrics=metrics, diagnostics={})
+                for path in (STORE_REL, REPORT_REL, Path("08_reviews/current/research_opportunities.local.md")):
+                    self.assertEqual((self.root/path).read_bytes(), (legacy_root/path).read_bytes())
+
+    def test_queue_batch_keeps_replay_count_constant_as_admissions_grow(self):
+        import opportunity_contract as contract
+        for admitted in (1, 3, 6):
+            with self.subTest(admitted=admitted):
+                store = self.deferred_store(12)
+                atomic_write_json(self.root / STORE_REL, store)
+                policy = read_json(self.root / POLICY_REL)
+                policy.update(active_capacity=24, new_opportunities_per_run=admitted)
+                atomic_write_json(self.root / POLICY_REL, policy)
+                with patch.object(contract, "_replay", wraps=contract._replay) as calls, \
+                        patch("research_opportunities.collect_triggers", return_value=([], {})):
+                    report = intake(self.root, current=NOW)
+                self.assertEqual(report["metrics"]["new_opportunities"], admitted)
+                self.assertEqual(calls.call_count, 6)
+
+    def test_queue_priority_cache_is_scoped_and_used_after_changed_observations(self):
+        import research_opportunities as opportunities
+        from opportunity_contract import append_event
+        store = self.queue_store([("BASE", "queued", 2, False), ("LEAD", "deferred_capacity", 5, False)])
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=1)
+        first, count = opportunities._queue_transitions(replay(store), set(), policy, current=NOW)
+        self.assertEqual((first, count), ([], 0))
+        item = next(i for i in replay(store).values() if i["ticker"] == "LEAD")
+        observed = packet(ticker="LEAD", family="catalyst", trigger="upcoming_earnings_calendar",
+            evidence={"event": {"event_id": "fresh", "status": "detected", "blockers": [],
+                "research_deadline_at": (NOW+timedelta(hours=2)).isoformat(), "first_detected_at": NOW.isoformat()}},
+            sources=item["observations"][-1]["sources"], current=NOW,
+            produced_by={"implementation_sha256": "a"*64, "policy_sha256": "b"*64})
+        append_event(store, {"kind": "observed", "opportunity_id": item["opportunity_id"],
+            "recorded_at": NOW.isoformat(), "observation": observed, "owner": "research_orchestration",
+            "reason_code": "fixture_changed_deadline"})
+        expected = copy.deepcopy(store)
+        expected_count = self.legacy_queue(expected, set(), policy, NOW)
+        changes, count = opportunities._queue_transitions(replay(store), set(), policy, current=NOW)
+        from opportunity_contract import transition_batch
+        transition_batch(store, changes, root=self.root, current=NOW)
+        self.assertEqual(count, expected_count)
+        self.assertEqual(count, 1)
+        self.assertEqual(store, expected)
+
+    def test_queue_batch_preserves_exact_priority_ties_and_bounds_no_admission_work(self):
+        import research_opportunities as opportunities
+        from opportunity_contract import transition_batch
+        store = self.queue_store([("ONE", "queued", 1, False), ("TWO", "queued", 1, False),
+            ("THREE", "queued", 1, False)])
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=6)
+        expected = copy.deepcopy(store)
+        with patch.object(opportunities, "priority", return_value=(2, "same", 1)):
+            count = self.legacy_queue(expected, set(), policy, NOW)
+            changes, actual_count = opportunities._queue_transitions(replay(store), set(), policy, current=NOW)
+        self.assertEqual([c["identity"] for c in changes],
+            [e["opportunity_id"] for e in store["events"][:2]])
+        transition_batch(store, changes, root=self.root, current=NOW)
+        self.assertEqual((store, actual_count), (expected, count))
+
+        store = self.deferred_store(40)
+        first = store["events"][0]
+        first["to_state"] = "queued"
+        first["record_hash"] = canonical_sha256({k: v for k, v in first.items() if k != "record_hash"})
+        # Rebuild the remaining hash links after the deliberate fixture setup.
+        for previous, event in zip(store["events"], store["events"][1:]):
+            event["previous_hash"] = previous["record_hash"]
+            event["record_hash"] = canonical_sha256({k: v for k, v in event.items() if k != "record_hash"})
+        projection = replay(store)
+        with patch.object(opportunities, "priority", wraps=opportunities.priority) as calls:
+            changes, count = opportunities._queue_transitions(projection, set(), policy, current=NOW)
+        self.assertEqual((changes, count), ([], 0))
+        self.assertEqual(calls.call_count, len(projection))
+
+    def test_queue_batch_multistep_events_and_late_failure_preserve_original_store(self):
+        import research_opportunities as opportunities
+        import opportunity_contract as contract
+        store = self.queue_store([("LEAD", "deferred_capacity", 1, False)])
+        policy = read_json(self.root / POLICY_REL)
+        policy.update(active_capacity=1, new_opportunities_per_run=1)
+        changes, _ = opportunities._queue_transitions(replay(store), set(), policy, current=NOW)
+        changes += [{**changes[0], "target": "deferred_capacity", "reason": "fixture_defer"},
+            {**changes[0], "target": "queued", "reason": "fixture_readmit"}]
+        expected = copy.deepcopy(store)
+        for change in changes:
+            transition(expected, change["identity"], change["target"], owner=change["owner"],
+                reason=change["reason"], sources=change["sources"], blockers=change["blockers"], current=NOW)
+        actual = copy.deepcopy(store)
+        contract.transition_batch(actual, changes, root=self.root, current=NOW)
+        self.assertEqual(actual, expected)
+
+        before = copy.deepcopy(store)
+        bad = [*changes, {**changes[0], "target": "researching"}]
+        with self.assertRaisesRegex(ValueError, "research_transition_owner_or_state_invalid"):
+            contract.transition_batch(store, bad, root=self.root, current=NOW)
+        self.assertEqual(store, before)
+
+        original_validate = contract.validate_journal
+        source = self.root / changes[0]["sources"][0]["path"]
+        raw = source.read_bytes()
+
+        def change_before_final_proof(*args, **kwargs):
+            source.write_bytes(b"synthetic final source mutation")
+            return original_validate(*args, **kwargs)
+
+        try:
+            with patch.object(contract, "validate_journal", side_effect=change_before_final_proof):
+                with self.assertRaisesRegex(ValueError, "research_source_changed"):
+                    contract.transition_batch(store, changes, root=self.root, current=NOW)
+            self.assertEqual(store, before)
+        finally:
+            source.write_bytes(raw)
+
+    def test_intake_preserves_expiry_before_rediscovered_observation(self):
+        from opportunity_contract import append_event
+        store = self.deferred_store(2)
+        current = NOW+timedelta(days=10)
+        expected = copy.deepcopy(store)
+        for identity, item in replay(store).items():
+            transition(expected, identity, "expired", owner="research_orchestration",
+                reason="research_evidence_stale_without_reassessment", sources=item["first_observation"]["sources"],
+                blockers=["new_evidence_and_recorded_reassessment_required"], current=current)
+        prior = store["events"][0]
+        observed = packet(ticker=prior["observation"]["ticker"], family="request", trigger="owner_requested_research",
+            evidence={"question": "Synthetic changed research question"},
+            sources=prior["observation"]["sources"], current=current,
+            produced_by={"implementation_sha256": "a"*64, "policy_sha256": "b"*64})
+        append_event(expected, {"kind": "observed", "opportunity_id": prior["opportunity_id"],
+            "recorded_at": current.isoformat(), "observation": observed, "owner": "research_orchestration",
+            "reason_code": "changed_evidence_first_seen_preserved"})
+        atomic_write_json(self.root / STORE_REL, store)
+        with patch("research_opportunities.collect_triggers", return_value=([observed], {})):
+            report = intake(self.root, current=current)
+        self.assertEqual(read_json(self.root / STORE_REL), expected)
+        self.assertEqual([event["kind"] for event in expected["events"][2:]],
+            ["transition", "transition", "observed"])
+        self.assertEqual(report["metrics"]["expired"], 2)
+        self.assertEqual(report["metrics"]["rediscovery_updates"], 1)
+        self.assertEqual(report["metrics"]["new_opportunities"], 0)
+
     def deferred_store(self, count=40):
         from opportunity_contract import append_event
         store = empty_store()
