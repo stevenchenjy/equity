@@ -140,6 +140,40 @@ without automatic trading-session email. The Codex analyst follow-up runs at
 08:45 and 13:45 weekdays. Material outcomes completed after a window carry
 forward; unchanged filler and expired DAY instructions are never resent.
 
+### Backup-host aggregate capacity allowance (2026-11-23)
+
+The temporary 8-GiB alternative host could complete the individually bounded
+research and publication work but repeatedly exhausted the former 1,020-second
+aggregate allowance. Those attempts remain failed evidence. The reviewed
+aggregate allowance is now 1,260 seconds (21 minutes), with a 1,320-second
+scheduler parent bound for cleanup. This is a compute-capacity adaptation;
+acceptance requires a new complete, current run under these bounds. It does not
+make any former attempt pass or establish delivery.
+
+Every individual child limit remains unchanged, including the ordinary
+240-second child, 360-second canonical composer, 210-second swing-history child,
+and existing public-source limits. Research quotas, required stages, account and
+source freshness, investment authority, short-claim expiry, dated plan/session
+expiry, late-start retirement and final sender clock checks remain unchanged.
+The full allowance still reserves its final 30 seconds for reporting, and the
+outer parent exceeds the full allowance by 60 seconds.
+
+Normal admission includes the 1,320-second parent, 170 seconds of independently
+scheduled news and 240 seconds of Git preflight: 1,730 seconds (28m50s). At the
+nominal 09:00 and 13:30 starts, that leaves 70 seconds before the next protected
+09:30 or 14:00 short slot. Actual clocks are checked again after lock acquisition
+and Git preflight. A later arrival that would overlap a protected slot defers
+without consuming a refresh slot; the 14:00 short retains priority. Eligible
+delivery remains 09:30–10:30 and 14:30–15:05 ET. Finishing late cannot reopen a
+closed window, renew a DAY draft or guarantee an email.
+
+This is the largest reviewed backup-host allowance with a useful margin at
+those nominal starts; a 30-minute full allowance is not admitted because its
+lookahead conflicts with the existing short cadence. On handback to the Mac
+mini, review measured capacity and restore the former 1,020/1,080-second pair
+through the same tested deployment process if supported. Do not change either
+timer independently or infer that a loaded schedule proves future execution.
+
 ## Current delivery and presentation rule (2026-09-26)
 
 This section supersedes earlier same-calendar-day coverage and long scheduled

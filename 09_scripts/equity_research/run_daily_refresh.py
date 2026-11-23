@@ -46,10 +46,12 @@ MARKET_SNAPSHOT_MODES = (MARKET_SNAPSHOT_FETCH, MARKET_SNAPSHOT_REUSE)
 # at least 13 seconds between request starts. Keep a fixed allowance for HTTP
 # time, process startup, local validation, and commit.
 DEFAULT_CHILD_TIMEOUT_SECONDS = 240
-# Keep the child tree within the scheduler's unchanged 1,080-second bound.
+# The measured 8-GiB backup host has a 1,260-second aggregate allowance,
+# inside the scheduler's 1,320-second bound. Individual child limits, required
+# work, short-window admission, and dated publication/delivery gates remain.
 # A stage that exhausts this allowance remains failed; no required stage can
 # disappear from the completion contract or inherit an older passing result.
-FULL_REFRESH_MAX_SECONDS = 1020
+FULL_REFRESH_MAX_SECONDS = 1260
 FINAL_REPORT_RESERVE_SECONDS = 30
 EOD_MARKET_REFRESH_TIMEOUT_SECONDS = 600
 # Daily reference pagination plus one new grouped day is paced at 13 seconds.

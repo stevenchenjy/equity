@@ -81,9 +81,12 @@ FULL_REFRESH_REUSE_ONLY_ENV = (
 )
 # The publication-window refresh can contain the bounded, paced 33-request
 # market import. Its parent timeout exceeds that child budget and leaves a
-# finite allowance for the existing local refresh steps. Retry slots are
-# separate launchd cycles and stop as soon as a full current refresh passes.
-DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 1080
+# finite allowance for the existing local refresh steps. The measured backup
+# host allowance is 1,260 seconds plus 60 seconds for parent cleanup. Existing
+# short-window lookahead includes this bound, news, and Git preflight; late
+# arrivals still defer. Retry slots remain separate launchd cycles and stop as
+# soon as a full current refresh passes.
+DAILY_REFRESH_PIPELINE_TIMEOUT_SECONDS = 1320
 # Existing independent-news child150s plus its noncanonical status child20s.
 SCHEDULED_NEWS_ALLOWANCE_SECONDS = 170
 

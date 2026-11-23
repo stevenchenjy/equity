@@ -81,7 +81,9 @@ sources, two matching overlap closes, coherent OHLCV and the latest completed
 session. `03_source_data/equity_research/swing_candidate_history.local/` is
 separate from the canonical seed/snapshot/history pointer. Valid current caches
 are revalidated and reused; pre-request reservations prevent repeated same-date
-refetches. The child has 210 seconds inside the unchanged full-refresh budget.
+refetches. The child retains its 210-second limit inside the aggregate full-refresh
+allowance documented in the delivery policy; the November 23 backup-host capacity
+adaptation does not expand this child or its two-name quota.
 
 Scheduled public full refreshes may collect. Operator full no-send reuse and
 publication-only closure stay offline for this stage. The explicit standalone

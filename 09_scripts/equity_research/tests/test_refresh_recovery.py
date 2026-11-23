@@ -277,7 +277,9 @@ class SchedulingRecoveryTests(unittest.TestCase):
             stack.enter_context(patch.object(scheduler, "load_active_state", return_value={"operational_from": "2026-10-01"}))
             stack.enter_context(patch.object(scheduler, "load_inhibit", return_value={"active": False}))
             stack.enter_context(patch.object(scheduler, "cycle_date", return_value="2026-10-26"))
-            stack.enter_context(patch.object(scheduler, "now_et", side_effect=[NOW.replace(hour=9, minute=9), NOW.replace(hour=9, minute=13)]))
+            # Enter before news while its allowance still fits; a slow news
+            # result must trigger the fresh-clock guard before any slot claim.
+            stack.enter_context(patch.object(scheduler, "now_et", side_effect=[NOW.replace(hour=9, minute=5), NOW.replace(hour=9, minute=9)]))
             stack.enter_context(patch.object(scheduler, "load_active_config", return_value={"notifications": {
                 "delivery_assessment_effective_from": "2026-10-22", "short_assessment_slots_et": ["09:30", "11:00", "12:30", "14:00", "15:30"]}}))
             stack.enter_context(patch.object(scheduler.sys, "argv", ["scheduler"]))

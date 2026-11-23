@@ -308,7 +308,7 @@ class CoordinatedAttentionParentTests(unittest.TestCase):
         self.assertEqual([entry for entry in calls if entry[0] == "research_backlog_view"],
                          [("research_backlog_view", False)] * 2)
         self.assertEqual(refresh.DEFAULT_CHILD_TIMEOUT_SECONDS, 240)
-        self.assertEqual(refresh.FULL_REFRESH_MAX_SECONDS, 1020)
+        self.assertEqual(refresh.FULL_REFRESH_MAX_SECONDS, 1260)
 
 
 class CoordinatedAttentionRoutingTests(unittest.TestCase):

@@ -67,7 +67,7 @@ NORMAL_REFRESH_GIT_PREFLIGHT_SECONDS = FETCH_TIMEOUT_SECONDS + GIT_TIMEOUT_SECON
 _GIT_PREFLIGHT_DEADLINE = ContextVar("runtime_git_preflight_deadline", default=None)
 SHORT_DEFERRAL_RELATIVE_PATH = Path("00_project_control/run_logs/runtime_short_deferral.local.json")
 # A pathological but still bounded holder can consume the individual Git
-# command budgets plus the refresh scheduler's 1080-second deterministic child.
+# command budgets plus the refresh scheduler's bounded deterministic child.
 # One hour exceeds that aggregate budget with margin while surfacing a stuck
 # holder. The waiting launchd job remains active, so launchd cannot start a
 # duplicate instance of that label while it is queued here.
