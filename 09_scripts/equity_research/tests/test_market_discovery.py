@@ -24,6 +24,14 @@ def raw_meta(ticker, kind="CS"):
         "type": kind, "market": "stocks", "locale": "us", "currency_name": "usd", "primary_exchange": "XNYS"}
 
 
+def grouped_payload(session, tickers, status="DELAYED"):
+    stamp = int(datetime.combine(session, datetime.min.time(), tzinfo=md.ET).timestamp()*1000)
+    rows = [{"T": ticker, "o": 100, "h": 101, "l": 99, "c": 100,
+             "v": 1000, "t": stamp} for ticker in tickers]
+    return {"status": status, "adjusted": True, "queryCount": len(rows),
+            "resultsCount": len(rows), "results": rows}
+
+
 def fixtures():
     meta = {"session": str(SESSION), "complete": True, "rows": {}}
     for ticker, kind in (("AAA", "CS"), ("BBB", "CS"), ("SPY", "ETF"), ("QQQ", "ETF")):
@@ -123,8 +131,83 @@ class DiscoveryTests(unittest.TestCase):
         for key, value in (("t", stamp-86400000), ("c", 200), ("v", float("nan")), ("otc", True)):
             v = deepcopy(good); v["results"][0][key] = value; variants.append(v)
         duplicate = deepcopy(good); duplicate["results"] *= 2; duplicate["resultsCount"] = 2; variants.append(duplicate)
-        for value in variants:
-            with self.assertRaises(md.DiscoveryError): md.normalize_grouped(value, SESSION)
+        for status in ("OK", "DELAYED"):
+            for value in variants:
+                value["status"] = status
+                with self.subTest(status=status), self.assertRaises(md.DiscoveryError):
+                    md.normalize_grouped(value, SESSION)
+
+    def test_delayed_completed_grouped_reaches_ordinary_refresh_with_original_receipts(self):
+        meta, days = fixtures()
+        payload = grouped_payload(SESSION, meta["rows"])
+        body = json.dumps(payload).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory); cache = root/md.CACHE_RELATIVE
+            md._cache_write(cache/f"metadata-{SESSION}.local.json", meta)
+            for day in DAYS[:-1]:
+                md._cache_write(cache/f"grouped-{day}.local.json", days[str(day)])
+            # Preserve the earlier failed attempt rather than relabel it as success.
+            failed = md._empty(SESSION, "unavailable", "invalid_response")
+            failed["fetched_at"] = NOW.isoformat(timespec="seconds")
+            md._publish_discovery_attempt(cache, failed, None)
+            originals = {p.name: p.read_bytes() for p in (cache/"attempts").glob("*.json")}
+            client = md.DiscoveryClient("offline-fixture", state_path=cache/"pace.json",
+                http_get=lambda *args: md._HTTPPayload(payload, body, 200),
+                clock=lambda: NOW.timestamp(), sleep=lambda n: None)
+            with patch.object(md, "now_et", return_value=NOW):
+                report = md.refresh_discovery(root, NOW, client=client)
+            self.assertTrue(report["complete"])
+            self.assertEqual(report["expected_session"], str(SESSION))
+            self.assertEqual(report["fetched_at"], NOW.isoformat(timespec="seconds"))
+            self.assertEqual(report["provider_requests_this_run"], 1)
+            receipt = report["provider_http_receipts"][0]
+            self.assertEqual(receipt["provider_status"], "DELAYED")
+            self.assertEqual(receipt["http_status"], 200)
+            self.assertEqual(receipt["failure_code"], "none")
+            self.assertEqual(datetime.fromisoformat(receipt["requested_at"]), NOW)
+            self.assertEqual((cache/receipt["response_path"]).read_bytes(), body)
+            self.assertEqual(payload["status"], "DELAYED")
+            self.assertEqual(md.load_discovery(root, NOW)["status"], "complete")
+            for name, raw in originals.items():
+                self.assertEqual((cache/"attempts"/name).read_bytes(), raw)
+
+    def test_delayed_reference_and_unknown_aggregate_statuses_are_rejected(self):
+        responses = [("/v3/reference/tickers?type=CS", {"status": "DELAYED", "results": [raw_meta("AAA")]})]
+        path = f"/v2/aggs/grouped/locale/us/market/stocks/{SESSION}?adjusted=true&include_otc=false"
+        responses.extend((path, grouped_payload(SESSION, ["SPY"], status))
+                         for status in ("ERROR", "PENDING", "DELAYED_UNKNOWN", "", None, False, [], {}))
+        with tempfile.TemporaryDirectory() as directory:
+            for index, (endpoint, payload) in enumerate(responses):
+                client = md.DiscoveryClient("offline-fixture", state_path=Path(directory)/f"pace-{index}.json",
+                    http_get=lambda *args, value=payload: value, clock=lambda: NOW.timestamp(), sleep=lambda n: None)
+                with self.subTest(status=payload["status"], endpoint=endpoint), self.assertRaises(md.DiscoveryError) as ctx:
+                    client.request(endpoint)
+                self.assertEqual(str(ctx.exception), "invalid_response")
+                if endpoint == path:
+                    with self.assertRaises(md.DiscoveryError):
+                        md.normalize_grouped(payload, SESSION)
+
+    def test_delayed_active_or_non_session_grouped_cannot_be_promoted(self):
+        # Matching bar dates alone do not establish a completed daily session.
+        for session, observed in ((NOW.date(), NOW),
+                                  ((NOW+timedelta(days=1)).date(), NOW),
+                                  (SESSION-timedelta(days=1), NOW)):
+            payload = grouped_payload(session, ["SPY"])
+            with self.subTest(session=session), patch.object(md, "now_et", return_value=observed):
+                with self.assertRaises(md.DiscoveryError) as ctx:
+                    md.normalize_grouped(payload, session)
+                self.assertEqual(str(ctx.exception), "bars_incomplete")
+
+    def test_grouped_completion_uses_existing_1615_boundary_for_both_statuses(self):
+        session = NOW.date()
+        for status in ("OK", "DELAYED"):
+            payload = grouped_payload(session, ["SPY"], status)
+            with self.subTest(status=status), patch.object(md, "now_et", return_value=NOW.replace(hour=16, minute=14, second=59)):
+                with self.assertRaises(md.DiscoveryError) as ctx:
+                    md.normalize_grouped(payload, session)
+                self.assertEqual(str(ctx.exception), "bars_incomplete")
+            with self.subTest(status=status), patch.object(md, "now_et", return_value=NOW.replace(hour=16, minute=15, second=0)):
+                self.assertTrue(md.normalize_grouped(payload, session)["complete"])
 
     def test_rank_invariant_to_watchlist_and_input_order(self):
         meta, days = fixtures()
@@ -302,6 +385,44 @@ class DiscoveryTests(unittest.TestCase):
             self.assertEqual(failed["top_stocks"], [])
             for name, raw in originals.items(): self.assertEqual((root/md.CACHE_RELATIVE/"attempts"/name).read_bytes(), raw)
             self.assertEqual(len(list((root/md.CACHE_RELATIVE/"attempts").glob("*.json"))), 2)
+
+
+class DelayedGroupedProductionShapeTests(unittest.TestCase):
+    def test_http200_delayed_12875_row_completed_session_retains_provider_bytes(self):
+        # The retained Nov 24 failure had this count/status/basis and a Nov 23
+        # requested session. Synthetic OHLCV avoids copying the private cache.
+        observed = datetime(2026, 11, 24, 4, 3, 49, 603423, tzinfo=md.ET)
+        session = observed.date()-timedelta(days=1)
+        payload = grouped_payload(session, ["SPY", *(f"S{i:05}" for i in range(12874))])
+        body = json.dumps(payload).encode()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            client = md.DiscoveryClient("offline-fixture", state_path=root/"pace.json",
+                http_get=lambda *args: md._HTTPPayload(payload, body, 200),
+                clock=lambda: observed.timestamp(), sleep=lambda n: None)
+            with patch.object(md, "now_et", return_value=observed):
+                normalized = client.fetch_grouped(session)
+            self.assertTrue(normalized["complete"])
+            self.assertEqual(len(normalized["rows"]), 12875)
+            self.assertEqual(normalized["session"], "2026-11-23")
+            receipt = client.http_receipts[0]
+            self.assertEqual(receipt["provider_status"], "DELAYED")
+            self.assertEqual(receipt["failure_code"], "none")
+            self.assertEqual(receipt["http_status"], 200)
+            self.assertEqual(datetime.fromisoformat(receipt["requested_at"]), observed)
+            self.assertEqual((root/receipt["response_path"]).read_bytes(), body)
+            self.assertEqual(receipt["response_sha256"], hashlib.sha256(body).hexdigest())
+            self.assertEqual(payload["status"], "DELAYED")
+
+    def test_delayed_missing_empty_and_below_production_coverage_remain_rejected(self):
+        payload = grouped_payload(SESSION, (f"S{i:05}" for i in range(5000)))
+        variants = []
+        missing = deepcopy(payload); missing.pop("results"); variants.append(missing)
+        empty = deepcopy(payload); empty.update(results=[], resultsCount=0); variants.append(empty)
+        sparse = deepcopy(payload); sparse["results"].pop(); sparse["resultsCount"] -= 1; variants.append(sparse)
+        for value in variants:
+            with self.subTest(rows=value.get("resultsCount")), self.assertRaises(md.DiscoveryError):
+                md.normalize_grouped(value, SESSION)
 
 
 if __name__ == "__main__": unittest.main()

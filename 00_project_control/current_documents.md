@@ -36,6 +36,8 @@ relevant checks before relying on any linked claim.
 
 - [Local assessment host availability](session_host_availability.md): bounded AC power assertion for the existing operating day, installed-service checks and explicit limits of local scheduling.
 
+- [External runtime reconnect guard](runtime_mount_guard.md): UUID-bound user-level restoration of the alternative host's canonical SSD mount, separate from research, email and power scheduling.
+
 - [Independent earnings-event research](earnings_event_research.md): rolling public calendar leads independent of momentum, deadline-aware research attention, event-specific assessments and unchanged capital gates; estimated dates and incomplete coverage remain explicit.
 
 - [Company valuation admission](company_valuation_admission.md): owner-authorized October 12 bridge from individually reviewed immutable company cases to canonical decisions; current evidence and independent allocation/entry gates remain.

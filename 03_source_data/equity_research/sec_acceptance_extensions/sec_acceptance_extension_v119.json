@@ -1,0 +1,66 @@
+{
+  "admitted_at": "2026-11-24T04:04:56.000-05:00",
+  "artifact_sha256": "caf500a80f5536cac6750f8cbe5f4de37a9c80760d0776a97fcb3451ed83faf6",
+  "boundaries": {
+    "broker_used": false,
+    "email_used": false,
+    "model_used": false,
+    "order_code_created": false,
+    "public_sec_only": true,
+    "smtp_used": false
+  },
+  "extension_version": "v119",
+  "prior_extension_set_sha256": "6b5c5a9891483ee24ebdc6ae869e531d83fc9e7511e891799ca6d6e8585898da",
+  "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+  "records": [
+    {
+      "accepted_at": "2026-11-23T12:33:34.000+00:00",
+      "accession_number": "0001193125-26-470942",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-24T04:04:56.000-05:00",
+      "cik": "1713683",
+      "entity_name": "Zscaler, Inc.",
+      "extension_record_sha256": "80f9a20f870bad84ffb7ad3166e95d9871ffdd859fef6ac8134c586c4eb90b89",
+      "extension_version": "v119",
+      "filing_date": "2026-11-23",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "3182e193d8b22f29fda5196b4c08b9b59fd3658aba4b871db596b8901ba53b32",
+      "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+      "ticker": "ZS"
+    },
+    {
+      "accepted_at": "2026-11-23T15:01:16.000+00:00",
+      "accession_number": "0001193125-26-471211",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-24T04:04:56.000-05:00",
+      "cik": "1713683",
+      "entity_name": "Zscaler, Inc.",
+      "extension_record_sha256": "cf459db8397b4d805fa0de6bc3d3c349cdf507324afa5a9128226a3501af3e30",
+      "extension_version": "v119",
+      "filing_date": "2026-11-23",
+      "form": "8-K",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "871bb398fa9c13f5c9258dfd20886836a0edd8f8e128825fca96c4de900f9956",
+      "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+      "ticker": "ZS"
+    },
+    {
+      "accepted_at": "2026-11-23T21:59:40.000+00:00",
+      "accession_number": "0001713683-26-000223",
+      "admission_decision": "admitted",
+      "admitted_at": "2026-11-24T04:04:56.000-05:00",
+      "cik": "1713683",
+      "entity_name": "Zscaler, Inc.",
+      "extension_record_sha256": "fdb61c463ec55fd54b3e6624ddcddb77dd4d45665be8a9a030d3d711d8c8bbab",
+      "extension_version": "v119",
+      "filing_date": "2026-11-23",
+      "form": "DEF 14A",
+      "prior_immutable_index_sha256": "bd4dd00ecf0f9d3d2b697cf2860821ad4dd8ef99cbdcd55088130b94c76f33f6",
+      "record_sha256": "c0660df544ca39a8e463585132305ddb7abcb9d6385de5e857c8677e20235d14",
+      "source_url": "https://data.sec.gov/submissions/CIK0001713683.json",
+      "ticker": "ZS"
+    }
+  ],
+  "schema_version": "phase5r_sec_acceptance_extension_artifact_v1"
+}

@@ -54,6 +54,7 @@ FAILURES = {"authentication_missing", "authentication_failed", "rate_limited",
     "cache_invalid", "benchmark_missing", "local_unavailable", "local_stale",
     "unexpected_failure", "rate_state_invalid", "coverage_incomplete", "evidence_write_failed"}
 PRICE_BASIS = "Massive Stocks Basic published EOD grouped OHLCV; adjusted=true (split-adjusted), include_otc=false; separate from unadjusted canonical order-price data"
+AGGREGATE_RESPONSE_STATUSES = frozenset({"OK", "DELAYED"})
 
 
 class DiscoveryError(RuntimeError):
@@ -233,11 +234,14 @@ class DiscoveryClient:
         except Exception:
             self._record_http(path, status=None, code="request_failed", body=None)
             raise DiscoveryError("request_failed") from None
-        statuses = {"OK", "DELAYED"} if path.startswith("/v2/aggs/ticker/") else {"OK"}
+        statuses = AGGREGATE_RESPONSE_STATUSES if path.startswith((
+            "/v2/aggs/ticker/", "/v2/aggs/grouped/locale/us/market/stocks/")) else {"OK"}
+        accepted = (isinstance(payload, dict) and isinstance(payload.get("status"), str)
+                    and payload["status"] in statuses)
         self._record_http(path, status=getattr(payload, "http_status", None),
-                          code="none" if isinstance(payload, dict) and payload.get("status") in statuses else "invalid_response",
+                          code="none" if accepted else "invalid_response",
                           body=getattr(payload, "response_bytes", None))
-        if not isinstance(payload, dict) or payload.get("status") not in statuses:
+        if not accepted:
             raise DiscoveryError("invalid_response")
         return payload
 
@@ -335,8 +339,14 @@ class DiscoveryClient:
 
 
 def normalize_grouped(payload: dict[str, Any], session: date) -> dict[str, Any]:
+    # DELAYED describes aggregate delivery latency, not daily-bar finality.
+    # Require the existing completed-session boundary and every row/date gate.
+    if (not is_us_market_session_date(session)
+            or session > latest_published_market_session(now_et())):
+        raise DiscoveryError("bars_incomplete")
     raw_rows = payload.get("results")
-    if (payload.get("status") != "OK" or payload.get("adjusted") is not True or payload.get("next_url")
+    if (not isinstance(payload.get("status"), str) or payload["status"] not in AGGREGATE_RESPONSE_STATUSES
+            or payload.get("adjusted") is not True or payload.get("next_url")
             or not isinstance(raw_rows, list) or not 0 < len(raw_rows) <= MAX_ROWS
             or payload.get("resultsCount") != len(raw_rows)):
         raise DiscoveryError("bars_incomplete")
