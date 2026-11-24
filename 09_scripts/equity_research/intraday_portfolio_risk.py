@@ -157,9 +157,10 @@ def _context(root: Path, current: datetime) -> dict:
             active.setdefault(row["ticker"], []).append(row)
     tactical = json.loads(raws[INPUTS[1]])
     if (tactical.get("schema_version") != "phase5r_tactical_policy_v1"
+            or tactical.get("max_position_pct", "missing") is not None
             or tactical.get("research_only") is not True or tactical.get("automatic_action_allowed") is not False):
         raise ValueError("intraday_risk_tactical_policy_invalid")
-    for key in ("ordinary_risk_pct", "event_risk_pct", "combined_risk_pct", "max_position_pct", "min_reward_to_risk", "max_holding_sessions"):
+    for key in ("ordinary_risk_pct", "event_risk_pct", "combined_risk_pct", "min_reward_to_risk", "max_holding_sessions"):
         _number(tactical.get(key), key, positive=True)
     return {"bindings": bindings, "account": account, "orders": orders, "inventory": inventory,
             "symbols": {x["ticker"]: "etf" if x["sleeve"] in {"core", "other_etf"} else "stocks" for x in inventory},

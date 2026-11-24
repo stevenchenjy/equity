@@ -26,9 +26,10 @@ class CapitalDecisionTests(unittest.TestCase):
         return engine.build(self.d,root=ROOT,current=self.v['current'],config=self.config,orders=self.v['open_orders'])
     def test_eligible_company_exact_order_and_loss(self):
         c=self.build();r=c['decisions'][0];p=r['order_draft']
-        self.assertEqual(r['decision'],'ACTIONABLE_BUY');self.assertEqual(r['shares'],4);self.assertEqual(r['estimated_notional'],408)
-        self.assertEqual(p['invalidation_price'],98);self.assertEqual(p['planned_total_loss'],16);self.assertEqual(p['planned_account_risk_pct'],.16)
-        self.assertEqual(p['estimated_cash_after'],7492);self.assertEqual(p['time_in_force'],'DAY');self.assertEqual(p['entry_limit'],102)
+        self.assertEqual(r['decision'],'ACTIONABLE_BUY');self.assertEqual(r['shares'],10);self.assertEqual(r['estimated_notional'],1020)
+        self.assertEqual(p['invalidation_price'],98);self.assertEqual(p['planned_total_loss'],40);self.assertEqual(p['planned_account_risk_pct'],.4)
+        self.assertEqual(p['estimated_cash_after'],6880);self.assertEqual(p['time_in_force'],'DAY');self.assertEqual(p['entry_limit'],102)
+        self.assertGreater(p['portfolio_weight_after'],5)
         engine.validate(c,current=self.v['current'],root=ROOT)
 
     def test_scoped_pending_fill_keeps_holding_review_and_blocks_trades(self):
@@ -88,7 +89,10 @@ class CapitalDecisionTests(unittest.TestCase):
             self.assertEqual(contract["household_allocation"]["planning_total_usd"], 11510)
             self.assertEqual(contract["household_allocation"]["stocks_before_usd"], 500)
             self.assertEqual(contract["planning_cash"], 10000)
-            self.assertEqual(contract["decisions"][0]["shares"], 0)
+            self.assertEqual(contract["decisions"][0]["shares"], 10)
+            self.d["account"]["cash_available"] = 50
+            self.assertEqual(self.build()["decisions"][0]["shares"], 0)
+            self.d["account"]["cash_available"] = 10000
             quote["data_quality_label"]="stale"
             unavailable=self.build()
             self.assertIn("household_moomoo_close_unverified_TEST", unavailable["global_blockers"])
@@ -165,7 +169,8 @@ class CapitalDecisionTests(unittest.TestCase):
     def test_real_account_risk_change_resizes_without_symbolic_review(self):
         self.d['account']['account_total_value']=4000;self.d['account']['cash_available']=3000
         self.d['tactical_review']=tactical_review.build_tactical_review(**self.v)
-        r=self.build()['decisions'][0];self.assertEqual(r['shares'],1);self.assertEqual(r['order_draft']['portfolio_weight_after'],2.55)
+        r=self.build()['decisions'][0];self.assertEqual(r['shares'],5);self.assertEqual(r['order_draft']['portfolio_weight_after'],12.75)
+        self.assertEqual(r['order_draft']['planned_total_loss'],20)
     def test_stale_orders_and_unverified_cash_prevent_quantity(self):
         for change in ('orders','cash'):
             if change=='orders':self.v['open_orders']['as_of']=(self.v['current']-timedelta(days=2)).isoformat()
@@ -326,7 +331,7 @@ class CapitalDecisionTests(unittest.TestCase):
     def test_email_actions_precede_research_with_numbers(self):
         self.d['capital_decision']=self.build();self.d['send_recommended']=False
         sections=cards(self.d);self.assertEqual(sections[0]['title'],"TODAY'S ACTION")
-        buy=next(r for r in sections if r['title']=='BUY — TEST');self.assertIn('$102.00',buy['body']);self.assertIn('planned loss $16.00',buy['body'])
+        buy=next(r for r in sections if r['title']=='BUY — TEST');self.assertIn('$102.00',buy['body']);self.assertIn('planned loss $40.00',buy['body'])
         _,text,html=render_email(self.d)
         self.assertLess(text.index('BUY — TEST'),text.index('Candidate decisions'));self.assertIn('data-action-kind="buy"',html)
     def test_admitted_company_case_is_background_and_does_not_create_order(self):
@@ -368,7 +373,7 @@ class CapitalDecisionTests(unittest.TestCase):
             root=Path(name);archive(root,prior,when=self.v['current'].replace(hour=9,minute=30))
             context=follow.build_followthrough(self.d,root=root,current=afternoon)
             self.assertEqual(context['status'],'conditional_execution_followthrough')
-            self.assertEqual(context['actions'][0]['assumed_remaining_shares'],4)
+            self.assertEqual(context['actions'][0]['assumed_remaining_shares'],10)
             self.assertEqual(context['actions'][0]['source'],'exact_displayed_capital_draft')
             self.assertFalse(context['canonical_state_changed'])
             self.d['delivery_followthrough']=context
@@ -384,7 +389,7 @@ class CapitalDecisionTests(unittest.TestCase):
         from test_delivery_followthrough import archive
         self._session_decision()
         with tempfile.TemporaryDirectory() as name:
-            root=Path(name);archive(root,self.d,when=self.v['current'].replace(hour=9,minute=30),alter_html=lambda h:h.replace('planned loss $16.00','risk omitted'))
+            root=Path(name);archive(root,self.d,when=self.v['current'].replace(hour=9,minute=30),alter_html=lambda h:h.replace('planned loss $40.00','risk omitted'))
             context=follow.build_followthrough(self.d,root=root,current=self.v['current'].replace(hour=14,minute=30))
             self.assertEqual(context['status'],'prior_action_not_structured');self.assertEqual(context['actions'],[])
     def test_delivery_comparison_uses_exact_capital_drafts_and_ignores_clocks_and_unqualified_churn(self):

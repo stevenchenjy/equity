@@ -4,7 +4,7 @@
   "ordinary_risk_pct": 0.5,
   "event_risk_pct": 0.25,
   "combined_risk_pct": 2.0,
-  "max_position_pct": 5.0,
+  "max_position_pct": null,
   "min_reward_to_risk": 2.0,
   "max_holding_sessions": 5,
   "coverage_tickers": ["SPY", "APP", "IOT", "RBRK", "RKLB", "META", "NOW", "QQQM", "NVDA", "XLI"],

@@ -23,6 +23,7 @@ def tactical_fixture() -> dict:
         "market_session": "2026-09-22", "next_session": "2026-09-23", "global_gates_passed": True,
         "blockers": [], "research_only": True, "automatic_action_allowed": False,
         "risk_budget": {"account_value": "5865"},
+        "risk_policy": {"max_position_pct": None},
         "open_orders": {"as_of": "2026-09-22T15:17:00-04:00", "complete": True, "orders": [
             {"ticker": "RKLB", "side": "buy", "quantity": 3, "remaining_quantity": 3, "limit_price": "70",
              "status": "open", "time_in_force": "DAY", "session_date": "2026-09-22",
@@ -73,7 +74,7 @@ class TacticalEmailTests(unittest.TestCase):
             "oversized": lambda d: d["tactical_review"]["drafts"][0].update(quantity=2),
             "stale_session": lambda d: d["tactical_review"]["drafts"][0].update(session_date="2026-09-21"),
             "incomplete_orders": lambda d: d["tactical_review"]["open_orders"].update(complete=False),
-            "tactical_position_cap": lambda d: d["account"].update(account_total_value="3000"),
+            "ordinary_loss_budget": lambda d: d["account"].update(account_total_value="1000"),
             "missing_time_exit": lambda d: d["tactical_review"]["drafts"][0].update(time_exit_session="eventually"),
             "inconsistent_risk": lambda d: d["tactical_review"]["drafts"][0].update(reward_to_risk="20"),
         }
@@ -145,7 +146,7 @@ class TacticalEmailTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "source_not_allowed"):
             render_email(decision)
 
-    def test_actual_tactical_module_payload_preserves_capped_quantity_in_renderer(self) -> None:
+    def test_actual_tactical_module_payload_preserves_supported_above_five_percent_quantity(self) -> None:
         from tactical_review import build_tactical_review
         from test_tactical_review import fixture
         values = fixture()
@@ -154,9 +155,40 @@ class TacticalEmailTests(unittest.TestCase):
         decision.update(decision_code="action_review_candidate", new_candidate_stability_distinct_closes=2)
         decision["tactical_review"] = build_tactical_review(**values)
         text = str(build_email_view(decision)["tactical_sections"])
-        self.assertIn("待人工判断：新增 4 股", text)
+        self.assertIn("待人工判断：新增 10 股", text)
         self.assertIn("$102.00", text)
         self.assertIn("股数不能相加或叠加委托", text)
+
+    def test_above_five_percent_draft_and_hypothetical_keep_loss_and_canonical_checks(self) -> None:
+        decision = tactical_fixture()
+        decision["account"]["account_total_value"] = "3000"
+        review = decision["tactical_review"]
+        self.assertIn("待人工判断：新增 1 股", str(build_email_view(decision)["tactical_sections"]))
+        review["drafts"][0]["event_risk"] = True
+        decision["account"]["account_total_value"] = "1500"
+        self.assertNotIn("待人工判断：新增", str(build_email_view(decision)["tactical_sections"]))
+        review["drafts"][0]["event_risk"] = False
+        self.assertIn("待人工判断：新增 1 股", str(build_email_view(decision)["tactical_sections"]))
+        decision["account"]["account_total_value"] = "3000"
+        decision["account"]["cash_basis"] = "ledger_estimate"
+        review.update(global_gates_passed=False, blockers=["cash_not_confirmed"])
+        review["drafts"][0].update(quantity=0, eligible=False, hypothetical_quantity=1,
+                                   hypothetical_assumptions=["现金已核对"])
+        self.assertIn("独立假设情景：1 股", str(build_email_view(decision)["tactical_sections"]))
+        decision["watch_candidates"][0]["suggested_whole_shares"] = "0"
+        self.assertNotIn("独立假设情景：1 股", str(build_email_view(decision)["tactical_sections"]))
+
+    def test_retained_numeric_cap_report_keeps_its_original_rule_and_admission(self) -> None:
+        decision = tactical_fixture()
+        decision["tactical_review"]["risk_policy"]["max_position_pct"] = 5
+        decision["account"]["account_total_value"] = "3000"
+        view = build_email_view(decision)
+        self.assertIn("单个短线标的资金上限 5%", view["trading_rules"][1])
+        self.assertNotIn("待人工判断：新增", str(view["tactical_sections"]))
+        decision["tactical_review"]["risk_policy"]["max_position_pct"] = None
+        view = build_email_view(decision)
+        self.assertIn("不设固定单股资金比例上限", view["trading_rules"][1])
+        self.assertIn("待人工判断：新增 1 股", str(view["tactical_sections"]))
 
 
 if __name__ == "__main__":

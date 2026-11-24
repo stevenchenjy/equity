@@ -15,7 +15,7 @@
 Owner authorization: November 1, 2026. This study operationalizes a limited
 earnings-survival hypothesis. It does not copy an influencer's complete method,
 claim his performance, adopt a large-gap strategy, or establish that a company
-with good earnings deserves investment. The unchanged current tactical capital
+with good earnings deserves investment. The current canonical tactical capital
 engine remains separate. Its observed prior-resistance target cannot supply
 upside for a fresh breakout above that same resistance.
 
@@ -163,12 +163,19 @@ does not mean zero return or no event.
 The initial implementation records fixed-horizon unadjusted price/cost
 sensitivities and same-session ETF sensitivities. It explicitly labels these
 paths unreviewed, corporate-action review required and qualified strategy paths
-zero. Where a valid capital/account context exists, a separate diagnostic may
-show cash, five-percent name-headroom and event planned-loss whole-share
+zero. Under the initial frozen implementation, where its original compatible
+capital/account context exists, a separate diagnostic may show cash,
+five-percent name-headroom and event planned-loss whole-share
 ceilings at a stated price reference. It retains actual quantity zero and does
 not clear combined open risk, aggregate allocation, executable funds/orders or
 the future entry price. Missing context remains unavailable. Portfolio capacity
 and managed-stop paths remain unverified.
+The owner removed the current 5% tactical name-exposure cap on November 24.
+The diagnostic above is a frozen historical research convention, not a current
+capital rule. The current explicit-null name-cap policy may make that original
+diagnostic unavailable; it cannot restore a 5% capital ceiling. Preserve the
+registered implementation and historical inputs rather than rewriting them to
+match the new policy.
 These dependencies must stay visible. A matched raw price path or a positive
 planning ceiling does not satisfy the fuller benchmark, feasibility or
 profitability review described above.

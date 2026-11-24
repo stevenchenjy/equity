@@ -19,8 +19,9 @@ It does not supply active numerical limits.
   rationale, downside/countercase, invalidation, and review/exit conditions.
 - Evaluate overlap, liquidity, financing/dilution, tail loss and plausible
   alternatives. Higher risk is not evidence of a superior expected return.
-- Tactical strategies retain 5% initial per-name exposure, 0.5% ordinary or
-  0.25% event planned loss, 2% combined planned loss, 2:1 minimum reward/risk
+- The owner removed the remaining 5% tactical name-exposure ceiling on
+  November 24, 2026. Tactical strategies retain 0.5% ordinary or 0.25% event
+  planned loss, 2% combined planned loss, 2:1 minimum reward/risk
   and reassessment/exit within three to five sessions. Gaps can exceed these
   planned losses. Do not convert purpose silently to avoid these budgets.
 - Never increase a position to compensate for prior losses. Averaging down

@@ -29,7 +29,7 @@ HYPOTHETICAL_BLOCKERS = {"cash_not_confirmed", "existing_tactical_risk_unconfirm
                          "open_orders_unconfirmed", "event_calendar_unconfirmed",
                          "existing_order_requires_reconciliation"}
 FOUR_RULES = [
-    "Each ordinary trade risks at most 0.5% of account value; event exposure at most 0.25%; combined tactical planned risk at most 2% and each name at most 5% of capital.",
+    "Each ordinary trade risks at most 0.5% of account value; event exposure at most 0.25%; combined tactical planned risk at most 2%. There is no fixed per-name capital ceiling; size within the supported canonical allocation, cash and risk allowances.",
     "Before entry, record a dated entry, observed invalidation, observed target, at least 2R, whole-share quantity and confirmed funds; a watch level is not an order.",
     "Exit/review no later than the fifth regular session, sooner on invalidation; never relabel a failed trade as a one-year core holding. Stops may slip or fail to fill.",
     "Recheck events, quotes and pending orders before submission; a DAY draft expires with its named session. Re-entry requires a fresh canonical review and newly valid setup, never automatic averaging down.",
@@ -301,9 +301,10 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
     next_session = current.date() if is_us_market_session_date(current.date()) and current.strftime("%H:%M") < "16:00" else _sessions_after(current.date())
     blockers: list[str] = []
     required_policy = {"ordinary_risk_pct": Decimal("0.5"), "event_risk_pct": Decimal("0.25"),
-                       "combined_risk_pct": Decimal("2"), "max_position_pct": Decimal("5"),
+                       "combined_risk_pct": Decimal("2"),
                        "min_reward_to_risk": Decimal("2"), "max_holding_sessions": Decimal("5")}
     if (policy.get("schema_version") != "phase5r_tactical_policy_v1"
+            or policy.get("max_position_pct", "missing") is not None
             or any(_number(policy.get(key)) != value for key, value in required_policy.items())):
         blockers.append("tactical_policy_invalid")
     for gate in ("market_gate", "evidence_gate", "fundamental_gate"):
@@ -407,9 +408,7 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
         only_assumptions = set(issues).issubset(HYPOTHETICAL_BLOCKERS)
         if only_assumptions and entry and stop and rr is not None and rr >= 2 and value and risk_limit:
             per_share = entry - stop
-            held_value = (_positive(held.get(ticker, {}).get("current_shares")) or Decimal(0)) * (_positive(row.get("last_price")) or Decimal(0))
-            capacity = max(Decimal(0), value * Decimal("0.05") - held_value)
-            quantity_limit = min(Decimal(canonical_qty), remaining_cash / entry, capacity / entry,
+            quantity_limit = min(Decimal(canonical_qty), remaining_cash / entry,
                                  risk_limit / per_share, remaining_risk / per_share)
             sized_qty = max(0, int(quantity_limit.to_integral_value(rounding=ROUND_FLOOR)))
             if not sized_qty:
@@ -457,7 +456,8 @@ def build_tactical_review(decision: dict[str, Any], *, current: datetime,
     return {"schema_version": SCHEMA_VERSION, "as_of": current.isoformat(), "market_session": session.isoformat(),
             "next_session": next_session.isoformat(), "classification": "real-trade candidate" if any(row["eligible"] for row in drafts) else "watchlist",
             "global_gates_passed": not blockers, "blockers": sorted(set(blockers)), "cash_basis": account.get("cash_basis", "unknown"),
-            "risk_policy": {key: float(value) for key, value in required_policy.items()},
+            "risk_policy": {**{key: float(value) for key, value in required_policy.items()},
+                            "max_position_pct": None},
             "risk_budget": {"account_value": _money(value), "ordinary_usd": _money(ordinary), "event_usd": _money(event_budget),
                             "combined_usd": _money(combined), "open_risk_usd": _money(existing_risk),
                             "open_risk_basis": "derived_local_core_only_inventory" if local_risk_zero else "reported_record"},

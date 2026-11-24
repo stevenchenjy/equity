@@ -71,13 +71,15 @@ class IntradayRiskPresentationTests(unittest.TestCase):
         decision=maintained_decision()
         risk=observation()
         risk['tactical_limits']={'ordinary_risk_pct':0.5,'event_risk_pct':0.25,'combined_risk_pct':2,
-            'max_position_pct':5,'min_reward_to_risk':2,'existing_planned_risk_usd':0,'combined_planned_risk_pct':0}
+            'max_position_pct':None,'min_reward_to_risk':2,'existing_planned_risk_usd':0,'combined_planned_risk_pct':0}
         decision['intraday_portfolio_risk']=risk
         _,text,html=render_email(decision)
         for output in (text,html):
             self.assertEqual(output.count('Intraday portfolio risk — observed snapshot'),1)
             self.assertIn('ordinary 0.50%, event 0.25%, combined 2.00%',output)
             self.assertIn('minimum reward/risk 2.00R',output)
+            self.assertIn('no fixed per-name capital ceiling',output)
+            self.assertNotIn('tactical position maximum 5',output)
             self.assertIn('Recorded planned tactical loss: $0.00; 0.00%',visible_html_text(output) if output.startswith('<!doctype') else output)
         self.assertLess(text.index('Intraday portfolio risk'),text.index('Holdings'))
 
@@ -86,6 +88,18 @@ class IntradayRiskPresentationTests(unittest.TestCase):
         decision['intraday_portfolio_risk']=observation()
         self.assertEqual(render_email(decision),render_email(decision))
         self.assertEqual(decision['intraday_portfolio_risk']['status'],'current')
+
+    def test_retained_numeric_name_cap_report_preserves_exact_original_wording(self):
+        risk = observation()
+        risk['tactical_limits'] = {'ordinary_risk_pct':.5,'event_risk_pct':.25,
+            'combined_risk_pct':2,'max_position_pct':5,'min_reward_to_risk':2}
+        body = intraday_risk_card({'intraday_portfolio_risk':risk})['body']
+        self.assertIn('tactical position maximum 5.00%',body)
+        self.assertNotIn('no fixed per-name capital ceiling',body)
+        current = {'intraday_portfolio_risk':risk, 'tactical_review':{'risk_policy':{'max_position_pct':None}}}
+        body = intraday_risk_card(current)['body']
+        self.assertIn('no fixed per-name capital ceiling',body)
+        self.assertNotIn('tactical position maximum 5.00%',body)
 
 
 if __name__ == '__main__':

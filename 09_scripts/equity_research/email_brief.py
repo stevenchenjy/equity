@@ -45,6 +45,20 @@ _TRADING_RULES = (
     "规则 3｜预期目标价差至少覆盖计划风险的 2 倍（2R）；没有可核验依据或条件未满足时，本次新增 0 股、NO TRADE，不为交易而交易。",
     "规则 4｜长期核心仓与短线仓分别记录；卖出后仅按事先写明且重新核验的条件买回，不自动补仓，也不保证能在更低价买回。",
 )
+_NO_NAME_CAP_RULE = "规则 2｜普通短线计划风险不超过组合的 0.5%，事件交易不超过 0.25%，合计不超过 2%；不设固定单股资金比例上限。股数仍受有依据的配置、整股、现金、组合配置和计划风险约束；跳空可能超过计划损失。"
+
+
+def _current_no_name_cap(review: Any) -> bool:
+    """Current producers declare null; retained older reports keep exact renders."""
+    policy = review.get("risk_policy") if isinstance(review, dict) else None
+    return isinstance(policy, dict) and "max_position_pct" in policy and policy["max_position_pct"] is None
+
+
+def _trading_rules(decision: dict[str, Any]) -> list[str]:
+    rules = list(_TRADING_RULES)
+    if _current_no_name_cap(decision.get("tactical_review")):
+        rules[1] = _NO_NAME_CAP_RULE
+    return rules
 _BLOCKED_CODES = {"account_conflict_hold", "data_gate_hold", "fundamental_weakening_review"}
 _LABELS = {
     "account_conflict_hold": ("需核对账户", "先核对账户，暂停仓位方案"),
@@ -219,6 +233,7 @@ def _tactical_view(
         ]}]
 
     sections = []
+    no_name_cap = _current_no_name_cap(review)
     account_value = _decimal(decision.get("account", {}).get("account_total_value"))
     blockers = review.get("blockers", [])
     blockers = blockers if isinstance(blockers, list) else ["malformed_review"]
@@ -315,6 +330,7 @@ def _tactical_view(
             session_ok = False
         cap = caps.get(ticker)
         draft_blockers = draft.get("blockers", [])
+        trade_risk_pct = Decimal("0.0025") if no_name_cap and draft.get("event_risk") is True else Decimal("0.005")
         eligible = (not global_block and review.get("global_gates_passed") is True
                     and review.get("research_only") is True and review.get("automatic_action_allowed") is False
                     and orders.get("complete") is True and not blockers and not draft_blockers
@@ -323,8 +339,8 @@ def _tactical_view(
                     and qty is not None and qty > 0 and qty == qty.to_integral_value()
                     and cap is not None and qty <= cap and risk_ok and details_ok and session_ok
                     and account_value is not None and account_value > 0
-                    and qty * entry <= account_value * Decimal("0.05")
-                    and qty * (entry - stop) <= account_value * Decimal("0.005")
+                    and (no_name_cap or qty * entry <= account_value * Decimal("0.05"))
+                    and qty * (entry - stop) <= account_value * trade_risk_pct
                     and market_session == decision.get("market_gate", {}).get("expected_market_session"))
         row_lines = [f"{ticker} · {'有条件的人工作业草案（real-trade candidate）' if eligible else '观察名单（watchlist）'}；适用日期：{draft.get('session_date') or next_session}。"]
         if eligible:
@@ -360,7 +376,7 @@ def _tactical_view(
                                and hypothetical is not None and hypothetical > 0 and hypothetical == hypothetical.to_integral_value()
                                and cap is not None and hypothetical <= cap
                                and account_value is not None and account_value > 0
-                               and hypothetical * entry <= account_value * Decimal("0.05")
+                               and (no_name_cap or hypothetical * entry <= account_value * Decimal("0.05"))
                                and hypothetical * (entry - stop) <= account_value * hypothetical_risk_pct)
             if hypothetical_ok:
                 row_lines.append(f"独立假设情景：{shares(hypothetical)} 股、金额不超过 {money(hypothetical * entry)}；实际合格新增仍为 0 股。")
@@ -785,7 +801,7 @@ def build_email_view(decision: dict[str, Any]) -> dict[str, Any]:
         "maintained_plan_lines": maintained_lines, "thesis_lines": thesis_lines,
         "watchlist": _watch_view(decision, plans, gates_passed=gates_passed),
         "funding_lines": funding_lines,
-        "trading_rules": list(_TRADING_RULES),
+        "trading_rules": _trading_rules(decision),
         "tactical_sections": _tactical_view(decision, plans, global_block=global_block),
         "discovery": build_discovery_view(decision),
         "limitations": limitations, "documents": documents, "receipt": receipt,
@@ -1039,7 +1055,10 @@ def intraday_risk_card(decision: dict[str, Any]) -> dict[str, Any] | None:
         lines.append(f"Largest individual stock: {concentration.get('largest_stock_ticker')} at {percent(concentration.get('largest_stock_weight_pct'))}. No fixed single-stock cap; ETF/stock economic overlap is not measured by these weights.")
     tactical = report.get("tactical_limits", {})
     if isinstance(tactical, dict) and tactical:
-        lines.append(f"Existing tactical limits: ordinary {percent(tactical.get('ordinary_risk_pct'))}, event {percent(tactical.get('event_risk_pct'))}, combined {percent(tactical.get('combined_risk_pct'))}, tactical position maximum {percent(tactical.get('max_position_pct'))}, minimum reward/risk {number(tactical.get('min_reward_to_risk'))}R.")
+        name_limit = ("no fixed per-name capital ceiling" if tactical.get("max_position_pct", "missing") is None
+                      or _current_no_name_cap(decision.get("tactical_review"))
+                      else "tactical position maximum " + percent(tactical.get("max_position_pct")))
+        lines.append(f"Existing tactical limits: ordinary {percent(tactical.get('ordinary_risk_pct'))}, event {percent(tactical.get('event_risk_pct'))}, combined {percent(tactical.get('combined_risk_pct'))}, {name_limit}, minimum reward/risk {number(tactical.get('min_reward_to_risk'))}R.")
         if validated:
             lines.append(f"Recorded planned tactical loss: {money(tactical.get('existing_planned_risk_usd'))}; {percent(tactical.get('combined_planned_risk_pct'))} of marked value. Planned risk is not a guaranteed maximum loss.")
     for key, label in (("plan_conditions", "Existing plan condition"), ("reassessment_triggers", "Risk reassessment")):

@@ -334,10 +334,6 @@ def build(decision: dict, *, root: Path, current: datetime, strategies: dict | N
                         limit_value=max(Decimal(0),allocation_total*num(cap)/100-before_value) if cap is not None else cash_remaining
                         if growth:
                             limit_value=min(limit_value,max(Decimal(0),allocation_total*num(p['reviewed_allocation']['target_position_pct'])/100-before_value))
-                        else:
-                            position_cap = num(decision["tactical_review"]["risk_policy"]["max_position_pct"]) / 100
-                            limit_value=min(limit_value, max(Decimal(0),total*position_cap-chase_before_value),
-                                            max(Decimal(0),allocation_total*position_cap-before_value))
                         role_room=allocation_total*num(cfg['research_risk_limits']['active_stock_hard_cap_pct'])/100-active_value
                         core_gap=max(Decimal(0),allocation_total*num(cfg.get('core_minimum_pct',0))/100-core_value)
                         if core_gap:

@@ -16,9 +16,15 @@ concentrated growth exposure and overlap with direct stocks. See
 Old asset-type targets and the economic-purpose split below are historical,
 not additional current constraints. Unused cash is not a reserve requirement,
 and a core holding above 30% is not automatically trimmed. Tactical strategy
-loss/initial-exposure budgets, account evidence, experimental status and human
+loss budgets, account evidence, experimental status and human
 execution remain. Higher volatility alone does not establish higher expected
 return or justify an unsupported concentration.
+
+November 24, 2026 clarification: the owner asked to remove any remaining 5%
+single-name rule and stated “我喜欢重仓”. This also removes the tactical per-name
+exposure exception below. No replacement fixed percentage or automatic large
+allocation is adopted; company-specific sizing, aggregate/core allocation,
+cash, ordinary/event/combined planned-loss limits and human execution remain.
 
 ## Action-first regular email (2026-09-29)
 
@@ -317,9 +323,10 @@ is permitted. The owner asked to apply the four rules to existing regular emails
    whole-share size, order type/session/expiration and exit/review date before
    entry. Separate core positions from tactical trades.
 2. Planned risk is at most 0.5% of account value per ordinary tactical trade,
-   0.25% for event exposure, and 2% across simultaneous tactical trades. Initial
-   tactical exposure per name is at most 5%; size to the smallest cash, position
-   and risk allowance. Gaps/slippage can exceed planned risk.
+   0.25% for event exposure, and 2% across simultaneous tactical trades. The
+   former 5% tactical name-exposure ceiling was removed on November 24; size to
+   the supported canonical allocation, cash, aggregate/core and risk allowances.
+   Gaps/slippage can exceed planned risk.
 3. Require at least 2:1 plausible reward to planned loss for a fresh tactical
    entry, and reassess/exit in three to five sessions. An unsuccessful short
    trade cannot silently become a long-term holding. These rules are a research

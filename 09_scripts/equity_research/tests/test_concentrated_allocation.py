@@ -63,9 +63,13 @@ class ConcentratedAllocationTests(unittest.TestCase):
                 else:self.plan['reviewed_allocation']['reassessment_price']=101
                 self.assertEqual(self.result()['shares'],0)
                 self.plan.clear();self.plan.update(saved)
-    def test_only_tactical_still_uses_existing_risk_cap(self):
+    def test_tactical_above_five_percent_still_uses_loss_budget(self):
         self.plan.update(role='tactical',strategy_horizon='multi_day_trend')
-        self.assertEqual(self.result()['shares'],4)
+        row=self.result()
+        self.assertEqual(row['shares'],10)
+        self.assertGreater(row['order_draft']['portfolio_weight_after'],5)
+        self.assertEqual(row['order_draft']['planned_total_loss'],40)
+        self.assertLessEqual(row['order_draft']['planned_account_risk_pct'],.5)
     def test_review_requires_sources_and_nonempty_analysis(self):
         for key in ('sources','rationale','downside_case','portfolio_overlap','alternatives'):
             row=copy.deepcopy(self.plan);row['reviewed_allocation'].pop(key)

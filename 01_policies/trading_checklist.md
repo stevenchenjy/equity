@@ -33,8 +33,10 @@ Use this checklist before any paper trade plan or real trade plan. A real trade 
 - Account value entered into the risk calculator.
 - Risk percentage chosen before position sizing.
 - The applicable strategy risk budget is checked: tactical ordinary/event
-  planned loss at most 0.5%/0.25%, combined tactical planned loss at most 2%,
-  and initial tactical exposure at most 5% per name. A sourced growth plan
+  planned loss at most 0.5%/0.25% and combined tactical planned loss at most 2%.
+  No fixed per-name exposure ceiling remains after the November 24 owner
+  amendment; canonical size, cash and aggregate/core allocation still apply.
+  A sourced growth plan
   uses its stated downside and current allocation contract; it does not
   inherit a historical generic one-trade percentage.
 - Entry price and stop price defined.

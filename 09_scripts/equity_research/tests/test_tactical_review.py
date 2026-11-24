@@ -43,13 +43,15 @@ def fixture():
 
 
 class TacticalReviewTests(unittest.TestCase):
-    def test_verified_canonical_candidate_is_capped_and_dated(self):
+    def test_verified_canonical_candidate_can_exceed_five_percent_and_is_dated(self):
         values = fixture()
         result = tactical.build_tactical_review(**values)
         draft = result["drafts"][0]
         self.assertTrue(draft["eligible"])
-        self.assertEqual(draft["quantity"], 4)  # 5% account capital cap, rounded down.
-        self.assertEqual(draft["planned_risk_usd"], 16)
+        self.assertEqual(draft["quantity"], 10)  # Canonical supported size; no fixed name ceiling.
+        self.assertGreater(draft["quantity"] * draft["entry_price"], 10000 * .05)
+        self.assertEqual(draft["planned_risk_usd"], 40)
+        self.assertIsNone(result["risk_policy"]["max_position_pct"])
         self.assertEqual(draft["reward_to_risk"], 4.5)
         self.assertEqual(draft["session_date"], "2026-09-23")
         self.assertEqual(draft["time_exit_session"], "2026-09-29")
@@ -70,7 +72,7 @@ class TacticalReviewTests(unittest.TestCase):
         values["open_orders"]["existing_tactical_risk_confirmed"] = False
         draft = tactical.build_tactical_review(**values)["drafts"][0]
         self.assertEqual(draft["quantity"], 0)
-        self.assertEqual(draft["hypothetical_quantity"], 4)
+        self.assertEqual(draft["hypothetical_quantity"], 10)
         self.assertEqual(len(draft["hypothetical_assumptions"]), 2)
         values["decision"]["eligible_new_position_review_candidates"] = []
         draft = tactical.build_tactical_review(**values)["drafts"][0]
@@ -81,7 +83,7 @@ class TacticalReviewTests(unittest.TestCase):
         values["decision"]["account"]["cash_basis"] = "owner_recorded"
         self.assertEqual(tactical.build_tactical_review(**values)["drafts"][0]["quantity"], 0)
         values["open_orders"]["cash_confirmed"] = True
-        self.assertEqual(tactical.build_tactical_review(**values)["drafts"][0]["quantity"], 4)
+        self.assertEqual(tactical.build_tactical_review(**values)["drafts"][0]["quantity"], 10)
         values["open_orders"]["as_of"] = "2026-09-22T15:17:00-04:00"
         draft = tactical.build_tactical_review(**values)["drafts"][0]
         self.assertEqual(draft["quantity"], 0)
@@ -172,7 +174,7 @@ class TacticalReviewTests(unittest.TestCase):
     def test_event_calendar_uses_lower_budget_and_missing_calendar_blocks(self):
         values = fixture()
         values["decision"]["account"]["account_total_value"] = 1000
-        # At this size the capital cap cannot afford even one share.
+        # The unchanged event planned-loss budget cannot cover one $4-risk share.
         values["open_orders"]["event_calendar"]["events"] = [{"ticker": "ALL", "session_date": "2026-09-25", "type": "macro"}]
         draft = tactical.build_tactical_review(**values)["drafts"][0]
         self.assertTrue(draft["event_risk"])
@@ -183,6 +185,31 @@ class TacticalReviewTests(unittest.TestCase):
         draft = tactical.build_tactical_review(**values)["drafts"][0]
         self.assertIn("event_calendar_unconfirmed", draft["blockers"])
         self.assertEqual(draft["quantity"], 0)
+
+    def test_event_and_ordinary_loss_budgets_still_bound_larger_positions(self):
+        values = fixture()
+        values["all_candidates"][0]["suggested_whole_shares"] = 100
+        ordinary = tactical.build_tactical_review(**values)["drafts"][0]
+        self.assertEqual(ordinary["quantity"], 12)
+        self.assertLessEqual(ordinary["planned_risk_usd"], 50)
+        values["open_orders"]["event_calendar"]["events"] = [
+            {"ticker": "TEST", "session_date": "2026-09-23", "type": "earnings"}]
+        event = tactical.build_tactical_review(**values)["drafts"][0]
+        self.assertEqual(event["quantity"], 6)
+        self.assertGreater(event["quantity"] * event["entry_price"], 10000 * .05)
+        self.assertEqual(event["planned_risk_usd"], 24)
+        self.assertEqual(event["risk_limit_usd"], 25)
+
+    def test_obsolete_or_missing_name_cap_setting_is_not_silently_restored(self):
+        for cap in (5, 100, "none", "missing"):
+            values = fixture()
+            if cap == "missing":
+                values["policy"].pop("max_position_pct")
+            else:
+                values["policy"]["max_position_pct"] = cap
+            result = tactical.build_tactical_review(**values)
+            self.assertIn("tactical_policy_invalid", result["blockers"])
+            self.assertEqual(result["drafts"][0]["quantity"], 0)
 
     def test_lagged_canonical_publication_cannot_create_a_next_session_order(self):
         values = fixture()

@@ -7,6 +7,12 @@ contract; the effective executable settings live in
 source implementation, production deployment and recomposition are distinct
 states and must be verified independently.
 
+On 2026-11-24 the owner explicitly removed the remaining 5% tactical per-name
+exposure ceiling and reaffirmed a preference for concentrated positions
+(“我喜欢重仓”). There is no fixed per-name percentage ceiling for either growth
+or tactical positions. This preference does not supply a desired weight or
+investment case, and does not change the separate planned-loss budgets below.
+
 ## Explicit authorization and definitions
 
 The owner directed complete replacement of the former allocation standard with
@@ -48,9 +54,9 @@ conditions for reducing or exiting. Greater volatility or a high advertised
 upside alone is not positive investment evidence. Never increase a position to
 recover a loss or silently relabel a failed short trade as a growth investment.
 
-Removing a portfolio-wide name cap does not remove strategy-specific risk
-budgets. Tactical plans retain initial exposure at most 5% per name, planned
-loss at most 0.5% per ordinary trade or 0.25% for event exposure, 2% combined,
+Removing a name exposure cap does not remove strategy-specific risk budgets.
+Tactical plans retain planned loss at most 0.5% per ordinary trade or 0.25% for
+event exposure, 2% combined,
 at least 2:1 plausible reward/risk and a three-to-five-session reassessment/exit.
 Gaps and slippage can exceed planned loss. A concentrated growth allocation
 requires its own supported growth purpose; it cannot evade tactical limits by
@@ -60,6 +66,14 @@ sizes. Each proposed growth size needs a maintained plan recording the desired
 weight, investment rationale, downside/countercase, invalidation and current
 supporting evidence. There is no automatic equal-weight size or automatic 70%
 allocation to one company; unused capital does not establish an investment case.
+
+The executable tactical policy records `max_position_pct: null` explicitly.
+Size remains bounded by the supported canonical quantity, actual account cash,
+combined core/stock allocation and planned-loss allowances. A position above 5%
+is not automatically oversized, and removal of that threshold does not clear
+any current holding, addition or new entry. Frozen studies retain their original
+5% diagnostics solely as dated research conventions; they cannot reinstate a
+current capital limit or confer trading authority.
 
 Current quotes, complete current orders, actual available shares, settled funds,
 whole-share feasibility and applicable strategy evidence remain required.

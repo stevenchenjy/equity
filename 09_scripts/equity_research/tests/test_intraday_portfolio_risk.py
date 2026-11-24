@@ -207,6 +207,7 @@ class IntradayPortfolioRiskTests(unittest.TestCase):
         self.assertFalse(result["performance_is_actual"])
         self.assertEqual(result["cash_usd"], 100)
         self.assertEqual(result["concentration"]["single_stock_cap_pct"], None)
+        self.assertIsNone(result["tactical_limits"]["max_position_pct"])
         self.assertEqual(result["reassessment_triggers"], [])
         self.assertFalse(result["email_authorized"])
         self.assertEqual(result["new_order_quantities"], 0)
@@ -214,6 +215,19 @@ class IntradayPortfolioRiskTests(unittest.TestCase):
         self.assertEqual(result["tactical_limits"]["ordinary_risk_pct"], .5)
         self.assertEqual(result["tactical_limits"]["event_risk_pct"], .25)
         self.assertEqual(risk.validate_assessment(self.root, result), result)
+
+    def test_current_null_tactical_name_cap_is_explicit_and_obsolete_caps_rejected(self):
+        self.assertIsNone(risk._context(self.root, self.now)["tactical"]["max_position_pct"])
+        original = json.loads((self.root / risk.INPUTS[1]).read_text())
+        for value in (5, 100, "none", "missing"):
+            policy = copy.deepcopy(original)
+            if value == "missing":
+                policy.pop("max_position_pct")
+            else:
+                policy["max_position_pct"] = value
+            self.write(risk.INPUTS[1], policy)
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "tactical_policy_invalid"):
+                risk._context(self.root, self.now)
 
     def test_fractional_held_exposure_survives_marking_and_plan_context(self):
         self.csv(risk.INPUTS[4], [{"ticker": "SPY", "shares_optional": "2"},
